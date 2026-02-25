@@ -18,6 +18,9 @@ import {
   Upload,
   FileDown,
   Percent,
+  AlertTriangle,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react';
 import { Button, StatusBadge, Modal } from '@/components/admin';
 import {
@@ -43,6 +46,8 @@ interface Product {
   isNew: boolean;
   isBestseller: boolean;
   purity: number | null;
+  purchaseCount: number;
+  reorderPoint: number | null;
   category: {
     id: string;
     name: string;
@@ -79,6 +84,58 @@ interface Props {
   categories: Category[];
   stats: Stats;
   isOwner: boolean;
+}
+
+/**
+ * ABC classification based on revenue contribution.
+ * A = top 80% of revenue, B = next 15%, C = remaining 5%.
+ */
+function computeABCClassification(products: Product[]): Record<string, 'A' | 'B' | 'C'> {
+  const result: Record<string, 'A' | 'B' | 'C'> = {};
+
+  // Estimate revenue as price * purchaseCount for each product
+  const withRevenue = products.map((p) => {
+    const activeFormats = (p.formats || []).filter(f => f.isActive);
+    const avgPrice = activeFormats.length > 0
+      ? activeFormats.reduce((sum, f) => sum + Number(f.price), 0) / activeFormats.length
+      : Number(p.price);
+    return {
+      id: p.id,
+      revenue: avgPrice * (p.purchaseCount || 0),
+    };
+  }).sort((a, b) => b.revenue - a.revenue);
+
+  const totalRevenue = withRevenue.reduce((sum, p) => sum + p.revenue, 0);
+  if (totalRevenue === 0) {
+    // No revenue data: all products are C
+    for (const p of products) result[p.id] = 'C';
+    return result;
+  }
+
+  let cumulativeRevenue = 0;
+  for (const p of withRevenue) {
+    cumulativeRevenue += p.revenue;
+    const ratio = cumulativeRevenue / totalRevenue;
+    if (ratio <= 0.80) {
+      result[p.id] = 'A';
+    } else if (ratio <= 0.95) {
+      result[p.id] = 'B';
+    } else {
+      result[p.id] = 'C';
+    }
+  }
+  return result;
+}
+
+/** Get products that are below their reorder point */
+function getReorderAlerts(products: Product[]): Product[] {
+  return products.filter((p) => {
+    if (!p.reorderPoint || !p.formats || p.formats.length === 0) return false;
+    const totalStock = p.formats
+      .filter(f => f.isActive)
+      .reduce((sum, f) => sum + f.stockQuantity, 0);
+    return totalStock <= p.reorderPoint;
+  });
 }
 
 function getProductStockStatus(product: Product, t: (key: string, params?: Record<string, string | number>) => string) {
@@ -126,6 +183,18 @@ export default function ProductsListClient({
   const [bulkPriceApplying, setBulkPriceApplying] = useState(false);
   const [bulkPriceDirection, setBulkPriceDirection] = useState<'increase' | 'decrease'>('increase');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Scheduled publish
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleAction, setScheduleAction] = useState<'publish' | 'unpublish'>('publish');
+  const [schedulingSave, setSchedulingSave] = useState(false);
+
+  // ABC Classification
+  const abcClassification = useMemo(() => computeABCClassification(products), [products]);
+
+  // Reorder alerts
+  const reorderAlerts = useMemo(() => getReorderAlerts(products), [products]);
 
   // ─── Business logic (unchanged) ─────────────────────────────
 
@@ -361,6 +430,40 @@ export default function ProductsListClient({
     }
   }, [bulkPricePercent, bulkPriceDirection, categoryFilter, t]);
 
+  const handleSchedulePublish = useCallback(async () => {
+    if (!selectedProductId || !scheduleDate) {
+      toast.error(t('admin.products.scheduleSelectDate') || 'Sélectionnez une date');
+      return;
+    }
+    setSchedulingSave(true);
+    try {
+      const res = await fetch(`/api/admin/products/${selectedProductId}/schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: scheduleAction,
+          scheduledAt: new Date(scheduleDate).toISOString(),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.products.scheduleError') || 'Erreur lors de la planification');
+        return;
+      }
+      toast.success(
+        scheduleAction === 'publish'
+          ? (t('admin.products.schedulePublishSuccess') || 'Publication planifiée')
+          : (t('admin.products.scheduleUnpublishSuccess') || 'Dépublication planifiée')
+      );
+      setShowScheduleModal(false);
+      setScheduleDate('');
+    } catch {
+      toast.error(t('admin.products.scheduleError') || 'Erreur lors de la planification');
+    } finally {
+      setSchedulingSave(false);
+    }
+  }, [selectedProductId, scheduleDate, scheduleAction, t]);
+
   const handlePopularPages = useCallback(() => {
     // Navigate to analytics/stats page if it exists, otherwise link to products stats
     router.push('/admin/analytics');
@@ -465,6 +568,16 @@ export default function ProductsListClient({
       if (!p.isActive) badges.push({ text: t('admin.products.inactive'), variant: 'error' });
       if (p.isFeatured) badges.push({ text: '★', variant: 'warning' });
 
+      // ABC classification badge
+      const abc = abcClassification[p.id];
+      if (abc === 'A') {
+        badges.push({ text: 'A', variant: 'success' });
+      } else if (abc === 'B') {
+        badges.push({ text: 'B', variant: 'info' });
+      } else if (abc === 'C') {
+        badges.push({ text: 'C', variant: 'neutral' });
+      }
+
       // FIX: BUG-070 - Show format price range instead of base product price
       const activeFormats = (p.formats || []).filter((f: { isActive: boolean; price: unknown }) => f.isActive);
       let priceDisplay: string;
@@ -491,7 +604,7 @@ export default function ProductsListClient({
         badges,
       };
     }),
-  [filteredProducts, t]);
+  [filteredProducts, t, abcClassification]);
 
   // ─── Render ─────────────────────────────────────────────────
 
@@ -551,6 +664,46 @@ export default function ProductsListClient({
           <MiniStat icon={Wrench} label={t('admin.products.accessories')} value={stats.accessories} />
         </div>
 
+        {/* Reorder Alerts Banner */}
+        {reorderAlerts.length > 0 && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-amber-800">
+                  {t('admin.products.reorderAlertTitle') || 'Alerte de réapprovisionnement'}
+                  <span className="ml-1 font-normal text-amber-600">({reorderAlerts.length})</span>
+                </p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {reorderAlerts.slice(0, 5).map((p) => {
+                    const totalStock = (p.formats || [])
+                      .filter(f => f.isActive)
+                      .reduce((sum, f) => sum + f.stockQuantity, 0);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedProductId(p.id)}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-amber-200 rounded text-xs text-amber-800 hover:bg-amber-100 transition-colors"
+                      >
+                        <span className="font-medium">{p.name}</span>
+                        <span className="text-amber-600">
+                          ({t('admin.products.reorderStock') || 'Stock'}: {totalStock}/{p.reorderPoint})
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {reorderAlerts.length > 5 && (
+                    <span className="text-xs text-amber-600 py-1">
+                      +{reorderAlerts.length - 5} {t('admin.products.reorderMore') || 'autres'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Category filter */}
         {categories.length > 0 && (
           <div className="mb-4">
@@ -607,6 +760,19 @@ export default function ProductsListClient({
                           {t('admin.products.edit')}
                         </Button>
                       </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Calendar}
+                        onClick={() => {
+                          setScheduleAction('publish');
+                          setScheduleDate('');
+                          setShowScheduleModal(true);
+                        }}
+                        title={t('admin.products.schedulePublish') || 'Planifier publication'}
+                      >
+                        {t('admin.products.schedule') || 'Planifier'}
+                      </Button>
                       <Link href={`/product/${selectedProduct.slug}`} target="_blank">
                         <Button variant="ghost" size="sm" icon={ExternalLink}>
                           {t('admin.outlook.viewSite')}
@@ -679,6 +845,27 @@ export default function ProductsListClient({
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colCategory')}</p>
                       <p className="text-sm font-medium text-slate-900">{selectedProduct.category.name}</p>
+                    </div>
+                    {/* ABC Classification */}
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500">{t('admin.products.abcClassification') || 'Classification ABC'}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <TrendingUp className="w-4 h-4 text-slate-400" />
+                        {(() => {
+                          const abc = abcClassification[selectedProduct.id];
+                          const configs = {
+                            A: { label: 'A - ' + (t('admin.products.abcA') || 'Haute contribution'), className: 'text-emerald-700 bg-emerald-100' },
+                            B: { label: 'B - ' + (t('admin.products.abcB') || 'Contribution moyenne'), className: 'text-sky-700 bg-sky-100' },
+                            C: { label: 'C - ' + (t('admin.products.abcC') || 'Faible contribution'), className: 'text-slate-600 bg-slate-100' },
+                          };
+                          const config = configs[abc || 'C'];
+                          return (
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.className}`}>
+                              {config.label}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
 
@@ -780,6 +967,88 @@ export default function ProductsListClient({
         onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
         onCancel={() => setConfirmDeleteId(null)}
       />
+
+      {/* ─── SCHEDULED PUBLISH MODAL ─────────────────────────────── */}
+      <Modal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        title={t('admin.products.scheduleTitle') || 'Planifier la publication'}
+        subtitle={selectedProduct ? selectedProduct.name : ''}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>
+              {t('common.cancel') || 'Annuler'}
+            </Button>
+            <Button
+              variant="primary"
+              icon={schedulingSave ? Loader2 : Calendar}
+              loading={schedulingSave}
+              onClick={handleSchedulePublish}
+              disabled={schedulingSave || !scheduleDate}
+            >
+              {t('admin.products.scheduleConfirm') || 'Planifier'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t('admin.products.scheduleActionLabel') || 'Action'}
+            </label>
+            <div className="flex gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="scheduleAction"
+                  checked={scheduleAction === 'publish'}
+                  onChange={() => setScheduleAction('publish')}
+                  className="w-4 h-4 text-sky-600 border-slate-300 focus:ring-sky-500"
+                />
+                <span className="text-sm text-slate-700">
+                  {t('admin.products.scheduleActionPublish') || 'Publier'}
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="scheduleAction"
+                  checked={scheduleAction === 'unpublish'}
+                  onChange={() => setScheduleAction('unpublish')}
+                  className="w-4 h-4 text-sky-600 border-slate-300 focus:ring-sky-500"
+                />
+                <span className="text-sm text-slate-700">
+                  {t('admin.products.scheduleActionUnpublish') || 'Dépublier'}
+                </span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t('admin.products.scheduleDateLabel') || 'Date et heure'}
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          {scheduleDate && (
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
+              <p className="text-sm text-sky-800">
+                {scheduleAction === 'publish'
+                  ? (t('admin.products.schedulePublishPreview') || 'Le produit sera publié le')
+                  : (t('admin.products.scheduleUnpublishPreview') || 'Le produit sera dépublié le')
+                }{' '}
+                <strong>{new Date(scheduleDate).toLocaleString('fr-CA')}</strong>
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* ─── BULK PRICE UPDATE MODAL ─────────────────────────────── */}
       <Modal

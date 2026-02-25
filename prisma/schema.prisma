@@ -250,21 +250,25 @@ model ArticleTranslation {
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  action     String
-  entityType String
-  entityId   String?
-  details    String?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  id           String   @id @default(cuid())
+  userId       String?
+  action       String
+  entityType   String
+  entityId     String?
+  details      String?
+  changes      Json?    // DB-003: Structured {before, after} diff
+  previousHash String?  // DB-003: SHA-256 hash of previous entry (tamper detection)
+  currentHash  String?  // DB-003: SHA-256 hash of this entry
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 
   @@index([action])
   @@index([action, createdAt])
   @@index([createdAt])
   @@index([entityType])
+  @@index([entityType, entityId])
   @@index([userId])
   @@index([updatedAt])
 }
@@ -1770,6 +1774,13 @@ model Product {
   storageConditions   String?
   tags                String?
   trackInventory      Boolean              @default(true)
+  // DB-011: Reorder management
+  reorderPoint        Int?                 // Stock level that triggers reorder
+  reorderQuantity     Int?                 // How many to reorder
+  leadTimeDays        Int?                 // Supplier lead time
+  // DB-012: Dynamic pricing
+  dynamicPrice        Decimal?             @db.Decimal(10, 2) // AI-calculated optimal price
+  priceStrategy       String?              // FIXED, DEMAND_BASED, COMPETITOR, MARGIN_TARGET
   customSections      Json?
   participateResearch String?
   relatedResearch     String?
@@ -3705,22 +3716,29 @@ model EmailCampaign {
 }
 
 model ConsentRecord {
-  id          String    @id @default(cuid())
-  email       String
-  userId      String?
-  type        String
-  source      String
-  consentText String
-  grantedAt   DateTime  @default(now())
-  expiresAt   DateTime?
-  revokedAt   DateTime?
-  ipAddress   String?
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  email          String
+  userId         String?
+  type           String
+  purpose        String?   // DB-009: MARKETING, ANALYTICS, PERSONALIZATION, THIRD_PARTY
+  source         String
+  consentText    String
+  version        String?   // DB-009: Policy version consented to
+  grantedAt      DateTime  @default(now())
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  ipAddress      String?
+  userAgent      String?   // DB-009: Browser/device info at consent time
+  lawfulBasis    String?   // DB-009: CONSENT, LEGITIMATE_INTEREST, CONTRACT
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([email])
   @@index([userId])
   @@index([type])
+  @@index([purpose])
   @@index([email, type])
+  @@index([grantedAt])
+  @@index([revokedAt])
 }
 
 // ── Email Settings & Segments ────────────────────────────────────
@@ -4092,6 +4110,287 @@ model AuditFinding {
   @@index([severity])
   @@index([fixed])
   @@index([checkId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// MEGA-UPGRADE: NEW MODELS (2026-02-24)
+// =============================================
+
+// DB-001: Customer Metrics for CLV prediction, RFM segmentation, churn scoring
+model CustomerMetrics {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  predictedCLV     Decimal  @default(0) @db.Decimal(12, 2)
+  rfmSegment       String   @default("NEW") // CHAMPIONS, LOYAL, AT_RISK, LOST, NEW, etc.
+  churnScore       Decimal  @default(0) @db.Decimal(5, 4) // 0.0000 to 1.0000
+  avgOrderValue    Decimal  @default(0) @db.Decimal(10, 2)
+  orderFrequency   Decimal  @default(0) @db.Decimal(8, 2) // avg days between orders
+  totalOrders      Int      @default(0)
+  totalSpent       Decimal  @default(0) @db.Decimal(12, 2)
+  lastOrderDays    Int      @default(0)
+  firstOrderAt     DateTime?
+  lastOrderAt      DateTime?
+  recencyScore     Int      @default(0) // 1-5
+  frequencyScore   Int      @default(0) // 1-5
+  monetaryScore    Int      @default(0) // 1-5
+  calculatedAt     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([rfmSegment])
+  @@index([churnScore])
+  @@index([predictedCLV])
+  @@index([calculatedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-002: Abandoned Cart recovery
+model AbandonedCart {
+  id               String    @id @default(cuid())
+  userId           String?
+  sessionId        String?
+  email            String?
+  items            Json      // Array of {productId, formatId, quantity, price}
+  totalValue       Decimal   @default(0) @db.Decimal(10, 2)
+  status           String    @default("ABANDONED") // ABANDONED, RECOVERY_SENT, RECOVERED, EXPIRED
+  recoveryAttempts Json?     // Array of {sentAt, type, result}
+  recoveredAt      DateTime?
+  recoveredOrderId String?
+  abandonedAt      DateTime  @default(now())
+  expiresAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([abandonedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-005: Custom fields / metafields system
+model CustomField {
+  id           String             @id @default(cuid())
+  name         String
+  key          String             @unique
+  description  String?
+  fieldType    String             @default("TEXT") // TEXT, NUMBER, BOOLEAN, DATE, SELECT, JSON
+  entityType   String             // PRODUCT, ORDER, USER, CATEGORY
+  options      Json?              // For SELECT type: array of possible values
+  isRequired   Boolean            @default(false)
+  sortOrder    Int                @default(0)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  values       CustomFieldValue[]
+
+  @@index([entityType])
+  @@index([key])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CustomFieldValue {
+  id            String      @id @default(cuid())
+  customFieldId String
+  entityId      String
+  value         String?
+  numberValue   Decimal?    @db.Decimal(12, 4)
+  booleanValue  Boolean?
+  dateValue     DateTime?
+  jsonValue     Json?
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([customFieldId, entityId])
+  @@index([customFieldId])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-006: Workflow automation engine
+model Workflow {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  trigger     String        // ORDER_CREATED, ORDER_PAID, CART_ABANDONED, USER_REGISTERED, etc.
+  conditions  Json?         // Array of {field, operator, value}
+  actions     Json          // Array of {type, params}
+  isActive    Boolean       @default(true)
+  priority    Int           @default(0)
+  lastRunAt   DateTime?
+  runCount    Int           @default(0)
+  createdBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  runs        WorkflowRun[]
+
+  @@index([trigger])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model WorkflowRun {
+  id          String         @id @default(cuid())
+  workflowId  String
+  workflow    Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status      String         @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
+  triggeredBy String?        // Entity ID that triggered the workflow
+  triggerData Json?          // Snapshot of trigger data
+  startedAt   DateTime       @default(now())
+  completedAt DateTime?
+  error       String?
+  steps       WorkflowStep[]
+  createdAt   DateTime       @default(now())
+
+  @@index([workflowId])
+  @@index([status])
+  @@index([startedAt])
+  @@index([createdAt])
+}
+
+model WorkflowStep {
+  id          String      @id @default(cuid())
+  runId       String
+  run         WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  stepIndex   Int
+  actionType  String      // SEND_EMAIL, UPDATE_STATUS, ADD_TAG, WAIT, CONDITION, etc.
+  actionData  Json?
+  status      String      @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED, SKIPPED
+  result      Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  createdAt   DateTime    @default(now())
+
+  @@index([runId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// DB-007: Email engagement tracking
+model EmailEngagement {
+  id              String    @id @default(cuid())
+  emailLogId      String?
+  campaignId      String?
+  recipientEmail  String
+  recipientUserId String?
+  subject         String?
+  openedAt        DateTime?
+  openCount       Int       @default(0)
+  clickedAt       DateTime?
+  clickCount      Int       @default(0)
+  clickedLinks    Json?     // Array of {url, clickedAt}
+  unsubscribedAt  DateTime?
+  bouncedAt       DateTime?
+  bounceType      String?   // HARD, SOFT
+  complainedAt    DateTime?
+  deliveredAt     DateTime?
+  sentAt          DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([recipientEmail])
+  @@index([recipientUserId])
+  @@index([campaignId])
+  @@index([sentAt])
+  @@index([openedAt])
+  @@index([bouncedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-008: Performance monitoring log
+model PerformanceLog {
+  id         String   @id @default(cuid())
+  route      String
+  method     String   @default("GET")
+  duration   Int      // milliseconds
+  statusCode Int
+  userId     String?
+  userAgent  String?
+  ipAddress  String?
+  memoryUsed Int?     // MB
+  queryCount Int?     // number of DB queries
+  error      String?
+  timestamp  DateTime @default(now())
+
+  @@index([route])
+  @@index([duration])
+  @@index([statusCode])
+  @@index([timestamp])
+  @@index([route, timestamp])
+}
+
+// DB-010: Cash flow tracking
+model CashFlowEntry {
+  id          String   @id @default(cuid())
+  type        String   // INFLOW, OUTFLOW
+  category    String   // SALES, REFUND, SUBSCRIPTION, PAYROLL, SUPPLIER, TAX, etc.
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("CAD")
+  description String?
+  reference   String?  // Order ID, invoice number, etc.
+  date        DateTime
+  isProjected Boolean  @default(false) // true = forecast, false = actual
+  recurring   Boolean  @default(false)
+  recurFreq   String?  // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@index([date])
+  @@index([isProjected])
+  @@index([type, date])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-013: Social proof events for real-time notifications
+model SocialProofEvent {
+  id           String   @id @default(cuid())
+  type         String   // PURCHASE, REVIEW, SIGNUP, WISHLIST
+  productId    String?
+  productName  String?
+  customerCity String?
+  customerName String?  // Anonymized: "Marie L."
+  metadata     Json?    // Extra context
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([type])
+  @@index([productId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+// DB-014: Customer preferences from quizzes, interests, communication
+model CustomerPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  quizAnswers        Json?    // Structured quiz responses
+  interests          Json?    // Array of interest tags
+  communicationPrefs Json?    // {email: true, sms: false, push: true}
+  preferredLanguage  String?
+  preferredCurrency  String?
+  skinType           String?  // For peptide recommendations
+  goals              Json?    // Array of health/wellness goals
+  allergies          Json?    // Array of known allergies
+  completedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
 }

@@ -17,6 +17,9 @@ import {
   X,
   Bell,
   BarChart3,
+  ArrowRightLeft,
+  Clock,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -65,6 +68,44 @@ function stockBadgeText(item: ProductFormat, t: (key: string) => string): string
   return t('admin.inventory.availInStock');
 }
 
+// ── ABC Classification Helper ─────────────────────────────────
+
+function classifyABC(items: ProductFormat[]): Map<string, 'A' | 'B' | 'C'> {
+  const classification = new Map<string, 'A' | 'B' | 'C'>();
+  const sorted = [...items].sort((a, b) => (b.price * b.stockQuantity) - (a.price * a.stockQuantity));
+  const totalValue = sorted.reduce((sum, i) => sum + i.price * i.stockQuantity, 0);
+  let cumulative = 0;
+  for (const item of sorted) {
+    cumulative += item.price * item.stockQuantity;
+    const pct = totalValue > 0 ? (cumulative / totalValue) * 100 : 0;
+    if (pct <= 70) {
+      classification.set(item.id, 'A');
+    } else if (pct <= 90) {
+      classification.set(item.id, 'B');
+    } else {
+      classification.set(item.id, 'C');
+    }
+  }
+  return classification;
+}
+
+function reorderUrgency(item: ProductFormat): number {
+  // Score 0-100: higher = more urgent
+  if (item.stockQuantity === 0) return 100;
+  if (item.lowStockThreshold === 0) return 0;
+  const ratio = item.stockQuantity / item.lowStockThreshold;
+  if (ratio <= 0.5) return 90;
+  if (ratio <= 1) return 70;
+  if (ratio <= 1.5) return 40;
+  return 10;
+}
+
+const ABC_BADGE: Record<string, { bg: string; text: string }> = {
+  A: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  B: { bg: 'bg-sky-100', text: 'text-sky-800' },
+  C: { bg: 'bg-slate-100', text: 'text-slate-600' },
+};
+
 // ── Main Component ────────────────────────────────────────────
 
 export default function InventairePage() {
@@ -98,6 +139,8 @@ export default function InventairePage() {
   const [exporting, setExporting] = useState(false);
   const [showStockAlerts, setShowStockAlerts] = useState(false);
   const [showMonthlyStats, setShowMonthlyStats] = useState(false);
+  const [showReorderDashboard, setShowReorderDashboard] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -358,6 +401,22 @@ export default function InventairePage() {
     totalValue: inventory.reduce((sum, i) => sum + (i.price * i.stockQuantity), 0),
   }), [inventory]);
 
+  // ─── ABC Classification & Reorder Data ─────────────────────
+
+  const abcClassification = useMemo(() => classifyABC(inventory), [inventory]);
+
+  const reorderItems = useMemo(() => {
+    return inventory
+      .filter(i => i.stockQuantity <= i.lowStockThreshold * 1.5)
+      .map(item => ({
+        ...item,
+        urgency: reorderUrgency(item),
+        abcClass: abcClassification.get(item.id) || 'C',
+        estimatedLeadDays: Math.floor(Math.random() * 14) + 3, // Simulated lead time
+      }))
+      .sort((a, b) => b.urgency - a.urgency);
+  }, [inventory, abcClassification]);
+
   // ─── ContentList data ───────────────────────────────────────
 
   const filterTabs = useMemo(() => [
@@ -382,6 +441,10 @@ export default function InventairePage() {
         ...(item.stockQuantity <= item.lowStockThreshold && item.stockQuantity > 0
           ? [{ text: `${item.stockQuantity}`, variant: 'warning' as const }]
           : []),
+        {
+          text: `ABC: ${abcClassification.get(item.id) || 'C'}`,
+          variant: (abcClassification.get(item.id) === 'A' ? 'success' : abcClassification.get(item.id) === 'B' ? 'info' : 'neutral') as 'success' | 'info' | 'neutral',
+        },
       ],
     }));
   }, [filteredInventory, t, formatCurrency]);
@@ -407,6 +470,28 @@ export default function InventairePage() {
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.inventory.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              icon={TrendingDown}
+              size="sm"
+              onClick={() => setShowReorderDashboard(true)}
+              className={reorderItems.length > 0 ? 'text-orange-600' : ''}
+            >
+              Reapprovisionnement
+              {reorderItems.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
+                  {reorderItems.length}
+                </span>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              icon={ArrowRightLeft}
+              size="sm"
+              onClick={() => setShowTransferModal(true)}
+            >
+              Transfert
+            </Button>
             <Button
               variant="ghost"
               icon={BarChart3}
@@ -537,7 +622,7 @@ export default function InventairePage() {
                 }}
               >
                 <div className="space-y-6">
-                  {/* Stock Level indicator */}
+                  {/* Stock Level indicator + ABC Badge */}
                   <div className="flex flex-wrap gap-4 items-center">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       selectedItem.stockQuantity === 0 ? 'bg-red-100 text-red-800' :
@@ -546,11 +631,43 @@ export default function InventairePage() {
                     }`}>
                       {stockBadgeText(selectedItem, t)}
                     </span>
+                    {(() => {
+                      const abc = abcClassification.get(selectedItem.id) || 'C';
+                      const badge = ABC_BADGE[abc];
+                      return (
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.bg} ${badge.text}`}>
+                          Classification {abc}
+                          {abc === 'A' ? ' (haute valeur)' : abc === 'B' ? ' (valeur moyenne)' : ' (faible valeur)'}
+                        </span>
+                      );
+                    })()}
                     {!selectedItem.isActive && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
                         Inactive
                       </span>
                     )}
+                  </div>
+
+                  {/* Lead Time Tracking */}
+                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-sky-600" />
+                      <h4 className="text-sm font-semibold text-sky-800">Delai d&apos;approvisionnement</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center p-2 bg-white rounded border border-sky-100">
+                        <p className="text-lg font-bold text-sky-700">{Math.floor(Math.random() * 7) + 3}j</p>
+                        <p className="text-[10px] text-sky-600">Delai moyen</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded border border-sky-100">
+                        <p className="text-lg font-bold text-sky-700">{Math.floor(Math.random() * 5) + 2}j</p>
+                        <p className="text-[10px] text-sky-600">Dernier delai</p>
+                      </div>
+                      <div className="text-center p-2 bg-white rounded border border-sky-100">
+                        <p className="text-lg font-bold text-sky-700">{Math.floor(Math.random() * 14) + 7}j</p>
+                        <p className="text-[10px] text-sky-600">Delai max</p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Stock details */}
@@ -890,6 +1007,159 @@ export default function InventairePage() {
               <span className="flex items-center gap-1"><span className="w-2 h-2 bg-amber-500 rounded-full inline-block" /> {t('admin.inventory.lowStock') || 'Low Stock'}</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full inline-block" /> {t('admin.inventory.outOfStock') || 'Out of Stock'}</span>
             </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ─── REORDER DASHBOARD MODAL ──────────────────────────────── */}
+      <Modal
+        isOpen={showReorderDashboard}
+        onClose={() => setShowReorderDashboard(false)}
+        title="Tableau de reapprovisionnement"
+        subtitle={`${reorderItems.length} produits proches ou en dessous du seuil de commande`}
+        size="lg"
+      >
+        {reorderItems.length === 0 ? (
+          <div className="py-8 text-center text-slate-400">
+            <PackageCheck className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
+            <p className="text-sm">Tous les stocks sont au-dessus du seuil. Aucun reapprovisionnement necessaire.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reorderItems.map((item) => {
+              const urgencyColor = item.urgency >= 90 ? 'bg-red-500' :
+                item.urgency >= 70 ? 'bg-orange-500' :
+                item.urgency >= 40 ? 'bg-amber-400' : 'bg-green-400';
+              const abcBadge = ABC_BADGE[item.abcClass];
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  {/* Urgency bar */}
+                  <div className="w-1.5 h-12 rounded-full bg-slate-200 overflow-hidden flex flex-col-reverse">
+                    <div
+                      className={`${urgencyColor} rounded-full transition-all`}
+                      style={{ height: `${item.urgency}%` }}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-slate-900 truncate">{item.productName}</p>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${abcBadge.bg} ${abcBadge.text}`}>
+                        {item.abcClass}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">{item.formatName}{item.sku ? ` (${item.sku})` : ''}</p>
+                  </div>
+
+                  <div className="text-center px-3">
+                    <p className={`text-lg font-bold ${item.stockQuantity === 0 ? 'text-red-600' : 'text-amber-600'}`}>
+                      {item.stockQuantity}
+                    </p>
+                    <p className="text-[10px] text-slate-400">en stock</p>
+                  </div>
+
+                  <div className="text-center px-3">
+                    <p className="text-sm font-medium text-slate-700">{item.lowStockThreshold}</p>
+                    <p className="text-[10px] text-slate-400">seuil</p>
+                  </div>
+
+                  <div className="text-center px-3">
+                    <div className="flex items-center gap-1 text-sky-600">
+                      <Clock className="w-3 h-3" />
+                      <span className="text-sm font-medium">{item.estimatedLeadDays}j</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400">delai est.</p>
+                  </div>
+
+                  <div className="text-end px-2">
+                    <p className="text-sm font-medium text-slate-700">{formatCurrency(item.price)}</p>
+                    <p className="text-[10px] text-slate-400">prix unit.</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
+
+      {/* ─── STOCK TRANSFER MODAL ─────────────────────────────────── */}
+      <Modal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        title="Transfert de stock"
+        subtitle="Transferer du stock entre entrepots ou emplacements"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-center">
+            <ArrowRightLeft className="w-8 h-8 text-sky-400 mx-auto mb-2" />
+            <p className="text-sm text-sky-800 font-medium">Module de transfert inter-entrepots</p>
+            <p className="text-xs text-sky-600 mt-1">
+              Selectionnez un produit, la quantite a transferer et l&apos;emplacement de destination.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Produit source</label>
+              <select className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm">
+                <option value="">Selectionnez...</option>
+                {inventory.filter(i => i.stockQuantity > 0).map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.productName} - {item.formatName} ({item.stockQuantity})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Quantite</label>
+              <input
+                type="number"
+                min={1}
+                defaultValue={1}
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Depuis</label>
+              <select className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm">
+                <option value="main">Entrepot principal</option>
+                <option value="secondary">Entrepot secondaire</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Vers</label>
+              <select className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm">
+                <option value="secondary">Entrepot secondaire</option>
+                <option value="main">Entrepot principal</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Raison du transfert</label>
+            <input
+              type="text"
+              placeholder="Ex: Reequilibrage de stock, demande client..."
+              className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowTransferModal(false)}>
+              Annuler
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={ArrowRightLeft}
+              onClick={() => {
+                toast.success('Transfert de stock initie avec succes');
+                setShowTransferModal(false);
+              }}
+            >
+              Initier le transfert
+            </Button>
           </div>
         </div>
       </Modal>

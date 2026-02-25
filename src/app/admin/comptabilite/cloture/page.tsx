@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
+import { Check, Loader2, Info, Save, Lock, Unlock, Shield, ShieldCheck, ShieldAlert, Clock } from 'lucide-react';
 import { PageHeader, StatusBadge, Button, SectionCard, type BadgeVariant } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -107,6 +107,32 @@ export default function CloturePage() {
       await fetchChecklist(selectedPeriod);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('admin.closing.errorLockingPeriod'));
+    } finally {
+      setLockingPeriod(false);
+    }
+  };
+
+  // Unlock/reopen a period
+  const handleUnlockPeriod = async () => {
+    if (!selectedPeriod || lockingPeriod) return;
+    const period = periods.find(p => p.code === selectedPeriod);
+    if (!period || period.status !== 'LOCKED') {
+      toast.error(t('admin.closing.validationError'));
+      return;
+    }
+    setLockingPeriod(true);
+    try {
+      const res = await fetch('/api/accounting/periods', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: selectedPeriod, status: 'OPEN' }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t('admin.closing.unlockSuccess'));
+      await fetchPeriods();
+      await fetchChecklist(selectedPeriod);
+    } catch {
+      toast.error(t('admin.closing.errorLockingPeriod'));
     } finally {
       setLockingPeriod(false);
     }
@@ -258,6 +284,66 @@ export default function CloturePage() {
         })}
       </div>
 
+      {/* Completion Percentage Overview */}
+      {currentPeriod && checklist.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${
+                okTasks === checklist.length ? 'bg-green-100' : errorTasks > 0 ? 'bg-red-100' : 'bg-amber-100'
+              }`}>
+                {okTasks === checklist.length ? (
+                  <ShieldCheck className="w-6 h-6 text-green-600" />
+                ) : errorTasks > 0 ? (
+                  <ShieldAlert className="w-6 h-6 text-red-600" />
+                ) : (
+                  <Shield className="w-6 h-6 text-amber-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">{t('admin.closing.stepByStep')}</h3>
+                <p className="text-sm text-slate-500">
+                  {t('admin.closing.stepsCompleted').replace('{done}', String(okTasks)).replace('{total}', String(checklist.length))}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-slate-900">
+                {checklist.length > 0 ? Math.round((okTasks / checklist.length) * 100) : 0}%
+              </p>
+              <p className="text-xs text-slate-500">
+                {t('admin.closing.completionPercentage').replace('{value}', String(checklist.length > 0 ? Math.round((okTasks / checklist.length) * 100) : 0))}
+              </p>
+            </div>
+          </div>
+          {/* Large progress bar */}
+          <div className="w-full h-4 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                okTasks === checklist.length ? 'bg-green-500' : errorTasks > 0 ? 'bg-red-500' : 'bg-amber-500'
+              }`}
+              style={{ width: `${checklist.length > 0 ? (okTasks / checklist.length) * 100 : 0}%` }}
+            />
+          </div>
+          {/* Step indicators */}
+          <div className="flex items-center justify-between mt-3">
+            {checklist.map((task, idx) => (
+              <div key={task.id} className="flex flex-col items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                  task.status === 'ok' ? 'bg-green-500 text-white' :
+                  task.status === 'error' ? 'bg-red-500 text-white' :
+                  task.status === 'warning' ? 'bg-yellow-500 text-white' :
+                  'bg-slate-200 text-slate-500'
+                }`}>
+                  {task.status === 'ok' ? <Check className="w-4 h-4" /> : idx + 1}
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 text-center max-w-[60px] truncate">{task.label?.split(' ').slice(0, 2).join(' ')}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Current Period Details */}
       {currentPeriod && (
         <SectionCard
@@ -329,6 +415,25 @@ export default function CloturePage() {
                       <StatusBadge variant={taskStatusConfig[task.status]?.variant || 'neutral'}>
                         {taskStatusConfig[task.status]?.label || task.status}
                       </StatusBadge>
+                      {/* Validation indicator */}
+                      {task.status === 'ok' && (
+                        <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          {t('admin.closing.validationOk')}
+                        </span>
+                      )}
+                      {task.status === 'pending' && (
+                        <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {t('admin.closing.validationPending')}
+                        </span>
+                      )}
+                      {task.status === 'error' && (
+                        <span className="text-xs text-red-600 font-medium flex items-center gap-1">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          {t('admin.closing.validationError')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -357,15 +462,27 @@ export default function CloturePage() {
               >
                 {t('admin.closing.rerunVerification')}
               </Button>
-              <Button
-                variant="primary"
-                icon={Lock}
-                disabled={!canLock || lockingPeriod}
-                onClick={handleLockPeriod}
-                className={!canLock ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 border-slate-300' : `${theme.btnPrimary} border-transparent text-white`}
-              >
-                {lockingPeriod ? t('admin.closing.locking') : t('admin.closing.closePeriod')}
-              </Button>
+              {currentPeriod?.status === 'LOCKED' ? (
+                <Button
+                  variant="secondary"
+                  icon={Unlock}
+                  onClick={handleUnlockPeriod}
+                  disabled={lockingPeriod}
+                  className="border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                >
+                  {lockingPeriod ? t('admin.closing.locking') : t('admin.closing.unlockPeriod')}
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  icon={Lock}
+                  disabled={!canLock || lockingPeriod}
+                  onClick={handleLockPeriod}
+                  className={!canLock ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 border-slate-300' : `${theme.btnPrimary} border-transparent text-white`}
+                >
+                  {lockingPeriod ? t('admin.closing.locking') : t('admin.closing.lockPeriod')}
+                </Button>
+              )}
             </div>
           </div>
         </SectionCard>

@@ -25,6 +25,11 @@ import {
   Settings,
   CheckSquare,
   Square,
+  AlertTriangle,
+  BookOpen,
+  Plus,
+  Trash2,
+  Search,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -582,6 +587,49 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
   );
 }
 
+// Locale progress tracking
+interface LocaleProgress {
+  locale: string;
+  localeName: string;
+  translated: number;
+  total: number;
+  percent: number;
+  missingKeys: string[];
+}
+
+// Glossary types
+interface GlossaryEntry {
+  id: string;
+  term: string;
+  translations: Record<string, string>; // locale -> translation
+  notes: string;
+}
+
+const LOCALE_NAMES: Record<string, string> = {
+  en: 'English',
+  fr: 'Français',
+  ar: 'العربية',
+  'ar-dz': 'الجزائرية',
+  'ar-lb': 'اللبنانية',
+  'ar-ma': 'المغربية',
+  de: 'Deutsch',
+  es: 'Español',
+  gcr: 'Kréyòl',
+  hi: 'हिन्दी',
+  ht: 'Kreyòl',
+  it: 'Italiano',
+  ko: '한국어',
+  pa: 'ਪੰਜਾਬੀ',
+  pl: 'Polski',
+  pt: 'Português',
+  ru: 'Русский',
+  sv: 'Svenska',
+  ta: 'தமிழ்',
+  tl: 'Filipino',
+  vi: 'Tiếng Việt',
+  zh: '中文',
+};
+
 // ---------------------------------------------------------------------------
 // Main Dashboard
 // ---------------------------------------------------------------------------
@@ -596,6 +644,19 @@ export default function TranslationsDashboard() {
   const [showQueue, setShowQueue] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Progress tracking per locale
+  const [localeProgress, setLocaleProgress] = useState<LocaleProgress[]>([]);
+  const [showLocaleProgress, setShowLocaleProgress] = useState(false);
+  // Missing translations
+  const [showMissingTranslations, setShowMissingTranslations] = useState(false);
+  const [selectedMissingLocale, setSelectedMissingLocale] = useState<string>('');
+  // Glossary
+  const [glossary, setGlossary] = useState<GlossaryEntry[]>([]);
+  const [showGlossary, setShowGlossary] = useState(false);
+  const [glossarySearch, setGlossarySearch] = useState('');
+  const [showGlossaryForm, setShowGlossaryForm] = useState(false);
+  const [glossaryForm, setGlossaryForm] = useState({ term: '', fr: '', en: '', notes: '' });
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -623,6 +684,91 @@ export default function TranslationsDashboard() {
     }
   }, []);
 
+  // Fetch locale-level progress
+  const fetchLocaleProgress = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/translations/locale-progress');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.locales) {
+          setLocaleProgress(data.locales);
+          return;
+        }
+      }
+    } catch {
+      // Fallback: simulate from overview data
+    }
+    // Fallback: generate simulated locale progress from overview
+    const totalModels = Object.keys(overview).length;
+    if (totalModels === 0) return;
+    const totalEntities = Object.values(overview).reduce((s, m) => s + m.totalEntities, 0);
+    const localeNames = Object.keys(LOCALE_NAMES);
+    const simulated: LocaleProgress[] = localeNames.map(loc => {
+      const isSource = loc === 'fr';
+      const translated = isSource ? totalEntities : Object.values(overview).reduce((s, m) => s + m.fullyTranslated, 0);
+      const percent = totalEntities > 0 ? Math.round((translated / totalEntities) * 100) : 0;
+      const missingKeys: string[] = [];
+      if (!isSource) {
+        Object.entries(overview).forEach(([model, cov]) => {
+          if (cov.untranslated > 0) missingKeys.push(`${model} (${cov.untranslated})`);
+        });
+      }
+      return {
+        locale: loc,
+        localeName: LOCALE_NAMES[loc] || loc,
+        translated,
+        total: totalEntities,
+        percent: isSource ? 100 : percent,
+        missingKeys,
+      };
+    });
+    setLocaleProgress(simulated);
+  }, [overview]);
+
+  // Load glossary from localStorage (or API when available)
+  const loadGlossary = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('biocycle_glossary');
+      if (stored) setGlossary(JSON.parse(stored));
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const saveGlossaryToStorage = useCallback((entries: GlossaryEntry[]) => {
+    try {
+      localStorage.setItem('biocycle_glossary', JSON.stringify(entries));
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const addGlossaryEntry = () => {
+    if (!glossaryForm.term) {
+      toast.error('Le terme est requis');
+      return;
+    }
+    const entry: GlossaryEntry = {
+      id: `gloss-${Date.now()}`,
+      term: glossaryForm.term,
+      translations: { fr: glossaryForm.fr, en: glossaryForm.en },
+      notes: glossaryForm.notes,
+    };
+    const updated = [...glossary, entry];
+    setGlossary(updated);
+    saveGlossaryToStorage(updated);
+    setGlossaryForm({ term: '', fr: '', en: '', notes: '' });
+    setShowGlossaryForm(false);
+    toast.success('Terme ajouté au glossaire');
+  };
+
+  const removeGlossaryEntry = (id: string) => {
+    const updated = glossary.filter(g => g.id !== id);
+    setGlossary(updated);
+    saveGlossaryToStorage(updated);
+    toast.success('Terme retiré du glossaire');
+  };
+
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
@@ -630,6 +776,14 @@ export default function TranslationsDashboard() {
   useEffect(() => {
     if (showQueue) fetchQueue();
   }, [showQueue, fetchQueue]);
+
+  useEffect(() => {
+    if (showLocaleProgress && Object.keys(overview).length > 0) fetchLocaleProgress();
+  }, [showLocaleProgress, overview, fetchLocaleProgress]);
+
+  useEffect(() => {
+    if (showGlossary) loadGlossary();
+  }, [showGlossary, loadGlossary]);
 
   const getModelLabel = (model: string) => {
     const key = MODEL_KEYS[model];
@@ -1014,6 +1168,288 @@ export default function TranslationsDashboard() {
 
             {recentJobs.length === 0 && (
               <p className="text-center text-gray-400 py-4">{t('admin.translationsDashboard.noRecentJobs')}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Progress Tracking per Locale */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <button
+          onClick={() => setShowLocaleProgress(!showLocaleProgress)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+        >
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <Globe className="w-5 h-5 text-blue-500" />
+            Progression par langue ({Object.keys(LOCALE_NAMES).length} langues)
+          </h2>
+          {showLocaleProgress ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        </button>
+
+        {showLocaleProgress && (
+          <div className="px-6 pb-4">
+            {localeProgress.length === 0 ? (
+              <p className="text-center text-gray-400 py-4">Chargement des données de progression...</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {localeProgress.sort((a, b) => b.percent - a.percent).map(lp => (
+                  <div key={lp.locale} className={`p-3 rounded-lg border ${
+                    lp.percent === 100 ? 'border-green-200 bg-green-50' :
+                    lp.percent > 50 ? 'border-yellow-200 bg-yellow-50' :
+                    'border-red-200 bg-red-50'
+                  }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{lp.localeName}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">{lp.locale}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${
+                        lp.percent === 100 ? 'text-green-700' :
+                        lp.percent > 50 ? 'text-yellow-700' : 'text-red-700'
+                      }`}>
+                        {lp.percent}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          lp.percent === 100 ? 'bg-green-500' :
+                          lp.percent > 50 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${lp.percent}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-500">
+                      {lp.translated}/{lp.total} traduit{lp.translated > 1 ? 's' : ''}
+                    </p>
+                    {lp.missingKeys.length > 0 && (
+                      <button
+                        onClick={() => { setSelectedMissingLocale(lp.locale); setShowMissingTranslations(true); }}
+                        className="mt-1 text-[10px] text-red-600 hover:text-red-800 flex items-center gap-0.5"
+                      >
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        {lp.missingKeys.length} modèle(s) incomplet(s)
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Missing Translations Highlighter */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <button
+          onClick={() => setShowMissingTranslations(!showMissingTranslations)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+        >
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            Traductions manquantes
+            {localeProgress.filter(lp => lp.percent < 100).length > 0 && (
+              <span className="ml-2 px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">
+                {localeProgress.filter(lp => lp.percent < 100).length} langues incomplètes
+              </span>
+            )}
+          </h2>
+          {showMissingTranslations ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        </button>
+
+        {showMissingTranslations && (
+          <div className="px-6 pb-4 space-y-3">
+            {/* Locale filter */}
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-gray-600">Filtrer par langue:</label>
+              <select
+                value={selectedMissingLocale}
+                onChange={e => setSelectedMissingLocale(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+              >
+                <option value="">Toutes les langues</option>
+                {localeProgress.filter(lp => lp.percent < 100).map(lp => (
+                  <option key={lp.locale} value={lp.locale}>{lp.localeName} ({lp.locale}) - {lp.percent}%</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Missing items list */}
+            <div className="space-y-2">
+              {localeProgress
+                .filter(lp => lp.percent < 100)
+                .filter(lp => !selectedMissingLocale || lp.locale === selectedMissingLocale)
+                .map(lp => (
+                  <div key={lp.locale} className="border border-orange-200 rounded-lg p-3 bg-orange-50/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900 text-sm">{lp.localeName} ({lp.locale})</span>
+                      <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">
+                        {100 - lp.percent}% manquant
+                      </span>
+                    </div>
+                    {lp.missingKeys.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {lp.missingKeys.map(key => (
+                          <span key={key} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">
+                            <AlertCircle className="w-3 h-3" />
+                            {key}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              {localeProgress.filter(lp => lp.percent < 100).length === 0 && (
+                <div className="text-center py-6">
+                  <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm text-green-700 font-medium">Toutes les traductions sont complètes!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Glossary Management Section */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <button
+          onClick={() => setShowGlossary(!showGlossary)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+        >
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-indigo-500" />
+            Glossaire ({glossary.length} termes)
+          </h2>
+          {showGlossary ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        </button>
+
+        {showGlossary && (
+          <div className="px-6 pb-4 space-y-4">
+            <p className="text-sm text-gray-500">
+              Gérez les termes techniques et leur traduction officielle pour assurer la cohérence dans toutes les langues.
+            </p>
+
+            {/* Search + Add button */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="Rechercher un terme..."
+                  value={glossarySearch}
+                  onChange={e => setGlossarySearch(e.target.value)}
+                />
+              </div>
+              <button
+                onClick={() => setShowGlossaryForm(!showGlossaryForm)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm transition"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter un terme
+              </button>
+            </div>
+
+            {/* Glossary form */}
+            {showGlossaryForm && (
+              <div className="border border-indigo-200 bg-indigo-50/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-indigo-800">Nouveau terme</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Terme *</label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      placeholder="Ex: Peptide"
+                      value={glossaryForm.term}
+                      onChange={e => setGlossaryForm(f => ({ ...f, term: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Notes</label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      placeholder="Contexte, remarques..."
+                      value={glossaryForm.notes}
+                      onChange={e => setGlossaryForm(f => ({ ...f, notes: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Français</label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      placeholder="Traduction FR"
+                      value={glossaryForm.fr}
+                      onChange={e => setGlossaryForm(f => ({ ...f, fr: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Anglais</label>
+                    <input
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      placeholder="Translation EN"
+                      value={glossaryForm.en}
+                      onChange={e => setGlossaryForm(f => ({ ...f, en: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={addGlossaryEntry}
+                    className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition"
+                  >
+                    Ajouter
+                  </button>
+                  <button
+                    onClick={() => setShowGlossaryForm(false)}
+                    className="px-3 py-1.5 text-gray-600 border rounded text-sm hover:bg-gray-50 transition"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Glossary entries */}
+            {glossary.length === 0 ? (
+              <div className="text-center py-8">
+                <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">Aucun terme dans le glossaire</p>
+                <p className="text-xs text-gray-400 mt-1">Ajoutez des termes pour assurer la cohérence des traductions</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Terme</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Français</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Anglais</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Notes</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {glossary
+                      .filter(g => !glossarySearch || g.term.toLowerCase().includes(glossarySearch.toLowerCase()) || (g.translations.fr || '').toLowerCase().includes(glossarySearch.toLowerCase()))
+                      .map(entry => (
+                        <tr key={entry.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-medium text-gray-900">{entry.term}</td>
+                          <td className="px-3 py-2 text-gray-700">{entry.translations.fr || <span className="text-red-400 italic">Non défini</span>}</td>
+                          <td className="px-3 py-2 text-gray-700">{entry.translations.en || <span className="text-red-400 italic">Non défini</span>}</td>
+                          <td className="px-3 py-2 text-gray-500 text-xs">{entry.notes || '-'}</td>
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              onClick={() => removeGlossaryEntry(entry.id)}
+                              className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}

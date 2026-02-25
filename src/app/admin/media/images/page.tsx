@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Image as ImageIcon, Upload, Search, Copy, Check, Trash2,
-  Loader2, ChevronLeft, ChevronRight, X,
+  Loader2, ChevronLeft, ChevronRight, X, Tags, Crop, Link2,
+  UploadCloud, Sparkles, ScissorsIcon,
 } from 'lucide-react';
 import NextImage from 'next/image';
 import { toast } from 'sonner';
@@ -13,6 +14,9 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { formatFileSize } from '@/lib/format-utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { generateTags, generateAltText } from '@/lib/media/ai-tagger';
+import { type ImageUsage, formatUsageSummary } from '@/lib/media/usage-tracker';
+import { CROP_PRESETS, type CropPreset } from '@/lib/media/smart-crop';
 
 interface MediaItem {
   id: string;
@@ -24,6 +28,13 @@ interface MediaItem {
   alt: string | null;
   folder: string;
   createdAt: string;
+}
+
+interface BulkUploadFile {
+  file: File;
+  progress: number;
+  status: 'pending' | 'uploading' | 'done' | 'error';
+  error?: string;
 }
 
 interface Pagination {
@@ -51,6 +62,18 @@ export default function MediaImagesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // AI tagging state
+  const [imageTags, setImageTags] = useState<Record<string, string[]>>({});
+  // Usage tracking state
+  const [imageUsages, setImageUsages] = useState<Record<string, ImageUsage>>({});
+  // Bulk upload state
+  const [bulkFiles, setBulkFiles] = useState<BulkUploadFile[]>([]);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+  // Smart crop state
+  const [showCropPresets, setShowCropPresets] = useState<string | null>(null);
 
   const loadImages = useCallback(async () => {
     setLoading(true);
@@ -83,6 +106,104 @@ export default function MediaImagesPage() {
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [preview]);
+
+  // Generate AI tags for loaded images
+  useEffect(() => {
+    if (images.length === 0) return;
+    const newTags: Record<string, string[]> = {};
+    for (const img of images) {
+      newTags[img.id] = generateTags(img.originalName, img.alt || undefined, img.folder);
+    }
+    setImageTags(newTags);
+  }, [images]);
+
+  // Load usage tracking for images
+  useEffect(() => {
+    if (images.length === 0) return;
+    const loadUsages = async () => {
+      try {
+        const ids = images.map(img => img.id).join(',');
+        const res = await fetch(`/api/admin/medias/usage?ids=${ids}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.usages) {
+            const usageMap: Record<string, ImageUsage> = {};
+            for (const u of data.usages) {
+              usageMap[u.imageId] = u;
+            }
+            setImageUsages(usageMap);
+          }
+        }
+      } catch {
+        // Usage tracking is optional - fail silently
+      }
+    };
+    loadUsages();
+  }, [images]);
+
+  // Bulk upload drag & drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length > 0) {
+      setBulkFiles(files.map(file => ({ file, progress: 0, status: 'pending' as const })));
+      setShowBulkUpload(true);
+    }
+  }, []);
+
+  const handleBulkFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setBulkFiles(Array.from(files).map(file => ({ file, progress: 0, status: 'pending' as const })));
+    setShowBulkUpload(true);
+    if (bulkInputRef.current) bulkInputRef.current.value = '';
+  }, []);
+
+  const startBulkUpload = useCallback(async () => {
+    for (let i = 0; i < bulkFiles.length; i++) {
+      setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading', progress: 10 } : f));
+      try {
+        const formData = new FormData();
+        formData.append('files', bulkFiles[i].file);
+        formData.append('folder', 'images');
+
+        // Generate auto alt text
+        const autoAlt = generateAltText(bulkFiles[i].file.name);
+        formData.append('alt', autoAlt);
+
+        setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, progress: 50 } : f));
+
+        const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+        if (res.ok) {
+          setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'done', progress: 100 } : f));
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'error', progress: 100, error: data.error || 'Erreur' } : f));
+        }
+      } catch {
+        setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'error', progress: 100, error: 'Erreur reseau' } : f));
+      }
+    }
+    loadImages();
+    toast.success('Envoi groupé terminé');
+  }, [bulkFiles, loadImages]);
+
+  // Smart crop handler
+  const handleCropPreset = useCallback(async (imageId: string, preset: CropPreset) => {
+    toast.info(`Recadrage ${preset.nameFr} (${preset.width}x${preset.height}) - Traitement côté serveur requis`);
+    setShowCropPresets(null);
+  }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -308,6 +429,86 @@ export default function MediaImagesPage() {
         />
       </div>
 
+      {/* Bulk Upload Zone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
+          isDragOver ? 'border-sky-400 bg-sky-50' : 'border-slate-300 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50'
+        }`}
+        onClick={() => bulkInputRef.current?.click()}
+      >
+        <input
+          ref={bulkInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleBulkFileSelect}
+          className="hidden"
+          aria-label="Sélectionner des images pour envoi groupé"
+        />
+        <UploadCloud className={`w-10 h-10 mx-auto mb-2 ${isDragOver ? 'text-sky-500' : 'text-slate-400'}`} />
+        <p className="text-sm font-medium text-slate-700">
+          Glissez-déposez vos images ici ou cliquez pour sélectionner
+        </p>
+        <p className="text-xs text-slate-500 mt-1">
+          Envoi groupé avec barres de progression - Formats: JPG, PNG, WebP, GIF
+        </p>
+      </div>
+
+      {/* Bulk Upload Progress */}
+      {showBulkUpload && bulkFiles.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Envoi groupé ({bulkFiles.filter(f => f.status === 'done').length}/{bulkFiles.length})
+            </h3>
+            <div className="flex gap-2">
+              {bulkFiles.some(f => f.status === 'pending') && (
+                <button
+                  onClick={startBulkUpload}
+                  className="px-3 py-1 bg-sky-600 text-white rounded text-xs hover:bg-sky-700"
+                >
+                  Démarrer l&apos;envoi
+                </button>
+              )}
+              <button
+                onClick={() => { setBulkFiles([]); setShowBulkUpload(false); }}
+                className="p-1 hover:bg-slate-100 rounded"
+                aria-label="Fermer"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {bulkFiles.map((bf, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <span className="text-xs text-slate-600 truncate w-40">{bf.file.name}</span>
+                <div className="flex-1 bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      bf.status === 'done' ? 'bg-green-500' :
+                      bf.status === 'error' ? 'bg-red-500' :
+                      bf.status === 'uploading' ? 'bg-sky-500' : 'bg-slate-300'
+                    }`}
+                    style={{ width: `${bf.progress}%` }}
+                  />
+                </div>
+                <span className="text-xs w-16 text-right">
+                  {bf.status === 'done' && <span className="text-green-600">Terminé</span>}
+                  {bf.status === 'error' && <span className="text-red-600">Erreur</span>}
+                  {bf.status === 'uploading' && <span className="text-sky-600">En cours...</span>}
+                  {bf.status === 'pending' && <span className="text-slate-400">En attente</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Image grid */}
       {loading ? (
         <div className="flex items-center justify-center h-32"><Loader2 className="w-6 h-6 animate-spin text-sky-500" /></div>
@@ -341,18 +542,78 @@ export default function MediaImagesPage() {
               <div className="aspect-square cursor-pointer relative" onClick={() => setPreview(img)}>
                 <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
               </div>
-              <div className="p-2">
+              <div className="p-2 space-y-1">
                 <p className="text-xs text-slate-700 truncate" title={img.originalName}>{img.originalName}</p>
                 <p className="text-xs text-slate-400">{formatSize(img.size)}</p>
+
+                {/* AI Auto-Tags */}
+                {imageTags[img.id] && imageTags[img.id].length > 0 && (
+                  <div className="flex flex-wrap gap-0.5">
+                    {imageTags[img.id].slice(0, 3).map(tag => (
+                      <span key={tag} className="inline-flex items-center gap-0.5 px-1 py-0 bg-violet-50 text-violet-600 text-[9px] rounded">
+                        <Tags className="w-2 h-2" />{tag}
+                      </span>
+                    ))}
+                    {imageTags[img.id].length > 3 && (
+                      <span className="text-[9px] text-violet-400">+{imageTags[img.id].length - 3}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Image Usage Tracking */}
+                {imageUsages[img.id] && imageUsages[img.id].usedIn.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Link2 className="w-2.5 h-2.5 text-emerald-500 flex-shrink-0" />
+                    <span className="text-[9px] text-emerald-600 truncate" title={formatUsageSummary(imageUsages[img.id])}>
+                      {formatUsageSummary(imageUsages[img.id])}
+                    </span>
+                  </div>
+                )}
+                {imageUsages[img.id] && imageUsages[img.id].usedIn.length === 0 && (
+                  <span className="text-[9px] text-slate-400 italic">Non utilisée</span>
+                )}
               </div>
-              <button
-                onClick={() => copyUrl(img)}
-                className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-                title="Copy URL"
-                aria-label="Copier l'URL de l'image"
-              >
-                {copiedId === img.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-600" />}
-              </button>
+
+              {/* Action buttons - copy + crop */}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowCropPresets(showCropPresets === img.id ? null : img.id); }}
+                  className="p-1.5 bg-white/80 rounded-full hover:bg-white"
+                  title="Recadrage intelligent"
+                  aria-label="Recadrage intelligent"
+                >
+                  <Crop className="w-3 h-3 text-slate-600" />
+                </button>
+                <button
+                  onClick={() => copyUrl(img)}
+                  className="p-1.5 bg-white/80 rounded-full hover:bg-white"
+                  title="Copier l'URL"
+                  aria-label="Copier l'URL de l'image"
+                >
+                  {copiedId === img.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-600" />}
+                </button>
+              </div>
+
+              {/* Smart Crop Presets Dropdown */}
+              {showCropPresets === img.id && (
+                <div className="absolute top-10 right-2 z-20 bg-white border border-slate-200 rounded-lg shadow-lg p-2 w-48" onClick={e => e.stopPropagation()}>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1 px-1">Recadrage rapide</p>
+                  {CROP_PRESETS.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => handleCropPreset(img.id, preset)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 rounded transition-colors text-left"
+                    >
+                      <ScissorsIcon className="w-3 h-3 text-slate-400" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium">{preset.nameFr}</span>
+                        <span className="text-slate-400 ml-1">({preset.aspectRatio})</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400">{preset.width}x{preset.height}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -393,6 +654,63 @@ export default function MediaImagesPage() {
                 <button onClick={() => copyUrl(preview)} className="text-sky-600 hover:text-sky-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
+              </div>
+
+              {/* AI Tags in preview */}
+              {imageTags[preview.id] && imageTags[preview.id].length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Tags IA auto-générés
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {imageTags[preview.id].map(tag => (
+                      <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-50 text-violet-700 text-xs rounded-full">
+                        <Tags className="w-3 h-3" />{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Usage tracking in preview */}
+              {imageUsages[preview.id] && (
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1">
+                    <Link2 className="w-3 h-3" /> Utilisation de l&apos;image
+                  </p>
+                  {imageUsages[preview.id].usedIn.length > 0 ? (
+                    <div className="space-y-1">
+                      {imageUsages[preview.id].usedIn.map((u, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs">
+                          <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] uppercase font-medium">{u.entityType}</span>
+                          <span className="text-slate-700">{u.entityName}</span>
+                          <span className="text-slate-400">({u.field})</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">Cette image n&apos;est utilisée nulle part</p>
+                  )}
+                </div>
+              )}
+
+              {/* Smart Crop Presets in preview */}
+              <div className="mt-3">
+                <p className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1">
+                  <Crop className="w-3 h-3" /> Recadrage intelligent
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {CROP_PRESETS.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => handleCropPreset(preview.id, preset)}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded hover:bg-sky-100 hover:text-sky-700 transition-colors"
+                    >
+                      <ScissorsIcon className="w-3 h-3" />
+                      {preset.nameFr} ({preset.aspectRatio})
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

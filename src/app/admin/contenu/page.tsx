@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, FileText, HelpCircle, Pencil, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Plus, FileText, HelpCircle, Pencil, Trash2, ExternalLink, Eye, EyeOff, Calendar, Clock, ArrowRight, FileSearch } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
@@ -28,6 +28,19 @@ interface Page {
   updatedAt: string;
   translations: { locale: string }[];
 }
+
+// Content scheduling types
+interface ScheduledContent {
+  id: string;
+  contentId: string;
+  contentType: 'page' | 'faq';
+  title: string;
+  action: 'publish' | 'unpublish';
+  scheduledAt: string;
+  status: 'scheduled' | 'executed' | 'cancelled';
+}
+
+type ContentStatus = 'draft' | 'review' | 'scheduled' | 'published';
 
 interface FAQItem {
   id: string;
@@ -71,6 +84,14 @@ export default function ContenuPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   // UX FIX: ConfirmDialog state for delete actions
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; type: 'page' | 'faq' } | null>(null);
+
+  // Scheduling state
+  const [scheduledItems, setScheduledItems] = useState<ScheduledContent[]>([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleTarget, setScheduleTarget] = useState<{ id: string; type: 'page' | 'faq'; title: string } | null>(null);
+  const [scheduleForm, setScheduleForm] = useState({ action: 'publish' as 'publish' | 'unpublish', scheduledAt: '' });
+  // Preview state
+  const [previewPageId, setPreviewPageId] = useState<string | null>(null);
 
   // FAQ modal
   const [faqModal, setFaqModal] = useState(false);
@@ -270,6 +291,47 @@ export default function ContenuPage() {
     }
   };
 
+  // Content scheduling functions
+  const openScheduleModal = (id: string, type: 'page' | 'faq', title: string) => {
+    setScheduleTarget({ id, type, title });
+    setScheduleForm({ action: 'publish', scheduledAt: '' });
+    setShowScheduleModal(true);
+  };
+
+  const saveSchedule = async () => {
+    if (!scheduleTarget || !scheduleForm.scheduledAt) {
+      toast.error('Veuillez sélectionner une date');
+      return;
+    }
+    // Save scheduled content (local state simulation - connect to API when backend ready)
+    const newSchedule: ScheduledContent = {
+      id: `sched-${Date.now()}`,
+      contentId: scheduleTarget.id,
+      contentType: scheduleTarget.type,
+      title: scheduleTarget.title,
+      action: scheduleForm.action,
+      scheduledAt: scheduleForm.scheduledAt,
+      status: 'scheduled',
+    };
+    setScheduledItems(prev => [...prev, newSchedule]);
+    setShowScheduleModal(false);
+    toast.success(`Planifié: "${scheduleTarget.title}" sera ${scheduleForm.action === 'publish' ? 'publié' : 'dépublié'} le ${new Date(scheduleForm.scheduledAt).toLocaleDateString(locale)}`);
+  };
+
+  const cancelSchedule = (schedId: string) => {
+    setScheduledItems(prev => prev.map(s => s.id === schedId ? { ...s, status: 'cancelled' as const } : s));
+    toast.success('Planification annulée');
+  };
+
+  // Get content status for timeline display
+  const getContentStatus = (page: Page): ContentStatus => {
+    if (page.isPublished && page.publishedAt) return 'published';
+    const hasSchedule = scheduledItems.find(s => s.contentId === page.id && s.status === 'scheduled');
+    if (hasSchedule) return 'scheduled';
+    if (page.content && page.content.length > 100) return 'review';
+    return 'draft';
+  };
+
   // Ribbon action handlers
   const handleRibbonSave = useCallback(() => {
     if (activeTab === 'pages') {
@@ -464,6 +526,43 @@ export default function ContenuPage() {
         searchPlaceholder={activeTab === 'pages' ? t('admin.content.searchPages') : t('admin.content.searchFaqs')}
       />
 
+      {/* Content Scheduling Section */}
+      {scheduledItems.filter(s => s.status === 'scheduled').length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2 mb-3">
+            <Calendar className="w-4 h-4" />
+            Contenus planifiés ({scheduledItems.filter(s => s.status === 'scheduled').length})
+          </h3>
+          <div className="space-y-2">
+            {scheduledItems.filter(s => s.status === 'scheduled').map(sched => (
+              <div key={sched.id} className="flex items-center gap-3 bg-white rounded-lg p-3 border border-amber-100">
+                <div className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase ${
+                  sched.action === 'publish' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {sched.action === 'publish' ? 'Publication' : 'Dépublication'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{sched.title}</p>
+                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {new Date(sched.scheduledAt).toLocaleDateString(locale)} à {new Date(sched.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded uppercase font-medium">
+                  {sched.contentType}
+                </span>
+                <button
+                  onClick={() => cancelSchedule(sched.id)}
+                  className="text-xs text-red-500 hover:text-red-700 px-2 py-1 hover:bg-red-50 rounded"
+                >
+                  Annuler
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
@@ -486,6 +585,7 @@ export default function ContenuPage() {
                   <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colPage')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUrl')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUpdated')}</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Parcours</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colStatus')}</th>
                   <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colActions')}</th>
                 </tr>
@@ -502,12 +602,53 @@ export default function ContenuPage() {
                             : t('admin.content.translationCount', { count: String(page.translations.length) })}
                         </p>
                       )}
+                      {/* Rich preview of scheduled content */}
+                      {scheduledItems.find(s => s.contentId === page.id && s.status === 'scheduled') && (
+                        <p className="text-[10px] text-amber-600 mt-0.5 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />
+                          Planifié: {new Date(scheduledItems.find(s => s.contentId === page.id && s.status === 'scheduled')!.scheduledAt).toLocaleDateString(locale)}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <code className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">/{page.slug}</code>
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-500">
                       {new Date(page.updatedAt).toLocaleDateString(locale)}
+                    </td>
+                    {/* Content Status Timeline */}
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const status = getContentStatus(page);
+                        const steps: { key: ContentStatus; label: string }[] = [
+                          { key: 'draft', label: 'Brouillon' },
+                          { key: 'review', label: 'Revue' },
+                          { key: 'scheduled', label: 'Planifié' },
+                          { key: 'published', label: 'Publié' },
+                        ];
+                        const currentIdx = steps.findIndex(s => s.key === status);
+                        return (
+                          <div className="flex items-center gap-0.5 justify-center">
+                            {steps.map((step, idx) => (
+                              <div key={step.key} className="flex items-center">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  idx <= currentIdx ? (
+                                    step.key === 'published' ? 'bg-emerald-500' :
+                                    step.key === 'scheduled' ? 'bg-amber-500' :
+                                    step.key === 'review' ? 'bg-sky-500' : 'bg-slate-400'
+                                  ) : 'bg-slate-200'
+                                }`} title={step.label} />
+                                {idx < steps.length - 1 && (
+                                  <div className={`w-3 h-0.5 ${idx < currentIdx ? 'bg-slate-400' : 'bg-slate-200'}`} />
+                                )}
+                              </div>
+                            ))}
+                            <span className="ml-1.5 text-[10px] text-slate-500">
+                              {steps[currentIdx]?.label || 'Brouillon'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => togglePagePublished(page)}>
@@ -519,6 +660,20 @@ export default function ContenuPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openPageModal(page)} />
+                        <button
+                          onClick={() => openScheduleModal(page.id, 'page', page.title)}
+                          className="p-1.5 text-slate-400 hover:text-amber-600 rounded hover:bg-amber-50 transition-colors"
+                          title="Planifier la publication"
+                        >
+                          <Calendar className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setPreviewPageId(previewPageId === page.id ? null : page.id)}
+                          className={`p-1.5 rounded hover:bg-sky-50 transition-colors ${previewPageId === page.id ? 'text-sky-600' : 'text-slate-400 hover:text-sky-600'}`}
+                          title="Aperçu enrichi"
+                        >
+                          <FileSearch className="w-4 h-4" />
+                        </button>
                         <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
                           <Button size="sm" variant="ghost" icon={ExternalLink} />
                         </a>
@@ -729,6 +884,128 @@ export default function ContenuPage() {
             />
             <span className="text-sm text-slate-700">{t('admin.content.publishedCheckbox')}</span>
           </label>
+        </div>
+      </Modal>
+
+      {/* Rich Preview Panel */}
+      {previewPageId && (() => {
+        const p = pages.find(pg => pg.id === previewPageId);
+        if (!p) return null;
+        const status = getContentStatus(p);
+        const schedule = scheduledItems.find(s => s.contentId === p.id && s.status === 'scheduled');
+        return (
+          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                <FileSearch className="w-4 h-4 text-sky-500" />
+                Aperçu enrichi: {p.title}
+              </h3>
+              <button onClick={() => setPreviewPageId(null)} className="text-slate-400 hover:text-slate-600 text-xs">
+                Fermer
+              </button>
+            </div>
+
+            {/* Status timeline horizontal */}
+            <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
+              {(['draft', 'review', 'scheduled', 'published'] as ContentStatus[]).map((step, idx) => {
+                const labels: Record<ContentStatus, string> = { draft: 'Brouillon', review: 'En revue', scheduled: 'Planifié', published: 'Publié' };
+                const isActive = step === status;
+                const isPast = ['draft', 'review', 'scheduled', 'published'].indexOf(step) <= ['draft', 'review', 'scheduled', 'published'].indexOf(status);
+                return (
+                  <div key={step} className="flex items-center gap-2">
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+                      isActive ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-200' :
+                      isPast ? 'bg-emerald-50 text-emerald-600' : 'bg-white text-slate-400'
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-sky-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      {labels[step]}
+                    </div>
+                    {idx < 3 && <ArrowRight className={`w-3 h-3 ${isPast ? 'text-slate-400' : 'text-slate-200'}`} />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Preview content */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1">URL</p>
+                <code className="text-xs bg-slate-100 px-2 py-1 rounded block">/{p.slug}</code>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1">Template</p>
+                <span className="text-xs text-slate-700">{p.template}</span>
+              </div>
+              {p.excerpt && (
+                <div className="col-span-2">
+                  <p className="text-xs font-medium text-slate-500 mb-1">Extrait</p>
+                  <p className="text-sm text-slate-700">{p.excerpt}</p>
+                </div>
+              )}
+              {schedule && (
+                <div className="col-span-2 bg-amber-50 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-amber-700 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    Publication planifiée
+                  </p>
+                  <p className="text-sm text-amber-600 mt-1">
+                    {schedule.action === 'publish' ? 'Publication' : 'Dépublication'} le {new Date(schedule.scheduledAt).toLocaleDateString(locale)} à {new Date(schedule.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+              <div className="col-span-2">
+                <p className="text-xs font-medium text-slate-500 mb-1">Contenu ({p.content.length} caractères)</p>
+                <div className="bg-slate-50 rounded-lg p-3 max-h-32 overflow-y-auto text-sm text-slate-700 whitespace-pre-wrap">
+                  {p.content.substring(0, 500)}{p.content.length > 500 ? '...' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Schedule Modal */}
+      <Modal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        title={`Planifier: ${scheduleTarget?.title || ''}`}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>Annuler</Button>
+            <Button variant="primary" onClick={saveSchedule}>Planifier</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label="Action">
+            <select
+              value={scheduleForm.action}
+              onChange={e => setScheduleForm(f => ({ ...f, action: e.target.value as 'publish' | 'unpublish' }))}
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              <option value="publish">Publier</option>
+              <option value="unpublish">Dépublier</option>
+            </select>
+          </FormField>
+          <FormField label="Date et heure">
+            <Input
+              type="datetime-local"
+              value={scheduleForm.scheduledAt}
+              onChange={e => setScheduleForm(f => ({ ...f, scheduledAt: e.target.value }))}
+              min={new Date().toISOString().slice(0, 16)}
+            />
+          </FormField>
+          {scheduleForm.scheduledAt && (
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
+              <p className="text-sm text-sky-800">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                &laquo;{scheduleTarget?.title}&raquo; sera {scheduleForm.action === 'publish' ? 'publié' : 'dépublié'} le{' '}
+                <strong>{new Date(scheduleForm.scheduledAt).toLocaleDateString(locale)}</strong> à{' '}
+                <strong>{new Date(scheduleForm.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</strong>
+              </p>
+            </div>
+          )}
         </div>
       </Modal>
 

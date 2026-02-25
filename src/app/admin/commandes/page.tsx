@@ -18,6 +18,12 @@ import {
   CheckSquare,
   Square,
   X,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Tag,
+  StickyNote,
+  History,
 } from 'lucide-react';
 
 import { Button } from '@/components/admin/Button';
@@ -36,6 +42,10 @@ import { useI18n } from '@/i18n/client';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import OrderTimeline from '@/components/admin/OrderTimeline';
+import type { TimelineEvent } from '@/components/admin/OrderTimeline';
+import { assessFraudRisk, type FraudResult } from '@/lib/fraud-detection';
+import { autoTagOrder, getTagColor, DEFAULT_TAG_RULES } from '@/lib/order-auto-tagger';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -123,8 +133,136 @@ function statusLabel(status: string): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
+/** Fraud risk badge config */
+function fraudRiskConfig(level: FraudResult['riskLevel']): { label: string; className: string; icon: typeof Shield } {
+  switch (level) {
+    case 'CRITICAL':
+      return { label: 'Critique', className: 'bg-red-100 text-red-700 border-red-200', icon: ShieldAlert };
+    case 'HIGH':
+      return { label: 'Elevé', className: 'bg-orange-100 text-orange-700 border-orange-200', icon: ShieldAlert };
+    case 'MEDIUM':
+      return { label: 'Moyen', className: 'bg-amber-100 text-amber-700 border-amber-200', icon: Shield };
+    case 'LOW':
+    default:
+      return { label: 'Faible', className: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: ShieldCheck };
+  }
+}
+
+/** Compute auto-tags for an order from the list */
+function computeOrderTags(order: Order): string[] {
+  return autoTagOrder({
+    total: order.total,
+    itemCount: order.items?.length || 0,
+    isFirstOrder: false, // Not available from list data
+    customerTier: '', // Not available from list data
+    shippingCountry: order.shippingCountry || 'CA',
+    promoCode: order.promoCode,
+  });
+}
+
+/** Build timeline events from order data */
+function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): TimelineEvent[] {
+  const events: TimelineEvent[] = [];
+
+  // Order creation
+  events.push({
+    id: `${order.id}-created`,
+    type: 'created',
+    title: 'Commande créée',
+    description: `Commande #${order.orderNumber} pour ${order.items?.length || 0} article(s)`,
+    timestamp: new Date(order.createdAt),
+  });
+
+  // Payment
+  if (order.paymentStatus === 'PAID' || order.paymentStatus === 'PARTIAL_REFUND' || order.paymentStatus === 'REFUNDED') {
+    events.push({
+      id: `${order.id}-paid`,
+      type: 'paid',
+      title: 'Paiement reçu',
+      description: `Montant: ${order.total.toFixed(2)} ${order.currencyCode}`,
+      timestamp: new Date(new Date(order.createdAt).getTime() + 60000),
+    });
+  }
+
+  // Status-based events
+  if (['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].includes(order.status)) {
+    events.push({
+      id: `${order.id}-processing`,
+      type: 'processing',
+      title: 'En traitement',
+      timestamp: new Date(new Date(order.createdAt).getTime() + 120000),
+    });
+  }
+
+  if (['SHIPPED', 'DELIVERED'].includes(order.status)) {
+    events.push({
+      id: `${order.id}-shipped`,
+      type: 'shipped',
+      title: 'Expédiée',
+      description: order.carrier ? `Via ${order.carrier}${order.trackingNumber ? ` - ${order.trackingNumber}` : ''}` : undefined,
+      timestamp: new Date(new Date(order.createdAt).getTime() + 180000),
+      metadata: order.trackingNumber ? { 'Suivi': order.trackingNumber } : undefined,
+    });
+  }
+
+  if (order.status === 'DELIVERED') {
+    events.push({
+      id: `${order.id}-delivered`,
+      type: 'delivered',
+      title: 'Livrée',
+      timestamp: new Date(new Date(order.createdAt).getTime() + 240000),
+    });
+  }
+
+  if (order.status === 'CANCELLED') {
+    events.push({
+      id: `${order.id}-cancelled`,
+      type: 'cancelled',
+      title: 'Annulée',
+      timestamp: new Date(new Date(order.createdAt).getTime() + 120000),
+    });
+  }
+
+  // Refunds from credit notes
+  for (const cn of creditNotes) {
+    events.push({
+      id: `cn-${cn.id}`,
+      type: 'refunded',
+      title: `Remboursement ${cn.creditNoteNumber}`,
+      description: `${cn.reason} - ${cn.total.toFixed(2)} ${order.currencyCode}`,
+      timestamp: cn.issuedAt ? new Date(cn.issuedAt) : new Date(),
+    });
+  }
+
+  // Admin notes
+  if (order.adminNotes) {
+    events.push({
+      id: `${order.id}-note`,
+      type: 'note',
+      title: 'Note interne',
+      description: order.adminNotes,
+      timestamp: new Date(new Date(order.createdAt).getTime() + 300000),
+    });
+  }
+
+  // Replacement orders
+  if (order.replacementOrders) {
+    for (const ro of order.replacementOrders) {
+      events.push({
+        id: `reship-${ro.id}`,
+        type: 'return',
+        title: `Ré-expédition ${ro.orderNumber}`,
+        description: ro.replacementReason,
+        timestamp: new Date(ro.createdAt),
+      });
+    }
+  }
+
+  return events;
+}
+
 /** Group orders by date buckets: Today, Yesterday, This Week, Older */
-function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday: string; thisWeek: string; older: string; replacement: string }, fmtCurrency?: (amount: number) => string): ContentListGroup[] {
+function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday: string; thisWeek: string; older: string; replacement: string }, fmtCurrency?: (amount: number) => string, fraudResults?: Record<string, FraudResult>): ContentListGroup[] {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
@@ -152,20 +290,41 @@ function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday:
     }
   }
 
-  const toItem = (order: Order): ContentListItem => ({
-    id: order.id,
-    avatar: { text: order.userName || order.shippingName || 'C' },
-    title: `#${order.orderNumber}`,
-    subtitle: order.userName || order.userEmail || '',
-    preview: `${fmtCurrency ? fmtCurrency(order.total) : String(order.total)} - ${order.items?.length || 0} articles`,
-    timestamp: order.createdAt,
-    badges: [
+  const toItem = (order: Order): ContentListItem => {
+    const badges: ContentListItem['badges'] = [
       { text: statusLabel(order.status), variant: statusBadgeVariant(order.status) },
-      ...(order.orderType === 'REPLACEMENT'
-        ? [{ text: labels?.replacement || 'Replacement', variant: 'warning' as const }]
-        : []),
-    ],
-  });
+    ];
+
+    // Replacement badge
+    if (order.orderType === 'REPLACEMENT') {
+      badges.push({ text: labels?.replacement || 'Replacement', variant: 'warning' as const });
+    }
+
+    // Fraud risk badge (only for MEDIUM+ risk)
+    const fraud = fraudResults?.[order.id];
+    if (fraud && (fraud.riskLevel === 'HIGH' || fraud.riskLevel === 'CRITICAL')) {
+      badges.push({ text: `Risque ${fraud.riskLevel === 'CRITICAL' ? 'critique' : 'élevé'}`, variant: 'error' as const });
+    } else if (fraud && fraud.riskLevel === 'MEDIUM') {
+      badges.push({ text: 'Risque moyen', variant: 'warning' as const });
+    }
+
+    // Auto-tags (show first 2 tags as badges)
+    const tags = computeOrderTags(order);
+    for (const tag of tags.slice(0, 2)) {
+      const rule = DEFAULT_TAG_RULES.find(r => r.tag === tag);
+      badges.push({ text: rule?.name || tag, variant: 'info' as const });
+    }
+
+    return {
+      id: order.id,
+      avatar: { text: order.userName || order.shippingName || 'C' },
+      title: `#${order.orderNumber}`,
+      subtitle: order.userName || order.userEmail || '',
+      preview: `${fmtCurrency ? fmtCurrency(order.total) : String(order.total)} - ${order.items?.length || 0} articles`,
+      timestamp: order.createdAt,
+      badges,
+    };
+  };
 
   const groups: ContentListGroup[] = [];
 
@@ -227,6 +386,20 @@ export default function OrdersPage() {
   // Enriched detail data
   const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
   const [paymentErrors, setPaymentErrors] = useState<PaymentErrorRef[]>([]);
+
+  // Timeline toggle
+  const [showTimeline, setShowTimeline] = useState(false);
+
+  // Quick add note modal
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+
+  // Bulk print
+  const [bulkPrinting, setBulkPrinting] = useState(false);
+
+  // Fraud detection cache (lightweight client-side assessment)
+  const [fraudResults, setFraudResults] = useState<Record<string, FraudResult>>({});
 
   const reshipReasons = useMemo(() => [
     t('admin.commandes.reshipReasonLost'),
@@ -544,6 +717,91 @@ export default function OrdersPage() {
     }
   }, [selectedOrder, t]);
 
+  // ─── Fraud detection (lightweight client-side) ─────────────
+  useEffect(() => {
+    if (orders.length === 0) return;
+    const results: Record<string, FraudResult> = {};
+    for (const order of orders) {
+      results[order.id] = assessFraudRisk({
+        userId: order.userId,
+        email: order.userEmail || '',
+        total: order.total,
+        shippingCountry: order.shippingCountry || 'CA',
+        shippingAddress: order.shippingAddress1 || '',
+        orderTimestamp: new Date(order.createdAt),
+      });
+    }
+    setFraudResults(results);
+  }, [orders]);
+
+  // ─── Quick Add Note ───────────────────────────────────────
+
+  const handleAddNote = useCallback(async () => {
+    if (!selectedOrder || !newNote.trim()) return;
+    setSavingNote(true);
+    try {
+      const existingNotes = selectedOrder.adminNotes || '';
+      const timestamp = new Date().toLocaleString('fr-CA');
+      const updatedNotes = existingNotes
+        ? `${existingNotes}\n\n[${timestamp}] ${newNote.trim()}`
+        : `[${timestamp}] ${newNote.trim()}`;
+
+      const res = await fetch(`/api/admin/orders/${selectedOrder.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminNotes: updatedNotes }),
+      });
+      if (res.ok) {
+        setSelectedOrder({ ...selectedOrder, adminNotes: updatedNotes });
+        toast.success(t('admin.commandes.notesSaved'));
+        setShowAddNoteModal(false);
+        setNewNote('');
+      }
+    } catch (error) {
+      console.warn('[OrdersPage] Failed to save quick note:', error);
+      toast.error(t('admin.commandes.networkError'));
+    } finally {
+      setSavingNote(false);
+    }
+  }, [selectedOrder, newNote, t]);
+
+  // ─── Bulk Print Batch ─────────────────────────────────────
+
+  const handleBulkPrint = useCallback(async () => {
+    if (selectedOrderIds.size === 0) {
+      toast.info(t('admin.commandes.selectOrderFirst'));
+      return;
+    }
+    setBulkPrinting(true);
+    try {
+      const res = await fetch('/api/admin/orders/print-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: Array.from(selectedOrderIds) }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.commandes.bulkPrintError'));
+        setBulkPrinting(false);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+      URL.revokeObjectURL(url);
+      toast.success(t('admin.commandes.bulkPrintSuccess'));
+    } catch {
+      toast.error(t('admin.commandes.networkError'));
+    } finally {
+      setBulkPrinting(false);
+    }
+  }, [selectedOrderIds, t]);
+
   // ─── Bulk Selection Helpers ──────────────────────────────
 
   const selectAllFiltered = useCallback(() => {
@@ -824,7 +1082,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
     older: t('admin.commandes.older'),
     replacement: t('admin.commandes.replacement'),
   }), [t]);
-  const orderGroups = useMemo(() => groupOrdersByDate(filteredOrders, dateLabels, formatCurrency), [filteredOrders, dateLabels, formatCurrency]);
+  const orderGroups = useMemo(() => groupOrdersByDate(filteredOrders, dateLabels, formatCurrency, fraudResults), [filteredOrders, dateLabels, formatCurrency, fraudResults]);
 
   // ─── Auto-select first item ────────────────────────────────
 
@@ -913,6 +1171,18 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                 {bulkUpdating
                   ? (t('admin.commandes.processing'))
                   : (t('admin.commandes.bulkApply') || 'Apply')}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={Printer}
+                disabled={bulkPrinting}
+                onClick={handleBulkPrint}
+              >
+                {bulkPrinting
+                  ? (t('admin.commandes.processing'))
+                  : (t('admin.commandes.bulkPrint') || 'Imprimer sélection')}
               </Button>
 
               <button
@@ -1018,6 +1288,59 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                     </div>
                   )}
 
+                  {/* Fraud Detection Badge */}
+                  {fraudResults[selectedOrder.id] && fraudResults[selectedOrder.id].riskLevel !== 'LOW' && (() => {
+                    const fraud = fraudResults[selectedOrder.id];
+                    const config = fraudRiskConfig(fraud.riskLevel);
+                    const FraudIcon = config.icon;
+                    return (
+                      <div className={`rounded-lg p-3 border flex items-start gap-3 ${config.className}`}>
+                        <FraudIcon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-sm">
+                              {t('admin.commandes.fraudRiskLabel')}: {config.label} ({fraud.riskScore}/100)
+                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              fraud.recommendation === 'DECLINE' ? 'bg-red-200 text-red-800' :
+                              fraud.recommendation === 'REVIEW' ? 'bg-amber-200 text-amber-800' :
+                              'bg-emerald-200 text-emerald-800'
+                            }`}>
+                              {fraud.recommendation === 'DECLINE' ? t('admin.commandes.fraudDecline') :
+                               fraud.recommendation === 'REVIEW' ? t('admin.commandes.fraudReview') :
+                               t('admin.commandes.fraudApprove')}
+                            </span>
+                          </div>
+                          <ul className="text-xs space-y-0.5">
+                            {fraud.signals.map((s, i) => (
+                              <li key={i}>{s.description} (+{s.score} pts)</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Auto-Tags */}
+                  {(() => {
+                    const tags = computeOrderTags(selectedOrder);
+                    if (tags.length === 0) return null;
+                    return (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Tag className="w-4 h-4 text-slate-400" />
+                        {tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                            style={{ backgroundColor: `${getTagColor(tag)}15`, color: getTagColor(tag), borderColor: `${getTagColor(tag)}40` }}
+                          >
+                            {DEFAULT_TAG_RULES.find(r => r.tag === tag)?.name || tag}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
                   {/* Status & Actions */}
                   <div className="flex flex-wrap gap-4 items-center">
                     <FormField label={t('admin.commandes.orderStatusLabel')}>
@@ -1056,6 +1379,46 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                       )}
                     </div>
                   </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={Truck}
+                      onClick={() => updateOrderStatus(selectedOrder.id, 'SHIPPED')}
+                      disabled={updating || selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED' || selectedOrder.status === 'CANCELLED'}
+                    >
+                      {t('admin.commandes.quickMarkShipped')}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={StickyNote}
+                      onClick={() => { setNewNote(''); setShowAddNoteModal(true); }}
+                    >
+                      {t('admin.commandes.quickAddNote')}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={History}
+                      onClick={() => setShowTimeline(!showTimeline)}
+                    >
+                      {showTimeline ? t('admin.commandes.hideTimeline') : t('admin.commandes.showTimeline')}
+                    </Button>
+                  </div>
+
+                  {/* Order Timeline */}
+                  {showTimeline && (
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        {t('admin.commandes.timelineTitle')}
+                      </h3>
+                      <OrderTimeline events={buildTimelineEvents(selectedOrder, creditNotes)} />
+                    </div>
+                  )}
 
                   {/* Customer Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1426,6 +1789,37 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
         }}
         onCancel={() => setConfirmCancelOrderId(null)}
       />
+
+      {/* ─── QUICK ADD NOTE MODAL ──────────────────────────────── */}
+      <Modal
+        isOpen={showAddNoteModal}
+        onClose={() => setShowAddNoteModal(false)}
+        title={t('admin.commandes.addNoteTitle')}
+        subtitle={selectedOrder ? t('admin.commandes.refundOrderSubtitle', { orderNumber: selectedOrder.orderNumber }) : ''}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowAddNoteModal(false)}>
+              {t('admin.commandes.cancel')}
+            </Button>
+            <Button variant="primary" icon={StickyNote} onClick={handleAddNote} disabled={savingNote || !newNote.trim()}>
+              {savingNote ? t('admin.commandes.processing') : t('admin.commandes.saveNote')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label={t('admin.commandes.noteLabel')}>
+            <Textarea
+              rows={4}
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder={t('admin.commandes.notePlaceholder')}
+              autoFocus
+            />
+          </FormField>
+        </div>
+      </Modal>
     </div>
   );
 }

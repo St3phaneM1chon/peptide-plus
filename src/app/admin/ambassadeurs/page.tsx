@@ -17,6 +17,8 @@ import {
   Settings,
   Inbox,
   Percent,
+  BarChart3,
+  ArrowUpRight,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -564,9 +566,186 @@ export default function AmbassadeursPage() {
             ))}
           </div>
         </div>
+
+        {/* Attribution des revenus par ambassadeur */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <DollarSign className="h-5 w-5 text-emerald-600" />
+            <h3 className="font-semibold text-slate-900">Attribution des revenus par code</h3>
+          </div>
+          {ambassadors.filter(a => a.status === 'ACTIVE' && a.totalSales > 0).length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-2 px-3 font-medium text-slate-600">Ambassadeur</th>
+                    <th className="text-left py-2 px-3 font-medium text-slate-600">Code</th>
+                    <th className="text-right py-2 px-3 font-medium text-slate-600">Ventes générées</th>
+                    <th className="text-right py-2 px-3 font-medium text-slate-600">Commissions</th>
+                    <th className="text-right py-2 px-3 font-medium text-slate-600">Revenu net</th>
+                    <th className="text-right py-2 px-3 font-medium text-slate-600">% du total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ambassadors
+                    .filter(a => a.totalSales > 0)
+                    .sort((a, b) => b.totalSales - a.totalSales)
+                    .slice(0, 10)
+                    .map((amb) => {
+                      const netRevenue = amb.totalSales - amb.totalEarnings;
+                      const pctOfTotal = stats.totalSales > 0
+                        ? ((amb.totalSales / stats.totalSales) * 100).toFixed(1)
+                        : '0.0';
+                      return (
+                        <tr key={amb.id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="py-2 px-3 text-slate-900 font-medium">{amb.userName}</td>
+                          <td className="py-2 px-3">
+                            <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sky-700">{amb.referralCode}</code>
+                          </td>
+                          <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(amb.totalSales)}</td>
+                          <td className="py-2 px-3 text-right text-red-600">{formatCurrency(amb.totalEarnings)}</td>
+                          <td className="py-2 px-3 text-right font-medium text-emerald-700">{formatCurrency(netRevenue)}</td>
+                          <td className="py-2 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-emerald-500 rounded-full"
+                                  style={{ width: `${Math.min(parseFloat(pctOfTotal), 100)}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-slate-600">{pctOfTotal}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 text-center py-4">Aucune vente enregistrée pour le moment</p>
+          )}
+        </div>
+
+        {/* ROI par ambassadeur et Métriques de campagne */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          {/* Calcul ROI par ambassadeur */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <ArrowUpRight className="h-5 w-5 text-sky-600" />
+              <h3 className="font-semibold text-slate-900">ROI par ambassadeur</h3>
+            </div>
+            <div className="space-y-2">
+              {ambassadors
+                .filter(a => a.totalEarnings > 0)
+                .sort((a, b) => {
+                  const roiA = a.totalEarnings > 0 ? ((a.totalSales - a.totalEarnings) / a.totalEarnings) * 100 : 0;
+                  const roiB = b.totalEarnings > 0 ? ((b.totalSales - b.totalEarnings) / b.totalEarnings) * 100 : 0;
+                  return roiB - roiA;
+                })
+                .slice(0, 5)
+                .map((amb) => {
+                  const roi = amb.totalEarnings > 0
+                    ? ((amb.totalSales - amb.totalEarnings) / amb.totalEarnings) * 100
+                    : 0;
+                  const costPerReferral = amb.totalReferrals > 0
+                    ? amb.totalEarnings / amb.totalReferrals
+                    : 0;
+                  return (
+                    <div key={amb.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{amb.userName}</p>
+                        <p className="text-xs text-slate-500">
+                          {amb.totalReferrals} référence{amb.totalReferrals > 1 ? 's' : ''} | Coût/réf: {formatCurrency(costPerReferral)}
+                        </p>
+                      </div>
+                      <div className="text-right ml-3">
+                        <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-sky-700' : 'text-red-600'}`}>
+                          {roi.toFixed(0)}%
+                        </p>
+                        <p className="text-[10px] text-slate-500">ROI</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              {ambassadors.filter(a => a.totalEarnings > 0).length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-4">Aucune donnée ROI disponible</p>
+              )}
+            </div>
+            {stats.totalCommissions > 0 && (
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">ROI global du programme</span>
+                  <span className="font-bold text-emerald-700">
+                    {((stats.totalSales - stats.totalCommissions) / stats.totalCommissions * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Métriques de suivi des campagnes */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="h-5 w-5 text-violet-600" />
+              <h3 className="font-semibold text-slate-900">Métriques des campagnes</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-emerald-700">{stats.total}</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">Ambassadeurs actifs</p>
+                </div>
+                <div className="bg-sky-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-sky-700">
+                    {ambassadors.reduce((sum, a) => sum + a.totalReferrals, 0)}
+                  </p>
+                  <p className="text-xs text-sky-600 mt-0.5">Références totales</p>
+                </div>
+                <div className="bg-violet-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-violet-700">
+                    {ambassadors.length > 0
+                      ? (ambassadors.reduce((sum, a) => sum + a.commissionRate, 0) / ambassadors.length).toFixed(1)
+                      : '0'}%
+                  </p>
+                  <p className="text-xs text-violet-600 mt-0.5">Commission moyenne</p>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-amber-700">
+                    {ambassadors.filter(a => a.status === 'ACTIVE' && a.totalReferrals > 0).length > 0
+                      ? formatCurrency(
+                          ambassadors.filter(a => a.status === 'ACTIVE' && a.totalReferrals > 0)
+                            .reduce((sum, a) => sum + a.totalSales / a.totalReferrals, 0) /
+                          ambassadors.filter(a => a.status === 'ACTIVE' && a.totalReferrals > 0).length
+                        )
+                      : formatCurrency(0)}
+                  </p>
+                  <p className="text-xs text-amber-600 mt-0.5">Valeur moy. / référence</p>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3">
+                <h4 className="text-xs font-semibold text-slate-700 mb-2">Performance par palier</h4>
+                {Object.entries(tierConfig).map(([tier, config]) => {
+                  const tierAmbassadors = ambassadors.filter(a => a.tier === tier && a.status === 'ACTIVE');
+                  const tierSales = tierAmbassadors.reduce((sum, a) => sum + a.totalSales, 0);
+                  return (
+                    <div key={tier} className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${config.color}`}>{tier}</span>
+                        <span className="text-xs text-slate-600">{tierAmbassadors.length} ambassadeur{tierAmbassadors.length > 1 ? 's' : ''}</span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-900">{formatCurrency(tierSales)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main content: list + detail */}
+
       <div className="flex-1 min-h-0">
         <MobileSplitLayout
           listWidth={400}

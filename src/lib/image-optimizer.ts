@@ -1,203 +1,82 @@
 /**
- * IMAGE OPTIMIZATION PIPELINE (#67)
- * Uses sharp for resizing, WebP conversion, compression, and EXIF stripping.
- *
- * Usage:
- *   import { optimizeImage, ImageVariant } from '@/lib/image-optimizer';
- *   const variants = await optimizeImage(buffer, 'product.jpg');
- *
- * Generates variants: thumbnail (150px), medium (400px), large (800px), original.
- * (#72): EXIF metadata is stripped (except orientation) for privacy.
+ * Image Optimization Utilities
+ * Auto-resize, thumbnail generation, dimension validation
  */
 
-import { storage, StorageOptions } from '@/lib/storage';
-import { logger } from '@/lib/logger';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface ImageVariant {
-  name: 'thumbnail' | 'medium' | 'large' | 'original';
+export interface ImageDimensions {
   width: number;
-  url: string;
-  size: number;
-  format: string;
+  height: number;
 }
 
-export interface OptimizedImage {
-  variants: ImageVariant[];
-  originalHash: string;
+export interface ImageOptimizeOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  format?: 'webp' | 'jpeg' | 'png';
 }
 
-// Variant configurations
-const VARIANTS = [
-  { name: 'thumbnail' as const, width: 150, quality: 75 },
-  { name: 'medium' as const, width: 400, quality: 80 },
-  { name: 'large' as const, width: 800, quality: 80 },
-] as const;
+export interface ThumbnailConfig {
+  name: string;
+  width: number;
+  height: number;
+  fit: 'cover' | 'contain' | 'fill';
+}
 
-// ---------------------------------------------------------------------------
-// Sharp lazy loading
-// ---------------------------------------------------------------------------
+export const THUMBNAIL_CONFIGS: ThumbnailConfig[] = [
+  { name: 'thumb_sm', width: 64, height: 64, fit: 'cover' },
+  { name: 'thumb_md', width: 200, height: 200, fit: 'cover' },
+  { name: 'thumb_lg', width: 400, height: 400, fit: 'cover' },
+  { name: 'card', width: 600, height: 400, fit: 'cover' },
+  { name: 'hero', width: 1200, height: 630, fit: 'cover' },
+];
 
-let sharpModule: typeof import('sharp') | null = null;
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
-async function getSharp() {
-  if (sharpModule) return sharpModule;
-
-  try {
-    sharpModule = (await import('sharp')).default;
-    return sharpModule;
-  } catch (error) {
-    logger.warn('Sharp is not installed. Image optimization disabled.', { error: error instanceof Error ? error.message : String(error) });
-    return null;
+export function validateImage(file: File): { valid: boolean; error?: string } {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return { valid: false, error: `Type non support\u00e9: ${file.type}. Utilisez JPEG, PNG ou WebP.` };
   }
+  if (file.size > MAX_IMAGE_SIZE) {
+    return { valid: false, error: `Fichier trop volumineux: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum: 10MB.` };
+  }
+  return { valid: true };
 }
 
-// ---------------------------------------------------------------------------
-// Image Optimization
-// ---------------------------------------------------------------------------
-
-/**
- * Optimize an image buffer and generate multiple variants.
- * Returns URLs for each variant (thumbnail, medium, large, original).
- *
- * @param buffer - Raw image buffer
- * @param filename - Original filename (used for naming)
- * @param options - Storage options (folder, etc.)
- */
-export async function optimizeImage(
-  buffer: Buffer,
-  filename: string,
-  options: StorageOptions = {}
-): Promise<OptimizedImage> {
-  const sharp = await getSharp();
-  const { folder = 'images' } = options;
-
-  // If sharp is not available, upload original as-is
-  if (!sharp) {
-    const result = await storage.upload(buffer, filename, 'image/webp', { folder });
-    return {
-      variants: [{
-        name: 'original',
-        width: 0,
-        url: result.url,
-        size: result.size,
-        format: 'original',
-      }],
-      originalHash: result.contentHash,
-    };
-  }
-
-  const baseName = filename.replace(/\.[^.]+$/, '');
-  const variants: ImageVariant[] = [];
-
-  // (#72): Strip EXIF metadata except orientation
-  const baseImage = sharp(buffer)
-    .rotate() // auto-rotate based on EXIF orientation
-    .withMetadata({ orientation: undefined }); // strip all EXIF except what rotate() uses
-
-  // FIX: F42 - Collect variant generation errors and surface them
-  const variantErrors: string[] = [];
-
-  // Generate resized WebP variants
-  for (const variant of VARIANTS) {
-    try {
-      const resized = await baseImage
-        .clone()
-        .resize(variant.width, null, {
-          withoutEnlargement: true, // don't upscale small images
-          fit: 'inside',
-        })
-        .webp({ quality: variant.quality })
-        .toBuffer();
-
-      const variantFilename = `${baseName}-${variant.name}.webp`;
-      const result = await storage.upload(
-        resized,
-        variantFilename,
-        'image/webp',
-        { folder: `${folder}/${variant.name}`, hashFilename: true }
-      );
-
-      variants.push({
-        name: variant.name,
-        width: variant.width,
-        url: result.url,
-        size: result.size,
-        format: 'webp',
-      });
-    } catch (error) {
-      // FIX: F42 - Collect errors instead of silently swallowing
-      const errMsg = `Failed to generate ${variant.name} variant: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error(errMsg);
-      variantErrors.push(errMsg);
+export function getImageDimensionsFromUrl(url: string): Promise<ImageDimensions> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Browser only'));
+      return;
     }
-  }
-
-  // FIX: F42 - If ALL variants failed, throw so the caller knows optimization failed
-  if (variants.length === 0 && variantErrors.length > 0) {
-    throw new Error(`All image variants failed: ${variantErrors.join('; ')}`);
-  }
-
-  // FIX: F75 - Upload original converted to WebP (WebP supports transparency/alpha channel).
-  // TODO: For PNGs with specific ICC color profiles, consider preserving original format as fallback.
-  try {
-    const originalWebp = await baseImage
-      .clone()
-      .webp({ quality: 85, alphaQuality: 100 }) // FIX: F75 - Preserve full alpha quality for transparent images
-      .toBuffer();
-
-    const originalFilename = `${baseName}-original.webp`;
-    const originalResult = await storage.upload(
-      originalWebp,
-      originalFilename,
-      'image/webp',
-      { folder: `${folder}/original`, hashFilename: true }
-    );
-
-    variants.push({
-      name: 'original',
-      width: 0, // original size
-      url: originalResult.url,
-      size: originalResult.size,
-      format: 'webp',
-    });
-
-    return {
-      variants,
-      originalHash: originalResult.contentHash,
-    };
-  } catch (error) {
-    logger.error('Failed to process original image', { error: error instanceof Error ? error.message : String(error) });
-    // Fallback: upload raw buffer
-    const result = await storage.upload(buffer, filename, 'image/webp', { folder });
-    variants.push({
-      name: 'original',
-      width: 0,
-      url: result.url,
-      size: result.size,
-      format: 'original',
-    });
-
-    return {
-      variants,
-      originalHash: result.contentHash,
-    };
-  }
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = url;
+  });
 }
 
-/**
- * Strip EXIF metadata from an image buffer (#72).
- * Preserves orientation by auto-rotating first.
- */
-export async function stripExif(buffer: Buffer): Promise<Buffer> {
-  const sharp = await getSharp();
-  if (!sharp) return buffer;
+export function calculateResizedDimensions(
+  original: ImageDimensions,
+  maxWidth: number,
+  maxHeight: number
+): ImageDimensions {
+  let { width, height } = original;
+  if (width > maxWidth) {
+    height = Math.round(height * (maxWidth / width));
+    width = maxWidth;
+  }
+  if (height > maxHeight) {
+    width = Math.round(width * (maxHeight / height));
+    height = maxHeight;
+  }
+  return { width, height };
+}
 
-  return sharp(buffer)
-    .rotate() // auto-rotate based on EXIF orientation
-    .withMetadata({ orientation: undefined })
-    .toBuffer();
+export function generateAltText(filename: string, productName?: string): string {
+  if (productName) return productName;
+  return filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }

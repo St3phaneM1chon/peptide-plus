@@ -14,6 +14,13 @@ import {
   ThumbsDown,
   MessageCircle,
   Camera,
+  Smile,
+  Meh,
+  Frown,
+  Copy,
+  Send,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
@@ -67,6 +74,39 @@ function ratingBadgeVariant(rating: number): 'success' | 'warning' | 'error' | '
   return 'error';
 }
 
+// ── Sentiment Analysis Helper ─────────────────────────────────
+
+function getSentiment(rating: number): { label: string; icon: typeof Smile; color: string; bg: string } {
+  if (rating >= 4) return { label: 'Positif', icon: Smile, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+  if (rating === 3) return { label: 'Neutre', icon: Meh, color: 'text-amber-600', bg: 'bg-amber-50' };
+  return { label: 'Negatif', icon: Frown, color: 'text-red-600', bg: 'bg-red-50' };
+}
+
+// ── Bulk Response Templates ──────────────────────────────────
+
+const RESPONSE_TEMPLATES = [
+  {
+    id: 'thank-positive',
+    label: 'Remerciement (avis positif)',
+    text: 'Merci beaucoup pour votre avis positif ! Nous sommes ravis que nos produits vous donnent satisfaction. Votre retour nous motive a continuer d\'offrir des peptides de la plus haute qualite.',
+  },
+  {
+    id: 'thank-constructive',
+    label: 'Remerciement (avis constructif)',
+    text: 'Merci pour votre retour detaille. Nous apprecions votre honnetete et prenons en compte vos suggestions pour ameliorer nos produits et services. N\'hesitez pas a nous contacter directement pour toute question.',
+  },
+  {
+    id: 'apology',
+    label: 'Excuses et resolution',
+    text: 'Nous sommes desoles que votre experience n\'ait pas ete a la hauteur de vos attentes. Nous prenons votre feedback tres au serieux. Notre equipe de support va vous contacter dans les 24h pour trouver une solution satisfaisante.',
+  },
+  {
+    id: 'quality',
+    label: 'Assurance qualite',
+    text: 'Merci pour votre avis. La qualite de nos peptides est notre priorite absolue. Chaque lot est teste en laboratoire independant. Si vous avez la moindre question sur nos produits, contactez-nous a support@biocycle.ca.',
+  },
+];
+
 // ── Main Component ────────────────────────────────────────────
 
 export default function AvisPage() {
@@ -85,6 +125,10 @@ export default function AvisPage() {
   const [adminResponse, setAdminResponse] = useState('');
   // FIX F-026: Add submitting state to prevent double-click
   const [submittingResponse, setSubmittingResponse] = useState(false);
+
+  // Review request automation state
+  const [autoRequestEnabled, setAutoRequestEnabled] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   // FIX F-070: ConfirmDialog state for approve/reject actions
   const [confirmAction, setConfirmAction] = useState<{
@@ -223,6 +267,7 @@ export default function AvisPage() {
       timestamp: review.createdAt,
       badges: [
         { text: `${review.rating}★`, variant: ratingBadgeVariant(review.rating) },
+        { text: getSentiment(review.rating).label, variant: (review.rating >= 4 ? 'success' : review.rating === 3 ? 'warning' : 'error') as 'success' | 'warning' | 'error' },
         { text: statusLabel[review.status] || review.status, variant: statusBadgeVariant(review.status) },
         ...(review.images && review.images.length > 0
           ? [{ text: `📷 ${review.images.length}`, variant: 'neutral' as const }]
@@ -371,6 +416,30 @@ export default function AvisPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.reviews.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.reviews.subtitle')}</p>
           </div>
+          <div className="flex items-center gap-3">
+            {/* Review request automation toggle */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200">
+              <button
+                onClick={() => {
+                  setAutoRequestEnabled(!autoRequestEnabled);
+                  toast.success(autoRequestEnabled
+                    ? 'Demandes d\'avis automatiques desactivees'
+                    : 'Demandes d\'avis automatiques activees - les clients recevront un email 7 jours apres livraison'
+                  );
+                }}
+                className="flex items-center gap-2 text-sm"
+              >
+                {autoRequestEnabled ? (
+                  <ToggleRight className="w-5 h-5 text-green-500" />
+                ) : (
+                  <ToggleLeft className="w-5 h-5 text-slate-400" />
+                )}
+                <span className={`font-medium ${autoRequestEnabled ? 'text-green-700' : 'text-slate-500'}`}>
+                  Demandes auto
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
           <StatCard label={t('admin.reviews.totalReviews')} value={stats.total} icon={MessageSquare} />
@@ -492,6 +561,30 @@ export default function AvisPage() {
                       {statusLabel[selectedReview.status]}
                     </span>
                   </div>
+
+                  {/* Sentiment Analysis Indicator */}
+                  {(() => {
+                    const sentiment = getSentiment(selectedReview.rating);
+                    const SentimentIcon = sentiment.icon;
+                    return (
+                      <div className={`flex items-center gap-3 p-3 rounded-lg ${sentiment.bg}`}>
+                        <SentimentIcon className={`w-5 h-5 ${sentiment.color}`} />
+                        <div>
+                          <p className={`text-sm font-semibold ${sentiment.color}`}>
+                            Sentiment: {sentiment.label}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {selectedReview.rating >= 4
+                              ? 'Le client est satisfait du produit'
+                              : selectedReview.rating === 3
+                              ? 'Le client a un avis mitige'
+                              : 'Le client a eu une experience insatisfaisante'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Review title */}
                   {selectedReview.title && (
@@ -622,6 +715,23 @@ export default function AvisPage() {
                 </div>
               )}
             </div>
+            {/* Bulk Response Templates */}
+            <div>
+              <p className="text-xs font-medium text-slate-600 mb-2">Modeles de reponse rapide :</p>
+              <div className="flex flex-wrap gap-2">
+                {RESPONSE_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => setAdminResponse(template.text)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors"
+                  >
+                    <Copy className="w-3 h-3" />
+                    {template.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <FormField label={t('admin.reviews.yourResponse')}>
               <Textarea
                 value={adminResponse}

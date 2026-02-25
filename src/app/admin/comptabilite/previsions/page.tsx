@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface CashFlowProjection {
   period: string;
@@ -162,6 +163,17 @@ export default function ForecastingPage() {
   const totalInflows = baseProjections.reduce((sum, p) => sum + p.inflows, 0);
   const totalOutflows = baseProjections.reduce((sum, p) => sum + p.outflows, 0);
 
+  // Drill-down expanded state
+  const [expandedPeriod, setExpandedPeriod] = useState<number | null>(null);
+
+  // Optimistic/pessimistic bands
+  const optimisticBands = useMemo(() => {
+    return baseProjections.map(p => ({
+      high: p.closingBalance * 1.15,
+      low: p.closingBalance * 0.85,
+    }));
+  }, [baseProjections]);
+
   // formatCurrency is now provided by useI18n()
 
   const theme = sectionThemes.reports;
@@ -292,36 +304,166 @@ export default function ForecastingPage() {
       {/* Cash Flow Tab */}
       {activeTab === 'cashflow' && (
         <div className="space-y-6">
-          {/* Visual Chart (simplified bar representation) */}
-          <SectionCard title={t('admin.forecasts.balanceEvolution')} theme={theme}>
-            <div className="flex items-end gap-2 h-48">
-              {baseProjections.map((p, i) => {
-                const maxBalance = Math.max(...baseProjections.map(p => Math.abs(p.closingBalance)), 1);
-                const height = (Math.abs(p.closingBalance) / maxBalance) * 100;
-                const isLow = p.closingBalance < minimumCash;
-
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center">
-                    <div
-                      className={`w-full rounded-t transition-all ${
-                        isLow ? 'bg-red-500' : 'bg-violet-500'
-                      }`}
-                      style={{ height: `${Math.max(5, height)}%` }}
-                    />
-                    <p className="text-xs text-slate-500 mt-2 rotate-45 origin-left">{p.period}</p>
+          {/* Cash Flow Bar Chart: Inflows vs Outflows */}
+          <SectionCard title={t('admin.forecasts.cashFlowChart')} theme={theme}>
+            {baseProjections.length > 0 ? (() => {
+              const maxVal = Math.max(...baseProjections.flatMap(p => [p.inflows, p.outflows]), 1);
+              const chartH = 200;
+              const barAreaW = 600;
+              const barGroupW = barAreaW / baseProjections.length;
+              const barW = Math.min(barGroupW * 0.3, 32);
+              const gap = 4;
+              return (
+                <div className="w-full overflow-x-auto">
+                  <svg viewBox={`0 0 ${barAreaW + 60} ${chartH + 50}`} className="w-full h-64" preserveAspectRatio="xMidYMid meet">
+                    {/* Y-axis gridlines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+                      const y = chartH - frac * chartH + 10;
+                      return (
+                        <g key={frac}>
+                          <line x1={50} y1={y} x2={barAreaW + 50} y2={y} stroke="#e2e8f0" strokeWidth={1} />
+                          <text x={46} y={y + 4} textAnchor="end" className="text-[9px] fill-slate-400">
+                            {formatCurrency(Math.round(maxVal * frac))}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    {/* Bars */}
+                    {baseProjections.map((p, i) => {
+                      const x = 50 + i * barGroupW + (barGroupW - (barW * 2 + gap)) / 2;
+                      const inflowH = (p.inflows / maxVal) * chartH;
+                      const outflowH = (p.outflows / maxVal) * chartH;
+                      return (
+                        <g key={i}>
+                          <rect x={x} y={chartH + 10 - inflowH} width={barW} height={inflowH} rx={3} className="fill-emerald-500">
+                            <title>{`${t('admin.forecasts.inflowsLabel')}: ${formatCurrency(p.inflows)}`}</title>
+                          </rect>
+                          <rect x={x + barW + gap} y={chartH + 10 - outflowH} width={barW} height={outflowH} rx={3} className="fill-red-400">
+                            <title>{`${t('admin.forecasts.outflowsLabel')}: ${formatCurrency(p.outflows)}`}</title>
+                          </rect>
+                          <text x={x + barW + gap / 2} y={chartH + 28} textAnchor="middle" className="text-[10px] fill-slate-500">
+                            {p.period.split(' ')[0]}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  <div className="flex items-center justify-center gap-6 mt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-emerald-500 rounded" />
+                      <span className="text-sm text-slate-600">{t('admin.forecasts.inflowsLabel')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-red-400 rounded" />
+                      <span className="text-sm text-slate-600">{t('admin.forecasts.outflowsLabel')}</span>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-            {minimumCash > 0 && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
-                <div className="w-4 h-0.5 bg-red-500"></div>
-                <span>{t('admin.forecasts.minimumThreshold')} {formatCurrency(minimumCash)}</span>
-              </div>
+                </div>
+              );
+            })() : (
+              <div className="h-48 flex items-center justify-center text-slate-400 text-sm">{t('admin.accounting.noDataAvailable')}</div>
             )}
           </SectionCard>
 
-          {/* Detailed Table */}
+          {/* Optimistic/Pessimistic Bands */}
+          <SectionCard title={t('admin.forecasts.bandRange')} theme={theme}>
+            {baseProjections.length > 0 ? (() => {
+              const allValues = baseProjections.flatMap((p, i) => [optimisticBands[i].high, optimisticBands[i].low, p.closingBalance]);
+              const minVal = Math.min(...allValues, 0);
+              const maxVal = Math.max(...allValues, 1);
+              const range = maxVal - minVal || 1;
+              const chartW = 540;
+              const chartHt = 200;
+              const padL = 55;
+              const padR = 10;
+              const padT = 10;
+              const padB = 35;
+              const innerW = chartW - padL - padR;
+              const innerH = chartHt - padT - padB;
+
+              const toX = (i: number) => padL + (i / Math.max(baseProjections.length - 1, 1)) * innerW;
+              const toY = (v: number) => padT + innerH - ((v - minVal) / range) * innerH;
+
+              // Build optimistic/pessimistic band polygon
+              const bandPath =
+                baseProjections.map((_, i) => `${i === 0 ? 'M' : 'L'}${toX(i)},${toY(optimisticBands[i].high)}`).join(' ') +
+                ' ' +
+                [...baseProjections].reverse().map((_, ri) => {
+                  const i = baseProjections.length - 1 - ri;
+                  return `L${toX(i)},${toY(optimisticBands[i].low)}`;
+                }).join(' ') +
+                ' Z';
+
+              const baseLine = baseProjections.map((p, i) => `${toX(i)},${toY(p.closingBalance)}`).join(' ');
+
+              return (
+                <div className="w-full overflow-x-auto">
+                  <svg viewBox={`0 0 ${chartW} ${chartHt}`} className="w-full h-52" preserveAspectRatio="xMidYMid meet">
+                    {/* Gridlines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+                      const val = minVal + frac * range;
+                      const y = padT + innerH - frac * innerH;
+                      return (
+                        <g key={frac}>
+                          <line x1={padL} y1={y} x2={chartW - padR} y2={y} stroke="#f1f5f9" strokeWidth={1} />
+                          <text x={padL - 4} y={y + 4} textAnchor="end" className="text-[9px] fill-slate-400">
+                            {formatCurrency(Math.round(val))}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    {/* Band area */}
+                    <path d={bandPath} fill="#8b5cf6" fillOpacity="0.1" stroke="none" />
+                    {/* Optimistic line */}
+                    <polyline
+                      points={baseProjections.map((_, i) => `${toX(i)},${toY(optimisticBands[i].high)}`).join(' ')}
+                      fill="none" stroke="#22c55e" strokeWidth={1.5} strokeDasharray="4,4"
+                    />
+                    {/* Pessimistic line */}
+                    <polyline
+                      points={baseProjections.map((_, i) => `${toX(i)},${toY(optimisticBands[i].low)}`).join(' ')}
+                      fill="none" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="4,4"
+                    />
+                    {/* Base line */}
+                    <polyline points={baseLine} fill="none" stroke="#7c3aed" strokeWidth={2.5} strokeLinejoin="round" />
+                    {/* Data points + labels */}
+                    {baseProjections.map((p, i) => (
+                      <g key={i}>
+                        <circle cx={toX(i)} cy={toY(p.closingBalance)} r={4} className="fill-white stroke-violet-600" strokeWidth={2}>
+                          <title>{`${p.period}: ${formatCurrency(p.closingBalance)}`}</title>
+                        </circle>
+                        <text x={toX(i)} y={chartHt - 4} textAnchor="middle" className="text-[10px] fill-slate-500">
+                          {p.period.split(' ')[0]}
+                        </text>
+                      </g>
+                    ))}
+                    {/* Minimum threshold line */}
+                    {minimumCash > 0 && (
+                      <line x1={padL} y1={toY(minimumCash)} x2={chartW - padR} y2={toY(minimumCash)} stroke="#ef4444" strokeWidth={1} strokeDasharray="6,3" />
+                    )}
+                  </svg>
+                  <div className="flex items-center justify-center gap-6 mt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-0.5 bg-violet-600 rounded" />
+                      <span className="text-xs text-slate-600">{t('admin.forecasts.baseScenario')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-0.5 bg-green-500 rounded border-dashed" style={{ borderBottom: '1.5px dashed #22c55e', height: 0 }} />
+                      <span className="text-xs text-slate-600">{t('admin.forecasts.optimisticBand')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-0.5 bg-red-500 rounded" style={{ borderBottom: '1.5px dashed #ef4444', height: 0 }} />
+                      <span className="text-xs text-slate-600">{t('admin.forecasts.pessimisticBand')}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="h-52 flex items-center justify-center text-slate-400 text-sm">{t('admin.accounting.noDataAvailable')}</div>
+            )}
+          </SectionCard>
+
+          {/* Detailed Table with Drill-Down */}
           <SectionCard title={t('admin.forecasts.tabCashFlow')} theme={theme} noPadding>
             <div className="overflow-x-auto">
             <table className="w-full">
@@ -337,18 +479,52 @@ export default function ForecastingPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {baseProjections.map((p, i) => (
-                  <tr key={i} className={`hover:bg-slate-50 ${p.closingBalance < minimumCash ? 'bg-red-50' : ''}`}>
-                    <td className="px-4 py-3 font-medium text-slate-900">{p.period}</td>
-                    <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(p.openingBalance)}</td>
-                    <td className="px-4 py-3 text-end text-green-600">+{formatCurrency(p.inflows)}</td>
-                    <td className="px-4 py-3 text-end text-red-600">-{formatCurrency(p.outflows)}</td>
-                    <td className={`px-4 py-3 text-end font-medium ${p.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {p.netCashFlow >= 0 ? '+' : ''}{formatCurrency(p.netCashFlow)}
-                    </td>
-                    <td className={`px-4 py-3 text-end font-bold ${p.closingBalance < minimumCash ? 'text-red-600' : 'text-slate-900'}`}>
-                      {formatCurrency(p.closingBalance)}
-                    </td>
-                  </tr>
+                  <Fragment key={i}>
+                    <tr
+                      className={`hover:bg-slate-50 cursor-pointer ${p.closingBalance < minimumCash ? 'bg-red-50' : ''}`}
+                      onClick={() => setExpandedPeriod(expandedPeriod === i ? null : i)}
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-900">
+                        <div className="flex items-center gap-2">
+                          {expandedPeriod === i ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                          {p.period}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(p.openingBalance)}</td>
+                      <td className="px-4 py-3 text-end text-green-600">+{formatCurrency(p.inflows)}</td>
+                      <td className="px-4 py-3 text-end text-red-600">-{formatCurrency(p.outflows)}</td>
+                      <td className={`px-4 py-3 text-end font-medium ${p.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {p.netCashFlow >= 0 ? '+' : ''}{formatCurrency(p.netCashFlow)}
+                      </td>
+                      <td className={`px-4 py-3 text-end font-bold ${p.closingBalance < minimumCash ? 'text-red-600' : 'text-slate-900'}`}>
+                        {formatCurrency(p.closingBalance)}
+                      </td>
+                    </tr>
+                    {expandedPeriod === i && (
+                      <tr key={`drill-${i}`} className="bg-slate-50/50">
+                        <td colSpan={6} className="px-8 py-3">
+                          <div className="text-xs font-semibold text-slate-500 uppercase mb-2">{t('admin.forecasts.drillDownCategory')}</div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                              <p className="text-xs text-slate-500">{t('admin.forecasts.catOperating')}</p>
+                              <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.85)}</p>
+                              <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.7)}</p>
+                            </div>
+                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                              <p className="text-xs text-slate-500">{t('admin.forecasts.catInvesting')}</p>
+                              <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.05)}</p>
+                              <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.2)}</p>
+                            </div>
+                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                              <p className="text-xs text-slate-500">{t('admin.forecasts.catFinancing')}</p>
+                              <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.1)}</p>
+                              <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.1)}</p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

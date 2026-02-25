@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/client';
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
   Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
+  ImageIcon, BarChart3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -59,6 +60,9 @@ export default function MediaVideosPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [playingVideo, setPlayingVideo] = useState<VideoItem | null>(null);
+  // Lazy-load embed preview state
+  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+  const [loadedEmbeds, setLoadedEmbeds] = useState<Set<string>>(new Set());
 
   const loadVideos = useCallback(async () => {
     setLoading(true);
@@ -84,6 +88,52 @@ export default function MediaVideosPage() {
     const timer = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Helper: Extract YouTube video ID from URL for auto-thumbnail
+  const getYoutubeId = (url: string): string | null => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
+    return match ? match[1] : null;
+  };
+
+  // Helper: Get auto-generated thumbnail URL
+  const getAutoThumbnail = (v: VideoItem): string | null => {
+    if (v.thumbnailUrl) return v.thumbnailUrl;
+    if (!v.videoUrl) return null;
+    const ytId = getYoutubeId(v.videoUrl);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+    return null;
+  };
+
+  // Helper: Get embed preview URL (lazy-loaded)
+  const getEmbedUrl = (v: VideoItem): string | null => {
+    if (!v.videoUrl) return null;
+    if (v.videoUrl.includes('youtube.com') || v.videoUrl.includes('youtu.be')) {
+      const ytId = getYoutubeId(v.videoUrl);
+      if (ytId) return `https://www.youtube.com/embed/${ytId}`;
+    }
+    if (v.videoUrl.includes('vimeo.com')) {
+      const vimeoId = v.videoUrl.split('/').pop();
+      if (vimeoId) return `https://player.vimeo.com/video/${vimeoId}`;
+    }
+    return null;
+  };
+
+  // Toggle lazy-load embed preview
+  const toggleEmbedPreview = useCallback((id: string) => {
+    if (previewVideoId === id) {
+      setPreviewVideoId(null);
+    } else {
+      setPreviewVideoId(id);
+      setLoadedEmbeds(prev => new Set(prev).add(id));
+    }
+  }, [previewVideoId]);
+
+  // Format view count with locale
+  const formatViews = (count: number): string => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
+    return String(count);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -301,46 +351,108 @@ export default function MediaVideosPage() {
         <div className="text-center py-12 text-slate-500">{t('admin.media.videosDesc')}</div>
       ) : (
         <div className="space-y-2">
-          {videos.map(v => (
-            <div key={v.id} className={`flex items-center gap-3 p-3 bg-white rounded-lg border transition-colors ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200 hover:border-slate-300'}`}>
-              <input
-                type="checkbox"
-                checked={selectedIds.has(v.id)}
-                onChange={() => toggleSelect(v.id)}
-                className="rounded border-slate-300 flex-shrink-0"
-                aria-label={`Select ${v.title}`}
-              />
-              {v.thumbnailUrl ? (
-                <Image src={v.thumbnailUrl} alt={v.title} className="w-20 h-14 rounded object-cover bg-slate-100" width={80} height={56} unoptimized />
-              ) : (
-                <div className="w-20 h-14 rounded bg-slate-100 flex items-center justify-center"><Video className="w-6 h-6 text-slate-300" /></div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-900 truncate">{v.title}</p>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
-                  {v.duration && <span>{v.duration}</span>}
-                  {v.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded">{v.category}</span>}
-                  {/* FIX: F40 - Use i18n for "views" and "by" labels */}
-                  <span>{v.views} {t('admin.media.views') || 'views'}</span>
-                  {v.instructor && <span>{t('admin.media.by') || 'by'} {v.instructor}</span>}
+          {videos.map(v => {
+            const autoThumb = getAutoThumbnail(v);
+            const embedUrl = getEmbedUrl(v);
+
+            return (
+              <div key={v.id} className="bg-white rounded-lg border transition-colors overflow-hidden ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200 hover:border-slate-300'}">
+                <div className={`flex items-center gap-3 p-3 ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(v.id)}
+                    onChange={() => toggleSelect(v.id)}
+                    className="rounded border-slate-300 flex-shrink-0"
+                    aria-label={`Select ${v.title}`}
+                  />
+                  {/* Auto-thumbnail display */}
+                  {autoThumb ? (
+                    <div className="relative w-24 h-16 rounded overflow-hidden bg-slate-100 flex-shrink-0 cursor-pointer group/thumb" onClick={() => embedUrl && toggleEmbedPreview(v.id)}>
+                      <Image src={autoThumb} alt={v.title} className="w-full h-full object-cover" width={96} height={64} unoptimized />
+                      {embedUrl && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                          <Play className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                      {!v.thumbnailUrl && (
+                        <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-black/60 text-white px-1 rounded">
+                          Auto
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-24 h-16 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <Video className="w-6 h-6 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 truncate">{v.title}</p>
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                      {v.duration && <span>{v.duration}</span>}
+                      {v.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded">{v.category}</span>}
+                      {v.instructor && <span>{t('admin.media.by') || 'par'} {v.instructor}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {/* View tracking count display */}
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg" title={`${v.views} vues`}>
+                      <BarChart3 className="w-3.5 h-3.5 text-sky-500" />
+                      <span className="text-xs font-semibold text-slate-700">{formatViews(v.views)}</span>
+                      <span className="text-[10px] text-slate-400">vues</span>
+                    </div>
+                    {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
+                    {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
+                    {v.videoUrl && (
+                      <>
+                        {embedUrl && (
+                          <button
+                            onClick={() => toggleEmbedPreview(v.id)}
+                            className={`text-slate-400 hover:text-sky-600 ${previewVideoId === v.id ? 'text-sky-600' : ''}`}
+                            aria-label="Aperçu intégré"
+                            title="Aperçu intégré"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label="Lire la vidéo">
+                          <Play className="w-4 h-4" />
+                        </button>
+                        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la vidéo dans un nouvel onglet">
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
-                {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
-                {v.videoUrl && (
-                  <>
-                    <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label="Play video">
-                      <Play className="w-4 h-4" />
-                    </button>
-                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la video dans un nouvel onglet">
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </>
+
+                {/* Lazy-load embed preview */}
+                {previewVideoId === v.id && embedUrl && (
+                  <div className="border-t border-slate-200 p-3 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-slate-500">Aperçu intégré</span>
+                      <button onClick={() => setPreviewVideoId(null)} className="text-xs text-slate-400 hover:text-slate-600">
+                        Fermer
+                      </button>
+                    </div>
+                    {loadedEmbeds.has(v.id) ? (
+                      <iframe
+                        src={embedUrl}
+                        className="w-full aspect-video rounded-lg"
+                        allow="encrypted-media"
+                        allowFullScreen
+                        title={`Aperçu: ${v.title}`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full aspect-video rounded-lg bg-slate-200 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

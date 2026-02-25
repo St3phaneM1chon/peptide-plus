@@ -3,12 +3,15 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Loader2, Trash2, Trophy, Award, Flame, Target, Gift, Clock, Star, Zap } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { BADGES, type Challenge } from '@/lib/loyalty/gamification';
+import { POINTS_RULES, LOYALTY_TIERS } from '@/lib/loyalty/points-engine';
+import { DEFAULT_EXPIRATION } from '@/lib/loyalty/expiration-manager';
 
 interface LoyaltyTier {
   name: string;
@@ -56,6 +59,30 @@ export default function FidelitePage() {
     tierName: string;
     userCount: number;
   }>({ isOpen: false, tierName: '', userCount: 0 });
+
+  // ─── Gamification: simulated active challenges ──────────────
+  const [activeChallenges] = useState<Challenge[]>([
+    { id: 'ch-spring', name: 'Spring Sprint', nameFr: 'Sprint du printemps', description: 'Place 3 orders this month', type: 'orders', target: 3, pointsReward: 300, startDate: new Date(), endDate: new Date(Date.now() + 30 * 86400000), isActive: true },
+    { id: 'ch-review', name: 'Review Master', nameFr: 'Maître des avis', description: 'Write 5 product reviews', type: 'reviews', target: 5, pointsReward: 250, startDate: new Date(), endDate: new Date(Date.now() + 60 * 86400000), isActive: true },
+    { id: 'ch-refer', name: 'Friend Finder', nameFr: 'Trouveur d\'amis', description: 'Refer 2 friends', type: 'referrals', target: 2, pointsReward: 400, startDate: new Date(), endDate: new Date(Date.now() + 45 * 86400000), isActive: false },
+  ]);
+
+  // ─── Reward catalog ─────────────────────────────────────────
+  const [rewardCatalog] = useState([
+    { id: 'r1', name: 'Réduction 5$', cost: 500, type: 'discount' as const },
+    { id: 'r2', name: 'Réduction 10$', cost: 900, type: 'discount' as const },
+    { id: 'r3', name: 'Livraison gratuite', cost: 300, type: 'freeShipping' as const },
+    { id: 'r4', name: 'Échantillon gratuit', cost: 200, type: 'freeProduct' as const },
+    { id: 'r5', name: 'Accès vente privée', cost: 1500, type: 'exclusive' as const },
+    { id: 'r6', name: 'Réduction 25$', cost: 2000, type: 'discount' as const },
+  ]);
+
+  // ─── Expiration summary (simulated) ─────────────────────────
+  const [expirationSummary] = useState({
+    expiring7: 1250,
+    expiring30: 4800,
+    expiring90: 12400,
+  });
 
   // FIX: FLAW-055 - Wrap fetchConfig in useCallback for stable reference
   const fetchConfig = useCallback(async () => {
@@ -489,6 +516,213 @@ export default function FidelitePage() {
             <p className="text-sm text-sky-600">{t('admin.loyalty.pointsEarned')}</p>
             <p className="text-3xl font-bold text-sky-900">{simResult.points.toLocaleString(locale)}</p>
             <p className="text-xs text-sky-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Gamification Dashboard ──────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Trophy className="w-5 h-5 text-amber-500" />
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.gamificationTitle')}</h3>
+        </div>
+        <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.gamificationSubtitle')}</p>
+
+        {/* Available Badges */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+            <Award className="w-4 h-4 text-purple-500" />
+            {t('admin.loyalty.availableBadges')}
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {BADGES.map((badge) => (
+              <div key={badge.id} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100 hover:border-amber-200 transition-colors">
+                <span className="text-2xl">{badge.icon}</span>
+                <p className="text-xs font-semibold text-slate-700 mt-1">{badge.nameFr}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{badge.requirement.type}: {badge.requirement.value}</p>
+                <p className="text-[10px] font-medium text-amber-600 mt-1">+{badge.pointsReward} {t('admin.loyalty.pts')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Challenges */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+            <Target className="w-4 h-4 text-blue-500" />
+            {t('admin.loyalty.activeChallenges')}
+          </h4>
+          <div className="space-y-2">
+            {activeChallenges.map((ch) => (
+              <div key={ch.id} className={`flex items-center justify-between rounded-lg border p-3 ${ch.isActive ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center gap-3">
+                  <Zap className={`w-4 h-4 ${ch.isActive ? 'text-green-600' : 'text-slate-400'}`} />
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{ch.nameFr}</p>
+                    <p className="text-xs text-slate-500">{t('admin.loyalty.challengeTarget')}: {ch.target} {ch.type} &middot; {t('admin.loyalty.challengeReward')}: +{ch.pointsReward} {t('admin.loyalty.pts')}</p>
+                  </div>
+                </div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ch.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}>
+                  {ch.isActive ? t('admin.loyalty.challengeActive') : t('admin.loyalty.challengeInactive')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Streak Tracking */}
+        <div>
+          <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-orange-500" />
+            {t('admin.loyalty.streakTracking')}
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-orange-600 font-medium">{t('admin.loyalty.currentStreak')}</p>
+              <p className="text-3xl font-bold text-orange-700">12</p>
+              <p className="text-xs text-orange-500">{t('admin.loyalty.days')}</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-slate-500 font-medium">{t('admin.loyalty.longestStreak')}</p>
+              <p className="text-3xl font-bold text-slate-700">34</p>
+              <p className="text-xs text-slate-500">{t('admin.loyalty.days')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Points Engine Config ─────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Star className="w-5 h-5 text-sky-600" />
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.pointsRulesTitle')}</h3>
+        </div>
+        <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.pointsRulesSubtitle')}</p>
+
+        {/* Point Rules Table */}
+        <div className="mb-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.action')}</th>
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsAwarded')}</th>
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.dailyLimit')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {POINTS_RULES.map((rule) => (
+                <tr key={rule.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2.5 px-3">
+                    <p className="font-medium text-slate-800">{rule.descriptionFr}</p>
+                    <p className="text-[10px] text-slate-400 font-mono">{rule.action}</p>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className="font-semibold text-sky-700">
+                      {typeof rule.points === 'function' ? '1 pt/$' : `${rule.points} ${t('admin.loyalty.pts')}`}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-slate-500">
+                    {rule.maxPerDay ? `${rule.maxPerDay}/jour` : t('admin.loyalty.noLimit')}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Tier Levels */}
+        <h4 className="text-sm font-semibold text-slate-700 mb-3">{t('admin.loyalty.tierLevels')}</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {LOYALTY_TIERS.map((tier) => (
+            <div key={tier.id} className="rounded-lg border-2 p-3 text-center" style={{ borderColor: tier.color, backgroundColor: `${tier.color}15` }}>
+              <p className="text-xs font-bold text-slate-700">{tier.nameFr}</p>
+              <p className="text-lg font-bold" style={{ color: tier.color }}>{tier.multiplier}x</p>
+              <p className="text-[10px] text-slate-500">{tier.minPoints.toLocaleString(locale)}+ {t('admin.loyalty.pts')}</p>
+              <div className="mt-2 text-[10px] text-slate-600">
+                {tier.perks.slice(0, 2).map((perk, i) => (
+                  <p key={i}>&#10003; {perk}</p>
+                ))}
+                {tier.perks.length > 2 && <p className="text-slate-400">+{tier.perks.length - 2} ...</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Reward Catalog ───────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Gift className="w-5 h-5 text-pink-500" />
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.rewardCatalog')}</h3>
+        </div>
+        <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.rewardCatalogSubtitle')}</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {rewardCatalog.map((reward) => {
+            const typeLabel = reward.type === 'discount' ? t('admin.loyalty.rewardDiscount')
+              : reward.type === 'freeShipping' ? t('admin.loyalty.rewardFreeShipping')
+              : reward.type === 'freeProduct' ? t('admin.loyalty.rewardFreeProduct')
+              : t('admin.loyalty.rewardExclusive');
+            const typeColor = reward.type === 'discount' ? 'bg-green-100 text-green-700'
+              : reward.type === 'freeShipping' ? 'bg-blue-100 text-blue-700'
+              : reward.type === 'freeProduct' ? 'bg-purple-100 text-purple-700'
+              : 'bg-amber-100 text-amber-700';
+            return (
+              <div key={reward.id} className="bg-slate-50 rounded-lg border border-slate-100 p-4 flex flex-col items-center text-center hover:border-pink-200 transition-colors">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full mb-2 ${typeColor}`}>{typeLabel}</span>
+                <p className="text-sm font-semibold text-slate-800">{reward.name}</p>
+                <p className="text-lg font-bold text-pink-600 mt-1">{reward.cost.toLocaleString(locale)} {t('admin.loyalty.pts')}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Points Expiration Widget ─────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Clock className="w-5 h-5 text-red-500" />
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.expirationTitle')}</h3>
+        </div>
+        <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.expirationSubtitle')}</p>
+
+        {/* Config summary */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-slate-500">{t('admin.loyalty.expirationMonths')}</p>
+            <p className="text-lg font-bold text-slate-800">{t('admin.loyalty.expirationMonthsValue').replace('{months}', String(DEFAULT_EXPIRATION.expirationMonths))}</p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-slate-500">{t('admin.loyalty.reminderSchedule')}</p>
+            <div className="text-xs text-slate-700 mt-1">
+              {DEFAULT_EXPIRATION.reminderDaysBefore.map((days) => (
+                <span key={days} className="inline-block bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 text-[10px] font-medium mr-1 mb-0.5">
+                  {t('admin.loyalty.reminderDays').replace('{days}', String(days))}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-slate-500">{t('admin.loyalty.gracePeriod')}</p>
+            <p className="text-lg font-bold text-slate-800">{t('admin.loyalty.gracePeriodDays').replace('{days}', String(DEFAULT_EXPIRATION.graceperiodDays))}</p>
+          </div>
+        </div>
+
+        {/* Expiring points summary */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-red-600 font-medium">{t('admin.loyalty.expiring7')}</p>
+            <p className="text-2xl font-bold text-red-700">{expirationSummary.expiring7.toLocaleString(locale)}</p>
+            <p className="text-[10px] text-red-500">{t('admin.loyalty.pts')}</p>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-amber-600 font-medium">{t('admin.loyalty.expiring30')}</p>
+            <p className="text-2xl font-bold text-amber-700">{expirationSummary.expiring30.toLocaleString(locale)}</p>
+            <p className="text-[10px] text-amber-500">{t('admin.loyalty.pts')}</p>
+          </div>
+          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-sky-600 font-medium">{t('admin.loyalty.expiring90')}</p>
+            <p className="text-2xl font-bold text-sky-700">{expirationSummary.expiring90.toLocaleString(locale)}</p>
+            <p className="text-[10px] text-sky-500">{t('admin.loyalty.pts')}</p>
           </div>
         </div>
       </div>

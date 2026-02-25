@@ -11,6 +11,9 @@ import { useI18n } from '@/i18n/client';
 import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
 import { KeyboardShortcutsDialog } from '@/components/admin/KeyboardShortcutsDialog';
 import AdminCommandPalette from '@/components/admin/AdminCommandPalette';
+import NotificationCenter from '@/components/admin/NotificationCenter';
+import Breadcrumbs from '@/components/admin/Breadcrumbs';
+import ThemeToggle from '@/components/admin/ThemeToggle';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -95,8 +98,15 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
       </a>
       <CsrfInit />
 
-      {/* Top bar - 48px height */}
-      <OutlookTopBar onMobileMenuToggle={handleToggleMobileMenu} />
+      {/* Top bar - 48px height + utility icons */}
+      <div className="relative">
+        <OutlookTopBar onMobileMenuToggle={handleToggleMobileMenu} />
+        {/* Floating utility bar: Theme + Notifications */}
+        <div className="absolute top-1.5 end-48 z-40 flex items-center gap-1">
+          <ThemeToggle />
+          <NotificationCenter />
+        </div>
+      </div>
 
       {/* Contextual Ribbon */}
       <OutlookRibbon />
@@ -141,6 +151,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         {/* Main content area */}
         <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll">
           <div className="p-4 lg:p-6">
+            <Breadcrumbs />
             {children}
           </div>
         </main>

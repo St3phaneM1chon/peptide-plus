@@ -6,7 +6,8 @@ import {
   LayoutTemplate, Save, Eye, Inbox, Megaphone, GitBranch,
   PieChart, Settings, Users, AlertTriangle, RefreshCw,
   Upload, Plus, Calendar, FlaskConical,
-  UserPlus, Copy,
+  UserPlus, Copy, Shield, CalendarDays, Paintbrush,
+  Activity, TrendingDown,
 } from 'lucide-react';
 import {
   PageHeader, StatCard, StatusBadge, Button, Modal,
@@ -22,6 +23,8 @@ import dynamic from 'next/dynamic';
 import CampaignList from './campaigns/CampaignList';
 import CampaignEditor from './campaigns/CampaignEditor';
 import SegmentBuilder from './segments/SegmentBuilder';
+import TemplateBuilder from './TemplateBuilder';
+import CampaignCalendar from './CampaignCalendar';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 
@@ -193,6 +196,10 @@ export default function EmailsPage() {
 
   // Analytics period state (lifted from AnalyticsDashboard for ribbon integration)
   const [analyticsPeriod, setAnalyticsPeriod] = useState('30d');
+
+  // Template builder & campaign calendar toggles
+  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [showCampaignCalendar, setShowCampaignCalendar] = useState(false);
 
   // Email auth status (loaded from settings or defaults to unknown)
   const emailAuthStatus = {
@@ -1013,6 +1020,103 @@ export default function EmailsPage() {
           icon={BarChart3}
         />
       </div>
+
+      {/* Authentification email et statistiques de livraison */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Authentification email (SPF/DKIM/DMARC) */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-slate-700" />
+            <h3 className="font-semibold text-slate-900">Authentification des emails</h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { name: 'SPF', status: emailAuthStatus.spf },
+              { name: 'DKIM', status: emailAuthStatus.dkim },
+              { name: 'DMARC', status: emailAuthStatus.dmarc },
+              { name: 'BIMI', status: emailAuthStatus.bimi },
+            ].map(item => (
+              <div key={item.name} className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
+                <span className={`w-3 h-3 rounded-full mb-2 ${
+                  item.status === 'configured' ? 'bg-green-500' :
+                  item.status === 'warning' ? 'bg-yellow-500' :
+                  'bg-red-400'
+                }`} />
+                <span className="text-sm font-medium text-slate-900">{item.name}</span>
+                <span className={`text-[10px] font-medium mt-0.5 ${
+                  item.status === 'configured' ? 'text-green-600' :
+                  item.status === 'warning' ? 'text-yellow-600' :
+                  'text-red-500'
+                }`}>
+                  {item.status === 'configured' ? 'Configuré' : item.status === 'warning' ? 'Attention' : 'Non configuré'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Taux de rebond et statistiques de livraison */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-5 w-5 text-slate-700" />
+            <h3 className="font-semibold text-slate-900">Statistiques de livraison</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-green-700">
+                {stats.total > 0 ? ((stats.sent / stats.total) * 100).toFixed(1) : '0.0'}%
+              </p>
+              <p className="text-xs text-green-600 mt-0.5">Taux de livraison</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-1">
+                <TrendingDown className="h-4 w-4 text-red-500" />
+                <p className="text-xl font-bold text-red-700">
+                  {stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : '0.0'}%
+                </p>
+              </div>
+              <p className="text-xs text-red-600 mt-0.5">Taux de rebond</p>
+            </div>
+            <div className="bg-sky-50 rounded-lg p-3 text-center">
+              <p className="text-xl font-bold text-sky-700">{stats.total}</p>
+              <p className="text-xs text-sky-600 mt-0.5">Total envoyés</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Boutons Constructeur de templates et Calendrier */}
+      <div className="flex gap-3">
+        <Button
+          variant={showTemplateBuilder ? 'primary' : 'secondary'}
+          icon={Paintbrush}
+          onClick={() => { setShowTemplateBuilder(!showTemplateBuilder); setShowCampaignCalendar(false); }}
+        >
+          {showTemplateBuilder ? 'Fermer le constructeur' : 'Constructeur de templates'}
+        </Button>
+        <Button
+          variant={showCampaignCalendar ? 'primary' : 'secondary'}
+          icon={CalendarDays}
+          onClick={() => { setShowCampaignCalendar(!showCampaignCalendar); setShowTemplateBuilder(false); }}
+        >
+          {showCampaignCalendar ? 'Fermer le calendrier' : 'Calendrier'}
+        </Button>
+      </div>
+
+      {/* Constructeur de templates (conditionnel) */}
+      {showTemplateBuilder && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <TemplateBuilder onSave={(blocks) => {
+            console.log('Template blocks saved:', blocks);
+            toast.success('Template sauvegardé avec succès');
+          }} />
+        </div>
+      )}
+
+      {/* Calendrier de campagnes (conditionnel) */}
+      {showCampaignCalendar && (
+        <CampaignCalendar />
+      )}
 
       {/* Tabs Navigation */}
       <div className="border-b border-slate-200">

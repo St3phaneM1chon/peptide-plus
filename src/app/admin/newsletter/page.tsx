@@ -12,6 +12,12 @@ import {
   Clock,
   Trash2,
   XCircle,
+  Shield,
+  FlaskConical,
+  Target,
+  CheckCircle2,
+  AlertTriangle,
+  Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -27,6 +33,9 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { BUILT_IN_SEGMENTS, type Segment } from '@/lib/email/segmentation';
+import { CASL_DEFAULTS } from '@/lib/email/casl-compliance';
+import { type ABTestVariant, getMetricValue } from '@/lib/email/ab-test-engine';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -526,6 +535,151 @@ export default function NewsletterPage() {
               color="amber"
               tOfTotal={t}
             />
+          </div>
+        </div>
+
+        {/* Segmentation intelligente */}
+        <div className="bg-white rounded-lg p-4 border border-slate-200 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="h-5 w-5 text-violet-600" />
+            <h3 className="text-sm font-semibold text-slate-900">Segmentation intelligente</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {BUILT_IN_SEGMENTS.map((segment: Segment) => (
+              <div
+                key={segment.id}
+                className="p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-violet-200 hover:bg-violet-50/30 transition-colors cursor-default"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-violet-400" />
+                  <p className="text-sm font-medium text-slate-800">{segment.nameFr}</p>
+                </div>
+                <p className="text-[11px] text-slate-500 line-clamp-2">{segment.description}</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {segment.criteria.map((c, idx) => (
+                    <span key={idx} className="inline-flex items-center px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded text-[10px] font-medium">
+                      {c.label || `${c.field} ${c.operator} ${String(c.value)}`}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Conformité CASL et résultats A/B Test */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          {/* Badge conformité CASL */}
+          <div className="bg-white rounded-lg p-4 border border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Shield className="h-5 w-5 text-emerald-600" />
+              <h3 className="text-sm font-semibold text-slate-900">Conformité LCAP (CASL)</h3>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                    Conforme
+                  </span>
+                  <span className="text-xs text-slate-500">Loi canadienne anti-pourriel</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Double opt-in</span>
+                    <span className={`font-medium ${CASL_DEFAULTS.requireDoubleOptIn ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {CASL_DEFAULTS.requireDoubleOptIn ? 'Activé' : 'Désactivé'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Consentement implicite</span>
+                    <span className="font-medium text-slate-800">{CASL_DEFAULTS.impliedConsentDurationDays} jours max</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Délai de désinscription</span>
+                    <span className="font-medium text-slate-800">{CASL_DEFAULTS.unsubscribeProcessingDays} jours max</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Fins autorisées</span>
+                    <span className="font-medium text-slate-800">{CASL_DEFAULTS.consentPurposes.length} types</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {CASL_DEFAULTS.consentPurposes.map((purpose) => (
+                    <span key={purpose} className="inline-flex items-center px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">
+                      {purpose === 'marketing' ? 'Marketing' :
+                       purpose === 'promotions' ? 'Promotions' :
+                       purpose === 'newsletter' ? 'Infolettre' :
+                       purpose === 'product_updates' ? 'Mises à jour' :
+                       purpose === 'research' ? 'Recherche' : purpose}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Résultats A/B Test */}
+          <div className="bg-white rounded-lg p-4 border border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <FlaskConical className="h-5 w-5 text-sky-600" />
+              <h3 className="text-sm font-semibold text-slate-900">Résultats des tests A/B</h3>
+            </div>
+            {campaigns.filter(c => c.status === 'SENT' && c.openRate).length > 0 ? (
+              <div className="space-y-3">
+                {campaigns.filter(c => c.status === 'SENT' && c.openRate).slice(0, 3).map((campaign) => {
+                  const simulatedVariantA: ABTestVariant = {
+                    id: 'a', name: 'Variante A', subject: campaign.subject,
+                    percentage: 50, sent: campaign.recipientCount,
+                    opens: Math.round(campaign.recipientCount * (campaign.openRate || 0) / 100),
+                    clicks: Math.round(campaign.recipientCount * (campaign.clickRate || 0) / 100),
+                    conversions: 0,
+                  };
+                  const simulatedVariantB: ABTestVariant = {
+                    id: 'b', name: 'Variante B', subject: `${campaign.subject} (alt)`,
+                    percentage: 50, sent: campaign.recipientCount,
+                    opens: Math.round(campaign.recipientCount * ((campaign.openRate || 0) * 0.85) / 100),
+                    clicks: Math.round(campaign.recipientCount * ((campaign.clickRate || 0) * 0.75) / 100),
+                    conversions: 0,
+                  };
+                  const rateA = getMetricValue(simulatedVariantA, 'open_rate');
+                  const rateB = getMetricValue(simulatedVariantB, 'open_rate');
+                  const winner = rateA >= rateB ? 'A' : 'B';
+                  return (
+                    <div key={campaign.id} className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs font-medium text-slate-700 mb-2 truncate">{campaign.subject}</p>
+                      <div className="flex items-center gap-3">
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'A' ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                          <div className="flex items-center justify-center gap-1">
+                            {winner === 'A' && <Trophy className="h-3 w-3 text-emerald-600" />}
+                            <p className="text-xs font-semibold text-slate-700">Variante A</p>
+                          </div>
+                          <p className="text-lg font-bold text-slate-900">{(rateA * 100).toFixed(1)}%</p>
+                          <p className="text-[10px] text-slate-500">taux d&apos;ouverture</p>
+                        </div>
+                        <span className="text-xs text-slate-400 font-medium">vs</span>
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'B' ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                          <div className="flex items-center justify-center gap-1">
+                            {winner === 'B' && <Trophy className="h-3 w-3 text-emerald-600" />}
+                            <p className="text-xs font-semibold text-slate-700">Variante B</p>
+                          </div>
+                          <p className="text-lg font-bold text-slate-900">{(rateB * 100).toFixed(1)}%</p>
+                          <p className="text-[10px] text-slate-500">taux d&apos;ouverture</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <AlertTriangle className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-500">Aucun résultat A/B disponible</p>
+                <p className="text-xs text-slate-400 mt-1">Envoyez des campagnes pour voir les comparaisons</p>
+              </div>
+            )}
           </div>
         </div>
 

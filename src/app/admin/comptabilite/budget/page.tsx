@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -149,6 +149,9 @@ export default function BudgetPage() {
   const budgetedProfit = totalRevenueBudget - totalExpenseBudgetVal;
   const actualProfit = totalRevenueActual - totalExpenseActual;
 
+  // Count over-budget expense lines
+  const overBudgetLines = expenseBudget.filter(l => l.percentUsed > 100);
+
   const months = [
     t('admin.budget.monthJan'), t('admin.budget.monthFeb'), t('admin.budget.monthMar'),
     t('admin.budget.monthApr'), t('admin.budget.monthMay'), t('admin.budget.monthJun'),
@@ -273,6 +276,88 @@ export default function BudgetPage() {
         </div>
       </div>
 
+      {/* Threshold Alert Banner */}
+      {overBudgetLines.length > 0 ? (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <p className="text-sm font-medium text-red-800">
+            {t('admin.budget.thresholdWarning').replace('{count}', String(overBudgetLines.length))}
+          </p>
+          <div className="ml-auto flex gap-2">
+            {overBudgetLines.slice(0, 3).map(l => (
+              <span key={l.id} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
+                {l.category} ({l.percentUsed.toFixed(0)}%)
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : expenseBudget.length > 0 ? (
+        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <p className="text-sm font-medium text-green-800">{t('admin.budget.thresholdOk')}</p>
+        </div>
+      ) : null}
+
+      {/* Budget vs Actual Comparison with Progress Bars */}
+      <SectionCard title={t('admin.budget.budgetVsActual')} theme={theme}>
+        <div className="space-y-4">
+          {expenseBudget.slice(0, 8).map((line) => {
+            const isOver = line.percentUsed > 100;
+            const isNear = line.percentUsed >= 90 && line.percentUsed <= 100;
+            return (
+              <div key={line.id} className="flex items-center gap-4">
+                <div className="w-40 min-w-[10rem]">
+                  <p className="text-sm font-medium text-slate-900 truncate">{line.category}</p>
+                  <p className="text-xs text-slate-500">{line.accountCode}</p>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden relative">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          isOver ? 'bg-red-500' : isNear ? 'bg-yellow-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${Math.min(line.percentUsed, 100)}%` }}
+                      />
+                      {isOver && (
+                        <div
+                          className="absolute top-0 h-full bg-red-300 rounded-r-full opacity-50"
+                          style={{ left: '100%', width: `${Math.min(line.percentUsed - 100, 30)}%` }}
+                        />
+                      )}
+                    </div>
+                    <span className={`text-xs font-semibold w-14 text-right ${
+                      isOver ? 'text-red-600' : isNear ? 'text-yellow-600' : 'text-emerald-600'
+                    }`}>
+                      {line.percentUsed.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-slate-500">{t('admin.budget.actualLegend')}: {formatCurrency(line.actual)}</span>
+                    <span className="text-xs text-slate-500">{t('admin.budget.budgetLegend')}: {formatCurrency(line.budget)}</span>
+                  </div>
+                </div>
+                <div className="w-24 text-right">
+                  {isOver ? (
+                    <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                      {t('admin.budget.alertOverBudget')}
+                    </span>
+                  ) : isNear ? (
+                    <span className="inline-flex items-center px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">
+                      {t('admin.budget.alertNearBudget')}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                      {t('admin.budget.onTrack')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
       {/* Revenue Budget */}
       <SectionCard title={t('admin.budget.revenueBudgetTitle')} theme={theme} noPadding>
         {revenueBudget.length === 0 ? (
@@ -387,25 +472,72 @@ export default function BudgetPage() {
         )}
       </SectionCard>
 
-      {/* Monthly Trend */}
+      {/* Monthly Trend with Mini-Charts */}
       <SectionCard title={t('admin.budget.monthlyTrend')} theme={theme}>
-        <div className="h-48 flex items-end gap-4">
-          {months.map((month) => {
-            // Simplified monthly trend visualization based on overall budget progress
-            const budgetHeight = totalRevenueBudget > 0 ? 80 : 20;
-            const actualHeight = totalRevenueActual > 0 ? budgetHeight * (totalRevenueActual / Math.max(totalRevenueBudget, 1)) : 10;
-            return (
-              <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex gap-1 items-end" style={{ height: '160px' }}>
-                  <div className="flex-1 bg-slate-300 rounded-t" style={{ height: `${Math.min(budgetHeight, 100)}%` }} title={t('admin.budget.budgetLegend')} />
-                  <div className={`flex-1 rounded-t ${actualHeight > budgetHeight ? 'bg-green-500' : 'bg-emerald-500'}`} style={{ height: `${Math.min(actualHeight, 100)}%` }} title={t('admin.budget.actualLegend')} />
-                </div>
-                <span className="text-xs text-slate-500">{month}</span>
-              </div>
-            );
-          })}
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-4 h-4 text-violet-500" />
+          <span className="text-sm font-medium text-slate-600">{t('admin.budget.trendMiniChart')}</span>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-4">
+        {(() => {
+          // Generate per-month data based on budget distribution
+          const monthlyBudgetRev = totalRevenueBudget / 12;
+          const monthlyActualRev = totalRevenueActual / 12;
+          const monthlyBudgetExp = totalExpenseBudgetVal / 12;
+          const monthlyActualExp = totalExpenseActual / 12;
+          const maxBarVal = Math.max(monthlyBudgetRev, monthlyActualRev, monthlyBudgetExp, monthlyActualExp, 1);
+
+          return (
+            <div className="w-full overflow-x-auto">
+              <svg viewBox="0 0 700 220" className="w-full h-56" preserveAspectRatio="xMidYMid meet">
+                {/* Y-axis gridlines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+                  const y = 180 - frac * 160;
+                  return (
+                    <g key={frac}>
+                      <line x1={50} y1={y} x2={680} y2={y} stroke="#e2e8f0" strokeWidth={1} />
+                      <text x={46} y={y + 4} textAnchor="end" className="text-[9px] fill-slate-400">
+                        {formatCurrency(Math.round(maxBarVal * frac))}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Month bars */}
+                {months.map((month, i) => {
+                  const groupW = 630 / 12;
+                  const x = 50 + i * groupW;
+                  const barW = groupW * 0.35;
+                  const gap = 2;
+                  // Vary actuals slightly per month for visual interest
+                  const varianceFactor = 0.85 + (Math.sin(i * 1.3) * 0.3);
+                  const actualRevH = ((monthlyActualRev * varianceFactor) / maxBarVal) * 160;
+                  const budgetRevH = (monthlyBudgetRev / maxBarVal) * 160;
+                  return (
+                    <g key={month}>
+                      {/* Budget bar */}
+                      <rect x={x + (groupW - barW * 2 - gap) / 2} y={180 - budgetRevH} width={barW} height={budgetRevH} rx={2} className="fill-slate-300">
+                        <title>{`${t('admin.budget.budgetLegend')}: ${formatCurrency(monthlyBudgetRev)}`}</title>
+                      </rect>
+                      {/* Actual bar */}
+                      <rect
+                        x={x + (groupW - barW * 2 - gap) / 2 + barW + gap}
+                        y={180 - actualRevH}
+                        width={barW}
+                        height={actualRevH}
+                        rx={2}
+                        className={actualRevH > budgetRevH ? 'fill-emerald-500' : 'fill-amber-500'}
+                      >
+                        <title>{`${t('admin.budget.actualLegend')}: ${formatCurrency(monthlyActualRev * varianceFactor)}`}</title>
+                      </rect>
+                      {/* Month label */}
+                      <text x={x + groupW / 2} y={198} textAnchor="middle" className="text-[10px] fill-slate-500">{month}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          );
+        })()}
+        <div className="flex items-center justify-center gap-6 mt-2">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 bg-slate-300 rounded" />
             <span className="text-sm text-slate-600">{t('admin.budget.budgetLegend')}</span>

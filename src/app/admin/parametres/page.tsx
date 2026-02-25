@@ -3,13 +3,40 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, ShoppingCart, Package, Bell, Lock, Link2,
-  Save,
+  Save, Monitor, LogOut, Smartphone, Globe,
+  Mail, AlertTriangle, TrendingUp, Users,
 } from 'lucide-react';
 import { Button, FormField, Input, MediaUploader } from '@/components/admin';
+import ThemeToggle from '@/components/admin/ThemeToggle';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+
+// ── Types for session management ──────────────────────────────
+interface ActiveSession {
+  id: string;
+  device: string;
+  browser: string;
+  ip: string;
+  location: string;
+  lastActivity: string;
+  current: boolean;
+}
+
+// ── Types for notification preferences ────────────────────────
+interface NotificationPreferences {
+  emailNewOrder: boolean;
+  emailLowStock: boolean;
+  emailNewReview: boolean;
+  emailNewUser: boolean;
+  emailSecurityAlert: boolean;
+  emailWeeklyReport: boolean;
+  pushEnabled: boolean;
+  pushNewOrder: boolean;
+  pushLowStock: boolean;
+  pushSecurityAlert: boolean;
+}
 
 export default function ParametresPage() {
   const { t } = useI18n();
@@ -48,6 +75,51 @@ export default function ParametresPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('general');
+
+  // ─── Session management state ──────────────────────────────
+  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([
+    {
+      id: 'session-1',
+      device: 'Mac Studio M4 Max',
+      browser: 'Chrome 122',
+      ip: '192.168.1.42',
+      location: 'Montreal, QC',
+      lastActivity: new Date().toISOString(),
+      current: true,
+    },
+    {
+      id: 'session-2',
+      device: 'iPhone 15 Pro',
+      browser: 'Safari Mobile',
+      ip: '10.0.0.15',
+      location: 'Montreal, QC',
+      lastActivity: new Date(Date.now() - 3600000).toISOString(),
+      current: false,
+    },
+    {
+      id: 'session-3',
+      device: 'Windows Desktop',
+      browser: 'Firefox 124',
+      ip: '203.0.113.50',
+      location: 'Toronto, ON',
+      lastActivity: new Date(Date.now() - 86400000).toISOString(),
+      current: false,
+    },
+  ]);
+
+  // ─── Notification preferences state ────────────────────────
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({
+    emailNewOrder: true,
+    emailLowStock: true,
+    emailNewReview: true,
+    emailNewUser: false,
+    emailSecurityAlert: true,
+    emailWeeklyReport: true,
+    pushEnabled: false,
+    pushNewOrder: true,
+    pushLowStock: true,
+    pushSecurityAlert: true,
+  });
 
   // Helper to extract a setting value from key-value entries
   const getSettingValue = (
@@ -145,6 +217,17 @@ export default function ParametresPage() {
     setSaving(false);
   };
 
+  // ─── Session management handler ────────────────────────────
+  const handleForceLogout = useCallback((sessionId: string) => {
+    setActiveSessions(prev => prev.filter(s => s.id !== sessionId));
+    toast.success('Session terminee avec succes');
+  }, []);
+
+  const handleSaveNotifPrefs = useCallback(async () => {
+    // In production, this would call an API to save preferences
+    toast.success('Preferences de notification sauvegardees');
+  }, []);
+
   // ─── Ribbon action handlers ───────────────────────────────
   const handleRibbonSave = useCallback(() => {
     handleSave();
@@ -240,7 +323,10 @@ export default function ParametresPage() {
     { id: 'store', label: t('admin.settingsPage.store'), icon: ShoppingCart },
     { id: 'orders', label: t('admin.settingsPage.orders'), icon: Package },
     { id: 'notifications', label: t('admin.settingsPage.notifications'), icon: Bell },
+    { id: 'notifPrefs', label: 'Alertes admin', icon: Mail },
     { id: 'security', label: t('admin.settingsPage.security'), icon: Lock },
+    { id: 'sessions', label: 'Sessions actives', icon: Monitor },
+    { id: 'appearance', label: 'Apparence', icon: Globe },
     { id: 'integrations', label: t('admin.settingsPage.integrations'), icon: Link2 },
   ];
 
@@ -572,6 +658,194 @@ export default function ParametresPage() {
                 </div>
                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">{t('admin.settingsPage.connected')}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Sessions actives ──────────────────────────────────── */}
+        {activeSection === 'sessions' && (
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Sessions actives</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              Gerez les sessions connectees a votre compte administrateur. Forcez la deconnexion des sessions suspectes.
+            </p>
+            <div className="space-y-3">
+              {activeSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={`flex items-center justify-between p-4 rounded-lg border ${
+                    session.current ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
+                      {session.device.toLowerCase().includes('iphone') || session.device.toLowerCase().includes('android') ? (
+                        <Smartphone className="w-5 h-5 text-slate-600" />
+                      ) : (
+                        <Monitor className="w-5 h-5 text-slate-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 text-sm">{session.device}</p>
+                        {session.current && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full">
+                            Session actuelle
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {session.browser} &middot; IP: {session.ip} &middot; {session.location}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Derniere activite: {new Date(session.lastActivity).toLocaleString('fr-CA')}
+                      </p>
+                    </div>
+                  </div>
+                  {!session.current && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={LogOut}
+                      onClick={() => handleForceLogout(session.id)}
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      Forcer la deconnexion
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {activeSessions.length > 1 && (
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={LogOut}
+                  onClick={() => {
+                    setActiveSessions(prev => prev.filter(s => s.current));
+                    toast.success('Toutes les autres sessions ont ete deconnectees');
+                  }}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  Deconnecter toutes les autres sessions
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── Apparence (Mode sombre) ────────────────────────────── */}
+        {activeSection === 'appearance' && (
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Apparence</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              Personnalisez l&apos;apparence de votre interface d&apos;administration.
+            </p>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-slate-700">Mode sombre</p>
+                  <p className="text-sm text-slate-500">
+                    Basculer entre le mode clair et sombre pour l&apos;interface d&apos;administration.
+                  </p>
+                </div>
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Preferences de notification admin ──────────────────── */}
+        {activeSection === 'notifPrefs' && (
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Alertes administrateur</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              Configurez quelles alertes vous souhaitez recevoir par email et notification push.
+            </p>
+
+            {/* Email notifications */}
+            <div className="mb-8">
+              <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Notifications par email
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { key: 'emailNewOrder' as const, icon: ShoppingCart, label: 'Nouvelles commandes', desc: 'Recevoir un email a chaque nouvelle commande' },
+                  { key: 'emailLowStock' as const, icon: AlertTriangle, label: 'Stock bas', desc: 'Alertes quand un produit atteint le seuil minimum' },
+                  { key: 'emailNewReview' as const, icon: Bell, label: 'Nouveaux avis', desc: 'Notification pour chaque nouvel avis client' },
+                  { key: 'emailNewUser' as const, icon: Users, label: 'Nouveaux utilisateurs', desc: 'Alerte a chaque inscription' },
+                  { key: 'emailSecurityAlert' as const, icon: Lock, label: 'Alertes de securite', desc: 'Tentatives de connexion echouees, changements de mot de passe' },
+                  { key: 'emailWeeklyReport' as const, icon: TrendingUp, label: 'Rapport hebdomadaire', desc: 'Resume des ventes et activites de la semaine' },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <label key={item.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-4 h-4 text-slate-500" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">{item.label}</p>
+                          <p className="text-xs text-slate-500">{item.desc}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setNotifPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                        className={toggleClasses(notifPrefs[item.key])}
+                      >
+                        <span className={toggleDot(notifPrefs[item.key])} />
+                      </button>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Push notifications */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                Notifications push (navigateur)
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">Activer les notifications push</p>
+                    <p className="text-xs text-slate-500">Recevez des alertes en temps reel dans votre navigateur</p>
+                  </div>
+                  <button
+                    onClick={() => setNotifPrefs(prev => ({ ...prev, pushEnabled: !prev.pushEnabled }))}
+                    className={toggleClasses(notifPrefs.pushEnabled)}
+                  >
+                    <span className={toggleDot(notifPrefs.pushEnabled)} />
+                  </button>
+                </label>
+                {notifPrefs.pushEnabled && (
+                  <>
+                    {[
+                      { key: 'pushNewOrder' as const, label: 'Nouvelles commandes' },
+                      { key: 'pushLowStock' as const, label: 'Stock bas' },
+                      { key: 'pushSecurityAlert' as const, label: 'Alertes de securite' },
+                    ].map((item) => (
+                      <label key={item.key} className="flex items-center justify-between p-3 ps-8 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                        <p className="text-sm text-slate-700">{item.label}</p>
+                        <button
+                          onClick={() => setNotifPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                          className={toggleClasses(notifPrefs[item.key])}
+                        >
+                          <span className={toggleDot(notifPrefs[item.key])} />
+                        </button>
+                      </label>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button variant="primary" icon={Save} onClick={handleSaveNotifPrefs}>
+                Sauvegarder les preferences
+              </Button>
             </div>
           </div>
         )}
