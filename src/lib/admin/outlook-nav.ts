@@ -325,6 +325,15 @@ export const folderSections: Record<string, NavFolderSection> = {
         collapsible: true,
         defaultOpen: false,
       },
+      {
+        labelKey: 'admin.nav.accountingFiscalReports',
+        items: [
+          { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
+          { href: '/admin/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
     ],
   },
 
@@ -335,8 +344,6 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         items: [
           { href: '/admin/permissions', labelKey: 'admin.nav.permissions', icon: Shield },
-          { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
-          { href: '/admin/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
           { href: '/admin/logs', labelKey: 'admin.nav.logsAudit', icon: Activity },
           { href: '/admin/employes', labelKey: 'admin.nav.employees', icon: UserCheck },
           { href: '/admin/parametres', labelKey: 'admin.nav.settings', icon: Settings },
@@ -366,7 +373,7 @@ export const folderSections: Record<string, NavFolderSection> = {
 
 /** Determine which rail section is active based on the current pathname */
 export function getActiveRailId(pathname: string): string {
-  if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
+  if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
   if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories')) return 'catalog';
@@ -374,6 +381,6 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
   return 'dashboard';
 }

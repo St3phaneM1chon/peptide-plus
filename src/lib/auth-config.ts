@@ -57,13 +57,16 @@ const oauthProviders: AuthProvider[] = [
       ]
     : []),
 
-  // Apple — email is verified by Apple, but we no longer enable dangerous linking
-  // to reduce attack surface. Only Google retains it (needed for Gmail account merging).
+  // Apple (TRUSTED - Apple always verifies email ownership)
+  // allowDangerousEmailAccountLinking is required so that users who already have
+  // an account with the same email (e.g., signed up with Google first) can link
+  // their Apple identity instead of getting OAuthAccountNotLinked error.
   ...(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
     ? [
         AppleProvider({
           clientId: process.env.APPLE_CLIENT_ID,
           clientSecret: process.env.APPLE_CLIENT_SECRET,
+          allowDangerousEmailAccountLinking: true,
         }),
       ]
     : []),
@@ -247,12 +250,18 @@ export const authConfig: NextAuthConfig = {
   // If the name changes between set (__Secure- when HTTPS detected) and read (no prefix
   // when HTTP detected internally), decryption fails with "could not be parsed".
   // Solution: force all cookies to use non-prefixed names with secure: true.
-  // OIDC cookies (pkce, state, nonce) use sameSite: 'none' because Apple Sign In
-  // uses response_mode=form_post, which sends a cross-site POST from appleid.apple.com.
-  // Cookies with sameSite: 'lax' are NOT sent on cross-site POST requests, causing
-  // Auth.js to fail nonce/state verification → "Configuration" error.
-  // Session, CSRF and callback cookies remain 'lax' (they are not needed during the
-  // cross-site POST callback, only after the redirect back to our domain).
+  // Apple Sign In uses response_mode=form_post, which sends a cross-site POST
+  // from appleid.apple.com back to our /api/auth/callback/apple endpoint.
+  // Cookies with sameSite: 'lax' are NOT sent on cross-site POST requests.
+  //
+  // ALL cookies needed during the OAuth callback must use sameSite: 'none':
+  //   - pkce, state, nonce: for OIDC verification (prevents "Configuration" error)
+  //   - callbackUrl: so Auth.js knows where to redirect after login (prevents
+  //     redirect to site root instead of /auth/post-login, causing login loop)
+  //   - csrfToken: Auth.js validates CSRF on POST callbacks
+  //
+  // Only the session token stays 'lax' because it's set AFTER the callback
+  // completes and is only needed on same-site requests going forward.
   cookies: {
     pkceCodeVerifier: {
       name: 'authjs.pkce.code_verifier',
@@ -268,11 +277,11 @@ export const authConfig: NextAuthConfig = {
     },
     callbackUrl: {
       name: 'authjs.callback-url',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
     },
     csrfToken: {
       name: 'authjs.csrf-token',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
     },
     sessionToken: {
       name: 'authjs.session-token',
@@ -506,11 +515,20 @@ export const authConfig: NextAuthConfig = {
       try {
         // New OAuth user created by PrismaAdapter: ensure role is CUSTOMER
         // (Prisma @default handles this, but we enforce it explicitly as a safeguard)
+        // IMPORTANT: Only set role if it's not already set. Auth.js fires createUser
+        // event even for existing users when allowDangerousEmailAccountLinking is enabled.
+        // We must NOT overwrite an existing OWNER/EMPLOYEE role to CUSTOMER.
         if (user.id) {
-          await prisma.user.update({
+          const existingUser = await prisma.user.findUnique({
             where: { id: user.id },
-            data: { role: UserRole.CUSTOMER },
+            select: { role: true },
           });
+          if (!existingUser?.role || existingUser.role === 'CUSTOMER') {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { role: UserRole.CUSTOMER },
+            });
+          }
         }
         // FAILLE-021 FIX: mask email in logs
         const maskedNewEmail = user.email

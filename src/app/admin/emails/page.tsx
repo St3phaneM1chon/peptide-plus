@@ -25,6 +25,7 @@ import CampaignEditor from './campaigns/CampaignEditor';
 import SegmentBuilder from './segments/SegmentBuilder';
 import TemplateBuilder from './TemplateBuilder';
 import CampaignCalendar from './CampaignCalendar';
+import EmailComposer from './compose/EmailComposer';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -197,6 +198,10 @@ export default function EmailsPage() {
 
   // Analytics period state (lifted from AnalyticsDashboard for ribbon integration)
   const [analyticsPeriod, setAnalyticsPeriod] = useState('30d');
+
+  // Email composer state
+  const [showComposer, setShowComposer] = useState(false);
+  const [composerReplyTo, setComposerReplyTo] = useState<{ to: string; subject: string; body: string } | null>(null);
 
   // Template builder & campaign calendar toggles
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
@@ -578,10 +583,9 @@ export default function EmailsPage() {
 
   // Mail tab actions -- require active conversation context, navigate to inbox
   const handleNewMessage = useCallback(() => {
-    setActiveTab('inbox');
-    setSelectedConversation(null);
-    toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation or use the compose button in Inbox');
-  }, [t]);
+    setComposerReplyTo(null);
+    setShowComposer(true);
+  }, []);
   const handleDelete = useCallback(async () => {
     if (!selectedConversation) {
       toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
@@ -625,31 +629,84 @@ export default function EmailsPage() {
       toast.error(t('common.errorOccurred'));
     }
   }, [selectedConversation, t]);
-  const handleReply = useCallback(() => {
+  const handleReply = useCallback(async () => {
     if (!selectedConversation) {
       toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
       return;
     }
-    // Navigate to inbox with the conversation selected - the ConversationThread handles reply
-    setActiveTab('inbox');
-    toast.info(t('admin.emailConfig.useReplyInThread') || 'Use the reply field in the conversation thread');
+    // Fetch conversation data to pre-fill the composer
+    try {
+      const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`);
+      if (res.ok) {
+        const data = await res.json();
+        const lastMsg = data.messages?.[data.messages.length - 1];
+        setComposerReplyTo({
+          to: lastMsg?.from || data.customerEmail || '',
+          subject: lastMsg?.subject || data.subject || '',
+          body: lastMsg?.htmlBody || lastMsg?.textBody || '',
+        });
+        setShowComposer(true);
+      } else {
+        // Fallback: open composer without pre-fill
+        setComposerReplyTo(null);
+        setShowComposer(true);
+      }
+    } catch {
+      setComposerReplyTo(null);
+      setShowComposer(true);
+    }
   }, [selectedConversation, t]);
-  const handleReplyAll = useCallback(() => {
+  const handleReplyAll = useCallback(async () => {
     if (!selectedConversation) {
       toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
       return;
     }
-    setActiveTab('inbox');
-    toast.info(t('admin.emailConfig.useReplyInThread') || 'Use the reply field in the conversation thread');
+    // Fetch conversation data to pre-fill the composer (same as reply for now)
+    try {
+      const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`);
+      if (res.ok) {
+        const data = await res.json();
+        const lastMsg = data.messages?.[data.messages.length - 1];
+        setComposerReplyTo({
+          to: lastMsg?.from || data.customerEmail || '',
+          subject: lastMsg?.subject || data.subject || '',
+          body: lastMsg?.htmlBody || lastMsg?.textBody || '',
+        });
+        setShowComposer(true);
+      } else {
+        setComposerReplyTo(null);
+        setShowComposer(true);
+      }
+    } catch {
+      setComposerReplyTo(null);
+      setShowComposer(true);
+    }
   }, [selectedConversation, t]);
-  const handleForward = useCallback(() => {
+  const handleForward = useCallback(async () => {
     if (!selectedConversation) {
       toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
       return;
     }
-    // Copy conversation ID to clipboard so user can reference it
-    navigator.clipboard.writeText(selectedConversation);
-    toast.success(t('admin.emailConfig.conversationIdCopied') || 'Conversation ID copied to clipboard');
+    // Fetch conversation data and open composer with forwarded content
+    try {
+      const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`);
+      if (res.ok) {
+        const data = await res.json();
+        const lastMsg = data.messages?.[data.messages.length - 1];
+        setComposerReplyTo({
+          to: '', // Empty for forward - user fills in the recipient
+          subject: `Fwd: ${lastMsg?.subject || data.subject || ''}`,
+          body: lastMsg?.htmlBody || lastMsg?.textBody || '',
+        });
+        setShowComposer(true);
+      } else {
+        setComposerReplyTo(null);
+        setShowComposer(true);
+      }
+    } catch {
+      setComposerReplyTo(null);
+      setShowComposer(true);
+    }
   }, [selectedConversation, t]);
   const handleFlag = useCallback(async () => {
     if (!selectedConversation) {
@@ -991,9 +1048,14 @@ export default function EmailsPage() {
         title={t('admin.emailConfig.hubTitle')}
         subtitle={t('admin.emailConfig.hubSubtitle')}
         actions={
-          <Button variant="primary" icon={SendHorizontal} onClick={sendTestEmail}>
-            {t('admin.emailConfig.sendTest')}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="primary" icon={Plus} onClick={handleNewMessage}>
+              {t('admin.emailConfig.newMessage') || 'Nouveau message'}
+            </Button>
+            <Button variant="secondary" icon={SendHorizontal} onClick={sendTestEmail}>
+              {t('admin.emailConfig.sendTest')}
+            </Button>
+          </div>
         }
       />
 
@@ -1783,6 +1845,25 @@ export default function EmailsPage() {
           </FormField>
         </div>
       </Modal>
+
+      {/* ==================== EMAIL COMPOSER MODAL ==================== */}
+      {showComposer && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/30 transition-opacity"
+            onClick={() => setShowComposer(false)}
+            aria-hidden="true"
+          />
+          {/* Composer panel */}
+          <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden" style={{ height: '70vh', maxHeight: '600px' }}>
+            <EmailComposer
+              onClose={() => { setShowComposer(false); setComposerReplyTo(null); }}
+              replyTo={composerReplyTo}
+            />
+          </div>
+        </div>
+      )}
     </div>
     </EmailErrorBoundary>
   );

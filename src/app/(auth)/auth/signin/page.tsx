@@ -145,9 +145,12 @@ function SignInContent() {
             <p className="text-sm">
               {error === 'OAuthSignin' && t('auth.errorOAuthSignin')}
               {error === 'OAuthCallback' && t('auth.errorOAuthCallback')}
+              {error === 'OAuthAccountNotLinked' && t('auth.errorAccountNotLinked')}
               {error === 'Callback' && t('auth.errorCallback')}
               {error === 'CredentialsSignin' && t('auth.errorCredentials')}
+              {error === 'SessionTimeout' && t('auth.errorSessionTimeout')}
               {formError && formError}
+              {!['OAuthSignin', 'OAuthCallback', 'OAuthAccountNotLinked', 'Callback', 'CredentialsSignin', 'SessionTimeout'].includes(error || '') && !formError && error && t('auth.errorGeneric')}
               {!error && !formError && t('auth.errorGeneric')}
             </p>
           </div>

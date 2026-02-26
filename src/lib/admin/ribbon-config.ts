@@ -1051,14 +1051,16 @@ export function getSubSectionId(
     pathname.startsWith('/admin/comptabilite/previsions') ||
     pathname.startsWith('/admin/comptabilite/budget') ||
     pathname.startsWith('/admin/comptabilite/rapports') ||
-    pathname.startsWith('/admin/comptabilite/exports')
+    pathname.startsWith('/admin/comptabilite/exports') ||
+    pathname.startsWith('/admin/rapports')
   ) return 'accounting.reports';
   if (
     pathname.startsWith('/admin/comptabilite/audit') ||
     pathname.startsWith('/admin/comptabilite/cloture') ||
     pathname.startsWith('/admin/comptabilite/parametres') ||
     pathname.startsWith('/admin/comptabilite/calendrier-fiscal') ||
-    pathname.startsWith('/admin/comptabilite/declaration-tps-tvq')
+    pathname.startsWith('/admin/comptabilite/declaration-tps-tvq') ||
+    pathname.startsWith('/admin/fiscal')
   ) return 'accounting.compliance';
 
   // ── System ──────────────────────────────────────
@@ -1067,7 +1069,6 @@ export function getSubSectionId(
     pathname.startsWith('/admin/employes')
   ) return 'system.access';
   if (
-    pathname.startsWith('/admin/fiscal') ||
     pathname.startsWith('/admin/livraison') ||
     pathname.startsWith('/admin/devises') ||
     pathname.startsWith('/admin/seo') ||
@@ -1075,7 +1076,6 @@ export function getSubSectionId(
     pathname.startsWith('/admin/contenu')
   ) return 'system.config';
   if (
-    pathname.startsWith('/admin/rapports') ||
     pathname.startsWith('/admin/logs') ||
     pathname.startsWith('/admin/uat') ||
     pathname.startsWith('/admin/navigateur') ||

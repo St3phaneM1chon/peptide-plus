@@ -22,6 +22,7 @@ function AuthErrorContent() {
     OAuthAccountNotLinked: t('auth.errorAccountNotLinked'),
     CredentialsSignin: t('auth.errorCredentials'),
     SessionRequired: t('auth.errorSessionRequired'),
+    SessionTimeout: t('auth.errorSessionTimeout'),
     Default: t('auth.errorGeneric'),
   };
 
