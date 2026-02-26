@@ -70,7 +70,7 @@ export default function SubscriptionsPage() {
     fetch(`/api/products?limit=20&active=true&locale=${locale}`)
       .then(res => res.json())
       .then(data => {
-        const products = (data.products || data || []).map((p: Record<string, unknown>) => ({
+        const products = (data.data?.products || data.products || data || []).map((p: Record<string, unknown>) => ({
           id: p.id as string,
           name: p.name as string,
           slug: p.slug as string,

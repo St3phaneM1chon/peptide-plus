@@ -119,7 +119,7 @@ export default function NewProductClient({ categories }: Props) {
           return;
         }
         const data = await res.json();
-        const products = data.products ?? [];
+        const products = data.data?.products ?? data.products ?? [];
         setSlugStatus(products.length > 0 ? 'taken' : 'available');
       } catch {
         setSlugStatus('idle');

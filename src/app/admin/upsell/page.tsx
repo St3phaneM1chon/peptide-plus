@@ -118,7 +118,7 @@ export default function UpsellAdminPage() {
       const res = await fetch('/api/products?limit=500&fields=id,name,slug');
       const data = await res.json();
       setProducts(
-        (data.products || []).map((p: { id: string; name: string; slug: string }) => ({
+        (data.data?.products || data.products || []).map((p: { id: string; name: string; slug: string }) => ({
           id: p.id,
           name: p.name,
           slug: p.slug,

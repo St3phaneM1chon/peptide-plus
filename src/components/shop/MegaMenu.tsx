@@ -78,8 +78,9 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
         fetch(`/api/products?featured=true&limit=3&locale=${locale}`).then(res => res.ok ? res.json() : { products: [] }),
       ])
         .then(([catData, prodData]) => {
-          setCategories(catData.categories || []);
-          setFeaturedProducts(prodData.products || []);
+          // API may use apiSuccess wrapper: { success, data: { categories }, meta }
+          setCategories(catData.data?.categories || catData.categories || []);
+          setFeaturedProducts(prodData.data?.products || prodData.products || []);
         })
         .catch(err => console.error('Error loading mega menu:', err))
         .finally(() => setIsLoading(false));

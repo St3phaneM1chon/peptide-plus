@@ -81,7 +81,8 @@ export default function CategoriesPage() {
     try {
       const res = await fetch('/api/categories?includeInactive=true');
       const data = await res.json();
-      setCategories(data.categories || []);
+      // API uses apiSuccess wrapper: { success, data: { categories }, meta }
+      setCategories(data.data?.categories || data.categories || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
     } finally {

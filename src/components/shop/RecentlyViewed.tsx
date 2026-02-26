@@ -65,8 +65,8 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         // BUG-056 FIX: The /api/products endpoint returns { products: [...] } via apiSuccess/withETag.
-        // Use that standard shape with a safe fallback to empty array.
-        const fetchedProducts: FetchedProduct[] = data.products ?? [];
+        // apiSuccess wraps in { success, data: { products }, meta }
+        const fetchedProducts: FetchedProduct[] = data.data?.products ?? data.products ?? [];
 
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();
