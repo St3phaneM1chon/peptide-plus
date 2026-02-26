@@ -6,9 +6,9 @@ import { useI18n } from '@/i18n/client';
 
 const accountLinks = [
   { href: '/account', labelKey: 'account.dashboard', icon: '🏠' },
-  { href: '/account/orders', labelKey: 'account.orders', icon: '📦' },
-  { href: '/account/inventory', labelKey: 'account.inventory', icon: '🔬' },
-  { href: '/account/addresses', labelKey: 'account.addresses', icon: '📍' },
+  { href: '/account/orders', labelKey: 'account.sidebar.orders', icon: '📦' },
+  { href: '/account/inventory', labelKey: 'account.sidebar.inventory', icon: '🔬' },
+  { href: '/account/addresses', labelKey: 'account.sidebar.addresses', icon: '📍' },
   { href: '/account/profile', labelKey: 'account.profile', icon: '👤' },
   { href: '/account/referrals', labelKey: 'customerRewards.referral', icon: '🎁' },
   { href: '/account/subscriptions', labelKey: 'nav.subscriptions', icon: '🔄' },

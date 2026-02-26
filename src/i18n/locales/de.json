@@ -454,6 +454,12 @@
     "wishlistSettings": {
       "placeholderListName": "Enter list name",
       "placeholderNewName": "Enter new name"
+    },
+    "navigation": "Account navigation",
+    "sidebar": {
+      "addresses": "Addresses",
+      "inventory": "My Peptides",
+      "orders": "Orders"
     }
   },
   "admin": {

@@ -1617,6 +1617,12 @@
       "chooseWishlist": "Choisir une liste de souhaits",
       "saved": "Enregistré",
       "default": "(Par défaut)"
+    },
+    "navigation": "Navigation du compte",
+    "sidebar": {
+      "addresses": "Adresses",
+      "inventory": "Mes peptides",
+      "orders": "Commandes"
     }
   },
   "reviews": {
