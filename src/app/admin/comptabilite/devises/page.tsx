@@ -59,15 +59,35 @@ export default function CurrencyPage() {
 
   const loadData = async () => {
     try {
-      // Fetch currencies from API
-      const res = await fetch('/api/accounting/currencies');
-      const json = await res.json();
+      // Fetch live FX rates from the new fx-rates API (includes trend data)
+      const fxRes = await fetch('/api/accounting/fx-rates');
+      const fxJson = await fxRes.json();
 
       // Build a rate lookup map from fetched currencies for use in foreign accounts
       const rateMap = new Map<string, number>();
 
-      if (json.currencies) {
-        const mapped: Currency[] = json.currencies
+      // Also fetch DB currencies as fallback for any currencies not in fx-rates
+      const dbRes = await fetch('/api/accounting/currencies');
+      const dbJson = await dbRes.json();
+
+      if (fxJson.rates) {
+        // Use live FX rates with real trend data
+        const mapped: Currency[] = fxJson.rates.map(
+          (r: { code: string; name: string; symbol: string; rate: number; trend: string; change24h: number; lastUpdated: string }) => ({
+            code: r.code,
+            name: r.name,
+            symbol: r.symbol,
+            rate: r.rate,
+            lastUpdated: r.lastUpdated ? new Date(r.lastUpdated) : new Date(),
+            trend: (r.trend as 'UP' | 'DOWN' | 'STABLE') || 'STABLE',
+            change24h: r.change24h ?? 0,
+          })
+        );
+        setCurrencies(mapped);
+        mapped.forEach(c => rateMap.set(c.code, c.rate));
+      } else if (dbJson.currencies) {
+        // Fallback to DB currencies if fx-rates API is unavailable
+        const mapped: Currency[] = dbJson.currencies
           .filter((c: Record<string, unknown>) => (c.code as string) !== 'CAD')
           .map((c: Record<string, unknown>) => ({
             id: c.id as string,
@@ -76,7 +96,6 @@ export default function CurrencyPage() {
             symbol: c.symbol as string,
             rate: Number(c.exchangeRate) || 1,
             lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
-            // No historical rates API available — trend and change24h are placeholder values
             trend: 'STABLE' as const,
             change24h: 0,
           }));
@@ -122,27 +141,39 @@ export default function CurrencyPage() {
   const handleRefreshRates = async () => {
     setRefreshing(true);
     try {
-      // Re-fetch currencies from API
-      const res = await fetch('/api/accounting/currencies');
+      // Trigger manual FX rate sync (updates DB from live sources)
+      const syncRes = await fetch('/api/accounting/fx-rates', {
+        method: 'POST',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+      });
+      if (syncRes.ok) {
+        const syncData = await syncRes.json();
+        toast.success(
+          t('admin.multiCurrency.syncSuccess') ||
+            `Taux synchronises: ${syncData.updated?.length || 0} mis a jour`
+        );
+      }
+
+      // Re-fetch live rates with trend data
+      const res = await fetch('/api/accounting/fx-rates');
       const json = await res.json();
-      if (json.currencies) {
-        const mapped: Currency[] = json.currencies
-          .filter((c: Record<string, unknown>) => (c.code as string) !== 'CAD')
-          .map((c: Record<string, unknown>) => ({
-            id: c.id as string,
-            code: c.code as string,
-            name: c.name as string,
-            symbol: c.symbol as string,
-            rate: Number(c.exchangeRate) || 1,
-            lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
-            // No historical rates API available — trend and change24h are placeholder values
-            trend: 'STABLE' as const,
-            change24h: 0,
-          }));
+      if (json.rates) {
+        const mapped: Currency[] = json.rates.map(
+          (r: { code: string; name: string; symbol: string; rate: number; trend: string; change24h: number; lastUpdated: string }) => ({
+            code: r.code,
+            name: r.name,
+            symbol: r.symbol,
+            rate: r.rate,
+            lastUpdated: r.lastUpdated ? new Date(r.lastUpdated) : new Date(),
+            trend: (r.trend as 'UP' | 'DOWN' | 'STABLE') || 'STABLE',
+            change24h: r.change24h ?? 0,
+          })
+        );
         setCurrencies(mapped);
       }
     } catch (err) {
       console.error('Error refreshing rates:', err);
+      toast.error(t('admin.multiCurrency.syncError') || 'Erreur lors de la synchronisation');
     } finally {
       setRefreshing(false);
     }

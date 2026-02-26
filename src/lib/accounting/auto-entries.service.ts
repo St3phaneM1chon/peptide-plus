@@ -103,7 +103,13 @@ function getSalesAccount(country: string, _province?: string): string {
 }
 
 /**
- * Determine which bank account to credit based on payment method
+ * Determine which bank/clearing account to use based on payment method.
+ *
+ * For Stripe: Returns CASH_STRIPE (1040) which serves as the Stripe
+ * Clearing Account. Sale entries debit this account (gross amount),
+ * fee entries credit it (fee deduction), and payout entries credit it
+ * (transfer to bank). See stripe-sync.service.ts for full documentation
+ * of the clearing account methodology.
  */
 function getBankAccount(paymentMethod: string): string {
   switch (paymentMethod) {

@@ -110,6 +110,12 @@ export {
   generateJournalEntryHTML,
 } from './pdf-reports.service';
 
+// Invoice PDF/HTML Generation Service
+export {
+  generateInvoiceHtml,
+} from './invoice-pdf.service';
+export type { InvoiceForPdf } from './invoice-pdf.service';
+
 // Alerts Service
 export {
   generateAlerts,
@@ -258,6 +264,23 @@ export {
   getPopularSearchTerms,
   getFilterOptions,
 } from './search.service';
+
+// PHASE 9: Revenue Recognition Service (ASC 606 / IFRS 15)
+export {
+  createRevenueSchedule,
+  recognizeRevenue,
+  getDeferredRevenueBalance,
+  getRevenueByType,
+  listRevenueSchedules,
+} from './revenue-recognition.service';
+export type {
+  RecognitionMethod,
+  RevenueScheduleStatus,
+  RevenueScheduleItem,
+  RevenueSchedule,
+  RecognitionEvent,
+  RevenueByType,
+} from './revenue-recognition.service';
 
 // Error Handler
 export {

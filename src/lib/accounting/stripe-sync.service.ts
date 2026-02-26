@@ -1,6 +1,40 @@
 /**
  * Stripe Sync Service
- * Synchronizes Stripe transactions with the accounting system
+ * Synchronizes Stripe transactions with the accounting system.
+ *
+ * CLEARING ACCOUNT METHODOLOGY (Best Practice - Already Implemented)
+ * ==================================================================
+ * This service uses CASH_STRIPE (account 1040) as a clearing/intermediary
+ * account for proper gross-to-net recording of Stripe transactions:
+ *
+ * 1. SALE OCCURS:
+ *    DR  Stripe Clearing (1040)    [gross amount]
+ *    CR  Revenue (4xxx)            [subtotal]
+ *    CR  Tax Payable (2xxx)        [taxes]
+ *
+ * 2. PROCESSING FEE:
+ *    DR  Payment Processing Fees (6110)  [fee amount]
+ *    CR  Stripe Clearing (1040)          [fee amount]
+ *
+ * 3. PAYOUT TO BANK:
+ *    DR  Bank Account (1010)        [net payout amount]
+ *    CR  Stripe Clearing (1040)     [net payout amount]
+ *
+ * The net effect: Stripe Clearing (1040) balance = funds held in Stripe
+ * at any point in time. After a complete cycle (sale + fee + payout),
+ * the clearing account returns to zero.
+ *
+ * This pattern ensures:
+ * - Revenue is recorded at gross (before fees)
+ * - Fees are properly expensed
+ * - Bank deposits reconcile to actual Stripe payouts
+ * - The Stripe clearing balance matches the Stripe dashboard at all times
+ *
+ * Entry generation: see auto-entries.service.ts
+ *   - generateSaleEntry()       -> DR 1040, CR 4xxx/2xxx
+ *   - generateFeeEntry()        -> DR 6110, CR 1040
+ *   - generateStripePayoutEntry() -> DR 1010, CR 1040
+ *   - generateRefundEntry()     -> DR 4xxx/2xxx, CR 1040
  */
 
 import Stripe from 'stripe';

@@ -7,6 +7,7 @@ import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface CashFlowProjection {
   period: string;
@@ -89,64 +90,130 @@ export default function ForecastingPage() {
     return projections;
   }, [forecastPeriod, currentBalance, monthlyRevenue, monthlyExpenses]);
 
-  const scenarios: Scenario[] = useMemo(() => {
-    const scenarioDefs = [
-      {
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [scenariosLoading, setScenariosLoading] = useState(false);
+
+  // Fetch scenarios from server when data changes
+  const fetchScenarios = useCallback(async () => {
+    if (monthlyRevenue === 0 && monthlyExpenses === 0) {
+      // No data yet, use base projections only
+      setScenarios([{
         id: 'base',
         name: t('admin.forecasts.baseScenario'),
         revenueGrowth: 5,
         expenseGrowth: 3,
         color: 'sky',
         projections: baseProjections,
-      },
-      {
-        id: 'aggressive',
-        name: t('admin.forecasts.aggressiveGrowth'),
-        revenueGrowth: 15,
-        expenseGrowth: 8,
-        color: 'green',
-        projections: [] as CashFlowProjection[],
-      },
-      {
-        id: 'conservative',
-        name: t('admin.forecasts.conservative'),
-        revenueGrowth: 2,
-        expenseGrowth: 2,
-        color: 'blue',
-        projections: [] as CashFlowProjection[],
-      },
-      {
-        id: 'worst',
-        name: t('admin.forecasts.worstCase'),
-        revenueGrowth: -20,
-        expenseGrowth: 5,
-        color: 'red',
-        projections: [] as CashFlowProjection[],
-      },
-    ];
+      }]);
+      return;
+    }
 
-    // Calculate scenario projections
-    scenarioDefs.forEach(scenario => {
-      if (scenario.id === 'base') return;
+    setScenariosLoading(true);
+    try {
+      const scenarioDefs = [
+        { name: t('admin.forecasts.aggressiveGrowth'), assumptions: { revenueGrowth: 0.15, expenseGrowth: 0.08, marketingChange: 0.5 } },
+        { name: t('admin.forecasts.conservative'), assumptions: { revenueGrowth: 0.02, expenseGrowth: 0.02, marketingChange: -0.2 } },
+        { name: t('admin.forecasts.worstCase'), assumptions: { revenueGrowth: -0.20, expenseGrowth: 0.05, marketingChange: 0 } },
+      ];
 
-      let balance = currentBalance;
-      scenario.projections = Array.from({ length: forecastPeriod }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() + i + 1);
-        const period = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
-        const inflows = monthlyRevenue * Math.pow(1 + scenario.revenueGrowth / 100, i);
-        const outflows = monthlyExpenses * Math.pow(1 + scenario.expenseGrowth / 100, i);
-        const netCashFlow = inflows - outflows;
-        const openingBalance = balance;
-        const closingBalance = balance + netCashFlow;
-        balance = closingBalance;
-
-        return { period, openingBalance, inflows, outflows, netCashFlow, closingBalance };
+      const res = await fetch('/api/accounting/forecasting', {
+        method: 'POST',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          action: 'scenarios',
+          currentCashBalance: currentBalance,
+          historicalData: {
+            revenue: monthlyRevenue,
+            purchases: monthlyExpenses * 0.4,
+            operating: monthlyExpenses * 0.3,
+            marketing: monthlyExpenses * 0.2,
+            taxes: monthlyExpenses * 0.1,
+          },
+          scenarios: scenarioDefs,
+        }),
       });
-    });
 
-    return scenarioDefs;
-  }, [baseProjections, currentBalance, forecastPeriod, monthlyRevenue, monthlyExpenses]);
+      if (!res.ok) throw new Error('Failed to fetch scenarios');
+      const data = await res.json();
+
+      const colorMap: Record<string, string> = {};
+      colorMap[t('admin.forecasts.aggressiveGrowth')] = 'green';
+      colorMap[t('admin.forecasts.conservative')] = 'blue';
+      colorMap[t('admin.forecasts.worstCase')] = 'red';
+
+      const idMap: Record<string, string> = {};
+      idMap[t('admin.forecasts.aggressiveGrowth')] = 'aggressive';
+      idMap[t('admin.forecasts.conservative')] = 'conservative';
+      idMap[t('admin.forecasts.worstCase')] = 'worst';
+
+      // Map server response to UI format
+      const serverScenarios: Scenario[] = (data.results || []).map((result: {
+        scenario: string;
+        assumptions: Record<string, number>;
+        projections: {
+          period: string;
+          openingBalance: number;
+          inflows: { total: number };
+          outflows: { total: number };
+          netCashFlow: number;
+          closingBalance: number;
+        }[];
+      }) => ({
+        id: idMap[result.scenario] || result.scenario.toLowerCase().replace(/\s+/g, '-'),
+        name: result.scenario,
+        revenueGrowth: result.assumptions.revenueGrowth || 0,
+        expenseGrowth: result.assumptions.expenseGrowth || 0,
+        color: colorMap[result.scenario] || 'slate',
+        projections: result.projections.map((p: {
+          period: string;
+          openingBalance: number;
+          inflows: { total: number };
+          outflows: { total: number };
+          netCashFlow: number;
+          closingBalance: number;
+        }) => ({
+          period: p.period,
+          openingBalance: p.openingBalance,
+          inflows: p.inflows.total,
+          outflows: p.outflows.total,
+          netCashFlow: p.netCashFlow,
+          closingBalance: p.closingBalance,
+        })),
+      }));
+
+      // Prepend base scenario
+      setScenarios([
+        {
+          id: 'base',
+          name: t('admin.forecasts.baseScenario'),
+          revenueGrowth: 5,
+          expenseGrowth: 3,
+          color: 'sky',
+          projections: baseProjections,
+        },
+        ...serverScenarios,
+      ]);
+    } catch (err) {
+      console.error('Error fetching scenarios:', err);
+      // Fallback: show base scenario only
+      setScenarios([{
+        id: 'base',
+        name: t('admin.forecasts.baseScenario'),
+        revenueGrowth: 5,
+        expenseGrowth: 3,
+        color: 'sky',
+        projections: baseProjections,
+      }]);
+    } finally {
+      setScenariosLoading(false);
+    }
+  }, [currentBalance, monthlyRevenue, monthlyExpenses, baseProjections, t]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchScenarios();
+    }
+  }, [loading, fetchScenarios]);
 
   const alerts = baseProjections
     .filter(p => p.closingBalance < minimumCash)
@@ -536,6 +603,12 @@ export default function ForecastingPage() {
       {/* Scenarios Tab */}
       {activeTab === 'scenarios' && (
         <div className="space-y-6">
+          {scenariosLoading && (
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <div className="animate-spin h-4 w-4 border-2 border-violet-500 border-t-transparent rounded-full"></div>
+              {t('admin.forecasts.loadingScenarios') || 'Chargement des scénarios...'}
+            </div>
+          )}
           {/* Scenario comparison */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {scenarios.map(scenario => {

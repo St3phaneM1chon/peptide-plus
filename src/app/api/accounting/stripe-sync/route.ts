@@ -1,5 +1,15 @@
 export const dynamic = 'force-dynamic';
 
+/**
+ * Stripe Sync API Route
+ *
+ * Uses CASH_STRIPE (1040) as a clearing account for proper gross-to-net recording:
+ * - Sale: DR Stripe Clearing (1040), CR Revenue (4xxx)
+ * - Fee: DR Processing Fees (6110), CR Stripe Clearing (1040)
+ * - Payout: DR Bank (1010), CR Stripe Clearing (1040)
+ * See stripe-sync.service.ts for full clearing account methodology documentation.
+ */
+
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { fullStripeSync, getStripeBalance } from '@/lib/accounting';

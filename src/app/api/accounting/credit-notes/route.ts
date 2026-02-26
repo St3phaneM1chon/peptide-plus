@@ -264,3 +264,287 @@ export const POST = withAdminGuard(async (request, { session }) => {
     );
   }
 });
+
+// ---------------------------------------------------------------------------
+// PUT /api/accounting/credit-notes
+// Update a DRAFT credit note: status transitions, reason, and/or line items
+// ---------------------------------------------------------------------------
+
+// Valid status transitions (#65 Audit)
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  DRAFT: ['ISSUED', 'VOID'],
+  ISSUED: ['APPLIED', 'VOID'],
+  APPLIED: ['VOID'],
+  // VOID is terminal
+};
+
+const updateCreditNoteSchema = z.object({
+  id: z.string().min(1, 'id requis'),
+  // Status transition (optional)
+  status: z.enum(['DRAFT', 'ISSUED', 'APPLIED', 'VOID']).optional(),
+  // Editable fields (only for DRAFT credit notes)
+  reason: z.string().min(1).max(500).optional(),
+  customerName: z.string().min(1).optional(),
+  customerEmail: z.string().email().optional().nullable(),
+  // Line items for recalculation (only for DRAFT)
+  items: z.array(z.object({
+    description: z.string().min(1),
+    amount: z.number().min(0.01),
+  })).optional(),
+  // Direct amount override (only for DRAFT, mutually exclusive with items)
+  amount: z.number().min(0.01).optional(),
+});
+
+export const PUT = withAdminGuard(async (request, { session }) => {
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/credit-notes');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateCreditNoteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Donnees invalides', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, status: newStatus, reason, customerName, customerEmail, items, amount } = parsed.data;
+
+    // Fetch existing credit note
+    const existing = await prisma.creditNote.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Note de credit non trouvee' }, { status: 404 });
+    }
+
+    // ---------------------------------------------------------------------------
+    // Status transition validation
+    // ---------------------------------------------------------------------------
+    if (newStatus && newStatus !== existing.status) {
+      const allowed = VALID_STATUS_TRANSITIONS[existing.status] || [];
+      if (!allowed.includes(newStatus)) {
+        return NextResponse.json(
+          { error: `Transition de statut invalide: ${existing.status} -> ${newStatus}. Transitions permises: ${allowed.join(', ') || 'aucune'}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Line item / amount editing (only for DRAFT credit notes)
+    // ---------------------------------------------------------------------------
+    const hasContentEdits = items || amount !== undefined || reason || customerName || ('customerEmail' in body);
+    if (hasContentEdits && existing.status !== 'DRAFT') {
+      return NextResponse.json(
+        { error: 'Seules les notes de credit en statut DRAFT peuvent etre modifiees. Statut actuel: ' + existing.status },
+        { status: 400 }
+      );
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+
+    // Status change
+    if (newStatus && newStatus !== existing.status) {
+      updateData.status = newStatus;
+      if (newStatus === 'ISSUED') {
+        updateData.issuedAt = new Date();
+        updateData.issuedBy = session.user.id || session.user.email;
+      }
+      if (newStatus === 'VOID') {
+        updateData.voidedAt = new Date();
+        updateData.voidedBy = session.user.id || session.user.email;
+      }
+    }
+
+    // Simple field updates
+    if (reason) updateData.reason = reason;
+    if (customerName) updateData.customerName = customerName;
+    if ('customerEmail' in body) updateData.customerEmail = customerEmail ?? null;
+
+    // Recalculate totals if items or amount changed
+    if (items || amount !== undefined) {
+      let subtotal: number;
+
+      if (items && items.length > 0) {
+        subtotal = roundCurrency(items.reduce((s, item) => s + item.amount, 0));
+      } else if (amount !== undefined) {
+        subtotal = roundCurrency(amount);
+      } else {
+        subtotal = Number(existing.subtotal);
+      }
+
+      // Validate against invoice total if linked to an invoice
+      if (existing.invoiceId) {
+        const invoice = await prisma.customerInvoice.findFirst({
+          where: { id: existing.invoiceId, deletedAt: null },
+        });
+
+        if (invoice) {
+          const invoiceTotal = Number(invoice.total);
+
+          // Sum existing non-void credit notes for same invoice, excluding current one
+          const existingCredits = await prisma.creditNote.aggregate({
+            where: {
+              invoiceId: existing.invoiceId,
+              id: { not: id },
+              status: { in: ['DRAFT', 'ISSUED', 'APPLIED'] },
+              deletedAt: null,
+            },
+            _sum: { total: true },
+          });
+          const existingCreditTotal = Number(existingCredits._sum.total ?? 0);
+
+          const taxTps = calculateTax(subtotal, GST_RATE);
+          const taxTvq = calculateTax(subtotal, QST_RATE);
+          const newTotal = roundCurrency(subtotal + taxTps + taxTvq);
+
+          if (existingCreditTotal + newTotal > invoiceTotal + 0.01) {
+            return NextResponse.json(
+              { error: `Le total des notes de credit (${roundCurrency(existingCreditTotal + newTotal)}) depasse le montant de la facture (${invoiceTotal})` },
+              { status: 400 }
+            );
+          }
+
+          updateData.subtotal = subtotal;
+          updateData.taxTps = taxTps;
+          updateData.taxTvq = taxTvq;
+          updateData.total = newTotal;
+        } else {
+          // Invoice not found (deleted?) -- still allow edit but recalculate taxes
+          const taxTps = calculateTax(subtotal, GST_RATE);
+          const taxTvq = calculateTax(subtotal, QST_RATE);
+          updateData.subtotal = subtotal;
+          updateData.taxTps = taxTps;
+          updateData.taxTvq = taxTvq;
+          updateData.total = roundCurrency(subtotal + taxTps + taxTvq);
+        }
+      } else {
+        // No linked invoice -- just recalculate
+        const taxTps = calculateTax(subtotal, GST_RATE);
+        const taxTvq = calculateTax(subtotal, QST_RATE);
+        updateData.subtotal = subtotal;
+        updateData.taxTps = taxTps;
+        updateData.taxTvq = taxTvq;
+        updateData.total = roundCurrency(subtotal + taxTps + taxTvq);
+      }
+    }
+
+    // Execute update in a transaction
+    const creditNote = await prisma.$transaction(async (tx) => {
+      return tx.creditNote.update({
+        where: { id },
+        data: updateData,
+        include: {
+          invoice: {
+            select: { id: true, invoiceNumber: true },
+          },
+        },
+      });
+    });
+
+    logger.info('Credit note updated', {
+      creditNoteId: id,
+      creditNoteNumber: creditNote.creditNoteNumber,
+      updatedFields: Object.keys(updateData),
+      oldStatus: existing.status,
+      newStatus: creditNote.status,
+      updatedBy: session.user.id || session.user.email,
+    });
+
+    return NextResponse.json({
+      success: true,
+      creditNote: {
+        ...creditNote,
+        subtotal: Number(creditNote.subtotal),
+        taxTps: Number(creditNote.taxTps),
+        taxTvq: Number(creditNote.taxTvq),
+        taxTvh: Number(creditNote.taxTvh),
+        total: Number(creditNote.total),
+      },
+    });
+  } catch (error) {
+    logger.error('Update credit note error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise a jour de la note de credit' },
+      { status: 500 }
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/accounting/credit-notes
+// Soft-delete a DRAFT credit note only
+// ---------------------------------------------------------------------------
+
+export const DELETE = withAdminGuard(async (request, { session }) => {
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/credit-notes');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'id requis' }, { status: 400 });
+    }
+
+    // Fetch existing credit note
+    const existing = await prisma.creditNote.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Note de credit non trouvee' }, { status: 404 });
+    }
+
+    // Only allow deletion of DRAFT credit notes
+    if (existing.status !== 'DRAFT') {
+      return NextResponse.json(
+        { error: `Seules les notes de credit en statut DRAFT peuvent etre supprimees. Statut actuel: ${existing.status}` },
+        { status: 400 }
+      );
+    }
+
+    // Soft delete
+    await prisma.creditNote.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    logger.info('Credit note soft-deleted', {
+      creditNoteId: id,
+      creditNoteNumber: existing.creditNoteNumber,
+      deletedBy: session.user.id || session.user.email,
+    });
+
+    return NextResponse.json({
+      success: true,
+      deletedId: id,
+      creditNoteNumber: existing.creditNoteNumber,
+    });
+  } catch (error) {
+    logger.error('Delete credit note error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json(
+      { error: 'Erreur lors de la suppression de la note de credit' },
+      { status: 500 }
+    );
+  }
+});

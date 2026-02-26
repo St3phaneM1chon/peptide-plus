@@ -2,151 +2,95 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { logger } from '@/lib/logger';
-import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { validateCsrf } from '@/lib/csrf-middleware';
+import { prisma } from '@/lib/db';
 import { z } from 'zod';
-
-// ---------------------------------------------------------------------------
-// Types - Payroll stub (no Prisma model yet)
-// ---------------------------------------------------------------------------
-
-interface PayrollEntry {
-  id: string;
-  employeeName: string;
-  employeeEmail: string | null;
-  period: string;
-  periodType: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
-  year: number;
-  month: number;
-  grossPay: number;
-  federalTax: number;
-  provincialTax: number;
-  cpp: number;       // Canada Pension Plan
-  ei: number;        // Employment Insurance
-  qpip: number;      // Quebec Parental Insurance Plan
-  rqap: number;      // Regime quebecois d'assurance parentale
-  otherDeductions: number;
-  netPay: number;
-  status: 'DRAFT' | 'APPROVED' | 'PAID';
-  paidAt: string | null;
-  createdAt: string;
-}
-
-interface PayrollSummary {
-  totalGross: number;
-  totalNet: number;
-  totalFederalTax: number;
-  totalProvincialTax: number;
-  totalCpp: number;
-  totalEi: number;
-  totalQpip: number;
-  employeeCount: number;
-}
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Zod schemas
 // ---------------------------------------------------------------------------
 
-const createPayrollSchema = z.object({
-  employeeName: z.string().min(1, 'employeeName is required').max(200),
-  employeeEmail: z.string().email().nullable().optional(),
-  period: z.string().min(1, 'period is required'),
-  periodType: z.enum(['WEEKLY', 'BIWEEKLY', 'MONTHLY']),
-  year: z.number().int().min(2000).max(2100),
-  month: z.number().int().min(1).max(12),
-  grossPay: z.number().min(0, 'grossPay must be >= 0'),
-  federalTax: z.number().min(0).default(0),
-  provincialTax: z.number().min(0).default(0),
-  cpp: z.number().min(0).default(0),
-  ei: z.number().min(0).default(0),
-  qpip: z.number().min(0).default(0),
-  rqap: z.number().min(0).default(0),
-  otherDeductions: z.number().min(0).default(0),
-  netPay: z.number().min(0, 'netPay must be >= 0'),
+const createPayrollRunSchema = z.object({
+  periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD'),
+  periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD'),
+  payDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format: YYYY-MM-DD'),
+  notes: z.string().max(2000).nullable().optional(),
 });
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/payroll
+// List payroll runs with pagination and filters
 // ---------------------------------------------------------------------------
 
-/**
- * List payroll entries with optional filters.
- *
- * STUB: No Prisma model exists yet for payroll. This route returns
- * empty data with the correct response shape so the frontend can
- * integrate immediately. Once a Payroll model is added to the schema,
- * replace the stub data with real Prisma queries.
- *
- * Query params:
- *   - year: filter by year (e.g. 2026)
- *   - month: filter by month (1-12)
- *   - status: filter by status (DRAFT, APPROVED, PAID)
- *   - page / limit: pagination
- */
 export const GET = withAdminGuard(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
-    const year = searchParams.get('year');
-    const month = searchParams.get('month');
-    const status = searchParams.get('status');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20') || 20), 200);
+    const status = searchParams.get('status');
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
 
-    // Log the filter params for debugging during stub phase
-    logger.debug('Payroll GET (stub)', {
-      year,
-      month,
-      status,
-      page,
-      limit,
-    });
+    const where: Record<string, unknown> = { deletedAt: null };
 
-    // ------------------------------------------------------------------
-    // STUB: Return empty results with correct shape.
-    // Replace this block with Prisma queries once the model exists:
-    //
-    //   const where: Prisma.PayrollWhereInput = {};
-    //   if (year) where.year = parseInt(year);
-    //   if (month) where.month = parseInt(month);
-    //   if (status) where.status = status;
-    //
-    //   const [entries, total] = await Promise.all([
-    //     prisma.payroll.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
-    //     prisma.payroll.count({ where }),
-    //   ]);
-    // ------------------------------------------------------------------
+    if (status) {
+      where.status = status;
+    }
+    if (dateFrom) {
+      where.periodStart = { ...(where.periodStart as object || {}), gte: new Date(dateFrom) };
+    }
+    if (dateTo) {
+      where.periodEnd = { ...(where.periodEnd as object || {}), lte: new Date(dateTo) };
+    }
 
-    const entries: PayrollEntry[] = [];
-    const total = 0;
+    const [runs, total] = await Promise.all([
+      prisma.payrollRun.findMany({
+        where,
+        include: {
+          entries: {
+            select: { id: true, employeeId: true, grossPay: true, netPay: true },
+          },
+        },
+        orderBy: { periodStart: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.payrollRun.count({ where }),
+    ]);
 
-    const summary: PayrollSummary = {
-      totalGross: 0,
-      totalNet: 0,
-      totalFederalTax: 0,
-      totalProvincialTax: 0,
-      totalCpp: 0,
-      totalEi: 0,
-      totalQpip: 0,
-      employeeCount: 0,
-    };
+    const mapped = runs.map((r) => ({
+      id: r.id,
+      runDate: r.runDate.toISOString().split('T')[0],
+      periodStart: r.periodStart.toISOString().split('T')[0],
+      periodEnd: r.periodEnd.toISOString().split('T')[0],
+      payDate: r.payDate.toISOString().split('T')[0],
+      status: r.status,
+      totalGross: Number(r.totalGross),
+      totalDeductions: Number(r.totalDeductions),
+      totalNet: Number(r.totalNet),
+      totalEmployerCost: Number(r.totalEmployerCost),
+      employeeCount: r.entries.length,
+      approvedBy: r.approvedBy,
+      approvedAt: r.approvedAt?.toISOString() ?? null,
+      notes: r.notes,
+      createdAt: r.createdAt.toISOString(),
+    }));
 
     return NextResponse.json({
-      entries,
+      runs: mapped,
       pagination: {
         page,
         limit,
         total,
         pages: Math.ceil(total / limit),
       },
-      summary,
     });
   } catch (error) {
-    logger.error('Error fetching payroll entries', {
+    logger.error('Error fetching payroll runs', {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation des donnees de paie' },
+      { error: 'Erreur lors de la recuperation des cycles de paie' },
       { status: 500 }
     );
   }
@@ -154,35 +98,13 @@ export const GET = withAdminGuard(async (request) => {
 
 // ---------------------------------------------------------------------------
 // POST /api/accounting/payroll
+// Create a new payroll run (DRAFT)
 // ---------------------------------------------------------------------------
 
-/**
- * Create a new payroll entry.
- *
- * STUB: Validates the input with Zod but does not persist to the database.
- * Returns a mock response with the validated data so the frontend can
- * integrate immediately. Replace with Prisma create once the model exists.
- */
-export const POST = withAdminGuard(async (request, { session }) => {
+export const POST = withAdminGuard(async (request) => {
   try {
-    // CSRF + Rate limiting
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/accounting/payroll');
-    if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
     const body = await request.json();
-    const parsed = createPayrollSchema.safeParse(body);
+    const parsed = createPayrollRunSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -191,74 +113,87 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    const data = parsed.data;
+    const { periodStart, periodEnd, payDate, notes } = parsed.data;
 
-    // Validate that deductions + net = gross
-    const totalDeductions =
-      data.federalTax +
-      data.provincialTax +
-      data.cpp +
-      data.ei +
-      data.qpip +
-      data.rqap +
-      data.otherDeductions;
+    const start = new Date(periodStart);
+    const end = new Date(periodEnd);
+    const pay = new Date(payDate);
 
-    if (Math.abs(data.grossPay - totalDeductions - data.netPay) > 0.01) {
+    if (end <= start) {
       return NextResponse.json(
-        {
-          error: `Le salaire net (${data.netPay}) + deductions (${totalDeductions.toFixed(2)}) ne correspond pas au brut (${data.grossPay})`,
-        },
+        { error: 'La date de fin doit etre apres la date de debut' },
+        { status: 400 }
+      );
+    }
+    if (pay < end) {
+      return NextResponse.json(
+        { error: 'La date de paiement doit etre egale ou apres la fin de periode' },
         { status: 400 }
       );
     }
 
-    logger.info('Payroll entry created (stub)', {
-      employeeName: data.employeeName,
-      period: data.period,
-      grossPay: data.grossPay,
-      submittedBy: session.user?.email,
+    // Check for overlapping payroll runs
+    const overlapping = await prisma.payrollRun.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { periodStart: { lte: end }, periodEnd: { gte: start } },
+        ],
+      },
     });
 
-    // ------------------------------------------------------------------
-    // STUB: Return mock created entry. Replace with Prisma create:
-    //
-    //   const entry = await prisma.payroll.create({
-    //     data: { ...data, createdBy: session.user?.email },
-    //   });
-    // ------------------------------------------------------------------
+    if (overlapping) {
+      return NextResponse.json(
+        { error: `Un cycle de paie existant chevauche cette periode (${overlapping.id})` },
+        { status: 409 }
+      );
+    }
 
-    const stubEntry: PayrollEntry = {
-      id: `stub-${Date.now()}`,
-      employeeName: data.employeeName,
-      employeeEmail: data.employeeEmail || null,
-      period: data.period,
-      periodType: data.periodType,
-      year: data.year,
-      month: data.month,
-      grossPay: data.grossPay,
-      federalTax: data.federalTax,
-      provincialTax: data.provincialTax,
-      cpp: data.cpp,
-      ei: data.ei,
-      qpip: data.qpip,
-      rqap: data.rqap,
-      otherDeductions: data.otherDeductions,
-      netPay: data.netPay,
-      status: 'DRAFT',
-      paidAt: null,
-      createdAt: new Date().toISOString(),
-    };
+    const run = await prisma.payrollRun.create({
+      data: {
+        runDate: new Date(),
+        periodStart: start,
+        periodEnd: end,
+        payDate: pay,
+        status: 'DRAFT',
+        notes: notes || null,
+      },
+    });
+
+    logger.info('Payroll run created', {
+      payrollRunId: run.id,
+      periodStart,
+      periodEnd,
+      payDate,
+    });
 
     return NextResponse.json(
-      { success: true, entry: stubEntry },
+      {
+        success: true,
+        run: {
+          id: run.id,
+          runDate: run.runDate.toISOString().split('T')[0],
+          periodStart: run.periodStart.toISOString().split('T')[0],
+          periodEnd: run.periodEnd.toISOString().split('T')[0],
+          payDate: run.payDate.toISOString().split('T')[0],
+          status: run.status,
+          totalGross: 0,
+          totalDeductions: 0,
+          totalNet: 0,
+          totalEmployerCost: 0,
+          employeeCount: 0,
+          notes: run.notes,
+          createdAt: run.createdAt.toISOString(),
+        },
+      },
       { status: 201 }
     );
   } catch (error) {
-    logger.error('Error creating payroll entry', {
+    logger.error('Error creating payroll run', {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { error: 'Erreur lors de la creation de l\'entree de paie' },
+      { error: 'Erreur lors de la creation du cycle de paie' },
       { status: 500 }
     );
   }
