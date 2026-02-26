@@ -2682,15 +2682,19 @@
       "mediaLibrary": "Bibliothèque"
     },
     "outlook": {
-      "searchPlaceholder": "Rechercher...",
       "collapsePane": "Réduire le panneau",
       "expandPane": "Développer le panneau",
-      "viewSite": "Voir le site",
+      "mainNavigationRail": "Rail de navigation principal",
       "noSelection": "Sélectionnez un élément à lire",
-      "today": "Aujourd'hui",
-      "yesterday": "Hier",
+      "older": "Plus ancien",
+      "searchPlaceholder": "Rechercher...",
+      "sectionNavigation": "Navigation de section",
       "thisWeek": "Cette semaine",
-      "older": "Plus ancien"
+      "today": "Aujourd'hui",
+      "toggleNavigation": "Basculer la navigation",
+      "toggleSubItems": "Basculer les sous-éléments",
+      "viewSite": "Voir le site",
+      "yesterday": "Hier"
     },
     "ribbon": {
       "tabHome": "Accueil",
@@ -7484,7 +7488,8 @@
       "liveIndicator": "En direct",
       "lastUpdated": "Dernière mise à jour",
       "simulatedData": "Données simulées"
-    }
+    },
+    "skipToContent": "Aller au contenu"
   },
   "badges": {
     "new": "NOUVEAU",
@@ -8160,5 +8165,12 @@
     "unsubscribeError": "Erreur lors de la désinscription.",
     "alreadySubscribed": "Vous êtes déjà inscrit à notre liste de diffusion.",
     "confirmed": "Votre inscription est confirmée ! Bienvenue."
+  },
+  "tts": {
+    "listen": "Écouter cette page",
+    "loading": "Chargement...",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "stop": "Arrêter"
   }
 }

@@ -3702,11 +3702,15 @@
     "outlook": {
       "collapsePane": "Collapse panel",
       "expandPane": "Expand panel",
+      "mainNavigationRail": "Main navigation rail",
       "noSelection": "Выберите элемент для чтения",
       "older": "Старше",
       "searchPlaceholder": "Search...",
+      "sectionNavigation": "Section navigation",
       "thisWeek": "На этой неделе",
       "today": "Сегодня",
+      "toggleNavigation": "Toggle navigation",
+      "toggleSubItems": "Toggle sub-items",
       "viewSite": "View site",
       "yesterday": "Вчера"
     },
@@ -5227,7 +5231,8 @@
       "liveIndicator": "Live",
       "lastUpdated": "Last updated",
       "simulatedData": "Simulated data"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "ambassador": {
     "ambassadorLabel": "Ambassador",
@@ -7998,5 +8003,12 @@
     "tutorial": "Руководство",
     "upcoming": "Скоро",
     "withWebinarLink": "со ссылкой на вебинар."
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "loading": "Loading...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
   }
 }

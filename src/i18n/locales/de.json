@@ -3702,11 +3702,15 @@
     "outlook": {
       "collapsePane": "Collapse panel",
       "expandPane": "Expand panel",
+      "mainNavigationRail": "Main navigation rail",
       "noSelection": "Wählen Sie ein Element zum Lesen",
       "older": "Älter",
       "searchPlaceholder": "Search...",
+      "sectionNavigation": "Section navigation",
       "thisWeek": "Diese Woche",
       "today": "Heute",
+      "toggleNavigation": "Toggle navigation",
+      "toggleSubItems": "Toggle sub-items",
       "viewSite": "View site",
       "yesterday": "Gestern"
     },
@@ -5227,7 +5231,8 @@
       "liveIndicator": "Live",
       "lastUpdated": "Last updated",
       "simulatedData": "Simulated data"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "ambassador": {
     "ambassadorLabel": "Ambassador",
@@ -7998,5 +8003,12 @@
     "tutorial": "Tutorial",
     "upcoming": "Bevorstehend",
     "withWebinarLink": "mit dem Webinar-Link."
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "loading": "Loading...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
   }
 }

@@ -5,7 +5,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export type TTSStatus = 'idle' | 'loading' | 'speaking' | 'paused';
 
 // Chatterbox TTS server URL (self-hosted on Mac Studio)
-const TTS_API_URL = process.env.NEXT_PUBLIC_TTS_API_URL || 'http://localhost:8003';
+// Only use localhost fallback in development; in production, skip if not configured
+const TTS_API_URL = process.env.NEXT_PUBLIC_TTS_API_URL
+  || (process.env.NODE_ENV === 'development' ? 'http://localhost:8003' : null);
 
 // Languages supported by Chatterbox multilingual model
 const CHATTERBOX_LANGUAGES = new Set([
@@ -148,14 +150,18 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    // Check Chatterbox server
-    fetch(`${TTS_API_URL}/health`, { signal: AbortSignal.timeout(3000) })
-      .then(r => r.json())
-      .then(data => {
-        setChatterboxAvailable(data.status === 'ok' && data.model_loaded);
-        setIsSupported(true);
-      })
-      .catch(() => setChatterboxAvailable(false));
+    // Check Chatterbox server (skip if no URL configured, e.g. in production without self-hosted TTS)
+    if (TTS_API_URL) {
+      fetch(`${TTS_API_URL}/health`, { signal: AbortSignal.timeout(3000) })
+        .then(r => r.json())
+        .then(data => {
+          setChatterboxAvailable(data.status === 'ok' && data.model_loaded);
+          setIsSupported(true);
+        })
+        .catch(() => setChatterboxAvailable(false));
+    } else {
+      setChatterboxAvailable(false);
+    }
 
     return () => {
       if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null;
@@ -185,6 +191,7 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}) {
    * Speak via Chatterbox API (returns audio blob)
    */
   const speakViaChatterbox = useCallback(async (text: string): Promise<boolean> => {
+    if (!TTS_API_URL) return false;
     try {
       const res = await fetch(`${TTS_API_URL}/tts`, {
         method: 'POST',

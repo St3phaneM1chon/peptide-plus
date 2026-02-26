@@ -3702,11 +3702,15 @@
     "outlook": {
       "collapsePane": "Collapse panel",
       "expandPane": "Expand panel",
+      "mainNavigationRail": "Main navigation rail",
       "noSelection": "읽을 항목을 선택하세요",
       "older": "이전",
       "searchPlaceholder": "Search...",
+      "sectionNavigation": "Section navigation",
       "thisWeek": "이번 주",
       "today": "오늘",
+      "toggleNavigation": "Toggle navigation",
+      "toggleSubItems": "Toggle sub-items",
       "viewSite": "View site",
       "yesterday": "어제"
     },
@@ -5227,7 +5231,8 @@
       "liveIndicator": "Live",
       "lastUpdated": "Last updated",
       "simulatedData": "Simulated data"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "ambassador": {
     "ambassadorLabel": "Ambassador",
@@ -7998,5 +8003,12 @@
     "tutorial": "튜토리얼",
     "upcoming": "다가오는",
     "withWebinarLink": "웨비나 링크와 함께."
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "loading": "Loading...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
   }
 }

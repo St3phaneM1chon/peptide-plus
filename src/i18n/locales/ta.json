@@ -3702,11 +3702,15 @@
     "outlook": {
       "collapsePane": "Collapse panel",
       "expandPane": "Expand panel",
+      "mainNavigationRail": "Main navigation rail",
       "noSelection": "படிக்க ஒரு உருப்படியைத் தேர்ந்தெடுக்கவும்",
       "older": "பழையது",
       "searchPlaceholder": "Search...",
+      "sectionNavigation": "Section navigation",
       "thisWeek": "இந்த வாரம்",
       "today": "இன்று",
+      "toggleNavigation": "Toggle navigation",
+      "toggleSubItems": "Toggle sub-items",
       "viewSite": "View site",
       "yesterday": "நேற்று"
     },
@@ -5227,7 +5231,8 @@
       "liveIndicator": "Live",
       "lastUpdated": "Last updated",
       "simulatedData": "Simulated data"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "ambassador": {
     "ambassadorLabel": "Ambassador",
@@ -7998,5 +8003,12 @@
     "tutorial": "கையேடு",
     "upcoming": "எதிர்வரும்",
     "withWebinarLink": "வெபினாரின் இணைப்புடன்."
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "loading": "Loading...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
   }
 }

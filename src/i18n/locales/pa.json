@@ -3702,11 +3702,15 @@
     "outlook": {
       "collapsePane": "Collapse panel",
       "expandPane": "Expand panel",
+      "mainNavigationRail": "Main navigation rail",
       "noSelection": "ਪੜ੍ਹਨ ਲਈ ਇੱਕ ਆਈਟਮ ਚੁਣੋ",
       "older": "ਪੁਰਾਣਾ",
       "searchPlaceholder": "Search...",
+      "sectionNavigation": "Section navigation",
       "thisWeek": "ਇਸ ਹਫ਼ਤੇ",
       "today": "ਅੱਜ",
+      "toggleNavigation": "Toggle navigation",
+      "toggleSubItems": "Toggle sub-items",
       "viewSite": "View site",
       "yesterday": "ਕੱਲ੍ਹ"
     },
@@ -5227,7 +5231,8 @@
       "liveIndicator": "Live",
       "lastUpdated": "Last updated",
       "simulatedData": "Simulated data"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "ambassador": {
     "ambassadorLabel": "Ambassador",
@@ -7998,5 +8003,12 @@
     "tutorial": "ਟਿਊਟੋਰਿਯਲ",
     "upcoming": "ਆਉਣ ਵਾਲੇ",
     "withWebinarLink": "ਵੈਬਿਨਾਰ ਲਿੰਕ ਨਾਲ।"
+  },
+  "tts": {
+    "listen": "Listen to this page",
+    "loading": "Loading...",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop"
   }
 }

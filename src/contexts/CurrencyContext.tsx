@@ -88,10 +88,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return priceInCAD * currency.exchangeRate;
   }, [currency.exchangeRate]);
 
+  // Track whether we have hydrated to avoid SSR/client mismatch (React #418)
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+
   // Memoize Intl.NumberFormat instance to avoid re-creating on every formatPrice call
+  // Use a stable locale ('en-CA') for SSR and initial client render to prevent hydration mismatch,
+  // then switch to navigator.language after hydration.
   const formatter = useMemo(() => {
-    const userLocale =
-      typeof navigator !== 'undefined' && navigator.language
+    const userLocale = hydrated
+      && typeof navigator !== 'undefined'
+      && navigator.language
         ? navigator.language
         : 'en-CA';
 
@@ -101,7 +108,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-  }, [currency.code]);
+  }, [currency.code, hydrated]);
 
   const formatPrice = useCallback((priceInCAD: number): string => {
     const converted = priceInCAD * currency.exchangeRate;

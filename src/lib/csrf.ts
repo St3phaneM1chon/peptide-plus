@@ -4,7 +4,8 @@
  */
 
 import { randomBytes, createHmac } from 'crypto';
-import { logger } from '@/lib/logger';
+// NOTE: logger is loaded dynamically (not at top-level) to avoid bundling
+// winston/fs/path into client components that import addCSRFHeader/fetchWithCSRF.
 // NOTE: cookies() from 'next/headers' is loaded dynamically inside server-only
 // functions to avoid breaking client component imports of this module.
 // See: verifyCSRFMiddleware() and setCSRFCookie()
@@ -32,7 +33,7 @@ function resolveCSRFSecret(): string {
 
   // Development: use a stable, clearly-marked dev secret
   if (typeof window === 'undefined') {
-    logger.warn('[csrf] CSRF_SECRET not set - using development fallback (NOT safe for production)');
+    console.warn('[csrf] CSRF_SECRET not set - using development fallback (NOT safe for production)');
   }
   return DEV_FALLBACK_SECRET;
 }
@@ -137,6 +138,9 @@ export async function verifyCSRFMiddleware(request: Request): Promise<{
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
+
+  // Dynamic import to avoid bundling winston/fs into client code
+  const { logger } = await import('@/lib/logger');
 
   if (!cookieToken) {
     // FAILLE-079 FIX: Log CSRF validation failures for security monitoring
