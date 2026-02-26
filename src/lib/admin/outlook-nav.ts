@@ -15,7 +15,7 @@ import {
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
   ClipboardCheck,
 } from 'lucide-react';
-import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
+import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
 // ── Icon Rail (left vertical strip) ──────────────────────────
 
@@ -167,6 +167,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/media/launch-zoom', labelKey: 'admin.nav.launchZoom', icon: ZoomIcon as unknown as LucideIcon, image: '/images/platforms/zoom.png' },
           { href: '/admin/media/launch-webex', labelKey: 'admin.nav.launchWebex', icon: WebexIcon as unknown as LucideIcon, image: '/images/platforms/webex.png' },
           { href: '/admin/media/launch-google-meet', labelKey: 'admin.nav.launchGoogleMeet', icon: GoogleMeetIcon as unknown as LucideIcon, image: '/images/platforms/google-meet.png' },
+          { href: '/admin/media/launch-whatsapp', labelKey: 'admin.nav.launchWhatsApp', icon: WhatsAppIcon as unknown as LucideIcon, image: '/images/platforms/whatsapp.png' },
         ],
         defaultOpen: true,
       },

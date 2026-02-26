@@ -79,7 +79,7 @@ export function PlatformLauncher({ platformId }: PlatformLauncherProps) {
             <button
               type="button"
               onClick={handleOpenDesktop}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all hover:shadow-lg bg-gradient-to-r ${platform.color}`}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all hover:shadow-lg ${platform.color}`}
               aria-label={t('admin.media.openDesktopApp')}
             >
               <Monitor className="w-4 h-4" />
@@ -121,7 +121,7 @@ export function PlatformLauncher({ platformId }: PlatformLauncherProps) {
               <button
                 type="button"
                 onClick={handleOpenDesktop}
-                className={`w-full flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-medium transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r ${platform.color}`}
+                className={`w-full flex items-center justify-center gap-2 px-6 py-3 text-white rounded-xl font-medium transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] ${platform.color}`}
               >
                 <Monitor className="w-5 h-5" />
                 {t('admin.media.openDesktopApp')}

@@ -2674,6 +2674,7 @@
       "launchZoom": "Zoom",
       "launchWebex": "Webex",
       "launchGoogleMeet": "Google Meet",
+      "launchWhatsApp": "WhatsApp",
       "mediaZoom": "API Zoom",
       "mediaWhatsApp": "API WhatsApp",
       "mediaTeams": "API Teams",
@@ -2959,6 +2960,8 @@
       "platformZoomDesc": "Lancez des réunions et webinaires Zoom",
       "platformWebex": "Webex",
       "platformWebexDesc": "Accédez à Cisco Webex pour vos visioconférences",
+      "platformWhatsApp": "WhatsApp",
+      "platformWhatsAppDesc": "Communiquez avec vos contacts via WhatsApp",
       "platformGoogleMeet": "Google Meet",
       "platformGoogleMeetDesc": "Démarrez un appel vidéo avec Google Meet",
       "platformBlocked": "Ce site ne peut pas être intégré. Utilisez les boutons ci-dessous pour l'ouvrir."

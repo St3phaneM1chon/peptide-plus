@@ -13,7 +13,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
-import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
+import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 import { platforms } from '@/lib/admin/platform-config';
 import { addCSRFHeader } from '@/lib/csrf';
 
@@ -39,6 +39,7 @@ const PLATFORM_LAUNCHERS = [
   { id: 'zoom', href: '/admin/media/launch-zoom', icon: ZoomIcon, gradient: platforms.zoom.color, nameKey: platforms.zoom.nameKey, descKey: platforms.zoom.descKey, hasDesktop: true },
   { id: 'webex', href: '/admin/media/launch-webex', icon: WebexIcon, gradient: platforms.webex.color, nameKey: platforms.webex.nameKey, descKey: platforms.webex.descKey, hasDesktop: true },
   { id: 'google-meet', href: '/admin/media/launch-google-meet', icon: GoogleMeetIcon, gradient: platforms['google-meet'].color, nameKey: platforms['google-meet'].nameKey, descKey: platforms['google-meet'].descKey, hasDesktop: false },
+  { id: 'whatsapp', href: '/admin/media/launch-whatsapp', icon: WhatsAppIcon, gradient: platforms.whatsapp.color, nameKey: platforms.whatsapp.nameKey, descKey: platforms.whatsapp.descKey, hasDesktop: true },
 ];
 
 // F60 FIX: Move platformDefs outside component to avoid recreating on every render
@@ -185,7 +186,7 @@ export default function MediaDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PLATFORM_LAUNCHERS.map((p) => (
             <Link key={p.id} href={p.href} className="group">
-              <div className={`flex items-center gap-3 p-4 bg-gradient-to-r ${p.gradient} rounded-lg text-white hover:opacity-90 transition-opacity`}>
+              <div className={`flex items-center gap-3 p-4 ${p.gradient} rounded-lg text-white hover:opacity-90 transition-opacity`}>
                 <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
                   <p.icon className="w-5 h-5" />
                 </div>
