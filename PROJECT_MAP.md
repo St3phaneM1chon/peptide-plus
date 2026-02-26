@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-26 (Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
+# LAST UPDATED: 2026-02-26 (AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 192 | **API Routes**: 356 | **Prisma Models**: 112 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 186
+- **Pages**: 193 | **API Routes**: 357 | **Prisma Models**: 112 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 187
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -86,15 +86,15 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 ---
 
-### 1.4 ACCOUNTING (28 admin pages)
+### 1.4 ACCOUNTING (29 admin pages)
 > **What**: Double-entry bookkeeping, journal entries, chart of accounts, invoices, bank reconciliation, tax reports, fixed assets, budgets
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/comptabilite` + 28 sub-pages (ecritures, factures-clients, factures-fournisseurs, notes-credit, grand-livre, plan-comptable, rapprochement, banques, devises, saisie-rapide, recurrentes, previsions, recherche, rapports, rapports-personnalises, exports, ocr, audit, calendrier-fiscal, declaration-tps-tvq, etats-financiers, immobilisations, import-bancaire, parametres, budget, cloture, aging, depenses) |
-| **API Routes** | 51+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, **payroll** (GET/POST -- stub), **reports/custom** (GET/POST), **reports/custom/[id]** (GET/PUT/DELETE), **reports/custom/[id]/run** (POST), **reports/custom/[id]/export** (GET), **reports/columns** (GET) |
+| **Pages** | `/admin/comptabilite` + 29 sub-pages (ecritures, factures-clients, factures-fournisseurs, notes-credit, grand-livre, plan-comptable, rapprochement, banques, devises, saisie-rapide, recurrentes, previsions, recherche, rapports, rapports-personnalises, exports, ocr, audit, calendrier-fiscal, declaration-tps-tvq, etats-financiers, immobilisations, import-bancaire, parametres, budget, cloture, aging, depenses, **ai-assistant**) |
+| **API Routes** | 52+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, **payroll** (GET/POST -- stub), **reports/custom** (GET/POST), **reports/custom/[id]** (GET/PUT/DELETE), **reports/custom/[id]/run** (POST), **reports/custom/[id]/export** (GET), **reports/columns** (GET), **ai-chat** (GET/POST) |
 | **Models** | `ChartOfAccount` (self-ref parent/children), `JournalEntry`, `JournalLine`, `CustomerInvoice`, `CustomerInvoiceItem`, `SupplierInvoice` (orphan), `CreditNote`, `BankAccount`, `BankTransaction`, `BankRule`, `Budget`, `BudgetLine`, `Expense`, `TaxReport` (orphan), `FixedAsset`, `FixedAssetDepreciation`, `AuditTrail`, `RecurringEntryTemplate` (orphan), `AccountingPeriod` (orphan), `FiscalYear` (orphan), `AccountingSettings` (orphan), `AccountingAlert` (orphan), `DocumentAttachment` (orphan), `FiscalCalendarEvent` (orphan), `CustomReport` (orphan) |
-| **Lib** | 34 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **report-engine** |
+| **Lib** | 35 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **report-engine**, **ai-accountant.service** |
 | **Affects** | Orders (auto journal entries on sale/refund), Payments (stripe-sync), Tax (TPS/TVQ declarations), Fixed Assets (depreciation) |
 | **NOTE** | Heavily uses soft references. JournalEntry.orderId is NOT a FK. BankTransaction.matchedEntryId is NOW a real FK to JournalEntry (SetNull). Most accounting-to-commerce connections are soft. |
 
@@ -451,7 +451,7 @@ User
 | Abonnements | `/admin/abonnements` | COMPLETE | OutlookUI | `/api/admin/subscriptions` |
 | Fidelite | `/admin/fidelite` | COMPLETE | OutlookUI | `/api/admin/loyalty/*` |
 
-### Comptabilite (28 pages - ALL COMPLETE)
+### Comptabilite (29 pages - ALL COMPLETE)
 All pages use Outlook UI pattern (SplitLayout, ContentList, DetailPane). Key backend connections:
 - **Dashboard**: `/api/accounting/dashboard` -> JournalEntry, BankAccount, CustomerInvoice aggregate
 - **Ecritures**: `/api/accounting/entries` -> JournalEntry, JournalLine, ChartOfAccount
@@ -460,6 +460,7 @@ All pages use Outlook UI pattern (SplitLayout, ContentList, DetailPane). Key bac
 - **Rapprochement**: `/api/accounting/reconciliation` -> BankTransaction, JournalEntry, BankAccount
 - **Banques**: `/api/accounting/bank-accounts` -> BankAccount, BankTransaction
 - **Budget**: `/api/accounting/budgets` -> Budget, BudgetLine
+- **AI Assistant**: `/api/accounting/ai-chat` -> JournalEntry, JournalLine, ChartOfAccount, CustomerInvoice, SupplierInvoice, BankAccount, Budget, BudgetLine, Expense (rule-based NLP, 18 intents, bilingual EN/FR)
 - **Exports**: `/api/accounting/export` -> JournalEntry, JournalLine, ChartOfAccount, TaxReport
 - **Alerts**: `/api/accounting/alerts` -> CustomerInvoice, BankAccount, SupplierInvoice, TaxReport
 - **Tax Summary**: `/api/accounting/tax-summary` -> Order, SupplierInvoice
@@ -657,6 +658,7 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 | /api/accounting/budgets | GET,POST,PUT,DEL | Budget,BudgetLine | admin-guard |
 | /api/accounting/export | GET | JournalEntry,JournalLine,ChartOfAccount,TaxReport | admin-guard |
 | /api/accounting/alerts | GET,POST,PATCH | AccountingAlert,CustomerInvoice,BankAccount,SupplierInvoice | admin-guard |
+| /api/accounting/ai-chat | GET,POST | JournalEntry,JournalLine,ChartOfAccount,CustomerInvoice,SupplierInvoice,BankAccount,Budget,BudgetLine | admin-guard (30 req/min) |
 
 ### Auth (5 routes)
 | Route | Models | External |
@@ -834,8 +836,8 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | **Audit** | admin-audit.ts (logAdminAction, getClientIpFromRequest), audit-engine.ts (getAuditDashboard) | Admin API routes, audit pages |
 | **Inventory** | inventory.ts (adjustStock) | Inventory API routes |
 
-### `/src/lib/accounting/` (33 files)
-auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates
+### `/src/lib/accounting/` (34 files)
+auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **ai-accountant.service** (rule-based NLP chat, 18 intents, bilingual, session management)
 
 ### `/src/lib/email/` (13 files)
 email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance)

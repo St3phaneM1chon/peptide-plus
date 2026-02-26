@@ -350,3 +350,34 @@ export type {
   ReportLineItem,
   ReportCategory,
 } from './report-templates.service';
+
+// PHASE 11: Multi-Entity / Multi-Company Service
+export {
+  createEntity,
+  getEntities,
+  getEntityTree,
+  getEntityById,
+  updateEntity,
+  setDefaultEntity,
+  deleteEntity,
+  getEntityFinancials,
+  createIntercoTransaction,
+  getIntercoTransactions,
+  updateIntercoTransaction,
+  matchIntercoTransactions,
+  eliminateIntercoTransactions,
+  getIntercoBalances,
+  getConsolidatedReport,
+  getEntityComparison,
+} from './multi-entity.service';
+export type {
+  CreateEntityInput,
+  UpdateEntityInput,
+  EntityTreeNode,
+  EntityFinancials,
+  IntercoBalance,
+  ConsolidatedReport,
+  EntityComparison,
+  IntercoTransactionType,
+  IntercoTransactionStatus,
+} from './multi-entity.service';
