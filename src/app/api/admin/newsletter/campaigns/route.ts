@@ -19,6 +19,21 @@ const createCampaignSchema = z.object({
   content: z.string().min(1, 'Content is required'),
   status: z.enum(['DRAFT', 'SCHEDULED', 'SENT']).default('DRAFT'),
   scheduledFor: z.string().datetime().optional(),
+  abTestConfig: z.object({
+    enabled: z.boolean(),
+    testType: z.enum(['subject', 'content']),
+    variantA: z.object({
+      subject: z.string().optional(),
+      htmlContent: z.string().optional(),
+    }),
+    variantB: z.object({
+      subject: z.string().optional(),
+      htmlContent: z.string().optional(),
+    }),
+    splitPercentage: z.number().min(10).max(50),
+    waitDurationMinutes: z.number().min(5).max(1440),
+    winningMetric: z.enum(['open_rate', 'click_rate', 'conversion_rate']),
+  }).optional(),
 });
 
 export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
@@ -43,12 +58,25 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     ]);
 
     const formatted = campaigns.map((c) => {
-      let parsedStats: Record<string, number> = {};
+      let parsedStats: Record<string, unknown> = {};
       if (c.stats) {
         try {
           parsedStats = JSON.parse(c.stats);
         } catch { /* ignore invalid JSON */ }
       }
+
+      // Extract A/B test config
+      let abTestConfig: Record<string, unknown> | undefined;
+      if (c.abTestConfig) {
+        try {
+          abTestConfig = JSON.parse(c.abTestConfig);
+        } catch { /* ignore invalid JSON */ }
+      }
+
+      // Extract A/B test result from stats
+      const abTestResult = parsedStats.abTest as Record<string, unknown> | undefined;
+
+      const sent = typeof parsedStats.sent === 'number' ? parsedStats.sent : 0;
 
       return {
         id: c.id,
@@ -57,14 +85,16 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
         status: c.status,
         scheduledFor: c.scheduledAt?.toISOString() || null,
         sentAt: c.sentAt?.toISOString() || null,
-        recipientCount: parsedStats.totalRecipients || parsedStats.sent || 0,
-        openRate: parsedStats.sent > 0
-          ? Math.round((parsedStats.opened || 0) / parsedStats.sent * 100)
+        recipientCount: (typeof parsedStats.totalRecipients === 'number' ? parsedStats.totalRecipients : 0) || sent,
+        openRate: sent > 0
+          ? Math.round(((typeof parsedStats.opened === 'number' ? parsedStats.opened : 0)) / sent * 100)
           : undefined,
-        clickRate: parsedStats.sent > 0
-          ? Math.round((parsedStats.clicked || 0) / parsedStats.sent * 100)
+        clickRate: sent > 0
+          ? Math.round(((typeof parsedStats.clicked === 'number' ? parsedStats.clicked : 0)) / sent * 100)
           : undefined,
         createdAt: c.createdAt.toISOString(),
+        abTestConfig: abTestConfig || undefined,
+        abTestResult: abTestResult || undefined,
       };
     });
 
@@ -97,7 +127,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       );
     }
 
-    const { subject, content, status, scheduledFor } = parsed.data;
+    const { subject, content, status, scheduledFor, abTestConfig } = parsed.data;
 
     const campaign = await prisma.emailCampaign.create({
       data: {
@@ -112,6 +142,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
             : null,
         sentAt: null,
         createdBy: session.user.id,
+        abTestConfig: abTestConfig ? JSON.stringify(abTestConfig) : null,
       },
     });
 

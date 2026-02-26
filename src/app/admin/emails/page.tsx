@@ -1170,16 +1170,20 @@ export default function EmailsPage() {
       {/* Constructeur de templates (conditionnel) */}
       {showTemplateBuilder && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <TemplateBuilder onSave={(blocks) => {
-            console.log('Template blocks saved:', blocks);
-            toast.success('Template sauvegardé avec succès');
+          <TemplateBuilder onSaved={() => {
+            fetchData();
+            setShowTemplateBuilder(false);
           }} />
         </div>
       )}
 
       {/* Calendrier de campagnes (conditionnel) */}
       {showCampaignCalendar && (
-        <CampaignCalendar />
+        <CampaignCalendar onCampaignClick={(id) => {
+          setActiveTab('campaigns');
+          setEditingCampaignId(id);
+          setShowCampaignCalendar(false);
+        }} />
       )}
 
       {/* Tabs Navigation */}

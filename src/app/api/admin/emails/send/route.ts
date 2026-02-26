@@ -12,6 +12,12 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 
+const attachmentSchema = z.object({
+  filename: z.string().max(255),
+  content: z.string(), // base64
+  contentType: z.string().max(100),
+});
+
 const sendEmailSchema = z.object({
   to: z.string().email(),
   subject: z.string().max(500).optional(),
@@ -19,6 +25,7 @@ const sendEmailSchema = z.object({
   textBody: z.string().optional(),
   templateId: z.string().optional(),
   variables: z.record(z.string(), z.unknown()).optional(),
+  attachments: z.array(attachmentSchema).max(10).optional(),
 });
 
 // POST /api/admin/emails/send - Send email (direct compose or template-based test)
@@ -42,7 +49,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-    const { to, subject, htmlBody, textBody, templateId, variables } = parsed.data;
+    const { to, subject, htmlBody, textBody, templateId, variables, attachments } = parsed.data;
 
     let emailSubject = subject || 'Test Email';
     let html = htmlBody || textBody?.replace(/\n/g, '<br/>') || '<p>This is a test email.</p>';
@@ -82,6 +89,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
       text,
       tags: [templateId ? 'admin-template-test' : 'admin-direct'],
       unsubscribeUrl,
+      ...(attachments?.length ? {
+        attachments: attachments.map(a => ({
+          filename: a.filename,
+          content: a.content,
+          contentType: a.contentType,
+        })),
+      } : {}),
     });
 
     // Log the email with messageId for webhook correlation

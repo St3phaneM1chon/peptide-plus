@@ -93,7 +93,10 @@ export type TriggerEvent =
   | 'points.expiring'
   | 'referral.completed'
   | 'winback.eligible'
-  | 'reorder.due';
+  | 'reorder.due'
+  | 'browse.abandoned'
+  | 'loyalty.tier_up'
+  | 'sunset.eligible';
 
 // ---------------------------------------------------------------------------
 // Active flows cache (avoids DB round-trip on every event)
@@ -910,6 +913,394 @@ export function getPreBuiltFlows(): PreBuiltFlow[] {
         { id: 'e6-7', source: '6', target: '7' },
         { id: 'e7-8', source: '7', target: '8' },
         { id: 'e8-9', source: '8', target: '9' },
+      ],
+    },
+
+    // -- 5. Browse Abandonment -----------------------------------------------
+    {
+      name: 'Abandon de navigation',
+      description: 'Interet 4h + Similaires 24h + Incentive 48h (si panier > 100$)',
+      trigger: 'browse.abandoned',
+      nodes: [
+        {
+          id: '1',
+          type: 'trigger',
+          position: { x: 250, y: 0 },
+          data: { label: 'Navigation abandonnee', triggerEvent: 'browse.abandoned' },
+        },
+        {
+          id: '2',
+          type: 'delay',
+          position: { x: 250, y: 100 },
+          data: { label: 'Attendre 4h', delayAmount: 4, delayUnit: 'hours' },
+        },
+        {
+          id: '3',
+          type: 'email',
+          position: { x: 250, y: 200 },
+          data: {
+            label: 'Toujours interesse?',
+            subject: 'Toujours interesse(e) par {{productName}}?',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '4',
+          type: 'delay',
+          position: { x: 250, y: 300 },
+          data: { label: 'Attendre 24h', delayAmount: 24, delayUnit: 'hours' },
+        },
+        {
+          id: '5',
+          type: 'condition',
+          position: { x: 250, y: 400 },
+          data: {
+            label: 'Ajoute au panier?',
+            conditionField: 'addedToCart',
+            conditionOperator: 'equals',
+            conditionValue: 'false',
+          },
+        },
+        {
+          id: '6',
+          type: 'email',
+          position: { x: 250, y: 500 },
+          data: {
+            label: 'Produits similaires',
+            subject: 'Des produits similaires qui pourraient vous plaire',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '7',
+          type: 'delay',
+          position: { x: 250, y: 600 },
+          data: { label: 'Attendre 48h', delayAmount: 48, delayUnit: 'hours' },
+        },
+        {
+          id: '8',
+          type: 'condition',
+          position: { x: 250, y: 700 },
+          data: {
+            label: 'Panier > 100$?',
+            conditionField: 'cartValue',
+            conditionOperator: 'greater_than',
+            conditionValue: '100',
+          },
+        },
+        {
+          id: '9',
+          type: 'email',
+          position: { x: 250, y: 800 },
+          data: {
+            label: 'Incentive 5%',
+            subject: '5% de rabais - offre limitee!',
+            htmlContent: '',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1-2', source: '1', target: '2' },
+        { id: 'e2-3', source: '2', target: '3' },
+        { id: 'e3-4', source: '3', target: '4' },
+        { id: 'e4-5', source: '4', target: '5' },
+        { id: 'e5-6', source: '5', target: '6', sourceHandle: 'true' },
+        { id: 'e6-7', source: '6', target: '7' },
+        { id: 'e7-8', source: '7', target: '8' },
+        { id: 'e8-9', source: '8', target: '9', sourceHandle: 'true' },
+      ],
+    },
+
+    // -- 6. Replenishment Reminder -------------------------------------------
+    {
+      name: 'Rappel de reapprovisionnement',
+      description: 'Rappel J25 + Urgence J30 + Incentive J35 (critique pour peptides)',
+      trigger: 'reorder.due',
+      nodes: [
+        {
+          id: '1',
+          type: 'trigger',
+          position: { x: 250, y: 0 },
+          data: { label: 'Reapprovisionnement du', triggerEvent: 'reorder.due' },
+        },
+        {
+          id: '2',
+          type: 'email',
+          position: { x: 250, y: 100 },
+          data: {
+            label: 'Rappel reappro',
+            subject: 'Bientot a court de {{productName}}? Recommandez maintenant',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '3',
+          type: 'delay',
+          position: { x: 250, y: 200 },
+          data: { label: 'Attendre 5 jours', delayAmount: 5, delayUnit: 'days' },
+        },
+        {
+          id: '4',
+          type: 'condition',
+          position: { x: 250, y: 300 },
+          data: {
+            label: 'A recommande?',
+            conditionField: 'hasReordered',
+            conditionOperator: 'equals',
+            conditionValue: 'false',
+          },
+        },
+        {
+          id: '5',
+          type: 'email',
+          position: { x: 250, y: 400 },
+          data: {
+            label: 'Urgence',
+            subject: 'Ne tombez pas en rupture! Derniere chance de recommander',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '6',
+          type: 'delay',
+          position: { x: 250, y: 500 },
+          data: { label: 'Attendre 5 jours', delayAmount: 5, delayUnit: 'days' },
+        },
+        {
+          id: '7',
+          type: 'condition',
+          position: { x: 250, y: 600 },
+          data: {
+            label: 'A recommande?',
+            conditionField: 'hasReordered',
+            conditionOperator: 'equals',
+            conditionValue: 'false',
+          },
+        },
+        {
+          id: '8',
+          type: 'email',
+          position: { x: 250, y: 700 },
+          data: {
+            label: 'Incentive 10%',
+            subject: 'Votre produit vous manque? 10% de rabais',
+            htmlContent: '',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1-2', source: '1', target: '2' },
+        { id: 'e2-3', source: '2', target: '3' },
+        { id: 'e3-4', source: '3', target: '4' },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true' },
+        { id: 'e5-6', source: '5', target: '6' },
+        { id: 'e6-7', source: '6', target: '7' },
+        { id: 'e7-8', source: '7', target: '8', sourceHandle: 'true' },
+      ],
+    },
+
+    // -- 7. Cross-Sell / Upsell -----------------------------------------------
+    {
+      name: 'Vente croisee / Montee en gamme',
+      description: 'Complementaires J7 + Upgrade J14 (mappings peptide-specifiques)',
+      trigger: 'order.delivered',
+      nodes: [
+        {
+          id: '1',
+          type: 'trigger',
+          position: { x: 250, y: 0 },
+          data: { label: 'Commande livree', triggerEvent: 'order.delivered' },
+        },
+        {
+          id: '2',
+          type: 'delay',
+          position: { x: 250, y: 100 },
+          data: { label: 'Attendre 7 jours', delayAmount: 7, delayUnit: 'days' },
+        },
+        {
+          id: '3',
+          type: 'email',
+          position: { x: 250, y: 200 },
+          data: {
+            label: 'Produits complementaires',
+            subject: 'Les clients qui ont achete {{productName}} adorent aussi...',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '4',
+          type: 'delay',
+          position: { x: 250, y: 300 },
+          data: { label: 'Attendre 7 jours', delayAmount: 7, delayUnit: 'days' },
+        },
+        {
+          id: '5',
+          type: 'email',
+          position: { x: 250, y: 400 },
+          data: {
+            label: 'Montee en gamme',
+            subject: 'Passez au niveau superieur avec votre protocole',
+            htmlContent: '',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1-2', source: '1', target: '2' },
+        { id: 'e2-3', source: '2', target: '3' },
+        { id: 'e3-4', source: '3', target: '4' },
+        { id: 'e4-5', source: '4', target: '5' },
+      ],
+    },
+
+    // -- 8. Sunset / List Cleanup ---------------------------------------------
+    {
+      name: 'Nettoyage de liste (Sunset)',
+      description: 'Re-engagement J0 + Derniere chance J7 + Desinscription auto J14',
+      trigger: 'sunset.eligible',
+      nodes: [
+        {
+          id: '1',
+          type: 'trigger',
+          position: { x: 250, y: 0 },
+          data: { label: 'Inactif 90j (email)', triggerEvent: 'sunset.eligible' },
+        },
+        {
+          id: '2',
+          type: 'email',
+          position: { x: 250, y: 100 },
+          data: {
+            label: 'Vous nous manquez',
+            subject: 'Vous nous manquez! Voici les nouveautes',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '3',
+          type: 'delay',
+          position: { x: 250, y: 200 },
+          data: { label: 'Attendre 7 jours', delayAmount: 7, delayUnit: 'days' },
+        },
+        {
+          id: '4',
+          type: 'condition',
+          position: { x: 250, y: 300 },
+          data: {
+            label: 'A ouvert?',
+            conditionField: 'emailOpened',
+            conditionOperator: 'equals',
+            conditionValue: 'false',
+          },
+        },
+        {
+          id: '5',
+          type: 'email',
+          position: { x: 250, y: 400 },
+          data: {
+            label: 'Derniere chance',
+            subject: 'Derniere chance de rester en contact',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '6',
+          type: 'delay',
+          position: { x: 250, y: 500 },
+          data: { label: 'Attendre 7 jours', delayAmount: 7, delayUnit: 'days' },
+        },
+        {
+          id: '7',
+          type: 'condition',
+          position: { x: 250, y: 600 },
+          data: {
+            label: 'A ouvert?',
+            conditionField: 'emailOpened',
+            conditionOperator: 'equals',
+            conditionValue: 'false',
+          },
+        },
+        {
+          id: '8',
+          type: 'email',
+          position: { x: 250, y: 700 },
+          data: {
+            label: 'Au revoir',
+            subject: 'Au revoir pour le moment',
+            htmlContent: '',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1-2', source: '1', target: '2' },
+        { id: 'e2-3', source: '2', target: '3' },
+        { id: 'e3-4', source: '3', target: '4' },
+        { id: 'e4-5', source: '4', target: '5', sourceHandle: 'true' },
+        { id: 'e5-6', source: '5', target: '6' },
+        { id: 'e6-7', source: '6', target: '7' },
+        { id: 'e7-8', source: '7', target: '8', sourceHandle: 'true' },
+      ],
+    },
+
+    // -- 9. VIP / Loyalty Tier ------------------------------------------------
+    {
+      name: 'Niveau VIP / Fidelite',
+      description: 'Felicitations J0 + Avantages J3 + Acces exclusif J7',
+      trigger: 'loyalty.tier_up',
+      nodes: [
+        {
+          id: '1',
+          type: 'trigger',
+          position: { x: 250, y: 0 },
+          data: { label: 'Nouveau niveau fidelite', triggerEvent: 'loyalty.tier_up' },
+        },
+        {
+          id: '2',
+          type: 'email',
+          position: { x: 250, y: 100 },
+          data: {
+            label: 'Felicitations',
+            subject: 'Felicitations! Vous etes maintenant {{tierName}}!',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '3',
+          type: 'delay',
+          position: { x: 250, y: 200 },
+          data: { label: 'Attendre 3 jours', delayAmount: 3, delayUnit: 'days' },
+        },
+        {
+          id: '4',
+          type: 'email',
+          position: { x: 250, y: 300 },
+          data: {
+            label: 'Avantages detailles',
+            subject: 'Vos avantages exclusifs {{tierName}} en detail',
+            htmlContent: '',
+          },
+        },
+        {
+          id: '5',
+          type: 'delay',
+          position: { x: 250, y: 400 },
+          data: { label: 'Attendre 4 jours', delayAmount: 4, delayUnit: 'days' },
+        },
+        {
+          id: '6',
+          type: 'email',
+          position: { x: 250, y: 500 },
+          data: {
+            label: 'Acces exclusif',
+            subject: 'Acces VIP anticipe - Produits exclusifs pour vous',
+            htmlContent: '',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1-2', source: '1', target: '2' },
+        { id: 'e2-3', source: '2', target: '3' },
+        { id: 'e3-4', source: '3', target: '4' },
+        { id: 'e4-5', source: '4', target: '5' },
+        { id: 'e5-6', source: '5', target: '6' },
       ],
     },
   ];

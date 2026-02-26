@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
-import { Send, Paperclip, X, Bold, Italic, Underline, Save } from 'lucide-react';
+import { useState, useRef, useMemo, useCallback } from 'react';
+import { Send, Paperclip, X, Bold, Italic, Underline, Save, File, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 import { useI18n } from '@/i18n/client';
@@ -13,6 +13,27 @@ interface EmailComposerProps {
   replyTo?: { to: string; subject: string; body: string } | null;
 }
 
+interface Attachment {
+  filename: string;
+  content: string; // base64
+  contentType: string;
+  size: number;
+}
+
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'png', 'jpg', 'jpeg', 'gif'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
+const MAX_TOTAL_SIZE = 25 * 1024 * 1024; // 25 MB total
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileExtension(filename: string): string {
+  return (filename.split('.').pop() || '').toLowerCase();
+}
+
 export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) {
   const { t } = useI18n();
   const [to, setTo] = useState(replyTo?.to ?? '');
@@ -20,7 +41,10 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
   const [subject, setSubject] = useState(replyTo ? `Re: ${replyTo.subject}` : '');
   const [showCc, setShowCc] = useState(false);
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sanitize replyTo body to prevent XSS
   const sanitizedReplyHtml = useMemo(() => {
@@ -35,10 +59,96 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
     return `<br/><br/><div style="border-left:2px solid #94a3b8;padding-left:12px;color:#64748b;margin-top:16px"><p>${dateStr}, ${safeFrom}:</p>${cleanBody}</div>`;
   }, [replyTo]);
 
+  const totalAttachmentSize = useMemo(() => {
+    return attachments.reduce((sum, a) => sum + a.size, 0);
+  }, [attachments]);
+
   const execCommand = (cmd: string) => {
     document.execCommand(cmd, false);
     bodyRef.current?.focus();
   };
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validate files before uploading
+    const filesToUpload: File[] = [];
+    let newTotalSize = totalAttachmentSize;
+
+    for (const file of Array.from(files)) {
+      const ext = getFileExtension(file.name);
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        toast.error(`"${file.name}": type .${ext} non autorise. Types acceptes: ${ALLOWED_EXTENSIONS.join(', ')}`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`"${file.name}" depasse la limite de 10 MB (${formatFileSize(file.size)})`);
+        continue;
+      }
+      newTotalSize += file.size;
+      if (newTotalSize > MAX_TOTAL_SIZE) {
+        toast.error(`Taille totale des pieces jointes depasse 25 MB`);
+        break;
+      }
+      filesToUpload.push(file);
+    }
+
+    if (filesToUpload.length === 0) {
+      // Reset the input so the same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      filesToUpload.forEach(f => formData.append('files', f));
+
+      const csrfHeaders = addCSRFHeader();
+      // Remove Content-Type so browser sets multipart/form-data with boundary
+      const headers: Record<string, string> = {};
+      if (csrfHeaders && typeof csrfHeaders === 'object') {
+        for (const [k, v] of Object.entries(csrfHeaders)) {
+          if (k.toLowerCase() !== 'content-type') {
+            headers[k] = v as string;
+          }
+        }
+      }
+
+      const res = await fetch('/api/admin/emails/attachments', {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      const data = await res.json();
+      const newAttachments: Attachment[] = (data.attachments || []).map((a: Attachment) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+        size: a.size,
+      }));
+
+      setAttachments(prev => [...prev, ...newAttachments]);
+      toast.success(`${newAttachments.length} fichier(s) attache(s)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de l\'upload');
+    } finally {
+      setUploading(false);
+      // Reset the file input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [totalAttachmentSize]);
+
+  const removeAttachment = useCallback((filename: string) => {
+    setAttachments(prev => prev.filter(a => a.filename !== filename));
+  }, []);
 
   const handleSend = async () => {
     if (!to || !subject) {
@@ -51,10 +161,27 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
       const textBody = bodyRef.current?.innerText ?? '';
       const htmlBody = bodyRef.current?.innerHTML ?? '';
 
+      const payload: Record<string, unknown> = {
+        to,
+        cc: cc || undefined,
+        subject,
+        textBody,
+        htmlBody,
+      };
+
+      // Include attachments if any
+      if (attachments.length > 0) {
+        payload.attachments = attachments.map(a => ({
+          filename: a.filename,
+          content: a.content,
+          contentType: a.contentType,
+        }));
+      }
+
       const res = await fetch('/api/admin/emails/send', {
         method: 'POST',
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ to, cc: cc || undefined, subject, textBody, htmlBody }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -92,31 +219,6 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
     localStorage.setItem('emailDrafts', JSON.stringify(drafts));
     toast.success(t('admin.emailComposer.draftSaved'));
   };
-
-  // TODO: Wire up loadDrafts to populate a draft list in the UI
-  // /**
-  //  * Load drafts from localStorage with 24h expiry check.
-  //  * Drafts older than 24 hours are automatically purged to limit
-  //  * the window of exposure for plaintext email content in storage.
-  //  */
-  // const loadDrafts = (): unknown[] => {
-  //   let drafts: unknown[];
-  //   try { drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]'); } catch { drafts = []; }
-  //   if (!Array.isArray(drafts)) return [];
-  //   const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-  //   const now = Date.now();
-  //   const validDrafts = drafts.filter((d) => {
-  //     if (typeof d !== 'object' || d === null) return false;
-  //     const savedAt = (d as Record<string, unknown>).savedAt;
-  //     if (typeof savedAt !== 'string') return false;
-  //     return now - new Date(savedAt).getTime() < TWENTY_FOUR_HOURS;
-  //   });
-  //   // Persist the pruned list back to remove expired entries
-  //   if (validDrafts.length !== drafts.length) {
-  //     localStorage.setItem('emailDrafts', JSON.stringify(validDrafts));
-  //   }
-  //   return validDrafts;
-  // };
 
   /**
    * Clear all email drafts from localStorage.
@@ -206,11 +308,59 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
           <Underline className="w-3.5 h-3.5 text-slate-600" />
         </button>
         <div className="w-px h-4 bg-slate-200 mx-1" />
-        <label className="p-1.5 rounded hover:bg-slate-100 cursor-pointer" title={t('admin.emailComposer.attachment')}>
-          <Paperclip className="w-3.5 h-3.5 text-slate-600" />
-          <input type="file" className="hidden" aria-label="Attach file" onChange={() => toast.info(t('admin.emailComposer.attachmentNote'))} />
-        </label>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="p-1.5 rounded hover:bg-slate-100 cursor-pointer disabled:opacity-50"
+          title={t('admin.emailComposer.attachment')}
+          aria-label={t('admin.emailComposer.attachment')}
+        >
+          {uploading ? (
+            <Loader2 className="w-3.5 h-3.5 text-slate-600 animate-spin" />
+          ) : (
+            <Paperclip className="w-3.5 h-3.5 text-slate-600" />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          aria-label="Attach file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif"
+          onChange={handleFileSelect}
+        />
+        {attachments.length > 0 && (
+          <span className="text-[10px] text-slate-400 ml-1">
+            {attachments.length} fichier(s) - {formatFileSize(totalAttachmentSize)}
+          </span>
+        )}
       </div>
+
+      {/* Attachment chips */}
+      {attachments.length > 0 && (
+        <div className="px-4 py-2 border-b border-slate-100 flex-shrink-0 flex flex-wrap gap-2">
+          {attachments.map((att) => (
+            <div
+              key={att.filename}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-700 max-w-[200px]"
+            >
+              <File className="w-3 h-3 flex-shrink-0 text-slate-400" />
+              <span className="truncate" title={att.filename}>{att.filename}</span>
+              <span className="text-slate-400 flex-shrink-0">({formatFileSize(att.size)})</span>
+              <button
+                type="button"
+                onClick={() => removeAttachment(att.filename)}
+                className="flex-shrink-0 p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-red-500"
+                aria-label={`Remove ${att.filename}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Body (contentEditable) */}
       <div

@@ -4,6 +4,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { addEmailTracking } from '@/lib/email/tracking';
 
 // Types pour les emails
 export interface EmailRecipient {
@@ -16,6 +17,8 @@ export interface EmailAttachment {
   content: string; // Base64
   contentType: string;
 }
+
+export type EmailType = 'marketing' | 'transactional';
 
 export interface SendEmailOptions {
   to: EmailRecipient | EmailRecipient[];
@@ -32,6 +35,10 @@ export interface SendEmailOptions {
   inReplyTo?: string;
   /** References header for email threading */
   references?: string;
+  /** Email type: 'marketing' adds tracking pixel + click tracking; 'transactional' does not */
+  emailType?: EmailType;
+  /** EmailLog ID for tracking pixel/click injection (only used when emailType is 'marketing') */
+  emailLogId?: string;
 }
 
 export interface EmailResult {
@@ -177,6 +184,21 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
     if (!checkEmailRateLimit(r.email)) {
       logger.warn('Email rate limit exceeded', { requestId, recipient: r.email });
       return { success: false, error: 'Rate limit exceeded for this recipient' };
+    }
+  }
+
+  // Inject tracking pixel and click tracking for marketing emails
+  // Must happen BEFORE text fallback generation so tracking pixel doesn't appear in text
+  if (emailData.emailType === 'marketing' && emailData.emailLogId && emailData.html) {
+    try {
+      emailData.html = addEmailTracking(emailData.html, emailData.emailLogId);
+    } catch (trackingErr) {
+      // Non-fatal: send the email without tracking rather than failing
+      logger.warn('[EmailService] Failed to inject tracking, sending without', {
+        requestId,
+        emailLogId: emailData.emailLogId,
+        error: trackingErr instanceof Error ? trackingErr.message : String(trackingErr),
+      });
     }
   }
 

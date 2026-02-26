@@ -51,16 +51,38 @@ interface Subscriber {
   unsubscribedAt?: string;
 }
 
+interface ABTestResult {
+  status: 'RUNNING' | 'COMPLETED' | 'WINNER_SELECTED';
+  variantA: ABTestVariant;
+  variantB: ABTestVariant;
+  winnerId?: string;
+  significant?: boolean;
+  winningMetric: 'open_rate' | 'click_rate' | 'conversion_rate';
+  checkWinnerAfter?: string;
+  winnerSelectedAt?: string;
+  sentToRemainder?: number;
+}
+
 interface Campaign {
   id: string;
   subject: string;
   content: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'SENT';
+  status: 'DRAFT' | 'SCHEDULED' | 'SENT' | 'AB_TESTING';
   scheduledFor?: string;
   sentAt?: string;
   recipientCount: number;
   openRate?: number;
   clickRate?: number;
+  abTestConfig?: {
+    enabled: boolean;
+    testType: 'subject' | 'content';
+    variantA: { subject?: string; htmlContent?: string };
+    variantB: { subject?: string; htmlContent?: string };
+    splitPercentage: number;
+    waitDurationMinutes: number;
+    winningMetric: 'open_rate' | 'click_rate' | 'conversion_rate';
+  };
+  abTestResult?: ABTestResult;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -79,6 +101,7 @@ function campaignBadgeVariant(status: string): 'success' | 'warning' | 'error' |
     case 'DRAFT': return 'neutral';
     case 'SCHEDULED': return 'info';
     case 'SENT': return 'success';
+    case 'AB_TESTING': return 'warning';
     default: return 'neutral';
   }
 }
@@ -135,6 +158,15 @@ export default function NewsletterPage() {
     subscriberContext: { totalActive: number; totalUnsubscribed: number };
   } | null>(null);
 
+  // A/B Test composer state
+  const [abTestEnabled, setAbTestEnabled] = useState(false);
+  const [abTestType, setAbTestType] = useState<'subject' | 'content'>('subject');
+  const [abVariantBSubject, setAbVariantBSubject] = useState('');
+  const [abVariantBContent, setAbVariantBContent] = useState('');
+  const [abSplitPercentage, setAbSplitPercentage] = useState(20);
+  const [abWaitMinutes, setAbWaitMinutes] = useState(120);
+  const [abWinningMetric, setAbWinningMetric] = useState<'open_rate' | 'click_rate'>('open_rate');
+
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -162,6 +194,23 @@ export default function NewsletterPage() {
 
     setSavingCampaign(true);
     try {
+      // Build A/B test config if enabled
+      const abConfig = abTestEnabled ? {
+        enabled: true,
+        testType: abTestType,
+        variantA: {
+          subject: newCampaign.subject,
+          htmlContent: newCampaign.content,
+        },
+        variantB: {
+          subject: abTestType === 'subject' ? abVariantBSubject : newCampaign.subject,
+          htmlContent: abTestType === 'content' ? abVariantBContent : newCampaign.content,
+        },
+        splitPercentage: abSplitPercentage,
+        waitDurationMinutes: abWaitMinutes,
+        winningMetric: abWinningMetric,
+      } : undefined;
+
       const res = await fetch('/api/admin/newsletter/campaigns', {
         method: 'POST',
         // FAILLE-002 FIX: Include CSRF token for server-side validation
@@ -170,6 +219,7 @@ export default function NewsletterPage() {
           subject: newCampaign.subject,
           content: newCampaign.content,
           status,
+          abTestConfig: abConfig,
         }),
       });
       if (!res.ok) {
@@ -186,6 +236,9 @@ export default function NewsletterPage() {
       toast.success(statusMessages[status]);
       setShowComposer(false);
       setNewCampaign({ subject: '', content: '' });
+      setAbTestEnabled(false);
+      setAbVariantBSubject('');
+      setAbVariantBContent('');
       await fetchData();
     } catch (err) {
       console.error('Error creating campaign:', err);
@@ -335,6 +388,12 @@ export default function NewsletterPage() {
 
   const onNewNewsletter = useCallback(() => {
     setNewCampaign({ subject: '', content: '' });
+    setAbTestEnabled(false);
+    setAbVariantBSubject('');
+    setAbVariantBContent('');
+    setAbSplitPercentage(20);
+    setAbWaitMinutes(120);
+    setAbWinningMetric('open_rate');
     setShowComposer(true);
   }, []);
 
@@ -635,48 +694,67 @@ export default function NewsletterPage() {
               <FlaskConical className="h-5 w-5 text-sky-600" />
               <h3 className="text-sm font-semibold text-slate-900">Résultats des tests A/B</h3>
             </div>
-            {campaigns.filter(c => c.status === 'SENT' && c.openRate).length > 0 ? (
+            {campaigns.filter(c => c.abTestResult).length > 0 ? (
               <div className="space-y-3">
-                {campaigns.filter(c => c.status === 'SENT' && c.openRate).slice(0, 3).map((campaign) => {
-                  const simulatedVariantA: ABTestVariant = {
-                    id: 'a', name: 'Variante A', subject: campaign.subject,
-                    percentage: 50, sent: campaign.recipientCount,
-                    opens: Math.round(campaign.recipientCount * (campaign.openRate || 0) / 100),
-                    clicks: Math.round(campaign.recipientCount * (campaign.clickRate || 0) / 100),
-                    conversions: 0,
-                  };
-                  const simulatedVariantB: ABTestVariant = {
-                    id: 'b', name: 'Variante B', subject: `${campaign.subject} (alt)`,
-                    percentage: 50, sent: campaign.recipientCount,
-                    opens: Math.round(campaign.recipientCount * ((campaign.openRate || 0) * 0.85) / 100),
-                    clicks: Math.round(campaign.recipientCount * ((campaign.clickRate || 0) * 0.75) / 100),
-                    conversions: 0,
-                  };
-                  const rateA = getMetricValue(simulatedVariantA, 'open_rate');
-                  const rateB = getMetricValue(simulatedVariantB, 'open_rate');
-                  const winner = rateA >= rateB ? 'A' : 'B';
+                {campaigns.filter(c => c.abTestResult).slice(0, 3).map((campaign) => {
+                  const abResult = campaign.abTestResult!;
+                  const metric = abResult.winningMetric || 'open_rate';
+                  const rateA = getMetricValue(abResult.variantA, metric);
+                  const rateB = getMetricValue(abResult.variantB, metric);
+                  const winner = abResult.winnerId || (rateA >= rateB ? 'A' : 'B');
+                  const metricLabel = metric === 'open_rate' ? "taux d'ouverture" : metric === 'click_rate' ? 'taux de clic' : 'taux conversion';
+                  const isRunning = abResult.status === 'RUNNING';
                   return (
                     <div key={campaign.id} className="bg-slate-50 rounded-lg p-3">
-                      <p className="text-xs font-medium text-slate-700 mb-2 truncate">{campaign.subject}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <p className="text-xs font-medium text-slate-700 truncate flex-1">{campaign.subject}</p>
+                        {isRunning && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px] font-medium animate-pulse">
+                            En cours
+                          </span>
+                        )}
+                        {abResult.status === 'COMPLETED' && abResult.significant && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-medium">
+                            Significatif
+                          </span>
+                        )}
+                        {abResult.status === 'COMPLETED' && !abResult.significant && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-medium">
+                            Non significatif
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3">
-                        <div className={`flex-1 text-center p-2 rounded ${winner === 'A' ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'A' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
                           <div className="flex items-center justify-center gap-1">
-                            {winner === 'A' && <Trophy className="h-3 w-3 text-emerald-600" />}
+                            {winner === 'A' && !isRunning && <Trophy className="h-3 w-3 text-emerald-600" />}
                             <p className="text-xs font-semibold text-slate-700">Variante A</p>
                           </div>
                           <p className="text-lg font-bold text-slate-900">{(rateA * 100).toFixed(1)}%</p>
-                          <p className="text-[10px] text-slate-500">taux d&apos;ouverture</p>
+                          <p className="text-[10px] text-slate-500">{metricLabel}</p>
+                          <p className="text-[10px] text-slate-400">{abResult.variantA.sent} envoyés</p>
                         </div>
                         <span className="text-xs text-slate-400 font-medium">vs</span>
-                        <div className={`flex-1 text-center p-2 rounded ${winner === 'B' ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'B' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
                           <div className="flex items-center justify-center gap-1">
-                            {winner === 'B' && <Trophy className="h-3 w-3 text-emerald-600" />}
+                            {winner === 'B' && !isRunning && <Trophy className="h-3 w-3 text-emerald-600" />}
                             <p className="text-xs font-semibold text-slate-700">Variante B</p>
                           </div>
                           <p className="text-lg font-bold text-slate-900">{(rateB * 100).toFixed(1)}%</p>
-                          <p className="text-[10px] text-slate-500">taux d&apos;ouverture</p>
+                          <p className="text-[10px] text-slate-500">{metricLabel}</p>
+                          <p className="text-[10px] text-slate-400">{abResult.variantB.sent} envoyés</p>
                         </div>
                       </div>
+                      {isRunning && abResult.checkWinnerAfter && (
+                        <p className="text-[10px] text-amber-600 mt-2 text-center">
+                          Résultat attendu: {new Date(abResult.checkWinnerAfter).toLocaleString(locale)}
+                        </p>
+                      )}
+                      {abResult.sentToRemainder !== undefined && abResult.sentToRemainder > 0 && (
+                        <p className="text-[10px] text-emerald-600 mt-2 text-center">
+                          Gagnant envoyé à {abResult.sentToRemainder} destinataires restants
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -685,7 +763,7 @@ export default function NewsletterPage() {
               <div className="text-center py-6">
                 <AlertTriangle className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                 <p className="text-sm text-slate-500">Aucun résultat A/B disponible</p>
-                <p className="text-xs text-slate-400 mt-1">Envoyez des campagnes pour voir les comparaisons</p>
+                <p className="text-xs text-slate-400 mt-1">Activez le test A/B dans le compositeur de campagne</p>
               </div>
             )}
           </div>
@@ -1111,6 +1189,137 @@ export default function NewsletterPage() {
               <p className="mt-1 text-sm text-red-600" role="alert">{composerErrors.content}</p>
             )}
           </FormField>
+
+          {/* ── A/B Test Configuration ─────────────────────────── */}
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={abTestEnabled}
+                onChange={(e) => setAbTestEnabled(e.target.checked)}
+                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              <FlaskConical className="h-4 w-4 text-sky-600" />
+              <span className="text-sm font-medium text-slate-700">
+                {t('admin.newsletter.enableABTest') || 'Enable A/B Test'}
+              </span>
+            </label>
+
+            {abTestEnabled && (
+              <div className="mt-4 space-y-4">
+                {/* Test type */}
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1.5">
+                    {t('admin.newsletter.abTestType') || 'Test Type'}
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAbTestType('subject')}
+                      className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
+                        abTestType === 'subject'
+                          ? 'bg-sky-50 border-sky-300 text-sky-700 font-medium'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      {t('admin.newsletter.abTestSubject') || 'Subject Line'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAbTestType('content')}
+                      className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
+                        abTestType === 'content'
+                          ? 'bg-sky-50 border-sky-300 text-sky-700 font-medium'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      {t('admin.newsletter.abTestContent') || 'Content'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Variant B input */}
+                {abTestType === 'subject' ? (
+                  <FormField label={t('admin.newsletter.abVariantBSubject') || 'Variant B Subject'} required>
+                    <Input
+                      type="text"
+                      value={abVariantBSubject}
+                      onChange={(e) => setAbVariantBSubject(e.target.value)}
+                      placeholder={t('admin.newsletter.abVariantBSubjectPlaceholder') || 'Alternative subject line...'}
+                    />
+                  </FormField>
+                ) : (
+                  <FormField label={t('admin.newsletter.abVariantBContent') || 'Variant B Content'} required>
+                    <Textarea
+                      rows={6}
+                      value={abVariantBContent}
+                      onChange={(e) => setAbVariantBContent(e.target.value)}
+                      placeholder={t('admin.newsletter.abVariantBContentPlaceholder') || 'Alternative email content...'}
+                      className="font-mono text-sm"
+                    />
+                  </FormField>
+                )}
+
+                {/* Split & timing settings */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 block mb-1.5">
+                      {t('admin.newsletter.abSplitPct') || 'Test Pool %'}
+                    </label>
+                    <select
+                      value={abSplitPercentage}
+                      onChange={(e) => setAbSplitPercentage(Number(e.target.value))}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    >
+                      <option value={10}>10%</option>
+                      <option value={20}>20%</option>
+                      <option value={30}>30%</option>
+                      <option value={40}>40%</option>
+                      <option value={50}>50%</option>
+                    </select>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {abSplitPercentage / 2}% A + {abSplitPercentage / 2}% B
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 block mb-1.5">
+                      {t('admin.newsletter.abWaitTime') || 'Wait Time'}
+                    </label>
+                    <select
+                      value={abWaitMinutes}
+                      onChange={(e) => setAbWaitMinutes(Number(e.target.value))}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    >
+                      <option value={30}>30 min</option>
+                      <option value={60}>1h</option>
+                      <option value={120}>2h</option>
+                      <option value={240}>4h</option>
+                      <option value={480}>8h</option>
+                      <option value={1440}>24h</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 block mb-1.5">
+                      {t('admin.newsletter.abWinMetric') || 'Win Metric'}
+                    </label>
+                    <select
+                      value={abWinningMetric}
+                      onChange={(e) => setAbWinningMetric(e.target.value as 'open_rate' | 'click_rate')}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    >
+                      <option value="open_rate">{t('admin.newsletter.abMetricOpens') || 'Open Rate'}</option>
+                      <option value="click_rate">{t('admin.newsletter.abMetricClicks') || 'Click Rate'}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-400">
+                  {t('admin.newsletter.abTestExplanation') || `${abSplitPercentage / 2}% of recipients will receive Variant A, ${abSplitPercentage / 2}% Variant B. After ${abWaitMinutes >= 60 ? `${abWaitMinutes / 60}h` : `${abWaitMinutes}min`}, the winning variant (by ${abWinningMetric === 'open_rate' ? 'open rate' : 'click rate'}) will be sent to the remaining ${100 - abSplitPercentage}%.`}
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <Button variant="secondary" className="flex-1" onClick={() => createCampaign('DRAFT')} disabled={savingCampaign}>
               {t('admin.newsletter.saveDraft')}

@@ -888,14 +888,19 @@ model Discount {
 }
 
 model EmailLog {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   templateId String?
   to         String
   subject    String
-  status     String   @default("sent")
+  status     String    @default("sent")
   error      String?
   messageId  String?
-  sentAt     DateTime @default(now())
+  sentAt     DateTime  @default(now())
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  clickCount Int       @default(0)
+  // A/B test variant tracking: "A" or "B" (null = not an A/B test)
+  abVariant  String?
 
   @@index([sentAt])
   @@index([templateId])
@@ -1827,6 +1832,20 @@ model Product {
   @@index([isActive, createdAt])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+// Browse abandonment tracking: records authenticated user product page views
+// Used by the browse-abandonment cron to detect users who viewed products 2+ times
+// without adding to cart. Rows older than 30 days are cleaned up by data-retention cron.
+model ProductView {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  @@index([userId, productId])
+  @@index([userId, viewedAt])
+  @@index([viewedAt])
 }
 
 model ProductFormat {

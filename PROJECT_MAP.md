@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-25 (Community Forum backend + Prisma models)
+# LAST UPDATED: 2026-02-26 (Email tracking pixels + A/B testing integration)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 189 | **API Routes**: 340 | **Prisma Models**: 109 | **Enums**: 30 | **Components**: 110 | **Hooks**: 16 | **Lib files**: 184
+- **Pages**: 190 | **API Routes**: 344 | **Prisma Models**: 109 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 185
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -105,11 +105,11 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/newsletter` |
-| **API Routes** | `POST /api/newsletter`, `POST /api/mailing-list/subscribe`, `GET /api/mailing-list/confirm`, `POST /api/mailing-list/unsubscribe`, `GET /api/unsubscribe`, `/api/admin/newsletter/*` |
-| **Models** | `MailingListSubscriber` (CASL-compliant, double opt-in), `MailingListPreference`, `ConsentRecord`, `NewsletterSubscriber` (legacy, NOT compliant), `EmailCampaign` (orphan), `EmailLog` (orphan) |
-| **Components** | `NewsletterPopup`, `MailingListSignup` |
-| **Lib** | `@/lib/email/email-service`, `@/lib/email/unsubscribe` |
+| **Pages** | `/admin/newsletter`, `/(shop)/email-preferences` (token-based, no auth required) |
+| **API Routes** | `POST /api/newsletter`, `POST /api/mailing-list/subscribe`, `GET /api/mailing-list/confirm`, `POST /api/mailing-list/unsubscribe`, `GET /api/unsubscribe`, `GET,PUT /api/email-preferences` (JWT token-based), `/api/admin/newsletter/*`, `GET /api/tracking/email` (open pixel), `GET /api/tracking/click` (click redirect), `GET /api/cron/ab-test-check` (A/B winner auto-send) |
+| **Models** | `MailingListSubscriber` (CASL-compliant, double opt-in), `MailingListPreference`, `ConsentRecord`, `NewsletterSubscriber` (legacy, NOT compliant), `NotificationPreference`, `EmailCampaign` (orphan), `EmailLog` (orphan, +openedAt/clickedAt/clickCount/abVariant), `EmailEngagement`, `AuditLog` |
+| **Components** | `NewsletterPopup`, `MailingListSignup`, `PreferenceForm` (email-preferences) |
+| **Lib** | `@/lib/email/email-service`, `@/lib/email/unsubscribe`, `@/lib/email/tracking` (HMAC pixel/link tracking), `@/lib/email/ab-test-engine` (Z-test winner selection) |
 | **CRITICAL BUGS** | 1) `NewsletterPopup` line 74 hardcodes `marketingConsent: true`. 2) `/api/newsletter` has NO double opt-in. 3) `ConsentRecord` model exists but is NEVER used by newsletter routes. 4) RFC 8058 one-click unsubscribe NOT implemented. 5) Two duplicate subscriber models exist (MailingListSubscriber vs NewsletterSubscriber). |
 | **Affects** | Email campaigns, GDPR compliance, user consent tracking |
 
@@ -193,7 +193,7 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | **Models** | `Conversation`, `Message`, `ChatConversation`, `ChatMessage`, `ChatSettings`, `EmailConversation`, `InboundEmail`, `InboundEmailAttachment`, `OutboundReply`, `ConversationNote`, `ConversationActivity`, `CannedResponse`, `EmailAutomationFlow`, `EmailCampaign`, `EmailLog`, `EmailTemplate` |
 | **Components** | `ChatWidget` |
 | **Hooks** | `useRecentChats`, `useAdminSSE`, `useAdminNotifications` |
-| **Lib** | `@/lib/email/email-service` (multi-provider: Resend/SendGrid/SMTP), `@/lib/email/templates/*`, `@/lib/email/automation-engine`, `@/lib/email/bounce-handler`, `@/lib/email/inbound-handler` |
+| **Lib** | `@/lib/email/email-service` (multi-provider: Resend/SendGrid/SMTP), `@/lib/email/templates/*`, `@/lib/email/automation-engine`, `@/lib/email/bounce-handler`, `@/lib/email/inbound-handler`, `@/lib/email/tracking` (open pixel/click tracking), `@/lib/email/ab-test-engine` (Z-test winner selection) |
 
 ---
 
@@ -620,7 +620,7 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 | /api/products/[id] | GET,PUT,DEL | Product,ProductFormat,ProductImage,Category,AuditLog | GET:none PUT/DEL:auth | - |
 | /api/categories | GET,POST | Category,AuditLog | GET:none POST:auth | - |
 
-### Newsletter/Mailing (11 routes)
+### Newsletter/Mailing (14 routes)
 | Route | Methods | Models | Auth | External |
 |-------|---------|--------|------|----------|
 | /api/newsletter | GET,POST | NewsletterSubscriber → forwards to mailing-list | rate-limit | - |
@@ -628,9 +628,13 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 | /api/mailing-list/confirm | GET | MailingListSubscriber | none | - |
 | /api/mailing-list/unsubscribe | GET,POST | MailingListSubscriber | rate-limit | - |
 | /api/unsubscribe | GET,POST | NewsletterSubscriber,NotificationPreference,AuditLog | jwt-token | jose(JWT) |
+| /api/email-preferences | GET,PUT | NewsletterSubscriber,MailingListSubscriber,MailingListPreference,NotificationPreference,ConsentRecord,AuditLog | jwt-token | jose(JWT) |
 | /api/admin/mailing-list | GET | MailingListSubscriber,MailingListPreference | admin-guard | - |
 | /api/admin/newsletter/subscribers | GET,POST | NewsletterSubscriber | admin-guard | - |
-| /api/admin/newsletter/campaigns | GET,POST | SiteSetting,NewsletterSubscriber | admin-guard | - |
+| /api/admin/newsletter/campaigns | GET,POST | EmailCampaign (abTestConfig JSON) | admin-guard | - |
+| /api/tracking/email | GET | EmailLog,EmailEngagement,EmailCampaign | none (HMAC) | 1x1 GIF pixel |
+| /api/tracking/click | GET | EmailLog,EmailEngagement,EmailCampaign | none (HMAC) | 302 redirect |
+| /api/cron/ab-test-check | GET,POST | EmailCampaign,EmailLog,User,NotificationPreference,ConsentRecord | cron-secret | sendEmail |
 
 ### Admin Integrations (3 routes) - NEW 2026-02-21
 | Route | Methods | Models | Auth | External |
@@ -832,8 +836,8 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 ### `/src/lib/accounting/` (33 files)
 auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates
 
-### `/src/lib/email/` (11 files)
-email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe
+### `/src/lib/email/` (13 files)
+email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance)
 
 ### `/src/lib/admin/` (6 files)
 admin-fetch, admin-layout-context, icon-resolver, outlook-nav, ribbon-config, section-themes

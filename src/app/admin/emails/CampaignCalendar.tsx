@@ -1,32 +1,123 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Mail, Gift, Tag } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Mail, GitBranch, Loader2 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface CalendarEvent {
   id: string;
   title: string;
   date: Date;
-  type: 'email' | 'promo' | 'social';
+  type: 'scheduled' | 'sent' | 'flow';
   color: string;
+  /** 'campaign' or 'flow' - used for click routing */
+  sourceType: 'campaign' | 'flow';
+}
+
+interface CampaignCalendarProps {
+  /** Called when user clicks a campaign event */
+  onCampaignClick?: (campaignId: string) => void;
 }
 
 const typeConfig = {
-  email: { icon: Mail, color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  promo: { icon: Tag, color: 'bg-green-100 text-green-700 border-green-200' },
-  social: { icon: Gift, color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  scheduled: { icon: Mail, color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  sent: { icon: Mail, color: 'bg-green-100 text-green-700 border-green-200' },
+  flow: { icon: GitBranch, color: 'bg-purple-100 text-purple-700 border-purple-200' },
 };
 
-export default function CampaignCalendar() {
+export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events] = useState<CalendarEvent[]>([
-    { id: '1', title: 'Newsletter mensuelle', date: new Date(2026, 1, 28), type: 'email', color: '#3b82f6' },
-    { id: '2', title: 'Promo printemps', date: new Date(2026, 2, 1), type: 'promo', color: '#10b981' },
-    { id: '3', title: 'Post Instagram', date: new Date(2026, 2, 3), type: 'social', color: '#8b5cf6' },
-  ]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  // Fetch campaigns and flows when component mounts or month changes
+  const fetchCalendarData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [campaignsRes, flowsRes] = await Promise.all([
+        fetch('/api/admin/emails/campaigns?limit=100', {
+          headers: addCSRFHeader(),
+        }),
+        fetch('/api/admin/emails/flows?active=true', {
+          headers: addCSRFHeader(),
+        }),
+      ]);
+
+      const calendarEvents: CalendarEvent[] = [];
+
+      if (campaignsRes.ok) {
+        const data = await campaignsRes.json();
+        const campaigns = data.campaigns || [];
+        for (const campaign of campaigns) {
+          // Sent campaigns: show on sentAt date
+          if (campaign.status === 'SENT' && campaign.sentAt) {
+            const sentDate = new Date(campaign.sentAt);
+            calendarEvents.push({
+              id: campaign.id,
+              title: campaign.name,
+              date: sentDate,
+              type: 'sent',
+              color: '#10b981',
+              sourceType: 'campaign',
+            });
+          }
+          // Scheduled campaigns: show on scheduledAt date
+          else if ((campaign.status === 'SCHEDULED' || campaign.status === 'DRAFT') && campaign.scheduledAt) {
+            const scheduledDate = new Date(campaign.scheduledAt);
+            calendarEvents.push({
+              id: campaign.id,
+              title: campaign.name,
+              date: scheduledDate,
+              type: 'scheduled',
+              color: '#3b82f6',
+              sourceType: 'campaign',
+            });
+          }
+          // Sending campaigns: show on current date
+          else if (campaign.status === 'SENDING') {
+            calendarEvents.push({
+              id: campaign.id,
+              title: `[En cours] ${campaign.name}`,
+              date: new Date(),
+              type: 'scheduled',
+              color: '#f59e0b',
+              sourceType: 'campaign',
+            });
+          }
+        }
+      }
+
+      if (flowsRes.ok) {
+        const data = await flowsRes.json();
+        const flows = data.flows || [];
+        for (const flow of flows) {
+          if (!flow.isActive) continue;
+          // Active automation flows: show as recurring indicator on the 1st of each visible month
+          calendarEvents.push({
+            id: flow.id,
+            title: `Flow: ${flow.name}`,
+            date: new Date(year, month, 1),
+            type: 'flow',
+            color: '#8b5cf6',
+            sourceType: 'flow',
+          });
+        }
+      }
+
+      setEvents(calendarEvents);
+    } catch {
+      // Silently fail; calendar shows empty
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month]);
+
+  useEffect(() => {
+    fetchCalendarData();
+  }, [fetchCalendarData]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
@@ -51,6 +142,12 @@ export default function CampaignCalendar() {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
+  const handleEventClick = (evt: CalendarEvent) => {
+    if (evt.sourceType === 'campaign' && onCampaignClick) {
+      onCampaignClick(evt.id);
+    }
+  };
+
   const weekDays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
@@ -61,9 +158,18 @@ export default function CampaignCalendar() {
           <h3 className="text-lg font-semibold text-slate-800 capitalize min-w-[200px] text-center">{monthName}</h3>
           <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100"><ChevronRight className="w-5 h-5" /></button>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700">
-          <Plus className="w-4 h-4" /> Événement
-        </button>
+        <div className="flex items-center gap-3">
+          {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+          {/* Legend */}
+          <div className="flex items-center gap-3 text-[10px]">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Planifie</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Envoye</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> Flow actif</span>
+          </div>
+          <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700">
+            <Plus className="w-4 h-4" /> Evenement
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-7">
@@ -82,9 +188,14 @@ export default function CampaignCalendar() {
               {dayEvents.map(evt => {
                 const cfg = typeConfig[evt.type];
                 return (
-                  <div key={evt.id} className={`px-1.5 py-0.5 text-[10px] rounded border truncate ${cfg.color}`}>
+                  <button
+                    key={evt.id}
+                    onClick={() => handleEventClick(evt)}
+                    className={`w-full text-left px-1.5 py-0.5 text-[10px] rounded border truncate ${cfg.color} ${evt.sourceType === 'campaign' ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                    title={evt.title}
+                  >
                     {evt.title}
-                  </div>
+                  </button>
                 );
               })}
             </div>

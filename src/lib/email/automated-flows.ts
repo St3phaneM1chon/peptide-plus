@@ -1,6 +1,8 @@
 /**
  * Automated Email Flow Engine
- * 7 pre-built flows: welcome, abandoned cart, post-purchase, win-back, review request, birthday, re-engagement
+ * 12 pre-built flows: welcome, abandoned cart, post-purchase, win-back, review request,
+ * birthday, re-engagement, browse abandonment, replenishment reminder, cross-sell,
+ * sunset/list cleanup, VIP loyalty tier
  */
 
 export interface EmailFlow {
@@ -125,6 +127,93 @@ export const DEFAULT_FLOWS: EmailFlow[] = [
       { id: 're2', type: 'wait', delayHours: 168 },
       { id: 're3', type: 'condition', condition: { field: 'emailOpened', operator: 'eq', value: false } },
       { id: 're4', type: 'action', action: { type: 'UNSUBSCRIBE', params: { reason: 'inactive_90d' } } },
+    ],
+  },
+  // -- 8. Browse Abandonment -----------------------------------------------
+  {
+    id: 'browse-abandonment',
+    name: 'Browse Abandonment',
+    nameFr: 'Abandon de navigation',
+    trigger: 'BROWSE_ABANDONED',
+    description: '3-step flow for users who viewed products 2+ times without adding to cart',
+    isActive: true,
+    steps: [
+      { id: 'ba1', type: 'wait', delayHours: 4 },
+      { id: 'ba2', type: 'email', subject: 'Toujours intéressé(e) par ce produit?', templateId: 'browse-abandonment-interest' },
+      { id: 'ba3', type: 'wait', delayHours: 24 },
+      { id: 'ba4', type: 'condition', condition: { field: 'addedToCart', operator: 'eq', value: false } },
+      { id: 'ba5', type: 'email', subject: 'Des produits similaires qui pourraient vous plaire', templateId: 'browse-abandonment-similar' },
+      { id: 'ba6', type: 'wait', delayHours: 48 },
+      { id: 'ba7', type: 'condition', condition: { field: 'cartValue', operator: 'gt', value: 100 } },
+      { id: 'ba8', type: 'email', subject: '5% de rabais sur votre prochain achat!', templateId: 'browse-abandonment-incentive' },
+    ],
+  },
+  // -- 9. Replenishment Reminder -------------------------------------------
+  {
+    id: 'replenishment-reminder',
+    name: 'Replenishment Reminder',
+    nameFr: 'Rappel de réapprovisionnement',
+    trigger: 'REORDER_DUE',
+    description: '3-step flow to remind customers to reorder before running out (critical for peptides)',
+    isActive: true,
+    steps: [
+      { id: 'rp1', type: 'email', subject: 'Bientôt à court? Recommandez votre produit', templateId: 'replenishment-running-low' },
+      { id: 'rp2', type: 'wait', delayHours: 120 },
+      { id: 'rp3', type: 'condition', condition: { field: 'hasReordered', operator: 'eq', value: false } },
+      { id: 'rp4', type: 'email', subject: 'Ne tombez pas en rupture! Dernière chance de recommander', templateId: 'replenishment-last-chance' },
+      { id: 'rp5', type: 'wait', delayHours: 120 },
+      { id: 'rp6', type: 'condition', condition: { field: 'hasReordered', operator: 'eq', value: false } },
+      { id: 'rp7', type: 'email', subject: 'Votre produit vous manque? 10% de rabais', templateId: 'replenishment-incentive' },
+    ],
+  },
+  // -- 10. Cross-Sell / Upsell ---------------------------------------------
+  {
+    id: 'cross-sell',
+    name: 'Cross-Sell / Upsell',
+    nameFr: 'Vente croisée / montée en gamme',
+    trigger: 'ORDER_DELIVERED',
+    description: '2-step flow: complementary products at 7 days, upgrade options at 14 days',
+    isActive: true,
+    steps: [
+      { id: 'cs1', type: 'wait', delayHours: 168 },
+      { id: 'cs2', type: 'email', subject: 'Les clients qui ont acheté ce produit adorent aussi...', templateId: 'cross-sell-complementary' },
+      { id: 'cs3', type: 'wait', delayHours: 168 },
+      { id: 'cs4', type: 'email', subject: 'Passez au niveau supérieur avec votre protocole', templateId: 'cross-sell-upgrade' },
+    ],
+  },
+  // -- 11. Sunset / List Cleanup -------------------------------------------
+  {
+    id: 'sunset',
+    name: 'Sunset / List Cleanup',
+    nameFr: 'Nettoyage de liste',
+    trigger: 'EMAIL_INACTIVE_90D',
+    description: '3-step sunset: re-engage, last chance, auto-unsubscribe for inactive subscribers',
+    isActive: true,
+    steps: [
+      { id: 'su1', type: 'email', subject: 'Vous nous manquez! Voici les nouveautés', templateId: 'sunset-miss-you' },
+      { id: 'su2', type: 'wait', delayHours: 168 },
+      { id: 'su3', type: 'condition', condition: { field: 'emailOpened', operator: 'eq', value: false } },
+      { id: 'su4', type: 'email', subject: 'Dernière chance de rester en contact', templateId: 'sunset-last-chance' },
+      { id: 'su5', type: 'wait', delayHours: 168 },
+      { id: 'su6', type: 'condition', condition: { field: 'emailOpened', operator: 'eq', value: false } },
+      { id: 'su7', type: 'email', subject: 'Au revoir pour le moment', templateId: 'sunset-goodbye' },
+      { id: 'su8', type: 'action', action: { type: 'UNSUBSCRIBE', params: { reason: 'sunset_inactive_90d', setInactive: true } } },
+    ],
+  },
+  // -- 12. VIP / Loyalty Tier -----------------------------------------------
+  {
+    id: 'vip-tier',
+    name: 'VIP / Loyalty Tier',
+    nameFr: 'Niveau VIP / Fidélité',
+    trigger: 'LOYALTY_TIER_UP',
+    description: '3-step celebration: tier announcement, perks explanation, exclusive access',
+    isActive: true,
+    steps: [
+      { id: 'vt1', type: 'email', subject: 'Félicitations! Vous avez atteint un nouveau niveau!', templateId: 'vip-tier-congrats' },
+      { id: 'vt2', type: 'wait', delayHours: 72 },
+      { id: 'vt3', type: 'email', subject: 'Vos avantages exclusifs en détail', templateId: 'vip-tier-perks' },
+      { id: 'vt4', type: 'wait', delayHours: 168 },
+      { id: 'vt5', type: 'email', subject: 'Accès anticipé VIP - Produits exclusifs', templateId: 'vip-tier-early-access' },
     ],
   },
 ];

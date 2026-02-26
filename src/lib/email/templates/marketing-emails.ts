@@ -5,6 +5,19 @@
  * TODO: FLAW-083 - All templates use locale?: 'fr' | 'en' with binary isFr logic.
  * The app supports 22 locales but marketing emails only work in French and English.
  * Implement a translation system for email content supporting at least es, de, ar, zh.
+ *
+ * Templates:
+ * 1. birthdayEmail          - Birthday with gift code + bonus points
+ * 2. welcomeEmail           - Welcome with referral code + welcome points
+ * 3. abandonedCartEmail     - Cart recovery with items list + optional discount
+ * 4. backInStockEmail       - Product back in stock notification
+ * 5. pointsExpiringEmail    - Loyalty points expiration warning
+ * 6. priceDropEmail         - Price drop alert for watched products
+ * 7. browseAbandonmentEmail - Browse abandonment (3 variants: interest, similar, incentive)
+ * 8. replenishmentReminderEmail - Replenishment reminder (3 variants: running low, last chance, incentive)
+ * 9. crossSellEmail         - Cross-sell complementary + upgrade products
+ * 10. sunsetEmail           - Sunset/list cleanup (3 variants: miss you, last chance, goodbye)
+ * 11. vipTierUpEmail        - VIP loyalty tier upgrade celebration
  */
 
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
@@ -711,6 +724,1028 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
       preheader: isFr
         ? `${data.productName} - Maintenant $${data.currentPrice.toFixed(2)} (économisez $${data.priceDrop.toFixed(2)})`
         : `${data.productName} - Now $${data.currentPrice.toFixed(2)} (save $${data.priceDrop.toFixed(2)})`,
+      content,
+      locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
+    }),
+  };
+}
+
+// ============================================
+// 7. EMAIL ABANDON DE NAVIGATION (BROWSE ABANDONMENT)
+// 3 variants: interest, similar products, incentive
+// ============================================
+export interface BrowseAbandonmentEmailData {
+  customerName: string;
+  customerEmail: string;
+  product: {
+    name: string;
+    slug: string;
+    price: number;
+    imageUrl?: string;
+  };
+  /** Step 2: similar/complementary products */
+  similarProducts?: Array<{
+    name: string;
+    slug: string;
+    price: number;
+    imageUrl?: string;
+  }>;
+  /** Step 3: discount code for high-value prospects */
+  discountCode?: string;
+  discountPercent?: number;
+  /** Which step of the flow: 1 = interest, 2 = similar, 3 = incentive */
+  step: 1 | 2 | 3;
+  locale?: 'fr' | 'en';
+  unsubscribeUrl?: string;
+}
+
+export function browseAbandonmentEmail(data: BrowseAbandonmentEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
+  const safeProductName = escapeHtml(data.product.name);
+  const productUrl = `${SHOP_URL}/product/${data.product.slug}`;
+
+  let subject: string;
+  let content: string;
+  let preheader: string;
+
+  switch (data.step) {
+    // -- Step 1: "Still interested?" with product image and CTA ----------------
+    case 1: {
+      subject = isFr
+        ? `Toujours intéressé(e) par ${safeSubjectName(data.product.name)}?`
+        : `Still interested in ${safeSubjectName(data.product.name)}?`;
+
+      preheader = isFr
+        ? `${data.product.name} vous attend - Ne passez pas à côté!`
+        : `${data.product.name} is waiting for you - Don't miss out!`;
+
+      content = `
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? '👀 Ce produit a attiré votre attention' : '👀 This product caught your eye'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `Bonjour ${safeName}, nous avons remarqué que vous avez consulté ce produit récemment.`
+            : `Hello ${safeName}, we noticed you've been checking out this product recently.`}
+        </p>
+
+        <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+          ${data.product.imageUrl && isSafeUrl(data.product.imageUrl) ? `
+          <img src="${escapeHtml(data.product.imageUrl)}" alt="${safeProductName}" width="200" height="200" style="border-radius: 8px; margin-bottom: 16px; object-fit: cover;">
+          ` : ''}
+          <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${safeProductName}</h2>
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #CC5500;">$${data.product.price.toFixed(2)}</p>
+        </div>
+
+        ${emailComponents.button(
+          isFr ? 'Voir le produit' : 'View product',
+          isSafeUrl(productUrl) ? productUrl : '#'
+        )}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 24px;">
+          ${isFr
+            ? 'Besoin d\'aide pour choisir? Notre équipe est là pour vous.'
+            : 'Need help choosing? Our team is here for you.'}
+        </p>
+      `;
+      break;
+    }
+
+    // -- Step 2: Show similar/complementary products ----------------------------
+    case 2: {
+      subject = isFr
+        ? `Des produits similaires qui pourraient vous plaire`
+        : `Similar products you might love`;
+
+      preheader = isFr
+        ? `Basé sur votre intérêt pour ${data.product.name} - Découvrez plus`
+        : `Based on your interest in ${data.product.name} - Discover more`;
+
+      const similarHtml = (data.similarProducts || []).slice(0, 3).map(p => `
+        <td style="padding: 8px; text-align: center; width: 33%;">
+          ${p.imageUrl && isSafeUrl(p.imageUrl) ? `
+          <a href="${SHOP_URL}/product/${p.slug}" style="text-decoration: none;">
+            <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" width="120" height="120" style="border-radius: 8px; margin-bottom: 8px; object-fit: cover;">
+          </a>
+          ` : ''}
+          <p style="margin: 0 0 4px 0; font-weight: 600; color: #1f2937; font-size: 14px;">
+            <a href="${SHOP_URL}/product/${p.slug}" style="color: #1f2937; text-decoration: none;">${escapeHtml(p.name)}</a>
+          </p>
+          <p style="margin: 0; font-size: 16px; font-weight: bold; color: #CC5500;">$${p.price.toFixed(2)}</p>
+        </td>
+      `).join('');
+
+      content = `
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? '🔬 D\'autres produits pour votre recherche' : '🔬 More products for your research'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, basé sur votre intérêt pour <strong>${safeProductName}</strong>, voici d'autres produits populaires.`
+            : `${safeName}, based on your interest in <strong>${safeProductName}</strong>, here are other popular products.`}
+        </p>
+
+        ${(data.similarProducts?.length ?? 0) > 0 ? `
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+          <tr>
+            ${similarHtml}
+          </tr>
+        </table>
+        ` : ''}
+
+        ${emailComponents.button(
+          isFr ? 'Explorer tous les produits' : 'Explore all products',
+          `${SHOP_URL}/shop`
+        )}
+      `;
+      break;
+    }
+
+    // -- Step 3: Limited-time incentive (5% off if cart value > $100) -----------
+    case 3: {
+      subject = isFr
+        ? `${data.discountPercent || 5}% de rabais sur votre prochain achat!`
+        : `${data.discountPercent || 5}% off your next purchase!`;
+
+      preheader = isFr
+        ? `Offre limitée! ${data.discountPercent || 5}% de rabais - Ne manquez pas cette occasion`
+        : `Limited offer! ${data.discountPercent || 5}% off - Don't miss this opportunity`;
+
+      content = `
+        <h1 style="color: #CC5500; margin-bottom: 8px; text-align: center;">
+          ${isFr ? '🎁 Une offre spéciale pour vous!' : '🎁 A special offer for you!'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, nous avons vu que <strong>${safeProductName}</strong> vous intéresse. Voici un petit coup de pouce!`
+            : `${safeName}, we saw that <strong>${safeProductName}</strong> caught your eye. Here's a little nudge!`}
+        </p>
+
+        ${data.discountCode ? `
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e; text-transform: uppercase; letter-spacing: 2px;">
+            ${isFr ? 'Offre limitée' : 'Limited offer'}
+          </p>
+          <p style="margin: 0 0 16px 0; font-size: 42px; font-weight: bold; color: #CC5500;">
+            ${data.discountPercent || 5}% ${isFr ? 'DE RABAIS' : 'OFF'}
+          </p>
+          <div style="background-color: white; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${isFr ? 'Votre code' : 'Your code'}</p>
+            <p style="margin: 0; font-size: 28px; font-weight: bold; color: #1f2937; letter-spacing: 4px; font-family: monospace;">
+              ${data.discountCode}
+            </p>
+          </div>
+          <p style="margin: 16px 0 0 0; font-size: 13px; color: #92400e;">
+            ${isFr ? 'Valide 48 heures seulement' : 'Valid for 48 hours only'}
+          </p>
+        </div>
+        ` : ''}
+
+        <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+          ${data.product.imageUrl && isSafeUrl(data.product.imageUrl) ? `
+          <img src="${escapeHtml(data.product.imageUrl)}" alt="${safeProductName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px; object-fit: cover;">
+          ` : ''}
+          <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${safeProductName}</h2>
+          <p style="margin: 0; font-size: 24px; font-weight: bold; color: #CC5500;">$${data.product.price.toFixed(2)}</p>
+        </div>
+
+        ${emailComponents.button(
+          isFr ? 'Profiter de l\'offre' : 'Claim this offer',
+          `${SHOP_URL}/product/${data.product.slug}${data.discountCode ? `?promo=${data.discountCode}` : ''}`
+        )}
+      `;
+      break;
+    }
+  }
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader,
+      content,
+      locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
+    }),
+  };
+}
+
+// ============================================
+// 8. EMAIL RAPPEL DE RÉAPPROVISIONNEMENT (REPLENISHMENT REMINDER)
+// 3 variants: running low, last chance, incentive
+// ============================================
+export interface ReplenishmentReminderEmailData {
+  customerName: string;
+  customerEmail: string;
+  product: {
+    name: string;
+    slug: string;
+    price: number;
+    imageUrl?: string;
+  };
+  orderDate: Date;
+  /** Days since delivery (used in messaging) */
+  daysSinceDelivery: number;
+  /** Which step: 1 = running low (25d), 2 = last chance (30d), 3 = incentive (35d) */
+  step: 1 | 2 | 3;
+  discountCode?: string;
+  discountPercent?: number;
+  locale?: 'fr' | 'en';
+  unsubscribeUrl?: string;
+}
+
+export function replenishmentReminderEmail(data: ReplenishmentReminderEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
+  const safeProductName = escapeHtml(data.product.name);
+  const productUrl = `${SHOP_URL}/product/${data.product.slug}`;
+
+  // FLAW-100 FIX: Use explicit timezone for consistent dates across server environments
+  const orderDateStr = data.orderDate.toLocaleDateString(isFr ? 'fr-CA' : 'en-CA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Toronto',
+  });
+
+  let subject: string;
+  let content: string;
+  let preheader: string;
+
+  switch (data.step) {
+    // -- Step 1 (25 days): "Running low? Reorder now" --------------------------
+    case 1: {
+      subject = isFr
+        ? `Bientôt à court de ${safeSubjectName(data.product.name)}? Recommandez maintenant`
+        : `Running low on ${safeSubjectName(data.product.name)}? Reorder now`;
+
+      preheader = isFr
+        ? `Il est peut-être temps de recommander votre ${data.product.name}`
+        : `It might be time to reorder your ${data.product.name}`;
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">🔄</span>
+        </div>
+
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Temps de renouveler?' : 'Time to reorder?'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `Bonjour ${safeName}, votre commande de <strong>${safeProductName}</strong> du ${orderDateStr} approche de la fin de son cycle.`
+            : `Hello ${safeName}, your order of <strong>${safeProductName}</strong> from ${orderDateStr} is nearing the end of its cycle.`}
+        </p>
+
+        <div style="background-color: #eff6ff; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+          ${data.product.imageUrl && isSafeUrl(data.product.imageUrl) ? `
+          <img src="${escapeHtml(data.product.imageUrl)}" alt="${safeProductName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px; object-fit: cover;">
+          ` : ''}
+          <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${safeProductName}</h2>
+          <p style="margin: 0 0 12px 0; font-size: 24px; font-weight: bold; color: #CC5500;">$${data.product.price.toFixed(2)}</p>
+          <p style="margin: 0; font-size: 14px; color: #6b7280;">
+            ${isFr
+              ? `Commandé il y a ${data.daysSinceDelivery} jours`
+              : `Ordered ${data.daysSinceDelivery} days ago`}
+          </p>
+        </div>
+
+        ${emailComponents.button(
+          isFr ? '🔄 Recommander maintenant' : '🔄 Reorder now',
+          isSafeUrl(productUrl) ? productUrl : '#'
+        )}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 24px;">
+          ${isFr
+            ? 'Commandez maintenant pour une livraison sans interruption de votre recherche.'
+            : 'Order now for uninterrupted delivery for your research.'}
+        </p>
+      `;
+      break;
+    }
+
+    // -- Step 2 (30 days): "Don't run out! Last chance to reorder" -------------
+    case 2: {
+      subject = isFr
+        ? `Ne tombez pas en rupture de ${safeSubjectName(data.product.name)}!`
+        : `Don't run out of ${safeSubjectName(data.product.name)}!`;
+
+      preheader = isFr
+        ? `Dernière chance de recommander avant la rupture`
+        : `Last chance to reorder before you run out`;
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">⚠️</span>
+        </div>
+
+        <h1 style="color: #dc2626; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Ne tombez pas en rupture!' : 'Don\'t run out!'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, il y a ${data.daysSinceDelivery} jours que vous avez reçu votre <strong>${safeProductName}</strong>. Votre stock doit être presque épuisé!`
+            : `${safeName}, it's been ${data.daysSinceDelivery} days since you received your <strong>${safeProductName}</strong>. Your supply must be almost gone!`}
+        </p>
+
+        ${emailComponents.warningBox(`
+          <p style="margin: 0; color: #92400e; text-align: center;">
+            <strong>⏰ ${isFr ? 'Dernière chance!' : 'Last chance!'}</strong><br>
+            ${isFr
+              ? 'Recommandez maintenant pour éviter toute interruption de votre recherche.'
+              : 'Reorder now to avoid any interruption in your research.'}
+          </p>
+        `)}
+
+        <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+          ${data.product.imageUrl && isSafeUrl(data.product.imageUrl) ? `
+          <img src="${escapeHtml(data.product.imageUrl)}" alt="${safeProductName}" width="120" height="120" style="border-radius: 8px; margin-bottom: 12px; object-fit: cover;">
+          ` : ''}
+          <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #1f2937;">${safeProductName}</h2>
+          <p style="margin: 0; font-size: 22px; font-weight: bold; color: #CC5500;">$${data.product.price.toFixed(2)}</p>
+        </div>
+
+        ${emailComponents.button(
+          isFr ? '⚡ Commander maintenant' : '⚡ Order now',
+          isSafeUrl(productUrl) ? productUrl : '#'
+        )}
+      `;
+      break;
+    }
+
+    // -- Step 3 (35 days): "Miss your product? Here's 10% off" ----------------
+    case 3: {
+      const discount = data.discountPercent || 10;
+      subject = isFr
+        ? `Votre ${safeSubjectName(data.product.name)} vous manque? ${discount}% de rabais`
+        : `Miss your ${safeSubjectName(data.product.name)}? ${discount}% off`;
+
+      preheader = isFr
+        ? `${discount}% de rabais sur votre prochaine commande de ${data.product.name}`
+        : `${discount}% off your next order of ${data.product.name}`;
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">💊</span>
+        </div>
+
+        <h1 style="color: #CC5500; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Votre produit vous manque?' : 'Missing your product?'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, nous avons remarqué que vous n'avez pas recommandé votre <strong>${safeProductName}</strong>. Voici une offre spéciale pour reprendre votre recherche!`
+            : `${safeName}, we noticed you haven't reordered your <strong>${safeProductName}</strong>. Here's a special offer to resume your research!`}
+        </p>
+
+        ${data.discountCode ? `
+        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #10b981;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #065f46; text-transform: uppercase; letter-spacing: 2px;">
+            ${isFr ? 'Offre de retour' : 'Come-back offer'}
+          </p>
+          <p style="margin: 0 0 16px 0; font-size: 42px; font-weight: bold; color: #059669;">
+            ${discount}% ${isFr ? 'DE RABAIS' : 'OFF'}
+          </p>
+          <div style="background-color: white; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${isFr ? 'Votre code' : 'Your code'}</p>
+            <p style="margin: 0; font-size: 28px; font-weight: bold; color: #1f2937; letter-spacing: 4px; font-family: monospace;">
+              ${data.discountCode}
+            </p>
+          </div>
+        </div>
+        ` : ''}
+
+        ${emailComponents.button(
+          isFr ? '🔄 Recommander avec rabais' : '🔄 Reorder with discount',
+          `${SHOP_URL}/product/${data.product.slug}${data.discountCode ? `?promo=${data.discountCode}` : ''}`
+        )}
+
+        ${emailComponents.divider()}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center;">
+          ${isFr
+            ? 'La continuité est essentielle pour des résultats de recherche optimaux.'
+            : 'Consistency is key for optimal research results.'}
+        </p>
+      `;
+      break;
+    }
+  }
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader,
+      content,
+      locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
+    }),
+  };
+}
+
+// ============================================
+// 9. EMAIL VENTE CROISÉE / MONTÉE EN GAMME (CROSS-SELL)
+// ============================================
+export interface CrossSellEmailData {
+  customerName: string;
+  customerEmail: string;
+  originalProduct: {
+    name: string;
+    slug: string;
+  };
+  recommendations: Array<{
+    name: string;
+    slug: string;
+    price: number;
+    imageUrl?: string;
+    reason?: string; // e.g. "Popular combo", "Higher potency", "Essential supply"
+  }>;
+  /** Step 1 = complementary products, Step 2 = upgrade / bundle options */
+  step: 1 | 2;
+  locale?: 'fr' | 'en';
+  unsubscribeUrl?: string;
+}
+
+/**
+ * Peptide-specific cross-sell product mappings.
+ * Used by cron jobs and flow logic to determine recommendations.
+ */
+export const PEPTIDE_CROSS_SELL_MAP: Record<string, { complementary: string[]; upgrades: string[] }> = {
+  'bpc-157': {
+    complementary: ['tb-500', 'bpc-157-tb-500-blend'],
+    upgrades: ['bpc-157-tb-500-blend'],
+  },
+  'tb-500': {
+    complementary: ['bpc-157', 'bpc-157-tb-500-blend'],
+    upgrades: ['bpc-157-tb-500-blend'],
+  },
+  'cjc-1295': {
+    complementary: ['ipamorelin', 'cjc-1295-ipamorelin-blend'],
+    upgrades: ['cjc-1295-ipamorelin-blend'],
+  },
+  'ipamorelin': {
+    complementary: ['cjc-1295', 'cjc-1295-ipamorelin-blend'],
+    upgrades: ['cjc-1295-ipamorelin-blend'],
+  },
+  // Any peptide maps to lab equipment
+  '_default': {
+    complementary: ['bacteriostatic-water', 'syringes'],
+    upgrades: [],
+  },
+};
+
+export function crossSellEmail(data: CrossSellEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
+  const safeOriginalName = escapeHtml(data.originalProduct.name);
+
+  let subject: string;
+  let content: string;
+  let preheader: string;
+
+  switch (data.step) {
+    // -- Step 1 (7 days): "Customers who bought X also love..." ----------------
+    case 1: {
+      subject = isFr
+        ? `Les clients qui ont acheté ${safeSubjectName(data.originalProduct.name)} adorent aussi...`
+        : `Customers who bought ${safeSubjectName(data.originalProduct.name)} also love...`;
+
+      preheader = isFr
+        ? `Complétez votre protocole de recherche avec des produits complémentaires`
+        : `Complete your research protocol with complementary products`;
+
+      const recsHtml = data.recommendations.slice(0, 3).map(p => `
+        <tr>
+          <td style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+              <tr>
+                ${p.imageUrl && isSafeUrl(p.imageUrl) ? `
+                <td width="80" style="padding-right: 16px;">
+                  <a href="${SHOP_URL}/product/${p.slug}" style="text-decoration: none;">
+                    <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" width="80" height="80" style="border-radius: 8px; object-fit: cover;">
+                  </a>
+                </td>
+                ` : ''}
+                <td>
+                  <p style="margin: 0 0 4px 0; font-weight: 600; color: #1f2937;">
+                    <a href="${SHOP_URL}/product/${p.slug}" style="color: #1f2937; text-decoration: none;">${escapeHtml(p.name)}</a>
+                  </p>
+                  ${p.reason ? `<p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280;">${escapeHtml(p.reason)}</p>` : ''}
+                  <p style="margin: 0; font-size: 18px; font-weight: bold; color: #CC5500;">$${p.price.toFixed(2)}</p>
+                </td>
+                <td width="120" align="right">
+                  <a href="${SHOP_URL}/product/${p.slug}" style="display: inline-block; background-color: #CC5500; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                    ${isFr ? 'Voir' : 'View'}
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      `).join('');
+
+      content = `
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? '🔬 Complétez votre protocole' : '🔬 Complete your protocol'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, les chercheurs qui utilisent <strong>${safeOriginalName}</strong> obtiennent de meilleurs résultats avec ces produits complémentaires:`
+            : `${safeName}, researchers using <strong>${safeOriginalName}</strong> get better results with these complementary products:`}
+        </p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+          ${recsHtml}
+        </table>
+
+        ${emailComponents.button(
+          isFr ? 'Explorer nos produits' : 'Explore our products',
+          `${SHOP_URL}/shop`
+        )}
+      `;
+      break;
+    }
+
+    // -- Step 2 (14 days): "Level up your protocol" ----------------------------
+    case 2: {
+      subject = isFr
+        ? `Passez au niveau supérieur avec votre protocole de recherche`
+        : `Level up your research protocol`;
+
+      preheader = isFr
+        ? `Découvrez des options premium et des ensembles pour votre recherche`
+        : `Discover premium options and bundles for your research`;
+
+      const upgradeHtml = data.recommendations.slice(0, 3).map(p => `
+        <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin: 12px 0; text-align: center;">
+          ${p.imageUrl && isSafeUrl(p.imageUrl) ? `
+          <a href="${SHOP_URL}/product/${p.slug}" style="text-decoration: none;">
+            <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" width="120" height="120" style="border-radius: 8px; margin-bottom: 12px; object-fit: cover;">
+          </a>
+          ` : ''}
+          <h3 style="margin: 0 0 4px 0; font-size: 16px; color: #1f2937;">
+            <a href="${SHOP_URL}/product/${p.slug}" style="color: #1f2937; text-decoration: none;">${escapeHtml(p.name)}</a>
+          </h3>
+          ${p.reason ? `<p style="margin: 0 0 8px 0; font-size: 13px; color: #059669; font-weight: 600;">${escapeHtml(p.reason)}</p>` : ''}
+          <p style="margin: 0 0 12px 0; font-size: 20px; font-weight: bold; color: #CC5500;">$${p.price.toFixed(2)}</p>
+          <a href="${SHOP_URL}/product/${p.slug}" style="display: inline-block; background-color: #CC5500; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
+            ${isFr ? 'Découvrir' : 'Discover'}
+          </a>
+        </div>
+      `).join('');
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">🚀</span>
+        </div>
+
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Passez au niveau supérieur' : 'Level up your protocol'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, améliorez vos résultats de recherche avec ces options avancées basées sur votre achat de <strong>${safeOriginalName}</strong>.`
+            : `${safeName}, enhance your research results with these advanced options based on your purchase of <strong>${safeOriginalName}</strong>.`}
+        </p>
+
+        ${upgradeHtml}
+
+        ${emailComponents.divider()}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center;">
+          ${isFr
+            ? 'Besoin de conseils sur les combinaisons optimales? Contactez notre équipe.'
+            : 'Need advice on optimal combinations? Contact our team.'}
+        </p>
+      `;
+      break;
+    }
+  }
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader,
+      content,
+      locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
+    }),
+  };
+}
+
+// ============================================
+// 10. EMAIL SUNSET / NETTOYAGE DE LISTE
+// 3 variants: miss you, last chance, goodbye
+// ============================================
+export interface SunsetEmailData {
+  customerName: string;
+  customerEmail: string;
+  /** Which step: 1 = "We miss you", 2 = "Last chance", 3 = "Goodbye" */
+  step: 1 | 2 | 3;
+  /** Latest products to showcase (step 1) */
+  latestProducts?: Array<{
+    name: string;
+    slug: string;
+    price: number;
+    imageUrl?: string;
+  }>;
+  /** Re-engagement incentive (step 2) */
+  discountCode?: string;
+  discountPercent?: number;
+  /** Preference center URL for step 2/3 */
+  preferenceCenterUrl?: string;
+  locale?: 'fr' | 'en';
+  unsubscribeUrl?: string;
+}
+
+export function sunsetEmail(data: SunsetEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
+
+  let subject: string;
+  let content: string;
+  let preheader: string;
+
+  switch (data.step) {
+    // -- Step 1: "We miss you! Here's what's new" ----------------------------
+    case 1: {
+      subject = isFr
+        ? `Vous nous manquez! Voici les nouveautés`
+        : `We miss you! Here's what's new`;
+
+      preheader = isFr
+        ? `Cela fait un moment - découvrez ce que vous avez manqué`
+        : `It's been a while - discover what you've missed`;
+
+      const productsHtml = (data.latestProducts || []).slice(0, 3).map(p => `
+        <td style="padding: 8px; text-align: center; width: 33%;">
+          ${p.imageUrl && isSafeUrl(p.imageUrl) ? `
+          <a href="${SHOP_URL}/product/${p.slug}" style="text-decoration: none;">
+            <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" width="120" height="120" style="border-radius: 8px; margin-bottom: 8px; object-fit: cover;">
+          </a>
+          ` : ''}
+          <p style="margin: 0 0 4px 0; font-weight: 600; color: #1f2937; font-size: 13px;">
+            <a href="${SHOP_URL}/product/${p.slug}" style="color: #1f2937; text-decoration: none;">${escapeHtml(p.name)}</a>
+          </p>
+          <p style="margin: 0; font-size: 16px; font-weight: bold; color: #CC5500;">$${p.price.toFixed(2)}</p>
+        </td>
+      `).join('');
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">👋</span>
+        </div>
+
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Vous nous manquez!' : 'We miss you!'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `Bonjour ${safeName}, cela fait un moment que nous n'avons pas eu de vos nouvelles. Voici ce que vous avez manqué!`
+            : `Hello ${safeName}, it's been a while since we've heard from you. Here's what you've missed!`}
+        </p>
+
+        ${(data.latestProducts?.length ?? 0) > 0 ? `
+        <h2 style="font-size: 18px; text-align: center; margin-top: 24px;">
+          ${isFr ? '🆕 Nouveaux produits' : '🆕 New products'}
+        </h2>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 16px 0;">
+          <tr>
+            ${productsHtml}
+          </tr>
+        </table>
+        ` : ''}
+
+        ${emailComponents.button(
+          isFr ? 'Voir toutes les nouveautés' : 'See all new products',
+          `${SHOP_URL}/shop?sort=newest`
+        )}
+
+        ${emailComponents.divider()}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center;">
+          ${isFr
+            ? 'Si vous ne souhaitez plus recevoir nos emails, vous pouvez mettre à jour vos préférences ci-dessous.'
+            : 'If you no longer wish to receive our emails, you can update your preferences below.'}
+        </p>
+      `;
+      break;
+    }
+
+    // -- Step 2 (7 days): "Last chance to stay in touch" ----------------------
+    case 2: {
+      subject = isFr
+        ? `Dernière chance de rester en contact`
+        : `Last chance to stay in touch`;
+
+      preheader = isFr
+        ? `Nous voulons vous garder - Confirmez votre intérêt`
+        : `We want to keep you - Confirm your interest`;
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">✉️</span>
+        </div>
+
+        <h1 style="color: #dc2626; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'On vous perd?' : 'Are we losing you?'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, nous avons remarqué que vous n'avez pas ouvert nos derniers emails. Nous ne voulons pas encombrer votre boîte de réception si vous n'êtes plus intéressé(e).`
+            : `${safeName}, we've noticed you haven't opened our recent emails. We don't want to clutter your inbox if you're no longer interested.`}
+        </p>
+
+        ${data.discountCode ? `
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">
+            ${isFr ? '🎁 Un petit cadeau de retrouvailles' : '🎁 A little reunion gift'}
+          </p>
+          <p style="margin: 0 0 16px 0; font-size: 36px; font-weight: bold; color: #CC5500;">
+            ${data.discountPercent || 10}% ${isFr ? 'DE RABAIS' : 'OFF'}
+          </p>
+          <div style="background-color: white; border-radius: 8px; padding: 12px;">
+            <p style="margin: 0; font-size: 20px; font-weight: bold; color: #1f2937; letter-spacing: 3px; font-family: monospace;">
+              ${data.discountCode}
+            </p>
+          </div>
+        </div>
+        ` : ''}
+
+        <div style="text-align: center; margin: 24px 0;">
+          ${emailComponents.button(
+            isFr ? '✅ Je veux rester!' : '✅ I want to stay!',
+            `${SHOP_URL}/shop`
+          )}
+        </div>
+
+        ${data.preferenceCenterUrl ? `
+        <p style="font-size: 14px; color: #6b7280; text-align: center;">
+          ${isFr
+            ? `Ou <a href="${data.preferenceCenterUrl}" style="color: #CC5500;">modifiez vos préférences email</a> pour recevoir uniquement ce qui vous intéresse.`
+            : `Or <a href="${data.preferenceCenterUrl}" style="color: #CC5500;">update your email preferences</a> to only receive what interests you.`}
+        </p>
+        ` : ''}
+
+        ${emailComponents.divider()}
+
+        <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+          ${isFr
+            ? '⚠️ Sans réponse de votre part dans les 7 prochains jours, nous cesserons de vous envoyer des emails marketing.'
+            : '⚠️ Without a response within the next 7 days, we will stop sending you marketing emails.'}
+        </p>
+      `;
+      break;
+    }
+
+    // -- Step 3 (14 days): "Goodbye for now" - auto-unsubscribe ---------------
+    case 3: {
+      subject = isFr
+        ? `Au revoir pour le moment`
+        : `Goodbye for now`;
+
+      preheader = isFr
+        ? `Nous vous avons retiré de notre liste - Revenez quand vous voulez`
+        : `We've removed you from our list - Come back anytime`;
+
+      content = `
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 64px;">🫡</span>
+        </div>
+
+        <h1 style="color: #1f2937; margin-bottom: 8px; text-align: center;">
+          ${isFr ? 'Au revoir pour le moment' : 'Goodbye for now'}
+        </h1>
+        <p style="font-size: 16px; color: #4b5563; text-align: center;">
+          ${isFr
+            ? `${safeName}, comme nous n'avons pas eu de réponse, nous vous avons retiré de notre liste d'envoi marketing. C'est notre façon de respecter votre boîte de réception.`
+            : `${safeName}, since we haven't heard back, we've removed you from our marketing mailing list. It's our way of respecting your inbox.`}
+        </p>
+
+        <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+          <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #065f46;">
+            ${isFr ? '💚 Vous pouvez toujours revenir!' : '💚 You can always come back!'}
+          </p>
+          <p style="margin: 0; font-size: 14px; color: #065f46;">
+            ${isFr
+              ? 'Si vous changez d\'avis, vous pourrez vous réinscrire à tout moment depuis votre compte ou notre site.'
+              : 'If you change your mind, you can resubscribe anytime from your account or our website.'}
+          </p>
+        </div>
+
+        ${emailComponents.button(
+          isFr ? 'Se réinscrire' : 'Resubscribe',
+          `${SHOP_URL}/newsletter`
+        )}
+
+        <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 24px;">
+          ${isFr
+            ? 'Vous recevrez toujours les emails transactionnels (commandes, livraisons, etc.).'
+            : 'You will still receive transactional emails (orders, shipping, etc.).'}
+        </p>
+      `;
+      break;
+    }
+  }
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader,
+      content,
+      locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
+    }),
+  };
+}
+
+// ============================================
+// 11. EMAIL NIVEAU VIP / FIDÉLITÉ (VIP TIER UP)
+// ============================================
+
+/** Loyalty tier definitions with perks */
+export const LOYALTY_TIERS: Record<string, {
+  name: { fr: string; en: string };
+  color: string;
+  icon: string;
+  perks: { fr: string[]; en: string[] };
+  minPoints: number;
+}> = {
+  SILVER: {
+    name: { fr: 'Argent', en: 'Silver' },
+    color: '#94a3b8',
+    icon: '🥈',
+    perks: {
+      fr: [
+        '5% de rabais permanent sur toutes les commandes',
+        'Accès anticipé aux nouveaux produits (24h)',
+        'Points de fidélité x1.5 sur chaque achat',
+        'Livraison gratuite sur les commandes de 150$+',
+      ],
+      en: [
+        '5% permanent discount on all orders',
+        'Early access to new products (24h)',
+        'Loyalty points x1.5 on every purchase',
+        'Free shipping on orders over $150',
+      ],
+    },
+    minPoints: 500,
+  },
+  GOLD: {
+    name: { fr: 'Or', en: 'Gold' },
+    color: '#f59e0b',
+    icon: '🥇',
+    perks: {
+      fr: [
+        '10% de rabais permanent sur toutes les commandes',
+        'Accès anticipé aux nouveaux produits (48h)',
+        'Points de fidélité x2 sur chaque achat',
+        'Livraison gratuite sur toutes les commandes',
+        'Support prioritaire par email',
+      ],
+      en: [
+        '10% permanent discount on all orders',
+        'Early access to new products (48h)',
+        'Loyalty points x2 on every purchase',
+        'Free shipping on all orders',
+        'Priority email support',
+      ],
+    },
+    minPoints: 1500,
+  },
+  PLATINUM: {
+    name: { fr: 'Platine', en: 'Platinum' },
+    color: '#818cf8',
+    icon: '💎',
+    perks: {
+      fr: [
+        '15% de rabais permanent sur toutes les commandes',
+        'Accès anticipé aux nouveaux produits (72h)',
+        'Points de fidélité x3 sur chaque achat',
+        'Livraison gratuite + prioritaire sur toutes les commandes',
+        'Support VIP dédié par téléphone et email',
+        'Cadeaux exclusifs et échantillons gratuits',
+        'Invitations aux événements privés BioCycle',
+      ],
+      en: [
+        '15% permanent discount on all orders',
+        'Early access to new products (72h)',
+        'Loyalty points x3 on every purchase',
+        'Free + priority shipping on all orders',
+        'Dedicated VIP support by phone and email',
+        'Exclusive gifts and free samples',
+        'Invitations to private BioCycle events',
+      ],
+    },
+    minPoints: 5000,
+  },
+};
+
+export interface VipTierUpEmailData {
+  customerName: string;
+  customerEmail: string;
+  tier: 'SILVER' | 'GOLD' | 'PLATINUM';
+  lifetimePoints: number;
+  locale?: 'fr' | 'en';
+  unsubscribeUrl?: string;
+}
+
+export function vipTierUpEmail(data: VipTierUpEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
+  const tierDef = LOYALTY_TIERS[data.tier];
+
+  if (!tierDef) {
+    // Fallback for unknown tier
+    return {
+      subject: isFr ? 'Félicitations pour votre nouveau niveau!' : 'Congratulations on your new tier!',
+      html: baseTemplate({
+        preheader: isFr ? 'Vous avez atteint un nouveau niveau de fidélité' : 'You\'ve reached a new loyalty tier',
+        content: `<p>${isFr ? 'Merci pour votre fidélité!' : 'Thank you for your loyalty!'}</p>`,
+        locale: data.locale,
+        unsubscribeUrl: data.unsubscribeUrl,
+      }),
+    };
+  }
+
+  const tierName = isFr ? tierDef.name.fr : tierDef.name.en;
+  const perks = isFr ? tierDef.perks.fr : tierDef.perks.en;
+
+  const subject = isFr
+    ? `${tierDef.icon} Félicitations! Vous êtes maintenant ${tierName}!`
+    : `${tierDef.icon} Congratulations! You're now ${tierName}!`;
+
+  const preheader = isFr
+    ? `Vous avez atteint le niveau ${tierName} avec ${data.lifetimePoints} points`
+    : `You've reached ${tierName} tier with ${data.lifetimePoints} points`;
+
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <span style="font-size: 80px;">${tierDef.icon}</span>
+    </div>
+
+    <h1 style="color: ${tierDef.color}; margin-bottom: 8px; text-align: center; font-size: 28px;">
+      ${isFr ? 'Félicitations!' : 'Congratulations!'}
+    </h1>
+    <p style="font-size: 18px; color: #4b5563; text-align: center;">
+      ${isFr
+        ? `${safeName}, vous avez atteint le niveau`
+        : `${safeName}, you've reached the`}
+    </p>
+
+    <div style="background: linear-gradient(135deg, ${tierDef.color}15 0%, ${tierDef.color}30 100%); border: 2px solid ${tierDef.color}; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center;">
+      <p style="margin: 0 0 8px 0; font-size: 48px; font-weight: bold; color: ${tierDef.color};">
+        ${tierName}
+      </p>
+      <p style="margin: 0; font-size: 14px; color: #6b7280;">
+        ${isFr
+          ? `${data.lifetimePoints.toLocaleString('fr-CA')} points de fidélité accumulés`
+          : `${data.lifetimePoints.toLocaleString('en-CA')} loyalty points accumulated`}
+      </p>
+    </div>
+
+    <h2 style="font-size: 20px; text-align: center; margin-top: 32px;">
+      ${isFr ? '🎁 Vos avantages exclusifs' : '🎁 Your exclusive perks'}
+    </h2>
+
+    <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 16px 0;">
+      <ul style="list-style: none; padding: 0; margin: 0;">
+        ${perks.map(perk => `
+        <li style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center;">
+          <span style="font-size: 18px; margin-right: 12px;">✅</span>
+          <span style="font-size: 15px; color: #1f2937;">${escapeHtml(perk)}</span>
+        </li>
+        `).join('')}
+      </ul>
+    </div>
+
+    ${emailComponents.button(
+      isFr ? 'Profiter de mes avantages' : 'Enjoy my perks',
+      `${SHOP_URL}/shop`
+    )}
+
+    ${emailComponents.divider()}
+
+    <div style="background-color: #eff6ff; border-radius: 8px; padding: 16px; text-align: center;">
+      <p style="margin: 0; font-size: 14px; color: #1e40af;">
+        ${isFr
+          ? '💡 Vos avantages s\'appliquent automatiquement à chaque commande!'
+          : '💡 Your perks are automatically applied to every order!'}
+      </p>
+    </div>
+
+    <p style="font-size: 13px; color: #9ca3af; text-align: center; margin-top: 24px;">
+      ${isFr
+        ? `Merci pour votre fidélité, ${safeName}. Vous faites partie de notre famille de chercheurs!`
+        : `Thank you for your loyalty, ${safeName}. You're part of our researcher family!`}
+    </p>
+  `;
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader,
       content,
       locale: data.locale,
       unsubscribeUrl: data.unsubscribeUrl,

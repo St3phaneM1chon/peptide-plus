@@ -31,7 +31,7 @@ const updateCampaignSchema = z.object({
   textContent: z.string().nullable().optional(),
   segmentQuery: z.unknown().optional(),
   scheduledAt: z.string().nullable().optional(),
-  status: z.enum(['DRAFT', 'SCHEDULED', 'SENDING', 'PAUSED']).optional(),
+  status: z.enum(['DRAFT', 'SCHEDULED', 'SENDING', 'PAUSED', 'AB_TESTING']).optional(),
   abTestConfig: z.unknown().optional(),
   timezone: z.string().max(50).nullable().optional(),
 });
@@ -42,6 +42,7 @@ const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   SCHEDULED: ['DRAFT'],
   SENDING: ['PAUSED'],
   PAUSED: ['SENDING'],
+  AB_TESTING: [], // AB_TESTING -> SENT is handled by the cron job only
 };
 
 /** Validate an IANA timezone string (basic check) */
@@ -219,9 +220,9 @@ export const PUT = withAdminGuard(
         ((existing.status === 'SENDING' && status === 'PAUSED') ||
          (existing.status === 'PAUSED' && status === 'SENDING'));
 
-      // Don't allow editing content of sent/sending/paused campaigns (except pause/resume)
-      if (!isPauseResume && (existing.status === 'SENT' || existing.status === 'SENDING' || existing.status === 'PAUSED')) {
-        return NextResponse.json({ error: 'Cannot edit a sent, sending, or paused campaign' }, { status: 400 });
+      // Don't allow editing content of sent/sending/paused/ab_testing campaigns (except pause/resume)
+      if (!isPauseResume && (existing.status === 'SENT' || existing.status === 'SENDING' || existing.status === 'PAUSED' || existing.status === 'AB_TESTING')) {
+        return NextResponse.json({ error: 'Cannot edit a sent, sending, paused, or A/B testing campaign' }, { status: 400 });
       }
 
       // Security: Reject oversized segmentQuery to prevent JSON injection / DoS
