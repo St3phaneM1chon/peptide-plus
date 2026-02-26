@@ -1588,6 +1588,8 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([orderId, productId])
+  @@index([productId, formatId]) // P-09: composite for product-history DISTINCT ON (productId, formatId)
+  @@index([productId, formatId, createdAt]) // P-09: composite for latest price per (productId, formatId) ordered by date
   @@index([createdAt])
 }
 

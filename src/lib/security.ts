@@ -299,6 +299,24 @@ interface RateLimitEntry {
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
+// P-08 FIX: Maximum number of entries in the rate limit store
+const RATE_LIMIT_STORE_MAX_SIZE = 10_000;
+
+/**
+ * P-08 FIX: Evict the oldest half of rateLimitStore when it exceeds the max size.
+ * Maps maintain insertion order, so the first keys are the oldest entries.
+ */
+function enforceRateLimitStoreMaxSize(): void {
+  if (rateLimitStore.size <= RATE_LIMIT_STORE_MAX_SIZE) return;
+  const toDelete = Math.floor(rateLimitStore.size / 2);
+  let deleted = 0;
+  for (const key of rateLimitStore.keys()) {
+    if (deleted >= toDelete) break;
+    rateLimitStore.delete(key);
+    deleted++;
+  }
+}
+
 // FAILLE-038 FIX: Store interval IDs for proper cleanup
 let rateLimitCleanupInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -326,6 +344,7 @@ export function checkRateLimit(
 
   // Nouvelle entrée ou fenêtre expirée
   if (!entry || now - entry.firstRequest > windowMs) {
+    enforceRateLimitStoreMaxSize();
     rateLimitStore.set(key, { count: 1, firstRequest: now });
     return {
       allowed: true,

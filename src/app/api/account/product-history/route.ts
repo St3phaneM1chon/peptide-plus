@@ -45,24 +45,35 @@ export async function GET() {
       return NextResponse.json({ categories: [] });
     }
 
-    // For lastOrderedPrice, fetch the most recent order item per (productId, formatId) group.
-    // This is still much cheaper than loading all 200 orders with all items.
-    const latestPricePromises = aggregated.map((group) =>
-      db.orderItem.findFirst({
-        where: {
-          productId: group.productId,
-          formatId: group.formatId,
-          order: {
-            userId: user.id,
-            status: { not: 'CANCELLED' },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { unitPrice: true },
-      })
-    );
+    // Extract unique product IDs from aggregation results
+    const productIds = [...new Set(aggregated.map((g) => g.productId))];
+    const formatIds = [...new Set(aggregated.map((g) => g.formatId).filter(Boolean))] as string[];
 
-    const latestPrices = await Promise.all(latestPricePromises);
+    // P-15 FIX: Replace N individual findFirst queries with a single $queryRaw that fetches
+    // the most recent unitPrice per (productId, formatId) group in one DB round-trip.
+    // DISTINCT ON orders by (productId, formatId, createdAt DESC) to get the latest row per pair.
+    type LatestPriceRow = { productId: string; formatId: string | null; unitPrice: string };
+    const latestPriceRows = await db.$queryRaw<LatestPriceRow[]>`
+      SELECT DISTINCT ON ("productId", "formatId") "productId", "formatId", "unitPrice"
+      FROM "OrderItem" oi
+      WHERE oi."productId" = ANY(${productIds}::text[])
+        AND EXISTS (
+          SELECT 1 FROM "Order" o
+          WHERE o."id" = oi."orderId"
+            AND o."userId" = ${user.id}
+            AND o."status" != 'CANCELLED'
+        )
+      ORDER BY "productId", "formatId", "createdAt" DESC
+    `;
+
+    // Index latest prices by "productId__formatId" composite key for O(1) lookup
+    const latestPriceMap = new Map<string, number>();
+    for (const row of latestPriceRows) {
+      const key = `${row.productId}__${row.formatId ?? 'null'}`;
+      if (!latestPriceMap.has(key)) {
+        latestPriceMap.set(key, Number(row.unitPrice));
+      }
+    }
 
     // Build productMap from aggregated data
     const productMap = new Map<
@@ -79,8 +90,7 @@ export async function GET() {
       }
     >();
 
-    for (let i = 0; i < aggregated.length; i++) {
-      const group = aggregated[i];
+    for (const group of aggregated) {
       const key = `${group.productId}__${group.formatId || 'null'}`;
       productMap.set(key, {
         productId: group.productId,
@@ -90,22 +100,33 @@ export async function GET() {
         totalOrdered: group._sum.quantity || 0,
         orderCount: group._count._all,
         lastOrderDate: group._max.createdAt?.toISOString() || new Date().toISOString(),
-        lastOrderedPrice: latestPrices[i]?.unitPrice ? Number(latestPrices[i]!.unitPrice) : 0,
+        lastOrderedPrice: latestPriceMap.get(key) ?? 0,
       });
     }
 
-    // Get product details for all unique product IDs
-    const productIds = [...new Set(aggregated.map((g) => g.productId))];
-    const formatIds = [...new Set(aggregated.map((g) => g.formatId).filter(Boolean))] as string[];
-
+    // P-15 FIX: Use select to fetch only the fields actually used in the response,
+    // avoiding loading heavy columns (description, specifications, aminoSequence, etc.)
     const [products, formats] = await Promise.all([
       db.product.findMany({
         where: { id: { in: productIds } },
-        include: { category: { select: { id: true, name: true } } },
+        select: {
+          id: true,
+          imageUrl: true,
+          slug: true,
+          price: true,
+          isActive: true,
+          category: { select: { id: true, name: true } },
+        },
       }),
       formatIds.length > 0
         ? db.productFormat.findMany({
             where: { id: { in: formatIds } },
+            select: {
+              id: true,
+              price: true,
+              inStock: true,
+              isActive: true,
+            },
           })
         : Promise.resolve([]),
     ]);

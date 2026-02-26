@@ -15,10 +15,29 @@ const TOKEN_ROTATION_INTERVAL_MS = 60 * 60 * 1000; // Rotation toutes les heures
 const lastActivityCache = new Map<string, number>();
 const sessionCreationCache = new Map<string, number>();
 
+// P-08 FIX: Maximum number of entries allowed in each session cache map
+const SESSION_CACHE_MAX_SIZE = 10_000;
+
+/**
+ * P-08 FIX: Evict oldest half of a Map when it exceeds SESSION_CACHE_MAX_SIZE.
+ * Maps maintain insertion order, so the first keys iterated are the oldest.
+ */
+function enforceCacheMaxSize<V>(map: Map<string, V>): void {
+  if (map.size <= SESSION_CACHE_MAX_SIZE) return;
+  const toDelete = Math.floor(map.size / 2);
+  let deleted = 0;
+  for (const key of map.keys()) {
+    if (deleted >= toDelete) break;
+    map.delete(key);
+    deleted++;
+  }
+}
+
 /**
  * Enregistre l'activité d'un utilisateur
  */
 export function recordUserActivity(sessionId: string): void {
+  enforceCacheMaxSize(lastActivityCache);
   lastActivityCache.set(sessionId, Date.now());
 }
 
@@ -27,6 +46,8 @@ export function recordUserActivity(sessionId: string): void {
  */
 export function recordSessionCreation(sessionId: string): void {
   const now = Date.now();
+  enforceCacheMaxSize(sessionCreationCache);
+  enforceCacheMaxSize(lastActivityCache);
   sessionCreationCache.set(sessionId, now);
   lastActivityCache.set(sessionId, now);
 }
@@ -103,6 +124,7 @@ export function recordSessionMetadata(
   sessionId: string,
   metadata: SessionMetadata
 ): void {
+  enforceCacheMaxSize(sessionMetadataCache);
   sessionMetadataCache.set(sessionId, metadata);
 }
 

@@ -83,8 +83,11 @@ export async function qualifyReferral(
       };
     }
 
-    // Calculate new balance
-    const newBalance = referral.referrer.loyaltyPoints + REFERRAL_BONUS_POINTS;
+    // F-005 FIX: Do NOT compute newBalance from the stale pre-transaction read.
+    // Instead, perform the atomic increment first inside the transaction, then read
+    // the DB-confirmed post-increment value for balanceAfter. This eliminates the
+    // TOCTOU race where two concurrent qualifications could both use the same stale
+    // loyaltyPoints value and produce an incorrect balanceAfter audit record.
 
     // Update everything in a transaction
     await prisma.$transaction(async (tx) => {
@@ -98,6 +101,17 @@ export async function qualifyReferral(
         },
       });
 
+      // Atomic increment - returns the updated user with the confirmed new balance
+      const updatedReferrer = await tx.user.update({
+        where: { id: referral.referrerId },
+        data: {
+          loyaltyPoints: { increment: REFERRAL_BONUS_POINTS },
+          lifetimePoints: { increment: REFERRAL_BONUS_POINTS },
+        },
+        select: { loyaltyPoints: true },
+      });
+
+      // balanceAfter is now the DB-confirmed post-increment value, not a stale estimate
       await tx.loyaltyTransaction.create({
         data: {
           userId: referral.referrerId,
@@ -106,15 +120,7 @@ export async function qualifyReferral(
           description: `Referral bonus - friend's first order`,
           orderId,
           referralId: referral.id,
-          balanceAfter: newBalance,
-        },
-      });
-
-      await tx.user.update({
-        where: { id: referral.referrerId },
-        data: {
-          loyaltyPoints: { increment: REFERRAL_BONUS_POINTS },
-          lifetimePoints: { increment: REFERRAL_BONUS_POINTS },
+          balanceAfter: updatedReferrer.loyaltyPoints,
         },
       });
 

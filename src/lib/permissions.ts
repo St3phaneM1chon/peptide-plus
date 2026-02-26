@@ -10,6 +10,10 @@
 
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+// FAILLE-008 FIX: Import canonical EMPLOYEE permission set from permission-constants.ts
+// to eliminate the dual-definition that previously existed between this file and
+// permission-constants.ts. permission-constants.ts is the single source of truth.
+import { EMPLOYEE_DEFAULT_PERMISSIONS } from '@/lib/permission-constants';
 
 // FAILLE-050 FIX: Use UserRole from @/types instead of duplicating the type definition
 // Re-export the type so existing consumers don't break
@@ -158,23 +162,12 @@ export const PERMISSION_MODULES: Record<string, { label: string; permissions: Pe
 };
 
 // Default permissions per role (exported for single source of truth - FAILLE-009)
-// SYNC NOTE: EMPLOYEE defaults MUST match EMPLOYEE_DEFAULT_PERMISSIONS in permission-constants.ts
+// FAILLE-008 FIX: EMPLOYEE defaults now derived directly from EMPLOYEE_DEFAULT_PERMISSIONS
+// (permission-constants.ts) instead of maintaining a duplicate array here.
+// This eliminates the risk of the two definitions drifting out of sync.
 export const ROLE_DEFAULTS: Record<UserRole, PermissionCode[]> = {
   OWNER: Object.keys(PERMISSIONS) as PermissionCode[], // All permissions
-  EMPLOYEE: [
-    'products.view', 'products.create', 'products.edit', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory',
-    'categories.view', 'categories.create', 'categories.edit',
-    'orders.view', 'orders.edit', 'orders.export',
-    'users.view',
-    'cms.pages.view', 'cms.pages.create', 'cms.pages.edit', 'cms.faq.manage', 'cms.blog.manage', 'cms.hero.manage',
-    'accounting.view',
-    'shipping.view', 'shipping.update_status',
-    'marketing.promos.manage', 'marketing.discounts.manage', 'marketing.newsletter.manage',
-    'chat.view', 'chat.respond',
-    'media.view', 'media.upload',
-    'analytics.view',
-    'seo.edit',
-  ],
+  EMPLOYEE: Array.from(EMPLOYEE_DEFAULT_PERMISSIONS) as PermissionCode[],
   CLIENT: [
     'products.view',
     'orders.view',

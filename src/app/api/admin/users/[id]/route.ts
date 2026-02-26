@@ -268,12 +268,22 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       );
     }
 
-    // SECURITY (FAILLE-001): Role hierarchy check - only OWNER can change roles
+    // FAILLE-003 FIX: Role hierarchy enforcement
+    // - Only OWNER can change roles at all
+    // - OWNER role cannot be assigned to any other user (prevents privilege proliferation)
+    // - EMPLOYEE cannot be promoted by anyone other than OWNER
     if (data.role !== undefined) {
       const callerRole = session.user.role as string;
       if (callerRole !== UserRole.OWNER) {
         return NextResponse.json(
           { error: 'Seul le propriétaire peut modifier les rôles' },
+          { status: 403 }
+        );
+      }
+      // Prevent assigning the OWNER role to any other user
+      if (data.role === UserRole.OWNER) {
+        return NextResponse.json(
+          { error: 'Le rôle OWNER ne peut pas être attribué à un autre utilisateur' },
           { status: 403 }
         );
       }

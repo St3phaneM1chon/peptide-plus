@@ -36,6 +36,8 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { BUILT_IN_SEGMENTS, type Segment } from '@/lib/email/segmentation';
 import { CASL_DEFAULTS } from '@/lib/email/casl-compliance';
 import { type ABTestVariant, getMetricValue } from '@/lib/email/ab-test-engine';
+// FAILLE-002 FIX: Import CSRF helper to include CSRF token in all mutating requests
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -162,7 +164,8 @@ export default function NewsletterPage() {
     try {
       const res = await fetch('/api/admin/newsletter/campaigns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // FAILLE-002 FIX: Include CSRF token for server-side validation
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           subject: newCampaign.subject,
           content: newCampaign.content,
@@ -347,7 +350,11 @@ export default function NewsletterPage() {
         onConfirm: () => {
           setConfirmAction(prev => ({ ...prev, isOpen: false }));
           setDeletingId(selectedSubscriber.id);
-          fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, { method: 'DELETE' })
+          fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, {
+            method: 'DELETE',
+            // FAILLE-002 FIX: Include CSRF token
+            headers: addCSRFHeader(),
+          })
             .then(res => {
               if (!res.ok) {
                 toast.error(t('common.deleteFailed'));
@@ -384,7 +391,8 @@ export default function NewsletterPage() {
         setConfirmAction(prev => ({ ...prev, isOpen: false }));
         fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          // FAILLE-002 FIX: Include CSRF token
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status: 'SENT' }),
         })
           .then(res => {
@@ -757,6 +765,8 @@ export default function NewsletterPage() {
                               try {
                                 const res = await fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, {
                                   method: 'DELETE',
+                                  // FAILLE-002 FIX: Include CSRF token
+                                  headers: addCSRFHeader(),
                                 });
                                 if (!res.ok) {
                                   const data = await res.json().catch(() => ({}));
@@ -899,7 +909,8 @@ export default function NewsletterPage() {
                                   try {
                                     const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
                                       method: 'PATCH',
-                                      headers: { 'Content-Type': 'application/json' },
+                                      // FAILLE-002 FIX: Include CSRF token
+                                      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                                       body: JSON.stringify({ status: 'SENT' }),
                                     });
                                     if (!res.ok) {
@@ -932,7 +943,8 @@ export default function NewsletterPage() {
                                 try {
                                   const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
                                     method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    // FAILLE-002 FIX: Include CSRF token
+                                    headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                                     body: JSON.stringify({ status: 'DRAFT' }),
                                   });
                                   if (!res.ok) {

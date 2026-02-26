@@ -214,7 +214,9 @@ async function syncCommissionsForCodes(
           : Number(amb.commissionRate);
 
     const orderTotal = Number(order.total);
-    const commissionAmount = Math.round(orderTotal * rate) / 100;
+    // F-010 FIX: commissionRate is stored as an integer percentage (e.g. 10 = 10%).
+    // Divide by 100 first to get the decimal multiplier, then round to 2 decimal places.
+    const commissionAmount = Math.round(orderTotal * (rate / 100) * 100) / 100;
 
     newCommissions.push({
       ambassadorId: amb.id,

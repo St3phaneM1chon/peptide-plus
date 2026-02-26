@@ -15,6 +15,8 @@ import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { BADGES, type Challenge } from '@/lib/loyalty/gamification';
 import { POINTS_RULES, LOYALTY_TIERS } from '@/lib/loyalty/points-engine';
 import { DEFAULT_EXPIRATION } from '@/lib/loyalty/expiration-manager';
+// FIX F-006: Import canonical reward catalog from single source of truth
+import { LOYALTY_REWARDS_CATALOG } from '@/lib/constants';
 
 interface LoyaltyTier {
   name: string;
@@ -71,14 +73,18 @@ export default function FidelitePage() {
   ]);
 
   // ─── Reward catalog ─────────────────────────────────────────
-  const [rewardCatalog] = useState([
-    { id: 'r1', name: 'Réduction 5$', cost: 500, type: 'discount' as const },
-    { id: 'r2', name: 'Réduction 10$', cost: 900, type: 'discount' as const },
-    { id: 'r3', name: 'Livraison gratuite', cost: 300, type: 'freeShipping' as const },
-    { id: 'r4', name: 'Échantillon gratuit', cost: 200, type: 'freeProduct' as const },
-    { id: 'r5', name: 'Accès vente privée', cost: 1500, type: 'exclusive' as const },
-    { id: 'r6', name: 'Réduction 25$', cost: 2000, type: 'discount' as const },
-  ]);
+  // FIX F-006: Derived from LOYALTY_REWARDS_CATALOG (single source of truth in constants.ts)
+  // instead of a hardcoded local array that was out of sync with the canonical definition.
+  const rewardCatalog = useMemo(
+    () =>
+      Object.entries(LOYALTY_REWARDS_CATALOG).map(([key, r]) => ({
+        id: key,
+        name: r.description,
+        cost: r.points,
+        type: r.type,
+      })),
+    []
+  );
 
   // ─── Expiration summary (simulated) ─────────────────────────
   const [expirationSummary] = useState({
@@ -858,13 +864,15 @@ export default function FidelitePage() {
         <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.rewardCatalogSubtitle')}</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {rewardCatalog.map((reward) => {
+            // FIX F-006: Updated type labels to match canonical catalog types
+            // (discount | shipping | bonus) from LOYALTY_REWARDS_CATALOG in constants.ts
             const typeLabel = reward.type === 'discount' ? t('admin.loyalty.rewardDiscount')
-              : reward.type === 'freeShipping' ? t('admin.loyalty.rewardFreeShipping')
-              : reward.type === 'freeProduct' ? t('admin.loyalty.rewardFreeProduct')
+              : reward.type === 'shipping' ? t('admin.loyalty.rewardFreeShipping')
+              : reward.type === 'bonus' ? t('admin.loyalty.rewardExclusive')
               : t('admin.loyalty.rewardExclusive');
             const typeColor = reward.type === 'discount' ? 'bg-green-100 text-green-700'
-              : reward.type === 'freeShipping' ? 'bg-blue-100 text-blue-700'
-              : reward.type === 'freeProduct' ? 'bg-purple-100 text-purple-700'
+              : reward.type === 'shipping' ? 'bg-blue-100 text-blue-700'
+              : reward.type === 'bonus' ? 'bg-purple-100 text-purple-700'
               : 'bg-amber-100 text-amber-700';
             return (
               <div key={reward.id} className="bg-slate-50 rounded-lg border border-slate-100 p-4 flex flex-col items-center text-center hover:border-pink-200 transition-colors">

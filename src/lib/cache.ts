@@ -101,6 +101,25 @@ const tagIndex = new Map<string, Set<string>>();
 const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes in ms
 const REDIS_PREFIX = 'cache:';
 
+// P-08 FIX: Maximum number of entries in the in-memory cache
+const MEM_CACHE_MAX_SIZE = 10_000;
+
+/**
+ * P-08 FIX: Evict the oldest half of memCache when it exceeds MEM_CACHE_MAX_SIZE.
+ * Maps maintain insertion order, so the first keys are the oldest entries.
+ * Uses cacheDeleteSync to properly clean up tagIndex references as well.
+ */
+function enforceMemCacheMaxSize(): void {
+  if (memCache.size <= MEM_CACHE_MAX_SIZE) return;
+  const toDelete = Math.floor(memCache.size / 2);
+  let deleted = 0;
+  for (const key of memCache.keys()) {
+    if (deleted >= toDelete) break;
+    cacheDeleteSync(key);
+    deleted++;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Core API
 // ---------------------------------------------------------------------------
@@ -167,6 +186,9 @@ export async function cacheSet<T>(
   if (memCache.has(key)) {
     cacheDeleteSync(key);
   }
+
+  // P-08 FIX: Enforce max size before inserting a new entry
+  enforceMemCacheMaxSize();
 
   const entry: CacheEntry<T> = {
     data,

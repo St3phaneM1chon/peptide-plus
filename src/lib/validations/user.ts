@@ -21,8 +21,12 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 // Admin update user
 // ---------------------------------------------------------------------------
 
+// FAILLE-003 FIX: OWNER role removed from assignable values at schema level.
+// The route-level guard also enforces this, but defense-in-depth requires the
+// schema itself to reject OWNER assignments so no code path can accidentally
+// bypass the runtime check.
 export const adminUpdateUserSchema = z.object({
-  role: z.enum(['PUBLIC', 'CUSTOMER', 'CLIENT_B2B', 'EMPLOYEE', 'OWNER']).optional(),
+  role: z.enum(['PUBLIC', 'CUSTOMER', 'CLIENT_B2B', 'EMPLOYEE']).optional(),
   name: nameSchema.optional(),
   phone: phoneSchema,
   locale: z.string().min(2).max(10).optional(),

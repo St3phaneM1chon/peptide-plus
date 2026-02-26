@@ -36,12 +36,13 @@ interface Reward {
   nameKey: string;
   descKey: string;
   pointsCost: number;
-  type: 'discount' | 'product' | 'shipping' | 'exclusive';
+  // FIX F-006: Added 'bonus' to match types in LOYALTY_REWARDS_CATALOG
+  type: 'discount' | 'product' | 'shipping' | 'exclusive' | 'bonus';
   value?: number;
   available: boolean;
 }
 
-import { LOYALTY_TIER_THRESHOLDS, LOYALTY_POINTS_CONFIG } from '@/lib/constants';
+import { LOYALTY_TIER_THRESHOLDS, LOYALTY_POINTS_CONFIG, LOYALTY_REWARDS_CATALOG } from '@/lib/constants';
 
 // Configuration des niveaux - derived from CANONICAL thresholds in constants.ts
 // benefits keys resolved at render time via t()
@@ -66,15 +67,32 @@ const LOYALTY_LEVELS_CONFIG: LoyaltyLevel[] = LOYALTY_TIER_THRESHOLDS.map(tier =
   };
 });
 
-// Récompenses disponibles - names/descriptions resolved via t() at render time
-const AVAILABLE_REWARDS_CONFIG = [
-  { id: 'discount-5', nameKey: 'customerRewards.reward5Discount', descKey: 'customerRewards.rewardNextOrderDesc', pointsCost: 100, type: 'discount' as const, value: 5, available: true },
-  { id: 'discount-15', nameKey: 'customerRewards.reward15Discount', descKey: 'customerRewards.rewardNextOrderDesc', pointsCost: 250, type: 'discount' as const, value: 15, available: true },
-  { id: 'discount-50', nameKey: 'customerRewards.reward50Discount', descKey: 'customerRewards.rewardNextOrderDesc', pointsCost: 750, type: 'discount' as const, value: 50, available: true },
-  { id: 'free-shipping', nameKey: 'customerRewards.rewardFreeShipping', descKey: 'customerRewards.rewardNextOrderShortDesc', pointsCost: 150, type: 'shipping' as const, available: true },
-  { id: 'bac-water-free', nameKey: 'customerRewards.rewardFreeBacWater', descKey: 'customerRewards.rewardBacWaterDesc', pointsCost: 200, type: 'product' as const, available: true },
-  { id: 'vip-consultation', nameKey: 'customerRewards.rewardVipConsultation', descKey: 'customerRewards.rewardVipConsultationDesc', pointsCost: 1000, type: 'exclusive' as const, available: true },
-];
+// FIX F-006: Reward catalog derived from LOYALTY_REWARDS_CATALOG (single source of truth in constants.ts).
+// Previously this used a hardcoded local array with different IDs (e.g. 'discount-5') and point costs
+// that did not match the canonical catalog keys (e.g. 'DISCOUNT_5') expected by /api/loyalty/redeem.
+// Now uses the canonical keys and point costs, with i18n name keys mapped per catalog entry.
+const REWARD_I18N_KEYS: Record<string, { nameKey: string; descKey: string }> = {
+  DISCOUNT_5:   { nameKey: 'customerRewards.reward5Discount',    descKey: 'customerRewards.rewardNextOrderDesc' },
+  DISCOUNT_10:  { nameKey: 'customerRewards.reward15Discount',   descKey: 'customerRewards.rewardNextOrderDesc' },
+  DISCOUNT_25:  { nameKey: 'customerRewards.reward50Discount',   descKey: 'customerRewards.rewardNextOrderDesc' },
+  DISCOUNT_50:  { nameKey: 'customerRewards.reward50Discount',   descKey: 'customerRewards.rewardNextOrderDesc' },
+  DISCOUNT_100: { nameKey: 'customerRewards.reward50Discount',   descKey: 'customerRewards.rewardNextOrderDesc' },
+  FREE_SHIPPING:{ nameKey: 'customerRewards.rewardFreeShipping', descKey: 'customerRewards.rewardNextOrderShortDesc' },
+  DOUBLE_POINTS:{ nameKey: 'customerRewards.rewardVipConsultation', descKey: 'customerRewards.rewardVipConsultationDesc' },
+};
+
+const AVAILABLE_REWARDS_CONFIG = Object.entries(LOYALTY_REWARDS_CATALOG).map(([key, r]) => {
+  const i18n = REWARD_I18N_KEYS[key] || { nameKey: 'customerRewards.rewardFreeShipping', descKey: 'customerRewards.rewardNextOrderDesc' };
+  return {
+    id: key,
+    nameKey: i18n.nameKey,
+    descKey: i18n.descKey,
+    pointsCost: r.points,
+    type: r.type as 'discount' | 'shipping' | 'exclusive' | 'product' | 'bonus',
+    value: r.value,
+    available: true,
+  };
+});
 
 export default function RewardsPage() {
   const { data: session, status } = useSession();

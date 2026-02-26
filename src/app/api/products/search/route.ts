@@ -264,7 +264,15 @@ export async function GET(request: NextRequest) {
             createdAt: true,
             updatedAt: true,
             category: {
-              select: { id: true, name: true, slug: true },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                // P-04 FIX: include translations inline to avoid a separate getTranslatedFieldsBatch call
+                translations: locale !== DB_SOURCE_LOCALE
+                  ? { where: { locale }, select: { name: true }, take: 1 }
+                  : false,
+              },
             },
             images: {
               orderBy: { sortOrder: 'asc' },
@@ -305,20 +313,20 @@ export async function GET(request: NextRequest) {
       if (locale !== DB_SOURCE_LOCALE) {
         products = await withTranslations(products, 'Product', locale);
 
-        // Translate nested category names on products (batch query instead of N+1)
-        const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
-        const categoryTranslations = new Map<string, Record<string, string>>();
-        if (categoryIds.length > 0) {
-          const batchResult = await getTranslatedFieldsBatch('Category', categoryIds, locale);
-          for (const [catId, trans] of batchResult) {
-            if (trans) categoryTranslations.set(catId, trans);
-          }
-        }
+        // P-04 FIX: category translations are already loaded inline via the `translations`
+        // nested select in the Prisma query above — no extra DB round-trip needed.
         products = products.map(p => {
-          const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
-          if (product.category && categoryTranslations.has(product.category.id)) {
-            const catTrans = categoryTranslations.get(product.category.id)!;
-            return { ...p, category: { ...product.category, name: catTrans.name || product.category.name } };
+          type ProductWithCat = Record<string, unknown> & {
+            category?: { id: string; name: string; slug: string; translations?: Array<{ name: string | null }> };
+          };
+          const product = p as ProductWithCat;
+          if (product.category) {
+            const inlineName = product.category.translations?.[0]?.name;
+            const { translations: _t, ...catWithoutTranslations } = product.category;
+            return {
+              ...p,
+              category: { ...catWithoutTranslations, name: inlineName || product.category.name },
+            };
           }
           return p;
         });

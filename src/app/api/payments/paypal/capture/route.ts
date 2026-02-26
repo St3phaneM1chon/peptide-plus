@@ -518,7 +518,9 @@ export async function POST(request: NextRequest) {
 
           if (ambassador && ambassador.status === 'ACTIVE') {
             const rate = Number(ambassador.commissionRate);
-            const commissionAmount = Math.round(Number(order.total) * rate) / 100;
+            // F-010 FIX: commissionRate is stored as an integer percentage (e.g. 10 = 10%).
+            // Divide by 100 first to get the decimal multiplier, then round to 2 decimal places.
+            const commissionAmount = Math.round(Number(order.total) * (rate / 100) * 100) / 100;
 
             await prisma.ambassadorCommission.upsert({
               where: {
