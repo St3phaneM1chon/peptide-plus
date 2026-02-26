@@ -1,8 +1,9 @@
-// BUG-060 FIX: Reduce ISR cache to 5 min for faster price/stock propagation
 // BUG-072 FIX: Added take: 100 limit to category product query
 // TODO: BUG-091 - Audit CSS classes for RTL support: use start/end instead of left/right
 // BUG-100 FIX: Translations are applied via withTranslations() on products, categories, children, and parent (see lines below)
-export const revalidate = 300;
+// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
+// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
+export const dynamic = 'force-dynamic';
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';

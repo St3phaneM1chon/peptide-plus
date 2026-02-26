@@ -15,7 +15,9 @@ import { getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 // ISR: revalidate every 5 minutes
-export const revalidate = 300;
+// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
+// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -1,5 +1,7 @@
-// BUG-060 FIX: Reduce ISR cache to 5 min for faster price/stock propagation
-export const revalidate = 300;
+// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
+// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
+// See: https://nextjs.org/docs/messages/app-static-to-dynamic-error
+export const dynamic = 'force-dynamic';
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
