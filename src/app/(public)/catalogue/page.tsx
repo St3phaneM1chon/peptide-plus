@@ -1,6 +1,6 @@
 /**
  * PAGE CATALOGUE
- * Liste de tous les produits peptides avec filtres
+ * Liste de tous les produits peptides avec filtres et catégories hiérarchiques
  */
 
 // P-02 FIX: Use ISR instead of force-dynamic for catalog (products don't change every second)
@@ -31,7 +31,22 @@ async function getProducts(filters: { category?: string; type?: string; sort?: s
   const where: Record<string, unknown> = { isActive: true };
 
   if (filters.category) {
-    where.category = { slug: filters.category };
+    // Check if this is a parent category - if so, include all children
+    const cat = await prisma.category.findUnique({
+      where: { slug: filters.category },
+      include: { children: { select: { id: true } } },
+    });
+    if (cat) {
+      if (cat.children.length > 0) {
+        // Parent category: include products from all children
+        const categoryIds = [cat.id, ...cat.children.map(c => c.id)];
+        where.categoryId = { in: categoryIds };
+      } else {
+        where.category = { slug: filters.category };
+      }
+    } else {
+      where.category = { slug: filters.category };
+    }
   }
 
   if (filters.type) {
@@ -67,14 +82,60 @@ async function getProducts(filters: { category?: string; type?: string; sort?: s
   });
 }
 
-async function getCategories() {
-  return prisma.category.findMany({
+interface CategoryWithHierarchy {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  sortOrder: number;
+  productCount: number;
+  totalProductCount: number; // includes children products
+  children: CategoryWithHierarchy[];
+}
+
+async function getCategories(): Promise<CategoryWithHierarchy[]> {
+  const allCategories = await prisma.category.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: 'asc' },
     include: {
-      _count: { select: { products: true } },
+      _count: { select: { products: { where: { isActive: true } } } },
     },
   });
+
+  // Build hierarchy: separate parents (no parentId) and children
+  const parentCategories: CategoryWithHierarchy[] = [];
+  const childrenMap = new Map<string, CategoryWithHierarchy[]>();
+
+  for (const cat of allCategories) {
+    const item: CategoryWithHierarchy = {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      parentId: cat.parentId,
+      sortOrder: cat.sortOrder,
+      productCount: cat._count.products,
+      totalProductCount: cat._count.products,
+      children: [],
+    };
+
+    if (!cat.parentId) {
+      parentCategories.push(item);
+    } else {
+      const siblings = childrenMap.get(cat.parentId) || [];
+      siblings.push(item);
+      childrenMap.set(cat.parentId, siblings);
+    }
+  }
+
+  // Attach children to parents and compute total counts
+  for (const parent of parentCategories) {
+    const children = childrenMap.get(parent.id) || [];
+    children.sort((a, b) => a.sortOrder - b.sortOrder);
+    parent.children = children;
+    parent.totalProductCount = parent.productCount + children.reduce((sum, c) => sum + c.productCount, 0);
+  }
+
+  return parentCategories;
 }
 
 export default async function CataloguePage({ searchParams }: CataloguePageProps) {
@@ -85,6 +146,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
   ]);
 
   const productTypes = ['PEPTIDE', 'SUPPLEMENT', 'ACCESSORY'];
+  const selectedSlug = params.category;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -121,7 +183,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                 </form>
               </div>
 
-              {/* Catégories */}
+              {/* Catégories hiérarchiques */}
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Catégories</h3>
                 <ul className="space-y-1">
@@ -137,23 +199,51 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                       Toutes les catégories
                     </Link>
                   </li>
-                  {categories.map((category) => (
-                    <li key={category.id}>
-                      <Link
-                        href={`/catalogue?category=${category.slug}`}
-                        className={`block px-3 py-2 rounded-lg text-sm ${
-                          params.category === category.slug
-                            ? 'bg-orange-50 text-orange-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        {category.name}
-                        <span className="text-gray-400 ms-1">
-                          ({category._count.products})
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
+                  {categories.map((parent) => {
+                    const isParentSelected = selectedSlug === parent.slug;
+
+                    return (
+                      <li key={parent.id}>
+                        {/* Parent category */}
+                        <Link
+                          href={`/catalogue?category=${parent.slug}`}
+                          className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                            isParentSelected
+                              ? 'bg-orange-50 text-orange-700'
+                              : 'text-gray-800 hover:bg-gray-50'
+                          }`}
+                        >
+                          {parent.name}
+                          <span className="text-gray-400 ms-1 font-normal">
+                            ({parent.totalProductCount})
+                          </span>
+                        </Link>
+
+                        {/* Child categories - always visible */}
+                        {parent.children.length > 0 && (
+                          <ul className="ml-3 mt-1 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                            {parent.children.map((child) => (
+                              <li key={child.id}>
+                                <Link
+                                  href={`/catalogue?category=${child.slug}`}
+                                  className={`block px-3 py-1.5 rounded-lg text-sm ${
+                                    selectedSlug === child.slug
+                                      ? 'bg-orange-50 text-orange-700 font-medium'
+                                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                                  }`}
+                                >
+                                  {child.name}
+                                  <span className="text-gray-400 ms-1">
+                                    ({child.productCount})
+                                  </span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 

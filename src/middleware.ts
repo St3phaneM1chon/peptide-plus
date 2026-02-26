@@ -277,11 +277,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // SECURITY: Force MFA setup for OWNER and EMPLOYEE roles (Chubb requirement)
+  // SECURITY: MFA setup recommended for OWNER and EMPLOYEE roles (Chubb requirement)
+  // Soft enforcement: redirect only on account/dashboard pages, not on admin or API
+  // This allows admin access while showing MFA banner on the account settings page
   if (
     token &&
     (token.role === 'OWNER' || token.role === 'EMPLOYEE') &&
     !token.mfaEnabled &&
+    (pathname.startsWith('/account') || pathname.startsWith('/dashboard')) &&
     !pathname.startsWith('/account/settings') &&
     !pathname.startsWith('/account/security') &&
     !pathname.startsWith('/api') &&

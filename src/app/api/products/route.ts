@@ -164,7 +164,10 @@ export async function GET(request: NextRequest) {
           reviewCount: true,
           productType: true,
           category: {
-            select: { id: true, name: true, slug: true },
+            select: {
+              id: true, name: true, slug: true, parentId: true,
+              parent: { select: { id: true, name: true, slug: true } },
+            },
           },
           // PERF 89: For list view, only fetch the primary image
           images: {
@@ -241,6 +244,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             slug: true,
+            parentId: true,
             _count: { select: { products: { where: { isActive: true } } } },
           },
           orderBy: { sortOrder: 'asc' },
@@ -271,6 +275,7 @@ export async function GET(request: NextRequest) {
           id: c.id,
           name: c.name,
           slug: c.slug,
+          parentId: c.parentId,
           count: c._count.products,
         })),
         priceRange: {
