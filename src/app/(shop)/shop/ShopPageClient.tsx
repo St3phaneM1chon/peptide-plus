@@ -235,7 +235,7 @@ export default function ShopPage() {
   // Map API products to ProductCard props, then filter & sort
   const filteredProducts = useMemo(() => {
     let result = products.map((p) => {
-      const activeFormats = p.formats.filter((f) => f.isActive);
+      const activeFormats = (p.formats || []).filter((f) => f.isActive);
       const lowestPrice = activeFormats.length > 0
         ? Math.min(...activeFormats.map((f) => Number(f.price)))
         : 0;

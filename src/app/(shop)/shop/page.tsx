@@ -1,3 +1,6 @@
+// FIX: force-dynamic because generateMetadata() calls getServerLocale() → cookies()/headers()
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import ShopPageClient from './ShopPageClient';
 import { JsonLd } from '@/components/seo/JsonLd';

@@ -172,7 +172,21 @@ export async function GET(request: NextRequest) {
             take: 1,
             select: { url: true, alt: true },
           },
-          // P-03: Only return format count for listing; full formats loaded on detail page
+          // Include active formats with minimal fields for price/stock display in shop grid
+          formats: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              formatType: true,
+              price: true,
+              comparePrice: true,
+              isActive: true,
+              stockQuantity: true,
+              imageUrl: true,
+            },
+          },
           _count: {
             select: { formats: true },
           },
