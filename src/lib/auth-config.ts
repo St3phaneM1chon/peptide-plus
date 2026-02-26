@@ -247,18 +247,24 @@ export const authConfig: NextAuthConfig = {
   // If the name changes between set (__Secure- when HTTPS detected) and read (no prefix
   // when HTTP detected internally), decryption fails with "could not be parsed".
   // Solution: force all cookies to use non-prefixed names with secure: true.
+  // OIDC cookies (pkce, state, nonce) use sameSite: 'none' because Apple Sign In
+  // uses response_mode=form_post, which sends a cross-site POST from appleid.apple.com.
+  // Cookies with sameSite: 'lax' are NOT sent on cross-site POST requests, causing
+  // Auth.js to fail nonce/state verification → "Configuration" error.
+  // Session, CSRF and callback cookies remain 'lax' (they are not needed during the
+  // cross-site POST callback, only after the redirect back to our domain).
   cookies: {
     pkceCodeVerifier: {
       name: 'authjs.pkce.code_verifier',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true, maxAge: 900 },
+      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true, maxAge: 900 },
     },
     state: {
       name: 'authjs.state',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true, maxAge: 900 },
+      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true, maxAge: 900 },
     },
     nonce: {
       name: 'authjs.nonce',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
     },
     callbackUrl: {
       name: 'authjs.callback-url',
