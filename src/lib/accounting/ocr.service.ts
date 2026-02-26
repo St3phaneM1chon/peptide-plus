@@ -32,6 +32,13 @@ interface OCRResult {
 }
 
 /**
+ * ACF-007: Maximum allowed base64-encoded image size before sending to OpenAI.
+ * A 10 MB file becomes ~13.3 MB of base64 (4/3 ratio), so the threshold below
+ * reflects the original binary limit of 10 MB expressed in base64 characters.
+ */
+const MAX_BASE64_CHARS = Math.ceil(10 * 1024 * 1024 * (4 / 3));
+
+/**
  * Process invoice image using OpenAI Vision API
  */
 export async function processInvoiceWithVision(
@@ -39,8 +46,17 @@ export async function processInvoiceWithVision(
   mimeType: string = 'image/png'
 ): Promise<OCRResult> {
   const startTime = Date.now();
-  
+
   try {
+    // ACF-007: Validate base64 payload size before forwarding to OpenAI.
+    // This catches callers that bypass validateOCRFile (e.g. direct service calls).
+    if (imageBase64.length > MAX_BASE64_CHARS) {
+      return {
+        success: false,
+        error: 'Image trop volumineuse (max 10 Mo). Veuillez compresser ou redimensionner l\'image avant de la soumettre.',
+      };
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return { success: false, error: 'OpenAI API key not configured' };
@@ -95,8 +111,10 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error: `OpenAI API error: ${error}` };
+      // ACF-001: Do not expose raw OpenAI API error body to callers (may contain key/rate info)
+      const errorBody = await response.text();
+      console.error('[OCR] OpenAI API error', { status: response.status, body: errorBody });
+      return { success: false, error: `OpenAI Vision API returned status ${response.status}` };
     }
 
     const result = await response.json();

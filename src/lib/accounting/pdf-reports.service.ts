@@ -5,6 +5,20 @@
 
 import { TaxReport, JournalEntry } from './types';
 
+/**
+ * ACF-006: Escape HTML special characters to prevent XSS injection
+ * in PDF/HTML templates that include user-provided or DB-sourced data.
+ */
+function escapeHtml(value: unknown): string {
+  const str = String(value ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // i18n labels for PDF reports
 type PdfLocale = 'fr' | 'en';
 
@@ -249,11 +263,11 @@ export function generateTaxReportHTML(report: TaxReport, company: CompanyInfo = 
   <div class="company-info">
     <div class="company-box">
       <h3>${L.companyInfo}</h3>
-      <div class="info-row"><span class="info-label">${L.businessName}:</span><span class="info-value">${company.name}</span></div>
-      <div class="info-row"><span class="info-label">${L.address}:</span><span class="info-value">${company.address}</span></div>
-      <div class="info-row"><span class="info-label">${L.city}:</span><span class="info-value">${company.city}, ${company.province} ${company.postalCode}</span></div>
-      <div class="info-row"><span class="info-label">N° TPS/GST:</span><span class="info-value">${company.tpsNumber}</span></div>
-      <div class="info-row"><span class="info-label">N° TVQ/QST:</span><span class="info-value">${company.tvqNumber}</span></div>
+      <div class="info-row"><span class="info-label">${L.businessName}:</span><span class="info-value">${escapeHtml(company.name)}</span></div>
+      <div class="info-row"><span class="info-label">${L.address}:</span><span class="info-value">${escapeHtml(company.address)}</span></div>
+      <div class="info-row"><span class="info-label">${L.city}:</span><span class="info-value">${escapeHtml(company.city)}, ${escapeHtml(company.province)} ${escapeHtml(company.postalCode)}</span></div>
+      <div class="info-row"><span class="info-label">N° TPS/GST:</span><span class="info-value">${escapeHtml(company.tpsNumber)}</span></div>
+      <div class="info-row"><span class="info-label">N° TVQ/QST:</span><span class="info-value">${escapeHtml(company.tvqNumber)}</span></div>
     </div>
     <div class="period-box">
       <h3>${L.declarationPeriod}</h3>
@@ -330,7 +344,7 @@ export function generateTaxReportHTML(report: TaxReport, company: CompanyInfo = 
   </div>
 
   <div class="footer">
-    <p>${L.generatedBy} ${company.name}.</p>
+    <p>${L.generatedBy} ${escapeHtml(company.name)}.</p>
     <p>${L.generationDate}: ${new Date().toLocaleDateString(fmt)} ${new Date().toLocaleTimeString(fmt)}</p>
     <p>${L.contactInfo}</p>
   </div>
@@ -415,16 +429,16 @@ export function generateIncomeStatementHTML(
 </head>
 <body>
   <div class="header">
-    <h1>${company.name}</h1>
+    <h1>${escapeHtml(company.name)}</h1>
     <h2>${L.incomeStatementTitle}</h2>
-    <h3>${L.period}: ${period}</h3>
+    <h3>${L.period}: ${escapeHtml(period)}</h3>
   </div>
 
   <table>
     <tr class="section-header"><td colspan="2">${L.revenue}</td></tr>
     ${Object.entries(data.revenue).map(([key, value]) => `
       <tr>
-        <td class="indent">${revenueLabels[key] || key}</td>
+        <td class="indent">${escapeHtml(revenueLabels[key] || key)}</td>
         <td class="amount ${value < 0 ? 'negative' : ''}">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
       </tr>
     `).join('')}
@@ -436,7 +450,7 @@ export function generateIncomeStatementHTML(
     <tr class="section-header"><td colspan="2">${L.cogs}</td></tr>
     ${Object.entries(data.cogs).map(([key, value]) => `
       <tr>
-        <td class="indent">${cogsLabels[key] || key}</td>
+        <td class="indent">${escapeHtml(cogsLabels[key] || key)}</td>
         <td class="amount">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
       </tr>
     `).join('')}
@@ -453,7 +467,7 @@ export function generateIncomeStatementHTML(
     <tr class="section-header"><td colspan="2">${L.operatingExpenses}</td></tr>
     ${Object.entries(data.expenses).map(([key, value]) => `
       <tr>
-        <td class="indent">${expenseLabels[key] || key}</td>
+        <td class="indent">${escapeHtml(expenseLabels[key] || key)}</td>
         <td class="amount">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
       </tr>
     `).join('')}
@@ -471,7 +485,7 @@ export function generateIncomeStatementHTML(
       <tr class="section-header"><td colspan="2">${L.otherIncomeExpenses}</td></tr>
       ${Object.entries(data.other).map(([key, value]) => `
         <tr>
-          <td class="indent">${key}</td>
+          <td class="indent">${escapeHtml(key)}</td>
           <td class="amount ${value < 0 ? 'negative' : ''}">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
         </tr>
       `).join('')}
@@ -540,9 +554,9 @@ export function generateBalanceSheetHTML(
 </head>
 <body>
   <div class="header">
-    <h1>${company.name}</h1>
+    <h1>${escapeHtml(company.name)}</h1>
     <h2>${L.balanceSheetTitle}</h2>
-    <h3>${L.asOf} ${asOfDate}</h3>
+    <h3>${L.asOf} ${escapeHtml(asOfDate)}</h3>
   </div>
 
   <div class="columns">
@@ -552,7 +566,7 @@ export function generateBalanceSheetHTML(
         <tr><td colspan="2" class="section-title">${L.currentAssets}</td></tr>
         ${Object.entries(data.assets.current).map(([key, value]) => `
           <tr>
-            <td class="indent">${key}</td>
+            <td class="indent">${escapeHtml(key)}</td>
             <td class="amount ${value < 0 ? 'negative' : ''}">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
           </tr>
         `).join('')}
@@ -564,7 +578,7 @@ export function generateBalanceSheetHTML(
         <tr><td colspan="2" class="section-title">${L.nonCurrentAssets}</td></tr>
         ${Object.entries(data.assets.nonCurrent).map(([key, value]) => `
           <tr>
-            <td class="indent">${key}</td>
+            <td class="indent">${escapeHtml(key)}</td>
             <td class="amount ${value < 0 ? 'negative' : ''}">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
           </tr>
         `).join('')}
@@ -586,7 +600,7 @@ export function generateBalanceSheetHTML(
         <tr><td colspan="2" class="section-title">${L.currentLiabilities}</td></tr>
         ${Object.entries(data.liabilities.current).map(([key, value]) => `
           <tr>
-            <td class="indent">${key}</td>
+            <td class="indent">${escapeHtml(key)}</td>
             <td class="amount">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
           </tr>
         `).join('')}
@@ -598,7 +612,7 @@ export function generateBalanceSheetHTML(
         <tr><td colspan="2" class="section-title">${L.equity}</td></tr>
         ${Object.entries(data.equity).map(([key, value]) => `
           <tr>
-            <td class="indent">${key}</td>
+            <td class="indent">${escapeHtml(key)}</td>
             <td class="amount">${value.toLocaleString(fmt, { minimumFractionDigits: 2 })} $</td>
           </tr>
         `).join('')}
@@ -679,12 +693,12 @@ export function generateJournalEntryHTML(entry: JournalEntry, _company: CompanyI
     ${entry.reference ? `
     <div class="meta-item">
       <div class="meta-label">${L.reference}</div>
-      <div class="meta-value">${entry.reference}</div>
+      <div class="meta-value">${escapeHtml(entry.reference)}</div>
     </div>
     ` : ''}
   </div>
 
-  <p style="margin: 10px 0;"><strong>Description:</strong> ${entry.description}</p>
+  <p style="margin: 10px 0;"><strong>Description:</strong> ${escapeHtml(entry.description)}</p>
 
   <table>
     <tr>
@@ -695,8 +709,8 @@ export function generateJournalEntryHTML(entry: JournalEntry, _company: CompanyI
     </tr>
     ${entry.lines.map(line => `
       <tr>
-        <td>${line.accountCode} - ${line.accountName}</td>
-        <td>${line.description || '-'}</td>
+        <td>${escapeHtml(line.accountCode)} - ${escapeHtml(line.accountName)}</td>
+        <td>${escapeHtml(line.description || '-')}</td>
         <td class="amount">${line.debit > 0 ? line.debit.toFixed(2) + ' $' : ''}</td>
         <td class="amount">${line.credit > 0 ? line.credit.toFixed(2) + ' $' : ''}</td>
       </tr>
@@ -709,7 +723,7 @@ export function generateJournalEntryHTML(entry: JournalEntry, _company: CompanyI
   </table>
 
   <p style="margin-top: 20px; color: #666; font-size: 10px;">
-    ${L.createdBy}: ${entry.createdBy} | ${new Date(entry.createdAt).toLocaleString(fmt)}
+    ${L.createdBy}: ${escapeHtml(entry.createdBy)} | ${new Date(entry.createdAt).toLocaleString(fmt)}
   </p>
 </body>
 </html>

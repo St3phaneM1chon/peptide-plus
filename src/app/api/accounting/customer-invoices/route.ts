@@ -452,6 +452,20 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // ACF-005: Check for cross-references before soft-deleting.
+    // Credit notes referencing this invoice must be voided/removed first.
+    const creditNoteCount = await prisma.creditNote.count({
+      where: { invoiceId: id },
+    });
+    if (creditNoteCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Impossible de supprimer cette facture: ${creditNoteCount} note(s) de crédit y font référence. Veuillez d'abord annuler ou supprimer ces notes de crédit.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // IMP-A004: Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
     // Records within the retention period CANNOT be deleted (even soft-deleted)
     const RETENTION_YEARS = 7;

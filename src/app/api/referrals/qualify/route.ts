@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
@@ -40,8 +41,18 @@ export async function POST(request: NextRequest) {
     let authorizedViaCron = false;
 
     // Check CRON_SECRET bearer token (for cron jobs / webhooks)
-    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-      authorizedViaCron = true;
+    // Use timing-safe comparison to prevent timing attacks (ACF-002 fix)
+    if (cronSecret && authHeader) {
+      const providedSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      try {
+        const a = Buffer.from(cronSecret, 'utf8');
+        const b = Buffer.from(providedSecret, 'utf8');
+        if (a.length === b.length && timingSafeEqual(a, b)) {
+          authorizedViaCron = true;
+        }
+      } catch {
+        // Comparison failed - authorizedViaCron remains false
+      }
     }
 
     // If not authenticated via CRON_SECRET, require admin session + CSRF

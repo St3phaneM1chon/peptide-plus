@@ -1,10 +1,11 @@
 /**
  * PAGE DE CONNEXION - BioCycle Peptides
  * Multi-providers + Email/Password + MFA
+ * Note: 'use client' pages cannot export route segment config like `dynamic`.
+ * Auth state is managed client-side via next-auth/react hooks.
  */
 
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { Suspense, useState, useEffect } from 'react';
 import { signIn, getProviders } from 'next-auth/react';

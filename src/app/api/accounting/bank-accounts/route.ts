@@ -246,6 +246,21 @@ export const DELETE = withAdminGuard(async (request, _ctx) => {
       return NextResponse.json({ error: 'Compte bancaire non trouvé' }, { status: 404 });
     }
 
+    // ACF-005: Check for cross-references before soft-deleting.
+    // BankTransaction has onDelete: Cascade in the schema, but we warn the user
+    // explicitly rather than silently cascading and losing transaction history.
+    const transactionCount = await prisma.bankTransaction.count({
+      where: { bankAccountId: id },
+    });
+    if (transactionCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Impossible de désactiver ce compte bancaire: ${transactionCount} transaction(s) bancaire(s) y sont associées. Veuillez d'abord transférer ou archiver ces transactions.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // FIX (F027): Soft-delete by deactivating and setting updatedAt.
     // NOTE: BankAccount model uses isActive (not deletedAt) for soft-delete.
     // This is consistent with the schema definition. Other entities use deletedAt.

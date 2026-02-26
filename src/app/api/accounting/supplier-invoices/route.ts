@@ -362,6 +362,25 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // ACF-005: Check for cross-references before soft-deleting.
+    // Inventory transactions and purchase orders referencing this invoice must be
+    // unlinked first to avoid orphaned financial records.
+    const [inventoryTxCount, purchaseOrderCount] = await Promise.all([
+      prisma.inventoryTransaction.count({ where: { supplierInvoiceId: id } }),
+      prisma.purchaseOrder.count({ where: { supplierInvoiceId: id } }),
+    ]);
+    if (inventoryTxCount > 0 || purchaseOrderCount > 0) {
+      const refs: string[] = [];
+      if (inventoryTxCount > 0) refs.push(`${inventoryTxCount} transaction(s) d'inventaire`);
+      if (purchaseOrderCount > 0) refs.push(`${purchaseOrderCount} bon(s) de commande`);
+      return NextResponse.json(
+        {
+          error: `Impossible de supprimer cette facture fournisseur: ${refs.join(' et ')} y font référence. Veuillez d'abord délier ces enregistrements.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // IMP-A004: Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
     const RETENTION_YEARS = 7;
     const retentionCutoff = new Date();

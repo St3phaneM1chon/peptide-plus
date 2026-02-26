@@ -1,10 +1,11 @@
 /**
  * PAGE D'INSCRIPTION - BioCycle Peptides
  * Création de compte avec validation
+ * Note: 'use client' pages cannot export route segment config like `dynamic`.
+ * Data is fetched client-side via useEffect hooks, not SSR.
  */
 
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { Suspense, useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
