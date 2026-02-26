@@ -33,12 +33,12 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     }
 
     if (type) {
-      const validTypes = ['PURCHASE', 'SALE', 'ADJUSTMENT', 'RETURN'];
+      const validTypes = ['PURCHASE', 'SALE', 'ADJUSTMENT', 'RETURN', 'LOSS'];
       if (validTypes.includes(type)) {
         where.type = type;
       } else {
         return NextResponse.json(
-          { error: `Invalid type. Must be one of: ${validTypes.join(', ')}` },
+          { error: `Invalid type filter. Must be one of: ${validTypes.join(', ')}` },
           { status: 400 }
         );
       }

@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
+
+export const metadata: Metadata = {
+  title: 'Redirecting... | BioCycle Peptides',
+  description: 'Processing your login and redirecting you to the appropriate page.',
+  robots: { index: false, follow: false },
+};
 
 /**
  * Post-login page - Server Component

@@ -2429,7 +2429,7 @@ model Subscription {
   productName     String
   formatName      String?
   quantity        Int       @default(1)
-  frequency       String    @default("MONTHLY")
+  frequency       String    @default("EVERY_2_MONTHS")
   discountPercent Int       @default(10)
   unitPrice       Decimal   @db.Decimal(10, 2)
   status          String    @default("ACTIVE")

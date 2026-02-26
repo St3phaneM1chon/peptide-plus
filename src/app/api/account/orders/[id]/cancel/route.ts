@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import Stripe from 'stripe';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
 let _stripe: Stripe | null = null;
@@ -329,6 +330,23 @@ export async function POST(
 
       return { updatedOrder, refundAmount, refundMethod };
     });
+
+    // Clawback ambassador commission on cancellation (P1-21 fix)
+    if (order.paymentStatus === 'PAID') {
+      try {
+        await clawbackAmbassadorCommission(
+          orderId,
+          Number(order.total),
+          Number(order.total),
+          true // full refund / full cancellation
+        );
+      } catch (commError) {
+        logger.error('[cancelOrder] Failed to clawback ambassador commission', {
+          error: commError instanceof Error ? commError.message : String(commError),
+          orderId,
+        });
+      }
+    }
 
     // Send cancellation email
     try {
