@@ -177,6 +177,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/media/api-whatsapp', labelKey: 'admin.nav.mediaWhatsApp', icon: MessageCircle },
           { href: '/admin/media/api-teams', labelKey: 'admin.nav.mediaTeams', icon: Users },
         ],
+        collapsible: true,
         defaultOpen: true,
       },
       {
