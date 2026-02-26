@@ -6,6 +6,7 @@ import { PageHeader, Button, Modal } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Currency {
   id: string;
@@ -70,7 +71,7 @@ export default function DevisesPage() {
     try {
       await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ 'currencies.autoUpdate': String(newValue) }),
       });
     } catch {
@@ -87,7 +88,7 @@ export default function DevisesPage() {
     try {
       const res = await fetch(`/api/admin/currencies/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
@@ -113,7 +114,7 @@ export default function DevisesPage() {
     try {
       const res = await fetch(`/api/admin/currencies/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isDefault: true }),
       });
       if (!res.ok) {
@@ -135,7 +136,7 @@ export default function DevisesPage() {
     try {
       const res = await fetch('/api/admin/currencies', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           code: form.code.toUpperCase(),
           name: form.name,
@@ -165,7 +166,7 @@ export default function DevisesPage() {
     try {
       const res = await fetch(`/api/admin/currencies/${editingCurrency.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: form.name,
           symbol: form.symbol,
@@ -260,7 +261,7 @@ export default function DevisesPage() {
           try {
             const res = await fetch('/api/admin/currencies', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
               body: JSON.stringify({ code: c.code.toUpperCase(), name: c.name, symbol: c.symbol, exchangeRate: c.exchangeRate || 1 }),
             });
             if (res.ok) added++;

@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { createElement } from 'react';
 import { Button } from '@/components/admin/Button';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import type { ContactListPageConfig } from '@/components/admin/ContactListPage';
 import { RoleManagementSection, PointAdjustmentSection } from './ClientDetailSections';
 
@@ -101,7 +102,7 @@ export const clientConfig: ContactListPageConfig = {
           variant: 'ghost' as const, size: 'sm' as const, icon: KeyRound,
           onClick: async () => {
             try {
-              const res = await fetch(`/api/admin/users/${item.id}/reset-password`, { method: 'POST' });
+              const res = await fetch(`/api/admin/users/${item.id}/reset-password`, { method: 'POST', headers: addCSRFHeader() });
               if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
                 toast.error(data.error || 'Failed to reset password');
@@ -123,7 +124,7 @@ export const clientConfig: ContactListPageConfig = {
             try {
               const res = await fetch(`/api/admin/users/${item.id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ isBanned: true }),
               });
               if (!res.ok) {

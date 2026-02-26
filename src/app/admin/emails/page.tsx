@@ -27,6 +27,7 @@ import TemplateBuilder from './TemplateBuilder';
 import CampaignCalendar from './CampaignCalendar';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---- Error Boundary ----
 
@@ -294,7 +295,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch(`/api/admin/emails/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
@@ -328,7 +329,7 @@ export default function EmailsPage() {
       const contentInput = document.querySelector<HTMLTextAreaElement>('[data-template-content]');
       const res = await fetch(`/api/admin/emails/${editingTemplate.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           subject: subjectInput?.value || editingTemplate.subject,
           htmlContent: contentInput?.value || editingTemplate.content,
@@ -470,7 +471,7 @@ export default function EmailsPage() {
 
       const res = await fetch('/api/admin/newsletter/subscribers/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ contacts }),
       });
 
@@ -502,7 +503,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch('/api/admin/newsletter/subscribers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           email: newContactEmail,
           locale: newContactLocale,
@@ -551,7 +552,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch('/api/admin/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: newTemplateName,
           subject: newTemplateSubject || newTemplateName,
@@ -589,6 +590,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`, {
         method: 'DELETE',
+        headers: addCSRFHeader(),
       });
       if (res.ok) {
         toast.success(t('admin.emailConfig.conversationDeleted') || 'Conversation deleted');
@@ -609,7 +611,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'ARCHIVED' }),
       });
       if (res.ok) {
@@ -657,7 +659,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isFlagged: true }),
       });
       if (res.ok) {
@@ -677,7 +679,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch(`/api/admin/emails/inbox/${selectedConversation}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'READ' }),
       });
       if (res.ok) {
@@ -786,7 +788,7 @@ export default function EmailsPage() {
       try {
         const res = await fetch(`/api/admin/emails/flows/${editingFlowId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ isActive: true }),
         });
         if (res.ok) {
@@ -806,7 +808,7 @@ export default function EmailsPage() {
       try {
         const res = await fetch(`/api/admin/emails/flows/${editingFlowId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ isActive: false }),
         });
         if (res.ok) {
@@ -1368,7 +1370,7 @@ export default function EmailsPage() {
                 const replyEmail = form.querySelector<HTMLInputElement>('[data-field="replyEmail"]')?.value;
                 const res = await fetch('/api/admin/emails/settings', {
                   method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                   body: JSON.stringify({
                     'email.provider': provider,
                     'email.senderEmail': senderEmail,

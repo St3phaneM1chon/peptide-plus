@@ -16,6 +16,7 @@ import {
   Hash,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Audit label formatters (inlined to avoid importing Node.js crypto module) ──
 
@@ -325,7 +326,7 @@ export default function AuditDashboardPage() {
     try {
       const res = await fetch('/api/admin/audits/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ auditTypeCode: code }),
       });
       if (res.ok) {
@@ -361,7 +362,7 @@ export default function AuditDashboardPage() {
     try {
       const res = await fetch('/api/admin/audits/run-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(severity === 'ALL' ? { severity: 'ALL' } : { severity }),
       });
 

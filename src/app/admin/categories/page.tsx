@@ -33,6 +33,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Category {
   id: string;
@@ -153,7 +154,7 @@ export default function CategoriesPage() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -211,7 +212,7 @@ export default function CategoriesPage() {
     try {
       const res = await fetch(`/api/categories/${catId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ parentId: null }),
       });
       if (!res.ok) {
@@ -231,7 +232,7 @@ export default function CategoriesPage() {
     try {
       const res = await fetch(`/api/categories/${catId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: !currentStatus }),
       });
       if (!res.ok) {
@@ -249,7 +250,7 @@ export default function CategoriesPage() {
   const handleDelete = async (catId: string) => {
     setDeletingId(catId);
     try {
-      const res = await fetch(`/api/categories/${catId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/categories/${catId}`, { method: 'DELETE', headers: addCSRFHeader() });
       // BUG-007 FIX: 204 No Content has no body; only parse JSON for non-204 responses
       if (res.status === 204) {
         // Success with no body
@@ -339,12 +340,12 @@ export default function CategoriesPage() {
       await Promise.all([
         fetch(`/api/categories/${catId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ sortOrder: swapCat.sortOrder }),
         }),
         fetch(`/api/categories/${swapCat.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ sortOrder: cat.sortOrder }),
         }),
       ]);

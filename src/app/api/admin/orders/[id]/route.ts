@@ -585,18 +585,11 @@ async function handleRefund(
   const refundTvh = Math.round(Number(order.taxTvh) * refundRatio * 100) / 100;
   const refundPst = Math.round(Number((order as Record<string, unknown>).taxPst || 0) * refundRatio * 100) / 100;
 
-  // Create refund accounting entries
-  const entryId = await createRefundAccountingEntries(
-    order.id,
-    amount,
-    refundTps,
-    refundTvq,
-    refundTvh,
-    reason,
-    refundPst
-  );
-
-  // Update order status + restore stock atomically in a single transaction
+  // ── Step 1: Update order status + restore stock atomically ───────────────────
+  // This is the critical write: it MUST succeed before we create accounting entries.
+  // Accounting entries (createRefundAccountingEntries, createCreditNote) each run
+  // their own internal transactions and cannot be nested inside this one, so they
+  // run in Step 2 below once the core DB state is confirmed consistent.
   await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: orderId },
@@ -652,6 +645,19 @@ async function handleRefund(
       }
     }
   });
+
+  // ── Step 2: Accounting entries (run after the core $transaction is committed) ─
+  // These use their own internal $transaction each. If they fail the order status
+  // and inventory are already correct; accounting reconciliation can be done manually.
+  const entryId = await createRefundAccountingEntries(
+    order.id,
+    amount,
+    refundTps,
+    refundTvq,
+    refundTvh,
+    reason,
+    refundPst
+  );
 
   // N+1 FIX: Fetch invoice and customer in parallel
   let creditNoteId: string | null = null;

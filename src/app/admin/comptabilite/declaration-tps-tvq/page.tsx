@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
 
 // ---------------------------------------------------------------------------
@@ -124,7 +125,7 @@ export default function DeclarationTpsTvqPage() {
     try {
       const res = await fetch('/api/accounting/gst-qst-declaration', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ startDate, endDate, method, province: 'QC', status, data: declaration }),
       });
       if (!res.ok) {

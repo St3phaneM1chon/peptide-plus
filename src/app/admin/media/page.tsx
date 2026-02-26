@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
 import { platforms } from '@/lib/admin/platform-config';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface PlatformStatus {
   key: string;
@@ -112,7 +113,7 @@ export default function MediaDashboardPage() {
         formData.append('files', files[i]);
       }
       formData.append('folder', 'general');
-      const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/medias', { method: 'POST', headers: addCSRFHeader(), body: formData });
       if (res.ok) {
         const data = await res.json();
         toast.success(`${data.count || 1} ${t('admin.media.uploadSuccess') || 'file(s) uploaded'}`);

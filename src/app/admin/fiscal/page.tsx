@@ -25,6 +25,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface TaxRegion {
   id: string;
@@ -205,7 +206,7 @@ export default function FiscalPage() {
         for (let month = 1; month <= 12; month++) {
           await fetch('/api/accounting/tax-reports', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               period: `${selectedYear}-${String(month).padStart(2, '0')}`,
               periodType: 'MONTHLY',
@@ -229,7 +230,7 @@ export default function FiscalPage() {
     try {
       const res = await fetch('/api/accounting/tax-reports', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: reportId, status: 'FILED' }),
       });
       if (!res.ok) throw new Error('Error');
@@ -245,7 +246,7 @@ export default function FiscalPage() {
     try {
       const res = await fetch('/api/accounting/tax-reports', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: reportId, status: 'PAID', paidAt: new Date().toISOString() }),
       });
       if (!res.ok) throw new Error('Error');
@@ -632,7 +633,7 @@ export default function FiscalPage() {
       try {
         const res = await fetch('/api/accounting/tax-reports', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ id: selectedReport.id, status: 'GENERATED' }),
         });
         if (!res.ok) throw new Error('Error');

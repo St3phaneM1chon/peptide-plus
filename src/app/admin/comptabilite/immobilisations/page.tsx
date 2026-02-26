@@ -28,6 +28,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
 
 // ---------------------------------------------------------------------------
@@ -221,7 +222,7 @@ export default function ImmobilisationsPage() {
 
       const res = await fetch('/api/accounting/fixed-assets', {
         method: editingAsset ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -245,7 +246,7 @@ export default function ImmobilisationsPage() {
     try {
       const res = await fetch('/api/accounting/fixed-assets', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: disposingAsset.id,
           status: 'DISPOSED',
@@ -269,7 +270,7 @@ export default function ImmobilisationsPage() {
     try {
       const res = await fetch('/api/accounting/fixed-assets', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: ccaAsset.id,
           action: 'depreciate',

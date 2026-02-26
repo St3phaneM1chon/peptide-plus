@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 export default function MediaTeamsPage() {
   const { t } = useI18n();
@@ -37,7 +38,7 @@ export default function MediaTeamsPage() {
     try {
       const res = await fetch('/api/admin/integrations/teams', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ enabled, tenantId, clientId, webhookUrl, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
@@ -50,7 +51,7 @@ export default function MediaTeamsPage() {
   const handleTest = async () => {
     const res = await fetch('/api/admin/integrations/teams', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ action: 'test' }),
     });
     const data = await res.json();

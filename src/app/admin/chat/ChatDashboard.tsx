@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Stats {
   open: number;
@@ -181,7 +182,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
     try {
       const res = await fetch(`/api/chat/conversations/${selectedConversation.id}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ content: messageContent }),
       });
       const data = await res.json();
@@ -205,7 +206,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
     try {
       const res = await fetch(`/api/chat/conversations/${selectedConversation.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(updates),
       });
       const data = await res.json();

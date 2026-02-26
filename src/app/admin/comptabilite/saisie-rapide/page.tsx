@@ -8,6 +8,7 @@ import { CANADIAN_PROVINCES } from '@/lib/canadianTaxes';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard } from '@/components/admin';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 /**
  * SECURITY: Safe formula evaluator using a recursive descent parser.
@@ -316,7 +317,7 @@ export default function QuickEntryPage() {
 
       const res = await fetch('/api/accounting/entries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           date: entryDate,
           description: `${selectedTemplate.name}${formValues.reference ? ` - ${formValues.reference}` : ''}`,

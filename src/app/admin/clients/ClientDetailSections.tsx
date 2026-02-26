@@ -5,6 +5,7 @@ import { Button } from '@/components/admin/Button';
 import { FormField, Input } from '@/components/admin/FormField';
 import type { ContactRecord } from '@/components/admin/ContactListPage';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Role Management Section ──────────────────────────────────
 
@@ -22,7 +23,7 @@ export function RoleManagementSection({ item, updateItem, t }: RoleManagementPro
     try {
       await fetch(`/api/admin/users/${item.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ role: newRole }),
       });
       updateItem(item.id, { role: newRole });
@@ -70,7 +71,7 @@ export function PointAdjustmentSection({ item, updateItem, t }: PointAdjustmentP
     try {
       await fetch(`/api/admin/users/${item.id}/points`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(adjustPoints),
       });
       const newPoints = (item.loyaltyPoints || 0) + adjustPoints.amount;

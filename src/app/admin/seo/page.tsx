@@ -14,6 +14,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface PageSEO {
   id: string;
@@ -175,7 +176,7 @@ export default function SEOPage() {
     try {
       const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ metaTitle: productMetaTitle, metaDescription: productMetaDesc }),
       });
       if (res.ok) {
@@ -248,7 +249,7 @@ export default function SEOPage() {
     try {
       const res = await fetch('/api/admin/seo', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           settings: {
             seo_site_name: globalSettings.siteName,
@@ -286,7 +287,7 @@ export default function SEOPage() {
       const pageKey = `seo_page_${editingPage.path.replace(/^\//, '')}`;
       const res = await fetch('/api/admin/seo', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           settings: {
             [pageKey]: JSON.stringify({
@@ -338,7 +339,7 @@ export default function SEOPage() {
     const pageKey = `seo_page_${page.path.replace(/^\//, '')}`;
     fetch('/api/admin/seo', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         settings: {
           [pageKey]: JSON.stringify({
@@ -401,7 +402,7 @@ export default function SEOPage() {
     try {
       const res = await fetch('/api/admin/seo', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           settings: {
             seo_robots_txt: robotsContent,

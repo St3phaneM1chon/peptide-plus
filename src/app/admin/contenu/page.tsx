@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Page {
   id: string;
@@ -153,7 +154,7 @@ export default function ContenuPage() {
 
       const res = await fetch('/api/admin/content/pages', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -176,7 +177,7 @@ export default function ContenuPage() {
     setConfirmDelete(null);
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error || t('common.deleteFailed'));
@@ -195,7 +196,7 @@ export default function ContenuPage() {
     try {
       const res = await fetch('/api/admin/content/pages', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: page.id, isPublished: !page.isPublished }),
       });
       if (!res.ok) {
@@ -232,7 +233,7 @@ export default function ContenuPage() {
 
       const res = await fetch('/api/admin/content/faqs', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -255,7 +256,7 @@ export default function ContenuPage() {
     setConfirmDelete(null);
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error || t('common.deleteFailed'));
@@ -274,7 +275,7 @@ export default function ContenuPage() {
     try {
       const res = await fetch('/api/admin/content/faqs', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: faq.id, isPublished: !faq.isPublished }),
       });
       if (!res.ok) {
@@ -364,7 +365,7 @@ export default function ContenuPage() {
             try {
               const res = await fetch('/api/admin/content/pages', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(p),
               });
               if (res.ok) created++;
@@ -377,7 +378,7 @@ export default function ContenuPage() {
             try {
               const res = await fetch('/api/admin/content/faqs', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(f),
               });
               if (res.ok) created++;

@@ -6,6 +6,7 @@ import { Globe } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
 
 export default function MediaMetaPage() {
@@ -45,7 +46,7 @@ export default function MediaMetaPage() {
     try {
       const res = await fetch('/api/admin/integrations/meta', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ enabled, appId, pixelId, pageId, igAccountId, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
@@ -58,7 +59,7 @@ export default function MediaMetaPage() {
   const handleTest = async () => {
     const res = await fetch('/api/admin/integrations/meta', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ action: 'test' }),
     });
     const data = await res.json();

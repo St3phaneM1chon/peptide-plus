@@ -23,6 +23,7 @@ import ConditionNode from './nodes/ConditionNode';
 import SMSNode from './nodes/SMSNode';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -124,7 +125,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 

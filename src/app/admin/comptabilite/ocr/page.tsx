@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard, StatCard } from '@/components/admin';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -127,7 +128,7 @@ export default function OCRPage() {
     try {
       const response = await fetch('/api/accounting/ocr/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(extractedData),
       });
       if (!response.ok) throw new Error(t('admin.ocrScan.apiError', { status: response.status }));

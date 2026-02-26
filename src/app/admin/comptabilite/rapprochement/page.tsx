@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface BankTransaction {
   id: string;
@@ -133,7 +134,7 @@ export default function RapprochementPage() {
     try {
       const res = await fetch('/api/accounting/reconciliation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ bankAccountId: selectedAccount }),
       });
       if (!res.ok) throw new Error(t('admin.reconciliation.errorAutoReconcile'));
@@ -154,7 +155,7 @@ export default function RapprochementPage() {
     try {
       const res = await fetch('/api/accounting/bank-transactions', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: selectedBankTx.id,
           reconciliationStatus: 'MATCHED',

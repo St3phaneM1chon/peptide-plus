@@ -6,6 +6,7 @@ import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ExportJob {
   id: string;
@@ -129,7 +130,7 @@ export default function ExportsPage() {
     try {
       const response = await fetch('/api/accounting/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           format: exportConfig.format,
           type: 'entries',

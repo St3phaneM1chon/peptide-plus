@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import SupplierForm from './SupplierForm';
 import type { SupplierFormData } from './SupplierForm';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -155,7 +156,7 @@ export default function FournisseursPage() {
     try {
       const res = await fetch('/api/admin/suppliers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data),
       });
       if (!res.ok) {
@@ -179,7 +180,7 @@ export default function FournisseursPage() {
     try {
       const res = await fetch(`/api/admin/suppliers/${editingSupplier.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data),
       });
       if (!res.ok) {
@@ -200,7 +201,7 @@ export default function FournisseursPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/suppliers/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/suppliers/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) {
         toast.error(t('common.error'));
         return;

@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface AccountingSettingsData {
   companyName: string;
@@ -176,7 +177,7 @@ export default function ParametresComptablesPage() {
     try {
       const res = await fetch('/api/accounting/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(settings),
       });
       if (!res.ok) {

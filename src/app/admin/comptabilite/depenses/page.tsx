@@ -39,6 +39,7 @@ import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -321,13 +322,13 @@ export default function DepensesPage() {
       if (editingExpense) {
         response = await fetch('/api/accounting/expenses', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ id: editingExpense.id, ...payload }),
         });
       } else {
         response = await fetch('/api/accounting/expenses', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
       }
@@ -359,7 +360,7 @@ export default function DepensesPage() {
 
       const response = await fetch('/api/accounting/expenses', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -386,7 +387,7 @@ export default function DepensesPage() {
     setConfirmDeleteExpenseId(null);
     setDeletingId(expenseId);
     try {
-      const response = await fetch(`/api/accounting/expenses?id=${expenseId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/accounting/expenses?id=${expenseId}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!response.ok) throw new Error(`Error ${response.status}`);
       await fetchExpenses();
     } catch (err) {

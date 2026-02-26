@@ -40,6 +40,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -335,7 +336,7 @@ export default function ClientDetailPage() {
     try {
       const res = await fetch(`/api/admin/users/${id}/points`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ amount, reason: pointsReason.trim() }),
       });
       if (res.ok) {

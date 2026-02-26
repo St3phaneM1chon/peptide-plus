@@ -59,7 +59,10 @@ export function verifyTOTP(secret: string, token: string): boolean {
  * Génère le code TOTP actuel (pour tests uniquement!)
  * AMELIORATION FID-002: Restricted to non-production environments
  */
-export function generateCurrentTOTP(secret: string): string {
+// FAILLE-015 FIX: Removed export - this function must not be publicly accessible.
+// It is for internal/test use only and should never be callable from outside this module.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _generateCurrentTOTP(secret: string): string {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('generateCurrentTOTP is disabled in production');
   }
@@ -225,18 +228,33 @@ export async function verifyMFACode(
   if (!user?.mfaSecret) {
     return { valid: false, type: null };
   }
-  
-  // Déchiffrer le secret
-  const secret = await decrypt(user.mfaSecret);
-  
+
+  // FAILLE-007 FIX: Wrap decrypt in try/catch - never fall back to raw encrypted string on failure.
+  // If decryption fails (wrong key, corrupted data, etc.), return an error rather than
+  // using the raw ciphertext as the TOTP secret, which would always fail verification anyway
+  // but could expose information about the failure mode.
+  let secret: string;
+  try {
+    secret = await decrypt(user.mfaSecret);
+  } catch (decryptError) {
+    console.error('[MFA] Failed to decrypt MFA secret - user must re-setup MFA:', decryptError instanceof Error ? decryptError.message : String(decryptError));
+    return { valid: false, type: null };
+  }
+
   // Essayer TOTP d'abord
   if (verifyTOTP(secret, code)) {
     return { valid: true, type: 'totp' };
   }
-  
+
   // Essayer les backup codes
   if (user.mfaBackupCodes) {
-    const hashedCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
+    let hashedCodes: string[];
+    try {
+      hashedCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
+    } catch (decryptError) {
+      console.error('[MFA] Failed to decrypt backup codes:', decryptError instanceof Error ? decryptError.message : String(decryptError));
+      return { valid: false, type: null };
+    }
     const { valid, usedIndex } = await verifyBackupCode(code, hashedCodes, userId);
     
     if (valid) {

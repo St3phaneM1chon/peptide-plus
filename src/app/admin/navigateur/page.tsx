@@ -7,6 +7,7 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, Button, Modal, FormField, Input, EmptyState } from '@/components/admin';
 import { availableIcons } from '@/lib/admin/icon-resolver';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface NavSection { id: string; title: string; subtitle?: string | null; icon?: string | null; railId: string; sortOrder: number; isActive: boolean; subSections: NavSubSection[]; }
 interface NavSubSection { id: string; title: string; subtitle?: string | null; icon?: string | null; sectionId: string; sortOrder: number; isActive: boolean; pages: NavPage[]; }
@@ -77,7 +78,7 @@ export default function NavigateurPage() {
 
       const res = await fetch(endpoint, {
         method: modalAction === 'edit' ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -98,7 +99,7 @@ export default function NavigateurPage() {
       : `/api/admin/nav-pages/${id}`;
 
     try {
-      const res = await fetch(endpoint, { method: 'DELETE' });
+      const res = await fetch(endpoint, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         toast.success(t('common.deleted') || 'Deleted');
         if (mode === 'section') { setSelectedSection(null); setSelectedSubSection(null); }
@@ -153,7 +154,7 @@ export default function NavigateurPage() {
     }
     try {
       for (const sec of inactiveSections) {
-        await fetch(`/api/admin/nav-sections/${sec.id}`, { method: 'DELETE' });
+        await fetch(`/api/admin/nav-sections/${sec.id}`, { method: 'DELETE', headers: addCSRFHeader() });
       }
       toast.success(t('admin.webNavigator.purgeSuccess') || `Purged ${inactiveSections.length} inactive section(s)`);
       setSelectedSection(null);

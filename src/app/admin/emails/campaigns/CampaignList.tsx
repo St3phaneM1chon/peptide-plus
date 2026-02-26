@@ -8,6 +8,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Campaign {
   id: string;
@@ -66,7 +67,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
     try {
       const res = await fetch('/api/admin/emails/campaigns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: `${t('admin.emails.campaigns.campaignPrefix')} ${new Date().toLocaleDateString(locale)}`,
           subject: t('admin.emails.campaigns.newCampaignSubject'),
@@ -88,7 +89,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
   const deleteCampaign = async (id: string) => {
     setDeletingId(id);
     try {
-      await fetch(`/api/admin/emails/campaigns/${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/emails/campaigns/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       setCampaigns(campaigns.filter(c => c.id !== id));
     } catch (error) {
       console.error(error);

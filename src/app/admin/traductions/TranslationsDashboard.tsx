@@ -34,6 +34,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ModelCoverage {
   totalEntities: number;
@@ -183,7 +184,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
       try {
         const res = await fetch('/api/admin/translations/trigger', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ model, all: true, force: forceRetranslate }),
         });
         const data = await res.json();
@@ -797,7 +798,7 @@ export default function TranslationsDashboard() {
     try {
       const res = await fetch('/api/admin/translations/trigger', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ model, all: true, force: false }),
       });
       const data = await res.json();

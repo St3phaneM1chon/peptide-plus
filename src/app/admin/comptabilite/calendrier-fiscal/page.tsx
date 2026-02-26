@@ -17,6 +17,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -168,7 +169,7 @@ export default function CalendrierFiscalPage() {
     try {
       const res = await fetch('/api/accounting/fiscal-calendar', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: eventId, status: 'COMPLETED' }),
       });
       if (!res.ok) {
@@ -193,7 +194,7 @@ export default function CalendrierFiscalPage() {
     try {
       const res = await fetch('/api/accounting/fiscal-calendar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           title: formTitle,
           titleFr: formTitleFr || null,

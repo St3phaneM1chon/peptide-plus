@@ -6,6 +6,7 @@ import { MessageCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
 
 export default function MediaXPage() {
@@ -41,7 +42,7 @@ export default function MediaXPage() {
     try {
       const res = await fetch('/api/admin/integrations/x', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ enabled, username, apiKeyId, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
@@ -54,7 +55,7 @@ export default function MediaXPage() {
   const handleTest = async () => {
     const res = await fetch('/api/admin/integrations/x', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ action: 'test' }),
     });
     const data = await res.json();

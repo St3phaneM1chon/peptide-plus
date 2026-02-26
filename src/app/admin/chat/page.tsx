@@ -31,6 +31,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Message {
   id: string;
@@ -115,7 +116,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ visitorId: conversations.find(c => c.id === conversationId)?.visitorId }),
       });
       const data = await res.json();
@@ -161,7 +162,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch('/api/chat/message', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           conversationId: selectedConversation.id,
           content: messageContent,
@@ -185,7 +186,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch('/api/chat/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isAdminOnline: !settings?.isAdminOnline }),
       });
       const data = await res.json();
@@ -231,7 +232,7 @@ export default function AdminChatPage() {
 
       const msgRes = await fetch('/api/chat/message', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           conversationId: selectedConversation.id,
           content: uploadData.url,
@@ -305,7 +306,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch(`/api/chat/settings`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'CLOSED' }),
       });
       if (res.ok) {
@@ -336,7 +337,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch(`/api/chat/settings`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'RESOLVED' }),
       });
       if (res.ok) {
@@ -358,7 +359,7 @@ export default function AdminChatPage() {
     try {
       const res = await fetch(`/api/chat/settings`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'ARCHIVED' }),
       });
       if (res.ok) {

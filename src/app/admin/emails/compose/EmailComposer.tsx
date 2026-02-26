@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 import { useI18n } from '@/i18n/client';
 import { Button } from '@/components/admin';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface EmailComposerProps {
   onClose: () => void;
@@ -52,7 +53,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
 
       const res = await fetch('/api/admin/emails/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ to, cc: cc || undefined, subject, textBody, htmlBody }),
       });
 

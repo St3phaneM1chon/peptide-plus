@@ -25,6 +25,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export default function QuestionsPage() {
     try {
       const res = await fetch(`/api/admin/questions/${id}/answer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ answer: answerText }),
       });
       if (!res.ok) {
@@ -122,7 +123,7 @@ export default function QuestionsPage() {
     try {
       const response = await fetch(`/api/admin/questions/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isPublic: !isPublic }),
       });
       if (!response.ok) {
@@ -146,7 +147,7 @@ export default function QuestionsPage() {
     setDeleteConfirmId(null); // Close dialog
     setDeletingId(id);
     try {
-      const response = await fetch(`/api/admin/questions/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/admin/questions/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         toast.error(data.error || t('common.deleteFailed'));

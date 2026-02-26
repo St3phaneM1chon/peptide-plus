@@ -8,6 +8,7 @@ import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Currency {
   id?: string;
@@ -197,7 +198,7 @@ export default function CurrencyPage() {
     try {
       const res = await fetch('/api/accounting/currencies', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ currencies: currencies.map(c => ({ code: c.code, exchangeRate: c.rate, isActive: true })) }),
       });
       if (!res.ok) throw new Error();

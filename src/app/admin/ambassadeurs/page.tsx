@@ -35,6 +35,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { addCSRFHeader } from '@/lib/csrf';
 import { z } from 'zod';
 
 // A-046: F-046 FIX - Zod schema for ambassador program config JSON structure
@@ -175,7 +176,7 @@ export default function AmbassadeursPage() {
     try {
       const res = await fetch(`/api/ambassadors/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status }),
       });
       if (!res.ok) {
@@ -202,7 +203,7 @@ export default function AmbassadeursPage() {
     try {
       const res = await fetch('/api/ambassadors/payouts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ ambassadorId: id }),
       });
 
@@ -251,7 +252,7 @@ export default function AmbassadeursPage() {
     try {
       const res = await fetch(`/api/ambassadors/${editCommissionAmbassadorId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ commissionRate: rate }),
       });
       if (!res.ok) {
@@ -336,7 +337,7 @@ export default function AmbassadeursPage() {
 
       const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           key: 'ambassador_program_config',
           value: JSON.stringify(zodResult.data),

@@ -38,6 +38,7 @@ import { useI18n } from '@/i18n/client';
 import { locales as LOCALES } from '@/i18n/config';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 const LOCALE_LABELS: Record<string, string> = {
   en: 'English', fr: 'Fran\u00e7ais', es: 'Espa\u00f1ol', de: 'Deutsch',
@@ -224,7 +225,7 @@ export default function BannieresPage() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -247,7 +248,7 @@ export default function BannieresPage() {
     try {
       const res = await fetch(`/api/hero-slides/${slide.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: !slide.isActive }),
       });
       if (!res.ok) {
@@ -268,7 +269,7 @@ export default function BannieresPage() {
   const executeDeleteSlide = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) { toast.error(t('admin.banners.deleteError')); return; }
       toast.success(t('admin.banners.slideDeleted'));
       fetchSlides();
@@ -298,13 +299,13 @@ export default function BannieresPage() {
       // Sequential updates to avoid race conditions on sortOrder
       const res1 = await fetch(`/api/hero-slides/${slide.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ sortOrder: other.sortOrder }),
       });
       if (!res1.ok) throw new Error('Failed to update slide order');
       const res2 = await fetch(`/api/hero-slides/${other.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ sortOrder: slide.sortOrder }),
       });
       if (!res2.ok) throw new Error('Failed to update slide order');

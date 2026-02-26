@@ -12,6 +12,19 @@ import { sendOrderCancellation } from '@/lib/email-service';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import Stripe from 'stripe';
+import { STRIPE_API_VERSION } from '@/lib/stripe';
+import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+
+// KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured');
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION });
+  }
+  return _stripe;
+}
 
 export async function POST(
   request: NextRequest,
@@ -77,6 +90,120 @@ export async function POST(
         },
         { status: 400 }
       );
+    }
+
+    // ── If order was PAID, attempt an actual refund via Stripe or PayPal BEFORE
+    // touching the DB. External payment calls must happen outside the DB transaction
+    // so a Stripe/PayPal failure surfaces a clean error without partial DB state.
+    let refundAmount = 0;
+    let refundMethod = '';
+    let stripeRefundId: string | undefined;
+    let paypalRefundId: string | undefined;
+    let refundedViaProvider = false;
+
+    if (order.paymentStatus === 'PAID') {
+      refundAmount = Number(order.total);
+      refundMethod = order.paymentMethod || 'Original payment method';
+
+      if (order.stripePaymentId) {
+        // ── Stripe refund ──────────────────────────────────────────────────
+        try {
+          const refund = await getStripe().refunds.create({
+            payment_intent: order.stripePaymentId,
+            amount: Math.round(refundAmount * 100), // Stripe uses cents
+            reason: 'requested_by_customer',
+          });
+          stripeRefundId = refund.id;
+          refundedViaProvider = true;
+          logger.info('[cancelOrder] Stripe refund created', {
+            orderId,
+            stripePaymentId: order.stripePaymentId,
+            stripeRefundId: refund.id,
+            amount: refundAmount,
+          });
+        } catch (stripeError) {
+          logger.error('[cancelOrder] Stripe refund failed', {
+            error: stripeError instanceof Error ? stripeError.message : String(stripeError),
+            orderId,
+            stripePaymentId: order.stripePaymentId,
+          });
+          return NextResponse.json(
+            {
+              error: 'Refund failed',
+              message: `Could not process refund via Stripe: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}`,
+            },
+            { status: 502 }
+          );
+        }
+      } else if (order.paypalOrderId) {
+        // ── PayPal refund ──────────────────────────────────────────────────
+        try {
+          const paypalAccessToken = await getPayPalAccessToken();
+
+          // Resolve the capture ID from the PayPal order
+          const orderRes = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders/${order.paypalOrderId}`, {
+            headers: { Authorization: `Bearer ${paypalAccessToken}` },
+          });
+          const orderData = await orderRes.json();
+          const captureId = orderData.purchase_units?.[0]?.payments?.captures?.[0]?.id as string | undefined;
+
+          if (!captureId) {
+            return NextResponse.json(
+              { error: 'PayPal capture ID not found — cannot process refund automatically. Please contact support.' },
+              { status: 400 }
+            );
+          }
+
+          const refundRes = await fetch(`${PAYPAL_API_URL}/v2/payments/captures/${captureId}/refund`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${paypalAccessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}), // empty body = full refund
+          });
+
+          if (!refundRes.ok) {
+            const refundError = await refundRes.json();
+            logger.error('[cancelOrder] PayPal refund failed', { error: refundError, orderId });
+            return NextResponse.json(
+              {
+                error: 'Refund failed',
+                message: `Could not process refund via PayPal: ${refundError.message || JSON.stringify(refundError)}`,
+              },
+              { status: 502 }
+            );
+          }
+
+          const refundData = await refundRes.json();
+          paypalRefundId = refundData.id as string | undefined;
+          refundedViaProvider = true;
+          logger.info('[cancelOrder] PayPal refund created', {
+            orderId,
+            paypalOrderId: order.paypalOrderId,
+            paypalRefundId,
+            amount: refundAmount,
+          });
+        } catch (paypalError) {
+          logger.error('[cancelOrder] PayPal refund error', {
+            error: paypalError instanceof Error ? paypalError.message : String(paypalError),
+            orderId,
+          });
+          return NextResponse.json(
+            {
+              error: 'Refund failed',
+              message: `Could not process refund via PayPal: ${paypalError instanceof Error ? paypalError.message : 'Unknown error'}`,
+            },
+            { status: 502 }
+          );
+        }
+      } else {
+        // No payment provider ID — flag for manual admin review
+        logger.warn('[cancelOrder] PAID order has no stripePaymentId or paypalOrderId; marking REFUND_PENDING for admin', {
+          orderId,
+          orderNumber: order.orderNumber,
+        });
+      }
     }
 
     // Begin transaction to update order and restore stock
@@ -146,29 +273,20 @@ export async function POST(
         });
       }
 
-      // If payment was made (PAID status), mark as REFUND_PENDING
-      // IMPORTANT: Do NOT set REFUNDED here — actual refund must go through
-      // Stripe/PayPal API via the admin refund endpoint
-      let refundAmount = 0;
-      let refundMethod = '';
-
+      // Set paymentStatus based on whether the provider refund succeeded
       if (order.paymentStatus === 'PAID') {
-        refundAmount = Number(order.total);
-        refundMethod = order.paymentMethod || 'Original payment method';
+        const newPaymentStatus = refundedViaProvider ? 'REFUNDED' : 'REFUND_PENDING';
 
-        // Mark as pending refund — admin must process the actual refund
         await tx.order.update({
           where: { id: orderId },
-          data: {
-            paymentStatus: 'REFUND_PENDING',
-          },
+          data: { paymentStatus: newPaymentStatus },
         });
 
-        // Log refund request in audit
+        // Audit log for the refund action
         await tx.auditLog.create({
           data: {
             userId: user.id,
-            action: 'ORDER_REFUND_REQUESTED',
+            action: refundedViaProvider ? 'ORDER_REFUNDED' : 'ORDER_REFUND_REQUESTED',
             entityType: 'Order',
             entityId: orderId,
             details: JSON.stringify({
@@ -177,8 +295,13 @@ export async function POST(
               currency: order.currency?.code || 'CAD',
               paymentMethod: refundMethod,
               stripePaymentId: order.stripePaymentId,
+              stripeRefundId: stripeRefundId ?? null,
               paypalOrderId: order.paypalOrderId,
-              note: 'Customer-initiated cancellation. Admin must process refund via payment provider.',
+              paypalRefundId: paypalRefundId ?? null,
+              refundedViaProvider,
+              note: refundedViaProvider
+                ? 'Customer-initiated cancellation. Refund processed automatically via payment provider.'
+                : 'Customer-initiated cancellation. No payment provider ID found — admin must process refund manually.',
             }),
           },
         });
@@ -242,7 +365,12 @@ export async function POST(
       refund: result.refundAmount > 0 ? {
         amount: result.refundAmount,
         method: result.refundMethod,
-        note: 'Refund request submitted. An admin will process your refund within 5-10 business days.',
+        stripeRefundId: stripeRefundId ?? null,
+        paypalRefundId: paypalRefundId ?? null,
+        processed: refundedViaProvider,
+        note: refundedViaProvider
+          ? 'Your refund has been submitted to your payment provider and should appear within 5-10 business days.'
+          : 'Refund request submitted. An admin will review and process your refund within 5-10 business days.',
       } : null,
     });
   } catch (error) {

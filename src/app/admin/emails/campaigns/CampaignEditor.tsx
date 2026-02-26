@@ -9,6 +9,7 @@ import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface CampaignEditorProps {
   campaignId: string;
@@ -69,7 +70,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
 
       const res = await fetch(`/api/admin/emails/campaigns/${campaignId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name,
           subject,
@@ -100,7 +101,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
         // Quick save
         await fetch(`/api/admin/emails/campaigns/${campaignId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ htmlContent: current }),
         });
       }

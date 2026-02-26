@@ -33,6 +33,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Product {
   id: string;
@@ -280,7 +281,7 @@ export default function ProductsListClient({
     setDeleting(id);
     try {
       // NOTE: DELETE handler at /api/products/[id] requires OWNER role + CSRF + rate-limit (secured)
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== id));
         if (selectedProductId === id) {
@@ -345,7 +346,7 @@ export default function ProductsListClient({
     try {
       const res = await fetch(`/api/products/${selectedProductId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: true }),
       });
       if (res.ok) {
@@ -367,7 +368,7 @@ export default function ProductsListClient({
     try {
       const res = await fetch(`/api/products/${selectedProductId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: false }),
       });
       if (res.ok) {
@@ -405,7 +406,7 @@ export default function ProductsListClient({
     try {
       const res = await fetch('/api/admin/products/bulk-price', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           percentage: bulkPricePercent,
           direction: bulkPriceDirection,
@@ -439,7 +440,7 @@ export default function ProductsListClient({
     try {
       const res = await fetch(`/api/admin/products/${selectedProductId}/schedule`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: scheduleAction,
           scheduledAt: new Date(scheduleDate).toISOString(),

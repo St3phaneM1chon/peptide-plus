@@ -19,6 +19,7 @@ import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -215,7 +216,7 @@ export default function PlanComptablePage() {
       if (editingAccount) {
         const res = await fetch('/api/accounting/chart-of-accounts', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             id: editingAccount.id,
             name: payload.name,
@@ -238,7 +239,7 @@ export default function PlanComptablePage() {
       } else {
         const res = await fetch('/api/accounting/chart-of-accounts', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
         if (!res.ok) {

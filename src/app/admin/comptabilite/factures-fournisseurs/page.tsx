@@ -19,6 +19,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface SupplierInvoice {
   id: string;
@@ -93,7 +94,7 @@ export default function FacturesFournisseursPage() {
     try {
       const response = await fetch('/api/accounting/supplier-invoices', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: invoiceId, status: 'APPROVED' }),
       });
       if (!response.ok) throw new Error(t('admin.supplierInvoices.apiError', { status: response.status }));
@@ -108,7 +109,7 @@ export default function FacturesFournisseursPage() {
     try {
       const response = await fetch('/api/accounting/supplier-invoices', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: invoiceId, status: 'PAID', paidAt: new Date().toISOString() }),
       });
       if (!response.ok) throw new Error(t('admin.supplierInvoices.apiError', { status: response.status }));
@@ -126,7 +127,7 @@ export default function FacturesFournisseursPage() {
     try {
       const res = await fetch('/api/accounting/supplier-invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ supplier: { name: 'Nouveau fournisseur', email: '' }, items: [], subtotal: 0, taxes: 0, total: 0, category: 'Divers' }),
       });
       if (!res.ok) throw new Error();

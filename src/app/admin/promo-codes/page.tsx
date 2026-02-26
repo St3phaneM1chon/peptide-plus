@@ -19,6 +19,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -160,7 +161,7 @@ export default function PromoCodesPage() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...formData,
           minOrderAmount: formData.minOrderAmount ? parseFloat(formData.minOrderAmount) : null,
@@ -196,7 +197,7 @@ export default function PromoCodesPage() {
     try {
       const res = await fetch(`/api/admin/promo-codes/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: !isActive }),
       });
       if (!res.ok) {
@@ -217,7 +218,7 @@ export default function PromoCodesPage() {
   const executeDeletePromoCode = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error || t('common.deleteFailed'));

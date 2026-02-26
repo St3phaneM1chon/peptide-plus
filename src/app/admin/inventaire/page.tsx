@@ -35,6 +35,7 @@ import { useI18n } from '@/i18n/client';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -244,7 +245,7 @@ export default function InventairePage() {
     try {
       const res = await fetch(`/api/admin/inventory/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ stockQuantity: newQuantity, reason }),
       });
       if (!res.ok) {
@@ -531,6 +532,7 @@ export default function InventairePage() {
                   try {
                     const res = await fetch('/api/admin/inventory/import', {
                       method: 'POST',
+                      headers: addCSRFHeader(),
                       body: formData,
                     });
                     if (!res.ok) {

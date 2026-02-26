@@ -8,6 +8,7 @@ import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Category {
   id: string;
@@ -235,7 +236,7 @@ export default function NewProductClient({ categories }: Props) {
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...formData,
           price: formData.price || formats[0]?.price || 0,

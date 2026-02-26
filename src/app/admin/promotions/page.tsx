@@ -18,6 +18,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -228,7 +229,7 @@ export default function PromotionsPage() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
 
@@ -257,7 +258,7 @@ export default function PromotionsPage() {
     try {
       const res = await fetch(`/api/admin/promotions/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newIsActive }),
       });
       if (!res.ok) {
@@ -279,7 +280,7 @@ export default function PromotionsPage() {
     setPromotions(promotions.filter((p) => p.id !== id));
     if (selectedId === id) setSelectedId(null);
     try {
-      const res = await fetch(`/api/admin/promotions/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/promotions/${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) {
         setPromotions(prev);
         const data = await res.json().catch(() => ({}));

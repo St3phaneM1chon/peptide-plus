@@ -6,6 +6,7 @@ import { sectionThemes } from '@/lib/admin/section-themes';
 import { PageHeader, SectionCard } from '@/components/admin';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface BankConnection {
   id: string;
@@ -190,7 +191,7 @@ export default function BankImportPage() {
     try {
       const res = await fetch('/api/accounting/bank-transactions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           bankAccountId: selectedBankAccountId,
           transactions: selected.map(t => ({

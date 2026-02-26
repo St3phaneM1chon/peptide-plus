@@ -21,6 +21,7 @@ import type { ContentListItem, ContentListGroup } from '@/components/admin/outlo
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -305,7 +306,7 @@ export default function LogsPage() {
       return;
     }
     try {
-      const res = await fetch('/api/admin/logs', { method: 'DELETE' });
+      const res = await fetch('/api/admin/logs', { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.success(t('admin.logs.purgeSuccess') || `Purged ${data.deleted || 'all'} log entries`);

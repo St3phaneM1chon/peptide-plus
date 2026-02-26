@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F-091 - Use fetchWithRetry for consistent retry behavior across admin pages
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { addCSRFHeader } from '@/lib/csrf';
 import { BADGES, type Challenge } from '@/lib/loyalty/gamification';
 import { POINTS_RULES, LOYALTY_TIERS } from '@/lib/loyalty/points-engine';
 import { DEFAULT_EXPIRATION } from '@/lib/loyalty/expiration-manager';
@@ -189,7 +190,7 @@ export default function FidelitePage() {
     try {
       const res = await fetch('/api/admin/loyalty/config', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(config),
       });
       if (res.ok) {

@@ -8,6 +8,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface FlowNodeSummary {
   type: string;
@@ -72,7 +73,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
     try {
       await fetch(`/api/admin/emails/flows/${flowId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: !isActive }),
       });
       setFlows(flows.map(f => f.id === flowId ? { ...f, isActive: !isActive } : f));
@@ -85,7 +86,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
   const deleteFlow = async (flowId: string) => {
     setDeletingId(flowId);
     try {
-      await fetch(`/api/admin/emails/flows/${flowId}`, { method: 'DELETE' });
+      await fetch(`/api/admin/emails/flows/${flowId}`, { method: 'DELETE', headers: addCSRFHeader() });
       setFlows(flows.filter(f => f.id !== flowId));
     } catch (error) {
       console.error(error);

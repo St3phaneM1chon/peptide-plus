@@ -103,6 +103,7 @@ interface Props {
 
 // BUG-032 FIX: Import locales from central config instead of hardcoding a mismatched list
 import { locales as ALL_LOCALES } from '@/i18n/config';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // BUG-080 FIX: Track unsaved changes and warn before navigating away
 export default function ProductEditClient({ product, categories, isOwner }: Props) {
@@ -224,7 +225,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     try {
       const res = await fetch(`/api/products/${product.id}/formats`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           formatType: 'VIAL_2ML',
           name: t('admin.productForm.newFormat'),
@@ -281,7 +282,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
       const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
@@ -320,7 +321,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       }
       const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
@@ -346,7 +347,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const confirmDeleteFormat = async () => {
     if (!formatToDelete) return;
     try {
-      const res = await fetch(`/api/products/${product.id}/formats/${formatToDelete}`, { method: 'DELETE' });
+      const res = await fetch(`/api/products/${product.id}/formats/${formatToDelete}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         setFormats(formats.filter(f => f.id !== formatToDelete));
       }
@@ -363,7 +364,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...formData,
           purity: formData.purity ? parseFloat(formData.purity) : null,
@@ -392,7 +393,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const handleDeleteProduct = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         router.push('/admin/produits');
       } else {

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Finding {
   id: string;
@@ -105,7 +106,7 @@ export default function AuditDetailPage() {
     try {
       const res = await fetch('/api/admin/audits/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ auditTypeCode: typeCode }),
       });
       if (res.ok) {
@@ -123,7 +124,7 @@ export default function AuditDetailPage() {
     try {
       await fetch(`/api/admin/audits/findings/${findingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ fixed: !currentFixed }),
       });
       setFindings((prev) =>
@@ -138,7 +139,7 @@ export default function AuditDetailPage() {
     try {
       await fetch(`/api/admin/audits/findings/${findingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ falsePositive: !current }),
       });
       setFindings((prev) =>

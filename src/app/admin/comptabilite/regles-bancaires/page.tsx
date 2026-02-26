@@ -22,6 +22,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -279,7 +280,7 @@ export default function ReglesBancairesPage() {
 
       const res = await fetch('/api/accounting/bank-rules', {
         method: editingRule ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -310,7 +311,7 @@ export default function ReglesBancairesPage() {
     try {
       const res = await fetch('/api/accounting/bank-rules', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: rule.id, isActive: !rule.isActive }),
       });
       if (!res.ok) throw new Error('Failed to toggle rule');
@@ -328,7 +329,7 @@ export default function ReglesBancairesPage() {
     setConfirmDeleteRule(null);
     setDeletingId(rule.id);
     try {
-      const res = await fetch(`/api/accounting/bank-rules?id=${rule.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/accounting/bank-rules?id=${rule.id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) throw new Error('Failed to delete rule');
       toast.success(t('admin.bankRules.ruleDeleted') || 'Rule deleted');
       fetchRules();
@@ -348,7 +349,7 @@ export default function ReglesBancairesPage() {
     try {
       await fetch('/api/accounting/bank-rules', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: rule.id, priority: newPriority }),
       });
       fetchRules();
@@ -366,7 +367,7 @@ export default function ReglesBancairesPage() {
     try {
       const res = await fetch('/api/accounting/bank-rules/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ applyAll: true }),
       });
       if (!res.ok) throw new Error('Failed to apply rules');

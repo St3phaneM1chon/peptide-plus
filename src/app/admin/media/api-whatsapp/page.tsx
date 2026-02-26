@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 export default function MediaWhatsAppPage() {
   const { t } = useI18n();
@@ -37,7 +38,7 @@ export default function MediaWhatsAppPage() {
     try {
       const res = await fetch('/api/admin/integrations/whatsapp', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ enabled, phoneNumberId, businessAccountId, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
@@ -50,7 +51,7 @@ export default function MediaWhatsAppPage() {
   const handleTest = async () => {
     const res = await fetch('/api/admin/integrations/whatsapp', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ action: 'test' }),
     });
     const data = await res.json();

@@ -42,6 +42,7 @@ import { useI18n } from '@/i18n/client';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { addCSRFHeader } from '@/lib/csrf';
 import OrderTimeline from '@/components/admin/OrderTimeline';
 import type { TimelineEvent } from '@/components/admin/OrderTimeline';
 import { assessFraudRisk, type FraudResult } from '@/lib/fraud-detection';
@@ -511,7 +512,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) {
@@ -537,7 +538,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ carrier, trackingNumber }),
       });
       if (!res.ok) {
@@ -584,7 +585,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/admin/orders/${selectedOrder.id}?action=refund`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ amount, reason: refundReason }),
       });
       const data = await res.json();
@@ -623,7 +624,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/admin/orders/${selectedOrder.id}?action=reship`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ reason: reshipReason }),
       });
       const data = await res.json();
@@ -698,7 +699,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch('/api/emails/send-order-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           orderId: selectedOrder.id,
           emailType: 'confirmation',
@@ -748,7 +749,7 @@ export default function OrdersPage() {
 
       const res = await fetch(`/api/admin/orders/${selectedOrder.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ adminNotes: updatedNotes }),
       });
       if (res.ok) {
@@ -776,7 +777,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch('/api/admin/orders/print-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ orderIds: Array.from(selectedOrderIds) }),
       });
       if (!res.ok) {
@@ -840,7 +841,7 @@ export default function OrdersPage() {
 
       const res = await fetch('/api/admin/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -1637,7 +1638,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                         try {
                           const res = await fetch(`/api/admin/orders/${selectedOrder.id}`, {
                             method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
                             body: JSON.stringify({ adminNotes: val }),
                           });
                           if (res.ok) {

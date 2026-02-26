@@ -19,6 +19,7 @@ import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -321,7 +322,7 @@ export default function FacturesClientsPage() {
         // For editing, we update status and details via PUT
         const response = await fetch('/api/accounting/customer-invoices', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             id: editingInvoice.id,
             notes: form.notes.trim() || undefined,
@@ -336,7 +337,7 @@ export default function FacturesClientsPage() {
         // Create new invoice
         const response = await fetch('/api/accounting/customer-invoices', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
         if (!response.ok) {
@@ -363,7 +364,7 @@ export default function FacturesClientsPage() {
     try {
       const response = await fetch(`/api/accounting/customer-invoices/${invoice.id}/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       });
       if (!response.ok) {
         const err = await response.json();
@@ -384,7 +385,7 @@ export default function FacturesClientsPage() {
     try {
       const response = await fetch('/api/accounting/customer-invoices', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: selectedInvoice.id,
           amountPaid: paymentForm.amount,
@@ -410,7 +411,7 @@ export default function FacturesClientsPage() {
     try {
       const response = await fetch('/api/accounting/customer-invoices', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           id: selectedInvoice.id,
           status: 'VOID',

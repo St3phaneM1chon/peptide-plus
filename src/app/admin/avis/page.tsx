@@ -42,6 +42,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -210,7 +211,7 @@ export default function AvisPage() {
     try {
       const res = await fetch(`/api/admin/reviews/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status }),
       });
       if (!res.ok) {
@@ -241,7 +242,7 @@ export default function AvisPage() {
     try {
       const res = await fetch(`/api/admin/reviews/${id}/respond`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ response: adminResponse }),
       });
       if (!res.ok) {

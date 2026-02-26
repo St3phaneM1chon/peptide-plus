@@ -26,6 +26,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ export default function AbonnementsPage() {
     try {
       const response = await fetch(`/api/admin/subscriptions/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: newStatus }),
       });
       if (!response.ok) {
@@ -170,7 +171,7 @@ export default function AbonnementsPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           key: 'subscription_config',
           value: JSON.stringify({
@@ -221,7 +222,7 @@ export default function AbonnementsPage() {
 
       const res = await fetch(`/api/admin/subscriptions/${selectedSub.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
       if (!res.ok) {

@@ -20,6 +20,7 @@ import {
 } from '@/components/admin';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface AgingBucket {
   label: string;
@@ -141,7 +142,7 @@ export default function AgingPage() {
     try {
       const response = await fetch('/api/accounting/aging/reminders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           type: reportType,
           customerIds: overdueCustomers.map(c => c.name),

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard, StatCard } from '@/components/admin';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface RecurringEntry {
   id: string;
@@ -109,7 +110,7 @@ export default function RecurringEntriesPage() {
     try {
       const response = await fetch('/api/accounting/recurring', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id, active: !entry.isActive }),
       });
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
@@ -141,7 +142,7 @@ export default function RecurringEntriesPage() {
       };
       const response = await fetch('/api/accounting/recurring', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
@@ -168,7 +169,7 @@ export default function RecurringEntriesPage() {
     try {
       const response = await fetch('/api/accounting/recurring', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id, active: false }),
       });
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));

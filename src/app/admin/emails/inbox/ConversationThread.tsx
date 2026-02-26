@@ -10,6 +10,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import CustomerSidebar from './CustomerSidebar';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface TimelineItem {
   type: 'inbound' | 'outbound' | 'note' | 'activity';
@@ -81,7 +82,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
 
         await fetch(`/api/admin/emails/inbox/${conversationId}/reply`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             to,
             subject: `Re: ${conversation.subject}`,
@@ -92,7 +93,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
       } else if (replyMode === 'note') {
         await fetch(`/api/admin/emails/inbox/${conversationId}/note`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ content: replyContent }),
         });
       }
@@ -112,7 +113,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
     try {
       const res = await fetch(`/api/admin/emails/inbox/${conversationId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(updates),
       });
       if (res.ok) {

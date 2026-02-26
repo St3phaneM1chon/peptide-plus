@@ -15,6 +15,7 @@ import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ export default function EmployesPage() {
     try {
       const res = await fetch(`/api/admin/employees/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
@@ -153,7 +154,7 @@ export default function EmployesPage() {
       if (editingEmployee) {
         const res = await fetch(`/api/admin/employees/${editingEmployee.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             name: formData.name,
             role: formData.role,
@@ -169,7 +170,7 @@ export default function EmployesPage() {
       } else {
         const res = await fetch('/api/admin/employees', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             email: formData.email,
             name: formData.name,

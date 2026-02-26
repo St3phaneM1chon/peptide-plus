@@ -295,7 +295,11 @@ export function cleanupExpiredAttempts(): void {
   enforceMapSizeLimit();
 }
 
-// FAILLE-007: Single cleanup interval (5 minutes) with typeof guard
+// FAILLE-018 FIX: Consolidated to a single cleanup interval (5 minutes).
+// Previously there were two setInterval calls for cleanupExpiredAttempts (one at module
+// load and one registered in a separate function), causing duplicate cleanup work and
+// holding two timer references. Now there is exactly one, guarded by typeof to avoid
+// SSR crashes in environments where setInterval is not available.
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupExpiredAttempts, 5 * 60 * 1000);
 }

@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface BankAccount {
   id: string;
@@ -219,7 +220,7 @@ export default function BanquesPage() {
   // Ribbon actions
   const handleRibbonSynchronize = useCallback(async () => {
     try {
-      const res = await fetch('/api/accounting/bank-sync', { method: 'POST' });
+      const res = await fetch('/api/accounting/bank-sync', { method: 'POST', headers: addCSRFHeader() });
       if (!res.ok) throw new Error();
       toast.success(t('admin.banking.syncSuccess') || 'Synchronisation bancaire lancee');
       fetchBankAccounts();

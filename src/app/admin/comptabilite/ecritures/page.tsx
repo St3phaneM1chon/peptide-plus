@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface JournalEntry {
   id: string;
@@ -231,7 +232,7 @@ export default function EcrituresPage() {
 
       const res = await fetch('/api/accounting/entries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           date: newEntryDate,
           description: newEntryDescription,

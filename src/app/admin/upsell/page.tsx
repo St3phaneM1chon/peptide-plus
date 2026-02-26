@@ -17,6 +17,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ export default function UpsellAdminPage() {
         : '/api/admin/upsell-config';
       const res = await fetch(url, {
         method: isUpdate ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           productId: formProductId || null,
           isEnabled: formEnabled,
@@ -214,7 +215,7 @@ export default function UpsellAdminPage() {
     setConfirmDeleteId(null);
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/upsell-config?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/upsell-config?id=${id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) throw new Error('Failed to delete');
 
       toast.success(t('admin.upsell.deleteSuccess'));

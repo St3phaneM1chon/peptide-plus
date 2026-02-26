@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ChecklistItem {
   id: string;
@@ -95,7 +96,7 @@ export default function CloturePage() {
     try {
       const res = await fetch(`/api/accounting/periods/${selectedPeriod}/close`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ closedBy: 'admin' }),
       });
       if (!res.ok) {
@@ -124,7 +125,7 @@ export default function CloturePage() {
     try {
       const res = await fetch('/api/accounting/periods', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ code: selectedPeriod, status: 'OPEN' }),
       });
       if (!res.ok) throw new Error();
@@ -164,7 +165,7 @@ export default function CloturePage() {
     try {
       const res = await fetch('/api/accounting/periods', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ code: selectedPeriod, status: 'OPEN' }),
       });
       if (!res.ok) throw new Error();

@@ -13,6 +13,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface CreditNote {
   id: string;
@@ -105,7 +106,7 @@ export default function NotesCreditPage() {
     try {
       const res = await fetch('/api/accounting/credit-notes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ customerName: 'Nouveau client', reason: 'Correction', subtotal: 0, currency: 'CAD' }),
       });
       if (!res.ok) throw new Error();
@@ -125,7 +126,7 @@ export default function NotesCreditPage() {
     try {
       const res = await fetch('/api/accounting/credit-notes', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: selectedNote.id, status: 'ISSUED' }),
       });
       if (!res.ok) throw new Error();
@@ -141,7 +142,7 @@ export default function NotesCreditPage() {
     try {
       const res = await fetch('/api/accounting/credit-notes', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: selectedNote.id, status: 'VOID' }),
       });
       if (!res.ok) throw new Error();

@@ -244,11 +244,14 @@ export async function resolveUserPermissions(userId: string, role: UserRole): Pr
  */
 const permissionCache = new Map<string, { permissions: Set<PermissionCode>; timestamp: number }>();
 const CACHE_TTL = 60_000; // 1 minute
-const CACHE_MAX_SIZE = 1_000; // FAILLE-008: Max entries in permission cache
+// FAILLE-013 FIX: Increased to 5000 entries to match other caches in the codebase.
+const CACHE_MAX_SIZE = 5_000;
 
 /**
- * FAILLE-008: Enforce cache size limit with TTL-based eviction.
- * Evicts expired entries first, then oldest if still over limit.
+ * FAILLE-013 FIX: Enforce cache size limit with TTL-based eviction.
+ * Evicts expired entries first. If still over limit, evict the oldest 50%
+ * of remaining entries (Maps maintain insertion order, so first keys = oldest).
+ * This avoids the thundering-herd problem caused by clearing the entire cache.
  */
 function enforcePermissionCacheLimit(): void {
   if (permissionCache.size <= CACHE_MAX_SIZE) return;
@@ -261,9 +264,15 @@ function enforcePermissionCacheLimit(): void {
     }
   }
 
-  // If still over limit, clear all and let it rebuild
+  // If still over limit, evict the oldest 50% of remaining entries
   if (permissionCache.size > CACHE_MAX_SIZE) {
-    permissionCache.clear();
+    const toEvict = Math.floor(permissionCache.size / 2);
+    let evicted = 0;
+    for (const key of permissionCache.keys()) {
+      if (evicted >= toEvict) break;
+      permissionCache.delete(key);
+      evicted++;
+    }
   }
 }
 

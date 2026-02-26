@@ -23,6 +23,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ShippingZone {
   id: string;
@@ -76,7 +77,7 @@ export default function LivraisonPage() {
     try {
       const res = await fetch(`/api/admin/shipping/zones/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
@@ -120,7 +121,7 @@ export default function LivraisonPage() {
     try {
       const res = await fetch(`/api/admin/shipping/zones/${zoneId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
@@ -223,7 +224,7 @@ export default function LivraisonPage() {
         : '/api/admin/shipping/zones';
       const res = await fetch(url, {
         method: editingZone ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -268,7 +269,7 @@ export default function LivraisonPage() {
       // For now, we update the zone's base fee and delivery days via PATCH.
       const res = await fetch(`/api/admin/shipping/zones/${addMethodZoneId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           baseFee: parseFloat(methodBaseRate) || 0,
           estimatedDaysMin: parseInt(methodMinDays) || 3,
@@ -328,7 +329,7 @@ export default function LivraisonPage() {
           try {
             const res = await fetch('/api/admin/shipping/zones', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
               body: JSON.stringify(z),
             });
             if (res.ok) created++;
