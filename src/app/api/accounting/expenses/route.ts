@@ -10,6 +10,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 // FIX: F017 - Import consolidated schemas from validation.ts instead of duplicating
 import { createExpenseSchema, updateExpenseSchema, assertPeriodOpen } from '@/lib/accounting/validation';
+import { generateExpenseNumber } from '@/lib/accounting/sequence.service';
 
 // ---------------------------------------------------------------------------
 // Deductibility rules per category (Canadian tax rules)
@@ -57,38 +58,9 @@ const CATEGORY_DEDUCTIBILITY: Record<string, number> = {
   capital_expenditure: 0,  // Goes through CCA instead
 };
 
-// ---------------------------------------------------------------------------
-// Sequential number generator: DEP-{year}-{sequential}
-// ---------------------------------------------------------------------------
-
-/**
- * FIX (F002): Generate expense number inside a transaction with FOR UPDATE
- * to prevent race conditions where two concurrent requests get the same number.
- * The tx parameter must be a Prisma transaction client.
- */
-async function generateExpenseNumberInTx(tx: Prisma.TransactionClient): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `DEP-${year}-`;
-
-  // Use FOR UPDATE to lock the row with the highest expense number,
-  // serializing concurrent inserts (same pattern as entries/route.ts)
-  const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-    SELECT MAX("expenseNumber") as max_num
-    FROM "Expense"
-    WHERE "expenseNumber" LIKE ${prefix + '%'}
-    FOR UPDATE
-  `;
-
-  let nextSeq = 1;
-  if (maxRow?.max_num) {
-    const parts = maxRow.max_num.split('-');
-    const lastSeq = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
-  }
-
-  // F063 FIX: Use padStart(5) for consistent 5-digit entry number format across all services
-  return `${prefix}${String(nextSeq).padStart(5, '0')}`;
-}
+// A002: Sequential number generation now delegated to centralized sequence.service.ts
+// The local generateExpenseNumberInTx function has been replaced by generateExpenseNumber
+// from '@/lib/accounting/sequence.service' which provides the same FOR UPDATE + padStart(5) logic.
 
 // FIX: F017 - Schemas imported from @/lib/accounting/validation.ts (single source of truth)
 
@@ -261,7 +233,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // FIX (F002 + F004): Wrap expense creation in a serializable transaction
     // to prevent race conditions on expense number generation
     const expense = await prisma.$transaction(async (tx) => {
-      const expenseNumber = await generateExpenseNumberInTx(tx);
+      const expenseNumber = await generateExpenseNumber(tx);
 
       return tx.expense.create({
         data: {

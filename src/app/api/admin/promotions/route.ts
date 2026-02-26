@@ -58,6 +58,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
           startsAt: true,
           endsAt: true,
           isActive: true,
+          priority: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -115,8 +116,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       startsAt: d.startsAt?.toISOString() || null,
       endsAt: d.endsAt?.toISOString() || null,
       isActive: d.isActive,
-      // TODO: FLAW-046 - priority hardcoded to 0; add priority field to Discount model in schema.prisma
-      priority: 0,
+      // FIX: FLAW-046 - priority now read from Discount model
+      priority: d.priority,
       createdAt: d.createdAt.toISOString(),
       updatedAt: d.updatedAt.toISOString(),
     }));
@@ -172,6 +173,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       startsAt,
       endsAt,
       isActive,
+      priority,
     } = parsed.data;
 
     // Validate category exists if provided
@@ -215,6 +217,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         startsAt: startsAt ? new Date(startsAt) : null,
         endsAt: endsAt ? new Date(endsAt) : null,
         isActive: isActive ?? true,
+        priority: priority ?? 0,
       },
     });
 
@@ -273,8 +276,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
           startsAt: discount.startsAt?.toISOString() || null,
           endsAt: discount.endsAt?.toISOString() || null,
           isActive: discount.isActive,
-          // TODO: FLAW-046 - priority hardcoded to 0; add priority field to Discount model in schema.prisma
-          priority: 0,
+          // FIX: FLAW-046 - priority now read from Discount model
+          priority: discount.priority,
           createdAt: discount.createdAt.toISOString(),
           updatedAt: discount.updatedAt.toISOString(),
         },

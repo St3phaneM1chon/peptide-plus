@@ -30,6 +30,8 @@ export const createPromotionSchema = z.object({
   startsAt: z.string().datetime().optional().nullable(),
   endsAt: z.string().datetime().optional().nullable(),
   isActive: z.boolean().optional().default(true),
+  // FLAW-046: Priority for conflict resolution (higher = applied first)
+  priority: z.number().int().min(0).max(1000).optional().default(0),
 }).refine(
   (data) => {
     if (data.type === 'PERCENTAGE' && data.value > 100) return false;
@@ -57,6 +59,8 @@ export const patchPromotionSchema = z.object({
   startsAt: z.string().datetime().optional().nullable(),
   endsAt: z.string().datetime().optional().nullable(),
   isActive: z.boolean().optional(),
+  // FLAW-046: Priority for conflict resolution
+  priority: z.number().int().min(0).max(1000).optional(),
 });
 
 export type PatchPromotionInput = z.infer<typeof patchPromotionSchema>;

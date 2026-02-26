@@ -7,6 +7,9 @@ import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { assertPeriodOpen } from '@/lib/accounting/validation';
 import { logger } from '@/lib/logger';
+// A003 FIX: Add rate limiting and CSRF protection
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 const createSupplierInvoiceSchema = z.object({
   invoiceNumber: z.string().min(1).max(100),
@@ -101,6 +104,20 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
+    // A003 FIX: Rate limiting + CSRF validation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/supplier-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     const parsed = createSupplierInvoiceSchema.safeParse(body);
@@ -232,6 +249,20 @@ export const POST = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
+    // A003 FIX: Rate limiting + CSRF validation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/supplier-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { id, status, amountPaid, paidAt, updatedAt: clientUpdatedAt } = body;
 
@@ -343,6 +374,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
  */
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
+    // A003 FIX: Rate limiting + CSRF validation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/supplier-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

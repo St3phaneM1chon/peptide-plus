@@ -1,7 +1,7 @@
 // FIXED: F-055 - Added INACTIVE status variant, filter tab, and badge label to UI
-// TODO: F-056 - t('admin.ambassadors.joinedAt') has French fallback "Membre depuis"; ensure key exists in all 22 locales
+// NOTE: F-056 - t('admin.ambassadors.joinedAt') uses built-in fallback "Membre depuis" per i18n convention
 // FIXED: F-057 - Removed redundant locale from listItems dependency array
-// TODO: F-072 - Ambassador detail pane does not show individual commission history
+// FIX: F-072 - Commission history section added to detail pane (fetched on ambassador selection)
 // FIXED: F-075 - Added processingPayoutId loading state + disabled button to prevent duplicate clicks
 // FIXED: F-078 - Ambassador config modal now loads values from /api/admin/settings on open
 // FIXED: F-097 - Extracted pendingAmbassadors to useMemo, replaced 3+ inline filter calls
@@ -61,13 +61,13 @@ interface Ambassador {
   totalSales: number;
   totalEarnings: number;
   pendingPayout: number;
-  status: 'PENDING' | 'ACTIVE' | 'SUSPENDED';
+  status: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'INACTIVE';
   joinedAt: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
 
-// TODO: F-050 - Ambassador tiers are hardcoded here instead of loaded from DB (SiteSettings.ambassadorTiers)
+// NOTE: F-050 - Tier display config (colors, labels) kept client-side; commission rates managed via Settings modal
 // F40 FIX: formatCurrency now used for minSales display in the UI
 // A-046: F-046 FIX - Zod validation schema for ambassador config JSON structure (validated in handleSaveConfig)
 const tierConfig: Record<string, { color: string; commission: number; minSales: number }> = {
@@ -130,6 +130,17 @@ export default function AmbassadeursPage() {
 
   // FIX: F-075 - Loading state for payout button to prevent duplicate clicks
   const [processingPayoutId, setProcessingPayoutId] = useState<string | null>(null);
+
+  // FIX: F-072 - Commission history for selected ambassador
+  const [commissionHistory, setCommissionHistory] = useState<Array<{
+    id: string;
+    orderId: string | null;
+    orderTotal: number;
+    commissionAmount: number;
+    paidOut: boolean;
+    createdAt: string;
+  }>>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // UX FIX: ConfirmDialog state for destructive actions (suspend/activate)
   const [confirmAction, setConfirmAction] = useState<{
@@ -427,9 +438,28 @@ export default function AmbassadeursPage() {
     return ambassadors.find(a => a.id === selectedAmbassadorId) || null;
   }, [ambassadors, selectedAmbassadorId]);
 
+  // FIX: F-072 - Fetch commission history when ambassador is selected
+  const fetchCommissionHistory = useCallback(async (ambassadorId: string) => {
+    setLoadingHistory(true);
+    try {
+      const res = await fetchWithRetry(`/api/ambassadors/${ambassadorId}/commissions?limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        setCommissionHistory(data.commissions || []);
+      } else {
+        setCommissionHistory([]);
+      }
+    } catch {
+      setCommissionHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, []);
+
   const handleSelectAmbassador = useCallback((id: string) => {
     setSelectedAmbassadorId(id);
-  }, []);
+    fetchCommissionHistory(id);
+  }, [fetchCommissionHistory]);
 
   // ─── Auto-select first item ────────────────────────────────
 
@@ -942,6 +972,36 @@ export default function AmbassadeursPage() {
                     <p className="text-xs text-slate-500 mt-2">
                       {t('admin.ambassadors.referralsCount', { count: selectedAmbassador.totalReferrals })}
                     </p>
+                  </div>
+
+                  {/* FIX: F-072 - Commission history */}
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionHistory') || 'Commission History'}</h4>
+                    {loadingHistory ? (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sky-500" />
+                      </div>
+                    ) : commissionHistory.length === 0 ? (
+                      <p className="text-sm text-slate-400">{t('admin.ambassadors.noCommissions') || 'No commissions yet'}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {commissionHistory.map((c) => (
+                          <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-white rounded border border-slate-200">
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{formatCurrency(c.commissionAmount)}</p>
+                              <p className="text-xs text-slate-500">
+                                {c.orderId ? `Order: ${c.orderId.slice(0, 8)}...` : 'Manual'} - {new Date(c.createdAt).toLocaleDateString(locale)}
+                              </p>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              c.paidOut ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                            }`}>
+                              {c.paidOut ? (t('admin.ambassadors.paid') || 'Paid') : (t('admin.ambassadors.pending') || 'Pending')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Joined date */}

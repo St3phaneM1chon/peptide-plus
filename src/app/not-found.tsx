@@ -1,8 +1,23 @@
 import Link from 'next/link';
-import { getServerLocale, createServerTranslator } from '@/i18n/server';
+import { createServerTranslator, type Locale } from '@/i18n/server';
+import { defaultLocale } from '@/i18n/config';
+
+/**
+ * Safely get the server locale, falling back to defaultLocale if cookies()
+ * is not available (e.g. during static page data collection in next build).
+ */
+async function getSafeLocale(): Promise<Locale> {
+  try {
+    // Dynamic import to avoid top-level cookies() call that crashes during static generation
+    const { getServerLocale } = await import('@/i18n/server');
+    return await getServerLocale();
+  } catch {
+    return defaultLocale;
+  }
+}
 
 export default async function NotFound() {
-  const locale = await getServerLocale();
+  const locale = await getSafeLocale();
   const t = createServerTranslator(locale);
 
   return (

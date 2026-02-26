@@ -18,6 +18,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { generateEntryNumber } from '@/lib/accounting/sequence.service';
 import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
@@ -149,21 +150,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
           // Use the pre-loaded global account map (O(1) lookup, no per-iteration DB query)
           const accountMap = globalAccountMap;
 
-          const year = new Date(entry.date).getFullYear();
-          const prefix = `JV-${year}-`;
-          const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-            SELECT MAX("entryNumber") as max_num
-            FROM "JournalEntry"
-            WHERE "entryNumber" LIKE ${prefix + '%'}
-            FOR UPDATE
-          `;
-          let nextNum = 1;
-          if (maxRow?.max_num) {
-            const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-            if (!isNaN(parsed)) nextNum = parsed + 1;
-          }
-          // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
-          const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+          // A002: Use centralized sequence service for entry number generation
+          const entryYear = new Date(entry.date).getFullYear();
+          const entryNumber = await generateEntryNumber(tx, entryYear);
 
           // Validate debit/credit balance before insertion
           const linesToCreate = entry.lines.map((l: { accountCode: string; description?: string; debit: number; credit: number }) => ({

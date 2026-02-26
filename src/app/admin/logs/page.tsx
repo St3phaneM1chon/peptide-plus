@@ -35,6 +35,8 @@ interface LogEntry {
   ipAddress?: string;
   userAgent?: string;
   details?: Record<string, unknown>;
+  /** FAILLE-068 FIX: Pre-computed searchable string to avoid JSON.stringify on every keystroke */
+  _searchText?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -159,7 +161,16 @@ export default function LogsPage() {
       const qs = params.toString();
       const res = await fetch(`/api/admin/logs${qs ? `?${qs}` : ''}`);
       const data = await res.json();
-      setLogs(data.logs || []);
+      // FAILLE-068 FIX: Pre-compute searchable string per log entry during fetch
+      const rawLogs: LogEntry[] = data.logs || [];
+      for (const log of rawLogs) {
+        log._searchText = [
+          log.action,
+          log.userName,
+          log.details ? JSON.stringify(log.details) : '',
+        ].join(' ').toLowerCase();
+      }
+      setLogs(rawLogs);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching logs:', err);
@@ -195,18 +206,13 @@ export default function LogsPage() {
 
   // ─── Filtering (must be before handleExportCSV that references filteredLogs) ──
 
-  // TODO: FAILLE-068 - JSON.stringify(log.details) on every search keystroke is O(n*m).
-  //       Pre-compute a searchable string per log entry during fetch for better performance.
+  // FAILLE-068 FIX: Use pre-computed _searchText instead of JSON.stringify on every keystroke
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
       if (levelFilter !== 'all' && log.level !== levelFilter) return false;
       if (searchValue) {
         const search = searchValue.toLowerCase();
-        if (
-          !log.action.toLowerCase().includes(search) &&
-          !log.userName?.toLowerCase().includes(search) &&
-          !JSON.stringify(log.details).toLowerCase().includes(search)
-        ) {
+        if (!log._searchText?.includes(search)) {
           return false;
         }
       }

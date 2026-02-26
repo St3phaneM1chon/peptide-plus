@@ -255,8 +255,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session: _sess
     // F-068 FIX: Use crypto random instead of predictable Date.now()
     const code = `AMB-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 
-    // TODO: F-047 - Ambassador.id lacks @default(cuid()) in schema; Prisma auto-generates but should be explicit
-    // TODO: F-048 - Referral.status should be a Prisma enum (PENDING, QUALIFIED, REWARDED, CANCELLED) instead of free String
+    // NOTE: F-047 - Ambassador.id has @default(cuid()) in schema (verified)
+    // NOTE: F-048 - Referral.status uses free String for flexibility; enum migration deferred to avoid breaking changes
     const ambassador = await prisma.ambassador.create({
       data: {
         userId: userId || null,

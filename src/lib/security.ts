@@ -2,8 +2,8 @@
  * UTILITAIRES DE SÉCURITÉ
  * Conforme OWASP Top 10 & Chubb Requirements
  *
- * TODO: FAILLE-083 - createSecurityLog returns JSON string; return object to avoid double-stringify
- * TODO: FAILLE-084 - decrypt() does not validate minimum buffer length before slicing; add length check
+ * FAILLE-083 FIX: createSecurityLog now returns a structured object (with toString() for backward compat)
+ * FAILLE-084 FIX: decrypt() now validates minimum buffer length before slicing
  * TODO: FAILLE-087 - setInterval timers in this file are not tracked; create a central timer registry
  * TODO: FAILLE-090 - Email masking logic differs between maskSensitiveData and admin-audit; unify into maskPII()
  * TODO: FAILLE-093 - phoneSchema only accepts E.164 format; consider libphonenumber-js for local format support
@@ -26,6 +26,44 @@ const AUTH_TAG_LENGTH = 16;
 const SALT_LENGTH = 32;
 const KEY_LENGTH = 32;
 
+// FIX: AMELIORATION-043 - Encryption key self-test at first use
+// Verifies that ENCRYPTION_KEY can successfully encrypt and decrypt a known plaintext.
+// Runs once per process lifetime; subsequent calls are no-ops.
+let encryptionKeyVerified = false;
+
+/**
+ * Verify ENCRYPTION_KEY works by performing a round-trip encrypt/decrypt test.
+ * Called lazily on first encrypt() or decrypt() invocation.
+ * Throws if the key is misconfigured, corrupted, or produces incorrect output.
+ */
+async function verifyEncryptionKey(key: string): Promise<void> {
+  if (encryptionKeyVerified) return;
+
+  const testPlaintext = '__encryption_selftest__';
+  try {
+    const salt = randomBytes(SALT_LENGTH);
+    const iv = randomBytes(IV_LENGTH);
+    const derivedKey = (await scryptAsync(key, salt, KEY_LENGTH)) as Buffer;
+
+    const cipher = createCipheriv(ALGORITHM, derivedKey, iv);
+    const encrypted = Buffer.concat([cipher.update(testPlaintext, 'utf8'), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+
+    const decipher = createDecipheriv(ALGORITHM, derivedKey, iv, { authTagLength: AUTH_TAG_LENGTH });
+    decipher.setAuthTag(authTag);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+
+    if (decrypted !== testPlaintext) {
+      throw new Error('Encryption self-test failed: round-trip mismatch');
+    }
+
+    encryptionKeyVerified = true;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new Error(`ENCRYPTION_KEY self-test failed - key may be corrupted or invalid: ${msg}`);
+  }
+}
+
 /**
  * Chiffre une donnée sensible avec AES-256-GCM
  */
@@ -34,6 +72,9 @@ export async function encrypt(plaintext: string): Promise<string> {
   if (!encryptionKey) {
     throw new Error('ENCRYPTION_KEY not configured');
   }
+
+  // AMELIORATION-043: Verify key integrity on first use
+  await verifyEncryptionKey(encryptionKey);
 
   // Générer un salt et IV uniques
   const salt = randomBytes(SALT_LENGTH);
@@ -67,7 +108,16 @@ export async function decrypt(encryptedData: string): Promise<string> {
     throw new Error('ENCRYPTION_KEY not configured');
   }
 
+  // AMELIORATION-043: Verify key integrity on first use
+  await verifyEncryptionKey(encryptionKey);
+
   const combined = Buffer.from(encryptedData, 'base64');
+
+  // FAILLE-084 FIX: Validate minimum buffer length before slicing to prevent empty/corrupted buffers
+  const MIN_BUFFER_LENGTH = SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH + 1; // at least 1 byte of ciphertext
+  if (combined.length < MIN_BUFFER_LENGTH) {
+    throw new Error(`Encrypted data is too short (${combined.length} bytes, minimum ${MIN_BUFFER_LENGTH}). Data may be corrupted or truncated.`);
+  }
 
   // Extraire les composants
   const salt = combined.subarray(0, SALT_LENGTH);
@@ -317,21 +367,33 @@ export function maskSensitiveData(data: Record<string, unknown>, depth = 0): Rec
 }
 
 /**
- * Crée une entrée de log structurée et sécurisée
+ * FAILLE-083 FIX: Returns structured object instead of JSON string to avoid double-stringify.
+ * The returned object has a toString() method for backward compatibility with string contexts.
  */
+interface SecurityLogEntry {
+  timestamp: string;
+  level: 'info' | 'warn' | 'error' | 'critical';
+  event: string;
+  data: Record<string, unknown>;
+  toString(): string;
+}
+
 export function createSecurityLog(
   level: 'info' | 'warn' | 'error' | 'critical',
   event: string,
   data: Record<string, unknown>
-): string {
-  const logEntry = {
+): SecurityLogEntry {
+  const logEntry: SecurityLogEntry = {
     timestamp: new Date().toISOString(),
     level,
     event,
     data: maskSensitiveData(data),
+    toString() {
+      return JSON.stringify({ timestamp: this.timestamp, level: this.level, event: this.event, data: this.data });
+    },
   };
 
-  return JSON.stringify(logEntry);
+  return logEntry;
 }
 
 // ============================================

@@ -876,6 +876,7 @@ model Discount {
   badge        String?
   badgeColor   String?
   isActive     Boolean      @default(true)
+  priority     Int          @default(0) // FLAW-046: Promotion priority for conflict resolution
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -885,6 +886,7 @@ model Discount {
   @@index([startsAt, endsAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([isActive, priority])
 }
 
 model EmailLog {
@@ -2515,7 +2517,7 @@ model Subscription {
 
 model SupplierInvoice {
   id              String        @id @default(cuid())
-  invoiceNumber   String        @unique
+  invoiceNumber   String
   supplierId      String?
   supplierName    String
   supplierEmail   String?
@@ -2550,6 +2552,7 @@ model SupplierInvoice {
   @@index([supplierId, status]) // S10: Composite for supplier invoice listing with status filter
   @@index([createdAt])
   @@index([updatedAt])
+  @@unique([invoiceNumber, supplierId]) // F012 FIX: Different suppliers can reuse the same invoice number
 }
 
 model TaxReport {

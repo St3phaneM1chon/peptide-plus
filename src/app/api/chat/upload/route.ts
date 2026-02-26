@@ -82,6 +82,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large. Maximum 10MB.' }, { status: 400 });
     }
 
+    // IMP-004: Storage quota check for authenticated users
+    if (session?.user?.id) {
+      const quota = await storage.checkStorageQuota(session.user.id, file.size);
+      if (!quota.allowed) {
+        return NextResponse.json({ error: 'Storage quota exceeded' }, { status: 413 });
+      }
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Magic bytes validation

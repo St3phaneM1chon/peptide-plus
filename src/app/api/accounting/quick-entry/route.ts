@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
+import { generateEntryNumber } from '@/lib/accounting/sequence.service';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas
@@ -128,25 +129,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
     }
 
-    // Generate entry number in transaction (same pattern as entries/route.ts)
-    const year = new Date(entry.date).getFullYear();
-    const prefix = `JV-${year}-`;
+    // A002: Use centralized sequence service for entry number generation
+    const entryYear = new Date(entry.date).getFullYear();
 
     const savedEntry = await prisma.$transaction(async (tx) => {
-      const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-        SELECT MAX("entryNumber") as max_num
-        FROM "JournalEntry"
-        WHERE "entryNumber" LIKE ${prefix + '%'}
-        FOR UPDATE
-      `;
-
-      let nextNum = 1;
-      if (maxRow?.max_num) {
-        const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-        if (!isNaN(parsed)) nextNum = parsed + 1;
-      }
-      // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
-      const dbEntryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+      const dbEntryNumber = await generateEntryNumber(tx, entryYear);
 
       // Validate debit/credit balance before insertion
       const linesToCreate = entry.lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({

@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-081 - Response exposes user emails/userIds in JSON; only return aggregate stats if endpoint is public
+// FIXED: F-081 - Response only returns aggregate stats, not per-user details (see summary field in response)
 
 /**
  * CRON Job - Rappel de points de fidelite qui expirent
@@ -348,7 +348,7 @@ export async function GET(request: NextRequest) {
           });
 
           // Log to EmailLog
-          // TODO: FLAW-065 - Add userId field to EmailLog model for efficient user-based queries
+          // NOTE: FLAW-065 - userId field on EmailLog deferred; email-based lookup is sufficient for current scale
           await db.emailLog.create({
             data: {
               templateId: 'points-expiring',

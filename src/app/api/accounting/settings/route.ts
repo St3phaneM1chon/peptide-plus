@@ -6,6 +6,7 @@ import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { requireAdmin } from '@/lib/accounting/auth-middleware';
 
 // #89 Audit: Zod schema for accounting settings validation
 const accountingSettingsSchema = z.object({

@@ -6,6 +6,8 @@
 import { ACCOUNT_CODES, TAX_RATES, JournalEntry, JournalLine } from './types';
 import { roundCurrency } from '@/lib/financial';
 import { calculateSalesTax as calculateSalesTaxByProvince } from './canadian-tax-config';
+// A011 FIX: Import assertJournalBalance to validate every auto-generated entry
+import { assertJournalBalance } from './validation';
 
 // #94 Error class for auto-entry generation failures
 export class AutoEntryError extends Error {
@@ -262,6 +264,9 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
     });
   }
 
+  // A011 FIX: Validate balance before returning
+  assertJournalBalance(lines, `auto-sale ${order.orderNumber}`);
+
   return {
     id: `${uniqueId('entry')}`,
     entryNumber: generateEntryNumber(),
@@ -326,6 +331,9 @@ export function generateFeeEntry(
       credit: fee,
     },
   ];
+
+  // A011 FIX: Validate balance before returning
+  assertJournalBalance(lines, `auto-fee ${orderNumber}`);
 
   return {
     id: `${uniqueId('entry-fee')}`,
@@ -423,6 +431,9 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
     credit: refund.amount,
   });
 
+  // A011 FIX: Validate balance before returning
+  assertJournalBalance(lines, `auto-refund ${refund.orderNumber}`);
+
   return {
     id: `${uniqueId('entry-refund')}`,
     entryNumber: generateEntryNumber(),
@@ -463,6 +474,9 @@ export function generateStripePayoutEntry(payout: StripePayoutData): JournalEntr
       credit: payout.net,
     },
   ];
+
+  // A011 FIX: Validate balance before returning
+  assertJournalBalance(lines, `stripe-payout ${payout.id}`);
 
   return {
     id: `${uniqueId('entry-payout')}`,
@@ -512,6 +526,9 @@ export function generateRecurringEntry(
       credit: amount,
     },
   ];
+
+  // A011 FIX: Validate balance before returning
+  assertJournalBalance(lines, `recurring ${reference || description}`);
 
   return {
     id: `${uniqueId('entry-recurring')}`,

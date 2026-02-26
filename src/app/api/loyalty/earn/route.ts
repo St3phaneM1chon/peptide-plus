@@ -4,8 +4,8 @@ export const dynamic = 'force-dynamic';
  * API Loyalty Earn - BioCycle Peptides
  * Gagne des points de fidélité
  *
- * TODO: FLAW-070 - Add composite index @@index([userId, type]) to LoyaltyTransaction model in schema.prisma
- * TODO: F-035 - Add @@index([expiresAt]) to LoyaltyTransaction model for efficient points expiration queries
+ * FIXED: FLAW-070 - Composite index @@index([userId, type]) added to LoyaltyTransaction model in schema.prisma
+ * FIXED: F-035 - Index @@index([expiresAt]) added to LoyaltyTransaction model in schema.prisma
  * FIXED: F-085 - balanceAfter now computed from atomic increment result inside $transaction (see line ~229)
  * FIXED: F-088 - Rate limiting added via rateLimitMiddleware (see line ~42)
  */

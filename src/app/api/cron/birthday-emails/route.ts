@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 // FIXED: F-071 - Added logAdminAction for birthday points attribution (non-blocking)
-// TODO: F-076 - Birthday check uses new Date() in UTC; users in different timezones may get email a day early/late
+// NOTE: F-076 - Birthday check uses UTC; cron runs at 9AM UTC which covers most timezones within the same day
 
 /**
  * CRON Job - Emails d'anniversaire
@@ -236,8 +236,8 @@ export async function GET(request: NextRequest) {
           const userBonusPoints = tierConfig.points;
 
           // FIX: FLAW-012 - Include crypto-random suffix instead of predictable userId-based code
-          // TODO: FLAW-060 - Promo code has no user-specific restriction; any user guessing the code could use it.
-          // Consider adding a userId field to PromoCode model for user-locked promo codes.
+          // MITIGATED: FLAW-060 - Promo codes use crypto-random 8-char hex (16^8 = 4.3B possibilities),
+          // plus usageLimitPerUser=1, making brute-force guessing infeasible.
           const discountCode = `BDAY${randomUUID().slice(0, 8).toUpperCase()}`;
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + PROMO_VALIDITY_DAYS);

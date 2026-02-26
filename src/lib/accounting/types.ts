@@ -110,6 +110,9 @@ export const ACCOUNT_CODES = {
 } as const;
 
 // Tax rates by province/region
+// WARNING: These are CURRENT rates only. For transactions that may span rate changes
+// (e.g., NS HST 15% -> 14% on 2025-04-01), use getTaxRateForProvince(code, asOfDate)
+// from canadian-tax-config.ts which supports effectiveDate-based lookup.
 export const TAX_RATES = {
   QC: { TPS: 0.05, TVQ: 0.09975, combined: 0.14975 },
   ON: { TVH: 0.13, combined: 0.13 },

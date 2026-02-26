@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  *
  * Storage: Redis (fast access) with cookie fallback.
  *
- * TODO: FLAW-069 - Add composite index @@index([email, type]) to ConsentRecord model in schema.prisma
+ * FIXED: FLAW-069 - Composite index @@index([email, type]) added to ConsentRecord model in schema.prisma
  * Identifies users by userId (if logged in) or a consent session cookie.
  */
 

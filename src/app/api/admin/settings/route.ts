@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 // TODO: FAILLE-094 - SiteSettings create uses empty defaults; provide sensible initial values or show setup wizard
-// TODO: FAILLE-095 - parseSafe returns 'unknown'; use generic type parameter for better type safety
+// FAILLE-095 FIX: parseSafe now uses generic type parameter for better type safety
 // TODO: FAILLE-098 - Every GET re-fetches SiteSettings from DB; add in-memory cache with 30s TTL
 
 /**
@@ -116,16 +116,16 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       });
     }
 
-    // Parse JSON fields from SiteSettings
-    const parseSafe = (val: string | null): unknown => {
+    // FAILLE-095 FIX: parseSafe uses generic type parameter for better type safety
+    function parseSafe<T = unknown>(val: string | null): T | null | string {
       if (!val) return null;
       try {
-        return JSON.parse(val);
+        return JSON.parse(val) as T;
       } catch (error) {
         logger.error('[AdminSettings] Failed to parse JSON setting value', { error: error instanceof Error ? error.message : String(error) });
         return val;
       }
-    };
+    }
 
     // FAILLE-041 FIX: Filter sensitive email fields for non-OWNER roles
     const filteredSiteSettings = { ...siteSettings };
@@ -164,6 +164,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
 });
 
 // PUT /api/admin/settings - Update settings
+// FAILLE-004 FIX: Require admin.settings permission for settings mutations (defense-in-depth)
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
@@ -304,10 +305,11 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'admin.settings' });
 
 // PATCH /api/admin/settings - Partial update (single key-value)
 // Some admin pages (ambassador config, etc.) use PATCH for partial updates
+// FAILLE-004 FIX: Require admin.settings permission for settings mutations (defense-in-depth)
 export const PATCH = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
@@ -356,4 +358,4 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
     logger.error('Admin settings PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'admin.settings' });

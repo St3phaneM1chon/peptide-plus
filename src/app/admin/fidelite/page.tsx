@@ -1,5 +1,5 @@
-// TODO: F-052 - key={tier.name} may cause React warnings if two tiers share the same name; mitigated by F-014 name collision check
-// TODO: F-062 - Simulation does not account for special bonuses (birthday, signup, review); add scenario options
+// FIX: F-052 - key uses index+name to avoid React warnings when tier names collide
+// NOTE: F-062 - Simulation special bonuses deferred; current simulation covers purchase-based point earning
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -44,7 +44,9 @@ export default function FidelitePage() {
   const [config, setConfig] = useState<LoyaltyConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  // FIX: FLAW-086 - TODO: Use tier index or stable ID instead of name for tier identification
+  // FIX: FLAW-086 - Use tier index for identification instead of name (names can be renamed)
+  const [editingTierIndex, setEditingTierIndex] = useState<number | null>(null);
+  // Keep editingTier (name-based) for backward compat with save logic
   const [editingTier, setEditingTier] = useState<string | null>(null);
 
   // Tier edit form state
@@ -210,22 +212,26 @@ export default function FidelitePage() {
 
   const openEditTier = (tierName: string) => {
     if (!config) return;
-    const tier = config.tiers.find((t) => t.name === tierName);
-    if (!tier) return;
+    const tierIdx = config.tiers.findIndex((t) => t.name === tierName);
+    if (tierIdx === -1) return;
+    const tier = config.tiers[tierIdx];
     setTierFormName(tier.name);
     setTierFormMinPoints(tier.minPoints);
     setTierFormMultiplier(tier.multiplier);
     setTierFormPerks(tier.perks.join('\n'));
     setTierFormColor(tier.color);
+    // FIX: FLAW-086 - Track by index for stable identification during rename
+    setEditingTierIndex(tierIdx);
     setEditingTier(tierName);
   };
 
   const closeEditTier = () => {
     setEditingTier(null);
+    setEditingTierIndex(null);
   };
 
   const saveTier = () => {
-    if (!config || !editingTier) return;
+    if (!config || editingTierIndex === null) return;
     // UX FIX: Validate tier form fields with inline error messages
     const errors: Record<string, string> = {};
     if (!tierFormName.trim()) {
@@ -237,15 +243,16 @@ export default function FidelitePage() {
     setTierFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    const newName = tierFormName.trim() || editingTier;
+    const newName = tierFormName.trim() || editingTier || '';
     // FIX F-014: Prevent tier name collisions by checking uniqueness
-    const nameConflict = config.tiers.some((tier) => tier.name !== editingTier && tier.name === newName);
+    // FIX: FLAW-086 - Use index-based identification to handle renames correctly
+    const nameConflict = config.tiers.some((tier, idx) => idx !== editingTierIndex && tier.name === newName);
     if (nameConflict) {
       setTierFormErrors({ name: t('admin.loyalty.tierNameExists') || 'A tier with this name already exists' });
       return;
     }
-    const updatedTiers = config.tiers.map((tier) => {
-      if (tier.name === editingTier) {
+    const updatedTiers = config.tiers.map((tier, idx) => {
+      if (idx === editingTierIndex) {
         return {
           name: newName,
           minPoints: tierFormMinPoints,
@@ -259,6 +266,7 @@ export default function FidelitePage() {
     setConfig({ ...config, tiers: updatedTiers });
     toast.info(t('admin.loyalty.tierUpdatedClickSave') || 'Tier updated locally - click Save to persist changes');
     setEditingTier(null);
+    setEditingTierIndex(null);
   };
 
   const addNewTier = () => {
@@ -279,6 +287,8 @@ export default function FidelitePage() {
     setTierFormMultiplier(newTier.multiplier);
     setTierFormPerks('');
     setTierFormColor(newTier.color);
+    // FIX: FLAW-086 - Track new tier by index
+    setEditingTierIndex(config.tiers.length); // Index of newly added tier
     setEditingTier(newTier.name);
   };
 
@@ -289,7 +299,10 @@ export default function FidelitePage() {
       ...config,
       tiers: config.tiers.filter((t) => t.name !== tierName),
     });
-    if (editingTier === tierName) setEditingTier(null);
+    if (editingTier === tierName) {
+      setEditingTier(null);
+      setEditingTierIndex(null);
+    }
     toast.success(t('admin.loyalty.tierDeleted'));
   };
 
@@ -544,9 +557,9 @@ export default function FidelitePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {config.tiers.map((tier) => (
+          {config.tiers.map((tier, idx) => (
             <div
-              key={tier.name}
+              key={`${idx}-${tier.name}`}
               className={`rounded-xl border-2 p-4 ${tierColors[tier.color]}`}
             >
               <div className="text-center mb-3">
@@ -605,8 +618,8 @@ export default function FidelitePage() {
               onChange={(e) => setSimTier(e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-sky-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
-              {config.tiers.map(tier => (
-                <option key={tier.name} value={tier.name}>{tier.name}</option>
+              {config.tiers.map((tier, idx) => (
+                <option key={`${idx}-${tier.name}`} value={tier.name}>{tier.name}</option>
               ))}
             </select>
           </FormField>

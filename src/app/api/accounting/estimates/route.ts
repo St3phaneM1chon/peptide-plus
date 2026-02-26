@@ -8,6 +8,7 @@ import { logAuditTrail } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { roundCurrency, calculateTax } from '@/lib/financial';
+import { generateEstimateNumber } from '@/lib/accounting/sequence.service';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas
@@ -212,25 +213,10 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const taxTotal = roundCurrency(taxGst + taxQst);
     const total = roundCurrency(afterDiscount + taxTotal);
 
-    // Generate estimate number and viewToken inside transaction
-    const year = new Date().getFullYear();
-    const prefix = `EST-${year}-`;
-
+    // A002: Use centralized sequence service for estimate number generation
+    // F063 FIX: Now uses padStart(5) for consistent 5-digit format across all document types
     const estimate = await prisma.$transaction(async (tx) => {
-      // Get next number with lock
-      const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-        SELECT MAX("estimateNumber") as max_num
-        FROM "Estimate"
-        WHERE "estimateNumber" LIKE ${prefix + '%'}
-        FOR UPDATE
-      `;
-
-      let nextNum = 1;
-      if (maxRow?.max_num) {
-        const num = parseInt(maxRow.max_num.split('-').pop() || '0');
-        if (!isNaN(num)) nextNum = num + 1;
-      }
-      const estimateNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+      const estimateNumber = await generateEstimateNumber(tx);
 
       // Generate unique viewToken
       const viewToken = crypto.randomUUID().replace(/-/g, '');

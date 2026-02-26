@@ -6,7 +6,8 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { roundCurrency } from '@/lib/financial';
 import { logAuditTrail } from '@/lib/accounting';
-import { updateJournalEntrySchema, assertJournalBalance } from '@/lib/accounting/validation';
+import { updateJournalEntrySchema, assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
+import { generateEntryNumber } from '@/lib/accounting/sequence.service';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
@@ -177,17 +178,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Check for locked accounting period
-    const lockedPeriod = await prisma.accountingPeriod.findFirst({
-      where: {
-        startDate: { lte: entryDate },
-        endDate: { gte: entryDate },
-        status: 'LOCKED',
-      },
-    });
-    if (lockedPeriod) {
+    // A017: Check for closed/locked accounting period using centralized assertPeriodOpen
+    try {
+      await assertPeriodOpen(entryDate);
+    } catch (periodError) {
       return NextResponse.json(
-        { error: `Impossible de créer une écriture dans la période comptable verrouillée "${lockedPeriod.name}" (${lockedPeriod.code})` },
+        { error: periodError instanceof Error ? periodError.message : 'Période comptable fermée ou verrouillée' },
         { status: 400 }
       );
     }
@@ -210,30 +206,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
     }
 
-    // Generate entry number inside a transaction to prevent race conditions.
-    // Using SELECT ... FOR UPDATE on the max entry ensures no two concurrent
-    // requests can produce the same number.
-    const year = new Date(date).getFullYear();
-    const prefix = `JV-${year}-`;
+    // A002: Use centralized sequence service for entry number generation.
+    // SELECT ... FOR UPDATE inside the transaction prevents race conditions.
+    const entryYear = new Date(date).getFullYear();
 
     const entry = await prisma.$transaction(async (tx) => {
-      // Lock the row with the highest entry number for this year to
-      // serialize concurrent inserts. If no entries exist yet the
-      // query returns null and we start at 1.
-      const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-        SELECT MAX("entryNumber") as max_num
-        FROM "JournalEntry"
-        WHERE "entryNumber" LIKE ${prefix + '%'}
-        FOR UPDATE
-      `;
-
-      let nextNum = 1;
-      if (maxRow?.max_num) {
-        const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-        if (!isNaN(parsed)) nextNum = parsed + 1;
-      }
-      // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
-      const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+      const entryNumber = await generateEntryNumber(tx, entryYear);
 
       const linesToCreate = lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
         accountId: accountMap.get(l.accountCode)!.id,

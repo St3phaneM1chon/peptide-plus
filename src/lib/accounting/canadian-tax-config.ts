@@ -30,6 +30,10 @@ export const PROVINCIAL_TAX_RATES: ProvincialTaxRate[] = [
   { provinceCode: 'MB', provinceName: 'Manitoba', provinceNameFr: 'Manitoba', gstRate: 5, pstRate: 7, hstRate: 0, totalRate: 12, pstName: 'RST', pstRegistrationThreshold: 10000, effectiveDate: '2019-07-01' },
   { provinceCode: 'NB', provinceName: 'New Brunswick', provinceNameFr: 'Nouveau-Brunswick', gstRate: 0, pstRate: 0, hstRate: 15, totalRate: 15, pstName: 'HST', pstRegistrationThreshold: 30000, effectiveDate: '2016-07-01' },
   { provinceCode: 'NL', provinceName: 'Newfoundland and Labrador', provinceNameFr: 'Terre-Neuve-et-Labrador', gstRate: 0, pstRate: 0, hstRate: 15, totalRate: 15, pstName: 'HST', pstRegistrationThreshold: 30000, effectiveDate: '2016-07-01' },
+  // FIX: F005 - NS HST dropped from 15% to 14% on 2025-04-01. Both rates are listed
+  // so that getTaxRateForProvince(code, asOfDate) can return the correct rate for
+  // transactions before and after the change date.
+  { provinceCode: 'NS', provinceName: 'Nova Scotia', provinceNameFr: 'Nouvelle-Ecosse', gstRate: 0, pstRate: 0, hstRate: 15, totalRate: 15, pstName: 'HST', pstRegistrationThreshold: 30000, effectiveDate: '2010-07-01' },
   { provinceCode: 'NS', provinceName: 'Nova Scotia', provinceNameFr: 'Nouvelle-Ecosse', gstRate: 0, pstRate: 0, hstRate: 14, totalRate: 14, pstName: 'HST', pstRegistrationThreshold: 30000, effectiveDate: '2025-04-01' },
   { provinceCode: 'PE', provinceName: 'Prince Edward Island', provinceNameFr: 'Ile-du-Prince-Edouard', gstRate: 0, pstRate: 0, hstRate: 15, totalRate: 15, pstName: 'HST', pstRegistrationThreshold: 30000, effectiveDate: '2013-04-01' },
   { provinceCode: 'YT', provinceName: 'Yukon', provinceNameFr: 'Yukon', gstRate: 5, pstRate: 0, hstRate: 0, totalRate: 5, pstName: 'N/A', pstRegistrationThreshold: 0, effectiveDate: '1991-01-01' },

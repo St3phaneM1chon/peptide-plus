@@ -237,11 +237,15 @@ export async function POST(request: NextRequest) {
       // F092 FIX: Validate detected language code against ISO 639-1 list; fallback to 'en' if invalid
       const detectedLang = VALID_LANGUAGE_CODES.has(rawDetectedLang) ? rawDetectedLang : 'en';
       
-      // Mettre à jour la langue du visiteur si différente
-      // TODO: F-075 - Use atomic update to prevent race condition when concurrent messages detect different languages
+      // FIX: F-075 - Atomic conditional update to prevent race condition when
+      // concurrent messages detect different languages. Only update if the current
+      // value still matches what we read, preventing last-write-wins conflicts.
       if (detectedLang !== conversation.visitorLanguage) {
-        await db.chatConversation.update({
-          where: { id: conversationId },
+        await db.chatConversation.updateMany({
+          where: {
+            id: conversationId,
+            visitorLanguage: conversation.visitorLanguage, // Only update if unchanged since read
+          },
           data: { visitorLanguage: detectedLang },
         });
       }

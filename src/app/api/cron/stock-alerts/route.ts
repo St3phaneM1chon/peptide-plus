@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
             }
 
             // FIX: FLAW-057 - Look up user locale from pre-fetched map
-            // TODO: FLAW-058 - Add optional userId field to StockAlert model for direct user relation
+            // NOTE: FLAW-058 - userId field on StockAlert deferred; email-based lookup via userLocaleMap is adequate
             let locale: Locale = 'en';
             const userLocale = userLocaleMap.get(alert.email);
             if (userLocale && (userLocale === 'fr' || userLocale === 'en')) {

@@ -11,6 +11,48 @@ import { getToken } from 'next-auth/jwt';
 import { defaultLocale, isValidLocale, type Locale, getLocaleFromHeaders } from '@/i18n/config';
 import { roleHasPermission } from '@/lib/permission-constants';
 
+// AMELIORATION-002 / FAILLE-012 / FAILLE-017: Centralized security headers function
+// Adds HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+// to every response. CSP mitigates XSS risk from httpOnly:false CSRF cookie (FAILLE-017).
+function addSecurityHeaders(response: NextResponse): void {
+  // Prevent clickjacking
+  response.headers.set('X-Frame-Options', 'DENY');
+  // Prevent MIME type sniffing
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  // Control referrer information
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Restrict browser features
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // Disable DNS prefetching
+  response.headers.set('X-DNS-Prefetch-Control', 'off');
+  // HSTS: Force HTTPS for 1 year (only in production to avoid local dev issues)
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  // Content-Security-Policy: Mitigate XSS (FAILLE-017)
+  // - 'self' for default sources
+  // - 'unsafe-inline' for styles (Tailwind/inline styles) and 'unsafe-eval' for Next.js dev
+  // - Explicit connect-src for Stripe and API calls
+  // - img-src allows data: URIs (QR codes, base64 images) and external HTTPS
+  const cspDirectives = [
+    "default-src 'self'",
+    // Next.js requires 'unsafe-eval' in dev; in production we allow 'unsafe-inline' for inline scripts
+    process.env.NODE_ENV === 'production'
+      ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
+      : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.stripe.com https://vitals.vercel-insights.com",
+    "frame-src 'self' https://js.stripe.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ];
+  response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+}
+
 // FAILLE-099 FIX: Use crypto.getRandomValues fallback instead of Math.random
 function generateRequestId(): string {
   try {
@@ -90,11 +132,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/auth')) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
-    // SECURITY: Apply security headers to auth pages
-    res.headers.set('X-Content-Type-Options', 'nosniff');
-    res.headers.set('X-Frame-Options', 'DENY');
-    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    addSecurityHeaders(res);
     return res;
   }
 
@@ -142,6 +180,7 @@ export async function middleware(request: NextRequest) {
       // FAILLE-080 FIX: Reduce CORS preflight cache to 1h (was 24h) for faster CORS policy updates
       preflightResponse.headers.set('Access-Control-Max-Age', '3600');
       preflightResponse.headers.set('x-request-id', requestId);
+      addSecurityHeaders(preflightResponse);
       return preflightResponse;
     }
 
@@ -171,10 +210,7 @@ export async function middleware(request: NextRequest) {
     res.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
-    // SECURITY: Apply security headers to API responses (mitigate XSS, clickjacking, MIME sniffing)
-    res.headers.set('X-Content-Type-Options', 'nosniff');
-    res.headers.set('X-Frame-Options', 'DENY');
-    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    addSecurityHeaders(res);
     return res;
   }
 
@@ -201,11 +237,7 @@ export async function middleware(request: NextRequest) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
     res.headers.set('x-locale', locale);
-    // SECURITY: Apply security headers to public pages (mitigate XSS, clickjacking, MIME sniffing)
-    res.headers.set('X-Content-Type-Options', 'nosniff');
-    res.headers.set('X-Frame-Options', 'DENY');
-    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    addSecurityHeaders(res);
     return res;
   }
 
@@ -336,11 +368,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // AMELIORATION SYS-002: Security headers to mitigate XSS, clickjacking, MIME sniffing
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // AMELIORATION SYS-002: Centralized security headers (HSTS, CSP, X-Frame-Options, etc.)
+  addSecurityHeaders(response);
 
   return response;
 }

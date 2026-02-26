@@ -18,12 +18,12 @@ import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 import { encryptToken } from './token-encryption';
 
-// TODO: FAILLE-085 - Replace 'any' with proper type: import type { Provider } from 'next-auth/providers'
+// FAILLE-085 FIX: Replace 'any' with proper Provider type from next-auth
 // TODO: FAILLE-086 - Cookie name forced to authjs.session-token (no __Secure- prefix) for Azure; review when Azure supports HTTPS E2E
 // TODO: FAILLE-091 - encryptedAdapter cast as any; type correctly or use 'satisfies' for partial verification
 // TODO: FAILLE-092 - signOut event logs userId but not IP/user-agent; add for suspicious logout tracing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AuthProvider = any;
+import type { Provider } from 'next-auth/providers';
+type AuthProvider = Provider;
 
 // =====================================================
 // CONFIGURATION DES PROVIDERS (conditionnels)
@@ -389,7 +389,8 @@ export const authConfig: NextAuthConfig = {
               if (dbUser?.name) token.name = dbUser.name;
               if (dbUser?.image) token.picture = dbUser.image;
             } catch (error) {
-              console.error('[AuthConfig] Failed to fetch user data for JWT token:', error);
+              // FAILLE-074 FIX: Use structured logger instead of console.error
+              logger.error('[AuthConfig] Failed to fetch user data for JWT token', { error: error instanceof Error ? error.message : String(error) });
               token.role = UserRole.CUSTOMER;
               token.mfaEnabled = false;
               token.mfaVerified = false;
@@ -452,7 +453,8 @@ export const authConfig: NextAuthConfig = {
           const { recordUserActivity } = await import('./session-security');
           recordUserActivity(token.id as string);
         } catch (error) {
-          console.error('[AuthConfig] Session security activity recording failed (non-blocking):', error);
+          // FAILLE-074 FIX: Use structured logger instead of console.error
+          logger.error('[AuthConfig] Session security activity recording failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
         }
       }
       return session;

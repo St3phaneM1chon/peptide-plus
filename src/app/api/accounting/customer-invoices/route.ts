@@ -12,6 +12,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { calculateTax, roundCurrency } from '@/lib/financial';
 import { assertPeriodOpen } from '@/lib/accounting/validation';
+import { generateInvoiceNumber } from '@/lib/accounting/sequence.service';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas (for PUT - update invoice status)
@@ -204,25 +205,9 @@ export const POST = withAdminGuard(async (request) => {
       );
     }
 
-    // Generate invoice number inside a transaction to prevent race conditions
-    const year = new Date().getFullYear();
-    const prefix = `FACT-${year}-`;
-
+    // A002: Use centralized sequence service for invoice number generation
     const invoice = await prisma.$transaction(async (tx) => {
-      const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-        SELECT MAX("invoiceNumber") as max_num
-        FROM "CustomerInvoice"
-        WHERE "invoiceNumber" LIKE ${prefix + '%'}
-        FOR UPDATE
-      `;
-
-      let nextNum = 1;
-      if (maxRow?.max_num) {
-        const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-        if (!isNaN(parsed)) nextNum = parsed + 1;
-      }
-      // F063 FIX: Use padStart(5) for consistent 5-digit number format
-      const invoiceNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+      const invoiceNumber = await generateInvoiceNumber(tx);
 
       return tx.customerInvoice.create({
         data: {

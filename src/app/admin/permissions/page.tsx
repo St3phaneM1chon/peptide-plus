@@ -1,9 +1,9 @@
 // TODO: FAILLE-051 - This page is fully client-side ('use client') without server-side permission check before render.
 //       Add a server layout or middleware check that verifies admin.permissions access before serving this component.
-// TODO: FAILLE-052 - Checkbox mutations fire immediately per click; add debounce (300ms) or batch modifications to reduce race conditions.
+// FIX: FAILLE-052 / AMELIORATION-042 - Debounce checkbox mutations (300ms) to prevent rapid-fire API calls and race conditions.
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Shield, Users, UserCog, Settings, Plus, Trash2, Check, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -160,19 +160,34 @@ export default function PermissionsPage() {
     });
   };
 
+  // FIX: FAILLE-052 / AMELIORATION-042 - Debounce checkbox mutations (300ms)
+  // Accumulates rapid clicks into a single API call per permission code.
+  const pendingDefaultUpdates = useRef<Map<string, { code: string; field: string; value: boolean; timer: ReturnType<typeof setTimeout> }>>(new Map());
+
   const updateDefault = async (code: string, field: string, value: boolean) => {
+    // Optimistic UI update
     setPermissions(prev => prev.map(p => p.code === code ? { ...p, [field]: value } : p));
-    try {
-      const res = await fetch('/api/admin/permissions', {
-        method: 'POST',
-        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ action: 'updateDefaults', code, [field]: value }),
-      });
-      if (!res.ok) toast.error(t('common.errorOccurred'));
-    } catch (error) {
-      console.error(error);
-      toast.error(t('common.errorOccurred'));
-    }
+
+    const key = `${code}:${field}`;
+    const existing = pendingDefaultUpdates.current.get(key);
+    if (existing) clearTimeout(existing.timer);
+
+    const timer = setTimeout(async () => {
+      pendingDefaultUpdates.current.delete(key);
+      try {
+        const res = await fetch('/api/admin/permissions', {
+          method: 'POST',
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ action: 'updateDefaults', code, [field]: value }),
+        });
+        if (!res.ok) toast.error(t('common.errorOccurred'));
+      } catch (error) {
+        console.error(error);
+        toast.error(t('common.errorOccurred'));
+      }
+    }, 300);
+
+    pendingDefaultUpdates.current.set(key, { code, field, value, timer });
   };
 
   const saveGroup = async () => {
@@ -221,27 +236,40 @@ export default function PermissionsPage() {
     fetchGroups();
   };
 
+  // FIX: FAILLE-052 - Debounce override toggles (300ms) to prevent rapid-fire mutations
+  const pendingOverrideUpdates = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
   const toggleOverride = async (permissionCode: string, granted: boolean) => {
     if (!selectedUser) return;
-    try {
-      const res = await fetch('/api/admin/permissions', {
-        method: 'POST',
-        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          action: 'setOverride',
-          userId: selectedUser.id,
-          permissionCode,
-          granted,
-        }),
-      });
-      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
-      toast.success(t('common.savedSuccessfully'));
-    } catch (error) {
-      console.error(error);
-      toast.error(t('common.errorOccurred'));
-      return;
-    }
-    fetchOverrides(selectedUser.id);
+    const userId = selectedUser.id;
+
+    const existing = pendingOverrideUpdates.current.get(permissionCode);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(async () => {
+      pendingOverrideUpdates.current.delete(permissionCode);
+      try {
+        const res = await fetch('/api/admin/permissions', {
+          method: 'POST',
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            action: 'setOverride',
+            userId,
+            permissionCode,
+            granted,
+          }),
+        });
+        if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+        toast.success(t('common.savedSuccessfully'));
+      } catch (error) {
+        console.error(error);
+        toast.error(t('common.errorOccurred'));
+        return;
+      }
+      fetchOverrides(userId);
+    }, 300);
+
+    pendingOverrideUpdates.current.set(permissionCode, timer);
   };
 
   const removeOverride = async (permissionCode: string) => {

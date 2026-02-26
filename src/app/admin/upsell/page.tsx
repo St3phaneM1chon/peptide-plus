@@ -93,6 +93,9 @@ export default function UpsellAdminPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
+  // FIX: FLAW-049 - Product search state for large catalogs
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+
   // FIX: FLAW-055 - Wrap fetchConfigs in useCallback for stable reference
   const fetchConfigs = useCallback(async () => {
     try {
@@ -107,15 +110,12 @@ export default function UpsellAdminPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
-  useEffect(() => {
-    fetchConfigs();
-    fetchProducts();
-  }, [fetchConfigs]);
-
-  // TODO: FLAW-049 - limit=500 truncates large catalogs; implement server-side search/autocomplete
-  const fetchProducts = async () => {
+  // FIX: FLAW-049 - Fetch products with search to avoid truncation on large catalogs
+  const fetchProducts = useCallback(async (search?: string) => {
     try {
-      const res = await fetch('/api/products?limit=500&fields=id,name,slug');
+      const params = new URLSearchParams({ limit: '50', fields: 'id,name,slug' });
+      if (search) params.set('search', search);
+      const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
       setProducts(
         (data.data?.products || data.products || []).map((p: { id: string; name: string; slug: string }) => ({
@@ -127,7 +127,22 @@ export default function UpsellAdminPage() {
     } catch {
       // silently fail - products dropdown won't work
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchConfigs();
+    fetchProducts();
+  }, [fetchConfigs, fetchProducts]);
+
+  // FIX: FLAW-049 - Debounced product search for large catalogs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (productSearchQuery) {
+        fetchProducts(productSearchQuery);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [productSearchQuery, fetchProducts]);
 
   // ─── Form helpers ─────────────────────────────────────────────
 
@@ -620,6 +635,14 @@ export default function UpsellAdminPage() {
           {/* Product selector (only for new configs) */}
           {!editingConfig && (
             <FormField label={t('admin.upsell.selectProduct')}>
+              {/* FIX: FLAW-049 - Search input for product autocomplete */}
+              <Input
+                type="text"
+                placeholder={t('admin.upsell.searchProduct') || 'Search products...'}
+                value={productSearchQuery}
+                onChange={(e) => setProductSearchQuery(e.target.value)}
+                className="mb-2"
+              />
               <select
                 value={formProductId}
                 onChange={(e) => setFormProductId(e.target.value)}

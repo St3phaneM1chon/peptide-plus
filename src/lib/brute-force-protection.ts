@@ -180,11 +180,11 @@ export async function recordFailedAttempt(
     // Log critique
     logger.warn('Security event: account locked', { event: 'account_locked', email: key, ipAddress, userAgent, lockoutDuration: LOCKOUT_DURATION_MS });
 
-    // TODO (SEC-L05): Send brute-force lockout email notification to the user.
-    // The email should include: the locked email address, the IP that triggered
-    // the lockout, the lockout duration, and a link to reset password.
-    // Implementation: create sendAccountLockedNotification() in lib/email.ts
-    // await sendAccountLockedNotification(email, ipAddress, LOCKOUT_DURATION_MS);
+    // FIX: AMELIORATION-037 / SEC-L05 - Send lockout notification email (non-blocking)
+    // Fire-and-forget: don't block the auth flow or leak timing information
+    sendAccountLockedNotification(key, ipAddress, LOCKOUT_DURATION_MS).catch((e) =>
+      logger.error('Lockout notification email failed', { error: e instanceof Error ? e.message : String(e), email: key })
+    );
 
     return {
       locked: true,
@@ -302,4 +302,55 @@ export function cleanupExpiredAttempts(): void {
 // SSR crashes in environments where setInterval is not available.
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupExpiredAttempts, 5 * 60 * 1000);
+}
+
+// ============================================
+// FIX: AMELIORATION-037 / SEC-L05 - Account lockout email notification
+// ============================================
+
+/**
+ * Send a notification email when an account is locked due to failed login attempts.
+ * Includes: the locked email, triggering IP, lockout duration, and a password reset link.
+ * This is fire-and-forget from the caller to avoid blocking auth flow or leaking timing info.
+ */
+async function sendAccountLockedNotification(
+  email: string,
+  ipAddress: string,
+  lockoutDurationMs: number,
+): Promise<void> {
+  try {
+    const { sendEmail } = await import('./email');
+    const lockoutMinutes = Math.ceil(lockoutDurationMs / 60000);
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://biocyclepeptides.com';
+    const resetUrl = `${baseUrl}/auth/forgot-password`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #DC2626;">Account Security Alert</h2>
+        <p>Your BioCycle Peptides account has been temporarily locked due to multiple failed login attempts.</p>
+        <table style="border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 4px 12px; font-weight: bold;">Account:</td><td style="padding: 4px 12px;">${email}</td></tr>
+          <tr><td style="padding: 4px 12px; font-weight: bold;">IP Address:</td><td style="padding: 4px 12px;">${ipAddress}</td></tr>
+          <tr><td style="padding: 4px 12px; font-weight: bold;">Duration:</td><td style="padding: 4px 12px;">${lockoutMinutes} minutes</td></tr>
+          <tr><td style="padding: 4px 12px; font-weight: bold;">Time:</td><td style="padding: 4px 12px;">${new Date().toISOString()}</td></tr>
+        </table>
+        <p>If this was you, please wait ${lockoutMinutes} minutes before trying again.</p>
+        <p>If you did not attempt to log in, we recommend resetting your password immediately:</p>
+        <p><a href="${resetUrl}" style="display: inline-block; background: #F97316; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Reset Password</a></p>
+        <p style="color: #6B7280; font-size: 12px; margin-top: 24px;">This is an automated security notification from BioCycle Peptides. Do not reply to this email.</p>
+      </div>
+    `;
+
+    await sendEmail({
+      to: { email },
+      subject: 'Security Alert: Account Locked - BioCycle Peptides',
+      html,
+      tags: ['security', 'lockout', 'automated'],
+    });
+
+    logger.info('Lockout notification email sent', { email });
+  } catch (error) {
+    // Re-throw so the caller's .catch() can log it
+    throw error;
+  }
 }

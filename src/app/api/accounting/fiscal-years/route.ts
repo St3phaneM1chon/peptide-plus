@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { requireAdmin } from '@/lib/accounting/auth-middleware';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas
@@ -53,8 +54,12 @@ export const GET = withAdminGuard(async (_request) => {
 // ---------------------------------------------------------------------------
 // POST /api/accounting/fiscal-years - Create a new fiscal year
 // ---------------------------------------------------------------------------
-export const POST = withAdminGuard(async (request) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    // A014: Require ADMIN accounting role for fiscal year management
+    const authError = await requireAdmin(session);
+    if (authError) return authError;
+
     // CSRF + Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';
@@ -121,6 +126,10 @@ export const POST = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
+    // A014: Require ADMIN accounting role for fiscal year close/reopen
+    const authError = await requireAdmin(session);
+    if (authError) return authError;
+
     // CSRF + Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';

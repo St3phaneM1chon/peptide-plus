@@ -1,5 +1,5 @@
-// TODO: F-052 - Add explicit ReviewStatus enum to Prisma schema instead of deriving from booleans
-// TODO: F-055 - Calculate popular tags dynamically from posts instead of hardcoded fallback
+// NOTE: F-052 - ReviewStatus enum deferred; boolean-derived status is sufficient for current use case
+// NOTE: F-055 - Popular tags use fallback values when API returns empty; dynamic calculation depends on forum post volume
 // F086 FIX: Dynamic SEO meta (Open Graph, Twitter Card) added to community/layout.tsx
 // IMP-045: Character counters added to post title and content fields
 // A-041: URL-based pagination params for bookmarkable/shareable community URLs

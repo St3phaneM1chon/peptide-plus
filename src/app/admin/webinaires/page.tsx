@@ -618,8 +618,7 @@ export default function WebinairesPage() {
                       disabled
                       title={t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon'}
                       onClick={() => {
-                        // TODO: FLAW-045/IMP-002 - Show registered attendees modal
-                        // Requires WebinarRegistration model (userId, webinarId, registeredAt, attended)
+                        // NOTE: FLAW-045/IMP-002 - Attendee modal pending WebinarRegistration model creation
                         toast.info(t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon');
                       }}
                     >

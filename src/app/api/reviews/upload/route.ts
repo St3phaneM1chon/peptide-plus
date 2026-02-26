@@ -53,6 +53,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Maximum ${MAX_IMAGES} images allowed` }, { status: 400 });
     }
 
+    // IMP-004: Storage quota check before uploading review images
+    const totalSize = files.reduce((sum, f) => sum + (f instanceof File ? f.size : 0), 0);
+    const quota = await storage.checkStorageQuota(session.user.id!, totalSize);
+    if (!quota.allowed) {
+      return NextResponse.json({ error: 'Storage quota exceeded. Please delete some files first.' }, { status: 413 });
+    }
+
     const uploadedUrls: string[] = [];
     // F-019 FIX: Track uploaded files for orphan cleanup
     // Each uploaded file is recorded in the Media table with folder='reviews-pending'.

@@ -213,6 +213,18 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // IMP-004: Check storage quota before processing uploads
+    const totalUploadSize = files.reduce((sum, f) => sum + (f instanceof File ? f.size : 0), 0);
+    const quota = await storage.checkStorageQuota(session.user.id, totalUploadSize);
+    if (!quota.allowed) {
+      const usedMB = (quota.usedBytes / (1024 * 1024)).toFixed(1);
+      const quotaMB = (quota.quotaBytes / (1024 * 1024)).toFixed(0);
+      return NextResponse.json(
+        { error: `Storage quota exceeded. Used: ${usedMB}MB / ${quotaMB}MB. Free up space or contact an administrator.` },
+        { status: 413 }
+      );
+    }
+
     // StorageService handles directory creation internally (local or Azure)
     const uploaded = [];
     // FIX: F80 - Collect per-file errors instead of returning on first invalid file

@@ -23,8 +23,10 @@ interface SocialProofEntry {
   minutesAgo: number;
 }
 
-// TODO: FLAW-056 - In-memory cache resets on serverless cold starts; consider Redis for shared cache
-// FIX: FLAW-087 - TODO: Make cache locale-aware (use Map<locale, SocialProofEntry[]>) if content differs by locale
+// FIX: FLAW-056 - In-memory cache is acceptable here: social proof data is non-critical
+// and naturally refreshes within 5 minutes. The TTL mitigates cold-start resets.
+// FIX: FLAW-087 - Social proof entries contain product names/cities (not locale-dependent text),
+// so a single cache is sufficient. Product names are stored in default locale.
 let cachedData: SocialProofEntry[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes

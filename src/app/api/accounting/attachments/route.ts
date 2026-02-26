@@ -168,6 +168,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       );
     }
 
+    // IMP-004: Storage quota check for accounting attachments
+    if (session.user?.id) {
+      const quota = await storage.checkStorageQuota(session.user.id, file.size);
+      if (!quota.allowed) {
+        return NextResponse.json(
+          { error: 'Storage quota exceeded. Please delete old attachments or contact an administrator.' },
+          { status: 413 }
+        );
+      }
+    }
+
     const mimeType = file.type;
     if (!ALLOWED_MIME_TYPES[mimeType]) {
       return NextResponse.json(

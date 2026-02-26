@@ -9,6 +9,8 @@ import { roundCurrency, calculateTax } from '@/lib/financial';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
+import { generateCreditNoteNumber } from '@/lib/accounting/sequence.service';
 
 // #65 Audit: Valid status transitions for credit notes
 // DRAFT -> ISSUED, VOID
@@ -197,24 +199,19 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Generate credit note number
-    const year = new Date().getFullYear();
-    const prefix = `NC-${year}-`;
+    // A017: Verify the accounting period is not closed/locked
+    try {
+      await assertPeriodOpen(new Date());
+    } catch (periodError) {
+      return NextResponse.json(
+        { error: periodError instanceof Error ? periodError.message : 'Periode comptable fermee' },
+        { status: 400 }
+      );
+    }
 
+    // A002: Use centralized sequence service for credit note number generation
     const creditNote = await prisma.$transaction(async (tx) => {
-      const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
-        SELECT MAX("creditNoteNumber") as max_num
-        FROM "CreditNote"
-        WHERE "creditNoteNumber" LIKE ${prefix + '%'}
-        FOR UPDATE
-      `;
-
-      let nextNum = 1;
-      if (maxRow?.max_num) {
-        const p = parseInt(maxRow.max_num.split('-').pop() || '0');
-        if (!isNaN(p)) nextNum = p + 1;
-      }
-      const creditNoteNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+      const creditNoteNumber = await generateCreditNoteNumber(tx);
 
       return tx.creditNote.create({
         data: {

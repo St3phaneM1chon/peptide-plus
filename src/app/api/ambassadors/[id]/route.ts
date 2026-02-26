@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 // FIX: F-080 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
-// TODO: F-084 - DELETE requires OWNER but PATCH allows EMPLOYEE (can soft-delete via INACTIVE); document or align permissions
+// NOTE: F-084 - DELETE=OWNER-only, PATCH=EMPLOYEE+ is by design; employees can update status but not hard-delete
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';

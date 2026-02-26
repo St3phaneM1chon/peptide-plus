@@ -11,7 +11,7 @@ import { useI18n } from '@/i18n/client';
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
   Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
-  ImageIcon, BarChart3, House,
+  ImageIcon, BarChart3, House, Edit2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -69,6 +69,14 @@ export default function MediaVideosPage() {
   // Lazy-load embed preview state
   const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
   const [loadedEmbeds, setLoadedEmbeds] = useState<Set<string>>(new Set());
+  // F32 FIX: Edit state for inline video editing
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: '', description: '', videoUrl: '', thumbnailUrl: '',
+    duration: '', category: '', tags: '', instructor: '',
+    isFeatured: false, isPublished: false,
+  });
+  const [updating, setUpdating] = useState(false);
 
   const loadVideos = useCallback(async () => {
     setLoading(true);
@@ -133,6 +141,72 @@ export default function MediaVideosPage() {
       setLoadedEmbeds(prev => new Set(prev).add(id));
     }
   }, [previewVideoId]);
+
+  // F32 FIX: Start editing a video - populate edit form with existing values
+  const startEdit = useCallback((v: VideoItem) => {
+    setEditingId(v.id);
+    setEditForm({
+      title: v.title,
+      description: v.description || '',
+      videoUrl: v.videoUrl || '',
+      thumbnailUrl: v.thumbnailUrl || '',
+      duration: v.duration || '',
+      category: v.category || '',
+      tags: v.tags ? v.tags.join(', ') : '',
+      instructor: v.instructor || '',
+      isFeatured: v.isFeatured,
+      isPublished: v.isPublished,
+    });
+    setFormError(null);
+  }, []);
+
+  // F32 FIX: Submit video update via PATCH endpoint
+  const handleUpdate = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
+    setUpdating(true);
+    setFormError(null);
+    try {
+      const tags = editForm.tags ? editForm.tags.split(',').map(t => t.trim().replace(/\s+/g, ' ')).filter(Boolean) : [];
+      if (editForm.videoUrl && !/^https?:\/\/.+/i.test(editForm.videoUrl)) {
+        const msg = t('admin.media.invalidVideoUrl') || 'Please enter a valid URL starting with http:// or https://';
+        toast.error(msg);
+        setFormError(msg);
+        setUpdating(false);
+        return;
+      }
+      if (editForm.thumbnailUrl && !/^https?:\/\/.+/i.test(editForm.thumbnailUrl)) {
+        const msg = t('admin.media.invalidThumbnailUrl') || 'Please enter a valid thumbnail URL';
+        toast.error(msg);
+        setFormError(msg);
+        setUpdating(false);
+        return;
+      }
+      const res = await fetchWithCSRF(`/api/admin/videos/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editForm, tags }),
+      });
+      if (res.ok) {
+        setEditingId(null);
+        setFormError(null);
+        loadVideos();
+        toast.success(t('admin.media.videoUpdated') || 'Video updated successfully');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        const errorMsg = data.error || t('admin.media.videoUpdateFailed') || 'Failed to update video';
+        toast.error(errorMsg);
+        setFormError(errorMsg);
+      }
+    } catch (err) {
+      console.error('Failed to update video:', err);
+      const errorMsg = t('admin.media.videoUpdateFailed') || 'Failed to update video';
+      toast.error(errorMsg);
+      setFormError(errorMsg);
+    } finally {
+      setUpdating(false);
+    }
+  }, [editingId, editForm, t, loadVideos]);
 
   // Format view count with locale
   const formatViews = (count: number): string => {
@@ -314,8 +388,8 @@ export default function MediaVideosPage() {
           </div>
           <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label="Publié" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label="En vedette" checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
             <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save')}
             </button>
@@ -405,34 +479,43 @@ export default function MediaVideosPage() {
                     <div className="flex items-center gap-3 text-xs text-slate-500">
                       {v.duration && <span>{v.duration}</span>}
                       {v.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded">{v.category}</span>}
-                      {v.instructor && <span>{t('admin.media.by') || 'par'} {v.instructor}</span>}
+                      {v.instructor && <span>{t('admin.media.videoBy') || 'by'} {v.instructor}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {/* View tracking count display */}
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg" title={`${v.views} vues`}>
+                    {/* View tracking count display - F40 FIX: Use i18n for "views" */}
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg" title={`${v.views} ${t('admin.media.videoViews') || 'views'}`}>
                       <BarChart3 className="w-3.5 h-3.5 text-sky-500" />
                       <span className="text-xs font-semibold text-slate-700">{formatViews(v.views)}</span>
-                      <span className="text-[10px] text-slate-400">vues</span>
+                      <span className="text-[10px] text-slate-400">{t('admin.media.videoViews') || 'views'}</span>
                     </div>
                     {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                     {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
+                    {/* F32 FIX: Edit button for inline video editing */}
+                    <button
+                      onClick={() => editingId === v.id ? setEditingId(null) : startEdit(v)}
+                      className={`text-slate-400 hover:text-sky-600 ${editingId === v.id ? 'text-sky-600' : ''}`}
+                      aria-label={editingId === v.id ? (t('admin.media.cancelEdit') || 'Cancel edit') : (t('admin.media.editVideo') || 'Edit video')}
+                      title={editingId === v.id ? (t('admin.media.cancelEdit') || 'Cancel edit') : (t('admin.media.editVideo') || 'Edit video')}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
                     {v.videoUrl && (
                       <>
                         {embedUrl && (
                           <button
                             onClick={() => toggleEmbedPreview(v.id)}
                             className={`text-slate-400 hover:text-sky-600 ${previewVideoId === v.id ? 'text-sky-600' : ''}`}
-                            aria-label="Aperçu intégré"
-                            title="Aperçu intégré"
+                            aria-label={t('admin.media.videoEmbeddedPreview') || 'Embedded preview'}
+                            title={t('admin.media.videoEmbeddedPreview') || 'Embedded preview'}
                           >
                             <ImageIcon className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label="Lire la vidéo">
+                        <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label={t('admin.media.videoPlayVideo') || 'Play video'}>
                           <Play className="w-4 h-4" />
                         </button>
-                        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la vidéo dans un nouvel onglet">
+                        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label={t('admin.media.videoOpenNewTab') || 'Open video in new tab'}>
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       </>
@@ -440,13 +523,46 @@ export default function MediaVideosPage() {
                   </div>
                 </div>
 
+                {/* F32 FIX: Inline edit form */}
+                {editingId === v.id && (
+                  <div className="border-t border-sky-200 p-4 bg-sky-50/50">
+                    <form onSubmit={handleUpdate} className="space-y-3">
+                      {formError && (
+                        <div className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">{formError}</div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.videoTitlePlaceholder') || 'Title *'} value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} required />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.videoUrlPlaceholder') || 'Video URL'} value={editForm.videoUrl} onChange={e => setEditForm({ ...editForm, videoUrl: e.target.value })} />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.thumbnailUrlPlaceholder') || 'Thumbnail URL'} value={editForm.thumbnailUrl} onChange={e => setEditForm({ ...editForm, thumbnailUrl: e.target.value })} />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.durationPlaceholder') || 'Duration (e.g. 12:30)'} value={editForm.duration} onChange={e => setEditForm({ ...editForm, duration: e.target.value })} />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.categoryPlaceholder') || 'Category'} value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })} />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.instructorPlaceholder') || 'Instructor'} value={editForm.instructor} onChange={e => setEditForm({ ...editForm, instructor: e.target.value })} />
+                        <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.tagsPlaceholder') || 'Tags (comma-separated)'} value={editForm.tags} onChange={e => setEditForm({ ...editForm, tags: e.target.value })} />
+                      </div>
+                      <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={editForm.isPublished} onChange={e => setEditForm({ ...editForm, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={editForm.isFeatured} onChange={e => setEditForm({ ...editForm, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
+                        <div className="ml-auto flex items-center gap-2">
+                          <button type="button" onClick={() => setEditingId(null)} className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-slate-50">
+                            {t('common.cancel') || 'Cancel'}
+                          </button>
+                          <button type="submit" disabled={updating} className="px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
+                            {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save') || 'Save'}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
                 {/* Lazy-load embed preview */}
                 {previewVideoId === v.id && embedUrl && (
                   <div className="border-t border-slate-200 p-3 bg-slate-50">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-slate-500">Aperçu intégré</span>
+                      <span className="text-xs font-medium text-slate-500">{t('admin.media.videoEmbeddedPreview') || 'Embedded preview'}</span>
                       <button onClick={() => setPreviewVideoId(null)} className="text-xs text-slate-400 hover:text-slate-600">
-                        Fermer
+                        {t('admin.media.videoClosePreview') || 'Close'}
                       </button>
                     </div>
                     {loadedEmbeds.has(v.id) ? (
@@ -455,7 +571,7 @@ export default function MediaVideosPage() {
                         className="w-full aspect-video rounded-lg"
                         allow="encrypted-media"
                         allowFullScreen
-                        title={`Aperçu: ${v.title}`}
+                        title={`${t('admin.media.videoEmbeddedPreview') || 'Preview'}: ${v.title}`}
                         loading="lazy"
                       />
                     ) : (

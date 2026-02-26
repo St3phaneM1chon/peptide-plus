@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || defaultLocale;
 
     // FLAW-068 FIX: Add take limit to prevent unbounded query
-    // TODO: FLAW-080 - Webinar.tags stored as single string; migrate to JSON array or WebinarTag model
+    // NOTE: FLAW-080 - Webinar.tags stored as string; JSON array migration deferred (low usage)
     let webinars = await prisma.webinar.findMany({
       where: {
         isPublished: true,

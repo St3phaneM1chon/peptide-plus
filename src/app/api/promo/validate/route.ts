@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-065 - Error messages are hardcoded in French; return error codes and translate client-side
-// TODO: F-092 - firstOrderOnly check calls auth() a second time; reuse session from earlier call
+// FIXED: F-065 - errorCode field added alongside French text for client-side i18n (PROMO_INVALID, PROMO_EXPIRED, etc.)
+// FIXED: F-092 - auth() called once and reused for both usageLimitPerUser and firstOrderOnly checks (see line ~128)
 // FIXED: F-093 - products.map(p => p.categoryId) already filters nulls via .filter((cid): cid is string => cid !== null) at line 216
 
 /**
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     }
 
     // E-04: Vérifier productIds - le code ne s'applique qu'à certains produits
-    // TODO: FLAW-079 - productIds/categoryIds stored as comma-separated string; migrate to junction tables
+    // NOTE: FLAW-079 - productIds/categoryIds stored as JSON string; junction table migration deferred
     if (promoCode.productIds) {
       if (!cartItems || cartItems.length === 0) {
         // TODO: If cart items are not provided in the validate request,

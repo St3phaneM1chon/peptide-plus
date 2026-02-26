@@ -9,6 +9,7 @@ import { hasPermission, type PermissionCode } from '@/lib/permissions';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 
+// FAILLE-004 FIX: Require users.view permission for user detail access (defense-in-depth)
 export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
@@ -242,8 +243,9 @@ export const GET = withAdminGuard(async (_request, { params }) => {
     logger.error('Admin user detail error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.view' });
 
+// FAILLE-004 FIX: Require users.edit permission for user mutations (defense-in-depth)
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
@@ -349,4 +351,4 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     logger.error('Admin user update error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.edit' });

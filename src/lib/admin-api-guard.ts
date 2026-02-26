@@ -20,7 +20,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
-import { checkRateLimit } from '@/lib/security';
+import { checkRateLimit as checkRateLimitMemory } from '@/lib/security';
+// FAILLE-009 FIX: Import Redis-backed rate limiter for persistent rate limiting across deploys
+import { checkRateLimit as checkRateLimitRedis } from '@/lib/rate-limiter';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 import { hasPermission, type PermissionCode } from '@/lib/permissions';
@@ -51,12 +53,10 @@ export interface AdminGuardOptions {
 /** HTTP methods considered as mutations (require CSRF protection) */
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-// FAILLE-009: Rate limits per minute for admin API routes.
-// These are applied via the in-memory checkRateLimit() from @/lib/security (not Redis-backed).
-// The in-memory store resets on server restart, which is acceptable for admin routes where
-// operators are authenticated. For Redis-backed rate limiting, @/lib/rate-limiter is used
-// by withApiHandler(); the admin guard uses its own per-key limiting tuned for admin workloads.
-// Reads: 100 req/min per IP+route (was 60) -- matches the general admin config in rate-limiter.ts
+// FAILLE-009 FIX: Rate limits per minute for admin API routes.
+// Now uses Redis-backed checkRateLimit from rate-limiter.ts (persistent across deploys/restarts),
+// with in-memory fallback from security.ts if Redis is unavailable.
+// Reads: 100 req/min per IP+route -- matches the general admin config in rate-limiter.ts
 // Writes: 30 req/min per IP+route -- intentionally stricter for mutation methods (POST/PUT/PATCH/DELETE)
 const RATE_LIMIT_READ = 100;
 const RATE_LIMIT_WRITE = 30;
@@ -181,7 +181,7 @@ export function withAdminGuard(
       }
 
       // ---------------------------------------------------------------
-      // 4. Rate limiting
+      // 4. Rate limiting (FAILLE-009 FIX: Redis-backed with in-memory fallback)
       // ---------------------------------------------------------------
       const ip = getClientIp(request);
       const pathname = new URL(request.url).pathname;
@@ -193,7 +193,20 @@ export function withAdminGuard(
         options?.rateLimit ??
         (isMutation ? RATE_LIMIT_WRITE : RATE_LIMIT_READ);
 
-      const rateResult = checkRateLimit(rateLimitKey, maxRequests, RATE_LIMIT_WINDOW_MS);
+      // Try Redis-backed rate limiter first (persists across deploys/restarts),
+      // fall back to in-memory rate limiter if Redis is unavailable.
+      let rateResult: { allowed: boolean; remaining: number; resetIn: number };
+      try {
+        const redisResult = await checkRateLimitRedis(ip, normalizedPath, session.user.id);
+        rateResult = {
+          allowed: redisResult.allowed,
+          remaining: redisResult.remaining,
+          resetIn: Math.max(0, redisResult.resetAt - Date.now()),
+        };
+      } catch {
+        // Redis unavailable - gracefully fall back to in-memory rate limiting
+        rateResult = checkRateLimitMemory(rateLimitKey, maxRequests, RATE_LIMIT_WINDOW_MS);
+      }
 
       if (!rateResult.allowed) {
         const retryAfterSeconds = Math.ceil(rateResult.resetIn / 1000);

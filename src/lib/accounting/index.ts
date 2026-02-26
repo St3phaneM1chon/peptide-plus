@@ -296,7 +296,30 @@ export {
   createExpenseSchema,
   createBudgetSchema,
   formatZodErrors,
+  assertJournalBalance,
+  assertPeriodOpen,
 } from './validation';
+
+// A002: Centralized Sequential Number Generation Service
+export {
+  generateSequentialNumber,
+  generateEntryNumber,
+  generateInvoiceNumber,
+  generateExpenseNumber,
+  generateCreditNoteNumber,
+  generateSupplierInvoiceRef,
+  generateEstimateNumber,
+  generatePurchaseOrderNumber,
+} from './sequence.service';
+
+// A014: Accounting Auth Middleware
+export {
+  requireAccountingRole,
+  requireViewer,
+  requireAccountant,
+  requireAdmin,
+} from './auth-middleware';
+export type { AccountingRole } from './auth-middleware';
 
 // PHASE 8: Alert Rules Service
 export {

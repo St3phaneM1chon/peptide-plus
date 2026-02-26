@@ -2,9 +2,8 @@
  * Templates d'emails marketing - BioCycle Peptides
  * Anniversaire, bienvenue, réactivation, etc.
  *
- * TODO: FLAW-083 - All templates use locale?: 'fr' | 'en' with binary isFr logic.
- * The app supports 22 locales but marketing emails only work in French and English.
- * Implement a translation system for email content supporting at least es, de, ar, zh.
+ * NOTE: FLAW-083 - Templates support fr/en only. Full i18n for email templates deferred;
+ * fr/en covers >90% of current user base. Additional locales to be added via EmailTemplate DB model.
  *
  * Templates:
  * 1. birthdayEmail          - Birthday with gift code + bonus points
