@@ -1,13 +1,15 @@
+// SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // GDPR/PIPEDA: Data export for a user
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Non autorisé - Propriétaire uniquement' }, { status: 401 });
+    // Extra restriction: OWNER only for GDPR data access
+    if (session.user.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Non autorise - Proprietaire uniquement' }, { status: 403 });
     }
 
     const userId = request.nextUrl.searchParams.get('userId');
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (!user) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: 'Utilisateur non trouve' }, { status: 404 });
     }
 
     const exportData = {
@@ -62,17 +64,17 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(exportData);
   } catch (error) {
-    console.error('GDPR export error:', error);
-    return NextResponse.json({ error: 'Erreur lors de l\'export' }, { status: 500 });
+    logger.error('GDPR export error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 // GDPR/PIPEDA: Data erasure (anonymize user)
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Non autorisé - Propriétaire uniquement' }, { status: 401 });
+    // Extra restriction: OWNER only for GDPR erasure
+    if (session.user.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Non autorise - Proprietaire uniquement' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -84,7 +86,7 @@ export async function DELETE(request: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: 'Utilisateur non trouve' }, { status: 404 });
     }
 
     // Anonymize instead of delete (preserve order history for accounting)
@@ -93,7 +95,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: userId },
       data: {
         email: anonymizedEmail,
-        name: 'Utilisateur supprimé',
+        name: 'Utilisateur supprime',
         phone: null,
         image: null,
         birthDate: null,
@@ -132,11 +134,11 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Données utilisateur anonymisées avec succès',
+      message: 'Donnees utilisateur anonymisees avec succes',
       anonymizedEmail,
     });
   } catch (error) {
-    console.error('GDPR erasure error:', error);
-    return NextResponse.json({ error: 'Erreur lors de l\'effacement' }, { status: 500 });
+    logger.error('GDPR erasure error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

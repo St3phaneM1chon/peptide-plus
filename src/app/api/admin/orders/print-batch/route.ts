@@ -1,20 +1,17 @@
+// SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { generateInvoiceHTML } from '@/lib/pdf-generator';
+import { logger } from '@/lib/logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'OWNER' && session.user.role !== 'EMPLOYEE')) {
-      return NextResponse.json({ error: 'Non autoris\u00e9' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { orderIds, type = 'invoice' } = body as { orderIds: string[]; type?: 'invoice' | 'packing_slip' };
 
     if (!Array.isArray(orderIds) || orderIds.length === 0 || orderIds.length > 50) {
-      return NextResponse.json({ error: 'S\u00e9lectionnez entre 1 et 50 commandes' }, { status: 400 });
+      return NextResponse.json({ error: 'Selectionnez entre 1 et 50 commandes' }, { status: 400 });
     }
 
     const orders = await prisma.order.findMany({
@@ -74,7 +71,7 @@ ${htmlPages.map((html, i) => `<div class="${i < htmlPages.length - 1 ? 'page-bre
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   } catch (error) {
-    console.error('Print batch error:', error);
-    return NextResponse.json({ error: 'Erreur lors de la g\u00e9n\u00e9ration' }, { status: 500 });
+    logger.error('Print batch error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

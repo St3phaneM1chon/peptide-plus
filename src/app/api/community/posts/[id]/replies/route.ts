@@ -20,6 +20,8 @@ import {
 } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 const createReplySchema = z.object({
   content: z.string().min(2, 'Reply must be at least 2 characters').max(5000, 'Reply must be at most 5,000 characters'),
@@ -111,6 +113,21 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id: postId } = await context.params;
+
+    // SEC-FIX: Rate limiting on reply creation to prevent spam/abuse
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/community/replies');
+    if (!rl.success) {
+      return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
+    }
+
+    // SEC-FIX: CSRF protection on mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
+    }
 
     // Content-Type validation
     const ctError = validateContentType(request);

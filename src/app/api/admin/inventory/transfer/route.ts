@@ -1,14 +1,11 @@
+// SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'OWNER' && session.user.role !== 'EMPLOYEE')) {
-      return NextResponse.json({ error: 'Non autoris\u00e9' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { formatId, quantity, fromLocation, toLocation, reason } = body as {
       formatId: string;
@@ -19,7 +16,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (!formatId || !quantity || quantity <= 0 || !fromLocation || !toLocation) {
-      return NextResponse.json({ error: 'Param\u00e8tres manquants' }, { status: 400 });
+      return NextResponse.json({ error: 'Parametres manquants' }, { status: 400 });
     }
 
     if (fromLocation === toLocation) {
@@ -50,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, transferId: transfer.id });
   } catch (error) {
-    console.error('Inventory transfer error:', error);
-    return NextResponse.json({ error: 'Erreur lors du transfert' }, { status: 500 });
+    logger.error('Inventory transfer error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

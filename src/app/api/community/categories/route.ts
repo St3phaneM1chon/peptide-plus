@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching forum categories:', error);
     return apiError(
       'Failed to fetch forum categories',
-      'Failed to fetch forum categories',
       ErrorCode.INTERNAL_ERROR,
       { request }
     );

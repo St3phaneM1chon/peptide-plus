@@ -1,13 +1,10 @@
+// SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'OWNER' && session.user.role !== 'EMPLOYEE')) {
-      return NextResponse.json({ error: 'Non autoris\u00e9' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { productName, category, attributes, language = 'fr' } = body as {
       productName: string;
@@ -22,14 +19,14 @@ export async function POST(request: NextRequest) {
 
     // Generate description using templates (no external API dependency)
     const attrList = attributes ? Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
-    const catContext = category ? ` dans la cat\u00e9gorie ${category}` : '';
+    const catContext = category ? ` dans la categorie ${category}` : '';
 
     const descriptions = {
       fr: {
-        short: `${productName}${catContext} - Peptide de recherche de haute qualit\u00e9. ${attrList ? `Caract\u00e9ristiques: ${attrList}.` : ''} Certificat d'analyse disponible.`,
-        full: `D\u00e9couvrez ${productName}, un peptide de recherche${catContext} soigneusement synth\u00e9tis\u00e9 selon les normes les plus strictes de l'industrie. ${attrList ? `\n\nSp\u00e9cifications: ${attrList}` : ''}\n\nChaque lot est accompagn\u00e9 d'un certificat d'analyse (COA) et d'un rapport HPLC attestant de la puret\u00e9 du produit. Stockage recommand\u00e9: r\u00e9frig\u00e9r\u00e9 \u00e0 -20\u00b0C.\n\n\u00c0 usage de recherche uniquement.`,
-        meta: `${productName} - Peptide de recherche haute qualit\u00e9 | BioCycle Peptides`,
-        metaDesc: `Achetez ${productName}${catContext}. Puret\u00e9 certifi\u00e9e, COA inclus. Livraison rapide au Canada. BioCycle Peptides.`,
+        short: `${productName}${catContext} - Peptide de recherche de haute qualite. ${attrList ? `Caracteristiques: ${attrList}.` : ''} Certificat d'analyse disponible.`,
+        full: `Decouvrez ${productName}, un peptide de recherche${catContext} soigneusement synthetise selon les normes les plus strictes de l'industrie. ${attrList ? `\n\nSpecifications: ${attrList}` : ''}\n\nChaque lot est accompagne d'un certificat d'analyse (COA) et d'un rapport HPLC attestant de la purete du produit. Stockage recommande: refrigere a -20\u00b0C.\n\nA usage de recherche uniquement.`,
+        meta: `${productName} - Peptide de recherche haute qualite | BioCycle Peptides`,
+        metaDesc: `Achetez ${productName}${catContext}. Purete certifiee, COA inclus. Livraison rapide au Canada. BioCycle Peptides.`,
       },
       en: {
         short: `${productName}${catContext ? ` in ${category}` : ''} - High-quality research peptide. ${attrList ? `Features: ${attrList}.` : ''} Certificate of Analysis included.`,
@@ -49,7 +46,7 @@ export async function POST(request: NextRequest) {
       language,
     });
   } catch (error) {
-    console.error('AI describe error:', error);
-    return NextResponse.json({ error: 'Erreur de g\u00e9n\u00e9ration' }, { status: 500 });
+    logger.error('AI describe error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

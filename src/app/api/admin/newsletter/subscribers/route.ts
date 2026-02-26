@@ -2,15 +2,18 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Newsletter Subscribers API
- * GET - List all newsletter subscribers (from NewsletterSubscriber)
+ * GET  - List all newsletter subscribers (from NewsletterSubscriber)
+ * POST - Add a single subscriber
  *
  * FIX: FLAW-002 - These routes were missing; the admin page fetched from them but they didn't exist.
+ * FIX: SECURITY - POST handler added (was missing, caused 404 from admin emails page)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { addSubscriberSchema } from '@/lib/validations/newsletter';
 
 export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
@@ -71,6 +74,75 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     });
     return NextResponse.json(
       { error: 'Failed to fetch subscribers', subscribers: [] },
+      { status: 500 }
+    );
+  }
+});
+
+/**
+ * POST /api/admin/newsletter/subscribers
+ * Add a single subscriber. Used by admin emails page "Add Contact" modal.
+ *
+ * FIX: SECURITY - This handler was missing, causing 404 when admins tried to add contacts.
+ */
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
+  try {
+    const body = await request.json();
+    const parsed = addSubscriberSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const { email, name, source, locale } = parsed.data;
+
+    // Check for existing subscriber
+    const existing = await prisma.newsletterSubscriber.findUnique({
+      where: { email },
+      select: { id: true, isActive: true, unsubscribedAt: true },
+    });
+
+    if (existing) {
+      if (existing.isActive && !existing.unsubscribedAt) {
+        return NextResponse.json(
+          { error: 'This email is already subscribed' },
+          { status: 409 }
+        );
+      }
+      // Re-activate previously unsubscribed contact
+      const updated = await prisma.newsletterSubscriber.update({
+        where: { id: existing.id },
+        data: {
+          isActive: true,
+          unsubscribedAt: null,
+          source: source || 'admin',
+          locale: locale || 'fr',
+          name: name || undefined,
+        },
+      });
+      return NextResponse.json({ subscriber: updated }, { status: 200 });
+    }
+
+    const subscriber = await prisma.newsletterSubscriber.create({
+      data: {
+        email,
+        name: name || null,
+        source: source || 'admin',
+        locale: locale || 'fr',
+        isActive: true,
+      },
+    });
+
+    return NextResponse.json({ subscriber }, { status: 201 });
+  } catch (error) {
+    logger.error('Admin newsletter subscriber POST error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json(
+      { error: 'Failed to add subscriber' },
       { status: 500 }
     );
   }

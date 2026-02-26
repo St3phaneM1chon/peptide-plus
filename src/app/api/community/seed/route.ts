@@ -5,10 +5,13 @@ export const dynamic = 'force-dynamic';
  *
  * Uses upsert by slug to be idempotent (safe to call multiple times).
  * Should be called once during initial setup or after DB reset.
+ *
+ * SEC-FIX: Requires OWNER authentication to prevent unauthorized seeding.
  */
 
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 
@@ -57,6 +60,15 @@ const DEFAULT_CATEGORIES = [
 
 export async function POST(request: NextRequest) {
   try {
+    // SEC-FIX: Require OWNER authentication — seeding categories is an admin-only action
+    const session = await auth();
+    if (!session?.user) {
+      return apiError('Authentication required', ErrorCode.UNAUTHORIZED, { request });
+    }
+    if (session.user.role !== 'OWNER') {
+      return apiError('Only the owner can seed forum categories', ErrorCode.FORBIDDEN, { request });
+    }
+
     const results = await Promise.all(
       DEFAULT_CATEGORIES.map((cat) =>
         prisma.forumCategory.upsert({

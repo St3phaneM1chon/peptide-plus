@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -166,6 +167,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
+
+    // SEC-FIX: CSRF protection on mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
+    }
 
     // Authentication required
     const session = await auth();
