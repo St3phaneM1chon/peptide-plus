@@ -51,8 +51,14 @@ export interface AdminGuardOptions {
 /** HTTP methods considered as mutations (require CSRF protection) */
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Rate limits per minute */
-const RATE_LIMIT_READ = 60;
+// FAILLE-009: Rate limits per minute for admin API routes.
+// These are applied via the in-memory checkRateLimit() from @/lib/security (not Redis-backed).
+// The in-memory store resets on server restart, which is acceptable for admin routes where
+// operators are authenticated. For Redis-backed rate limiting, @/lib/rate-limiter is used
+// by withApiHandler(); the admin guard uses its own per-key limiting tuned for admin workloads.
+// Reads: 100 req/min per IP+route (was 60) -- matches the general admin config in rate-limiter.ts
+// Writes: 30 req/min per IP+route -- intentionally stricter for mutation methods (POST/PUT/PATCH/DELETE)
+const RATE_LIMIT_READ = 100;
 const RATE_LIMIT_WRITE = 30;
 
 /** Rate limit window in milliseconds (1 minute) */

@@ -4,6 +4,10 @@
  * Use these functions on ALL user-supplied text before storing in the database.
  */
 
+// FAILLE-016 FIX: Delegate IP range checking to the canonical implementation in security.ts
+// which covers all private/reserved IPv4 and IPv6 ranges.
+import { isPrivateOrReservedIP } from '@/lib/security';
+
 /**
  * Escape HTML entities to prevent stored XSS.
  * Use for fields that will be rendered in HTML contexts (emails, admin views).
@@ -23,6 +27,9 @@ export function sanitizeText(input: string): string {
  * Validate and sanitize a URL. Returns null if the URL is invalid or uses
  * a forbidden protocol (only http: and https: are allowed).
  * Also blocks localhost/private IPs to prevent SSRF.
+ *
+ * FAILLE-016 FIX: Delegates to isPrivateOrReservedIP() which covers all RFC-defined
+ * private and reserved ranges (IPv4 + IPv6 including link-local, ULA, CGNAT, loopback).
  */
 export function sanitizeUrl(url: string): string | null {
   try {
@@ -31,18 +38,8 @@ export function sanitizeUrl(url: string): string | null {
     // Only allow HTTP(S)
     if (!['http:', 'https:'].includes(parsed.protocol)) return null;
 
-    // Block local/private addresses (SSRF prevention)
-    const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-    if (blockedHosts.includes(parsed.hostname)) return null;
-
-    const privateIPPatterns = [
-      /^10\./,
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-      /^192\.168\./,
-    ];
-    for (const pattern of privateIPPatterns) {
-      if (pattern.test(parsed.hostname)) return null;
-    }
+    // Block local/private/reserved addresses (SSRF prevention) — complete coverage
+    if (isPrivateOrReservedIP(parsed.hostname)) return null;
 
     return parsed.toString();
   } catch (error) {

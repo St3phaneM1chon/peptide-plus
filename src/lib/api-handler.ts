@@ -97,6 +97,13 @@ export function apiSuccess<T>(data: T, status = 200): NextResponse {
 /**
  * Wrap an API route handler with standardized error handling, auth, and validation.
  *
+ * @deprecated P1-11: This wrapper is used in only one route (api/user/change-password).
+ * For admin API routes, use `withAdminGuard` from `@/lib/admin-api-guard` instead,
+ * which provides defense-in-depth: auth + role check + CSRF + rate limiting + audit logging.
+ * For user-facing authenticated routes, use `withUserGuard` from `@/lib/user-api-guard`.
+ * New routes should NOT use withApiHandler. Existing usage in user/change-password will
+ * be migrated to withUserGuard in a future cleanup pass.
+ *
  * Usage:
  * ```ts
  * export const POST = withApiHandler(async (ctx) => {

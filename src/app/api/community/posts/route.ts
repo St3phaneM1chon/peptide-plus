@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import {
@@ -19,6 +20,12 @@ import {
 import { ErrorCode } from '@/lib/error-codes';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import type { Prisma } from '@prisma/client';
+
+const createPostSchema = z.object({
+  title: z.string().min(5, 'Title must be at least 5 characters').max(200, 'Title must be at most 200 characters'),
+  content: z.string().min(10, 'Content must be at least 10 characters').max(10000, 'Content must be at most 10,000 characters'),
+  categoryId: z.string().min(1, 'Category is required'),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -170,60 +177,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, categoryId } = body as {
-      title?: string;
-      content?: string;
-      categoryId?: string;
-    };
-
-    // Validation
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
-      return apiError('Title is required', ErrorCode.VALIDATION_ERROR, {
-        request,
-      });
-    }
-    if (title.trim().length < 5) {
+    const parsed = createPostSchema.safeParse(body);
+    if (!parsed.success) {
       return apiError(
-        'Title must be at least 5 characters',
+        parsed.error.errors[0].message,
         ErrorCode.VALIDATION_ERROR,
-        { request }
+        { details: parsed.error.errors.map(e => ({ path: e.path.join('.'), message: e.message })), request }
       );
     }
-    if (title.trim().length > 200) {
-      return apiError(
-        'Title must be at most 200 characters',
-        ErrorCode.VALIDATION_ERROR,
-        { request }
-      );
-    }
-    if (
-      !content ||
-      typeof content !== 'string' ||
-      content.trim().length === 0
-    ) {
-      return apiError('Content is required', ErrorCode.VALIDATION_ERROR, {
-        request,
-      });
-    }
-    if (content.trim().length < 10) {
-      return apiError(
-        'Content must be at least 10 characters',
-        ErrorCode.VALIDATION_ERROR,
-        { request }
-      );
-    }
-    if (content.trim().length > 10000) {
-      return apiError(
-        'Content must be at most 10,000 characters',
-        ErrorCode.VALIDATION_ERROR,
-        { request }
-      );
-    }
-    if (!categoryId || typeof categoryId !== 'string') {
-      return apiError('Category is required', ErrorCode.VALIDATION_ERROR, {
-        request,
-      });
-    }
+    const { title, content, categoryId } = parsed.data;
 
     // Verify category exists
     const category = await prisma.forumCategory.findUnique({

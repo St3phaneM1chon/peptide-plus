@@ -381,7 +381,11 @@ export const GET = withAdminGuard(async (request) => {
     const threeMonthsAgo = new Date(viewYear, viewMonth - 3, 1);
     const lastMonthEnd = new Date(viewYear, viewMonth, 0, 23, 59, 59);
 
-    const historicalExpenseLines = await prisma.journalLine.findMany({
+    // P-07 FIX: Use groupBy to aggregate historical expense totals per account in the DB
+    // instead of loading every individual journal line into JS memory.
+    // The previous findMany fetched potentially thousands of rows just to sum debit by account code.
+    const historicalExpenseByAccount = await prisma.journalLine.groupBy({
+      by: ['accountId'],
       where: {
         debit: { gt: 0 },
         account: { type: 'EXPENSE' },
@@ -391,8 +395,18 @@ export const GET = withAdminGuard(async (request) => {
           date: { gte: threeMonthsAgo, lte: lastMonthEnd },
         },
       },
-      select: { debit: true, account: { select: { code: true, name: true } } },
+      _sum: { debit: true },
     });
+
+    // Fetch account codes for the grouped accountIds (one targeted query instead of per-row joins)
+    const historicalAccountIds = historicalExpenseByAccount.map((r) => r.accountId);
+    const historicalAccounts = historicalAccountIds.length > 0
+      ? await prisma.chartOfAccount.findMany({
+          where: { id: { in: historicalAccountIds } },
+          select: { id: true, code: true },
+        })
+      : [];
+    const historicalAccountCodeMap = new Map(historicalAccounts.map((a) => [a.id, a.code]));
 
     // Build current month expenses by account code (from expensesByCategory)
     const currentExpensesByCode: Record<string, number> = {};
@@ -400,15 +414,13 @@ export const GET = withAdminGuard(async (request) => {
       currentExpensesByCode[cat.accountCode] = cat.total;
     }
 
-    // Build historical averages
-    const historicalTotals: Record<string, number> = {};
-    for (const line of historicalExpenseLines) {
-      const code = line.account.code;
-      historicalTotals[code] = (historicalTotals[code] || 0) + Number(line.debit);
-    }
+    // Build historical averages from the DB-aggregated totals (divide by 3 months)
     const historicalAverages: Record<string, number> = {};
-    for (const [code, total] of Object.entries(historicalTotals)) {
-      historicalAverages[code] = Math.round((total / 3) * 100) / 100;
+    for (const row of historicalExpenseByAccount) {
+      const code = historicalAccountCodeMap.get(row.accountId);
+      if (code) {
+        historicalAverages[code] = Math.round((Number(row._sum.debit ?? 0) / 3) * 100) / 100;
+      }
     }
 
     const expenseAnomalies = detectExpenseAnomalies(currentExpensesByCode, historicalAverages);

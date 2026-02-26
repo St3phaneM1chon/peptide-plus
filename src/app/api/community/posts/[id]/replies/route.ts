@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import {
@@ -19,6 +20,11 @@ import {
 } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const createReplySchema = z.object({
+  content: z.string().min(2, 'Reply must be at least 2 characters').max(5000, 'Reply must be at most 5,000 characters'),
+  parentReplyId: z.string().optional(),
+});
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -137,35 +143,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { content, parentReplyId } = body as {
-      content?: string;
-      parentReplyId?: string;
-    };
-
-    // Validation
-    if (
-      !content ||
-      typeof content !== 'string' ||
-      content.trim().length === 0
-    ) {
-      return apiError('Content is required', ErrorCode.VALIDATION_ERROR, {
-        request,
-      });
-    }
-    if (content.trim().length < 2) {
+    const parsed = createReplySchema.safeParse(body);
+    if (!parsed.success) {
       return apiError(
-        'Reply must be at least 2 characters',
+        parsed.error.errors[0].message,
         ErrorCode.VALIDATION_ERROR,
-        { request }
+        { details: parsed.error.errors.map(e => ({ path: e.path.join('.'), message: e.message })), request }
       );
     }
-    if (content.trim().length > 5000) {
-      return apiError(
-        'Reply must be at most 5,000 characters',
-        ErrorCode.VALIDATION_ERROR,
-        { request }
-      );
-    }
+    const { content, parentReplyId } = parsed.data;
 
     // If parentReplyId is provided, verify it exists and belongs to this post
     if (parentReplyId) {

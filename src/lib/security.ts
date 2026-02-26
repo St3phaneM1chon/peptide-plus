@@ -175,41 +175,89 @@ export function sanitizeInput(input: string): string {
 }
 
 /**
+ * Checks whether a hostname resolves to a private, reserved, or loopback IP address.
+ * Covers all RFC-defined private/reserved IPv4 and IPv6 ranges to prevent SSRF attacks.
+ *
+ * FAILLE-016 FIX (complete): Added IPv6 loopback (::1), link-local (fe80::/10),
+ * ULA (fc00::/7), CGNAT (100.64.0.0/10), and all other reserved ranges.
+ */
+export function isPrivateOrReservedIP(hostname: string): boolean {
+  // Normalize: strip IPv6 bracket notation (e.g. [::1] → ::1)
+  const host = hostname.startsWith('[') && hostname.endsWith(']')
+    ? hostname.slice(1, -1)
+    : hostname;
+
+  // ---- IPv4 blocked names and addresses ----
+  const blockedHostnames = ['localhost', '0.0.0.0'];
+  if (blockedHostnames.includes(host.toLowerCase())) return true;
+
+  const ipv4Patterns = [
+    /^127\./,                                      // IPv4 loopback (127.0.0.0/8)
+    /^10\./,                                       // RFC 1918 class A private
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./,             // RFC 1918 class B private
+    /^192\.168\./,                                 // RFC 1918 class C private
+    /^169\.254\./,                                 // Link-local / Azure IMDS (169.254.169.254)
+    /^100\.(6[4-9]|[7-9]\d|1[0-2]\d|127)\./,      // CGNAT / carrier-grade NAT (100.64.0.0/10)
+    /^198\.18\./,                                  // Benchmark testing (198.18.0.0/15)
+    /^198\.19\./,                                  // Benchmark testing (198.19.0.0/15)
+    /^198\.51\.100\./,                             // TEST-NET-2 (RFC 5737)
+    /^203\.0\.113\./,                              // TEST-NET-3 (RFC 5737)
+    /^192\.0\.2\./,                                // TEST-NET-1 (RFC 5737)
+    /^192\.88\.99\./,                              // 6to4 relay anycast (deprecated, RFC 7526)
+    /^240\./,                                      // Reserved (240.0.0.0/4)
+    /^255\.255\.255\.255$/,                        // Broadcast
+    /^0\./,                                        // This network (0.0.0.0/8)
+  ];
+
+  for (const pattern of ipv4Patterns) {
+    if (pattern.test(host)) return true;
+  }
+
+  // ---- IPv6 blocked addresses and ranges ----
+  const normalizedIPv6 = host.toLowerCase();
+
+  // ::1 — IPv6 loopback
+  if (normalizedIPv6 === '::1') return true;
+
+  // :: — unspecified address
+  if (normalizedIPv6 === '::') return true;
+
+  const ipv6Patterns = [
+    /^fe[89ab][0-9a-f]:/i,    // fe80::/10 — link-local (fe80–febf)
+    /^fc[0-9a-f]{2}:/i,       // fc00::/7 — ULA first half (fc00–fdff)
+    /^fd[0-9a-f]{2}:/i,       // fc00::/7 — ULA second half
+    /^::ffff:/i,               // IPv4-mapped (::ffff:0:0/96) — covers all IPv4-mapped
+    /^64:ff9b:/i,              // IPv4/IPv6 translation (64:ff9b::/96, RFC 6052)
+    /^100::/i,                 // Discard prefix (100::/64, RFC 6666)
+    /^2001:db8:/i,             // Documentation (2001:db8::/32, RFC 3849)
+    /^2001::/i,                // Teredo tunneling (2001::/32)
+    /^2002:/i,                 // 6to4 (2002::/16)
+  ];
+
+  for (const pattern of ipv6Patterns) {
+    if (pattern.test(normalizedIPv6)) return true;
+  }
+
+  return false;
+}
+
+/**
  * Valide et sanitize une URL
  */
 export function sanitizeUrl(url: string): string | null {
   try {
     const parsed = new URL(url);
-    
+
     // N'autoriser que HTTP(S)
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return null;
     }
-    
-    // Bloquer les URLs locales (SSRF)
-    const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-    if (blockedHosts.includes(parsed.hostname)) {
+
+    // Bloquer les IPs/hostnames privés, réservés ou locaux (SSRF) — FAILLE-016 COMPLETE FIX
+    if (isPrivateOrReservedIP(parsed.hostname)) {
       return null;
     }
-    
-    // Bloquer les IPs privées + link-local + Azure IMDS (FAILLE-016 FIX)
-    const privateIPPatterns = [
-      /^10\./,
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-      /^192\.168\./,
-      /^169\.254\./,                         // Link-local / Azure IMDS
-      /^100\.(6[4-9]|[7-9]\d|1[0-2]\d|127)\./, // Carrier-grade NAT
-      /^198\.51\.100\./,                     // TEST-NET-2
-      /^203\.0\.113\./,                      // TEST-NET-3
-      /^0\./,                                // This network
-    ];
-    
-    for (const pattern of privateIPPatterns) {
-      if (pattern.test(parsed.hostname)) {
-        return null;
-      }
-    }
-    
+
     return parsed.href;
   } catch (error) {
     console.error('[Security] URL validation failed:', error);

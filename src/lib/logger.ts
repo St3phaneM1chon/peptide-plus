@@ -105,6 +105,11 @@ type ApiHandler = (
  *
  *   async function handler(req: NextRequest) { ... }
  *   export const GET = requestLogger(handler);
+ *
+ * TODO (P1-13): This middleware is defined but not yet applied to any route.
+ * To enable request/response logging globally, wrap individual route handlers
+ * with requestLogger(), or integrate it into the Next.js middleware at
+ * src/middleware.ts for blanket coverage on all /api/* routes.
  */
 export function requestLogger(handler: ApiHandler): ApiHandler {
   return async (request: NextRequest, context?: unknown) => {
