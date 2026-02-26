@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-26 (Purchase Orders system + Email tracking pixels + A/B testing)
+# LAST UPDATED: 2026-02-26 (Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 191 | **API Routes**: 351 | **Prisma Models**: 111 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 185
+- **Pages**: 192 | **API Routes**: 356 | **Prisma Models**: 112 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 186
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -91,10 +91,10 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/comptabilite` + 27 sub-pages (ecritures, factures-clients, factures-fournisseurs, notes-credit, grand-livre, plan-comptable, rapprochement, banques, devises, saisie-rapide, recurrentes, previsions, recherche, rapports, exports, ocr, audit, calendrier-fiscal, declaration-tps-tvq, etats-financiers, immobilisations, import-bancaire, parametres, budget, cloture, aging, depenses) |
-| **API Routes** | 46+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, **payroll** (GET/POST -- stub with in-memory data, no Prisma model yet) |
-| **Models** | `ChartOfAccount` (self-ref parent/children), `JournalEntry`, `JournalLine`, `CustomerInvoice`, `CustomerInvoiceItem`, `SupplierInvoice` (orphan), `CreditNote`, `BankAccount`, `BankTransaction`, `BankRule`, `Budget`, `BudgetLine`, `Expense`, `TaxReport` (orphan), `FixedAsset`, `FixedAssetDepreciation`, `AuditTrail`, `RecurringEntryTemplate` (orphan), `AccountingPeriod` (orphan), `FiscalYear` (orphan), `AccountingSettings` (orphan), `AccountingAlert` (orphan), `DocumentAttachment` (orphan), `FiscalCalendarEvent` (orphan) |
-| **Lib** | 33 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates |
+| **Pages** | `/admin/comptabilite` + 28 sub-pages (ecritures, factures-clients, factures-fournisseurs, notes-credit, grand-livre, plan-comptable, rapprochement, banques, devises, saisie-rapide, recurrentes, previsions, recherche, rapports, rapports-personnalises, exports, ocr, audit, calendrier-fiscal, declaration-tps-tvq, etats-financiers, immobilisations, import-bancaire, parametres, budget, cloture, aging, depenses) |
+| **API Routes** | 51+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, **payroll** (GET/POST -- stub), **reports/custom** (GET/POST), **reports/custom/[id]** (GET/PUT/DELETE), **reports/custom/[id]/run** (POST), **reports/custom/[id]/export** (GET), **reports/columns** (GET) |
+| **Models** | `ChartOfAccount` (self-ref parent/children), `JournalEntry`, `JournalLine`, `CustomerInvoice`, `CustomerInvoiceItem`, `SupplierInvoice` (orphan), `CreditNote`, `BankAccount`, `BankTransaction`, `BankRule`, `Budget`, `BudgetLine`, `Expense`, `TaxReport` (orphan), `FixedAsset`, `FixedAssetDepreciation`, `AuditTrail`, `RecurringEntryTemplate` (orphan), `AccountingPeriod` (orphan), `FiscalYear` (orphan), `AccountingSettings` (orphan), `AccountingAlert` (orphan), `DocumentAttachment` (orphan), `FiscalCalendarEvent` (orphan), `CustomReport` (orphan) |
+| **Lib** | 34 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **report-engine** |
 | **Affects** | Orders (auto journal entries on sale/refund), Payments (stripe-sync), Tax (TPS/TVQ declarations), Fixed Assets (depreciation) |
 | **NOTE** | Heavily uses soft references. JournalEntry.orderId is NOT a FK. BankTransaction.matchedEntryId is NOW a real FK to JournalEntry (SetNull). Most accounting-to-commerce connections are soft. |
 

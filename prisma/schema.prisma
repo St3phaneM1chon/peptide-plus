@@ -4300,6 +4300,32 @@ model CustomFieldValue {
   @@index([updatedAt])
 }
 
+// DB-007: Custom Reports Builder
+model CustomReport {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  type        String    // INCOME_STATEMENT, BALANCE_SHEET, CASH_FLOW, AR_AGING, AP_AGING, TAX_SUMMARY, JOURNAL_DETAIL, TRIAL_BALANCE, CUSTOM
+  config      String    @db.Text // JSON report configuration (columns, filters, grouping, sorting)
+  isTemplate  Boolean   @default(false)
+  isPublic    Boolean   @default(false) // Visible to all admins
+  createdBy   String?
+  schedule    String?   // Cron expression for automated delivery (null = manual only)
+  recipients  String?   // JSON array of email addresses for scheduled delivery
+  lastRunAt   DateTime?
+  lastRunData String?   @db.Text // Cached last run results (JSON)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([type])
+  @@index([createdBy])
+  @@index([isTemplate])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
 // DB-006: Workflow automation engine
 model Workflow {
   id          String        @id @default(cuid())
@@ -4792,5 +4818,84 @@ model EstimateItem {
   estimate        Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
 
   @@index([estimateId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// Time Tracking (Roadmap 3-3)
+// =============================================================================
+
+model TimeEntry {
+  id             String    @id @default(cuid())
+  employeeId     String?
+  userId         String?
+  userName       String
+  date           DateTime  @default(now())
+  startTime      DateTime?
+  endTime        DateTime?
+  hoursWorked    Decimal   @db.Decimal(6, 2)
+  description    String?
+  projectId      String?
+  projectName    String?
+  taskCategory   String?
+  isBillable     Boolean   @default(false)
+  billableRate   Decimal?  @db.Decimal(8, 2)
+  status         String    @default("DRAFT")
+  approvedBy     String?
+  approvedAt     DateTime?
+  rejectedReason String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@index([employeeId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@index([projectName])
+  @@index([deletedAt])
+}
+
+model TimeProject {
+  id           String    @id @default(cuid())
+  name         String
+  code         String    @unique
+  description  String?
+  clientName   String?
+  budget       Decimal?  @db.Decimal(12, 2)
+  budgetAmount Decimal?  @db.Decimal(12, 2)
+  defaultRate  Decimal?  @db.Decimal(8, 2)
+  status       String    @default("ACTIVE")
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([code])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model BatchJob {
+  id             String    @id @default(cuid())
+  type           String // BATCH_JOURNAL_ENTRIES, BATCH_INVOICES, BATCH_PAYMENTS, BATCH_EXPENSES, BATCH_STATUS_UPDATE, BATCH_EXPORT, BATCH_DELETE
+  status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+  totalItems     Int       @default(0)
+  processedItems Int       @default(0)
+  successItems   Int       @default(0)
+  failedItems    Int       @default(0)
+  inputData      String?   @db.Text // JSON input payload
+  resultData     String?   @db.Text // JSON results
+  errorLog       String?   @db.Text // JSON error details
+  createdBy      String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([type])
+  @@index([status])
   @@index([createdAt])
 }
