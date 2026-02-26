@@ -381,3 +381,47 @@ export type {
   IntercoTransactionType,
   IntercoTransactionStatus,
 } from './multi-entity.service';
+
+// PHASE 12: RS&DE (Scientific Research & Experimental Development) Tax Credits
+export {
+  listProjects as listRSDeProjects,
+  getProject as getRSDeProject,
+  createProject as createRSDeProject,
+  updateProject as updateRSDeProject,
+  deleteProject as deleteRSDeProject,
+  listExpenses as listRSDeExpenses,
+  createExpense as createRSDeExpense,
+  deleteExpense as deleteRSDeExpense,
+  calculateCredits,
+  prepareT661,
+  checkEligibility,
+  suggestCategory as suggestRSDeCategory,
+  getDashboardSummary as getRSDeSummary,
+  CATEGORY_LABELS as RSDE_CATEGORY_LABELS,
+} from './rsde.service';
+export type {
+  RSDeProjectStatus,
+  RSDeExpenseCategory,
+  CreateProjectInput as CreateRSDeProjectInput,
+  CreateExpenseInput as CreateRSDeExpenseInput,
+  CreditCalculation,
+  T661FormData,
+  DashboardSummary as RSDeDashboardSummary,
+} from './rsde.service';
+
+// PWA Service
+export {
+  initInstallPrompt,
+  promptInstall,
+  canInstall,
+  isOnline,
+  onOnlineStatusChange,
+  getSyncQueue,
+  addToSyncQueue,
+  processSyncQueue,
+  getOfflineStatus,
+  registerServiceWorker,
+  requestNotificationPermission,
+  getStorageEstimate,
+  clearCaches,
+} from './pwa.service';

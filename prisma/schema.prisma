@@ -5228,3 +5228,86 @@ model StockTransferItem {
   @@index([transferId])
   @@index([productId])
 }
+
+// =============================================================================
+// RS&DE (Scientific Research & Experimental Development) Tax Credits
+// =============================================================================
+
+enum RSDeProjectStatus {
+  DRAFT
+  ACTIVE
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum RSDeExpenseCategory {
+  SALARY
+  MATERIALS
+  SUBCONTRACTOR
+  CAPITAL
+  OVERHEAD
+}
+
+model RSDeProject {
+  id                         String            @id @default(cuid())
+  name                       String
+  description                String?           @db.Text
+  fiscalYear                 Int
+  startDate                  DateTime?
+  endDate                    DateTime?
+  status                     RSDeProjectStatus @default(DRAFT)
+  technologicalUncertainty   String?           @db.Text
+  technologicalAdvancement   String?           @db.Text
+  systematicInvestigation    String?           @db.Text
+  isSpcc                     Boolean           @default(true)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
+  expenses     RSDeExpense[]
+  calculations RSDeCalculation[]
+
+  @@index([fiscalYear])
+  @@index([status])
+}
+
+model RSDeExpense {
+  id               String              @id @default(cuid())
+  projectId        String
+  category         RSDeExpenseCategory
+  description      String
+  amount           Decimal             @db.Decimal(12, 2)
+  date             DateTime
+  employeeName     String?
+  hoursWorked      Decimal?            @db.Decimal(8, 2)
+  hourlyRate       Decimal?            @db.Decimal(8, 2)
+  isEligible       Boolean             @default(true)
+  eligibilityNotes String?
+  createdAt        DateTime            @default(now())
+
+  project RSDeProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([category])
+  @@index([date])
+}
+
+model RSDeCalculation {
+  id              String   @id @default(cuid())
+  projectId       String
+  fiscalYear      Int
+  totalEligible   Decimal  @db.Decimal(14, 2)
+  federalRate     Decimal  @db.Decimal(5, 4)
+  federalCredit   Decimal  @db.Decimal(14, 2)
+  provincialRate  Decimal  @db.Decimal(5, 4)
+  provincialCredit Decimal @db.Decimal(14, 2)
+  totalCredit     Decimal  @db.Decimal(14, 2)
+  spccLimit       Decimal  @db.Decimal(14, 2)
+  isRefundable    Boolean  @default(true)
+  calculatedAt    DateTime @default(now())
+
+  project RSDeProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([fiscalYear])
+}

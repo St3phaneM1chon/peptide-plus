@@ -8769,5 +8769,119 @@
       "listWebhooks": "List all registered webhook endpoints with delivery counts and available events.",
       "createWebhook": "Register a new webhook endpoint. Returns a signing secret that should be saved securely."
     }
+  },
+  "mobile": {
+    "title": "Mobile Accounting",
+    "dashboard": {
+      "title": "Dashboard",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "profit": "Profit",
+      "outstanding": "Outstanding Invoices",
+      "recentTransactions": "Recent Transactions"
+    },
+    "receipts": {
+      "title": "Receipt Capture",
+      "takePhoto": "Take Photo",
+      "upload": "Upload",
+      "processing": "OCR Processing...",
+      "vendor": "Vendor",
+      "amount": "Amount",
+      "date": "Date",
+      "category": "Category",
+      "save": "Save"
+    },
+    "expenses": {
+      "title": "Expenses",
+      "quickAdd": "Quick Add",
+      "amount": "Amount",
+      "category": "Category",
+      "note": "Note",
+      "recent": "Recent",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month"
+    },
+    "timeTracker": {
+      "title": "Time Tracker",
+      "start": "Start",
+      "stop": "Stop",
+      "project": "Project",
+      "todayTotal": "Today Total",
+      "weekTotal": "Week Total",
+      "noProject": "No Project"
+    },
+    "settings": {
+      "title": "Settings",
+      "notifications": "Notifications",
+      "overdueInvoices": "Overdue Invoices",
+      "taxReminders": "Tax Reminders",
+      "dailySummary": "Daily Summary",
+      "paymentReceived": "Payment Received",
+      "offline": "Offline Mode",
+      "storage": "Storage",
+      "clearCache": "Clear Cache"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "expenses": "Expenses",
+      "capture": "Receipts",
+      "timer": "Timer",
+      "more": "More"
+    },
+    "offline": {
+      "banner": "Offline Mode",
+      "syncing": "Syncing...",
+      "syncComplete": "Synced",
+      "pendingChanges": "pending changes"
+    },
+    "invoice": {
+      "title": "New Invoice",
+      "client": "Client",
+      "addLine": "Add Line",
+      "description": "Description",
+      "amount": "Amount",
+      "tax": "Tax",
+      "total": "Total",
+      "send": "Send"
+    }
+  },
+  "rsde": {
+    "title": "SR&ED Tax Credits",
+    "projects": "Projects",
+    "expenses": "Expenses",
+    "calculator": "Calculator",
+    "t661": "T661 Form",
+    "dashboard": "Dashboard",
+    "newProject": "New Project",
+    "projectName": "Project Name",
+    "fiscalYear": "Fiscal Year",
+    "status": "Status",
+    "totalEligible": "Total Eligible",
+    "federalCredit": "Federal Credit",
+    "provincialCredit": "Provincial Credit (CRIC)",
+    "totalCredits": "Total Credits",
+    "calculate": "Calculate",
+    "generate": "Generate",
+    "spcc": "SPCC",
+    "categories": {
+      "salary": "Salaries",
+      "materials": "Materials",
+      "subcontractor": "Subcontracting",
+      "capital": "Capital",
+      "overhead": "Overhead"
+    },
+    "eligibility": {
+      "uncertainty": "Technological Uncertainty",
+      "advancement": "Technological Advancement",
+      "investigation": "Systematic Investigation"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "active": "Active",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
   }
 }

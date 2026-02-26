@@ -193,6 +193,7 @@ const pathToSection: Record<string, AccountingSectionId> = {
   '/admin/comptabilite/calendrier-fiscal': 'compliance',
   '/admin/comptabilite/declaration-tps-tvq': 'compliance',
   '/admin/comptabilite/multi-entite': 'compliance',
+  '/admin/comptabilite/rsde': 'compliance',
 };
 
 /** Get section ID from pathname */

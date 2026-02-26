@@ -120,6 +120,18 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Comptabilité Mobile",
+      "short_name": "Compta",
+      "description": "Tableau de bord comptable mobile",
+      "url": "/mobile/dashboard",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "related_applications": [],

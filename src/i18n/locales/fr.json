@@ -8931,5 +8931,119 @@
       "listWebhooks": "Lister tous les endpoints webhook enregistres avec les compteurs de livraison et evenements disponibles.",
       "createWebhook": "Enregistrer un nouveau endpoint webhook. Retourne un secret de signature a conserver en securite."
     }
+  },
+  "mobile": {
+    "title": "Comptabilité Mobile",
+    "dashboard": {
+      "title": "Tableau de Bord",
+      "revenue": "Revenus",
+      "expenses": "Dépenses",
+      "profit": "Profit",
+      "outstanding": "Factures en attente",
+      "recentTransactions": "Transactions récentes"
+    },
+    "receipts": {
+      "title": "Capture Reçus",
+      "takePhoto": "Prendre Photo",
+      "upload": "Téléverser",
+      "processing": "Traitement OCR...",
+      "vendor": "Fournisseur",
+      "amount": "Montant",
+      "date": "Date",
+      "category": "Catégorie",
+      "save": "Sauvegarder"
+    },
+    "expenses": {
+      "title": "Dépenses",
+      "quickAdd": "Ajout Rapide",
+      "amount": "Montant",
+      "category": "Catégorie",
+      "note": "Note",
+      "recent": "Récentes",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "thisMonth": "Ce mois"
+    },
+    "timeTracker": {
+      "title": "Chronomètre",
+      "start": "Démarrer",
+      "stop": "Arrêter",
+      "project": "Projet",
+      "todayTotal": "Total aujourd'hui",
+      "weekTotal": "Total semaine",
+      "noProject": "Sans projet"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "notifications": "Notifications",
+      "overdueInvoices": "Factures en retard",
+      "taxReminders": "Rappels fiscaux",
+      "dailySummary": "Résumé quotidien",
+      "paymentReceived": "Paiement reçu",
+      "offline": "Mode hors-ligne",
+      "storage": "Stockage",
+      "clearCache": "Vider le cache"
+    },
+    "nav": {
+      "dashboard": "Tableau",
+      "expenses": "Dépenses",
+      "capture": "Reçus",
+      "timer": "Chrono",
+      "more": "Plus"
+    },
+    "offline": {
+      "banner": "Mode hors-ligne",
+      "syncing": "Synchronisation...",
+      "syncComplete": "Synchronisé",
+      "pendingChanges": "changements en attente"
+    },
+    "invoice": {
+      "title": "Nouvelle Facture",
+      "client": "Client",
+      "addLine": "Ajouter ligne",
+      "description": "Description",
+      "amount": "Montant",
+      "tax": "Taxes",
+      "total": "Total",
+      "send": "Envoyer"
+    }
+  },
+  "rsde": {
+    "title": "Crédits R&D RS&DE",
+    "projects": "Projets",
+    "expenses": "Dépenses",
+    "calculator": "Calculateur",
+    "t661": "Formulaire T661",
+    "dashboard": "Tableau de bord",
+    "newProject": "Nouveau projet",
+    "projectName": "Nom du projet",
+    "fiscalYear": "Année fiscale",
+    "status": "Statut",
+    "totalEligible": "Total éligible",
+    "federalCredit": "Crédit fédéral",
+    "provincialCredit": "Crédit provincial (CRIC)",
+    "totalCredits": "Crédits totaux",
+    "calculate": "Calculer",
+    "generate": "Générer",
+    "spcc": "SPCC",
+    "categories": {
+      "salary": "Salaires",
+      "materials": "Matériaux",
+      "subcontractor": "Sous-traitance",
+      "capital": "Capital",
+      "overhead": "Frais généraux"
+    },
+    "eligibility": {
+      "uncertainty": "Incertitude technologique",
+      "advancement": "Avancement technologique",
+      "investigation": "Investigation systématique"
+    },
+    "statuses": {
+      "draft": "Brouillon",
+      "active": "Actif",
+      "submitted": "Soumis",
+      "approved": "Approuvé",
+      "rejected": "Rejeté"
+    }
   }
 }

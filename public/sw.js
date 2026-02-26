@@ -165,4 +165,38 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+  if (event.data && event.data.type === 'SYNC_QUEUE') {
+    // Trigger sync queue processing from PWA service
+    console.log('[SW] Sync queue triggered');
+  }
+});
+
+// Background sync for offline POST requests
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-queue') {
+    event.waitUntil(
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: 'SYNC_QUEUE' }));
+      })
+    );
+  }
+});
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : { title: 'BioCycle Compta', body: 'Nouvelle notification' };
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'BioCycle Compta', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-96.png',
+      data: { url: data.url || '/mobile/dashboard' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/mobile/dashboard';
+  event.waitUntil(self.clients.openWindow(url));
 });
