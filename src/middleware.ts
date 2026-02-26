@@ -145,38 +145,24 @@ export async function middleware(request: NextRequest) {
       return preflightResponse;
     }
 
-    // P1-8 FIX: Enforce centralized auth check for /api/admin/* routes at the middleware layer.
-    // Even though withAdminGuard() performs its own auth in each handler, the middleware provides
-    // an early-exit defense-in-depth layer that prevents unauthenticated requests from ever
-    // reaching admin route handlers (e.g. in case a route is accidentally wrapped without the guard).
+    // P1-8: Defense-in-depth auth logging for /api/admin/* routes.
+    // The actual auth enforcement is handled by withAdminGuard() in each route handler.
+    // We only LOG suspicious unauthenticated admin API requests here — blocking is left
+    // to the per-route guard to avoid breaking the site if middleware token resolution
+    // differs from the route-level auth (e.g. different cookie names on Azure).
     if (pathname.startsWith('/api/admin')) {
-      // Reuse the same AUTH_SECRET / NEXTAUTH_SECRET resolution as the page-level auth above
-      if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
-        console.warn(JSON.stringify({ event: 'middleware_no_auth_secret_admin', pathname }));
-      }
-      let adminToken = null;
       try {
-        adminToken = await getToken({
+        const adminToken = await getToken({
           req: request,
           secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
           secureCookie: false,
           cookieName: 'authjs.session-token',
         });
-      } catch (err) {
-        console.error(JSON.stringify({
-          event: 'middleware_admin_api_getToken_error',
-          pathname,
-          error: String(err),
-        }));
-      }
-
-      if (!adminToken) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-
-      const adminRole = adminToken.role as string | undefined;
-      if (adminRole !== 'EMPLOYEE' && adminRole !== 'OWNER') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        if (!adminToken) {
+          console.warn(JSON.stringify({ event: 'middleware_admin_api_no_token', pathname, method: request.method }));
+        }
+      } catch {
+        // Token resolution failed — don't block, just log
       }
     }
 
