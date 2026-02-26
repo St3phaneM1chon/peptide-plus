@@ -5,6 +5,7 @@
 
 import { logger } from '@/lib/logger';
 import { addEmailTracking } from '@/lib/email/tracking';
+import { prisma } from '@/lib/db';
 
 // Types pour les emails
 export interface EmailRecipient {
@@ -54,6 +55,52 @@ const DEFAULT_FROM: EmailRecipient = {
 };
 
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com';
+
+// ---------------------------------------------------------------------------
+// DB-backed email config with TTL cache
+// ---------------------------------------------------------------------------
+
+interface EmailConfig {
+  provider: string;
+  senderEmail: string;
+  senderName: string;
+  replyEmail: string;
+}
+
+let _configCache: { config: EmailConfig; expiresAt: number } | null = null;
+const CONFIG_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function getEmailConfig(): Promise<EmailConfig> {
+  if (_configCache && Date.now() < _configCache.expiresAt) {
+    return _configCache.config;
+  }
+
+  try {
+    const settings = await prisma.emailSettings.findMany();
+    const map: Record<string, string> = {};
+    for (const s of settings) map[s.key] = s.value;
+
+    const config: EmailConfig = {
+      provider: map['email.provider']?.toLowerCase() || process.env.EMAIL_PROVIDER || 'log',
+      senderEmail: map['email.senderEmail'] || process.env.SMTP_FROM || 'noreply@biocyclepeptides.com',
+      senderName: map['email.senderName'] || 'BioCycle Peptides',
+      replyEmail: map['email.replyEmail'] || process.env.SMTP_FROM || '',
+    };
+
+    _configCache = { config, expiresAt: Date.now() + CONFIG_TTL_MS };
+    return config;
+  } catch (err) {
+    logger.warn('[EmailService] Failed to read EmailSettings from DB, using env vars', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return {
+      provider: process.env.EMAIL_PROVIDER || 'log',
+      senderEmail: process.env.SMTP_FROM || 'noreply@biocyclepeptides.com',
+      senderName: 'BioCycle Peptides',
+      replyEmail: process.env.SMTP_FROM || '',
+    };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Plain text fallback: strip HTML to generate text/plain MIME part
@@ -157,7 +204,10 @@ const MAX_HTML_SIZE = 20_000_000; // 20 MB – SendGrid payload limit
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
   // AMELIORATION: Use crypto.randomUUID instead of Math.random for request IDs
   const requestId = crypto.randomUUID().replace(/-/g, '');
-  const provider = process.env.EMAIL_PROVIDER || 'log'; // 'resend', 'sendgrid', 'smtp', 'log'
+
+  // Read config from DB (cached 5min) with env var fallback
+  const config = await getEmailConfig();
+  const provider = config.provider;
 
   // Subject length validation (SMTP limit)
   options.subject = options.subject.slice(0, MAX_SUBJECT_LENGTH);
@@ -174,8 +224,11 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 
   const emailData = {
     ...options,
-    from: options.from || DEFAULT_FROM,
-    replyTo: sanitizeReplyTo(options.replyTo),
+    from: options.from || {
+      email: config.senderEmail,
+      name: config.senderName,
+    },
+    replyTo: sanitizeReplyTo(options.replyTo || config.replyEmail || undefined),
   };
 
   // Rate limit check (Faille #3)

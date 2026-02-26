@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef, useMemo, useCallback } from 'react';
-import { Send, Paperclip, X, Bold, Italic, Underline, Save, File, Loader2 } from 'lucide-react';
+import { Send, X, Save, File } from 'lucide-react';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 import { useI18n } from '@/i18n/client';
 import { Button } from '@/components/admin';
+import { EmailToolbar } from '@/components/admin/EmailToolbar';
 import { addCSRFHeader } from '@/lib/csrf';
 
 interface EmailComposerProps {
@@ -62,11 +63,6 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
   const totalAttachmentSize = useMemo(() => {
     return attachments.reduce((sum, a) => sum + a.size, 0);
   }, [attachments]);
-
-  const execCommand = (cmd: string) => {
-    document.execCommand(cmd, false);
-    bodyRef.current?.focus();
-  };
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -297,46 +293,25 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
       </div>
 
       {/* Formatting toolbar */}
-      <div className="flex items-center gap-1 px-4 py-1.5 border-b border-slate-100 flex-shrink-0">
-        <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold" aria-label="Bold">
-          <Bold className="w-3.5 h-3.5 text-slate-600" />
-        </button>
-        <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic" aria-label="Italic">
-          <Italic className="w-3.5 h-3.5 text-slate-600" />
-        </button>
-        <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline" aria-label="Underline">
-          <Underline className="w-3.5 h-3.5 text-slate-600" />
-        </button>
-        <div className="w-px h-4 bg-slate-200 mx-1" />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="p-1.5 rounded hover:bg-slate-100 cursor-pointer disabled:opacity-50"
-          title={t('admin.emailComposer.attachment')}
-          aria-label={t('admin.emailComposer.attachment')}
-        >
-          {uploading ? (
-            <Loader2 className="w-3.5 h-3.5 text-slate-600 animate-spin" />
-          ) : (
-            <Paperclip className="w-3.5 h-3.5 text-slate-600" />
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          aria-label="Attach file"
-          multiple
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif"
-          onChange={handleFileSelect}
-        />
-        {attachments.length > 0 && (
+      <EmailToolbar
+        editorRef={bodyRef}
+        onAttach={() => fileInputRef.current?.click()}
+        uploading={uploading}
+        trailing={attachments.length > 0 ? (
           <span className="text-[10px] text-slate-400 ml-1">
             {attachments.length} fichier(s) - {formatFileSize(totalAttachmentSize)}
           </span>
-        )}
-      </div>
+        ) : undefined}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        aria-label="Attach file"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif"
+        onChange={handleFileSelect}
+      />
 
       {/* Attachment chips */}
       {attachments.length > 0 && (

@@ -12,3 +12,4 @@ export { FormField, Input, Textarea } from './FormField';
 export { MediaUploader } from './MediaUploader';
 export { MediaGalleryUploader, type GalleryImage } from './MediaGalleryUploader';
 export { WebNavigator } from './WebNavigator';
+export { EmailToolbar } from './EmailToolbar';

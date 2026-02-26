@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  ArrowLeft, Save, Send, Eye, Code, Bold, Italic, Underline,
-  Type, Heading1, List, Link2, Variable,
+  ArrowLeft, Save, Send, Eye, Code,
+  Type, Variable,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 import { addCSRFHeader } from '@/lib/csrf';
+import { EmailToolbar } from '@/components/admin/EmailToolbar';
 
 interface CampaignEditorProps {
   campaignId: string;
@@ -120,11 +121,6 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
     }
   };
 
-  const execCommand = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    editorRef.current?.focus();
-  };
-
   const insertVariable = (varName: string) => {
     if (mode === 'visual' && editorRef.current) {
       document.execCommand('insertText', false, `{{${varName}}}`);
@@ -230,69 +226,48 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
 
       {/* Mode tabs + toolbar */}
       {isEditable && mode !== 'preview' && (
-        <div className="flex items-center gap-1 px-4 py-1.5 border-b border-slate-100 flex-shrink-0">
-          {/* Mode toggle */}
-          <button
-            onClick={() => {
-              if (mode === 'visual' && editorRef.current) {
-                setHtmlContent(editorRef.current.innerHTML);
-              }
-              setMode(mode === 'visual' ? 'code' : 'visual');
-            }}
-            className={`px-2 py-1 text-[10px] font-medium rounded ${mode === 'code' ? 'bg-slate-200 text-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
-            aria-label="Basculer entre mode visuel et HTML"
-          >
-            <Code className="h-3 w-3 inline mr-1" />{mode === 'code' ? 'HTML' : 'Visual'}
-          </button>
-          <div className="w-px h-4 bg-slate-200 mx-1" />
-
-          {mode === 'visual' && (
-            <>
-              <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold" aria-label="Gras">
-                <Bold className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-              <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic" aria-label="Italique">
-                <Italic className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-              <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline" aria-label="Souligner">
-                <Underline className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-              <div className="w-px h-4 bg-slate-200 mx-1" />
-              <button type="button" onClick={() => execCommand('formatBlock', 'h1')} className="p-1.5 rounded hover:bg-slate-100" title="Heading" aria-label="Titre">
-                <Heading1 className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-              <button type="button" onClick={() => execCommand('insertUnorderedList')} className="p-1.5 rounded hover:bg-slate-100" title="List" aria-label="Liste">
-                <List className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-              <button type="button" onClick={() => {
-                const url = prompt('URL:');
-                if (url) execCommand('createLink', url);
-              }} className="p-1.5 rounded hover:bg-slate-100" title="Link" aria-label="Inserer un lien">
-                <Link2 className="w-3.5 h-3.5 text-slate-600" />
-              </button>
-            </>
-          )}
-
-          <div className="flex-1" />
-
-          {/* Variable insertion */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 rounded" aria-label="Inserer une variable">
-              <Variable className="h-3 w-3" /> Variables
+        <>
+          {/* Mode toggle row */}
+          <div className="flex items-center gap-1 px-4 py-1 border-b border-slate-100 flex-shrink-0">
+            <button
+              onClick={() => {
+                if (mode === 'visual' && editorRef.current) {
+                  setHtmlContent(editorRef.current.innerHTML);
+                }
+                setMode(mode === 'visual' ? 'code' : 'visual');
+              }}
+              className={`px-2 py-1 text-[10px] font-medium rounded ${mode === 'code' ? 'bg-slate-200 text-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
+              aria-label="Basculer entre mode visuel et HTML"
+            >
+              <Code className="h-3 w-3 inline mr-1" />{mode === 'code' ? 'HTML' : 'Visual'}
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
-              {['prenom', 'email', 'nom', 'company'].map(v => (
-                <button
-                  key={v}
-                  onClick={() => insertVariable(v)}
-                  className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
-                >
-                  {`{{${v}}}`}
-                </button>
-              ))}
-            </div>
           </div>
-        </div>
+
+          {/* Full toolbar (visual mode only) */}
+          {mode === 'visual' && (
+            <EmailToolbar
+              editorRef={editorRef}
+              trailing={
+                <div className="relative group">
+                  <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 rounded" aria-label="Inserer une variable">
+                    <Variable className="h-3 w-3" /> Variables
+                  </button>
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
+                    {['prenom', 'email', 'nom', 'company'].map(v => (
+                      <button
+                        key={v}
+                        onClick={() => insertVariable(v)}
+                        className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                      >
+                        {`{{${v}}}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              }
+            />
+          )}
+        </>
       )}
 
       {/* Editor area */}
