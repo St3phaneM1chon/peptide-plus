@@ -2058,28 +2058,40 @@ model Purchase {
 }
 
 model PurchaseOrder {
-  id                String              @id @default(cuid())
-  poNumber          String              @unique
+  id                String                 @id @default(cuid())
+  poNumber          String                 @unique
   supplierId        String?
   supplierName      String
   supplierEmail     String?
-  department        String              @default("OPS")
-  status            String              @default("DRAFT")
+  supplierAddress   String?
+  department        String                 @default("OPS")
+  status            String                 @default("DRAFT") // DRAFT, SENT, CONFIRMED, PARTIALLY_RECEIVED, RECEIVED, INVOICED, CANCELLED
+  orderDate         DateTime               @default(now())
+  expectedDate      DateTime?
+  receivedDate      DateTime?
   requestedBy       String?
   approvedBy        String?
   approvedAt        DateTime?
-  subtotal          Decimal             @default(0) @db.Decimal(12, 2)
-  taxTps            Decimal             @default(0) @db.Decimal(12, 2)
-  taxTvq            Decimal             @default(0) @db.Decimal(12, 2)
-  total             Decimal             @default(0) @db.Decimal(12, 2)
-  currency          String              @default("CAD")
+  subtotal          Decimal                @default(0) @db.Decimal(12, 2)
+  taxTps            Decimal                @default(0) @db.Decimal(12, 2)
+  taxTvq            Decimal                @default(0) @db.Decimal(12, 2)
+  total             Decimal                @default(0) @db.Decimal(12, 2)
+  currency          String                 @default("CAD")
   notes             String?
+  internalNotes     String?
+  sentAt            DateTime?
+  cancelledAt       DateTime?
+  cancelledBy       String?
+  cancelReason      String?
   supplierInvoiceId String?
+  createdBy         String?
   orderedAt         DateTime?
   receivedAt        DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  deletedAt         DateTime?
   items             PurchaseOrderItem[]
+  receipts          PurchaseOrderReceipt[]
 
   @@index([approvedBy])
   @@index([department])
@@ -2087,28 +2099,62 @@ model PurchaseOrder {
   @@index([status])
   @@index([supplierInvoiceId])
   @@index([supplierId])
+  @@index([supplierName])
+  @@index([orderDate])
+  @@index([poNumber])
+  @@index([deletedAt])
   @@index([createdAt])
   @@index([updatedAt])
 }
 
 model PurchaseOrderItem {
-  id              String        @id @default(cuid())
-  purchaseOrderId String
-  description     String
-  productId       String?
-  formatId        String?
-  sku             String?
-  quantity        Int
-  unitCost        Decimal       @db.Decimal(12, 2)
-  total           Decimal       @db.Decimal(12, 2)
-  receivedQty     Int           @default(0)
-  createdAt       DateTime      @default(now())
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  productId        String?
+  productName      String        @default("")
+  description      String
+  formatId         String?
+  sku              String?
+  quantity         Decimal       @db.Decimal(10, 2)
+  quantityReceived Decimal       @default(0) @db.Decimal(10, 2)
+  unitCost         Decimal       @db.Decimal(12, 2)
+  taxRate          Decimal       @default(0) @db.Decimal(5, 2)
+  total            Decimal       @db.Decimal(12, 2)
+  receivedQty      Int           @default(0)
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
   @@index([formatId])
   @@index([productId])
   @@index([purchaseOrderId])
   @@index([createdAt])
+}
+
+model PurchaseOrderReceipt {
+  id              String                     @id @default(cuid())
+  purchaseOrderId String
+  receivedDate    DateTime                   @default(now())
+  receivedBy      String?
+  notes           String?
+  createdAt       DateTime                   @default(now())
+  purchaseOrder   PurchaseOrder              @relation(fields: [purchaseOrderId], references: [id])
+  items           PurchaseOrderReceiptItem[]
+
+  @@index([purchaseOrderId])
+}
+
+model PurchaseOrderReceiptItem {
+  id                  String               @id @default(cuid())
+  receiptId           String
+  purchaseOrderItemId String
+  quantityReceived    Decimal              @db.Decimal(10, 2)
+  notes               String?
+  receipt             PurchaseOrderReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+  @@index([purchaseOrderItemId])
 }
 
 model QuantityDiscount {
@@ -4672,4 +4718,79 @@ model PayStub {
 
   @@index([employeeId])
   @@index([periodStart, periodEnd])
+}
+
+// ---------------------------------------------------------------------------
+// Estimates / Devis (Roadmap 3-2)
+// ---------------------------------------------------------------------------
+
+model Estimate {
+  id              String    @id @default(cuid())
+  estimateNumber  String    @unique
+  customerId      String?
+  customerName    String
+  customerEmail   String?
+  customerAddress String?
+  customerPhone   String?
+  status          String    @default("DRAFT") // DRAFT, SENT, VIEWED, ACCEPTED, DECLINED, EXPIRED, CONVERTED
+  issueDate       DateTime  @default(now())
+  validUntil      DateTime
+  acceptedAt      DateTime?
+  acceptedBy      String?
+  signatureData   String?
+  declinedAt      DateTime?
+  declineReason   String?
+  convertedAt     DateTime?
+  invoiceId       String?
+  subtotal        Decimal   @default(0) @db.Decimal(12, 2)
+  discountAmount  Decimal   @default(0) @db.Decimal(10, 2)
+  discountPercent Decimal   @default(0) @db.Decimal(5, 2)
+  taxGst          Decimal   @default(0) @db.Decimal(10, 2)
+  taxQst          Decimal   @default(0) @db.Decimal(10, 2)
+  taxTotal        Decimal   @default(0) @db.Decimal(10, 2)
+  total           Decimal   @default(0) @db.Decimal(12, 2)
+  currency        String    @default("CAD")
+  notes           String?
+  internalNotes   String?
+  termsConditions String?
+  templateId      String?
+  sentAt          DateTime?
+  viewedAt        DateTime?
+  viewToken       String?   @unique
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  items           EstimateItem[]
+
+  @@index([estimateNumber])
+  @@index([status])
+  @@index([customerName])
+  @@index([validUntil])
+  @@index([viewToken])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model EstimateItem {
+  id              String   @id @default(cuid())
+  estimateId      String
+  productId       String?
+  productName     String
+  description     String?
+  quantity        Decimal  @db.Decimal(10, 2)
+  unitPrice       Decimal  @db.Decimal(12, 2)
+  discountPercent Decimal  @default(0) @db.Decimal(5, 2)
+  taxRate         Decimal  @default(0) @db.Decimal(5, 2)
+  lineTotal       Decimal  @db.Decimal(12, 2)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  estimate        Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+
+  @@index([estimateId])
+  @@index([createdAt])
 }

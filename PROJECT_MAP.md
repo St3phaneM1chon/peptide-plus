@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-26 (Email tracking pixels + A/B testing integration)
+# LAST UPDATED: 2026-02-26 (Purchase Orders system + Email tracking pixels + A/B testing)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 190 | **API Routes**: 344 | **Prisma Models**: 109 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 185
+- **Pages**: 191 | **API Routes**: 351 | **Prisma Models**: 111 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 185
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -224,15 +224,16 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 ---
 
-### 1.14 SUPPLIER MANAGEMENT
-> **What**: Supplier directory, contacts, purchase orders
+### 1.14 SUPPLIER MANAGEMENT & PURCHASE ORDERS
+> **What**: Supplier directory, contacts, purchase orders, goods receipt, PO-to-invoice conversion
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/fournisseurs` |
-| **API Routes** | `/api/admin/suppliers` |
-| **Models** | `Supplier`, `SupplierContact`, `SupplierLink`, `SupplierInvoice` (orphan -- soft ref supplierId), `PurchaseOrder` (soft ref supplierId) |
-| **NOTE** | `PurchaseOrder` has NO FK to Supplier. `SupplierInvoice` has NO FK to Supplier or JournalEntry. |
+| **Pages** | `/admin/fournisseurs`, `/admin/comptabilite/bons-commande` |
+| **API Routes** | `/api/admin/suppliers`, `/api/accounting/purchase-orders` (GET/POST), `/api/accounting/purchase-orders/[id]` (GET/PUT/DELETE), `/api/accounting/purchase-orders/[id]/send` (POST), `/api/accounting/purchase-orders/[id]/approve` (POST), `/api/accounting/purchase-orders/[id]/receive` (POST), `/api/accounting/purchase-orders/[id]/convert-to-invoice` (POST), `/api/accounting/purchase-orders/next-number` (GET) |
+| **Models** | `Supplier`, `SupplierContact`, `SupplierLink`, `SupplierInvoice` (orphan -- soft ref supplierId), `PurchaseOrder` (soft ref supplierId), `PurchaseOrderItem`, `PurchaseOrderReceipt`, `PurchaseOrderReceiptItem` |
+| **Components** | Admin shared: `PageHeader`, `DataTable`, `Modal`, `StatusBadge`, `StatCard`, `FilterBar`, `FormField`, `SectionCard` |
+| **NOTE** | PO lifecycle: DRAFT -> SENT -> CONFIRMED -> PARTIALLY_RECEIVED -> RECEIVED -> INVOICED. Convert-to-invoice creates a SupplierInvoice from a received PO. |
 
 ---
 

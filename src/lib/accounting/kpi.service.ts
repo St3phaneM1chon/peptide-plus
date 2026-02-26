@@ -135,36 +135,35 @@ async function bulkSumByAccountType(
   endDate?: Date,
 ): Promise<AggRow[]> {
   try {
-    const dateConditions: string[] = [
-      `je.status = 'POSTED'`,
-      `je."deletedAt" IS NULL`,
-      `ca."isActive" = true`,
+    const { Prisma } = await import('@prisma/client');
+
+    // Build safe parameterized query using Prisma.sql tagged template
+    const conditions = [
+      Prisma.sql`je.status = 'POSTED'`,
+      Prisma.sql`je."deletedAt" IS NULL`,
+      Prisma.sql`ca."isActive" = true`,
     ];
-    const params: (Date | string)[] = [];
 
     if (startDate) {
-      params.push(startDate);
-      dateConditions.push(`je.date >= $${params.length}::timestamp`);
+      conditions.push(Prisma.sql`je.date >= ${startDate}::timestamp`);
     }
     if (endDate) {
-      params.push(endDate);
-      dateConditions.push(`je.date <= $${params.length}::timestamp`);
+      conditions.push(Prisma.sql`je.date <= ${endDate}::timestamp`);
     }
 
-    const whereClause = dateConditions.join(' AND ');
+    const whereClause = Prisma.join(conditions, ' AND ');
 
-    const rows = await prisma.$queryRawUnsafe<AggRow[]>(
-      `SELECT ca.type AS account_type,
-              LEFT(ca.code, 2) AS code_prefix,
-              COALESCE(SUM(jl.debit), 0)::float AS total_debit,
-              COALESCE(SUM(jl.credit), 0)::float AS total_credit
-       FROM "JournalLine" jl
-       JOIN "ChartOfAccount" ca ON jl."accountId" = ca.id
-       JOIN "JournalEntry" je ON jl."entryId" = je.id
-       WHERE ${whereClause}
-       GROUP BY ca.type, LEFT(ca.code, 2)`,
-      ...params,
-    );
+    const rows = await prisma.$queryRaw<AggRow[]>(Prisma.sql`
+      SELECT ca.type AS account_type,
+             LEFT(ca.code, 2) AS code_prefix,
+             COALESCE(SUM(jl.debit), 0)::float AS total_debit,
+             COALESCE(SUM(jl.credit), 0)::float AS total_credit
+      FROM "JournalLine" jl
+      JOIN "ChartOfAccount" ca ON jl."accountId" = ca.id
+      JOIN "JournalEntry" je ON jl."entryId" = je.id
+      WHERE ${whereClause}
+      GROUP BY ca.type, LEFT(ca.code, 2)
+    `);
 
     return rows;
   } catch (error) {

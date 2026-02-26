@@ -174,6 +174,7 @@ const pathToSection: Record<string, AccountingSectionId> = {
   '/admin/comptabilite/factures-clients': 'accounts',
   '/admin/comptabilite/factures-fournisseurs': 'accounts',
   '/admin/comptabilite/notes-credit': 'accounts',
+  '/admin/comptabilite/bons-commande': 'accounts',
   '/admin/comptabilite/aging': 'accounts',
   '/admin/comptabilite/immobilisations': 'accounts',
   '/admin/comptabilite/banques': 'bank',
