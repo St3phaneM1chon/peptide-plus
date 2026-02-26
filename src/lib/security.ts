@@ -81,8 +81,8 @@ export async function decrypt(encryptedData: string): Promise<string> {
   // Dériver la clé
   const key = (await scryptAsync(encryptionKey, salt, KEY_LENGTH)) as Buffer;
 
-  // Déchiffrer
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  // Déchiffrer (authTagLength required by GCM spec to prevent tag truncation attacks)
+  const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
   decipher.setAuthTag(authTag);
 
   const decrypted = Buffer.concat([

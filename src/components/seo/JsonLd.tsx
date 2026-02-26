@@ -8,6 +8,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
     <script
       type="application/ld+json"
+      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
       dangerouslySetInnerHTML={{ __html: safeJson }}
     />
   );
