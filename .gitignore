@@ -54,3 +54,4 @@ coverage/
 
 # User uploads
 public/uploads/
+AuthKey_*.p8

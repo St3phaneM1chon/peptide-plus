@@ -8,6 +8,8 @@ import type { NextAuthConfig } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import AppleProvider from 'next-auth/providers/apple';
 import TwitterProvider from 'next-auth/providers/twitter';
+import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id';
+import LinkedIn from 'next-auth/providers/linkedin';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcryptjs';
@@ -86,6 +88,28 @@ const oauthProviders: AuthProvider[] = [
               mfaEnabled: false,
             };
           },
+        }),
+      ]
+    : []),
+
+  // Microsoft (Azure AD / Entra ID) — email verified by Microsoft
+  ...(process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET
+    ? [
+        MicrosoftEntraID({
+          clientId: process.env.AZURE_AD_CLIENT_ID,
+          clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
+          tenantId: process.env.AZURE_AD_TENANT_ID || 'common',
+          allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+    : []),
+
+  // LinkedIn — email verified by LinkedIn
+  ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET
+    ? [
+        LinkedIn({
+          clientId: process.env.LINKEDIN_CLIENT_ID,
+          clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
         }),
       ]
     : []),
