@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Component, type ReactNode, type ErrorInfo } from 'react';
+import { useState, useEffect, useCallback, useRef, Component, type ReactNode, type ErrorInfo, type MouseEvent as ReactMouseEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Mail, SendHorizontal, CheckCircle2, XCircle, BarChart3,
   LayoutTemplate, Save, Eye, Inbox, Megaphone, GitBranch,
@@ -150,16 +151,38 @@ const templateVariants: Record<string, BadgeVariant> = {
 
 // ---- Main Page ----
 
+type EmailFolder = 'inbox' | 'sent' | 'drafts' | 'deleted' | 'junk' | 'notes' | 'archive' | 'search';
+
+interface SentEmail {
+  id: string;
+  to: string;
+  subject: string;
+  status: string;
+  sentAt: string;
+  templateId: string | null;
+  campaignId: string | null;
+}
+
 export default function EmailsPage() {
   const { t, locale } = useI18n();
+  const searchParams = useSearchParams();
+  const folderParam = (searchParams.get('folder') as EmailFolder) || 'inbox';
   const [activeTab, setActiveTab] = useState<TabKey>('inbox');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
 
-  // Inbox state
+  // Inbox / folder state
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedSentEmail, setSelectedSentEmail] = useState<SentEmail | null>(null);
+  const [sentEmails, setSentEmails] = useState<SentEmail[]>([]);
+  const [sentLoading, setSentLoading] = useState(false);
+
+  // Split panel resize
+  const [splitWidth, setSplitWidth] = useState(380);
+  const splitDragging = useRef(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
 
   // Flow state
   const [editingFlowId, setEditingFlowId] = useState<string | null>(null);
@@ -219,6 +242,66 @@ export default function EmailsPage() {
     fetchData();
     fetchInboxCount();
   }, []);
+
+  // When folder param changes, switch to inbox tab and fetch appropriate data
+  useEffect(() => {
+    if (folderParam) {
+      setActiveTab('inbox');
+      setSelectedConversation(null);
+      setSelectedSentEmail(null);
+      if (folderParam === 'sent') {
+        fetchSentEmails();
+      }
+    }
+  }, [folderParam]);
+
+  // Fetch sent emails (excluding campaign emails)
+  const fetchSentEmails = async () => {
+    setSentLoading(true);
+    try {
+      const res = await fetch('/api/admin/emails/logs?status=SENT&excludeCampaigns=true');
+      if (res.ok) {
+        const data = await res.json();
+        setSentEmails((data.logs || []).map((l: Record<string, unknown>) => ({
+          id: l.id as string,
+          to: l.to as string,
+          subject: l.subject as string || '(sans sujet)',
+          status: l.status as string,
+          sentAt: l.sentAt as string,
+          templateId: l.templateId as string | null,
+          campaignId: l.campaignId as string | null,
+        })));
+      }
+    } catch {
+      console.error('Failed to fetch sent emails');
+    } finally {
+      setSentLoading(false);
+    }
+  };
+
+  // Split panel drag handlers
+  const handleSplitMouseDown = useCallback((e: ReactMouseEvent) => {
+    e.preventDefault();
+    splitDragging.current = true;
+    const startX = e.clientX;
+    const startWidth = splitWidth;
+
+    const onMouseMove = (me: globalThis.MouseEvent) => {
+      if (!splitDragging.current) return;
+      const delta = me.clientX - startX;
+      const newWidth = Math.max(260, Math.min(600, startWidth + delta));
+      setSplitWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      splitDragging.current = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [splitWidth]);
 
   // Load email settings when settings tab is activated
   useEffect(() => {
@@ -1053,128 +1136,68 @@ export default function EmailsPage() {
       fallbackTitle={t('admin.emailConfig.errorBoundaryTitle') || 'Email admin error'}
       fallbackDescription={t('admin.emailConfig.errorBoundaryDescription') || 'An unexpected error occurred in the email administration panel. Please try refreshing.'}
     >
-    <div className="space-y-6">
-      <PageHeader
-        title={t('admin.emailConfig.hubTitle')}
-        subtitle={t('admin.emailConfig.hubSubtitle')}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="primary" icon={Plus} onClick={handleNewMessage}>
-              {t('admin.emailConfig.newMessage') || 'Nouveau message'}
-            </Button>
-            <Button variant="secondary" icon={SendHorizontal} onClick={sendTestEmail}>
-              {t('admin.emailConfig.sendTest')}
-            </Button>
-          </div>
-        }
-      />
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label={t('admin.emailConfig.activeTemplates')}
-          value={`${stats.activeTemplates}/${templates.length}`}
-          icon={LayoutTemplate}
-        />
-        <StatCard
-          label={t('admin.emailConfig.emailsSent24h')}
-          value={stats.sent}
-          icon={CheckCircle2}
-          className="!border-green-200 !bg-green-50"
-        />
-        <StatCard
-          label={t('admin.emailConfig.failures')}
-          value={stats.failed}
-          icon={XCircle}
-          className="!border-red-200 !bg-red-50"
-        />
-        <StatCard
-          label={t('admin.emailConfig.successRate')}
-          value={`${((stats.sent / (stats.sent + stats.failed)) * 100 || 0).toFixed(1)}%`}
-          icon={BarChart3}
-        />
-      </div>
-
-      {/* Authentification email et statistiques de livraison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Authentification email (SPF/DKIM/DMARC) */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="h-5 w-5 text-slate-700" />
-            <h3 className="font-semibold text-slate-900">Authentification des emails</h3>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="space-y-3">
+      {/* Compact header bar — stats + actions inline */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-6">
+          <h1 className="text-lg font-bold text-slate-900">{t('admin.emailConfig.hubTitle')}</h1>
+          {/* Inline stats */}
+          <div className="hidden sm:flex items-center gap-4 text-sm">
+            <span className="flex items-center gap-1.5 text-slate-600">
+              <LayoutTemplate className="h-4 w-4" />
+              {stats.activeTemplates}/{templates.length}
+            </span>
+            <span className="flex items-center gap-1.5 text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              {stats.sent} <span className="text-slate-400 text-xs">24h</span>
+            </span>
+            {stats.failed > 0 && (
+              <span className="flex items-center gap-1.5 text-red-600">
+                <XCircle className="h-4 w-4" />
+                {stats.failed}
+              </span>
+            )}
+            {/* Auth badges inline */}
             {[
               { name: 'SPF', status: emailAuthStatus.spf },
               { name: 'DKIM', status: emailAuthStatus.dkim },
               { name: 'DMARC', status: emailAuthStatus.dmarc },
-              { name: 'BIMI', status: emailAuthStatus.bimi },
             ].map(item => (
-              <div key={item.name} className="flex flex-col items-center p-3 bg-slate-50 rounded-lg">
-                <span className={`w-3 h-3 rounded-full mb-2 ${
+              <span key={item.name} className="flex items-center gap-1 text-xs">
+                <span className={`w-2 h-2 rounded-full ${
                   item.status === 'configured' ? 'bg-green-500' :
                   item.status === 'warning' ? 'bg-yellow-500' :
                   'bg-red-400'
                 }`} />
-                <span className="text-sm font-medium text-slate-900">{item.name}</span>
-                <span className={`text-[10px] font-medium mt-0.5 ${
-                  item.status === 'configured' ? 'text-green-600' :
-                  item.status === 'warning' ? 'text-yellow-600' :
-                  'text-red-500'
-                }`}>
-                  {item.status === 'configured' ? 'Configuré' : item.status === 'warning' ? 'Attention' : 'Non configuré'}
-                </span>
-              </div>
+                {item.name}
+              </span>
             ))}
           </div>
         </div>
-
-        {/* Taux de rebond et statistiques de livraison */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Activity className="h-5 w-5 text-slate-700" />
-            <h3 className="font-semibold text-slate-900">Statistiques de livraison</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-green-50 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-green-700">
-                {stats.total > 0 ? ((stats.sent / stats.total) * 100).toFixed(1) : '0.0'}%
-              </p>
-              <p className="text-xs text-green-600 mt-0.5">Taux de livraison</p>
-            </div>
-            <div className="bg-red-50 rounded-lg p-3 text-center">
-              <div className="flex items-center justify-center gap-1">
-                <TrendingDown className="h-4 w-4 text-red-500" />
-                <p className="text-xl font-bold text-red-700">
-                  {stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : '0.0'}%
-                </p>
-              </div>
-              <p className="text-xs text-red-600 mt-0.5">Taux de rebond</p>
-            </div>
-            <div className="bg-sky-50 rounded-lg p-3 text-center">
-              <p className="text-xl font-bold text-sky-700">{stats.total}</p>
-              <p className="text-xs text-sky-600 mt-0.5">Total envoyés</p>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showTemplateBuilder ? 'primary' : 'secondary'}
+            icon={Paintbrush}
+            onClick={() => { setShowTemplateBuilder(!showTemplateBuilder); setShowCampaignCalendar(false); }}
+            className="!text-xs !py-1.5"
+          >
+            {showTemplateBuilder ? 'Fermer' : 'Templates'}
+          </Button>
+          <Button
+            variant={showCampaignCalendar ? 'primary' : 'secondary'}
+            icon={CalendarDays}
+            onClick={() => { setShowCampaignCalendar(!showCampaignCalendar); setShowTemplateBuilder(false); }}
+            className="!text-xs !py-1.5"
+          >
+            {showCampaignCalendar ? 'Fermer' : 'Calendrier'}
+          </Button>
+          <Button variant="primary" icon={Plus} onClick={handleNewMessage} className="!text-xs !py-1.5">
+            {t('admin.emailConfig.newMessage') || 'Nouveau message'}
+          </Button>
+          <Button variant="secondary" icon={SendHorizontal} onClick={sendTestEmail} className="!text-xs !py-1.5">
+            {t('admin.emailConfig.sendTest')}
+          </Button>
         </div>
-      </div>
-
-      {/* Boutons Constructeur de templates et Calendrier */}
-      <div className="flex gap-3">
-        <Button
-          variant={showTemplateBuilder ? 'primary' : 'secondary'}
-          icon={Paintbrush}
-          onClick={() => { setShowTemplateBuilder(!showTemplateBuilder); setShowCampaignCalendar(false); }}
-        >
-          {showTemplateBuilder ? 'Fermer le constructeur' : 'Constructeur de templates'}
-        </Button>
-        <Button
-          variant={showCampaignCalendar ? 'primary' : 'secondary'}
-          icon={CalendarDays}
-          onClick={() => { setShowCampaignCalendar(!showCampaignCalendar); setShowTemplateBuilder(false); }}
-        >
-          {showCampaignCalendar ? 'Fermer le calendrier' : 'Calendrier'}
-        </Button>
       </div>
 
       {/* Constructeur de templates (conditionnel) */}
@@ -1229,20 +1252,134 @@ export default function EmailsPage() {
         </nav>
       </div>
 
-      {/* ==================== INBOX TAB ==================== */}
+      {/* ==================== INBOX TAB (Split Panel) ==================== */}
       {activeTab === 'inbox' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden" style={{ height: 'calc(100vh - 380px)', minHeight: '500px' }}>
-          {selectedConversation ? (
-            <ConversationThread
-              conversationId={selectedConversation}
-              onBack={() => setSelectedConversation(null)}
-            />
-          ) : (
-            <InboxView
-              onSelectConversation={setSelectedConversation}
-              selectedId={selectedConversation || undefined}
-            />
-          )}
+        <div
+          ref={splitContainerRef}
+          className="bg-white rounded-xl border border-slate-200 overflow-hidden flex"
+          style={{ height: 'calc(100vh - 380px)', minHeight: '500px' }}
+        >
+          {/* LEFT PANEL — Email list (resizable) */}
+          <div className="flex-shrink-0 border-r border-slate-200 overflow-hidden flex flex-col" style={{ width: splitWidth }}>
+            {/* Folder header */}
+            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">
+                {folderParam === 'inbox' && (t('admin.nav.emailInbox') || 'Boîte de réception')}
+                {folderParam === 'sent' && (t('admin.nav.emailSent') || 'Envoyés')}
+                {folderParam === 'drafts' && (t('admin.nav.emailDrafts') || 'Brouillons')}
+                {folderParam === 'deleted' && (t('admin.nav.emailDeleted') || 'Éléments supprimés')}
+                {folderParam === 'junk' && (t('admin.nav.emailJunk') || 'Courrier indésirable')}
+                {folderParam === 'notes' && (t('admin.nav.emailNotes') || 'Notes')}
+                {folderParam === 'archive' && (t('admin.nav.emailArchive') || 'Archive')}
+                {folderParam === 'search' && (t('admin.nav.emailSearchFolders') || 'Recherche')}
+              </span>
+            </div>
+
+            {/* Email list content */}
+            <div className="flex-1 overflow-y-auto">
+              {folderParam === 'inbox' ? (
+                <InboxView
+                  onSelectConversation={(id) => { setSelectedConversation(id); setSelectedSentEmail(null); }}
+                  selectedId={selectedConversation || undefined}
+                />
+              ) : folderParam === 'sent' ? (
+                sentLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+                  </div>
+                ) : sentEmails.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                    <SendHorizontal className="h-10 w-10 mb-2" />
+                    <p className="text-sm">{t('admin.emailConfig.noEmailsSent') || 'Aucun email envoyé'}</p>
+                  </div>
+                ) : (
+                  sentEmails.map((email) => (
+                    <button
+                      key={email.id}
+                      onClick={() => { setSelectedSentEmail(email); setSelectedConversation(null); }}
+                      className={`w-full text-left p-3 border-b border-slate-100 transition-colors ${
+                        selectedSentEmail?.id === email.id ? 'bg-sky-50' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium text-slate-900 truncate">{email.to}</span>
+                        <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                          {new Date(email.sentAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600 truncate mt-0.5">{email.subject}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-medium ${
+                          email.status === 'SENT' ? 'bg-green-100 text-green-700' :
+                          email.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>{email.status}</span>
+                      </div>
+                    </button>
+                  ))
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                  <Mail className="h-10 w-10 mb-2" />
+                  <p className="text-sm">
+                    {folderParam === 'drafts' && 'Aucun brouillon'}
+                    {folderParam === 'deleted' && 'Aucun élément supprimé'}
+                    {folderParam === 'junk' && 'Aucun courrier indésirable'}
+                    {folderParam === 'notes' && 'Aucune note'}
+                    {folderParam === 'archive' && 'Aucun élément archivé'}
+                    {folderParam === 'search' && 'Aucun résultat'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RESIZE HANDLE */}
+          <div
+            className="w-1 cursor-col-resize bg-slate-200 hover:bg-sky-400 active:bg-sky-500 transition-colors flex-shrink-0"
+            onMouseDown={handleSplitMouseDown}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Redimensionner le panneau"
+          />
+
+          {/* RIGHT PANEL — Email content (fills remaining space) */}
+          <div className="flex-1 overflow-y-auto">
+            {selectedConversation ? (
+              <ConversationThread
+                conversationId={selectedConversation}
+                onBack={() => setSelectedConversation(null)}
+              />
+            ) : selectedSentEmail ? (
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                  <button onClick={() => setSelectedSentEmail(null)} className="hover:text-slate-700">
+                    &larr; {t('common.back') || 'Retour'}
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-slate-900">{selectedSentEmail.subject}</h2>
+                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <span><strong>{t('admin.emailConfig.recipient') || 'À'}:</strong> {selectedSentEmail.to}</span>
+                    <span>{new Date(selectedSentEmail.sentAt).toLocaleString(locale)}</span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                      selectedSentEmail.status === 'SENT' ? 'bg-green-100 text-green-700' :
+                      selectedSentEmail.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>{selectedSentEmail.status}</span>
+                  </div>
+                  {selectedSentEmail.templateId && (
+                    <p className="text-sm text-slate-400">Template: {selectedSentEmail.templateId}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <Mail className="h-16 w-16 mb-4 opacity-30" />
+                <p className="text-sm">{t('admin.emails.inbox.selectConversation') || 'Sélectionnez un message pour le lire'}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
