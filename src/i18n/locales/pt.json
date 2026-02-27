@@ -2143,12 +2143,15 @@
       "preview": "Pré-visualização",
       "provider": "Provedor",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "Destinatário",
       "replyEmail": "E-mail de Resposta",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "Solicitação de avaliação (5 dias após a entrega)",
       "save": "Salvar",
       "sendTest": "Enviar um Teste",
       "senderEmail": "E-mail do Remetente",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "Nome do Remetente",
       "smtpConfig": "Configuração SMTP",
       "status": "Status",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "Suporte por Chat",
       "codeAudits": "Auditorias de Código",
+      "backups": "Backups",
       "commerce": "Commerce",
       "community": "Comunidade",
       "configuration": "Configuração",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "Backups Multi-Projeto",
+      "subtitle": "Estado dos backups automáticos de todos os projetos"
     },
     "uat": {
       "actionsCol": "Ações",

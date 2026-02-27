@@ -111,6 +111,7 @@ const ADMIN_ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/settings': 'admin.settings',
   // FAILLE-061 FIX: Restrict audit logs to users with audit_log permission
   '/admin/logs': 'admin.audit_log',
+  '/admin/backups': 'admin.backups',
 };
 
 // Routes admin/owner uniquement

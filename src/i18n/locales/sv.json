@@ -2143,12 +2143,15 @@
       "preview": "Förhandsvisning",
       "provider": "Leverantör",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "Mottagare",
       "replyEmail": "Svar till e-post",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "Recensionsförfrågan (5 dagar efter leverans)",
       "save": "Spara",
       "sendTest": "Skicka ett test",
       "senderEmail": "Avsändarens e-post",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "Avsändarens namn",
       "smtpConfig": "SMTP-konfiguration",
       "status": "Status",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "Chattstöd",
       "codeAudits": "Kodgranskningar",
+      "backups": "Säkerhetskopior",
       "commerce": "Commerce",
       "community": "Gemenskap",
       "configuration": "Konfiguration",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "Multi-projekt säkerhetskopior",
+      "subtitle": "Automatisk säkerhetskopieringsstatus för alla projekt"
     },
     "uat": {
       "actionsCol": "Åtgärder",

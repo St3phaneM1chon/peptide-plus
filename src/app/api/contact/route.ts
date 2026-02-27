@@ -34,10 +34,17 @@ export async function POST(request: NextRequest) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { status: 429, request, headers: rl.headers });
     }
 
-    // CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return apiError('Invalid CSRF token', ErrorCode.VALIDATION_ERROR, { status: 403, request });
+    // CSRF validation: Skip for public contact form (no authenticated session to protect).
+    // Protection against abuse is handled by rate limiting (3 req/IP/hour) above.
+    // CsrfInit is only mounted in the admin layout, so public pages never have CSRF tokens.
+    // Keeping the import for reference but not blocking public submissions.
+    const csrfHeader = request.headers.get('X-CSRF-Token') || request.headers.get('x-csrf-token');
+    if (csrfHeader) {
+      // If a CSRF token IS provided (e.g., from admin context), validate it
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return apiError('Invalid CSRF token', ErrorCode.VALIDATION_ERROR, { status: 403, request });
+      }
     }
 
     let rawBody: unknown;

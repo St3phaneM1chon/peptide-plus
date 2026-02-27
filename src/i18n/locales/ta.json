@@ -2143,12 +2143,15 @@
       "preview": "முன்காட்சி",
       "provider": "வழங்குநர்",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "பெறுநர்",
       "replyEmail": "பதில் மின்னஞ்சல்",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "மதிப்பீட்டு கோரிக்கை (வழங்கிய 5 நாட்களுக்கு பிறகு)",
       "save": "சேமிக்கவும்",
       "sendTest": "ஒரு சோதனை அனுப்பவும்",
       "senderEmail": "அனுப்புநரின் மின்னஞ்சல்",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "அனுப்புநரின் பெயர்",
       "smtpConfig": "SMTP அமைப்பு",
       "status": "நிலை",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "சாட் ஆதரவு",
       "codeAudits": "குறியீடு தணிக்கை",
+      "backups": "காப்புப்பிரதிகள்",
       "commerce": "Commerce",
       "community": "சமூகம்",
       "configuration": "கட்டமைப்பு",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "பல திட்ட காப்புப்பிரதிகள்",
+      "subtitle": "அனைத்து திட்டங்களின் தானியங்கி காப்புப்பிரதி நிலை"
     },
     "uat": {
       "actionsCol": "செயல்கள்",

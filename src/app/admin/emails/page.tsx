@@ -1347,13 +1347,13 @@ export default function EmailsPage() {
                   <option value="SMTP">{t('admin.emailConfig.customSmtp')}</option>
                 </select>
               </FormField>
-              <FormField label={t('admin.emailConfig.senderEmail')}>
+              <FormField label={t('admin.emailConfig.senderEmail')} hint={t('admin.emailConfig.senderEmailHint')}>
                 <Input type="email" defaultValue={emailSettings['email.senderEmail'] || 'noreply@biocyclepeptides.com'} data-field="senderEmail" />
               </FormField>
               <FormField label={t('admin.emailConfig.senderName')}>
                 <Input type="text" defaultValue={emailSettings['email.senderName'] || 'BioCycle Peptides'} data-field="senderName" />
               </FormField>
-              <FormField label={t('admin.emailConfig.replyEmail')}>
+              <FormField label={t('admin.emailConfig.replyEmail')} hint={t('admin.emailConfig.replyEmailHint')}>
                 <Input type="email" defaultValue={emailSettings['email.replyEmail'] || 'support@biocyclepeptides.com'} data-field="replyEmail" />
               </FormField>
             </div>
@@ -1366,11 +1366,11 @@ export default function EmailsPage() {
               <FormField label={t('admin.emailConfig.webhookUrl')} hint={t('admin.emailConfig.webhookUrlHint')}>
                 <Input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/inbound-email`} />
               </FormField>
-              <FormField label={t('admin.emailConfig.receptionAddress')}>
-                <Input type="email" defaultValue="support@biocycle.ca" />
+              <FormField label={t('admin.emailConfig.receptionAddress')} hint={t('admin.emailConfig.receptionAddressHint')}>
+                <Input type="email" defaultValue={emailSettings['email.receptionAddress'] || 'support@biocycle.ca'} data-field="receptionAddress" />
               </FormField>
               <FormField label={t('admin.emailConfig.webhookSecret')}>
-                <Input type="password" placeholder={t('admin.emailConfig.webhookSecretPlaceholder')} />
+                <Input type="password" defaultValue={emailSettings['email.webhookSecret'] || ''} placeholder={t('admin.emailConfig.webhookSecretPlaceholder')} data-field="webhookSecret" />
               </FormField>
             </div>
           </div>
@@ -1381,19 +1381,19 @@ export default function EmailsPage() {
             <div className="space-y-3">
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.abandonedCartEmail')}</span>
-                <input type="checkbox" aria-label="Enable abandoned cart email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.abandonedCart'] === 'true'} data-field="autoAbandonedCart" aria-label="Enable abandoned cart email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.reviewRequest')}</span>
-                <input type="checkbox" defaultChecked aria-label="Enable review request email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.reviewRequest'] !== 'false'} data-field="autoReviewRequest" aria-label="Enable review request email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.birthdayEmail')}</span>
-                <input type="checkbox" defaultChecked aria-label="Enable birthday email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.birthdayEmail'] !== 'false'} data-field="autoBirthday" aria-label="Enable birthday email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.autoResponder')}</span>
-                <input type="checkbox" aria-label="Enable auto-responder email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.autoResponder'] === 'true'} data-field="autoAutoResponder" aria-label="Enable auto-responder email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
             </div>
           </div>
@@ -1434,6 +1434,12 @@ export default function EmailsPage() {
                 const senderEmail = form.querySelector<HTMLInputElement>('[data-field="senderEmail"]')?.value;
                 const senderName = form.querySelector<HTMLInputElement>('[data-field="senderName"]')?.value;
                 const replyEmail = form.querySelector<HTMLInputElement>('[data-field="replyEmail"]')?.value;
+                const receptionAddress = form.querySelector<HTMLInputElement>('[data-field="receptionAddress"]')?.value;
+                const webhookSecret = form.querySelector<HTMLInputElement>('[data-field="webhookSecret"]')?.value;
+                const autoAbandonedCart = form.querySelector<HTMLInputElement>('[data-field="autoAbandonedCart"]')?.checked;
+                const autoReviewRequest = form.querySelector<HTMLInputElement>('[data-field="autoReviewRequest"]')?.checked;
+                const autoBirthday = form.querySelector<HTMLInputElement>('[data-field="autoBirthday"]')?.checked;
+                const autoAutoResponder = form.querySelector<HTMLInputElement>('[data-field="autoAutoResponder"]')?.checked;
                 const res = await fetch('/api/admin/emails/settings', {
                   method: 'PUT',
                   headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
@@ -1442,6 +1448,12 @@ export default function EmailsPage() {
                     'email.senderEmail': senderEmail,
                     'email.senderName': senderName,
                     'email.replyEmail': replyEmail,
+                    'email.receptionAddress': receptionAddress,
+                    'email.webhookSecret': webhookSecret,
+                    'automation.abandonedCart': String(autoAbandonedCart ?? false),
+                    'automation.reviewRequest': String(autoReviewRequest ?? true),
+                    'automation.birthdayEmail': String(autoBirthday ?? true),
+                    'automation.autoResponder': String(autoAutoResponder ?? false),
                   }),
                 });
                 if (res.ok) {

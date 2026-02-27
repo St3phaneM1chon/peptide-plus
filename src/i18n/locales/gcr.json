@@ -2143,12 +2143,15 @@
       "preview": "Aperçu",
       "provider": "Founisè",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "Resipyan",
       "replyEmail": "Reponn-a Email",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "Demann revizyon (5 jou apre livrezon)",
       "save": "Sove",
       "sendTest": "Voye yon Tès",
       "senderEmail": "Email Voye",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "Non Voye",
       "smtpConfig": "Konfigirasyon SMTP",
       "status": "Estati",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "Soutien par chat",
       "codeAudits": "Code Audits",
+      "backups": "Backups",
       "commerce": "Commerce",
       "community": "Communauté",
       "configuration": "Configuration",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "Backups Multi-Projets",
+      "subtitle": "État des sauvegardes automatiques de tous les projets"
     },
     "uat": {
       "actionsCol": "Actions",

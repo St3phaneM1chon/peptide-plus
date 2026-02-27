@@ -2143,12 +2143,15 @@
       "preview": "预览",
       "provider": "提供商",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "收件人",
       "replyEmail": "回复邮件",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "评价请求（交货后 5 天）",
       "save": "保存",
       "sendTest": "发送测试邮件",
       "senderEmail": "发件人电子邮件",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "发件人姓名",
       "smtpConfig": "SMTP 配置",
       "status": "状态",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "聊天支持",
       "codeAudits": "代码审计",
+      "backups": "备份",
       "commerce": "Commerce",
       "community": "社区",
       "configuration": "配置",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "多项目备份",
+      "subtitle": "所有项目的自动备份状态"
     },
     "uat": {
       "actionsCol": "操作",

@@ -479,6 +479,7 @@ All pages use Outlook UI pattern (SplitLayout, ContentList, DetailPane). Key bac
 | Audits Dashboard | `/admin/audits` | COMPLETE | `/api/admin/audits` |
 | Audit by Type | `/admin/audits/[type]` | COMPLETE | `/api/admin/audits` |
 | Audit Catalog | `/admin/audits/catalog` | COMPLETE | `/api/admin/audits` |
+| Backups Dashboard | `/admin/backups` | COMPLETE | `/api/admin/backups` |
 
 ### Fiscal (4 pages)
 | Page | Path | Status |
@@ -908,6 +909,8 @@ manifest.json, sw.js, offline.html, icons
 - `src/app/admin/audits/page.tsx` -- Audit dashboard page
 - `src/app/admin/audits/[type]/page.tsx` -- Audit detail by type
 - `src/app/admin/audits/catalog/page.tsx` -- Audit catalog page
+- `src/app/api/admin/backups/route.ts` -- GET multi-project backup status
+- `src/app/admin/backups/page.tsx` -- Multi-project backup dashboard
 - All admin API routes now call `logAdminAction()` for CREATE/UPDATE/DELETE operations
 
 #### S11: Skeleton Loading (100% coverage)

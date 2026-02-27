@@ -519,6 +519,7 @@
       "settings": "Paramètres",
       "uatTesting": "UAT Testing",
       "codeAudits": "Audits de Code",
+      "backups": "Sauvegardes",
       "upsell": "Offres Upsell",
       "commerce": "Commerce",
       "distributors": "Distributeurs",
@@ -2694,8 +2695,10 @@
       "provider": "Provider",
       "customSmtp": "SMTP personnalisé",
       "senderEmail": "Email expéditeur",
+      "senderEmailHint": "Adresse d'expédition (From:)",
       "senderName": "Nom expéditeur",
       "replyEmail": "Email réponse",
+      "replyEmailHint": "Adresse de réponse (Reply-To:)",
       "automations": "Automatisations",
       "abandonedCartEmail": "Email panier abandonné (après 24h)",
       "reviewRequest": "Demande d'avis (5 jours après livraison)",
@@ -2753,6 +2756,7 @@
       "webhookUrl": "URL Webhook (Inbound Parse)",
       "webhookUrlHint": "Configurez cette URL dans Resend/SendGrid Inbound Parse",
       "receptionAddress": "Adresse de réception",
+      "receptionAddressHint": "Adresse qui reçoit les courriels entrants",
       "webhookSecret": "Secret webhook",
       "webhookSecretPlaceholder": "INBOUND_EMAIL_WEBHOOK_SECRET",
       "autoResponder": "Auto-répondeur sur emails entrants",
@@ -3224,6 +3228,10 @@
       "saveSettings": "Sauvegarder les paramètres",
       "settingsSaved": "Paramètres sauvegardés !",
       "settingsError": "Erreur lors du chargement des paramètres"
+    },
+    "backups": {
+      "title": "Sauvegardes Multi-Projets",
+      "subtitle": "État des sauvegardes automatiques de tous les projets"
     },
     "uat": {
       "title": "Tests UAT — AureliaPay",

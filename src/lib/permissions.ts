@@ -105,6 +105,7 @@ export const PERMISSIONS = {
   // Admin Settings
   'admin.settings': 'Manage admin settings',
   'admin.audit_log': 'View audit log',
+  'admin.backups': 'View backup status',
 } as const;
 
 export type PermissionCode = keyof typeof PERMISSIONS;
@@ -157,7 +158,7 @@ export const PERMISSION_MODULES: Record<string, { label: string; permissions: Pe
   },
   admin: {
     label: 'Administration',
-    permissions: ['seo.edit', 'admin.settings', 'admin.audit_log'],
+    permissions: ['seo.edit', 'admin.settings', 'admin.audit_log', 'admin.backups'],
   },
 };
 

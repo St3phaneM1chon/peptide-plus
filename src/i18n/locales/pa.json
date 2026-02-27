@@ -2143,12 +2143,15 @@
       "preview": "ਪ੍ਰੀਵਿਊ",
       "provider": "ਪ੍ਰਦਾਤਾ",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "ਗ੍ਰਹਕ",
       "replyEmail": "ਜਵਾਬ ਦੇਣ ਵਾਲੀ ਈਮੇਲ",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "ਸਮੀਖਿਆ ਦੀ ਬੇਨਤੀ (ਡਿਲਿਵਰੀ ਦੇ 5 ਦਿਨ ਬਾਅਦ)",
       "save": "ਸੇਵ ਕਰੋ",
       "sendTest": "ਇੱਕ ਟੈਸਟ ਭੇਜੋ",
       "senderEmail": "ਭੇਜਣ ਵਾਲੇ ਦੀ ਈਮੇਲ",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "ਭੇਜਣ ਵਾਲੇ ਦਾ ਨਾਮ",
       "smtpConfig": "SMTP ਸੰਰਚਨਾ",
       "status": "ਸਥਿਤੀ",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "ਚੈਟ ਸਹਾਇਤਾ",
       "codeAudits": "ਕੋਡ ਆਡਿਟ",
+      "backups": "ਬੈਕਅੱਪ",
       "commerce": "Commerce",
       "community": "ਕਮਿਊਨਿਟੀ",
       "configuration": "ਕੰਫਿਗਰੇਸ਼ਨ",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "ਮਲਟੀ-ਪ੍ਰੋਜੈਕਟ ਬੈਕਅੱਪ",
+      "subtitle": "ਸਾਰੇ ਪ੍ਰੋਜੈਕਟਾਂ ਦੀ ਆਟੋਮੈਟਿਕ ਬੈਕਅੱਪ ਸਥਿਤੀ"
     },
     "uat": {
       "actionsCol": "ਕਾਰਵਾਈਆਂ",

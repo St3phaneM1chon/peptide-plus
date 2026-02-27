@@ -2143,12 +2143,15 @@
       "preview": "Preview",
       "provider": "Tagapagbigay",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "Tumatanggap",
       "replyEmail": "Email na Tugon",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "Hiling para sa pagsusuri (5 araw pagkatapos ng paghahatid)",
       "save": "I-save",
       "sendTest": "Magpadala ng Pagsubok",
       "senderEmail": "Email ng Nagpadala",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "Pangalan ng Nagpadala",
       "smtpConfig": "SMTP Configuration",
       "status": "Katayuan",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "Suporta sa Chat",
       "codeAudits": "Code Audits",
+      "backups": "Mga Backup",
       "commerce": "Commerce",
       "community": "Komunidad",
       "configuration": "Konpigurasyon",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "Multi-Project Backups",
+      "subtitle": "Awtomatikong backup status para sa lahat ng proyekto"
     },
     "uat": {
       "actionsCol": "Mga Aksyon",

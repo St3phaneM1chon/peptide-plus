@@ -2143,12 +2143,15 @@
       "preview": "미리보기",
       "provider": "제공자",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "수신자",
       "replyEmail": "회신 이메일",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "리뷰 요청 (배송 후 5일)",
       "save": "저장",
       "sendTest": "테스트 발송",
       "senderEmail": "발신자 이메일",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "발신자 이름",
       "smtpConfig": "SMTP 구성",
       "status": "상태",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "채팅 지원",
       "codeAudits": "코드 감사",
+      "backups": "백업",
       "commerce": "Commerce",
       "community": "커뮤니티",
       "configuration": "설정",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "다중 프로젝트 백업",
+      "subtitle": "모든 프로젝트의 자동 백업 상태"
     },
     "uat": {
       "actionsCol": "작업",

@@ -2143,12 +2143,15 @@
       "preview": "معاينة",
       "provider": "المزود",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "المستلم",
       "replyEmail": "بريد الرد",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "طلب مراجعة (بعد 5 أيام من التسليم)",
       "save": "حفظ",
       "sendTest": "إرسال اختبار",
       "senderEmail": "بريد المرسل",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "اسم المرسل",
       "smtpConfig": "تهيئة SMTP",
       "status": "الحالة",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "دعم الدردشة",
       "codeAudits": "تدقيق الكود",
+      "backups": "النسخ الاحتياطية",
       "commerce": "Commerce",
       "community": "المجتمع",
       "configuration": "الإعدادات",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "النسخ الاحتياطية متعددة المشاريع",
+      "subtitle": "حالة النسخ الاحتياطية التلقائية لجميع المشاريع"
     },
     "uat": {
       "actionsCol": "الإجراءات",

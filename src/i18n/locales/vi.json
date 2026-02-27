@@ -2143,12 +2143,15 @@
       "preview": "Xem trước",
       "provider": "Nhà cung cấp",
       "receptionAddress": "Reception address",
+      "receptionAddressHint": "Address that receives inbound emails",
       "recipient": "Người nhận",
       "replyEmail": "Email trả lời",
+      "replyEmailHint": "Reply-To address for responses",
       "reviewRequest": "Yêu cầu đánh giá (5 ngày sau khi giao hàng)",
       "save": "Lưu",
       "sendTest": "Gửi Thử nghiệm",
       "senderEmail": "Email người gửi",
+      "senderEmailHint": "From address used for outgoing emails",
       "senderName": "Tên người gửi",
       "smtpConfig": "Cấu hình SMTP",
       "status": "Trạng thái",
@@ -3687,6 +3690,7 @@
       "chartOfAccounts": "Chart of Accounts",
       "chatSupport": "Hỗ trợ trò chuyện",
       "codeAudits": "Kiểm Toán Mã",
+      "backups": "Sao lưu",
       "commerce": "Commerce",
       "community": "Cộng đồng",
       "configuration": "Cấu hình",
@@ -5234,6 +5238,10 @@
       "wizardTitle": "Translation Session",
       "wizardTotalToTranslate": "Total to translate",
       "wizardTranslating": "Translating..."
+    },
+    "backups": {
+      "title": "Sao lưu đa dự án",
+      "subtitle": "Trạng thái sao lưu tự động cho tất cả dự án"
     },
     "uat": {
       "actionsCol": "Hành động",
