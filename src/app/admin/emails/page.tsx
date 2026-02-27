@@ -261,6 +261,17 @@ export default function EmailsPage() {
     bimi: emailSettings['auth.bimi'] || 'unknown',
   };
 
+  // Email accounts CRUD (must be before useEffect that references it)
+  const fetchEmailAccounts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/emails/accounts');
+      if (res.ok) {
+        const data = await res.json();
+        setEmailAccounts(data.accounts || []);
+      }
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
     fetchData();
     fetchInboxCount();
@@ -407,17 +418,6 @@ export default function EmailsPage() {
       }
     } catch { toast.error(t('common.errorOccurred')); }
   };
-
-  // Email accounts CRUD
-  const fetchEmailAccounts = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/emails/accounts');
-      if (res.ok) {
-        const data = await res.json();
-        setEmailAccounts(data.accounts || []);
-      }
-    } catch { /* silent */ }
-  }, []);
 
   const openAccountModal = (account?: EmailAccountData) => {
     if (account) {
