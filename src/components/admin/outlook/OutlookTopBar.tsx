@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import {
   Menu,
   Search,
-  Bell,
   ShoppingCart,
   MessageCircle,
   Package,
@@ -67,7 +66,7 @@ interface SearchResult {
   url: string;
 }
 
-export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
+export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMobileMenuToggle?: () => void; extraIcons?: React.ReactNode } = {}) {
   const { data: session } = useSession();
   const { t } = useI18n();
   const router = useRouter();
@@ -215,17 +214,9 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
       </div>
 
       {/* ── Right section ─────────────────────────────────────── */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Bell / Notifications */}
-        <button
-          type="button"
-          title={t('admin.notifications')}
-          aria-label={t('admin.notifications')}
-          className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <Bell className="w-[18px] h-[18px] text-slate-500" />
-          <span className="absolute top-1.5 end-1.5 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Extra icons injected by parent (ThemeToggle, NotificationCenter) */}
+        {extraIcons}
 
         {/* Orders */}
         <Link

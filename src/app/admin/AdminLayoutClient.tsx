@@ -98,15 +98,16 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
       </a>
       <CsrfInit />
 
-      {/* Top bar - 48px height + utility icons */}
-      <div className="relative">
-        <OutlookTopBar onMobileMenuToggle={handleToggleMobileMenu} />
-        {/* Floating utility bar: Theme + Notifications — positioned before the TopBar right icons */}
-        <div className="absolute top-1.5 end-[220px] z-40 flex items-center gap-2">
-          <ThemeToggle />
-          <NotificationCenter />
-        </div>
-      </div>
+      {/* Top bar - 48px height */}
+      <OutlookTopBar
+        onMobileMenuToggle={handleToggleMobileMenu}
+        extraIcons={
+          <>
+            <ThemeToggle />
+            <NotificationCenter />
+          </>
+        }
+      />
 
       {/* Contextual Ribbon */}
       <OutlookRibbon />
