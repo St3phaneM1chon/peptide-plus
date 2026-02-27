@@ -234,7 +234,11 @@ export default function ChatWidget() {
       });
 
       const data = await res.json();
-      
+
+      if (!res.ok || !data.message) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
       // Replace temp message with real one
       setMessages(prev => {
         const filtered = prev.filter(m => m.id !== tempMessage.id);

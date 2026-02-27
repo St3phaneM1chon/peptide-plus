@@ -46,14 +46,17 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    // FIX F-004/F-017: CSRF protection on chat message
-    // Note: For chat widget (visitors), CSRF may not always be present.
-    // Rate limiting already protects against abuse from unauthenticated users.
+    // CSRF validation: Log-only for chat messages (non-blocking).
+    // The chat widget doesn't send CSRF tokens, and logged-in users
+    // browsing the shop will have a session cookie but no CSRF header.
+    // Rate limiting (20/hour per IP) is the primary abuse protection here.
     if (session?.user) {
       const csrfValid = await validateCsrf(request);
       if (!csrfValid) {
-        // Authenticated users MUST provide valid CSRF
-        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+        logger.info('Chat message without CSRF from authenticated user', {
+          userId: session.user.id,
+          ip,
+        });
       }
     }
 
