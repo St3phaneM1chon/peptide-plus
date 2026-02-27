@@ -18,13 +18,16 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    // SECURITY FIX (F-002 + F-007): Auth + rate limiting + CSRF for chat upload
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
     const session = await auth();
+
+    // SECURITY FIX (F-002 + F-007): CSRF for authenticated users only
+    // Visitors (no session) are protected by rate limiting instead
+    if (session?.user) {
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+    }
 
     // Rate limit: 5 uploads per minute per IP
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

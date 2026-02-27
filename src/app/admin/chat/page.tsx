@@ -223,7 +223,7 @@ export default function AdminChatPage() {
       formData.append('image', file);
       formData.append('conversationId', selectedConversation.id);
 
-      const uploadRes = await fetch('/api/chat/upload', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/chat/upload', { method: 'POST', body: formData, headers: addCSRFHeader({}) });
       const uploadData = await uploadRes.json();
 
       if (!uploadRes.ok || !uploadData.success) {
