@@ -48,6 +48,7 @@ const integrationActionSchema = z.object({
 
 const VALID_PLATFORMS = [
   'zoom', 'whatsapp', 'teams', 'youtube', 'x', 'tiktok', 'google', 'meta', 'linkedin',
+  'webex', 'google-meet', 'google-ads',
 ] as const;
 
 type Platform = typeof VALID_PLATFORMS[number];
@@ -63,6 +64,9 @@ const PLATFORM_FIELDS: Record<Platform, string[]> = {
   google: ['enabled', 'customerId', 'merchantId', 'publicLink'],
   meta: ['enabled', 'appId', 'pixelId', 'pageId', 'igAccountId', 'publicLink'],
   linkedin: ['enabled', 'companyId', 'appId', 'publicLink'],
+  webex: ['enabled', 'clientId', 'publicLink'],
+  'google-meet': ['enabled', 'clientId', 'publicLink'],
+  'google-ads': ['enabled', 'customerId', 'merchantId', 'publicLink'],
 };
 
 // Secret field names (stored in env vars, not DB — only indicate presence)
@@ -76,11 +80,15 @@ const SECRET_FIELDS: Record<Platform, string[]> = {
   google: ['developerToken', 'clientSecret', 'refreshToken'],
   meta: ['accessToken', 'appSecret'],
   linkedin: ['clientSecret', 'accessToken'],
+  webex: ['clientSecret'],
+  'google-meet': ['clientSecret'],
+  'google-ads': ['developerToken', 'clientSecret', 'refreshToken'],
 };
 
 // Env var name for secrets: INTEGRATION_<PLATFORM>_<FIELD>
 function getEnvVarName(platform: string, field: string): string {
-  return `INTEGRATION_${platform.toUpperCase()}_${field.replace(/([A-Z])/g, '_$1').toUpperCase()}`;
+  const normalizedPlatform = platform.replace(/-/g, '_').toUpperCase();
+  return `INTEGRATION_${normalizedPlatform}_${field.replace(/([A-Z])/g, '_$1').toUpperCase()}`;
 }
 
 function hasSecret(platform: string, field: string): boolean {
