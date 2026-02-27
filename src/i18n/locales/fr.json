@@ -2847,7 +2847,8 @@
       "bouncesCleanedCount": "{count} contacts rebondis supprimes",
       "useSubscriberDetailToUnsubscribe": "Utilisez la vue detail de l'abonne pour desabonner les contacts individuellement",
       "errorBoundaryTitle": "Erreur du module emails",
-      "errorBoundaryDescription": "Une erreur inattendue s'est produite dans le panneau d'administration des emails. Veuillez rafraîchir la page."
+      "errorBoundaryDescription": "Une erreur inattendue s'est produite dans le panneau d'administration des emails. Veuillez rafraîchir la page.",
+      "from": "De :"
     },
     "emails": {
       "inbox": {

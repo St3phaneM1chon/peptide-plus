@@ -2362,7 +2362,8 @@
       "bouncesCleanedCount": "Removed {count} bounced contacts",
       "useSubscriberDetailToUnsubscribe": "Use the subscriber detail view to unsubscribe individual contacts",
       "errorBoundaryTitle": "Email module error",
-      "errorBoundaryDescription": "An unexpected error occurred in the email administration panel. Please try refreshing the page."
+      "errorBoundaryDescription": "An unexpected error occurred in the email administration panel. Please try refreshing the page.",
+      "from": "From:"
     },
     "emails": {
       "analytics": {

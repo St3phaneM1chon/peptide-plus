@@ -2216,7 +2216,8 @@
       "webhookUrl": "Webhook URL (Inbound Parse)",
       "webhookUrlHint": "Configure this URL in Resend/SendGrid Inbound Parse",
       "errorBoundaryTitle": "Email module error",
-      "errorBoundaryDescription": "An unexpected error occurred in the email administration panel. Please try refreshing the page."
+      "errorBoundaryDescription": "An unexpected error occurred in the email administration panel. Please try refreshing the page.",
+      "from": "De :"
     },
     "emails": {
       "analytics": {
