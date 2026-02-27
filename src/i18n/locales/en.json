@@ -2208,6 +2208,7 @@
       "emailsSent24h": "Emails Sent (24h)",
       "failures": "Failures",
       "hubSubtitle": "Unified email, campaign, workflow and analytics management",
+      "newMessage": "New message",
       "hubTitle": "Communication Hub",
       "inboundTitle": "Inbound Email Reception",
       "noEmailsSent": "No emails sent",

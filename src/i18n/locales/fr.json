@@ -2745,6 +2745,7 @@
           "description": "Après livraison"
         }
       },
+      "newMessage": "Nouveau message",
       "hubTitle": "Hub de Communication",
       "hubSubtitle": "Gestion unifiée emails, campagnes, workflows et analytics",
       "tabInbox": "Inbox",
