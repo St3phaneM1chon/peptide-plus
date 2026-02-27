@@ -3838,6 +3838,26 @@ model EmailSettings {
   @@index([updatedAt])
 }
 
+model EmailAccount {
+  id           String   @id @default(cuid())
+  name         String                       // Display name (e.g. "Support", "Marketing")
+  email        String                       // Email address (e.g. support@biocyclepeptides.com)
+  displayName  String?                      // Sender display name
+  replyTo      String?                      // Reply-to address (if different from email)
+  provider     String   @default("resend")  // resend, sendgrid, smtp
+  credentials  Json     @default("{}")      // Provider-specific credentials (encrypted JSON)
+  isDefault    Boolean  @default(false)     // Default account for sending
+  isActive     Boolean  @default(true)      // Account enabled/disabled
+  color        String?                      // Color label for UI identification
+  signature    String?  @db.Text            // HTML email signature
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([isDefault])
+  @@index([isActive])
+}
+
 model EmailSegment {
   id          String   @id @default(cuid())
   name        String

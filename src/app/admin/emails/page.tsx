@@ -198,6 +198,29 @@ export default function EmailsPage() {
   const [emailSettings, setEmailSettings] = useState<Record<string, string>>({});
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
+  // Email accounts state
+  interface EmailAccountData {
+    id: string;
+    name: string;
+    email: string;
+    displayName: string | null;
+    replyTo: string | null;
+    provider: string;
+    credentials: Record<string, string>;
+    isDefault: boolean;
+    isActive: boolean;
+    color: string | null;
+    signature: string | null;
+  }
+  const [emailAccounts, setEmailAccounts] = useState<EmailAccountData[]>([]);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<EmailAccountData | null>(null);
+  const [accountForm, setAccountForm] = useState({
+    name: '', email: '', displayName: '', replyTo: '', provider: 'resend',
+    isDefault: false, isActive: true, color: '#3b82f6', signature: '',
+    apiKey: '', smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '',
+  });
+
   // Modal states for implemented features
   const [showAbTestModal, setShowAbTestModal] = useState(false);
   const [abTestSubjectA, setAbTestSubjectA] = useState('');
@@ -241,7 +264,8 @@ export default function EmailsPage() {
   useEffect(() => {
     fetchData();
     fetchInboxCount();
-  }, []);
+    fetchEmailAccounts();
+  }, [fetchEmailAccounts]);
 
   // When folder param changes, switch to inbox tab and fetch appropriate data
   useEffect(() => {
@@ -382,6 +406,105 @@ export default function EmailsPage() {
         setInboxCount((data.counts?.NEW || 0) + (data.counts?.OPEN || 0));
       }
     } catch { toast.error(t('common.errorOccurred')); }
+  };
+
+  // Email accounts CRUD
+  const fetchEmailAccounts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/emails/accounts');
+      if (res.ok) {
+        const data = await res.json();
+        setEmailAccounts(data.accounts || []);
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  const openAccountModal = (account?: EmailAccountData) => {
+    if (account) {
+      setEditingAccount(account);
+      setAccountForm({
+        name: account.name, email: account.email,
+        displayName: account.displayName || '', replyTo: account.replyTo || '',
+        provider: account.provider, isDefault: account.isDefault,
+        isActive: account.isActive, color: account.color || '#3b82f6',
+        signature: account.signature || '',
+        apiKey: account.credentials?.apiKey || '',
+        smtpHost: account.credentials?.smtpHost || '',
+        smtpPort: account.credentials?.smtpPort || '587',
+        smtpUser: account.credentials?.smtpUser || '',
+        smtpPass: '',
+      });
+    } else {
+      setEditingAccount(null);
+      setAccountForm({
+        name: '', email: '', displayName: '', replyTo: '', provider: 'resend',
+        isDefault: false, isActive: true, color: '#3b82f6', signature: '',
+        apiKey: '', smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '',
+      });
+    }
+    setShowAccountModal(true);
+  };
+
+  const saveAccount = async () => {
+    const credentials: Record<string, string> = {};
+    if (accountForm.provider === 'resend' || accountForm.provider === 'sendgrid') {
+      if (accountForm.apiKey) credentials.apiKey = accountForm.apiKey;
+    } else if (accountForm.provider === 'smtp') {
+      if (accountForm.smtpHost) credentials.smtpHost = accountForm.smtpHost;
+      if (accountForm.smtpPort) credentials.smtpPort = accountForm.smtpPort;
+      if (accountForm.smtpUser) credentials.smtpUser = accountForm.smtpUser;
+      if (accountForm.smtpPass) credentials.smtpPass = accountForm.smtpPass;
+    }
+
+    const payload = {
+      name: accountForm.name,
+      email: accountForm.email,
+      displayName: accountForm.displayName || undefined,
+      replyTo: accountForm.replyTo || undefined,
+      provider: accountForm.provider,
+      credentials,
+      isDefault: accountForm.isDefault,
+      isActive: accountForm.isActive,
+      color: accountForm.color || undefined,
+      signature: accountForm.signature || undefined,
+    };
+
+    try {
+      const url = editingAccount
+        ? `/api/admin/emails/accounts/${editingAccount.id}`
+        : '/api/admin/emails/accounts';
+      const method = editingAccount ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        toast.success(editingAccount ? 'Compte mis à jour' : 'Compte créé');
+        setShowAccountModal(false);
+        fetchEmailAccounts();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Erreur');
+      }
+    } catch { toast.error('Erreur réseau'); }
+  };
+
+  const deleteAccount = async (id: string) => {
+    if (!confirm('Supprimer ce compte email ?')) return;
+    try {
+      const res = await fetch(`/api/admin/emails/accounts/${id}`, {
+        method: 'DELETE',
+        headers: addCSRFHeader({}),
+      });
+      if (res.ok) {
+        toast.success('Compte supprimé');
+        fetchEmailAccounts();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Erreur');
+      }
+    } catch { toast.error('Erreur réseau'); }
   };
 
   const toggleTemplate = async (id: string) => {
@@ -1630,8 +1753,175 @@ export default function EmailsPage() {
               {t('admin.emailConfig.testConnection') || 'Test Connection'}
             </Button>
           </div>
+
+          {/* ==================== EMAIL ACCOUNTS MANAGEMENT ==================== */}
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-900">Comptes email</h3>
+              <Button variant="primary" icon={Plus} onClick={() => openAccountModal()}>
+                Ajouter un compte
+              </Button>
+            </div>
+
+            {emailAccounts.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                <Mail className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Aucun compte email configuré</p>
+                <p className="text-xs mt-1">Ajoutez un compte pour gérer vos envois</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {emailAccounts.map((acc) => (
+                  <div key={acc.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: acc.color || '#3b82f6' }} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-900">{acc.name}</span>
+                          {acc.isDefault && (
+                            <span className="px-1.5 py-0.5 text-[10px] bg-sky-100 text-sky-700 rounded-full font-medium">Par défaut</span>
+                          )}
+                          {!acc.isActive && (
+                            <span className="px-1.5 py-0.5 text-[10px] bg-red-100 text-red-700 rounded-full font-medium">Désactivé</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-500">{acc.email}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {acc.provider === 'resend' ? 'Resend' : acc.provider === 'sendgrid' ? 'SendGrid' : 'SMTP'}
+                          {acc.displayName && ` · ${acc.displayName}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openAccountModal(acc)}
+                        className="px-3 py-1.5 text-xs text-slate-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+                      >
+                        Modifier
+                      </button>
+                      {!acc.isDefault && (
+                        <button
+                          onClick={() => deleteAccount(acc.id)}
+                          className="px-3 py-1.5 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
+      {/* ==================== ACCOUNT MODAL ==================== */}
+      <Modal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        title={editingAccount ? 'Modifier le compte email' : 'Ajouter un compte email'}
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowAccountModal(false)}>
+              {t('common.cancel') || 'Annuler'}
+            </Button>
+            <Button variant="primary" icon={Save} onClick={saveAccount}>
+              {editingAccount ? 'Mettre à jour' : 'Créer le compte'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField label="Nom du compte">
+              <Input value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} placeholder="Support, Marketing..." />
+            </FormField>
+            <FormField label="Adresse email">
+              <Input type="email" value={accountForm.email} onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })} placeholder="support@biocyclepeptides.com" />
+            </FormField>
+            <FormField label="Nom d'affichage">
+              <Input value={accountForm.displayName} onChange={(e) => setAccountForm({ ...accountForm, displayName: e.target.value })} placeholder="BioCycle Support" />
+            </FormField>
+            <FormField label="Répondre à (Reply-To)">
+              <Input type="email" value={accountForm.replyTo} onChange={(e) => setAccountForm({ ...accountForm, replyTo: e.target.value })} placeholder="reply@biocyclepeptides.com" />
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FormField label="Fournisseur">
+              <select
+                value={accountForm.provider}
+                onChange={(e) => setAccountForm({ ...accountForm, provider: e.target.value })}
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm"
+              >
+                <option value="resend">Resend</option>
+                <option value="sendgrid">SendGrid</option>
+                <option value="smtp">SMTP</option>
+              </select>
+            </FormField>
+            <FormField label="Couleur">
+              <input
+                type="color"
+                value={accountForm.color}
+                onChange={(e) => setAccountForm({ ...accountForm, color: e.target.value })}
+                className="w-full h-9 rounded-lg border border-slate-300 cursor-pointer"
+              />
+            </FormField>
+            <FormField label="Options">
+              <div className="flex items-center gap-4 pt-2">
+                <label className="flex items-center gap-1.5 text-sm">
+                  <input type="checkbox" checked={accountForm.isDefault} onChange={(e) => setAccountForm({ ...accountForm, isDefault: e.target.checked })} />
+                  Par défaut
+                </label>
+                <label className="flex items-center gap-1.5 text-sm">
+                  <input type="checkbox" checked={accountForm.isActive} onChange={(e) => setAccountForm({ ...accountForm, isActive: e.target.checked })} />
+                  Actif
+                </label>
+              </div>
+            </FormField>
+          </div>
+
+          {/* Provider-specific credentials */}
+          {(accountForm.provider === 'resend' || accountForm.provider === 'sendgrid') && (
+            <FormField label={`Clé API ${accountForm.provider === 'resend' ? 'Resend' : 'SendGrid'}`}>
+              <Input
+                type="password"
+                value={accountForm.apiKey}
+                onChange={(e) => setAccountForm({ ...accountForm, apiKey: e.target.value })}
+                placeholder="re_xxxx... ou SG.xxxx..."
+              />
+            </FormField>
+          )}
+
+          {accountForm.provider === 'smtp' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Hôte SMTP">
+                <Input value={accountForm.smtpHost} onChange={(e) => setAccountForm({ ...accountForm, smtpHost: e.target.value })} placeholder="smtp.example.com" />
+              </FormField>
+              <FormField label="Port SMTP">
+                <Input value={accountForm.smtpPort} onChange={(e) => setAccountForm({ ...accountForm, smtpPort: e.target.value })} placeholder="587" />
+              </FormField>
+              <FormField label="Utilisateur SMTP">
+                <Input value={accountForm.smtpUser} onChange={(e) => setAccountForm({ ...accountForm, smtpUser: e.target.value })} placeholder="user@example.com" />
+              </FormField>
+              <FormField label="Mot de passe SMTP">
+                <Input type="password" value={accountForm.smtpPass} onChange={(e) => setAccountForm({ ...accountForm, smtpPass: e.target.value })} placeholder="••••••••" />
+              </FormField>
+            </div>
+          )}
+
+          <FormField label="Signature email (HTML)">
+            <Textarea
+              value={accountForm.signature}
+              onChange={(e) => setAccountForm({ ...accountForm, signature: e.target.value })}
+              rows={4}
+              placeholder="<p>Cordialement,<br/>L'équipe BioCycle Peptides</p>"
+            />
+          </FormField>
+        </div>
+      </Modal>
 
       {/* Edit Template Modal */}
       <Modal
