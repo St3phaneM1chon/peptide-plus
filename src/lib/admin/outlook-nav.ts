@@ -13,7 +13,7 @@ import {
   Megaphone, Inbox, FileBarChart, Layout, Receipt, CreditCard, Clock,
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
-  ClipboardCheck, Database,
+  ClipboardCheck, Database, Sparkles,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -86,6 +86,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/commandes', labelKey: 'admin.nav.orders', icon: ShoppingCart, badge: 'pendingOrders' },
           { href: '/admin/customers', labelKey: 'admin.nav.customers', icon: Users },
           { href: '/admin/clients', labelKey: 'admin.nav.distributors', icon: Briefcase },
+          { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: RefreshCw },
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
         ],
@@ -148,7 +149,6 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         items: [
           { href: '/admin/fidelite', labelKey: 'admin.nav.loyaltyProgram', icon: Gift },
-          { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: RefreshCw },
           { href: '/admin/webinaires', labelKey: 'admin.nav.webinars', icon: Video },
         ],
         defaultOpen: true,
@@ -172,26 +172,35 @@ export const folderSections: Record<string, NavFolderSection> = {
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.mediaAPIs',
+        labelKey: 'admin.nav.mediaAds',
         items: [
-          { href: '/admin/media/api-zoom', labelKey: 'admin.nav.mediaZoom', icon: Video },
-          { href: '/admin/media/api-whatsapp', labelKey: 'admin.nav.mediaWhatsApp', icon: MessageCircle },
-          { href: '/admin/media/api-teams', labelKey: 'admin.nav.mediaTeams', icon: Users },
+          { href: '/admin/media/ads-youtube', labelKey: 'admin.nav.mediaYouTube', icon: Video, image: '/images/platforms/youtube.png' },
+          { href: '/admin/media/ads-x', labelKey: 'admin.nav.mediaX', icon: MessageCircle, image: '/images/platforms/x.png' },
+          { href: '/admin/media/ads-tiktok', labelKey: 'admin.nav.mediaTikTok', icon: Activity, image: '/images/platforms/tiktok.png' },
+          { href: '/admin/media/ads-google', labelKey: 'admin.nav.mediaGoogle', icon: Search, image: '/images/platforms/google-ads.png' },
+          { href: '/admin/media/ads-linkedin', labelKey: 'admin.nav.mediaLinkedIn', icon: Briefcase, image: '/images/platforms/linkedin.png' },
+          { href: '/admin/media/ads-meta', labelKey: 'admin.nav.mediaMeta', icon: Users, image: '/images/platforms/meta.png' },
         ],
         collapsible: true,
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.mediaAds',
+        labelKey: 'admin.nav.mediaAPIs',
         items: [
-          { href: '/admin/media/pub-youtube', labelKey: 'admin.nav.mediaYouTube', icon: Video, image: '/images/platforms/youtube.png' },
-          { href: '/admin/media/pub-x', labelKey: 'admin.nav.mediaX', icon: MessageCircle, image: '/images/platforms/x.png' },
-          { href: '/admin/media/pub-tiktok', labelKey: 'admin.nav.mediaTikTok', icon: Activity, image: '/images/platforms/tiktok.png' },
-          { href: '/admin/media/pub-google', labelKey: 'admin.nav.mediaGoogle', icon: Search, image: '/images/platforms/google-ads.png' },
-          { href: '/admin/media/pub-linkedin', labelKey: 'admin.nav.mediaLinkedIn', icon: Briefcase, image: '/images/platforms/linkedin.png' },
+          { href: '/admin/media/api-zoom', labelKey: 'admin.nav.apiZoom', icon: Settings },
+          { href: '/admin/media/api-teams', labelKey: 'admin.nav.apiTeams', icon: Settings },
+          { href: '/admin/media/api-whatsapp', labelKey: 'admin.nav.apiWhatsApp', icon: Settings },
+          { href: '/admin/media/api-webex', labelKey: 'admin.nav.apiWebex', icon: Settings },
+          { href: '/admin/media/api-google-meet', labelKey: 'admin.nav.apiGoogleMeet', icon: Settings },
+          { href: '/admin/media/api-youtube', labelKey: 'admin.nav.apiYouTube', icon: Settings },
+          { href: '/admin/media/api-x', labelKey: 'admin.nav.apiX', icon: Settings },
+          { href: '/admin/media/api-tiktok', labelKey: 'admin.nav.apiTikTok', icon: Settings },
+          { href: '/admin/media/api-google-ads', labelKey: 'admin.nav.apiGoogleAds', icon: Settings },
+          { href: '/admin/media/api-linkedin', labelKey: 'admin.nav.apiLinkedIn', icon: Settings },
+          { href: '/admin/media/api-meta', labelKey: 'admin.nav.apiMeta', icon: Settings },
         ],
         collapsible: true,
-        defaultOpen: true,
+        defaultOpen: false,
       },
       {
         labelKey: 'admin.nav.mediaManagement',
@@ -348,9 +357,17 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/employes', labelKey: 'admin.nav.employees', icon: UserCheck },
           { href: '/admin/parametres', labelKey: 'admin.nav.settings', icon: Settings },
           { href: '/admin/uat', labelKey: 'admin.nav.uatTesting', icon: FlaskConical },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.aurelia',
+        items: [
+          { href: '/admin/mots-magiques', labelKey: 'admin.nav.magicWords', icon: Sparkles },
           { href: '/admin/audits', labelKey: 'admin.nav.codeAudits', icon: ClipboardCheck },
           { href: '/admin/backups', labelKey: 'admin.nav.backups', icon: Database },
         ],
+        collapsible: true,
         defaultOpen: true,
       },
       {
@@ -376,12 +393,12 @@ export const folderSections: Record<string, NavFolderSection> = {
 export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
   if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories')) return 'catalog';
   if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell')) return 'marketing';
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
-  if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
+  if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
   return 'dashboard';
 }
