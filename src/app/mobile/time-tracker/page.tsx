@@ -46,6 +46,7 @@ export default function MobileTimeTracker() {
       return () => clearInterval(intervalRef.current);
     } else {
       setElapsed('00:00:00');
+      return undefined;
     }
   }, [data?.running]);
 

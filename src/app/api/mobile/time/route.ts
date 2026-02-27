@@ -19,28 +19,28 @@ export const GET = withAdminGuard(async () => {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
 
     const [runningTimer, todayEntries, weekEntries] = await Promise.all([
-      prisma.timeEntry.findFirst({ where: { endTime: null }, include: { project: { select: { name: true } } }, orderBy: { startTime: 'desc' } }),
-      prisma.timeEntry.findMany({ where: { startTime: { gte: today } }, include: { project: { select: { name: true } } }, orderBy: { startTime: 'desc' } }),
-      prisma.timeEntry.findMany({ where: { startTime: { gte: weekStart } }, select: { duration: true } }),
+      prisma.timeEntry.findFirst({ where: { endTime: null }, orderBy: { startTime: 'desc' } }),
+      prisma.timeEntry.findMany({ where: { startTime: { gte: today } }, orderBy: { startTime: 'desc' } }),
+      prisma.timeEntry.findMany({ where: { startTime: { gte: weekStart } }, select: { hoursWorked: true } }),
     ]);
 
-    const todayTotal = todayEntries.reduce((s, e) => s + (e.duration || 0), 0);
-    const weekTotal = weekEntries.reduce((s, e) => s + (e.duration || 0), 0);
+    const todayTotal = todayEntries.reduce((s, e) => s + Number(e.hoursWorked || 0), 0);
+    const weekTotal = weekEntries.reduce((s, e) => s + Number(e.hoursWorked || 0), 0);
 
     return NextResponse.json({
       running: runningTimer ? {
         id: runningTimer.id,
-        startTime: runningTimer.startTime.toISOString(),
-        projectName: runningTimer.project?.name || null,
+        startTime: runningTimer.startTime?.toISOString() || null,
+        projectName: runningTimer.projectName || null,
         description: runningTimer.description,
       } : null,
       todayEntries: todayEntries.map(e => ({
         id: e.id,
         description: e.description,
-        startTime: e.startTime.toISOString(),
+        startTime: e.startTime?.toISOString() || null,
         endTime: e.endTime?.toISOString() || null,
-        duration: e.duration,
-        projectName: e.project?.name || null,
+        duration: Number(e.hoursWorked || 0),
+        projectName: e.projectName || null,
       })),
       todayTotal,
       weekTotal,
@@ -58,19 +58,19 @@ export const POST = withAdminGuard(async (request) => {
     if (action === 'start') {
       // Stop any running timer first
       const running = await prisma.timeEntry.findFirst({ where: { endTime: null } });
-      if (running) {
-        const duration = Math.round((Date.now() - running.startTime.getTime()) / 60000);
-        await prisma.timeEntry.update({ where: { id: running.id }, data: { endTime: new Date(), duration } });
+      if (running && running.startTime) {
+        const hoursWorked = Math.round((Date.now() - running.startTime.getTime()) / 60000) / 60;
+        await prisma.timeEntry.update({ where: { id: running.id }, data: { endTime: new Date(), hoursWorked } });
       }
       const entry = await prisma.timeEntry.create({
-        data: { startTime: new Date(), description: description || 'Timer mobile', projectId: projectId || undefined },
+        data: { startTime: new Date(), description: description || 'Timer mobile', projectId: projectId || undefined, userName: 'Mobile User', hoursWorked: 0 },
       });
       return NextResponse.json(entry, { status: 201 });
     } else {
       const running = await prisma.timeEntry.findFirst({ where: { endTime: null } });
       if (!running) return NextResponse.json({ error: 'Aucun timer actif' }, { status: 404 });
-      const duration = Math.round((Date.now() - running.startTime.getTime()) / 60000);
-      const entry = await prisma.timeEntry.update({ where: { id: running.id }, data: { endTime: new Date(), duration } });
+      const hoursWorked = running.startTime ? Math.round((Date.now() - running.startTime.getTime()) / 60000) / 60 : 0;
+      const entry = await prisma.timeEntry.update({ where: { id: running.id }, data: { endTime: new Date(), hoursWorked } });
       return NextResponse.json(entry);
     }
   } catch (error) {

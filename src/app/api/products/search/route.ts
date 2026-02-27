@@ -269,9 +269,9 @@ export async function GET(request: NextRequest) {
                 name: true,
                 slug: true,
                 // P-04 FIX: include translations inline to avoid a separate getTranslatedFieldsBatch call
-                translations: locale !== DB_SOURCE_LOCALE
-                  ? { where: { locale }, select: { name: true }, take: 1 }
-                  : false,
+                ...(locale !== DB_SOURCE_LOCALE
+                  ? { translations: { where: { locale }, select: { name: true }, take: 1 } }
+                  : {}),
               },
             },
             images: {
@@ -329,7 +329,7 @@ export async function GET(request: NextRequest) {
             };
           }
           return p;
-        });
+        }) as typeof products;
       }
 
       // Get categories with product counts for facets

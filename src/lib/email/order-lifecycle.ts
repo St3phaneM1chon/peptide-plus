@@ -84,6 +84,11 @@ export async function sendOrderLifecycleEmail(
     }
 
     // ── 2. Load user ──────────────────────────────────────────────────────
+    if (!order.userId) {
+      logger.error('[OrderLifecycleEmail] Order has no userId — skipping email', { orderId, event });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: order.userId },
       select: { id: true, name: true, email: true, locale: true },
@@ -128,7 +133,7 @@ export async function sendOrderLifecycleEmail(
       shippingAddress: {
         name: order.shippingName,
         address1: order.shippingAddress1,
-        address2: order.shippingAddress2 || undefined,
+        address2: order.shippingAddress2 ?? undefined,
         city: order.shippingCity,
         state: order.shippingState,
         postalCode: order.shippingPostal,

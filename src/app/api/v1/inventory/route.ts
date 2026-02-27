@@ -40,7 +40,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
       {
         AND: [
           { reorderPoint: { not: null } },
-          { stockQuantity: { lte: prisma.$queryRaw ? 5 : 5 } },
+          { stockQuantity: { lte: 5 } },
         ],
       },
     ];

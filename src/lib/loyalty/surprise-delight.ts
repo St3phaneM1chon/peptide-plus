@@ -47,7 +47,7 @@ export function checkAnniversaryReward(createdAt: Date, lastAnniversaryReward: D
   };
 }
 
-export function generateRandomSurprise(orderCount: number, lastSurpriseDate: Date | null): SurpriseReward | null {
+export function generateRandomSurprise(_orderCount: number, lastSurpriseDate: Date | null): SurpriseReward | null {
   // Only surprise every 30+ days
   if (lastSurpriseDate) {
     const daysSince = (Date.now() - lastSurpriseDate.getTime()) / (1000 * 60 * 60 * 24);

@@ -55,20 +55,6 @@ export function verifyTOTP(secret: string, token: string): boolean {
   }
 }
 
-/**
- * Génère le code TOTP actuel (pour tests uniquement!)
- * AMELIORATION FID-002: Restricted to non-production environments
- */
-// FAILLE-015 FIX: Removed export - this function must not be publicly accessible.
-// It is for internal/test use only and should never be callable from outside this module.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _generateCurrentTOTP(secret: string): string {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('generateCurrentTOTP is disabled in production');
-  }
-  return authenticator.generate(secret);
-}
-
 // =====================================================
 // BACKUP CODES
 // =====================================================

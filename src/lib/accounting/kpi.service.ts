@@ -6,7 +6,6 @@
  */
 
 import { prisma } from '@/lib/db';
-import { Prisma } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,59 +50,6 @@ function getPreviousPeriod(startDate: Date, endDate: Date): { prevStart: Date; p
   return { prevStart, prevEnd };
 }
 
-async function sumByAccountType(
-  accountType: string,
-  startDate?: Date,
-  endDate?: Date,
-  codePrefix?: string,
-): Promise<number> {
-  const dateFilter: Prisma.JournalEntryWhereInput = {
-    status: 'POSTED',
-    deletedAt: null,
-    ...(startDate || endDate
-      ? {
-          date: {
-            ...(startDate ? { gte: startDate } : {}),
-            ...(endDate ? { lte: endDate } : {}),
-          },
-        }
-      : {}),
-  };
-
-  const accountFilter: Prisma.ChartOfAccountWhereInput = {
-    type: accountType as Prisma.EnumAccountTypeFilter['equals'],
-    isActive: true,
-    ...(codePrefix ? { code: { startsWith: codePrefix } } : {}),
-  };
-
-  try {
-    const result = await prisma.journalLine.aggregate({
-      where: {
-        entry: dateFilter,
-        account: accountFilter,
-      },
-      _sum: {
-        debit: true,
-        credit: true,
-      },
-    });
-
-    const totalDebit = Number(result._sum.debit ?? 0);
-    const totalCredit = Number(result._sum.credit ?? 0);
-
-    if (accountType === 'ASSET' || accountType === 'EXPENSE') {
-      return totalDebit - totalCredit;
-    }
-    return totalCredit - totalDebit;
-  } catch (error) {
-    console.error('[KPIService] sumByAccountType query failed:', {
-      accountType,
-      codePrefix,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return 0;
-  }
-}
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;

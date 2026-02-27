@@ -57,8 +57,8 @@ export const POST = withAdminGuard(async (request) => {
         notes: parsed.note || `Catégorie: ${parsed.category}`,
         lines: {
           create: [
-            { accountCode: parsed.accountCode, description: parsed.description, debit: parsed.amount, credit: 0, lineOrder: 1 },
-            { accountCode: '1000', description: parsed.description, debit: 0, credit: parsed.amount, lineOrder: 2 },
+            { accountId: parsed.accountCode, description: parsed.description, debit: parsed.amount, credit: 0, lineOrder: 1 },
+            { accountId: '1000', description: parsed.description, debit: 0, credit: parsed.amount, lineOrder: 2 },
           ],
         },
       },

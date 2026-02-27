@@ -29,8 +29,8 @@ export const POST = withAdminGuard(async (request) => {
         notes: parsed.ocrText ? `OCR: ${parsed.ocrText.slice(0, 500)}` : undefined,
         lines: {
           create: [
-            { accountCode: parsed.category, description: `Reçu ${parsed.vendor}`, debit: parsed.amount, credit: 0, lineOrder: 1 },
-            { accountCode: '1000', description: `Paiement ${parsed.vendor}`, debit: 0, credit: parsed.amount, lineOrder: 2 },
+            { accountId: parsed.category, description: `Reçu ${parsed.vendor}`, debit: parsed.amount, credit: 0, lineOrder: 1 },
+            { accountId: '1000', description: `Paiement ${parsed.vendor}`, debit: 0, credit: parsed.amount, lineOrder: 2 },
           ],
         },
       },

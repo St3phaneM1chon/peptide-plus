@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { createServerTranslator, type Locale } from '@/i18n/server';
-import { defaultLocale } from '@/i18n/config';
+import { createServerTranslator } from '@/i18n/server';
+import { type Locale, defaultLocale } from '@/i18n/config';
 
 /**
  * Safely get the server locale, falling back to defaultLocale if cookies()

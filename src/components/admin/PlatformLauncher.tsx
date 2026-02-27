@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import Image from 'next/image';
-import { Monitor, Video, ExternalLink } from 'lucide-react';
+import { Monitor, ExternalLink } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { getPlatform } from '@/lib/admin/platform-config';
 

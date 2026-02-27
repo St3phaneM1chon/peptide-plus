@@ -238,10 +238,20 @@ export default function EmailsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [templatesRes, logsRes] = await Promise.all([
+      const [templatesRes, logsRes, settingsRes] = await Promise.all([
         fetch('/api/admin/emails'),
         fetch('/api/admin/emails/logs'),
+        fetch('/api/admin/emails/settings'),
       ]);
+
+      // Load email settings (including auth status) on initial fetch
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData?.settings) {
+          setEmailSettings(settingsData.settings);
+          setSettingsLoaded(true);
+        }
+      }
 
       if (templatesRes.ok) {
         const templatesData = await templatesRes.json();

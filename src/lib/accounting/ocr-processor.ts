@@ -18,7 +18,6 @@ export interface OcrExtraction {
 }
 
 // Common patterns for Canadian invoices
-const AMOUNT_PATTERN = /\$?\s*(\d{1,3}(?:[, ]\d{3})*(?:\.\d{2}))/g;
 const DATE_PATTERNS = [
   /(\d{4}[-/]\d{2}[-/]\d{2})/, // 2026-02-24
   /(\d{2}[-/]\d{2}[-/]\d{4})/, // 24/02/2026
