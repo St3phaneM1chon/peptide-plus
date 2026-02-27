@@ -215,7 +215,7 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
       </div>
 
       {/* ── Right section ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* Bell / Notifications */}
         <button
           type="button"
