@@ -259,7 +259,7 @@ export default function EmailsPage() {
   const fetchSentEmails = async () => {
     setSentLoading(true);
     try {
-      const res = await fetch('/api/admin/emails/logs?status=SENT&excludeCampaigns=true');
+      const res = await fetch('/api/admin/emails/logs?excludeCampaigns=true&limit=100');
       if (res.ok) {
         const data = await res.json();
         setSentEmails((data.logs || []).map((l: Record<string, unknown>) => ({
@@ -1302,7 +1302,7 @@ export default function EmailsPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-slate-900 truncate">{email.to}</span>
+                        <span className="text-sm font-medium text-slate-900 truncate">À: {email.to}</span>
                         <span className="text-[10px] text-slate-400 whitespace-nowrap">
                           {new Date(email.sentAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -1310,8 +1310,9 @@ export default function EmailsPage() {
                       <p className="text-sm text-slate-600 truncate mt-0.5">{email.subject}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-medium ${
-                          email.status === 'SENT' ? 'bg-green-100 text-green-700' :
-                          email.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                          ['sent', 'delivered'].includes(email.status.toLowerCase()) ? 'bg-green-100 text-green-700' :
+                          ['opened', 'clicked'].includes(email.status.toLowerCase()) ? 'bg-blue-100 text-blue-700' :
+                          ['failed', 'bounced'].includes(email.status.toLowerCase()) ? 'bg-red-100 text-red-700' :
                           'bg-yellow-100 text-yellow-700'
                         }`}>{email.status}</span>
                       </div>
@@ -1359,12 +1360,14 @@ export default function EmailsPage() {
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold text-slate-900">{selectedSentEmail.subject}</h2>
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
+                    <span><strong>{t('admin.emailConfig.from') || 'De'}:</strong> {emailSettings['email.senderEmail'] || 'noreply@biocyclepeptides.com'}</span>
                     <span><strong>{t('admin.emailConfig.recipient') || 'À'}:</strong> {selectedSentEmail.to}</span>
                     <span>{new Date(selectedSentEmail.sentAt).toLocaleString(locale)}</span>
                     <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                      selectedSentEmail.status === 'SENT' ? 'bg-green-100 text-green-700' :
-                      selectedSentEmail.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                      ['sent', 'delivered'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-green-100 text-green-700' :
+                      ['opened', 'clicked'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-blue-100 text-blue-700' :
+                      ['failed', 'bounced'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-red-100 text-red-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>{selectedSentEmail.status}</span>
                   </div>

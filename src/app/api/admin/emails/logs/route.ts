@@ -37,7 +37,7 @@ function buildLogFilters(searchParams: URLSearchParams): Record<string, unknown>
   const excludeCampaigns = searchParams.get('excludeCampaigns') === 'true';
 
   const where: Record<string, unknown> = {};
-  if (status) where.status = status;
+  if (status) where.status = { equals: status, mode: 'insensitive' };
   if (to) where.to = { contains: to, mode: 'insensitive' };
   if (templateId) where.templateId = templateId;
   // Exclude campaign/group emails when browsing "Sent" folder
