@@ -11,7 +11,7 @@ import { useI18n } from '@/i18n/client';
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
   Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
-  ImageIcon, BarChart3, House, Edit2,
+  ImageIcon, BarChart3, House, Edit2, FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -34,6 +34,14 @@ interface VideoItem {
   isFeatured: boolean;
   isPublished: boolean;
   createdAt: string;
+  contentType: string;
+  source: string;
+  sourceUrl: string | null;
+  visibility: string;
+  status: string;
+  videoCategoryId: string | null;
+  featuredClientId: string | null;
+  videoCategory: { id: string; name: string; slug: string } | null;
 }
 
 interface Pagination {
@@ -52,6 +60,9 @@ export default function MediaVideosPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [filterPublished, setFilterPublished] = useState<string>('');
+  const [filterContentType, setFilterContentType] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterSource, setFilterSource] = useState<string>('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,6 +72,7 @@ export default function MediaVideosPage() {
     title: '', description: '', videoUrl: '', thumbnailUrl: '',
     duration: '', category: '', tags: '', instructor: '',
     isFeatured: false, isPublished: false,
+    contentType: 'GENERAL', source: 'YOUTUBE', visibility: 'PUBLIC', status: 'DRAFT',
   });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -75,6 +87,7 @@ export default function MediaVideosPage() {
     title: '', description: '', videoUrl: '', thumbnailUrl: '',
     duration: '', category: '', tags: '', instructor: '',
     isFeatured: false, isPublished: false,
+    contentType: 'GENERAL', source: 'YOUTUBE', visibility: 'PUBLIC', status: 'DRAFT',
   });
   const [updating, setUpdating] = useState(false);
 
@@ -84,6 +97,9 @@ export default function MediaVideosPage() {
       const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (search) params.set('search', search);
       if (filterPublished) params.set('isPublished', filterPublished);
+      if (filterContentType) params.set('contentType', filterContentType);
+      if (filterStatus) params.set('status', filterStatus);
+      if (filterSource) params.set('source', filterSource);
       const res = await fetch(`/api/admin/videos?${params}`);
       const data = await res.json();
       setVideos(data.videos || []);
@@ -93,7 +109,7 @@ export default function MediaVideosPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterPublished]);
+  }, [page, search, filterPublished, filterContentType, filterStatus, filterSource]);
 
   useEffect(() => { loadVideos(); }, [loadVideos]);
 
@@ -156,6 +172,10 @@ export default function MediaVideosPage() {
       instructor: v.instructor || '',
       isFeatured: v.isFeatured,
       isPublished: v.isPublished,
+      contentType: v.contentType || 'GENERAL',
+      source: v.source || 'YOUTUBE',
+      visibility: v.visibility || 'PUBLIC',
+      status: v.status || 'DRAFT',
     });
     setFormError(null);
   }, []);
@@ -247,7 +267,7 @@ export default function MediaVideosPage() {
       if (res.ok) {
         setShowForm(false);
         setFormError(null);
-        setForm({ title: '', description: '', videoUrl: '', thumbnailUrl: '', duration: '', category: '', tags: '', instructor: '', isFeatured: false, isPublished: false });
+        setForm({ title: '', description: '', videoUrl: '', thumbnailUrl: '', duration: '', category: '', tags: '', instructor: '', isFeatured: false, isPublished: false, contentType: 'GENERAL', source: 'YOUTUBE', visibility: 'PUBLIC', status: 'DRAFT' });
         loadVideos();
         toast.success(t('admin.media.videoCreated') || 'Video created successfully');
       } else {
@@ -387,6 +407,41 @@ export default function MediaVideosPage() {
             <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.tagsPlaceholder') || 'Tags (comma-separated)'} value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
           </div>
           <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          {/* Content Hub fields */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.contentType} onChange={e => setForm({ ...form, contentType: e.target.value })} aria-label="Content Type">
+              <option value="GENERAL">General</option>
+              <option value="PODCAST">Podcast</option>
+              <option value="TRAINING">Training</option>
+              <option value="WEBINAR">Webinar</option>
+              <option value="TESTIMONIAL">Testimonial</option>
+              <option value="PRODUCT_DEMO">Product Demo</option>
+              <option value="RESEARCH">Research</option>
+              <option value="TUTORIAL">Tutorial</option>
+              <option value="INTERVIEW">Interview</option>
+              <option value="CONFERENCE">Conference</option>
+            </select>
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} aria-label="Source">
+              <option value="YOUTUBE">YouTube</option>
+              <option value="VIMEO">Vimeo</option>
+              <option value="TEAMS">Teams</option>
+              <option value="ZOOM">Zoom</option>
+              <option value="UPLOAD">Upload</option>
+              <option value="EXTERNAL">External</option>
+            </select>
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.visibility} onChange={e => setForm({ ...form, visibility: e.target.value })} aria-label="Visibility">
+              <option value="PUBLIC">Public</option>
+              <option value="PRIVATE">Private</option>
+              <option value="INTERNAL">Internal</option>
+              <option value="CLIENTS_ONLY">Clients Only</option>
+            </select>
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} aria-label="Status">
+              <option value="DRAFT">Draft</option>
+              <option value="REVIEW">Review</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+          </div>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
@@ -430,6 +485,51 @@ export default function MediaVideosPage() {
           <option value="">{t('common.all') || 'All'}</option>
           <option value="true">{t('admin.media.published') || 'Published'}</option>
           <option value="false">{t('admin.media.draft') || 'Draft'}</option>
+        </select>
+        {/* Content Hub filters */}
+        <select
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+          value={filterContentType}
+          onChange={e => { setFilterContentType(e.target.value); setPage(1); }}
+          aria-label="Filter by content type"
+        >
+          <option value="">Content Type</option>
+          <option value="GENERAL">General</option>
+          <option value="PODCAST">Podcast</option>
+          <option value="TRAINING">Training</option>
+          <option value="WEBINAR">Webinar</option>
+          <option value="TESTIMONIAL">Testimonial</option>
+          <option value="PRODUCT_DEMO">Product Demo</option>
+          <option value="RESEARCH">Research</option>
+          <option value="TUTORIAL">Tutorial</option>
+          <option value="INTERVIEW">Interview</option>
+          <option value="CONFERENCE">Conference</option>
+        </select>
+        <select
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+          value={filterStatus}
+          onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
+          aria-label="Filter by status"
+        >
+          <option value="">Status</option>
+          <option value="DRAFT">Draft</option>
+          <option value="REVIEW">Review</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
+        <select
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+          value={filterSource}
+          onChange={e => { setFilterSource(e.target.value); setPage(1); }}
+          aria-label="Filter by source"
+        >
+          <option value="">Source</option>
+          <option value="YOUTUBE">YouTube</option>
+          <option value="VIMEO">Vimeo</option>
+          <option value="TEAMS">Teams</option>
+          <option value="ZOOM">Zoom</option>
+          <option value="UPLOAD">Upload</option>
+          <option value="EXTERNAL">External</option>
         </select>
       </div>
 
@@ -476,10 +576,42 @@ export default function MediaVideosPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-900 truncate">{v.title}</p>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
                       {v.duration && <span>{v.duration}</span>}
                       {v.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded">{v.category}</span>}
                       {v.instructor && <span>{t('admin.media.videoBy') || 'by'} {v.instructor}</span>}
+                      {/* Content Hub badges */}
+                      {v.status && (
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          v.status === 'DRAFT' ? 'bg-slate-100 text-slate-600' :
+                          v.status === 'REVIEW' ? 'bg-amber-100 text-amber-700' :
+                          v.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' :
+                          v.status === 'ARCHIVED' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {v.status}
+                        </span>
+                      )}
+                      {v.contentType && v.contentType !== 'GENERAL' && (
+                        <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-medium">
+                          {v.contentType.replace('_', ' ')}
+                        </span>
+                      )}
+                      {v.source && v.source !== 'YOUTUBE' && (
+                        <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-medium">
+                          {v.source}
+                        </span>
+                      )}
+                      {v.visibility && v.visibility !== 'PUBLIC' && (
+                        <span className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-medium">
+                          {v.visibility}
+                        </span>
+                      )}
+                      {v.videoCategory && (
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-medium">
+                          {v.videoCategory.name}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -491,6 +623,15 @@ export default function MediaVideosPage() {
                     </div>
                     {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                     {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
+                    {/* View Detail link */}
+                    <Link
+                      href={`/admin/media/videos/${v.id}`}
+                      className="text-slate-400 hover:text-sky-600"
+                      aria-label={t('admin.media.viewDetail') || 'View detail'}
+                      title={t('admin.media.viewDetail') || 'View detail'}
+                    >
+                      <FileText className="w-4 h-4" />
+                    </Link>
                     {/* F32 FIX: Edit button for inline video editing */}
                     <button
                       onClick={() => editingId === v.id ? setEditingId(null) : startEdit(v)}
@@ -540,6 +681,41 @@ export default function MediaVideosPage() {
                         <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.tagsPlaceholder') || 'Tags (comma-separated)'} value={editForm.tags} onChange={e => setEditForm({ ...editForm, tags: e.target.value })} />
                       </div>
                       <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+                      {/* Content Hub fields */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.contentType} onChange={e => setEditForm({ ...editForm, contentType: e.target.value })} aria-label="Content Type">
+                          <option value="GENERAL">General</option>
+                          <option value="PODCAST">Podcast</option>
+                          <option value="TRAINING">Training</option>
+                          <option value="WEBINAR">Webinar</option>
+                          <option value="TESTIMONIAL">Testimonial</option>
+                          <option value="PRODUCT_DEMO">Product Demo</option>
+                          <option value="RESEARCH">Research</option>
+                          <option value="TUTORIAL">Tutorial</option>
+                          <option value="INTERVIEW">Interview</option>
+                          <option value="CONFERENCE">Conference</option>
+                        </select>
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.source} onChange={e => setEditForm({ ...editForm, source: e.target.value })} aria-label="Source">
+                          <option value="YOUTUBE">YouTube</option>
+                          <option value="VIMEO">Vimeo</option>
+                          <option value="TEAMS">Teams</option>
+                          <option value="ZOOM">Zoom</option>
+                          <option value="UPLOAD">Upload</option>
+                          <option value="EXTERNAL">External</option>
+                        </select>
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.visibility} onChange={e => setEditForm({ ...editForm, visibility: e.target.value })} aria-label="Visibility">
+                          <option value="PUBLIC">Public</option>
+                          <option value="PRIVATE">Private</option>
+                          <option value="INTERNAL">Internal</option>
+                          <option value="CLIENTS_ONLY">Clients Only</option>
+                        </select>
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} aria-label="Status">
+                          <option value="DRAFT">Draft</option>
+                          <option value="REVIEW">Review</option>
+                          <option value="PUBLISHED">Published</option>
+                          <option value="ARCHIVED">Archived</option>
+                        </select>
+                      </div>
                       <div className="flex items-center gap-4">
                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={editForm.isPublished} onChange={e => setEditForm({ ...editForm, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={editForm.isFeatured} onChange={e => setEditForm({ ...editForm, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>

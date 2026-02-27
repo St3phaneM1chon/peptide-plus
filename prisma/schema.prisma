@@ -1820,6 +1820,7 @@ model Product {
   reviews             Review[]
   stockAlerts         StockAlert[]
   upsellConfig        UpsellConfig?
+  videoLinks          VideoProductLink[]
 
   @@index([categoryId])
   @@index([isBestseller])
@@ -2781,6 +2782,12 @@ model User {
   termsVersion      String?
   privacyAcceptedAt DateTime?
 
+  // Content Hub relations
+  createdVideos      Video[]       @relation("VideoCreatedBy")
+  featuredInVideos   Video[]       @relation("VideoFeaturedClient")
+  consentsGiven      SiteConsent[] @relation("ConsentClient")
+  consentsRequested  SiteConsent[] @relation("ConsentRequester")
+
   @@index([role])
   @@index([createdAt])
   @@index([loyaltyTier])
@@ -2877,8 +2884,8 @@ model Video {
   thumbnailUrl String?
   videoUrl     String?
   duration     String?
-  category     String?
-  tags         String?
+  category     String?            // Legacy string category (kept for backward compat)
+  tags         String?            // Legacy CSV tags (kept for backward compat)
   instructor   String?
   views        Int                @default(0)
   isFeatured   Boolean            @default(false)
@@ -2887,7 +2894,26 @@ model Video {
   sortOrder    Int                @default(0)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
-  translations VideoTranslation[]
+
+  // Content Hub fields
+  contentType      VideoContentType  @default(OTHER)
+  source           VideoSource       @default(YOUTUBE)
+  sourceUrl        String?           // Original URL from source platform
+  visibility       ContentVisibility @default(PUBLIC)
+  status           ContentStatus     @default(DRAFT)
+  videoCategoryId  String?           // FK -> VideoCategory
+  createdById      String?           // FK -> User (who created this)
+  featuredClientId String?           // FK -> User (client who appears in video)
+
+  // Relations
+  translations     VideoTranslation[]
+  videoCategory    VideoCategory?    @relation(fields: [videoCategoryId], references: [id], onDelete: SetNull)
+  createdBy        User?             @relation("VideoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  featuredClient   User?             @relation("VideoFeaturedClient", fields: [featuredClientId], references: [id], onDelete: SetNull)
+  placements       VideoPlacement[]
+  productLinks     VideoProductLink[]
+  videoTags        VideoTag[]
+  consents         SiteConsent[]
 
   @@index([category])
   @@index([isPublished])
@@ -2895,6 +2921,13 @@ model Video {
   @@index([createdAt])
   @@index([updatedAt])
   @@index([title])    // F-57: Text search on video title
+  @@index([contentType])
+  @@index([source])
+  @@index([visibility])
+  @@index([status])
+  @@index([videoCategoryId])
+  @@index([createdById])
+  @@index([featuredClientId])
 }
 
 model VideoTranslation {
@@ -5333,4 +5366,284 @@ model RSDeCalculation {
 
   @@index([projectId])
   @@index([fiscalYear])
+}
+
+// =====================================================
+// CONTENT HUB / MEDIATHEQUE
+// =====================================================
+
+enum VideoContentType {
+  PODCAST
+  TRAINING
+  PERSONAL_SESSION
+  PRODUCT_DEMO
+  TESTIMONIAL
+  FAQ_VIDEO
+  WEBINAR_RECORDING
+  TUTORIAL
+  BRAND_STORY
+  LIVE_STREAM
+  OTHER
+}
+
+enum VideoSource {
+  YOUTUBE
+  VIMEO
+  TEAMS
+  ZOOM
+  WEBEX
+  GOOGLE_MEET
+  WHATSAPP
+  X_TWITTER
+  TIKTOK
+  NATIVE_UPLOAD
+  OTHER
+}
+
+enum ContentVisibility {
+  PUBLIC
+  CUSTOMERS_ONLY
+  CLIENTS_ONLY
+  EMPLOYEES_ONLY
+  PRIVATE
+}
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentPlacement {
+  HOMEPAGE_HERO
+  HOMEPAGE_FEATURED
+  PRODUCT_PAGE
+  VIDEO_LIBRARY
+  WEBINAR_ARCHIVE
+  LEARNING_CENTER
+  BLOG_EMBED
+  FAQ_SECTION
+  CUSTOMER_ACCOUNT
+  AMBASSADOR_PAGE
+  CALCULATOR_HELP
+  LAB_RESULTS
+  COMMUNITY
+}
+
+enum ContentConsentStatus {
+  PENDING
+  GRANTED
+  REVOKED
+  EXPIRED
+}
+
+enum ContentConsentType {
+  VIDEO_APPEARANCE
+  TESTIMONIAL
+  PHOTO
+  CASE_STUDY
+  MARKETING
+  OTHER
+}
+
+// Video categories managed by OWNER (CRUD)
+model VideoCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent       VideoCategory?              @relation("VideoCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     VideoCategory[]             @relation("VideoCategoryHierarchy")
+  translations VideoCategoryTranslation[]
+  videos       Video[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model VideoCategoryTranslation {
+  id              String             @id @default(cuid())
+  videoCategoryId String
+  locale          String
+  name            String?
+  description     String?
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  qualityLevel    TranslationQuality @default(draft)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  videoCategory VideoCategory @relation(fields: [videoCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([videoCategoryId, locale])
+  @@index([locale])
+  @@index([videoCategoryId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Where a video is displayed on the site
+model VideoPlacement {
+  id          String           @id @default(cuid())
+  videoId     String
+  placement   ContentPlacement
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  contextId   String?          // e.g. productId for PRODUCT_PAGE
+  contextType String?          // e.g. "Product", "BlogPost"
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, placement, contextId])
+  @@index([placement])
+  @@index([videoId])
+  @@index([contextId])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// M:N relation between Video and Product
+model VideoProductLink {
+  id        String   @id @default(cuid())
+  videoId   String
+  productId String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video   Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, productId])
+  @@index([videoId])
+  @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Normalized video tags
+model VideoTag {
+  id      String @id @default(cuid())
+  videoId String
+  tag     String
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, tag])
+  @@index([videoId])
+  @@index([tag])
+}
+
+// Tracks ALL content consents for the site (only required when publishing video publicly)
+model SiteConsent {
+  id       String               @id @default(cuid())
+  clientId String
+  type     ContentConsentType   @default(VIDEO_APPEARANCE)
+  status   ContentConsentStatus @default(PENDING)
+
+  // Optional link to content
+  videoId String?
+
+  // Form
+  formTemplateId String?
+  responses      Json?    // { questionId: answer }
+
+  // Electronic proof
+  grantedAt   DateTime?
+  revokedAt   DateTime?
+  expiresAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  signatureHash String?  // SHA-256 tamper detection
+
+  // PDF
+  pdfUrl         String?
+  pdfGeneratedAt DateTime?
+
+  // Admin
+  requestedById    String?
+  requestedAt      DateTime  @default(now())
+  revocationReason String?
+  token            String?   @unique // Unique token for public consent form
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client       User                 @relation("ConsentClient", fields: [clientId], references: [id], onDelete: Cascade)
+  video        Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  formTemplate ConsentFormTemplate?  @relation(fields: [formTemplateId], references: [id], onDelete: SetNull)
+  requestedBy  User?                @relation("ConsentRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([videoId])
+  @@index([status])
+  @@index([type])
+  @@index([formTemplateId])
+  @@index([requestedById])
+  @@index([grantedAt])
+  @@index([revokedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Configurable consent form templates
+model ConsentFormTemplate {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique
+  description String?
+  version     Int                 @default(1)
+  isActive    Boolean             @default(true)
+  type        ContentConsentType  @default(VIDEO_APPEARANCE)
+  questions   Json                // [{id, question, type: "checkbox"|"text"|"signature", required}]
+  legalText   String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  translations ConsentFormTranslation[]
+  consents     SiteConsent[]
+
+  @@index([isActive])
+  @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ConsentFormTranslation {
+  id               String             @id @default(cuid())
+  formTemplateId   String
+  locale           String
+  name             String?
+  description      String?
+  questions        Json?              // Translated questions
+  legalText        String?
+  contentHash      String?
+  translatedBy     String?            @default("gpt-4o-mini")
+  isApproved       Boolean            @default(false)
+  qualityLevel     TranslationQuality @default(draft)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  formTemplate ConsentFormTemplate @relation(fields: [formTemplateId], references: [id], onDelete: Cascade)
+
+  @@unique([formTemplateId, locale])
+  @@index([locale])
+  @@index([formTemplateId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }

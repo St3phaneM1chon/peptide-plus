@@ -13,7 +13,7 @@ import {
   Megaphone, Inbox, FileBarChart, Layout, Receipt, CreditCard, Clock,
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
-  ClipboardCheck, Database, Sparkles,
+  ClipboardCheck, Database, Sparkles, Play,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -205,9 +205,13 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         labelKey: 'admin.nav.mediaManagement',
         items: [
+          { href: '/admin/media/content-hub', labelKey: 'admin.nav.contentHub', icon: Layout },
           { href: '/admin/media/videos', labelKey: 'admin.nav.mediaVideos', icon: Video },
+          { href: '/admin/media/video-categories', labelKey: 'admin.nav.videoCategories', icon: FolderOpen },
+          { href: '/admin/media/consents', labelKey: 'admin.nav.consents', icon: FileCheck },
+          { href: '/admin/media/consent-templates', labelKey: 'admin.nav.consentTemplates', icon: ClipboardCheck },
           { href: '/admin/media/images', labelKey: 'admin.nav.mediaImages', icon: ImageIcon },
-          { href: '/admin/media/library', labelKey: 'admin.nav.mediaLibrary', icon: FolderOpen },
+          { href: '/admin/media/library', labelKey: 'admin.nav.mediaLibrary', icon: Play },
         ],
         collapsible: true,
         defaultOpen: true,

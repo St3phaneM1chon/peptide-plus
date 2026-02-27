@@ -1,15 +1,15 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-26 (AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
+# LAST UPDATED: 2026-02-27 (Content Hub / Mediatheque + Video Categories + Consent Management + AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 193 | **API Routes**: 357 | **Prisma Models**: 112 | **Enums**: 30 | **Components**: 111 | **Hooks**: 16 | **Lib files**: 187
+- **Pages**: 199 | **API Routes**: 377 | **Prisma Models**: 120 | **Enums**: 30 | **Components**: 116 | **Hooks**: 16 | **Lib files**: 187
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
-- **Orphan models** (no Prisma FK): 35/109 (32.1%) -- many use soft references
+- **Orphan models** (no Prisma FK): 35/120 (29.2%) -- many use soft references
 
 ---
 
@@ -237,15 +237,15 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 ---
 
-### 1.15 MEDIA (MOSTLY STUBS)
+### 1.15 MEDIA (PARTIALLY STUBS)
 > **What**: Media library, videos, images, API integrations (Zoom, WhatsApp, Teams), advertising platforms
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (STUB), `/admin/media/library` (STUB), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/pub-google` (STUB), `/admin/media/pub-tiktok` (STUB), `/admin/media/pub-x` (STUB), `/admin/media/pub-youtube` (STUB) |
+| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (COMPLETE - see 1.19 Content Hub), `/admin/media/library` (STUB), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/pub-google` (STUB), `/admin/media/pub-tiktok` (STUB), `/admin/media/pub-x` (STUB), `/admin/media/pub-youtube` (STUB) |
 | **API Routes** | `/api/admin/medias`, `/api/admin/videos` |
 | **Models** | `Media` (orphan) |
-| **NOTE** | 9 out of 11 media pages are STUBS (title + description only). No backend for Zoom/WhatsApp/Teams/ad platforms. |
+| **NOTE** | 5 out of 11 media pages are STUBS (4 ad platforms + library). Videos now fully managed via Content Hub (1.19). |
 
 ---
 
@@ -289,6 +289,20 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | `/api/cron/stock-alerts` | StockAlert, Product | Sends notification |
 | `/api/cron/update-exchange-rates` | Currency | External API call |
 | `/api/cron/welcome-series` | User | Sends email sequence |
+
+---
+
+### 1.19 CONTENT HUB / MEDIATHEQUE
+> **What**: Video management, categorized mediatheque, consent forms (PDF/email), video placements on products/pages
+
+| Layer | Elements |
+|-------|----------|
+| **Pages** | `/admin/media/video-categories` (COMPLETE), `/admin/media/content-hub` (COMPLETE), `/admin/media/consents` (COMPLETE), `/admin/media/consent-templates` (COMPLETE), `/admin/media/videos/[id]` (COMPLETE), `/account/content` (COMPLETE), `/consent/[token]` (COMPLETE), `/videos` (refactored) |
+| **API Routes** | `/api/admin/video-categories`, `/api/admin/video-categories/[id]`, `/api/admin/videos/[id]/placements`, `/api/admin/videos/[id]/products`, `/api/admin/videos/[id]/tags`, `/api/admin/videos/[id]/consent`, `/api/admin/consent-templates`, `/api/admin/consent-templates/[id]`, `/api/admin/consents`, `/api/admin/consents/[id]`, `/api/admin/content-hub/stats`, `/api/videos`, `/api/videos/[slug]`, `/api/videos/placements/[placement]`, `/api/account/content`, `/api/account/consents`, `/api/account/consents/[id]`, `/api/consent/[token]` |
+| **Models** | `Video` (extended), `VideoCategory`, `VideoCategoryTranslation`, `VideoPlacement`, `VideoProductLink`, `VideoTag`, `SiteConsent`, `ConsentFormTemplate`, `ConsentFormTranslation` |
+| **Components** | `VideoPlayer`, `VideoCard`, `VideoGrid`, `VideoFilters`, `VideoPlacementWidget` |
+| **Lib** | `consent-pdf.ts`, `consent-email.ts`, `validations/video-category.ts`, `validations/consent.ts` |
+| **Affects** | Products (video links), Account (mediatheque), Email system (consent emails) |
 
 ---
 
@@ -695,6 +709,29 @@ orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** 
 | /api/community/seed | POST | ForumCategory | admin-guard | Seed default forum categories |
 | /api/community/debug | GET | ForumCategory,ForumPost | none | Debug endpoint for dev |
 
+### Content Hub / Mediatheque (20 routes) - NEW 2026-02-27
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/video-categories | GET,POST | VideoCategory,VideoCategoryTranslation | admin-guard | CRUD with translations |
+| /api/admin/video-categories/[id] | GET,PUT,DELETE | VideoCategory,VideoCategoryTranslation | admin-guard | Single category management |
+| /api/admin/videos/[id]/placements | GET,POST,DELETE | VideoPlacement,Video | admin-guard | Assign videos to page locations |
+| /api/admin/videos/[id]/products | GET,POST,DELETE | VideoProductLink,Video,Product | admin-guard | Link videos to products |
+| /api/admin/videos/[id]/tags | GET,POST,DELETE | VideoTag,Video | admin-guard | Tag management per video |
+| /api/admin/videos/[id]/consent | GET,POST | SiteConsent,Video | admin-guard | Consent forms for video appearances |
+| /api/admin/consent-templates | GET,POST | ConsentFormTemplate,ConsentFormTranslation | admin-guard | Consent form templates |
+| /api/admin/consent-templates/[id] | GET,PUT,DELETE | ConsentFormTemplate,ConsentFormTranslation | admin-guard | Single template management |
+| /api/admin/consents | GET,POST | SiteConsent | admin-guard | All consent records |
+| /api/admin/consents/[id] | GET,PUT,DELETE | SiteConsent | admin-guard | Single consent management |
+| /api/admin/content-hub/stats | GET | Video,VideoCategory,SiteConsent,VideoPlacement | admin-guard | Dashboard statistics |
+| /api/admin/emails/accounts | GET,POST | EmailAccount (SiteSetting) | admin-guard | Email accounts for consent sending |
+| /api/videos | GET | Video,VideoCategory,VideoTag | none | Public video listing |
+| /api/videos/[slug] | GET | Video,VideoCategory | none | Single video by slug |
+| /api/videos/placements/[placement] | GET | VideoPlacement,Video | none | Videos for a specific placement |
+| /api/account/content | GET | Video,VideoCategory,SiteConsent | auth | User mediatheque |
+| /api/account/consents | GET,POST | SiteConsent,ConsentFormTemplate | auth | User consent management |
+| /api/account/consents/[id] | GET | SiteConsent | auth | Single consent detail |
+| /api/consent/[token] | GET,POST | SiteConsent,ConsentFormTemplate | none (token) | Public consent form signing |
+
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
 
@@ -718,6 +755,15 @@ products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, 
 
 ### Admin-Specific Components (28)
 PageHeader, StatCard, Modal, Button, DataTable, FilterBar, FormField, MediaUploader, MediaGalleryUploader, WebNavigator, CsrfInit, ContactListPage, StatusBadge, EmptyState, SectionCard, OutlookRibbon, SplitLayout, ContentList, DetailPane, FolderPane, IconRail, ChatPreview, AvatarCircle, OutlookTopBar, MobileSplitLayout, IntegrationCard, **AdminCommandPalette** (NEW - Cmd+K global search/navigation), **KeyboardShortcutsDialog** (NEW - ?-key shortcut reference)
+
+### Content Hub / Video Components (5) - NEW 2026-02-27
+| Component | Used By (pages) |
+|-----------|-----------------|
+| `VideoPlayer` | /admin/media/videos/[id], /videos, /product/[slug], /account/content |
+| `VideoCard` | /admin/media/content-hub, /videos, /account/content |
+| `VideoGrid` | /admin/media/content-hub, /videos, /account/content |
+| `VideoFilters` | /admin/media/content-hub, /videos |
+| `VideoPlacementWidget` | /admin/media/videos/[id], product pages (embedded) |
 
 ### Shop-Specific Components (57)
 Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, ProductQA, CartDrawer, CartCrossSell, SearchModal, QuickViewModal, WishlistButton, FormatSelector, PeptideCalculator, CompareButton, CompareBar, NewsletterPopup, MailingListSignup, CookieConsent, FreeShippingBanner, FlashSaleBanner, TrustBadges, ShareButtons, UpsellInterstitialModal, StickyAddToCart, BundleCard, StockAlertButton, PriceDropButton, GiftCardRedeem, RecentlyViewed, TextToSpeechButton, DisclaimerModal, QuantityTiers, CategoryScroller, ProductBadges, HeroSlider, ProductVideo, SubscriptionOfferModal...
@@ -771,9 +817,9 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 | **Order** | 4 | Cascades OrderItems. SetNull PaymentErrors. |
 | **EmailConversation** | 4 | Cascades inbound/outbound/notes/activities |
 
-### Translation Models (14)
+### Translation Models (16)
 ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy @default("gpt-4o-mini")`
-- Article, BlogPost, Category, Faq, Guide, HeroSlide, NewsArticle, Page, Product, ProductFormat, QuickReply, Testimonial, Video, Webinar
+- Article, BlogPost, Category, ConsentFormTranslation, Faq, Guide, HeroSlide, NewsArticle, Page, Product, ProductFormat, QuickReply, Testimonial, Video, VideoCategoryTranslation, Webinar
 
 ### Community Forum Models (4) - NEW 2026-02-25
 | Model | Fields | Relations | Notes |
@@ -787,6 +833,24 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | Model | Fields | Relations | Notes |
 |-------|--------|-----------|-------|
 | `ContactMessage` | id, name, email, subject, message, status, userId?, readAt, archivedAt | user(User?) | Persisted contact form messages, optional user FK |
+
+### Content Hub / Mediatheque Models (8) - NEW 2026-02-27
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `VideoCategory` | id, slug, sortOrder, isActive, createdAt, updatedAt | translations(VideoCategoryTranslation[]), videos(Video[]) | Hierarchical video categories, unique slug |
+| `VideoCategoryTranslation` | id, videoCategoryId, locale, name, description | videoCategory(VideoCategory) | @@unique([videoCategoryId, locale]) |
+| `VideoPlacement` | id, videoId, placement, position, isActive, startDate?, endDate? | video(Video) | Where a video appears (homepage, product page, etc.) |
+| `VideoProductLink` | id, videoId, productId, sortOrder | video(Video), product(Product) | @@unique([videoId, productId]), links videos to products |
+| `VideoTag` | id, videoId, tag | video(Video) | @@unique([videoId, tag]), tagging system for videos |
+| `SiteConsent` | id, type, status, signerName, signerEmail, signedAt?, token, videoId?, templateId?, pdfUrl?, metadata? | video(Video?), template(ConsentFormTemplate?) | Consent records (image/video rights), token-based signing |
+| `ConsentFormTemplate` | id, slug, isActive, createdAt, updatedAt | translations(ConsentFormTranslation[]), consents(SiteConsent[]) | Reusable consent form templates, unique slug |
+| `ConsentFormTranslation` | id, templateId, locale, title, content, fields? | template(ConsentFormTemplate) | @@unique([templateId, locale]) |
+
+### Updated Models (2026-02-27)
+| Model | Change | Details |
+|-------|--------|---------|
+| `Video` | Extended | Added `categoryId` FK to VideoCategory, `placements`, `productLinks`, `tags`, `consents` relations |
+| `Product` | New relation | Added `videoLinks(VideoProductLink[])` relation for video associations |
 
 ### Updated Models (2026-02-25)
 | Model | Change | Details |
@@ -884,7 +948,7 @@ manifest.json, sw.js, offline.html, icons
 3. ~~**Media APIs (Zoom/WhatsApp/Teams)**~~ -- FIXED 2026-02-21: Config dashboards, services, API routes, IntegrationCard
 4. ~~**Audit Logging Coverage**~~ -- FIXED 2026-02-24 (S10-06): 100% admin API audit logging with `logAdminAction()`
 5. ~~**Skeleton Loading**~~ -- FIXED 2026-02-24 (S11): 119 loading.tsx files across all admin pages
-6. **Media Section** -- 6 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Videos, Library)
+6. **Media Section** -- 5 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Library). Videos now handled by Content Hub (1.19)
 7. ~~**Community Forum**~~ -- FIXED 2026-02-25: 5 Prisma models (ForumCategory, ForumPost, ForumReply, ForumVote, ContactMessage) + 7 API routes, /community page now uses real API
 8. **About Section** -- 6 STUB pages
 9. **Checkout Payment** -- Stripe integration incomplete
@@ -957,3 +1021,64 @@ manifest.json, sw.js, offline.html, icons
 
 #### Updated Pages
 - `src/app/(shop)/community/page.tsx` -- Now uses real API (was useState local data only)
+
+### New Files (2026-02-27 Session - Content Hub / Mediatheque)
+
+#### Admin Pages (4 new)
+- `src/app/admin/media/video-categories/page.tsx` -- Video category management (CRUD, translations)
+- `src/app/admin/media/content-hub/page.tsx` -- Content hub dashboard (stats, video grid, filters)
+- `src/app/admin/media/consents/page.tsx` -- Consent records management (list, status, PDF)
+- `src/app/admin/media/consent-templates/page.tsx` -- Consent form template builder
+
+#### Client/Public Pages (2 new + 1 refactored)
+- `src/app/(shop)/account/content/page.tsx` -- User mediatheque (purchased/accessible videos)
+- `src/app/(public)/consent/[token]/page.tsx` -- Public consent form signing page (token-based)
+- `src/app/(shop)/videos/page.tsx` -- Refactored video listing with categories and filters
+
+#### Content Hub API Routes (20 files)
+- `src/app/api/admin/video-categories/route.ts` -- GET,POST video categories with translations
+- `src/app/api/admin/video-categories/[id]/route.ts` -- GET,PUT,DELETE single video category
+- `src/app/api/admin/videos/[id]/placements/route.ts` -- GET,POST,DELETE video placements
+- `src/app/api/admin/videos/[id]/products/route.ts` -- GET,POST,DELETE video-product links
+- `src/app/api/admin/videos/[id]/tags/route.ts` -- GET,POST,DELETE video tags
+- `src/app/api/admin/videos/[id]/consent/route.ts` -- GET,POST consent for video appearances
+- `src/app/api/admin/consent-templates/route.ts` -- GET,POST consent form templates
+- `src/app/api/admin/consent-templates/[id]/route.ts` -- GET,PUT,DELETE single template
+- `src/app/api/admin/consents/route.ts` -- GET,POST all consent records
+- `src/app/api/admin/consents/[id]/route.ts` -- GET,PUT,DELETE single consent
+- `src/app/api/admin/content-hub/stats/route.ts` -- GET content hub dashboard statistics
+- `src/app/api/admin/emails/accounts/route.ts` -- GET,POST email accounts configuration
+- `src/app/api/videos/route.ts` -- GET public video listing
+- `src/app/api/videos/[slug]/route.ts` -- GET single video by slug
+- `src/app/api/videos/placements/[placement]/route.ts` -- GET videos for placement location
+- `src/app/api/account/content/route.ts` -- GET user mediatheque content
+- `src/app/api/account/consents/route.ts` -- GET,POST user consents
+- `src/app/api/account/consents/[id]/route.ts` -- GET single user consent
+- `src/app/api/consent/[token]/route.ts` -- GET,POST public consent form (token-based)
+
+#### New Components (5)
+- `src/components/VideoPlayer.tsx` -- Video player with controls, responsive
+- `src/components/VideoCard.tsx` -- Video thumbnail card with metadata
+- `src/components/VideoGrid.tsx` -- Responsive grid layout for video cards
+- `src/components/VideoFilters.tsx` -- Category/tag/search filters for videos
+- `src/components/VideoPlacementWidget.tsx` -- Embeddable widget for video placements on pages/products
+
+#### New Prisma Models (8)
+- `VideoCategory` -- Video categories with translations (slug, sortOrder, isActive)
+- `VideoCategoryTranslation` -- Translations for video categories (locale, name, description)
+- `VideoPlacement` -- Video placement assignments (placement location, position, date range)
+- `VideoProductLink` -- Video-product associations (sortOrder, unique per video+product)
+- `VideoTag` -- Video tags (unique per video+tag)
+- `SiteConsent` -- Consent records (type, status, signer info, token-based signing, PDF storage)
+- `ConsentFormTemplate` -- Reusable consent form templates (slug, isActive)
+- `ConsentFormTranslation` -- Translations for consent templates (locale, title, content, fields)
+
+#### New Lib Files (4)
+- `src/lib/consent-pdf.ts` -- PDF generation for consent forms
+- `src/lib/consent-email.ts` -- Email sending for consent requests
+- `src/lib/validations/video-category.ts` -- Zod schemas for video category validation
+- `src/lib/validations/consent.ts` -- Zod schemas for consent form validation
+
+#### Updated Prisma Models
+- `Video` -- Added `categoryId` FK to VideoCategory, new relations: placements, productLinks, tags, consents
+- `Product` -- Added `videoLinks(VideoProductLink[])` relation

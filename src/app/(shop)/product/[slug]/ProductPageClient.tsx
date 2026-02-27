@@ -27,6 +27,7 @@ import ProductTabs from './ProductTabs';
 const ProductReviews = dynamic(() => import('@/components/shop/ProductReviews'), { ssr: false });
 const ProductQA = dynamic(() => import('@/components/shop/ProductQA'), { ssr: false });
 const RecentlyViewed = dynamic(() => import('@/components/shop/RecentlyViewed'), { ssr: false });
+const VideoPlacementWidget = dynamic(() => import('@/components/content/VideoPlacementWidget'), { ssr: false });
 
 interface ProductFormat {
   id: string;
@@ -426,6 +427,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
         {/* Tabs: Description / Specifications / Research / Reconstitution / Video */}
         <ProductTabs product={product} chemistryData={chemistryData} />
+
+        {/* Product Videos (self-hides when no videos found) */}
+        <VideoPlacementWidget
+          placement="PRODUCT_PAGE"
+          contextId={product.id}
+          title={t('product.videos') || 'Product Videos'}
+          className="mt-12 border-t pt-8"
+        />
 
         {/* Related Products */}
         {product.relatedProducts.length > 0 && (

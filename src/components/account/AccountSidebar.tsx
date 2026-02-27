@@ -8,6 +8,7 @@ const accountLinks = [
   { href: '/account', labelKey: 'account.dashboard', icon: '🏠' },
   { href: '/account/orders', labelKey: 'account.sidebar.orders', icon: '📦' },
   { href: '/account/inventory', labelKey: 'account.sidebar.inventory', icon: '🔬' },
+  { href: '/account/content', labelKey: 'account.sidebar.content', icon: '🎬' },
   { href: '/account/addresses', labelKey: 'account.sidebar.addresses', icon: '📍' },
   { href: '/account/profile', labelKey: 'account.profile', icon: '👤' },
   { href: '/account/referrals', labelKey: 'customerRewards.referral', icon: '🎁' },

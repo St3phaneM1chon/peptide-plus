@@ -81,6 +81,16 @@ export const GET = withAdminGuard(async (request, _ctx) => {
           sortOrder: true,
           createdAt: true,
           updatedAt: true,
+          // Content Hub fields
+          contentType: true,
+          source: true,
+          sourceUrl: true,
+          visibility: true,
+          status: true,
+          videoCategoryId: true,
+          featuredClientId: true,
+          views: true,
+          videoCategory: { select: { id: true, name: true, slug: true } },
           translations: {
             orderBy: { locale: 'asc' },
             select: { id: true, locale: true, title: true, description: true },
@@ -156,6 +166,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
       locale,
       sortOrder,
       translations,
+      contentType,
+      source,
+      sourceUrl,
+      visibility,
+      status,
+      videoCategoryId,
+      createdById,
+      featuredClientId,
     } = parsed.data;
 
     // Generate slug from title
@@ -195,6 +213,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
         isPublished: isPublished ?? false,
         locale: locale || 'en',
         sortOrder: sortOrder ?? 0,
+        // Content Hub fields
+        contentType: contentType ?? 'OTHER',
+        source: source ?? 'YOUTUBE',
+        sourceUrl: sourceUrl ? sanitizeUrl(sourceUrl) : null,
+        visibility: visibility ?? 'PUBLIC',
+        status: status ?? 'DRAFT',
+        videoCategoryId: videoCategoryId || null,
+        createdById: createdById || session.user.id,
+        featuredClientId: featuredClientId || null,
         ...(translations && translations.length > 0
           ? {
               translations: {
@@ -209,6 +236,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
       include: {
         translations: true,
+        videoCategory: { select: { id: true, name: true, slug: true } },
       },
     });
 

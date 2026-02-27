@@ -27,6 +27,23 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         translations: {
           orderBy: { locale: 'asc' },
         },
+        videoCategory: { select: { id: true, name: true, slug: true } },
+        createdBy: { select: { id: true, name: true, email: true } },
+        featuredClient: { select: { id: true, name: true, email: true } },
+        placements: { orderBy: { sortOrder: 'asc' } },
+        productLinks: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            product: { select: { id: true, name: true, slug: true, imageUrl: true, price: true } },
+          },
+        },
+        videoTags: { orderBy: { tag: 'asc' } },
+        consents: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            client: { select: { id: true, name: true, email: true } },
+          },
+        },
       },
     });
 
@@ -37,7 +54,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       );
     }
 
-    // Parse tags
+    // Parse legacy tags
     let parsedTags: string[] = [];
     if (video.tags) {
       try {
@@ -48,10 +65,14 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       }
     }
 
+    // Merge normalized tags with legacy tags
+    const normalizedTags = video.videoTags.map(vt => vt.tag);
+    const allTags = normalizedTags.length > 0 ? normalizedTags : parsedTags;
+
     return NextResponse.json({
       video: {
         ...video,
-        tags: parsedTags,
+        tags: allTags,
       },
     });
   } catch (error) {
@@ -101,6 +122,14 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       locale,
       sortOrder,
       translations,
+      contentType,
+      source,
+      sourceUrl,
+      visibility,
+      status,
+      videoCategoryId,
+      createdById,
+      featuredClientId,
     } = parsed.data;
 
     // Build update data - only include provided fields
@@ -153,6 +182,30 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     if (isPublished !== undefined) updateData.isPublished = isPublished;
     if (locale !== undefined) updateData.locale = locale;
     if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+    // Content Hub fields
+    if (contentType !== undefined) updateData.contentType = contentType;
+    if (source !== undefined) updateData.source = source;
+    if (sourceUrl !== undefined) updateData.sourceUrl = sourceUrl ? sanitizeUrl(sourceUrl) : sourceUrl;
+    if (visibility !== undefined) updateData.visibility = visibility;
+    if (status !== undefined) {
+      // Enforce consent rule: cannot publish if featuredClientId is set and no granted consent
+      if (status === 'PUBLISHED' && (featuredClientId || existing.featuredClientId)) {
+        const clientId = featuredClientId || existing.featuredClientId;
+        const grantedConsent = await prisma.siteConsent.findFirst({
+          where: { videoId: id, clientId: clientId!, status: 'GRANTED' },
+        });
+        if (!grantedConsent) {
+          return NextResponse.json(
+            { error: 'Cannot publish: consent from featured client is required. Request consent first.' },
+            { status: 400 }
+          );
+        }
+      }
+      updateData.status = status;
+    }
+    if (videoCategoryId !== undefined) updateData.videoCategoryId = videoCategoryId || null;
+    if (createdById !== undefined) updateData.createdById = createdById || null;
+    if (featuredClientId !== undefined) updateData.featuredClientId = featuredClientId || null;
 
     // Update video
     const video = await prisma.video.update({
