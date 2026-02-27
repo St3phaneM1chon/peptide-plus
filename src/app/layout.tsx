@@ -192,6 +192,8 @@ export default async function RootLayout({
         <Script id="sw-register" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }`}
         </Script>
+        {/* Anti-FOUC: apply dark class before first paint to avoid white flash */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('admin-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
       <body className={inter.className}>
         <GoogleAnalytics />

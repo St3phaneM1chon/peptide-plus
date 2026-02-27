@@ -1381,15 +1381,159 @@ a:focus-visible,
 }
 
 /* =====================================================
-   DARK MODE / THEMING TODOs
+   DARK MODE
    ===================================================== */
 
-/* TODO (#68): Define semantic CSS variables for theming (e.g. --color-bg-primary,
-   --color-text-primary, --color-accent) and map them to Tailwind classes.
-   This will allow a single toggle (adding 'dark' class to <html>) to
-   swap all colors site-wide without modifying individual components. */
+/* Resolved #68 & #69: Dark mode via CSS variable swap.
+   Adding 'dark' class to <html> inverts all color variables site-wide. */
 
-/* TODO (#69): Unify admin dashboard and shop front color schemes.
-   Currently admin uses Tailwind default grays while shop uses custom
-   orange palette. Both should reference the same semantic variables
-   so theming is consistent across the entire application. */
+html.dark :root {
+  /* Gris principaux - inversés */
+  --gray-100: #111113;  /* Background sombre */
+  --gray-200: #1C1C1F;  /* Cards, sections */
+  --gray-300: #2E2E32;  /* Bordures */
+  --gray-400: #9E9E9E;  /* Texte secondaire (unchanged) */
+  --gray-500: #E8E8E8;  /* Texte principal */
+
+  /* Accents */
+  --accent: #E8E8E8;
+  --accent-hover: #FFFFFF;
+
+  /* Feedback (unchanged - already high-contrast) */
+  --success: #4CAF50;
+  --error: #F44336;
+  --warning: #FF9800;
+}
+
+/* Admin outlook dark overrides */
+html.dark .admin-outlook {
+  --selected-bg: #1E293B;
+  --selected-border: #334155;
+  --accent: #38BDF8;
+  --border-color: #334155;
+}
+
+/* Global dark mode overrides for Tailwind utility classes that reference
+   hardcoded whites/slates. This targets the most common patterns used
+   across all admin and shop components. */
+html.dark body {
+  background-color: var(--gray-100);
+  color: var(--gray-500);
+}
+
+/* White backgrounds → dark */
+html.dark .bg-white { background-color: #1C1C1F !important; }
+html.dark .bg-slate-50 { background-color: #18181B !important; }
+html.dark .bg-slate-100 { background-color: #1F1F23 !important; }
+html.dark .bg-gray-50 { background-color: #18181B !important; }
+html.dark .bg-gray-100 { background-color: #1F1F23 !important; }
+
+/* Hover backgrounds */
+html.dark .hover\:bg-slate-50:hover { background-color: #1F1F23 !important; }
+html.dark .hover\:bg-slate-100:hover { background-color: #27272A !important; }
+html.dark .hover\:bg-slate-200:hover { background-color: #2E2E32 !important; }
+html.dark .hover\:bg-gray-50:hover { background-color: #1F1F23 !important; }
+
+/* Dark text → light */
+html.dark .text-slate-900 { color: #F1F5F9 !important; }
+html.dark .text-slate-800 { color: #E2E8F0 !important; }
+html.dark .text-slate-700 { color: #CBD5E1 !important; }
+html.dark .text-slate-600 { color: #94A3B8 !important; }
+html.dark .text-gray-900 { color: #F1F5F9 !important; }
+html.dark .text-gray-800 { color: #E2E8F0 !important; }
+html.dark .text-gray-700 { color: #CBD5E1 !important; }
+html.dark .text-gray-600 { color: #94A3B8 !important; }
+
+/* Borders → darker */
+html.dark .border-slate-200 { border-color: #2E2E32 !important; }
+html.dark .border-slate-300 { border-color: #3F3F46 !important; }
+html.dark .border-slate-100 { border-color: #27272A !important; }
+html.dark .border-gray-200 { border-color: #2E2E32 !important; }
+html.dark .border-gray-300 { border-color: #3F3F46 !important; }
+
+/* Input/select backgrounds */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #1C1C1F;
+  color: #E8E8E8;
+  border-color: #3F3F46;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #6B7280;
+}
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #38BDF8;
+}
+
+/* Dividers and rings */
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #2E2E32 !important; }
+html.dark .ring-slate-200 { --tw-ring-color: #2E2E32 !important; }
+
+/* Shadows — softer on dark */
+html.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3) !important; }
+html.dark .shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4) !important; }
+html.dark .shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5) !important; }
+html.dark .shadow-xl { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5) !important; }
+
+/* Tables */
+html.dark table { background-color: #1C1C1F; color: #E8E8E8; }
+html.dark th { background-color: #18181B; color: #CBD5E1; border-color: #2E2E32; }
+html.dark td { border-color: #2E2E32; }
+html.dark tr:hover td { background-color: #1F1F23; }
+
+/* Modals / Overlays */
+html.dark [role="dialog"] { background-color: #1C1C1F; color: #E8E8E8; }
+
+/* Scrollbars */
+html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
+  background-color: #3F3F46;
+}
+html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #52525B;
+}
+html.dark .admin-outlook .outlook-scroll {
+  scrollbar-color: #3F3F46 transparent;
+}
+
+/* Cards & panels */
+html.dark .rounded-xl { border-color: #2E2E32; }
+
+/* Stat badges — soften the tinted backgrounds */
+html.dark .bg-green-50 { background-color: #052e16 !important; }
+html.dark .bg-green-100 { background-color: #064e3b !important; }
+html.dark .bg-red-50 { background-color: #2D0A0A !important; }
+html.dark .bg-red-100 { background-color: #450A0A !important; }
+html.dark .bg-yellow-50 { background-color: #2D2305 !important; }
+html.dark .bg-yellow-100 { background-color: #422006 !important; }
+html.dark .bg-blue-50 { background-color: #0C1929 !important; }
+html.dark .bg-blue-100 { background-color: #172554 !important; }
+html.dark .bg-sky-50 { background-color: #0C1929 !important; }
+html.dark .bg-sky-100 { background-color: #0C4A6E !important; }
+html.dark .bg-purple-50 { background-color: #1E0A38 !important; }
+html.dark .bg-purple-100 { background-color: #2E1065 !important; }
+html.dark .bg-orange-50 { background-color: #2D1A05 !important; }
+html.dark .bg-orange-100 { background-color: #431407 !important; }
+html.dark .bg-slate-50\/80 { background-color: rgba(24,24,27,0.8) !important; }
+
+/* ContentEditable (email composer body) */
+html.dark [contenteditable="true"] {
+  background-color: #1C1C1F;
+  color: #E8E8E8;
+}
+
+/* Dropdown menus */
+html.dark [class*="absolute"][class*="bg-white"] {
+  background-color: #1C1C1F !important;
+  border-color: #3F3F46 !important;
+}
+
+/* Toast notifications (sonner) */
+html.dark [data-sonner-toaster] [data-sonner-toast] {
+  background-color: #1C1C1F !important;
+  color: #E8E8E8 !important;
+  border-color: #3F3F46 !important;
+}
