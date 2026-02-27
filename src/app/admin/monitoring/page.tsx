@@ -102,6 +102,11 @@ export default function MonitoringPage() {
 
   return (
     <div className="space-y-6">
+      {/* Demo banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-sm text-amber-800">
+        <Info className="w-4 h-4 flex-shrink-0" />
+        <span><span className="font-semibold">Partiellement simule</span> &mdash; Le statut de sante (/api/health) est reel. Les metriques de performance et uptime sont simulees. Connecter un APM (Azure Application Insights, Datadog) pour des donnees reelles.</span>
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Monitoring</h1>

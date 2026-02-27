@@ -122,7 +122,14 @@ export const GET = withAdminGuard(async (_request, { params }) => {
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    // Normalize frontend field names (discountType → type, discountValue → value)
+    const body = {
+      ...rawBody,
+      ...(rawBody.discountType && { type: rawBody.discountType }),
+      ...(rawBody.discountValue !== undefined && { value: rawBody.discountValue }),
+    };
 
     // Validate with Zod
     const parsed = patchPromotionSchema.safeParse(body);

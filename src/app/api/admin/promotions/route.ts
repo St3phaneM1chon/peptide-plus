@@ -146,10 +146,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const rawBody = await request.json();
 
     // G2-FLAW-06: Normalize frontend field names to match Zod schema
+    // Discount.type in DB = PERCENTAGE | FIXED_AMOUNT (discount method)
+    // Frontend may send discountType/discountValue as aliases
     const body = {
       ...rawBody,
-      type: rawBody.type === 'PRODUCT_DISCOUNT' || rawBody.type === 'CATEGORY_DISCOUNT'
-        ? (rawBody.discountType || rawBody.type) : rawBody.type,
+      type: rawBody.discountType || rawBody.type,
       value: rawBody.discountValue ?? rawBody.value,
     };
 

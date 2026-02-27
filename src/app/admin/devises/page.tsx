@@ -42,12 +42,21 @@ export default function DevisesPage() {
   useEffect(() => {
     fetchCurrencies();
     // Load autoUpdate setting
+    // API returns { settings: { module: [...entries] } } grouped by module
     fetch('/api/admin/settings')
       .then(r => r.json())
       .then(data => {
-        const settings = data.settings || [];
-        const autoSetting = settings.find?.((s: { key: string }) => s.key === 'currencies.autoUpdate');
-        if (autoSetting) setAutoUpdate(autoSetting.value === 'true');
+        const settingsByModule = data.settings || {};
+        // Search across all modules for the currencies.autoUpdate key
+        for (const entries of Object.values(settingsByModule)) {
+          const found = (entries as Array<{ key: string; value: string }>)?.find(
+            (s) => s.key === 'currencies.autoUpdate'
+          );
+          if (found) {
+            setAutoUpdate(found.value === 'true');
+            break;
+          }
+        }
       })
       .catch(() => {});
   }, []);
@@ -70,9 +79,9 @@ export default function DevisesPage() {
     setAutoUpdate(newValue);
     try {
       await fetch('/api/admin/settings', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ 'currencies.autoUpdate': String(newValue) }),
+        body: JSON.stringify({ key: 'currencies.autoUpdate', value: String(newValue), module: 'currencies' }),
       });
     } catch {
       setAutoUpdate(!newValue);

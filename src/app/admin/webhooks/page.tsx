@@ -57,6 +57,10 @@ export default function WebhooksPage() {
 
   return (
     <div className="space-y-6">
+      {/* Demo banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-sm text-amber-800">
+        <span className="font-semibold">Mode Demo</span> &mdash; Les donnees de cette page ne sont pas persistees. Les modifications seront perdues au rechargement.
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">

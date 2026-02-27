@@ -112,6 +112,10 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Demo banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-sm text-amber-800">
+        <span className="font-semibold">Donnees simulees</span> &mdash; Cette page affiche des donnees generees aleatoirement. Connecter un service d&apos;analytics (Google Analytics, Plausible, etc.) pour des donnees reelles.
+      </div>
       <PageHeader
         title={t('admin.analytics.title')}
         subtitle={t('admin.analytics.subtitle')}

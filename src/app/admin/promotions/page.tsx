@@ -201,24 +201,16 @@ export default function PromotionsPage() {
         : '/api/admin/promotions';
       const method = isEdit ? 'PATCH' : 'POST';
 
-      // FIX F-019: Send both type (promo kind) and discountType (discount method)
+      // FIX: Map frontend fields to Prisma Discount model fields
+      // DB Discount.type = PERCENTAGE | FIXED_AMOUNT (discount method)
+      // Promo kind is derived from: appliesToAll, categoryId, productId
       const body: Record<string, unknown> = {
         name: formName.trim(),
-        type: formPromoKind,
-        discountType: formType,
-        discountValue: formValue,
+        type: formType,         // PERCENTAGE | FIXED_AMOUNT (maps to DB Discount.type)
+        value: formValue,       // maps to DB Discount.value
         appliesToAll: formAppliesToAll || formPromoKind === 'FLASH_SALE',
         isActive: true,
       };
-
-      // Add type-specific fields
-      if (formPromoKind === 'BUY_X_GET_Y') {
-        body.buyQuantity = formBuyQty;
-        body.getQuantity = formGetQty;
-      }
-      if (formPromoKind === 'BUNDLE' || formPromoKind === 'BUY_X_GET_Y') {
-        body.minQuantity = formMinQuantity;
-      }
 
       if (formStartDate) {
         body.startsAt = new Date(formStartDate).toISOString();

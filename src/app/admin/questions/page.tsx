@@ -80,7 +80,7 @@ export default function QuestionsPage() {
     try {
       const res = await fetch('/api/admin/questions');
       const data = await res.json();
-      setQuestions(data.questions || []);
+      setQuestions(data.data || []);
     } catch (err) {
       console.error('Error fetching questions:', err);
       toast.error(t('common.error'));
