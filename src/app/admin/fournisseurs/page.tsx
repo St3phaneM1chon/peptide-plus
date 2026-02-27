@@ -131,7 +131,7 @@ export default function FournisseursPage() {
 
       const res = await fetchWithRetry(`/api/admin/suppliers?${params.toString()}`);
       const data = await res.json();
-      setSuppliers(data.suppliers || []);
+      setSuppliers(data.data || []);
       setTotal(data.total || 0);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
