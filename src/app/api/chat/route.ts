@@ -67,12 +67,13 @@ export async function GET(request: NextRequest) {
 // POST - Créer ou récupérer une conversation
 export async function POST(request: NextRequest) {
   try {
-    // F-009 FIX: Tighter rate limiting on conversation lookup/creation to prevent
-    // visitorId brute-force enumeration attacks (SEC-25 enhanced)
+    // Rate limiting on conversation lookup/creation
+    // Uses 'chat' bucket (30/min) instead of 'chat/route' (10/hour) because
+    // the widget polls this endpoint every 10s for new messages
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip')
       || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/chat/route');
+    const rl = await rateLimitMiddleware(ip, '/api/chat');
     if (!rl.success) {
       const res = NextResponse.json(
         { error: rl.error!.message },

@@ -190,7 +190,7 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
   // FLAW-FIX: Mailing list subscribe - 5 per IP per hour (uses 'newsletter' config via path mapping)
   'mailing-list/subscribe': { windowMs: 3600000, maxRequests: 5 },
 
-  // SEC-25: Chat route - 10 per user per hour
+  // SEC-25: Chat route - kept for backward compatibility (unused since chat POST now uses 'chat' bucket)
   'chat/route': { windowMs: 3600000, maxRequests: 10 },
 
   // SEC-27: Password change - 5 per user per hour

@@ -135,6 +135,7 @@ export default function ChatWidget() {
   // Polling for new messages (simple solution without WebSocket)
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messagesLengthRef = useRef(messages.length);
+  const pollIntervalMs = useRef(10000); // Start at 10s, backoff on 429
 
   // Keep the ref in sync with messages length
   useEffect(() => {
@@ -150,6 +151,9 @@ export default function ChatWidget() {
 
     if (!isOpen || !conversationId) return;
 
+    // Reset interval to default when chat opens
+    pollIntervalMs.current = 10000;
+
     const pollMessages = async () => {
       try {
         const res = await fetch('/api/chat', {
@@ -157,6 +161,27 @@ export default function ChatWidget() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ visitorId }),
         });
+
+        if (res.status === 429) {
+          // Rate limited — backoff: double the interval (max 60s)
+          pollIntervalMs.current = Math.min(pollIntervalMs.current * 2, 60000);
+          // Restart interval with new delay
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = setInterval(pollMessages, pollIntervalMs.current);
+          }
+          return;
+        }
+
+        // Successful response — reset interval to default if it was backed off
+        if (pollIntervalMs.current > 10000) {
+          pollIntervalMs.current = 10000;
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = setInterval(pollMessages, pollIntervalMs.current);
+          }
+        }
+
         const data = await res.json();
         if (data.conversation?.messages) {
           const newMessages = data.conversation.messages;
@@ -169,7 +194,7 @@ export default function ChatWidget() {
       }
     };
 
-    pollingIntervalRef.current = setInterval(pollMessages, 5000); // Poll every 5 seconds
+    pollingIntervalRef.current = setInterval(pollMessages, pollIntervalMs.current);
 
     return () => {
       if (pollingIntervalRef.current) {
