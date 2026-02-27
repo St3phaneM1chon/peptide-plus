@@ -2132,7 +2132,9 @@
       "emailStatus": {
         "failed": "Failed",
         "pending": "Pending",
-        "sent": "Sent"
+        "sent": "Sent",
+        "bounced": "Bounced",
+        "delivered": "Delivered"
       },
       "emailsSent24h": "Correos Enviados (24h)",
       "failures": "Fallos",
@@ -2202,6 +2204,14 @@
         "WELCOME": {
           "description": "Nuevo usuario",
           "label": "Bienvenida"
+        },
+        "UNKNOWN": {
+          "label": "Custom",
+          "description": "Custom or unclassified email"
+        },
+        "bounce-notification": {
+          "label": "Bounce",
+          "description": "Bounce notification"
         }
       },
       "testConnection": "Test Connection",
@@ -5846,6 +5856,10 @@
       "prev": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {total}"
+    },
+    "dataTable": {
+      "row": "row",
+      "rows": "rows"
     }
   },
   "ambassador": {

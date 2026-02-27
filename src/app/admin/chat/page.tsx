@@ -638,7 +638,7 @@ export default function AdminChatPage() {
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                      title={t('common.emoji') || 'Emoji'}
+                      title={t('chat.emoji') || 'Emoji'}
                     >
                       <Smile className="w-5 h-5 text-slate-500" />
                     </button>

@@ -1328,6 +1328,10 @@
       "purchases": "Commandes",
       "viewProfile": "Voir le profil"
     },
+    "dataTable": {
+      "row": "ligne",
+      "rows": "lignes"
+    },
     "dashboard": {
       "title": "Tableau de bord",
       "subtitle": "Vue d'ensemble de votre boutique",
@@ -2746,6 +2750,14 @@
         "REVIEW_REQUEST": {
           "label": "Demande d'avis",
           "description": "Après livraison"
+        },
+        "UNKNOWN": {
+          "label": "Personnalisé",
+          "description": "Email personnalisé ou non classifié"
+        },
+        "bounce-notification": {
+          "label": "Rebond",
+          "description": "Notification de rebond"
         }
       },
       "newMessage": "Nouveau message",
@@ -2769,6 +2781,8 @@
       "authStatusWarning": "À vérifier",
       "authStatusMissing": "Non configuré",
       "emailStatus": {
+        "bounced": "Rebond",
+        "delivered": "Livré",
         "sent": "Envoyé",
         "failed": "Échoué",
         "pending": "En attente"

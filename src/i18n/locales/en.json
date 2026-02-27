@@ -2127,6 +2127,10 @@
       "surpriseNone": "No surprise available",
       "noRecentActivity": "No recent activity"
     },
+    "dataTable": {
+      "row": "row",
+      "rows": "rows"
+    },
     "dashboard": {
       "activeProducts": "Active products",
       "b2bClients": "B2B Clients",
@@ -2204,6 +2208,8 @@
       "editTemplate": "Edit Template",
       "emailAuthTitle": "Email Authentication (Deliverability)",
       "emailStatus": {
+        "bounced": "Bounced",
+        "delivered": "Delivered",
         "failed": "Failed",
         "pending": "Pending",
         "sent": "Sent"
@@ -2274,9 +2280,17 @@
           "description": "After delivery",
           "label": "Review Request"
         },
+        "UNKNOWN": {
+          "description": "Custom or unclassified email",
+          "label": "Custom"
+        },
         "WELCOME": {
           "description": "New user",
           "label": "Welcome"
+        },
+        "bounce-notification": {
+          "description": "Bounce notification",
+          "label": "Bounce"
         }
       },
       "testConnection": "Test Connection",

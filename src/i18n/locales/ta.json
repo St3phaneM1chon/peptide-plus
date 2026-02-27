@@ -2132,7 +2132,9 @@
       "emailStatus": {
         "failed": "Failed",
         "pending": "Pending",
-        "sent": "Sent"
+        "sent": "Sent",
+        "bounced": "Bounced",
+        "delivered": "Delivered"
       },
       "emailsSent24h": "அனுப்பிய மின்னஞ்சல்கள் (24 மணி நேரம்)",
       "failures": "தோல்விகள்",
@@ -2202,6 +2204,14 @@
         "WELCOME": {
           "description": "புதிய பயனர்",
           "label": "வரவேற்கிறேன்"
+        },
+        "UNKNOWN": {
+          "label": "Custom",
+          "description": "Custom or unclassified email"
+        },
+        "bounce-notification": {
+          "label": "Bounce",
+          "description": "Bounce notification"
         }
       },
       "testConnection": "Test Connection",
@@ -5846,6 +5856,10 @@
       "prev": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {total}"
+    },
+    "dataTable": {
+      "row": "row",
+      "rows": "rows"
     }
   },
   "ambassador": {
