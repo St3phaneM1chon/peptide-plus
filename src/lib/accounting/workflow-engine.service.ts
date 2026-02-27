@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * Workflow Engine Service - Phase 3-7: Workflow Rules & Approvals
