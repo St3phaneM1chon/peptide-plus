@@ -1398,7 +1398,10 @@
       "viewOriginal": "மூலத்தை காண்க",
       "visitor": "விருந்தினர்",
       "waitingCount": "{count} காத்திருக்கிறது",
-      "you": "You"
+      "you": "You",
+      "timeNow": "இப்போது",
+      "timeMinute": "நிமி",
+      "timeHour": "மணி"
     },
     "clients": {
       "adjustPoints": "புள்ளிகளை சரிசெய்யவும்",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "படிக்க ஒரு செய்தியைத் தேர்ந்தெடுக்கவும்"
       },
       "nodes": {
         "condition": "Condition",

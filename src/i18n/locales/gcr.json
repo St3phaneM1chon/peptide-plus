@@ -1398,7 +1398,10 @@
       "viewOriginal": "Voir original",
       "visitor": "Visiteur",
       "waitingCount": "{count} en attente",
-      "you": "You"
+      "you": "You",
+      "timeNow": "astè",
+      "timeMinute": "min",
+      "timeHour": "h"
     },
     "clients": {
       "adjustPoints": "Ajiste pwen",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Sélectionnez un message pour le lire"
       },
       "nodes": {
         "condition": "Condition",

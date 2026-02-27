@@ -1398,7 +1398,10 @@
       "viewOriginal": "查看原文",
       "visitor": "访客",
       "waitingCount": "{count} 个等待",
-      "you": "You"
+      "you": "You",
+      "timeNow": "刚刚",
+      "timeMinute": "分",
+      "timeHour": "时"
     },
     "clients": {
       "adjustPoints": "调整积分",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "选择一条消息阅读"
       },
       "nodes": {
         "condition": "Condition",

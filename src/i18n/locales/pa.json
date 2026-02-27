@@ -1398,7 +1398,10 @@
       "viewOriginal": "ਮੂਲ ਵੇਖੋ",
       "visitor": "ਮੁਹੰਮਦ",
       "waitingCount": "{count} ਉਡੀਕ ਰਹੀ",
-      "you": "You"
+      "you": "You",
+      "timeNow": "ਹੁਣੇ",
+      "timeMinute": "ਮਿੰ",
+      "timeHour": "ਘੰ"
     },
     "clients": {
       "adjustPoints": "ਅੰਕ ਸਹੀ ਕਰੋ",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "ਪੜ੍ਹਨ ਲਈ ਸੁਨੇਹਾ ਚੁਣੋ"
       },
       "nodes": {
         "condition": "Condition",

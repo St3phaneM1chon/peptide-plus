@@ -1398,7 +1398,10 @@
       "viewOriginal": "عرض الأصل",
       "visitor": "زائر",
       "waitingCount": "{count} في الانتظار",
-      "you": "You"
+      "you": "You",
+      "timeNow": "الآن",
+      "timeMinute": "د",
+      "timeHour": "س"
     },
     "clients": {
       "adjustPoints": "تعديل النقاط",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "حدد رسالة لقراءتها"
       },
       "nodes": {
         "condition": "Condition",

@@ -1398,7 +1398,10 @@
       "viewOriginal": "मूल देखें",
       "visitor": "आगंतुक",
       "waitingCount": "{count} प्रतीक्षा में",
-      "you": "You"
+      "you": "You",
+      "timeNow": "अभी",
+      "timeMinute": "मि",
+      "timeHour": "घं"
     },
     "clients": {
       "adjustPoints": "बिंदुओं को समायोजित करें",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "पढ़ने के लिए एक संदेश चुनें"
       },
       "nodes": {
         "condition": "Condition",

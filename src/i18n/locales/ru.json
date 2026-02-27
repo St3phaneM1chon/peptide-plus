@@ -1398,7 +1398,10 @@
       "viewOriginal": "Посмотреть оригинал",
       "visitor": "Посетитель",
       "waitingCount": "{count} в ожидании",
-      "you": "You"
+      "you": "You",
+      "timeNow": "сейчас",
+      "timeMinute": "мин",
+      "timeHour": "ч"
     },
     "clients": {
       "adjustPoints": "Корректировка баллов",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Выберите сообщение для чтения"
       },
       "nodes": {
         "condition": "Condition",

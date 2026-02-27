@@ -1398,7 +1398,10 @@
       "viewOriginal": "Visa original",
       "visitor": "Besökare",
       "waitingCount": "{count} väntande",
-      "you": "You"
+      "you": "You",
+      "timeNow": "nu",
+      "timeMinute": "min",
+      "timeHour": "h"
     },
     "clients": {
       "adjustPoints": "Justera poäng",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Välj ett meddelande att läsa"
       },
       "nodes": {
         "condition": "Condition",

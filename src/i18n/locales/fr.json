@@ -981,7 +981,10 @@
       "daysAbbrev": "j",
       "unassigned": "Non assigné",
       "recentMessages": "Messages récents",
-      "noRecentMessages": "Aucun message dans les dernières 24h"
+      "noRecentMessages": "Aucun message dans les dernières 24h",
+      "timeNow": "maintenant",
+      "timeMinute": "min",
+      "timeHour": "h"
     },
     "customers": {
       "title": "Clients",
@@ -2891,7 +2894,8 @@
         "statsOrders": "Commandes",
         "statsTotal": "Total dépensé",
         "statsConversations": "Conversations",
-        "searchPlaceholder": "Rechercher des conversations..."
+        "searchPlaceholder": "Rechercher des conversations...",
+        "selectConversation": "Sélectionnez un message pour le lire"
       },
       "flows": {
         "triggerOrderCreated": "Commande créée",

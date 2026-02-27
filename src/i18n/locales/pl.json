@@ -1398,7 +1398,10 @@
       "viewOriginal": "Zobacz oryginał",
       "visitor": "Odwiedzający",
       "waitingCount": "{count} w oczekiwaniu",
-      "you": "You"
+      "you": "You",
+      "timeNow": "teraz",
+      "timeMinute": "min",
+      "timeHour": "g"
     },
     "clients": {
       "adjustPoints": "Dostosuj punkty",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Wybierz wiadomość do przeczytania"
       },
       "nodes": {
         "condition": "Condition",

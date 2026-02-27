@@ -1398,7 +1398,10 @@
       "viewOriginal": "Xem gốc",
       "visitor": "Khách truy cập",
       "waitingCount": "{count} đang chờ",
-      "you": "You"
+      "you": "You",
+      "timeNow": "bây giờ",
+      "timeMinute": "ph",
+      "timeHour": "g"
     },
     "clients": {
       "adjustPoints": "Điều chỉnh điểm",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Chọn một tin nhắn để đọc"
       },
       "nodes": {
         "condition": "Condition",

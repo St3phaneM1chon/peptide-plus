@@ -1398,7 +1398,10 @@
       "viewOriginal": "Tingnan ang orihinal",
       "visitor": "Bumisita",
       "waitingCount": "{count} naghihintay",
-      "you": "You"
+      "you": "You",
+      "timeNow": "ngayon",
+      "timeMinute": "min",
+      "timeHour": "o"
     },
     "clients": {
       "adjustPoints": "Ayusin ang mga puntos",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Pumili ng mensahe na babasahin"
       },
       "nodes": {
         "condition": "Condition",

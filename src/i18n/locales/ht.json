@@ -1398,7 +1398,10 @@
       "viewOriginal": "Gade orijinal",
       "visitor": "Vizitè",
       "waitingCount": "{count} ap tann",
-      "you": "You"
+      "you": "You",
+      "timeNow": "kounye a",
+      "timeMinute": "min",
+      "timeHour": "h"
     },
     "clients": {
       "adjustPoints": "Ajiste pwen",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "Chwazi yon mesaj pou li"
       },
       "nodes": {
         "condition": "Condition",

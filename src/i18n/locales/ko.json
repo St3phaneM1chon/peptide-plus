@@ -1398,7 +1398,10 @@
       "viewOriginal": "원본 보기",
       "visitor": "방문자",
       "waitingCount": "{count} 대기 중",
-      "you": "You"
+      "you": "You",
+      "timeNow": "지금",
+      "timeMinute": "분",
+      "timeHour": "시간"
     },
     "clients": {
       "adjustPoints": "포인트 조정",
@@ -2392,7 +2395,8 @@
         "statsConversations": "Conversations",
         "statsOrders": "Orders",
         "statsTotal": "Total spent",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "selectConversation": "읽을 메시지를 선택하세요"
       },
       "nodes": {
         "condition": "Condition",
