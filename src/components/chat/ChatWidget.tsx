@@ -95,6 +95,13 @@ export default function ChatWidget() {
         setConversationId(data.conversation.id);
         setMessages(data.conversation.messages || []);
       }
+      // F-009 SYNC FIX: Server may generate a new visitorId for security.
+      // We MUST update our local state + localStorage to stay in sync,
+      // otherwise all subsequent messages/polls will fail (visitorId mismatch → 404).
+      if (data.visitorId && data.visitorId !== visitorId) {
+        setVisitorId(data.visitorId);
+        localStorage.setItem('biocycle_chat_visitor_id', data.visitorId);
+      }
     } catch (error) {
       console.error('Failed to init conversation:', error);
     }

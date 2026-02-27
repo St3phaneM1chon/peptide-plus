@@ -151,9 +151,12 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
   }, [editorRef]);
 
   const exec = useCallback((cmd: string, value?: string) => {
+    // Focus editor BEFORE executing command — block-level commands like
+    // insertUnorderedList / insertOrderedList require the contentEditable
+    // element to have focus and a valid selection, otherwise they silently fail.
+    editorRef.current?.focus();
     execCmd(cmd, value);
-    refocus();
-  }, [refocus]);
+  }, [editorRef]);
 
   const handleFontFamily = (font: string) => {
     exec('fontName', font);
@@ -218,7 +221,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
   const iconColor = 'text-slate-600';
 
   return (
-    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-slate-200 bg-slate-50/80 flex-shrink-0 flex-wrap">
+    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-slate-200 bg-slate-50/80 flex-shrink-0 flex-wrap" onMouseDown={(e) => { if ((e.target as HTMLElement).closest('input')) return; e.preventDefault(); }}>
       {/* Undo / Redo */}
       <TBtn onClick={() => exec('undo')} title="Annuler (Ctrl+Z)">
         <Undo2 className={`${iconSize} ${iconColor}`} />
