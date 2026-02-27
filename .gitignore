@@ -19,8 +19,8 @@ dist/
 .env.test
 .env.production
 
-# Logs
-logs/
+# Logs (root only — don't ignore src/app/api/**/logs/)
+/logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
