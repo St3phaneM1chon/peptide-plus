@@ -57,4 +57,6 @@ public/uploads/
 AuthKey_*.p8
 
 # Database backups (managed by backup_database.py)
-backups/
+/backups/
+!src/app/admin/backups/
+!src/app/api/admin/backups/
