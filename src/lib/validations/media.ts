@@ -107,8 +107,9 @@ export const brandKitSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').optional().nullable(),
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').optional().nullable(),
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').optional().nullable(),
-  fontHeading: z.string().max(100).optional().nullable(),
-  fontBody: z.string().max(100).optional().nullable(),
+  // C-06 fix: Validate font names to prevent CSS injection (only allow safe characters)
+  fontHeading: z.string().max(100).regex(/^[a-zA-Z0-9\s\-_,'"]+$/, 'Invalid font name characters').optional().nullable(),
+  fontBody: z.string().max(100).regex(/^[a-zA-Z0-9\s\-_,'"]+$/, 'Invalid font name characters').optional().nullable(),
   guidelines: z.string().max(10000).optional().nullable(),
   isActive: z.boolean().optional().default(true),
 }).strict();

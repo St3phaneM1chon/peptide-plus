@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from './crypto';
 import { logger } from '@/lib/logger';
+import { createHash, randomBytes } from 'crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -140,19 +141,62 @@ function safeErrorMessage(error: unknown): string {
 // OAuth Manager
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// PKCE helpers (V-022 fix: OAuth Authorization Code with PKCE)
+// ---------------------------------------------------------------------------
+
+function generateCodeVerifier(): string {
+  return randomBytes(32).toString('base64url');
+}
+
+function generateCodeChallenge(verifier: string): string {
+  return createHash('sha256').update(verifier).digest('base64url');
+}
+
+function generateRandomState(): string {
+  return randomBytes(32).toString('hex');
+}
+
+// In-memory store for PKCE verifiers and state (per-session, short-lived)
+// In production, use a Redis/DB store with TTL
+const pkceStore = new Map<string, { codeVerifier: string; platform: Platform; createdAt: number }>();
+
+// Clean expired entries (older than 10 minutes)
+function cleanPkceStore() {
+  const now = Date.now();
+  for (const [key, val] of pkceStore.entries()) {
+    if (now - val.createdAt > 10 * 60 * 1000) {
+      pkceStore.delete(key);
+    }
+  }
+}
+
 /**
  * Generate the authorization URL to redirect the user to the platform's OAuth consent screen.
+ * V-021/V-022 fix: Uses cryptographic random state + PKCE code challenge.
  */
-export function getAuthorizationUrl(platform: Platform, state?: string): string {
+export function getAuthorizationUrl(platform: Platform, _state?: string): { url: string; state: string } {
   const config = getPlatformConfig(platform);
   const callbackUrl = getCallbackUrl(platform);
-  const oauthState = state || platform;
+
+  // V-021 fix: Generate cryptographic random state (never use platform name)
+  const oauthState = generateRandomState();
+
+  // V-022 fix: Generate PKCE code verifier and challenge
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = generateCodeChallenge(codeVerifier);
+
+  // Store verifier for the callback
+  cleanPkceStore();
+  pkceStore.set(oauthState, { codeVerifier, platform, createdAt: Date.now() });
 
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: callbackUrl,
     response_type: 'code',
     state: oauthState,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
   });
 
   // Platform-specific scope formatting
@@ -169,28 +213,55 @@ export function getAuthorizationUrl(platform: Platform, state?: string): string 
     params.set('scope', config.scopes.join(' '));
   }
 
-  return `${config.authUrl}?${params.toString()}`;
+  return { url: `${config.authUrl}?${params.toString()}`, state: oauthState };
+}
+
+/**
+ * Validate OAuth state and retrieve PKCE verifier.
+ */
+export function validateOAuthState(state: string): { codeVerifier: string; platform: Platform } | null {
+  const entry = pkceStore.get(state);
+  if (!entry) return null;
+
+  // Check expiry (10 minutes)
+  if (Date.now() - entry.createdAt > 10 * 60 * 1000) {
+    pkceStore.delete(state);
+    return null;
+  }
+
+  // One-time use: delete after retrieval
+  pkceStore.delete(state);
+  return { codeVerifier: entry.codeVerifier, platform: entry.platform };
 }
 
 /**
  * Exchange authorization code for tokens and store them in PlatformConnection.
+ * V-022 fix: Includes PKCE code_verifier in token exchange.
  */
 export async function handleCallback(
   platform: Platform,
   code: string,
-  userId?: string
+  userId?: string,
+  codeVerifier?: string,
 ): Promise<{ success: boolean; error?: string }> {
   const config = getPlatformConfig(platform);
   const callbackUrl = getCallbackUrl(platform);
 
   try {
-    const body = new URLSearchParams({
+    const bodyParams: Record<string, string> = {
       grant_type: 'authorization_code',
       code,
       redirect_uri: callbackUrl,
       client_id: config.clientId,
       client_secret: config.clientSecret,
-    });
+    };
+
+    // V-022 fix: Include PKCE code_verifier if available
+    if (codeVerifier) {
+      bodyParams.code_verifier = codeVerifier;
+    }
+
+    const body = new URLSearchParams(bodyParams);
 
     const response = await fetch(config.tokenUrl, {
       method: 'POST',

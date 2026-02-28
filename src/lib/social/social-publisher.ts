@@ -2,10 +2,12 @@
  * Social Publisher Service
  * Publishes posts to social media platforms (Meta, X, TikTok, LinkedIn).
  * Reads credentials from SiteSetting table.
+ * Tokens are encrypted at rest with AES-256-GCM (V-041 fix).
  */
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { encrypt, decrypt } from '@/lib/platform/crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,9 +31,45 @@ interface PublishResult {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Token setting keys that store encrypted values
+const ENCRYPTED_SETTING_KEYS = new Set([
+  'meta_page_access_token',
+  'x_bearer_token',
+  'tiktok_access_token',
+  'linkedin_access_token',
+]);
+
+/**
+ * Get a site setting value. Automatically decrypts token values.
+ */
 async function getSetting(key: string): Promise<string | null> {
   const setting = await prisma.siteSetting.findUnique({ where: { key } });
-  return setting?.value ?? null;
+  if (!setting?.value) return null;
+
+  // Decrypt token values stored encrypted at rest
+  if (ENCRYPTED_SETTING_KEYS.has(key)) {
+    try {
+      return decrypt(setting.value);
+    } catch {
+      // Fallback: value may be plaintext (pre-migration), return as-is
+      logger.warn(`[Social] Setting ${key} not encrypted, returning plaintext`);
+      return setting.value;
+    }
+  }
+
+  return setting.value;
+}
+
+/**
+ * Store a social token encrypted at rest.
+ */
+export async function storeSocialToken(key: string, plaintext: string): Promise<void> {
+  const encrypted = encrypt(plaintext);
+  await prisma.siteSetting.upsert({
+    where: { key },
+    create: { key, value: encrypted },
+    update: { value: encrypted },
+  });
 }
 
 // ---------------------------------------------------------------------------

@@ -10,6 +10,27 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
+// Security: Transcript sanitization (V-096 fix: anti-prompt injection)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sanitize transcript text before passing to AI prompts.
+ * Strips control characters, known prompt injection patterns, and role-switching attempts.
+ */
+function sanitizeTranscript(text: string): string {
+  return text
+    // Remove control characters except newlines and tabs
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    // Strip known prompt injection patterns
+    .replace(/\b(ignore previous|disregard|forget|override|system prompt|you are now|new instructions?|act as|pretend to be)\b/gi, '[FILTERED]')
+    // Strip markdown/HTML role markers that could confuse the model
+    .replace(/<\/?(?:system|assistant|user|prompt|instructions?)>/gi, '')
+    // Remove excessive whitespace
+    .replace(/\n{4,}/g, '\n\n\n')
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -72,7 +93,7 @@ Return a JSON array of highlights sorted by importance. Example:
 [{"title":"Key Finding","summary":"Important research result","startTime":120,"endTime":180,"confidence":0.9,"tags":["research","results"]}]
 
 TRANSCRIPT:
-${transcript.slice(0, 15000)}`;
+${sanitizeTranscript(transcript).slice(0, 15000)}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

@@ -5787,3 +5787,46 @@ model AdCampaignSnapshot {
   @@unique([platform, campaignId, date])
   @@index([platform, date])
 }
+
+// ---------------------------------------------------------------------------
+// Brand Kit (C-05: Persistent brand settings)
+// ---------------------------------------------------------------------------
+model BrandKit {
+  id             String   @id @default(cuid())
+  name           String
+  logoUrl        String?
+  faviconUrl     String?
+  primaryColor   String?  // Hex color validated: /^#[0-9A-Fa-f]{6}$/
+  secondaryColor String?
+  accentColor    String?
+  fontHeading    String?
+  fontBody       String?
+  guidelines     String?  @db.Text
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Content Interaction (C-07: Real analytics tracking)
+// ---------------------------------------------------------------------------
+model ContentInteraction {
+  id          String   @id @default(cuid())
+  contentId   String   // FK to Video.id, Media.id, or SocialPost.id
+  contentType String   // "video", "social_post", "media"
+  action      String   // "view", "click", "share", "conversion"
+  sessionId   String?  // Anonymous session tracking
+  userId      String?  // Authenticated user (optional)
+  referrer    String?  // Referring URL
+  userAgent   String?
+  ipHash      String?  // Hashed IP for dedup (not raw IP)
+  metadata    Json?    // Extra data (e.g., share platform, conversion value)
+  createdAt   DateTime @default(now())
+
+  @@index([contentId, contentType])
+  @@index([action])
+  @@index([createdAt])
+  @@index([contentId, action, createdAt])
+}

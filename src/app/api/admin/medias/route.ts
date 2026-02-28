@@ -20,6 +20,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { isProcessableImage, optimizeImage, generateVariants, DEFAULT_VARIANTS } from '@/lib/media/image-pipeline';
 
 /**
  * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.
@@ -281,8 +282,35 @@ export const POST = withAdminGuard(async (request, { session }) => {
         continue;
       }
 
-      // FIX (F9): Use StorageService instead of local filesystem (persists on Azure)
-      const uploadResult = await storage.upload(buffer, uniqueName, file.type, { folder });
+      // C-09: Optimize images before upload + strip EXIF (C-18)
+      let uploadBuffer = buffer;
+      let uploadMime = file.type;
+      let variantUrls: Record<string, string> = {};
+
+      if (isProcessableImage(file.type)) {
+        try {
+          // Optimize original (resize to max 1920px, convert to webp, strip EXIF)
+          const optimized = await optimizeImage(buffer, { maxWidth: 1920, maxHeight: 1080, quality: 85 });
+          uploadBuffer = optimized.buffer;
+          uploadMime = optimized.mimeType;
+
+          // C-13: Auto-generate responsive variants (thumb, card, hero)
+          const variants = await generateVariants(buffer, DEFAULT_VARIANTS);
+          for (const v of variants) {
+            const variantName = `${randomUUID()}_${v.variant}.webp`;
+            const variantResult = await storage.upload(v.buffer, variantName, v.mimeType, { folder: `${folder}/variants` });
+            variantUrls[v.variant] = variantResult.url;
+          }
+        } catch (pipelineError) {
+          // Non-fatal: fall back to original buffer
+          logger.warn('[MediaUpload] Image pipeline failed, using original', {
+            error: pipelineError instanceof Error ? pipelineError.message : String(pipelineError),
+          });
+        }
+      }
+
+      // Upload (optimized) file to storage
+      const uploadResult = await storage.upload(uploadBuffer, uniqueName, uploadMime, { folder });
       const url = uploadResult.url;
 
       // Save to database
@@ -290,8 +318,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
         data: {
           filename: uniqueName,
           originalName: file.name,
-          mimeType: file.type,
-          size: file.size,
+          mimeType: uploadMime,
+          size: uploadBuffer.length,
           url,
           alt: alt || null,
           folder,

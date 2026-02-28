@@ -151,7 +151,25 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
       logger.error('Sitemap: Error fetching blog posts', { error: error instanceof Error ? error.message : String(error) });
     }
 
-    // 5. Learn/Article pages
+    // 5. Published videos (C-15: auto-sitemap for media)
+    try {
+      const videos = await prisma.video.findMany({
+        where: { isPublished: true, visibility: 'PUBLIC' },
+        select: { slug: true, updatedAt: true },
+      });
+      for (const video of videos) {
+        entries.push({
+          loc: `${SITE_URL}/videos/${video.slug}`,
+          lastmod: formatDate(video.updatedAt),
+          changefreq: 'weekly',
+          priority: '0.7',
+        });
+      }
+    } catch (error) {
+      logger.error('Sitemap: Error fetching videos', { error: error instanceof Error ? error.message : String(error) });
+    }
+
+    // 6. Learn/Article pages
     try {
       const articles = await prisma.article.findMany({
         where: { isPublished: true },

@@ -15,6 +15,8 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { sanitizeUrl } from '@/lib/sanitize';
 import { generateTags } from '@/lib/media/ai-tagger';
+import { storage } from '@/lib/storage';
+import { randomUUID as genUUID } from 'crypto';
 
 // GET /api/admin/videos - List all videos
 export const GET = withAdminGuard(async (request, _ctx) => {
@@ -160,9 +162,81 @@ export const GET = withAdminGuard(async (request, _ctx) => {
   }
 });
 
-// POST /api/admin/videos - Create a new video
+// POST /api/admin/videos - Create a new video (JSON or FormData with file upload)
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    const requestContentType = request.headers.get('content-type') || '';
+
+    // C-10: Handle multipart file upload
+    if (requestContentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const videoFile = formData.get('videoFile') as File | null;
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string | null;
+      const category = formData.get('category') as string | null;
+      const thumbnailUrl = formData.get('thumbnailUrl') as string | null;
+
+      if (!title) {
+        return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+      }
+
+      let videoUrl: string | null = formData.get('videoUrl') as string | null;
+
+      // Upload video file if provided
+      if (videoFile && videoFile instanceof File) {
+        const maxSize = 500 * 1024 * 1024; // 500MB for videos
+        if (videoFile.size > maxSize) {
+          return NextResponse.json({ error: 'Video file exceeds 500MB limit' }, { status: 413 });
+        }
+
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+        if (!allowedTypes.includes(videoFile.type)) {
+          return NextResponse.json({ error: 'Invalid video format. Allowed: MP4, WebM, MOV, AVI' }, { status: 400 });
+        }
+
+        const buffer = Buffer.from(await videoFile.arrayBuffer());
+        const ext = videoFile.name.split('.').pop() || 'mp4';
+        const filename = `${genUUID()}.${ext}`;
+        const result = await storage.upload(buffer, filename, videoFile.type, { folder: 'videos' });
+        videoUrl = result.url;
+      }
+
+      // Generate slug
+      const baseSlug = title.toLowerCase().normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      let slug = baseSlug;
+      const existingSlug = await prisma.video.findUnique({ where: { slug }, select: { id: true } });
+      if (existingSlug) slug = `${baseSlug}-${genUUID().slice(0, 8)}`;
+
+      const video = await prisma.video.create({
+        data: {
+          title,
+          slug,
+          description: description || null,
+          thumbnailUrl: thumbnailUrl ? sanitizeUrl(thumbnailUrl) : null,
+          videoUrl: videoUrl ? sanitizeUrl(videoUrl) : null,
+          category: category || null,
+          source: videoFile ? 'UPLOAD' as never : 'YOUTUBE',
+          createdById: session.user.id,
+          status: 'DRAFT',
+        },
+        include: { translations: true, videoCategory: { select: { id: true, name: true, slug: true } } },
+      });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'CREATE_VIDEO',
+        targetType: 'Video',
+        targetId: video.id,
+        newValue: { title, slug: video.slug, hasFile: !!videoFile },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
+      return NextResponse.json({ video }, { status: 201 });
+    }
+
+    // Standard JSON body
     const body = await request.json();
 
     // Validate with Zod

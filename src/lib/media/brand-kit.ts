@@ -1,33 +1,14 @@
 /**
  * Brand Kit Service
- * Chantier 4.3: CRUD operations for brand kits.
- *
- * NOTE: Requires a BrandKit model in schema.prisma. Until then,
- * uses a settings-based approach with the existing Setting model
- * or a dedicated table. See schema addition below.
- *
- * Prisma model to add:
- * model BrandKit {
- *   id             String   @id @default(cuid())
- *   name           String
- *   logoUrl        String?
- *   faviconUrl     String?
- *   primaryColor   String?  // Hex color
- *   secondaryColor String?
- *   accentColor    String?
- *   fontHeading    String?
- *   fontBody       String?
- *   guidelines     String?  @db.Text
- *   isActive       Boolean  @default(true)
- *   createdAt      DateTime @default(now())
- *   updatedAt      DateTime @updatedAt
- * }
+ * C-05 fix: Migrated from in-memory to Prisma persistence.
+ * Data survives redeploys.
  */
 
+import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
-// Types (standalone until Prisma model is added)
+// Types (matches Prisma BrandKit model)
 // ---------------------------------------------------------------------------
 
 export interface BrandKit {
@@ -60,58 +41,74 @@ export interface BrandKitInput {
 }
 
 // ---------------------------------------------------------------------------
-// In-memory storage (until Prisma model is added)
+// Default values (used for initial seeding)
 // ---------------------------------------------------------------------------
 
-// Placeholder using JSON file or env-based config
-// When BrandKit model is added to Prisma, replace these functions
+const DEFAULT_BRAND_KIT: Omit<BrandKit, 'id' | 'createdAt' | 'updatedAt'> = {
+  name: process.env.BRAND_NAME || 'BioCycle Peptides',
+  logoUrl: process.env.BRAND_LOGO_URL || null,
+  faviconUrl: process.env.BRAND_FAVICON_URL || null,
+  primaryColor: process.env.BRAND_PRIMARY_COLOR || '#1e40af',
+  secondaryColor: process.env.BRAND_SECONDARY_COLOR || '#7c3aed',
+  accentColor: process.env.BRAND_ACCENT_COLOR || '#059669',
+  fontHeading: process.env.BRAND_FONT_HEADING || 'Inter',
+  fontBody: process.env.BRAND_FONT_BODY || 'Inter',
+  guidelines: null,
+  isActive: true,
+};
 
-let brandKitCache: BrandKit | null = null;
+// ---------------------------------------------------------------------------
+// CRUD operations (Prisma-backed)
+// ---------------------------------------------------------------------------
 
 /**
- * Get the active brand kit.
+ * Get the active brand kit. Creates a default one if none exists.
  */
-export async function getActiveBrandKit(): Promise<BrandKit | null> {
-  // TODO: Replace with Prisma query when model is added
-  // return prisma.brandKit.findFirst({ where: { isActive: true } });
-  if (brandKitCache) return brandKitCache;
+export async function getActiveBrandKit(): Promise<BrandKit> {
+  try {
+    const existing = await prisma.brandKit.findFirst({
+      where: { isActive: true },
+      orderBy: { updatedAt: 'desc' },
+    });
 
-  // Default brand kit from environment
-  const defaultKit: BrandKit = {
-    id: 'default',
-    name: process.env.BRAND_NAME || 'BioCycle Peptides',
-    logoUrl: process.env.BRAND_LOGO_URL || null,
-    faviconUrl: process.env.BRAND_FAVICON_URL || null,
-    primaryColor: process.env.BRAND_PRIMARY_COLOR || '#1e40af',
-    secondaryColor: process.env.BRAND_SECONDARY_COLOR || '#7c3aed',
-    accentColor: process.env.BRAND_ACCENT_COLOR || '#059669',
-    fontHeading: process.env.BRAND_FONT_HEADING || 'Inter',
-    fontBody: process.env.BRAND_FONT_BODY || 'Inter',
-    guidelines: null,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+    if (existing) return existing;
 
-  brandKitCache = defaultKit;
-  return defaultKit;
+    // Auto-seed default brand kit on first access
+    const created = await prisma.brandKit.create({
+      data: DEFAULT_BRAND_KIT,
+    });
+    logger.info('[BrandKit] Created default brand kit');
+    return created;
+  } catch (error) {
+    logger.error('[BrandKit] Error fetching brand kit', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 /**
  * Update the brand kit.
  */
 export async function updateBrandKit(input: Partial<BrandKitInput>): Promise<BrandKit> {
-  // TODO: Replace with Prisma update when model is added
   const current = await getActiveBrandKit();
-  if (!current) throw new Error('No brand kit found');
 
-  const updated: BrandKit = {
-    ...current,
-    ...input,
-    updatedAt: new Date(),
-  };
+  const updated = await prisma.brandKit.update({
+    where: { id: current.id },
+    data: {
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
+      ...(input.faviconUrl !== undefined && { faviconUrl: input.faviconUrl }),
+      ...(input.primaryColor !== undefined && { primaryColor: input.primaryColor }),
+      ...(input.secondaryColor !== undefined && { secondaryColor: input.secondaryColor }),
+      ...(input.accentColor !== undefined && { accentColor: input.accentColor }),
+      ...(input.fontHeading !== undefined && { fontHeading: input.fontHeading }),
+      ...(input.fontBody !== undefined && { fontBody: input.fontBody }),
+      ...(input.guidelines !== undefined && { guidelines: input.guidelines }),
+      ...(input.isActive !== undefined && { isActive: input.isActive }),
+    },
+  });
 
-  brandKitCache = updated;
   logger.info('[BrandKit] Updated brand kit', { name: updated.name });
   return updated;
 }

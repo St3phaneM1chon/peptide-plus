@@ -8,6 +8,49 @@
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { isIP } from 'net';
+
+// ---------------------------------------------------------------------------
+// SSRF Protection (V-011 fix)
+// ---------------------------------------------------------------------------
+
+const PRIVATE_IP_RANGES = [
+  /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+  /^0\./, /^169\.254\./, /^::1$/, /^fc00:/, /^fe80:/, /^fd/,
+];
+
+/**
+ * Validate a URL is safe to fetch (not targeting private/internal networks).
+ * V-011 fix: Prevents SSRF via video URL.
+ */
+function validateExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+
+    // Only allow http/https
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+
+    // Block localhost
+    if (url.hostname === 'localhost' || url.hostname === '0.0.0.0') return false;
+
+    // Block IP addresses in private ranges
+    if (isIP(url.hostname)) {
+      for (const range of PRIVATE_IP_RANGES) {
+        if (range.test(url.hostname)) return false;
+      }
+    }
+
+    // Block common internal hostnames
+    const blockedPatterns = ['.internal', '.local', '.corp', '.intranet', 'metadata.google'];
+    for (const pattern of blockedPatterns) {
+      if (url.hostname.includes(pattern)) return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -105,6 +148,12 @@ export async function transcribeVideo(
 
   if (!video?.videoUrl) {
     return { success: false, error: 'Video not found or has no URL' };
+  }
+
+  // V-011 fix: Validate URL to prevent SSRF attacks
+  if (!validateExternalUrl(video.videoUrl)) {
+    logger.warn(`[Transcription] Blocked SSRF attempt for video ${videoId}: "${video.videoUrl}"`);
+    return { success: false, error: 'Invalid video URL: internal/private addresses are not allowed' };
   }
 
   logger.info(`[Transcription] Starting transcription for video ${videoId}: "${video.title}"`);
