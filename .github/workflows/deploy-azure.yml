@@ -220,7 +220,7 @@ jobs:
         run: |
           # Use prisma from node_modules (already in the artifact)
           echo "Pushing Prisma schema to production database..."
-          npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
+          npx prisma@5.22.0 db push --accept-data-loss 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
