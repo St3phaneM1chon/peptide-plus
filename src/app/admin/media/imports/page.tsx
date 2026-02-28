@@ -36,6 +36,7 @@ const PLATFORM_LABELS: Record<string, string> = {
   teams: 'Teams',
   'google-meet': 'Meet',
   webex: 'Webex',
+  youtube: 'YouTube',
 };
 
 const STATUS_STYLES: Record<string, { icon: React.ReactNode; bg: string; text: string }> = {
@@ -151,7 +152,7 @@ export default function RecordingImportsPage() {
         loadImports();
       }
     } catch {
-      toast.error('Action failed');
+      toast.error(t('common.error'));
     } finally {
       setActionLoading(null);
     }
@@ -168,12 +169,12 @@ export default function RecordingImportsPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`${data.succeeded} imported, ${data.failed} failed`);
+        toast.success(`${data.succeeded} ${t('admin.recordingImports.importAction')}, ${data.failed} ${t('admin.media.testFailed')}`);
         setSelectedIds(new Set());
         loadImports();
       }
     } catch {
-      toast.error('Bulk import failed');
+      toast.error(t('admin.recordingImports.importError'));
     } finally {
       setActionLoading(null);
     }
@@ -266,7 +267,7 @@ export default function RecordingImportsPage() {
             onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
             className="rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value="">{t('admin.recordingImports.filterAll')} - Status</option>
+            <option value="">{t('admin.recordingImports.filterAll')} - {t('admin.consents.statusColumn')}</option>
             {Object.keys(STATUS_STYLES).map((s) => (
               <option key={s} value={s}>{t(`admin.recordingImports.status.${s}`)}</option>
             ))}
@@ -314,22 +315,22 @@ export default function RecordingImportsPage() {
                   {t('admin.recordingImports.filterPlatform')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Meeting
+                  {t('admin.media.meetingLabel')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Date
+                  {t('admin.media.dateLabel')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Duration
+                  {t('admin.media.durationLabel')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Status
+                  {t('admin.consents.statusColumn')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                  Consent
+                  {t('admin.media.consentSection')}
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-medium uppercase text-gray-500">
-                  Actions
+                  {t('common.actions') || 'Actions'}
                 </th>
               </tr>
             </thead>
