@@ -81,12 +81,21 @@ export async function PATCH(request: Request, context: RouteContext) {
       },
     });
 
-    // Auto-archive video when consent is revoked
+    // Auto-archive video only if no other GRANTED consents remain
     if (existing.videoId) {
-      await prisma.video.update({
-        where: { id: existing.videoId },
-        data: { status: 'ARCHIVED' },
+      const otherGranted = await prisma.siteConsent.count({
+        where: {
+          videoId: existing.videoId,
+          status: 'GRANTED',
+          id: { not: id },
+        },
       });
+      if (otherGranted === 0) {
+        await prisma.video.update({
+          where: { id: existing.videoId },
+          data: { status: 'ARCHIVED' },
+        });
+      }
     }
 
     return NextResponse.json({ consent });

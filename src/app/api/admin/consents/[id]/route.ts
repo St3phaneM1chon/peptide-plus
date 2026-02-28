@@ -75,12 +75,21 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
         updateData.revokedAt = new Date();
         updateData.revocationReason = parsed.data.revocationReason || null;
 
-        // Auto-archive video when consent is revoked
+        // Auto-archive video only if no other GRANTED consents remain
         if (existing.videoId) {
-          await prisma.video.update({
-            where: { id: existing.videoId },
-            data: { status: 'ARCHIVED' },
+          const otherGranted = await prisma.siteConsent.count({
+            where: {
+              videoId: existing.videoId,
+              status: 'GRANTED',
+              id: { not: id },
+            },
           });
+          if (otherGranted === 0) {
+            await prisma.video.update({
+              where: { id: existing.videoId },
+              data: { status: 'ARCHIVED' },
+            });
+          }
         }
       }
       if (parsed.data.status === 'GRANTED') {

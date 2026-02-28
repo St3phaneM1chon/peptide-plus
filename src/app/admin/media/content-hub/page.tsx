@@ -31,11 +31,11 @@ interface ContentHubStats {
   }[];
 }
 
-const STATUS_BADGES: Record<string, { bg: string; text: string; label: string }> = {
-  DRAFT: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Draft' },
-  REVIEW: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'In Review' },
-  PUBLISHED: { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' },
-  ARCHIVED: { bg: 'bg-red-100', text: 'text-red-700', label: 'Archived' },
+const STATUS_BADGES: Record<string, { bg: string; text: string; key: string }> = {
+  DRAFT: { bg: 'bg-gray-100', text: 'text-gray-700', key: 'videoStatus.DRAFT' },
+  REVIEW: { bg: 'bg-yellow-100', text: 'text-yellow-700', key: 'videoStatus.REVIEW' },
+  PUBLISHED: { bg: 'bg-green-100', text: 'text-green-700', key: 'videoStatus.PUBLISHED' },
+  ARCHIVED: { bg: 'bg-red-100', text: 'text-red-700', key: 'videoStatus.ARCHIVED' },
 };
 
 const BAR_COLORS = [
@@ -240,7 +240,7 @@ export default function ContentHubPage() {
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
-                          {statusBadge.label}
+                          {t(statusBadge.key)}
                         </span>
                       </td>
                       <td className="py-2.5 pr-4">

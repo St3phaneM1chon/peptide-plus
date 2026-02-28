@@ -30,19 +30,7 @@ interface VideoItem {
   videoCategory: { id: string; name: string; slug: string } | null;
 }
 
-const typeLabels: Record<string, string> = {
-  PODCAST: 'Podcast',
-  TRAINING: 'Training',
-  PERSONAL_SESSION: 'Session',
-  PRODUCT_DEMO: 'Demo',
-  TESTIMONIAL: 'Testimonial',
-  FAQ_VIDEO: 'FAQ',
-  WEBINAR_RECORDING: 'Webinar',
-  TUTORIAL: 'Tutorial',
-  BRAND_STORY: 'Brand',
-  LIVE_STREAM: 'Live',
-  OTHER: 'Video',
-};
+// Content type labels resolved via i18n (see contentType.* keys)
 
 export default function AccountContentPage() {
   const { t } = useI18n();
@@ -123,7 +111,7 @@ export default function AccountContentPage() {
 
       {/* Results count */}
       <p className="text-sm text-gray-500">
-        {total} {total === 1 ? 'video' : 'videos'}
+        {total} {total === 1 ? t('videos.videoSingular') : t('videos.videoPlural')}
         {search && ` matching "${search}"`}
       </p>
 
@@ -178,7 +166,7 @@ export default function AccountContentPage() {
                 )}
                 {/* Type badge */}
                 <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {typeLabels[video.contentType] || video.contentType}
+                  {t(`contentType.${video.contentType}`)}
                 </div>
               </div>
 

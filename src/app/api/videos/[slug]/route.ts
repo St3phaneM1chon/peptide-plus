@@ -40,9 +40,15 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     // Only show published videos publicly
-    if (video.status !== 'PUBLISHED' && !video.isPublished) {
+    if (video.status !== 'PUBLISHED') {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
+
+    // Increment view count (fire-and-forget)
+    prisma.video.update({
+      where: { slug },
+      data: { views: { increment: 1 } },
+    }).catch(() => {});
 
     // Apply translation
     const translation = video.translations.find(t => t.locale === locale);

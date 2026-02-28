@@ -16,6 +16,23 @@ import { sendConsentConfirmationEmail, sendConsentAdminNotification } from '@/li
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+// Simple in-memory rate limit for consent submissions (5 per IP per 15 min)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 5;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
 // GET /api/consent/[token] - Get form for client to fill
 export async function GET(_request: Request, context: RouteContext) {
   try {
@@ -75,6 +92,14 @@ export async function GET(_request: Request, context: RouteContext) {
 // POST /api/consent/[token] - Submit consent
 export async function POST(request: Request, context: RouteContext) {
   try {
+    // Rate limit check
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+    if (!checkRateLimit(clientIp)) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const { token } = await context.params;
     const body = await request.json();
 

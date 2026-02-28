@@ -82,22 +82,11 @@ function formatViews(views: number): string {
   return String(views);
 }
 
-/** Map a content-type enum to a human-readable label */
-function contentTypeLabel(ct: string): string {
-  const map: Record<string, string> = {
-    PODCAST: 'Podcast',
-    TRAINING: 'Training',
-    PERSONAL_SESSION: 'Personal Session',
-    PRODUCT_DEMO: 'Product Demo',
-    TESTIMONIAL: 'Testimonial',
-    FAQ_VIDEO: 'FAQ',
-    WEBINAR_RECORDING: 'Webinar',
-    TUTORIAL: 'Tutorial',
-    BRAND_STORY: 'Brand Story',
-    LIVE_STREAM: 'Live Stream',
-    OTHER: 'Other',
-  };
-  return map[ct] || ct;
+/** Map a content-type enum to a translated label */
+function contentTypeLabel(ct: string, t: (key: string) => string): string {
+  const key = `contentType.${ct}`;
+  const val = t(key);
+  return val !== key ? val : ct;
 }
 
 // ---------------------------------------------------------------------------
@@ -457,7 +446,7 @@ export default function VideosPage() {
                           </span>
                         )}
                         <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full">
-                          {contentTypeLabel(video.contentType)}
+                          {contentTypeLabel(video.contentType, t)}
                         </span>
                       </div>
                       <h3 className="font-semibold line-clamp-2 group-hover:text-orange-600 transition-colors">
@@ -608,7 +597,7 @@ export default function VideosPage() {
                     </span>
                   )}
                   <span className="bg-white/10 px-2 py-0.5 rounded text-xs">
-                    {contentTypeLabel(playingVideo.contentType)}
+                    {contentTypeLabel(playingVideo.contentType, t)}
                   </span>
                   {playingVideo.instructor && <span>{playingVideo.instructor}</span>}
                 </div>

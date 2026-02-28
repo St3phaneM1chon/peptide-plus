@@ -63,23 +63,19 @@ export const GET = withAdminGuard(async () => {
     });
 
     return NextResponse.json({
-      videos: {
-        total: totalVideos,
-        published: publishedVideos,
-        draft: draftVideos,
-        review: reviewVideos,
-        archived: archivedVideos,
-        totalViews: totalViews._sum.views || 0,
-      },
-      categories: totalCategories,
-      placements: totalPlacements,
+      totalVideos,
+      published: publishedVideos,
+      draft: draftVideos,
+      inReview: reviewVideos,
+      archived: archivedVideos,
+      totalViews: totalViews._sum.views || 0,
+      activeCategories: totalCategories,
+      activePlacements: totalPlacements,
       productLinks: totalProductLinks,
-      consents: {
-        pending: pendingConsents,
-        granted: grantedConsents,
-        revoked: revokedConsents,
-      },
-      byType: videosByType.map(v => ({ type: v.contentType, count: v._count.id })),
+      pendingConsents,
+      grantedConsents,
+      revokedConsents,
+      byContentType: videosByType.map(v => ({ type: v.contentType, count: v._count.id })),
       bySource: videosBySource.map(v => ({ source: v.source, count: v._count.id })),
       recentVideos,
     });

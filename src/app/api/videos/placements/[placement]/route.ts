@@ -19,16 +19,25 @@ export async function GET(request: Request, context: RouteContext) {
     const locale = searchParams.get('locale') || 'en';
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
 
+    // Validate placement enum
+    const validPlacements = [
+      'HOMEPAGE_HERO', 'HOMEPAGE_FEATURED', 'PRODUCT_PAGE', 'VIDEO_LIBRARY',
+      'WEBINAR_ARCHIVE', 'LEARNING_CENTER', 'BLOG_EMBED', 'FAQ_SECTION',
+      'CUSTOMER_ACCOUNT', 'AMBASSADOR_PAGE', 'CALCULATOR_HELP', 'LAB_RESULTS', 'COMMUNITY',
+    ] as const;
+    type PlacementEnum = typeof validPlacements[number];
+
+    if (!validPlacements.includes(placement as PlacementEnum)) {
+      return NextResponse.json({ error: 'Invalid placement' }, { status: 400 });
+    }
+
     const placements = await prisma.videoPlacement.findMany({
       where: {
-        placement: placement as 'HOMEPAGE_HERO' | 'HOMEPAGE_FEATURED' | 'PRODUCT_PAGE' | 'VIDEO_LIBRARY' | 'WEBINAR_ARCHIVE' | 'LEARNING_CENTER' | 'BLOG_EMBED' | 'FAQ_SECTION' | 'CUSTOMER_ACCOUNT' | 'AMBASSADOR_PAGE' | 'CALCULATOR_HELP' | 'LAB_RESULTS' | 'COMMUNITY',
+        placement: placement as PlacementEnum,
         isActive: true,
         ...(contextId ? { contextId } : {}),
         video: {
-          OR: [
-            { status: 'PUBLISHED' },
-            { isPublished: true },
-          ],
+          status: 'PUBLISHED',
           visibility: 'PUBLIC',
         },
       },

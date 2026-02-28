@@ -35,14 +35,7 @@ interface Template {
   _count: { consents: number };
 }
 
-const typeOptions = [
-  { value: 'VIDEO_APPEARANCE', label: 'Video Appearance' },
-  { value: 'TESTIMONIAL', label: 'Testimonial' },
-  { value: 'PHOTO', label: 'Photo' },
-  { value: 'CASE_STUDY', label: 'Case Study' },
-  { value: 'MARKETING', label: 'Marketing' },
-  { value: 'OTHER', label: 'Other' },
-];
+const typeOptionKeys = ['VIDEO_APPEARANCE', 'TESTIMONIAL', 'PHOTO', 'CASE_STUDY', 'MARKETING', 'OTHER'];
 
 const emptyQuestion = (): Question => ({
   id: `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -194,7 +187,7 @@ export default function ConsentTemplatesPage() {
             className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
           >
             <Plus className="h-4 w-4" />
-            New Template
+            {t('admin.consentTemplates.create')}
           </button>
         )}
       </div>
@@ -203,7 +196,7 @@ export default function ConsentTemplatesPage() {
       {showForm && (
         <div className="bg-white border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">{editingId ? 'Edit Template' : 'New Template'}</h2>
+            <h2 className="text-lg font-semibold">{editingId ? t('admin.consentTemplates.edit') : t('admin.consentTemplates.create')}</h2>
             <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
@@ -211,29 +204,29 @@ export default function ConsentTemplatesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.consentTemplates.labelName')}</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className="w-full border rounded px-3 py-2 text-sm"
-                placeholder="e.g., Video Appearance Consent"
+                placeholder={t('admin.consentTemplates.namePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.consentTemplates.labelType')}</label>
               <select
                 value={form.type}
                 onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
                 className="w-full border rounded px-3 py-2 text-sm"
               >
-                {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {typeOptionKeys.map(k => <option key={k} value={k}>{t(`consentType.${k}`)}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.consentTemplates.labelDescription')}</label>
             <textarea
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -245,9 +238,9 @@ export default function ConsentTemplatesPage() {
           {/* Questions Builder */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">Questions *</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.consentTemplates.labelQuestions')}</label>
               <button onClick={addQuestion} className="text-sm text-orange-600 hover:text-orange-800 flex items-center gap-1">
-                <Plus className="h-3 w-3" /> Add Question
+                <Plus className="h-3 w-3" /> {t('admin.consentTemplates.addQuestion')}
               </button>
             </div>
             <div className="space-y-3">
@@ -260,7 +253,7 @@ export default function ConsentTemplatesPage() {
                       value={q.question}
                       onChange={e => updateQuestion(idx, 'question', e.target.value)}
                       className="w-full border rounded px-3 py-1.5 text-sm"
-                      placeholder="Question text..."
+                      placeholder={t('admin.consentTemplates.questionPlaceholder')}
                     />
                     <div className="flex gap-3 items-center">
                       <select
@@ -268,9 +261,9 @@ export default function ConsentTemplatesPage() {
                         onChange={e => updateQuestion(idx, 'type', e.target.value)}
                         className="border rounded px-2 py-1 text-xs"
                       >
-                        <option value="checkbox">Checkbox</option>
-                        <option value="text">Text</option>
-                        <option value="signature">Signature</option>
+                        <option value="checkbox">{t('questionType.checkbox')}</option>
+                        <option value="text">{t('questionType.text')}</option>
+                        <option value="signature">{t('questionType.signature')}</option>
                       </select>
                       <label className="flex items-center gap-1 text-xs text-gray-600">
                         <input
@@ -278,7 +271,7 @@ export default function ConsentTemplatesPage() {
                           checked={q.required}
                           onChange={e => updateQuestion(idx, 'required', e.target.checked)}
                         />
-                        Required
+                        {t('admin.consentTemplates.required')}
                       </label>
                     </div>
                   </div>
@@ -293,13 +286,13 @@ export default function ConsentTemplatesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Legal Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.consentTemplates.labelLegalText')}</label>
             <textarea
               value={form.legalText}
               onChange={e => setForm(f => ({ ...f, legalText: e.target.value }))}
               className="w-full border rounded px-3 py-2 text-sm font-mono"
               rows={4}
-              placeholder="Legal terms and conditions..."
+              placeholder={t('admin.consentTemplates.legalTextPlaceholder')}
             />
           </div>
 
@@ -310,12 +303,12 @@ export default function ConsentTemplatesPage() {
               onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))}
               id="isActive"
             />
-            <label htmlFor="isActive" className="text-sm text-gray-700">Active</label>
+            <label htmlFor="isActive" className="text-sm text-gray-700">{t('admin.consentTemplates.active')}</label>
           </div>
 
           <div className="flex justify-end gap-3">
             <button onClick={resetForm} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
@@ -323,7 +316,7 @@ export default function ConsentTemplatesPage() {
               className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {editingId ? 'Update' : 'Create'}
+              {editingId ? t('admin.consentTemplates.update') : t('common.create')}
             </button>
           </div>
         </div>
@@ -337,7 +330,7 @@ export default function ConsentTemplatesPage() {
           </div>
         ) : templates.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            No templates yet. Create your first consent form template.
+            {t('admin.consentTemplates.empty')}
           </div>
         ) : (
           <div className="divide-y">
@@ -347,15 +340,15 @@ export default function ConsentTemplatesPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-gray-900">{template.name}</h3>
                     <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                      {typeOptions.find(o => o.value === template.type)?.label || template.type}
+                      {t(`consentType.${template.type}`)}
                     </span>
                     {template.isActive ? (
                       <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded flex items-center gap-0.5">
-                        <Eye className="h-3 w-3" /> Active
+                        <Eye className="h-3 w-3" /> {t('admin.consentTemplates.active')}
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded flex items-center gap-0.5">
-                        <EyeOff className="h-3 w-3" /> Inactive
+                        <EyeOff className="h-3 w-3" /> {t('admin.consentTemplates.inactive')}
                       </span>
                     )}
                     <span className="text-xs text-gray-400">v{template.version}</span>
@@ -371,14 +364,14 @@ export default function ConsentTemplatesPage() {
                   <button
                     onClick={() => startEdit(template)}
                     className="p-2 hover:bg-gray-100 rounded"
-                    title="Edit"
+                    title={t('common.edit')}
                   >
                     <Edit2 className="h-4 w-4 text-gray-500" />
                   </button>
                   <button
                     onClick={() => setDeleteId(template.id)}
                     className="p-2 hover:bg-red-50 rounded"
-                    title="Delete"
+                    title={t('common.delete')}
                     disabled={template._count.consents > 0}
                   >
                     <Trash2 className="h-4 w-4 text-red-400" />
@@ -393,9 +386,9 @@ export default function ConsentTemplatesPage() {
       {/* Delete Confirmation */}
       {deleteId && (
         <ConfirmDialog
-          title="Delete Template"
-          message="Are you sure you want to delete this consent template? This cannot be undone."
-          confirmLabel="Delete"
+          title={t('admin.consentTemplates.deleteTitle')}
+          message={t('admin.consentTemplates.deleteMessage')}
+          confirmLabel={t('common.delete')}
           onConfirm={handleDelete}
           onCancel={() => setDeleteId(null)}
         />

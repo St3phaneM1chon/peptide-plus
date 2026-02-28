@@ -42,14 +42,7 @@ const statusColors: Record<string, string> = {
   EXPIRED: 'bg-gray-100 text-gray-800',
 };
 
-const typeLabels: Record<string, string> = {
-  VIDEO_APPEARANCE: 'Video Appearance',
-  TESTIMONIAL: 'Testimonial',
-  PHOTO: 'Photo',
-  CASE_STUDY: 'Case Study',
-  MARKETING: 'Marketing',
-  OTHER: 'Other',
-};
+// Consent type labels resolved via i18n (see consentType.* keys)
 
 export default function AdminConsentsPage() {
   const { t } = useI18n();
@@ -172,8 +165,8 @@ export default function AdminConsentsPage() {
               className="border rounded px-3 py-1.5 text-sm"
             >
               <option value="">All</option>
-              {Object.entries(typeLabels).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+              {['VIDEO_APPEARANCE', 'TESTIMONIAL', 'PHOTO', 'CASE_STUDY', 'MARKETING', 'OTHER'].map(k => (
+                <option key={k} value={k}>{t(`consentType.${k}`)}</option>
               ))}
             </select>
           </div>
@@ -227,12 +220,12 @@ export default function AdminConsentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                        {typeLabels[consent.type] || consent.type}
+                        {t(`consentType.${consent.type}`)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {consent.video ? (
-                        <Link href={`/admin/media/videos`} className="text-orange-600 hover:underline text-xs">
+                        <Link href={`/admin/media/videos/${consent.video.id}`} className="text-orange-600 hover:underline text-xs">
                           {consent.video.title}
                         </Link>
                       ) : (
@@ -262,12 +255,13 @@ export default function AdminConsentsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button
+                        <Link
+                          href={`/admin/media/consents/${consent.id}`}
                           title="View details"
-                          className="p-1.5 hover:bg-gray-100 rounded"
+                          className="p-1.5 hover:bg-gray-100 rounded inline-flex"
                         >
                           <Eye className="h-4 w-4 text-gray-500" />
-                        </button>
+                        </Link>
                         {consent.pdfUrl && (
                           <a
                             href={consent.pdfUrl}
@@ -283,6 +277,23 @@ export default function AdminConsentsPage() {
                           <button
                             title="Resend request"
                             className="p-1.5 hover:bg-gray-100 rounded"
+                            onClick={async () => {
+                              try {
+                                const { fetchWithCSRF } = await import('@/lib/fetch-csrf');
+                                const res = await fetchWithCSRF(`/api/admin/consents/${consent.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ resend: true }),
+                                });
+                                if (res.ok) {
+                                  toast.success('Consent request resent');
+                                } else {
+                                  toast.error('Failed to resend');
+                                }
+                              } catch {
+                                toast.error('Failed to resend');
+                              }
+                            }}
                           >
                             <Send className="h-4 w-4 text-orange-500" />
                           </button>
