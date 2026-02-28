@@ -66,6 +66,7 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         revokeUrl: undefined, // Azure AD doesn't have a standard revoke endpoint
         scopes: [
           'https://graph.microsoft.com/OnlineMeetings.Read.All',
+          'https://graph.microsoft.com/OnlineMeetings.ReadWrite',
           'https://graph.microsoft.com/CallRecords.Read.All',
           'https://graph.microsoft.com/Files.Read.All',
           'offline_access',
@@ -82,6 +83,7 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         scopes: [
           'https://www.googleapis.com/auth/meetings.space.readonly',
           'https://www.googleapis.com/auth/drive.readonly',
+          'https://www.googleapis.com/auth/calendar.events',
         ],
         clientId: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -108,6 +110,7 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         scopes: [
           'spark:recordings_read',
           'meeting:recordings_read',
+          'meeting:schedules_write',
         ],
         clientId: process.env.WEBEX_CLIENT_ID || '',
         clientSecret: process.env.WEBEX_CLIENT_SECRET || '',

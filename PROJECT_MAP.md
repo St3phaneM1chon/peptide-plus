@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-28 (Media Audit: Security fixes + SWR hooks + Image pipeline + Cross-post + Validations + OAuth refresh + Transcription + AI-tagging + Anomaly detection + MediaPicker + CalendarView + Dashboard + Bulk actions + Highlights + Analytics + Brand Kit)
+# LAST UPDATED: 2026-02-28 (Media Audit: Security fixes + SWR hooks + Image pipeline + Cross-post + Validations + OAuth refresh + Transcription + AI-tagging + Anomaly detection + MediaPicker + CalendarView + Dashboard + Bulk actions + Highlights + Analytics + Brand Kit + Meeting Creation Service)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 245 | **API Routes**: 507 | **Prisma Models**: 124 | **Enums**: 30 | **Components**: 125 | **Hooks**: 19 | **Lib files**: 248
+- **Pages**: 245 | **API Routes**: 509 | **Prisma Models**: 124 | **Enums**: 30 | **Components**: 125 | **Hooks**: 19 | **Lib files**: 250
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -784,6 +784,8 @@ orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** 
 | /api/webhooks/teams | POST | RecordingImport | webhook-secret | Teams webhook |
 | /api/webhooks/webex | POST | RecordingImport | webhook-secret | Webex webhook |
 | /api/admin/videos/[id]/publish-youtube | POST | Video | admin-guard | YouTube upload |
+| /api/admin/meetings/create | POST | - | admin-guard | Create meeting (Zoom/Teams/Meet/Webex) |
+| /api/admin/meetings/notify-whatsapp | POST | - | admin-guard | Send WhatsApp meeting notification |
 
 ### Social Media & Ads (8 routes) - NEW 2026-02-28
 | Route | Methods | Models | Auth | Notes |
@@ -993,10 +995,10 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 ### `/src/lib/accounting/` (34 files)
 auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **ai-accountant.service** (rule-based NLP chat, 18 intents, bilingual, session management)
 
-### `/src/lib/email/` (13 files)
-email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance)
+### `/src/lib/email/` (14 files)
+email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance), meeting-invitation
 
-### `/src/lib/platform/` (5 files) - NEW 2026-02-28
+### `/src/lib/platform/` (7 files) - NEW 2026-02-28
 | File | Purpose | Used By |
 |------|---------|---------|
 | `crypto.ts` | AES-256-GCM token encryption/decryption | platform-connections API routes |
@@ -1004,6 +1006,7 @@ email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, ma
 | `recording-import.ts` | Recording import service (fetch, download, create Video) | recording-imports API routes |
 | `webhook-handlers.ts` | Webhook validation & handlers (Zoom, Teams, Webex) | /api/webhooks/zoom, teams, webex |
 | `youtube-publish.ts` | YouTube resumable upload service | /api/admin/videos/[id]/publish-youtube |
+| `meeting-creation.ts` | Unified meeting creation service (Zoom, Teams, Google Meet, Webex) | /api/admin/meetings/create |
 
 ### `/src/lib/social/` (2 files) - NEW 2026-02-28
 | File | Purpose | Used By |
