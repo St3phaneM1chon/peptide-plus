@@ -36,9 +36,10 @@ interface PlatformOAuthConfig {
 // ---------------------------------------------------------------------------
 
 function getCallbackUrl(platform: Platform): string {
-  // Prefer AUTH_URL / NEXTAUTH_URL for OAuth callbacks (server-side, matches actual host)
-  // NEXT_PUBLIC_APP_URL is the public-facing URL which may differ from the auth callback origin
-  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+  // For OAuth callbacks, use the public-facing URL (NEXT_PUBLIC_APP_URL) first,
+  // because AUTH_URL/NEXTAUTH_URL may point to internal addresses (e.g. 0.0.0.0:3000)
+  // which are unreachable by the OAuth provider's redirect.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
   return `${baseUrl}/api/admin/platform-connections/${platform}/callback`;
 }
 
