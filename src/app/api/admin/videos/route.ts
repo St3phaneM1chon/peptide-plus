@@ -49,6 +49,21 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       where.featuredClientId = featuredClientIdParam;
     }
 
+    const sourceParam = searchParams.get('source');
+    if (sourceParam) {
+      where.source = sourceParam;
+    }
+
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      where.status = statusParam;
+    }
+
+    const contentTypeParam = searchParams.get('contentType');
+    if (contentTypeParam) {
+      where.contentType = contentTypeParam;
+    }
+
     if (search) {
       // IMP-051: TODO: Add tags to search (tags is stored as JSON string, needs contains search)
       where.OR = [

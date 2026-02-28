@@ -1,15 +1,15 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-27 (Content Hub / Mediatheque + Video Categories + Consent Management + AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
+# LAST UPDATED: 2026-02-28 (Content Hub / Mediatheque + Video Categories + Consent Management + Platform Integrations + AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 199 | **API Routes**: 377 | **Prisma Models**: 120 | **Enums**: 30 | **Components**: 116 | **Hooks**: 16 | **Lib files**: 187
+- **Pages**: 201 | **API Routes**: 392 | **Prisma Models**: 122 | **Enums**: 30 | **Components**: 116 | **Hooks**: 16 | **Lib files**: 192
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
-- **Orphan models** (no Prisma FK): 35/120 (29.2%) -- many use soft references
+- **Orphan models** (no Prisma FK): 35/122 (28.7%) -- many use soft references
 
 ---
 
@@ -242,10 +242,10 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (COMPLETE - see 1.19 Content Hub), `/admin/media/library` (STUB), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/pub-google` (STUB), `/admin/media/pub-tiktok` (STUB), `/admin/media/pub-x` (STUB), `/admin/media/pub-youtube` (STUB) |
-| **API Routes** | `/api/admin/medias`, `/api/admin/videos` |
-| **Models** | `Media` (orphan) |
-| **NOTE** | 5 out of 11 media pages are STUBS (4 ad platforms + library). Videos now fully managed via Content Hub (1.19). |
+| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (COMPLETE - see 1.19 Content Hub), `/admin/media/library` (STUB), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/pub-google` (STUB), `/admin/media/pub-tiktok` (STUB), `/admin/media/pub-x` (STUB), `/admin/media/pub-youtube` (STUB), `/admin/media/connections` (COMPLETE - see 1.20 Platform Integrations), `/admin/media/imports` (COMPLETE - see 1.20 Platform Integrations) |
+| **API Routes** | `/api/admin/medias`, `/api/admin/videos`, `/api/admin/platform-connections/*`, `/api/admin/recording-imports/*` |
+| **Models** | `Media` (orphan), `PlatformConnection`, `RecordingImport` |
+| **NOTE** | 5 out of 11 original media pages are STUBS (4 ad platforms + library). Videos via Content Hub (1.19). Platform connections & recording imports via 1.20. |
 
 ---
 
@@ -302,7 +302,21 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | **Models** | `Video` (extended), `VideoCategory`, `VideoCategoryTranslation`, `VideoPlacement`, `VideoProductLink`, `VideoTag`, `SiteConsent`, `ConsentFormTemplate`, `ConsentFormTranslation` |
 | **Components** | `VideoPlayer`, `VideoCard`, `VideoGrid`, `VideoFilters`, `VideoPlacementWidget` |
 | **Lib** | `consent-pdf.ts`, `consent-email.ts`, `validations/video-category.ts`, `validations/consent.ts` |
-| **Affects** | Products (video links), Account (mediatheque), Email system (consent emails) |
+| **Affects** | Products (video links), Account (mediatheque), Email system (consent emails), Platform Integrations (recording imports create Videos) |
+
+---
+
+### 1.20 PLATFORM INTEGRATIONS
+> **What**: OAuth connections to video conferencing platforms (Zoom, Teams, Meet, Webex), recording auto-import, YouTube publishing, webhook receivers
+
+| Layer | Elements |
+|-------|----------|
+| **Pages** | `/admin/media/connections` (COMPLETE), `/admin/media/imports` (COMPLETE) |
+| **API Routes** | `/api/admin/platform-connections/*`, `/api/admin/recording-imports/*`, `/api/webhooks/zoom`, `/api/webhooks/teams`, `/api/webhooks/webex`, `/api/admin/videos/[id]/publish-youtube` |
+| **Models** | `PlatformConnection`, `RecordingImport`, `Video` (extended with recordingImport relation, platformMeetingId field) |
+| **Components** | (inline in pages: PlatformConnectionCard, Toggle, Select, ImportRow, StatusBadge, Pagination) |
+| **Lib** | `platform/crypto.ts`, `platform/oauth.ts`, `platform/recording-import.ts`, `platform/webhook-handlers.ts`, `platform/youtube-publish.ts` |
+| **Affects** | Content Hub (Video), Consents (SiteConsent auto-create), Users (participant matching) |
 
 ---
 
@@ -367,7 +381,8 @@ User
   ├── Learning: CourseAccess, Grade
   ├── Tracking: PriceWatch
   ├── Loyalty: Ambassador
-  └── Collections: WishlistCollection
+  ├── Collections: WishlistCollection
+  └── Integrations: PlatformConnection
 ```
 
 ---
@@ -391,6 +406,8 @@ User
 | **Email templates** | Order lifecycle emails; Welcome series; Marketing campaigns; Bounce handler; Automation flows |
 | **Tax calculations** | `@/lib/canadianTaxes`; Checkout page; Accounting tax-summary; Fiscal declarations; Country obligations |
 | **i18n locale files** | ALL 22 locale JSON files; Every page using `t()` calls |
+| **Platform connections** | `@/lib/platform/*` (crypto, oauth, recording-import, webhook-handlers, youtube-publish); Platform API routes; Webhook routes; Video model; RecordingImport model |
+| **Video model** (extended) | VideoCategory, VideoPlacement, VideoProductLink, VideoTag, SiteConsent, RecordingImport; Content Hub pages; Platform Integrations pages; All video API routes |
 
 ---
 
@@ -447,6 +464,8 @@ User
 | Pub TikTok | `/admin/media/pub-tiktok` | **STUB** | - |
 | Pub X/Twitter | `/admin/media/pub-x` | **STUB** | - |
 | Pub YouTube | `/admin/media/pub-youtube` | **STUB** | - |
+| Connections | `/admin/media/connections` | COMPLETE | `/api/admin/platform-connections/*` |
+| Imports | `/admin/media/imports` | COMPLETE | `/api/admin/recording-imports/*` |
 
 ### Content & Reviews
 | Page | Path | Status | Components | API |
@@ -684,13 +703,16 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 | /api/auth/reset-password | User | bcryptjs |
 | /api/auth/accept-terms | User | - |
 
-### Webhooks (4 routes)
+### Webhooks (7 routes)
 | Route | Models | Auth |
 |-------|--------|------|
 | /api/webhooks/stripe | proxy → /api/payments/webhook | stripe-sig |
 | /api/webhooks/paypal | WebhookEvent,Order,OrderItem,ProductFormat,InventoryTransaction,Ambassador | paypal-sig |
 | /api/webhooks/email-bounce | EmailLog,BounceRecord via bounce-handler | svix-signature (Resend) |
 | /api/webhooks/inbound-email | InboundEmail,EmailConversation | webhook-secret |
+| /api/webhooks/zoom | RecordingImport | webhook-secret (also in Platform Integrations) |
+| /api/webhooks/teams | RecordingImport | webhook-secret (also in Platform Integrations) |
+| /api/webhooks/webex | RecordingImport | webhook-secret (also in Platform Integrations) |
 
 ### Cron Jobs (12 routes, all cron-secret auth)
 abandoned-cart, birthday-emails, data-retention, dependency-check, email-flows, points-expiring, price-drop-alerts, release-reservations, satisfaction-survey, stock-alerts, update-exchange-rates, welcome-series
@@ -731,6 +753,25 @@ orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** 
 | /api/account/consents | GET,POST | SiteConsent,ConsentFormTemplate | auth | User consent management |
 | /api/account/consents/[id] | GET | SiteConsent | auth | Single consent detail |
 | /api/consent/[token] | GET,POST | SiteConsent,ConsentFormTemplate | none (token) | Public consent form signing |
+
+### Platform Integrations (15 routes) - NEW 2026-02-28
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/platform-connections | GET | PlatformConnection | admin-guard | List all connections |
+| /api/admin/platform-connections/[platform] | GET,PUT,DELETE | PlatformConnection | admin-guard | CRUD connection |
+| /api/admin/platform-connections/[platform]/oauth | GET | PlatformConnection | admin-guard | Init OAuth flow |
+| /api/admin/platform-connections/[platform]/callback | GET | PlatformConnection | admin-guard | OAuth callback |
+| /api/admin/platform-connections/[platform]/refresh | POST | PlatformConnection | admin-guard | Refresh token |
+| /api/admin/platform-connections/[platform]/test | POST | PlatformConnection | admin-guard | Test connection |
+| /api/admin/recording-imports | GET | RecordingImport | admin-guard | List imports |
+| /api/admin/recording-imports/sync | POST | RecordingImport | admin-guard | Sync recordings |
+| /api/admin/recording-imports/[id] | GET,PATCH | RecordingImport | admin-guard | Detail/retry |
+| /api/admin/recording-imports/[id]/import | POST | RecordingImport,Video | admin-guard | Import recording |
+| /api/admin/recording-imports/bulk-import | POST | RecordingImport,Video | admin-guard | Bulk import |
+| /api/webhooks/zoom | POST | RecordingImport | webhook-secret | Zoom webhook |
+| /api/webhooks/teams | POST | RecordingImport | webhook-secret | Teams webhook |
+| /api/webhooks/webex | POST | RecordingImport | webhook-secret | Webex webhook |
+| /api/admin/videos/[id]/publish-youtube | POST | Video | admin-guard | YouTube upload |
 
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
@@ -811,7 +852,7 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 ### Hub Models (highest incoming FK)
 | Model | Incoming FK Count | Deletion Impact |
 |-------|------------------|-----------------|
-| **User** | 36 | CATASTROPHIC -- cascades to 16+ tables (incl. ForumPost, ForumReply, ForumVote, ContactMessage), blocks on 3 |
+| **User** | 37 | CATASTROPHIC -- cascades to 17+ tables (incl. ForumPost, ForumReply, ForumVote, ContactMessage, PlatformConnection), blocks on 3 |
 | **Product** | 14 | HIGH -- cascades formats, images, translations, modules, alerts |
 | **ChartOfAccount** | 6 | BLOCKS if JournalLines or FixedAssets reference it |
 | **Order** | 4 | Cascades OrderItems. SetNull PaymentErrors. |
@@ -845,6 +886,17 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | `SiteConsent` | id, type, status, signerName, signerEmail, signedAt?, token, videoId?, templateId?, pdfUrl?, metadata? | video(Video?), template(ConsentFormTemplate?) | Consent records (image/video rights), token-based signing |
 | `ConsentFormTemplate` | id, slug, isActive, createdAt, updatedAt | translations(ConsentFormTranslation[]), consents(SiteConsent[]) | Reusable consent form templates, unique slug |
 | `ConsentFormTranslation` | id, templateId, locale, title, content, fields? | template(ConsentFormTemplate) | @@unique([templateId, locale]) |
+
+### Platform Integrations Models (2) - NEW 2026-02-28
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `PlatformConnection` | id, platform, accessToken, refreshToken, tokenExpiresAt, accountId, isEnabled, autoImport, defaultCategoryId, webhookSecret, createdAt, updatedAt | connectedBy(User), defaultCategory(VideoCategory?), recordingImports(RecordingImport[]) | OAuth tokens AES-256-GCM encrypted, unique platform |
+| `RecordingImport` | id, connectionId, externalId, meetingId, meetingTitle, status, blobUrl, fileSize, createdAt, updatedAt | connection(PlatformConnection), video(Video?) | Import lifecycle: PENDING -> DOWNLOADING -> PROCESSING -> COMPLETED/FAILED |
+
+### Updated Models (2026-02-28)
+| Model | Change | Details |
+|-------|--------|---------|
+| `Video` | Extended | Added `recordingImport` relation to RecordingImport, `platformMeetingId` field |
 
 ### Updated Models (2026-02-27)
 | Model | Change | Details |
@@ -885,7 +937,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 
 ## 13. LIB SERVICES
 
-### Root `/src/lib/` (184 files total)
+### Root `/src/lib/` (189 files total)
 | Category | Files | Used By |
 |----------|-------|---------|
 | **Auth** | auth-config, mfa, brute-force-protection, csrf, session-security, webauthn, password-history | Auth pages, middleware, API guards |
@@ -906,6 +958,15 @@ auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring
 
 ### `/src/lib/email/` (13 files)
 email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance)
+
+### `/src/lib/platform/` (5 files) - NEW 2026-02-28
+| File | Purpose | Used By |
+|------|---------|---------|
+| `crypto.ts` | AES-256-GCM token encryption/decryption | platform-connections API routes |
+| `oauth.ts` | Unified OAuth manager (Zoom, Teams, Meet, Webex, YouTube) | platform-connections OAuth/callback routes |
+| `recording-import.ts` | Recording import service (fetch, download, create Video) | recording-imports API routes |
+| `webhook-handlers.ts` | Webhook validation & handlers (Zoom, Teams, Webex) | /api/webhooks/zoom, teams, webex |
+| `youtube-publish.ts` | YouTube resumable upload service | /api/admin/videos/[id]/publish-youtube |
 
 ### `/src/lib/admin/` (6 files)
 admin-fetch, admin-layout-context, icon-resolver, outlook-nav, ribbon-config, section-themes

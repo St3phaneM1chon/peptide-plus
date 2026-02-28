@@ -2783,10 +2783,11 @@ model User {
   privacyAcceptedAt DateTime?
 
   // Content Hub relations
-  createdVideos      Video[]       @relation("VideoCreatedBy")
-  featuredInVideos   Video[]       @relation("VideoFeaturedClient")
-  consentsGiven      SiteConsent[] @relation("ConsentClient")
-  consentsRequested  SiteConsent[] @relation("ConsentRequester")
+  createdVideos          Video[]               @relation("VideoCreatedBy")
+  featuredInVideos       Video[]               @relation("VideoFeaturedClient")
+  consentsGiven          SiteConsent[]         @relation("ConsentClient")
+  consentsRequested      SiteConsent[]         @relation("ConsentRequester")
+  platformConnections    PlatformConnection[]  @relation("PlatformConnections")
 
   @@index([role])
   @@index([createdAt])
@@ -2905,6 +2906,9 @@ model Video {
   createdById      String?           // FK -> User (who created this)
   featuredClientId String?           // FK -> User (client who appears in video)
 
+  // Platform import fields
+  platformMeetingId String?           // Source meeting ID for reference
+
   // Relations
   translations     VideoTranslation[]
   videoCategory    VideoCategory?    @relation(fields: [videoCategoryId], references: [id], onDelete: SetNull)
@@ -2914,6 +2918,7 @@ model Video {
   productLinks     VideoProductLink[]
   videoTags        VideoTag[]
   consents         SiteConsent[]
+  recordingImport  RecordingImport?
 
   @@index([category])
   @@index([isPublished])
@@ -5460,10 +5465,11 @@ model VideoCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  parent       VideoCategory?              @relation("VideoCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children     VideoCategory[]             @relation("VideoCategoryHierarchy")
-  translations VideoCategoryTranslation[]
-  videos       Video[]
+  parent                VideoCategory?              @relation("VideoCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children              VideoCategory[]             @relation("VideoCategoryHierarchy")
+  translations          VideoCategoryTranslation[]
+  videos                Video[]
+  platformConnections   PlatformConnection[]
 
   @@index([parentId])
   @@index([isActive])
@@ -5646,4 +5652,91 @@ model ConsentFormTranslation {
   @@index([formTemplateId])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+// ==========================================
+// Platform Integration Models (Content Hub Phase 6)
+// ==========================================
+
+model PlatformConnection {
+  id             String   @id @default(cuid())
+  platform       String   @unique // "zoom", "teams", "google-meet", "webex", "youtube"
+
+  // OAuth tokens (encrypted at rest via lib/platform/crypto.ts)
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+
+  // Platform-specific IDs
+  accountId      String?  // Zoom Account ID, Azure Tenant ID, etc.
+  externalUserId String?  // Platform user/org ID
+
+  // Config
+  isEnabled          Boolean           @default(false)
+  autoImport         Boolean           @default(false)
+  defaultCategoryId  String?
+  defaultVisibility  ContentVisibility @default(PRIVATE)
+  defaultContentType VideoContentType  @default(OTHER)
+
+  // Webhook
+  webhookSecret String?
+  webhookId     String?  // Subscription ID on the platform side
+
+  // Sync state
+  lastSyncAt DateTime?
+  syncStatus String?    // "idle", "syncing", "error"
+  syncError  String?
+
+  // Who connected this
+  connectedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  defaultCategory VideoCategory? @relation(fields: [defaultCategoryId], references: [id], onDelete: SetNull)
+  connectedBy     User?          @relation("PlatformConnections", fields: [connectedById], references: [id], onDelete: SetNull)
+  imports         RecordingImport[]
+
+  @@index([platform, isEnabled])
+  @@index([connectedById])
+}
+
+model RecordingImport {
+  id           String @id @default(cuid())
+  connectionId String
+
+  // Source info
+  externalId   String    // Recording ID on the platform
+  meetingId    String?   // Meeting ID
+  meetingTitle String?
+  meetingDate  DateTime?
+  hostEmail    String?
+  duration     Int?      // seconds
+  participants Json?     // [{name, email}]
+
+  // Import status
+  status String @default("pending") // pending, downloading, processing, completed, failed, skipped
+  error  String?
+
+  // Result
+  videoId       String? @unique
+  blobUrl       String? // Azure Blob URL of downloaded file
+  fileSize      Int?    // bytes
+  transcriptUrl String?
+
+  // Auto-consent
+  consentAutoCreated Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  video      Video?             @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@unique([connectionId, externalId])
+  @@index([status])
+  @@index([connectionId, createdAt])
+  @@index([videoId])
 }

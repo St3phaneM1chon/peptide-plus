@@ -11,6 +11,7 @@ import {
   ArrowLeft, ChevronRight, House, Loader2, Save,
   Tag, X, Plus, MapPin, ShieldCheck, Package,
   Video as VideoIcon, ExternalLink, Clock, Eye,
+  Upload, MonitorPlay,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -89,10 +90,20 @@ interface VideoDetail {
   videoCategory: { id: string; name: string; slug: string } | null;
   createdBy: { id: string; name: string | null; email: string | null } | null;
   featuredClient: { id: string; name: string | null; email: string | null } | null;
+  platformMeetingId: string | null;
   placements: VideoPlacement[];
   productLinks: ProductLink[];
   videoTags: { id: string; tag: string }[];
   consents: ConsentEntry[];
+  recordingImport: {
+    id: string;
+    platform: string;
+    meetingTitle: string | null;
+    meetingDate: string | null;
+    hostEmail: string | null;
+    duration: number | null;
+    createdAt: string;
+  } | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1045,6 +1056,100 @@ export default function VideoDetailPage() {
               {t('common.loading') || 'Loading...'}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* SECTION 6: Recording Source (only if imported from platform) */}
+      {/* ============================================================ */}
+      {video.recordingImport && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <MonitorPlay className="w-4 h-4 text-slate-400" />
+            {t('admin.media.recordingSource') || 'Recording Source'}
+          </h2>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-slate-500">{t('admin.recordingImports.filterPlatform') || 'Platform'}:</span>{' '}
+              <span className="font-medium text-slate-700 capitalize">{video.recordingImport.platform}</span>
+            </div>
+            {video.recordingImport.meetingTitle && (
+              <div>
+                <span className="text-slate-500">Meeting:</span>{' '}
+                <span className="font-medium text-slate-700">{video.recordingImport.meetingTitle}</span>
+              </div>
+            )}
+            {video.recordingImport.meetingDate && (
+              <div>
+                <span className="text-slate-500">Date:</span>{' '}
+                <span className="font-medium text-slate-700">
+                  {new Date(video.recordingImport.meetingDate).toLocaleDateString(undefined, {
+                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            )}
+            {video.recordingImport.hostEmail && (
+              <div>
+                <span className="text-slate-500">Host:</span>{' '}
+                <span className="font-medium text-slate-700">{video.recordingImport.hostEmail}</span>
+              </div>
+            )}
+            {video.platformMeetingId && (
+              <div>
+                <span className="text-slate-500">Meeting ID:</span>{' '}
+                <span className="font-mono text-xs text-slate-600">{video.platformMeetingId}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-slate-500">{t('admin.recordingImports.importAction') || 'Imported'}:</span>{' '}
+              <span className="font-medium text-slate-700">
+                {new Date(video.recordingImport.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* SECTION 7: YouTube Publish */}
+      {/* ============================================================ */}
+      {video.videoUrl && video.source !== 'YOUTUBE' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <Upload className="w-4 h-4 text-slate-400" />
+            {t('admin.media.publishYouTube') || 'Publish to YouTube'}
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">
+            {t('admin.media.publishYouTubeDesc') || 'Upload this video to your YouTube channel. The video will be uploaded as unlisted by default.'}
+          </p>
+          <button
+            onClick={async () => {
+              if (!confirm(t('admin.media.confirmPublishYouTube') || 'Upload this video to YouTube?')) return;
+              toast.loading(t('admin.media.publishingYouTube') || 'Uploading to YouTube...');
+              try {
+                const res = await fetchWithCSRF(`/api/admin/videos/${video.id}/publish-youtube`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ privacyStatus: 'unlisted' }),
+                });
+                const data = await res.json();
+                toast.dismiss();
+                if (data.success) {
+                  toast.success(`${t('admin.media.publishedYouTube') || 'Published to YouTube!'} ${data.youtubeUrl}`);
+                } else {
+                  toast.error(data.error || t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+                }
+              } catch {
+                toast.dismiss();
+                toast.error(t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm"
+          >
+            <Upload className="w-4 h-4" />
+            {t('admin.media.publishYouTubeBtn') || 'Upload to YouTube'}
+          </button>
         </div>
       )}
 

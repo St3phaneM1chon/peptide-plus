@@ -208,6 +208,8 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/media/content-hub', labelKey: 'admin.nav.contentHub', icon: Layout },
           { href: '/admin/media/videos', labelKey: 'admin.nav.mediaVideos', icon: Video },
           { href: '/admin/media/video-categories', labelKey: 'admin.nav.videoCategories', icon: FolderOpen },
+          { href: '/admin/media/connections', labelKey: 'admin.nav.platformConnections', icon: Zap },
+          { href: '/admin/media/imports', labelKey: 'admin.nav.recordingImports', icon: Import },
           { href: '/admin/media/consents', labelKey: 'admin.nav.consents', icon: FileCheck },
           { href: '/admin/media/consent-templates', labelKey: 'admin.nav.consentTemplates', icon: ClipboardCheck },
           { href: '/admin/media/images', labelKey: 'admin.nav.mediaImages', icon: ImageIcon },

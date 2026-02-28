@@ -3855,7 +3855,9 @@
       "apiTikTok": "TikTok",
       "apiGoogleAds": "Google Ads",
       "apiLinkedIn": "LinkedIn",
-      "apiMeta": "Meta (Facebook)"
+      "apiMeta": "Meta (Facebook)",
+      "platformConnections": "Platform Connections",
+      "recordingImports": "Recording Imports"
     },
     "newsletter": {
       "activeSubscribers": "Активные подписчики",
@@ -6071,6 +6073,63 @@
       "empty": "No templates yet. Create your first consent form template.",
       "deleteTitle": "Delete Template",
       "deleteMessage": "Are you sure you want to delete this consent template? This cannot be undone."
+    },
+    "platformConnections": {
+      "title": "Platform Connections",
+      "subtitle": "Connect video platforms to automatically import recordings into your Content Hub",
+      "loadError": "Failed to load platform connections",
+      "connected": "Successfully connected {platform}",
+      "disconnected": "Successfully disconnected {platform}",
+      "oauthError": "OAuth error for {platform}: {error}",
+      "connectError": "Failed to initiate connection",
+      "disconnectError": "Failed to disconnect",
+      "confirmDisconnect": "Are you sure you want to disconnect this platform? All settings will be preserved but tokens will be revoked.",
+      "statusConnected": "Connected",
+      "statusDisconnected": "Not connected",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "test": "Test",
+      "testSuccess": "Connection is working",
+      "testFailed": "Connection test failed",
+      "autoImport": "Auto-import recordings",
+      "defaultCategory": "Default category",
+      "noCategory": "No default category",
+      "defaultVisibility": "Default visibility",
+      "defaultContentType": "Default content type",
+      "imports": "imports",
+      "updateError": "Failed to update settings",
+      "syncNow": "Sync Now",
+      "syncing": "Syncing...",
+      "syncSuccess": "Sync completed",
+      "syncError": "Sync failed"
+    },
+    "recordingImports": {
+      "title": "Recording Imports",
+      "subtitle": "Manage recordings imported from connected platforms",
+      "loadError": "Failed to load imports",
+      "noImports": "No recording imports yet",
+      "noImportsDesc": "Connect a platform and sync recordings to see them here",
+      "status": {
+        "pending": "Pending",
+        "downloading": "Downloading",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
+      "importAction": "Import",
+      "skipAction": "Skip",
+      "retryAction": "Retry",
+      "bulkImport": "Import Selected",
+      "bulkSkip": "Skip Selected",
+      "viewVideo": "View Video",
+      "consentRequired": "Consent Required",
+      "consentGranted": "Consent Granted",
+      "filterPlatform": "Platform",
+      "filterStatus": "Status",
+      "filterAll": "All",
+      "importSuccess": "Recording imported successfully",
+      "importError": "Failed to import recording"
     }
   },
   "ambassador": {
@@ -6704,7 +6763,8 @@
     "all": "All",
     "add": "Add",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "refresh": "Обновить"
   },
   "community": {
     "allDiscussions": "Все обсуждения",
@@ -9253,5 +9313,12 @@
     "BRAND_STORY": "История бренда",
     "LIVE_STREAM": "Прямая трансляция",
     "OTHER": "Другое"
+  },
+  "contentVisibility": {
+    "PUBLIC": "Public",
+    "CUSTOMERS_ONLY": "Customers Only",
+    "CLIENTS_ONLY": "Clients Only",
+    "EMPLOYEES_ONLY": "Employees Only",
+    "PRIVATE": "Private"
   }
 }

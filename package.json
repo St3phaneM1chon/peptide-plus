@@ -29,6 +29,7 @@
     "@azure/keyvault-secrets": "^4.7.0",
     "@azure/msal-browser": "^3.5.0",
     "@azure/msal-react": "^2.0.0",
+    "@azure/storage-blob": "^12.31.0",
     "@prisma/client": "^5.8.0",
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.3",

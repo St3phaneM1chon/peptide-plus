@@ -4028,7 +4028,9 @@
       "contentHub": "Content Hub",
       "videoCategories": "Video Categories",
       "consents": "Consents",
-      "consentTemplates": "Consent Templates"
+      "consentTemplates": "Consent Templates",
+      "platformConnections": "Platform Connections",
+      "recordingImports": "Recording Imports"
     },
     "videoCategories": {
       "title": "Video Categories",
@@ -6271,6 +6273,63 @@
       "aureliaDesc": "Activate Aurelia AI consciousness — memory orchestrator, identity, personality",
       "learnDesc": "Display knowledge islands and allow adding new learnings to vector memory",
       "evolutionDesc": "Exhaustive research for AI memory improvements — 3 parallel agents, 100+ proposals"
+    },
+    "platformConnections": {
+      "title": "Platform Connections",
+      "subtitle": "Connect video platforms to automatically import recordings into your Content Hub",
+      "loadError": "Failed to load platform connections",
+      "connected": "Successfully connected {platform}",
+      "disconnected": "Successfully disconnected {platform}",
+      "oauthError": "OAuth error for {platform}: {error}",
+      "connectError": "Failed to initiate connection",
+      "disconnectError": "Failed to disconnect",
+      "confirmDisconnect": "Are you sure you want to disconnect this platform? All settings will be preserved but tokens will be revoked.",
+      "statusConnected": "Connected",
+      "statusDisconnected": "Not connected",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "test": "Test",
+      "testSuccess": "Connection is working",
+      "testFailed": "Connection test failed",
+      "autoImport": "Auto-import recordings",
+      "defaultCategory": "Default category",
+      "noCategory": "No default category",
+      "defaultVisibility": "Default visibility",
+      "defaultContentType": "Default content type",
+      "imports": "imports",
+      "updateError": "Failed to update settings",
+      "syncNow": "Sync Now",
+      "syncing": "Syncing...",
+      "syncSuccess": "Sync completed",
+      "syncError": "Sync failed"
+    },
+    "recordingImports": {
+      "title": "Recording Imports",
+      "subtitle": "Manage recordings imported from connected platforms",
+      "loadError": "Failed to load imports",
+      "noImports": "No recording imports yet",
+      "noImportsDesc": "Connect a platform and sync recordings to see them here",
+      "status": {
+        "pending": "Pending",
+        "downloading": "Downloading",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
+      "importAction": "Import",
+      "skipAction": "Skip",
+      "retryAction": "Retry",
+      "bulkImport": "Import Selected",
+      "bulkSkip": "Skip Selected",
+      "viewVideo": "View Video",
+      "consentRequired": "Consent Required",
+      "consentGranted": "Consent Granted",
+      "filterPlatform": "Platform",
+      "filterStatus": "Status",
+      "filterAll": "All",
+      "importSuccess": "Recording imported successfully",
+      "importError": "Failed to import recording"
     }
   },
   "ambassador": {
@@ -6872,6 +6931,7 @@
     "previous": "Previous",
     "previousSlide": "Previous slide",
     "redirecting": "Redirecting...",
+    "refresh": "Refresh",
     "replies": "replies",
     "report": "Report",
     "required": "This field is required",
@@ -9466,5 +9526,12 @@
     "BRAND_STORY": "Brand Story",
     "LIVE_STREAM": "Live Stream",
     "OTHER": "Other"
+  },
+  "contentVisibility": {
+    "PUBLIC": "Public",
+    "CUSTOMERS_ONLY": "Customers Only",
+    "CLIENTS_ONLY": "Clients Only",
+    "EMPLOYEES_ONLY": "Employees Only",
+    "PRIVATE": "Private"
   }
 }

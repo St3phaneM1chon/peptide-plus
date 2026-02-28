@@ -44,6 +44,17 @@ export const GET = withAdminGuard(async (_request, { params }) => {
             client: { select: { id: true, name: true, email: true } },
           },
         },
+        recordingImport: {
+          select: {
+            id: true,
+            meetingTitle: true,
+            meetingDate: true,
+            hostEmail: true,
+            duration: true,
+            createdAt: true,
+            connection: { select: { platform: true } },
+          },
+        },
       },
     });
 
@@ -69,10 +80,24 @@ export const GET = withAdminGuard(async (_request, { params }) => {
     const normalizedTags = video.videoTags.map(vt => vt.tag);
     const allTags = normalizedTags.length > 0 ? normalizedTags : parsedTags;
 
+    // Flatten recordingImport for frontend
+    const recordingImport = video.recordingImport
+      ? {
+          id: video.recordingImport.id,
+          platform: video.recordingImport.connection.platform,
+          meetingTitle: video.recordingImport.meetingTitle,
+          meetingDate: video.recordingImport.meetingDate,
+          hostEmail: video.recordingImport.hostEmail,
+          duration: video.recordingImport.duration,
+          createdAt: video.recordingImport.createdAt,
+        }
+      : null;
+
     return NextResponse.json({
       video: {
         ...video,
         tags: allTags,
+        recordingImport,
       },
     });
   } catch (error) {

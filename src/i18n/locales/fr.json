@@ -630,7 +630,9 @@
       "contentHub": "Hub de Contenu",
       "videoCategories": "Catégories Vidéo",
       "consents": "Consentements",
-      "consentTemplates": "Modèles de Consentement"
+      "consentTemplates": "Modèles de Consentement",
+      "platformConnections": "Connexions Plateformes",
+      "recordingImports": "Imports Enregistrements"
     },
     "videoCategories": {
       "title": "Catégories Vidéo",
@@ -6271,6 +6273,63 @@
       "aureliaDesc": "Activer la conscience IA Aurelia — orchestrateur mémoire, identité, personnalité",
       "learnDesc": "Afficher les îlots de connaissance et permettre d'ajouter de nouveaux apprentissages en mémoire vectorielle",
       "evolutionDesc": "Recherche exhaustive d'améliorations mémoire IA — 3 agents parallèles, 100+ propositions"
+    },
+    "platformConnections": {
+      "title": "Connexions Plateformes",
+      "subtitle": "Connectez les plateformes video pour importer automatiquement les enregistrements dans votre Content Hub",
+      "loadError": "Echec du chargement des connexions plateformes",
+      "connected": "{platform} connecte avec succes",
+      "disconnected": "{platform} deconnecte avec succes",
+      "oauthError": "Erreur OAuth pour {platform} : {error}",
+      "connectError": "Echec de l'initiation de la connexion",
+      "disconnectError": "Echec de la deconnexion",
+      "confirmDisconnect": "Etes-vous sur de vouloir deconnecter cette plateforme ? Tous les parametres seront preserves mais les jetons seront revoques.",
+      "statusConnected": "Connecte",
+      "statusDisconnected": "Non connecte",
+      "connect": "Connecter",
+      "disconnect": "Deconnecter",
+      "test": "Tester",
+      "testSuccess": "La connexion fonctionne",
+      "testFailed": "Echec du test de connexion",
+      "autoImport": "Import auto des enregistrements",
+      "defaultCategory": "Categorie par defaut",
+      "noCategory": "Pas de categorie par defaut",
+      "defaultVisibility": "Visibilite par defaut",
+      "defaultContentType": "Type de contenu par defaut",
+      "imports": "imports",
+      "updateError": "Echec de la mise a jour des parametres",
+      "syncNow": "Synchroniser",
+      "syncing": "Synchronisation...",
+      "syncSuccess": "Synchronisation terminee",
+      "syncError": "Echec de la synchronisation"
+    },
+    "recordingImports": {
+      "title": "Imports Enregistrements",
+      "subtitle": "Gerez les enregistrements importes depuis les plateformes connectees",
+      "loadError": "Echec du chargement des imports",
+      "noImports": "Aucun import d'enregistrement pour l'instant",
+      "noImportsDesc": "Connectez une plateforme et synchronisez les enregistrements pour les voir ici",
+      "status": {
+        "pending": "En attente",
+        "downloading": "Telechargement",
+        "processing": "Traitement",
+        "completed": "Termine",
+        "failed": "Echoue",
+        "skipped": "Ignore"
+      },
+      "importAction": "Importer",
+      "skipAction": "Ignorer",
+      "retryAction": "Reessayer",
+      "bulkImport": "Importer la selection",
+      "bulkSkip": "Ignorer la selection",
+      "viewVideo": "Voir la video",
+      "consentRequired": "Consentement requis",
+      "consentGranted": "Consentement accorde",
+      "filterPlatform": "Plateforme",
+      "filterStatus": "Statut",
+      "filterAll": "Tous",
+      "importSuccess": "Enregistrement importe avec succes",
+      "importError": "Echec de l'import de l'enregistrement"
     }
   },
   "ambassador": {
@@ -6905,7 +6964,8 @@
     "all": "Tout",
     "add": "Ajouter",
     "active": "Actif",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "refresh": "Actualiser"
   },
   "community": {
     "title": "Forum communautaire",
@@ -9466,5 +9526,12 @@
     "BRAND_STORY": "Histoire de marque",
     "LIVE_STREAM": "Diffusion en direct",
     "OTHER": "Autre"
+  },
+  "contentVisibility": {
+    "PUBLIC": "Public",
+    "CUSTOMERS_ONLY": "Clients uniquement",
+    "CLIENTS_ONLY": "Clients VIP uniquement",
+    "EMPLOYEES_ONLY": "Employes uniquement",
+    "PRIVATE": "Prive"
   }
 }
