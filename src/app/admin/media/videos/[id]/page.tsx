@@ -11,7 +11,7 @@ import {
   ArrowLeft, ChevronRight, House, Loader2, Save,
   Tag, X, Plus, MapPin, ShieldCheck, Package,
   Video as VideoIcon, ExternalLink, Clock, Eye,
-  Upload, MonitorPlay,
+  MonitorPlay, Youtube,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -192,6 +192,12 @@ export default function VideoDetailPage() {
   // -- Product links state --
   const [productLinks, setProductLinks] = useState<ProductLink[]>([]);
   const [removingProduct, setRemovingProduct] = useState<string | null>(null);
+
+  // -- YouTube publish modal state --
+  const [showYTModal, setShowYTModal] = useState(false);
+  const [ytPublishing, setYtPublishing] = useState(false);
+  const [ytResult, setYtResult] = useState<{ youtubeUrl?: string } | null>(null);
+  const [ytForm, setYtForm] = useState({ title: '', description: '', tags: '', privacyStatus: 'unlisted' as 'public' | 'unlisted' | 'private' });
 
   // -----------------------------------------------------------------------
   // Data loading
@@ -1117,39 +1123,164 @@ export default function VideoDetailPage() {
       {video.videoUrl && video.source !== 'YOUTUBE' && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
-            <Upload className="w-4 h-4 text-slate-400" />
+            <Youtube className="w-4 h-4 text-red-500" />
             {t('admin.media.publishYouTube') || 'Publish to YouTube'}
           </h2>
           <p className="text-sm text-slate-500 mb-4">
             {t('admin.media.publishYouTubeDesc') || 'Upload this video to your YouTube channel. The video will be uploaded as unlisted by default.'}
           </p>
+
+          {/* YouTube result link */}
+          {ytResult?.youtubeUrl && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+              <Youtube className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-green-800">{t('admin.media.publishedYouTube') || 'Published to YouTube!'}</p>
+                <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-600 hover:underline truncate block">
+                  {ytResult.youtubeUrl}
+                </a>
+              </div>
+              <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg">
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+
           <button
-            onClick={async () => {
-              if (!confirm(t('admin.media.confirmPublishYouTube') || 'Upload this video to YouTube?')) return;
-              toast.loading(t('admin.media.publishingYouTube') || 'Uploading to YouTube...');
-              try {
-                const res = await fetchWithCSRF(`/api/admin/videos/${video.id}/publish-youtube`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ privacyStatus: 'unlisted' }),
-                });
-                const data = await res.json();
-                toast.dismiss();
-                if (data.success) {
-                  toast.success(`${t('admin.media.publishedYouTube') || 'Published to YouTube!'} ${data.youtubeUrl}`);
-                } else {
-                  toast.error(data.error || t('admin.media.publishYouTubeError') || 'YouTube upload failed');
-                }
-              } catch {
-                toast.dismiss();
-                toast.error(t('admin.media.publishYouTubeError') || 'YouTube upload failed');
-              }
+            onClick={() => {
+              setYtForm({
+                title: video.title,
+                description: video.description || '',
+                tags: tags.join(', '),
+                privacyStatus: 'unlisted',
+              });
+              setShowYTModal(true);
             }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm"
           >
-            <Upload className="w-4 h-4" />
-            {t('admin.media.publishYouTubeBtn') || 'Upload to YouTube'}
+            <Youtube className="w-4 h-4" />
+            {t('admin.media.publishYouTubeBtn') || 'Publish to YouTube'}
           </button>
+        </div>
+      )}
+
+      {/* YouTube Publish Modal */}
+      {showYTModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !ytPublishing && setShowYTModal(false)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+              <Youtube className="w-5 h-5 text-red-500" />
+              {t('admin.media.publishYouTube') || 'Publish to YouTube'}
+            </h3>
+
+            <div className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('admin.media.ytTitle') || 'Title'}
+                </label>
+                <input
+                  type="text"
+                  value={ytForm.title}
+                  onChange={e => setYtForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                  maxLength={100}
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('admin.media.ytDescription') || 'Description'}
+                </label>
+                <textarea
+                  value={ytForm.description}
+                  onChange={e => setYtForm(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 resize-none"
+                  maxLength={5000}
+                />
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('admin.media.ytTags') || 'Tags (comma-separated)'}
+                </label>
+                <input
+                  type="text"
+                  value={ytForm.tags}
+                  onChange={e => setYtForm(prev => ({ ...prev, tags: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                  placeholder="peptides, research, biocycle"
+                />
+              </div>
+
+              {/* Privacy */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('admin.media.ytPrivacy') || 'Privacy'}
+                </label>
+                <select
+                  value={ytForm.privacyStatus}
+                  onChange={e => setYtForm(prev => ({ ...prev, privacyStatus: e.target.value as 'public' | 'unlisted' | 'private' }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                >
+                  <option value="unlisted">{t('admin.media.ytUnlisted') || 'Unlisted'}</option>
+                  <option value="public">{t('admin.media.ytPublic') || 'Public'}</option>
+                  <option value="private">{t('admin.media.ytPrivate') || 'Private'}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowYTModal(false)}
+                disabled={ytPublishing}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm disabled:opacity-50"
+              >
+                {t('common.cancel') || 'Cancel'}
+              </button>
+              <button
+                onClick={async () => {
+                  setYtPublishing(true);
+                  try {
+                    const ytTags = ytForm.tags.split(',').map(s => s.trim()).filter(Boolean);
+                    const res = await fetchWithCSRF(`/api/admin/videos/${video.id}/publish-youtube`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        title: ytForm.title,
+                        description: ytForm.description,
+                        tags: ytTags,
+                        privacyStatus: ytForm.privacyStatus,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      toast.success(t('admin.media.publishedYouTube') || 'Published to YouTube!');
+                      setYtResult({ youtubeUrl: data.youtubeUrl });
+                      setShowYTModal(false);
+                    } else {
+                      toast.error(data.error || t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+                    }
+                  } catch {
+                    toast.error(t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+                  } finally {
+                    setYtPublishing(false);
+                  }
+                }}
+                disabled={ytPublishing || !ytForm.title.trim()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 shadow-sm"
+              >
+                {ytPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4" />}
+                {ytPublishing
+                  ? (t('admin.media.publishingYouTube') || 'Uploading...')
+                  : (t('admin.media.publishYouTubeBtn') || 'Publish to YouTube')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
