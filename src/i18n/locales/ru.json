@@ -3771,7 +3771,14 @@
         "fontCaptions": "Captions",
         "logoLight": "Main logo (light background)",
         "logoDark": "Inverted logo (dark background)",
-        "logoGuidelines": "Minimum protection zone: 16px around the logo. Do not distort, change colors, or add effects."
+        "logoGuidelines": "Minimum protection zone: 16px around the logo. Do not distort, change colors, or add effects.",
+        "saved": "Brand kit saved",
+        "saveError": "Failed to save brand kit",
+        "brandName": "Brand Name",
+        "primaryColor": "Primary Color",
+        "accentColor": "Accent Color",
+        "guidelines": "Brand Guidelines",
+        "guidelinesPlaceholder": "Brand usage guidelines, tone of voice, dos & donts..."
       },
       "socialScheduler": {
         "title": "Social Scheduler",
@@ -3834,7 +3841,46 @@
         "noDataHint": "Configure your platform credentials and click \"Sync Now\" to fetch campaign data.",
         "activeCampaigns": "Active Campaigns",
         "campaignName": "Campaign"
-      }
+      },
+      "selectMedia": "Select Media",
+      "noMedia": "No media found",
+      "week": "Week",
+      "weekView": "Week",
+      "monthView": "Month",
+      "analytics": "Media Analytics",
+      "analyticsDesc": "Content performance across all media channels",
+      "analyticsError": "Failed to load analytics",
+      "totalViews": "Total Views",
+      "totalClicks": "Total Clicks",
+      "totalShares": "Total Shares",
+      "conversions": "Conversions",
+      "viewsTrend": "Views Trend",
+      "platformBreakdown": "Platform Breakdown",
+      "topContent": "Top Content",
+      "noData": "No data for this period",
+      "transcribe": "Transcribe",
+      "transcribing": "Transcribing...",
+      "transcribeSuccess": "Transcription complete",
+      "transcribeError": "Transcription failed",
+      "highlights": "Highlights",
+      "extractHighlights": "Extract Highlights",
+      "extractingHighlights": "Extracting highlights...",
+      "highlightsFound": "highlights found",
+      "noHighlights": "No highlights yet. Extract them from the video transcript.",
+      "crossPost": "Cross-post",
+      "crossPostDesc": "Post to multiple platforms at once",
+      "calendarView": "Calendar",
+      "listView": "List",
+      "mediaDashboard": "Media Overview",
+      "mediaDashboardDesc": "Quick overview of all media metrics",
+      "videosCount": "Videos",
+      "postsCount": "Social Posts",
+      "mediaFiles": "Media Files",
+      "recentActivity": "Recent Activity",
+      "bulkDelete": "Delete Selected",
+      "bulkTag": "Tag Selected",
+      "bulkPublishBtn": "Publish Selected",
+      "bulkArchiveBtn": "Archive Selected"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6118,7 +6164,8 @@
     },
     "dataTable": {
       "row": "row",
-      "rows": "rows"
+      "rows": "rows",
+      "selected": "selected"
     },
     "magicWords": {
       "title": "Magic Words",
@@ -6979,7 +7026,10 @@
     "active": "Active",
     "inactive": "Inactive",
     "refresh": "Обновить",
-    "clear": "Clear"
+    "clear": "Clear",
+    "clearSelection": "Clear",
+    "today": "Today",
+    "days": "days"
   },
   "community": {
     "allDiscussions": "Все обсуждения",

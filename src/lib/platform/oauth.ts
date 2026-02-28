@@ -118,6 +118,25 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
 }
 
 // ---------------------------------------------------------------------------
+// Security helpers
+// ---------------------------------------------------------------------------
+
+// V-052 FIX: Redact potential tokens/secrets from log output
+function redactSensitive(text: string): string {
+  // Redact anything that looks like an access/refresh token (long alphanumeric strings)
+  return text
+    .replace(/"(access_token|refresh_token|token|id_token|client_secret)"\s*:\s*"[^"]+"/gi, '"$1":"[REDACTED]"')
+    .replace(/Bearer\s+[A-Za-z0-9._\-]+/gi, 'Bearer [REDACTED]')
+    .replace(/ya29\.[A-Za-z0-9._\-]+/g, 'ya29.[REDACTED]') // Google tokens
+    .replace(/eyJ[A-Za-z0-9_\-]{20,}/g, '[JWT_REDACTED]'); // JWT tokens
+}
+
+function safeErrorMessage(error: unknown): string {
+  if (error instanceof Error) return redactSensitive(error.message);
+  return redactSensitive(String(error));
+}
+
+// ---------------------------------------------------------------------------
 // OAuth Manager
 // ---------------------------------------------------------------------------
 
@@ -181,7 +200,7 @@ export async function handleCallback(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`[OAuth] Token exchange failed for ${platform}:`, errorText);
+      logger.error(`[OAuth] Token exchange failed for ${platform}:`, redactSensitive(errorText));
       return { success: false, error: `Token exchange failed: ${response.status}` };
     }
 
@@ -217,7 +236,7 @@ export async function handleCallback(
     logger.info(`[OAuth] Successfully connected ${platform}`);
     return { success: true };
   } catch (error) {
-    logger.error(`[OAuth] Callback error for ${platform}:`, error);
+    logger.error(`[OAuth] Callback error for ${platform}:`, safeErrorMessage(error));
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -261,7 +280,7 @@ export async function refreshToken(platform: Platform): Promise<{
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`[OAuth] Token refresh failed for ${platform}:`, errorText);
+      logger.error(`[OAuth] Token refresh failed for ${platform}:`, redactSensitive(errorText));
 
       await prisma.platformConnection.update({
         where: { platform },
@@ -289,7 +308,7 @@ export async function refreshToken(platform: Platform): Promise<{
 
     return { success: true, accessToken: tokens.accessToken };
   } catch (error) {
-    logger.error(`[OAuth] Refresh error for ${platform}:`, error);
+    logger.error(`[OAuth] Refresh error for ${platform}:`, safeErrorMessage(error));
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -352,7 +371,7 @@ export async function revokeConnection(platform: Platform): Promise<{ success: b
           await fetch(`${config.revokeUrl}?token=${token}`, { method: 'POST' });
         }
       } catch (error) {
-        logger.warn(`[OAuth] Revocation request failed for ${platform}:`, error);
+        logger.warn(`[OAuth] Revocation request failed for ${platform}:`, safeErrorMessage(error));
         // Continue with local cleanup
       }
     }

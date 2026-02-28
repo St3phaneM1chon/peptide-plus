@@ -75,6 +75,7 @@ export type CreateVideoInput = z.infer<typeof createVideoSchema>;
 // Update video (PATCH /api/admin/videos/[id])
 // ---------------------------------------------------------------------------
 
+// V-032 FIX: .strict() rejects any fields not in this whitelist (prevents mass assignment)
 export const patchVideoSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   description: z.string().max(10000).optional().nullable(),
@@ -104,6 +105,6 @@ export const patchVideoSchema = z.object({
   videoCategoryId: z.string().max(100).optional().nullable(),
   createdById: z.string().max(100).optional().nullable(),
   featuredClientId: z.string().max(100).optional().nullable(),
-});
+}).strict();
 
 export type PatchVideoInput = z.infer<typeof patchVideoSchema>;

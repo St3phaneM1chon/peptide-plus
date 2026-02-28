@@ -1,15 +1,15 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-28 (Content Hub / Mediatheque + Video Categories + Consent Management + Platform Integrations + AI Conversational Accountant + Custom Reports Builder + Purchase Orders + Email tracking + A/B testing)
+# LAST UPDATED: 2026-02-28 (Media Audit: Security fixes + SWR hooks + Image pipeline + Cross-post + Validations + OAuth refresh + Transcription + AI-tagging + Anomaly detection + MediaPicker + CalendarView + Dashboard + Bulk actions + Highlights + Analytics + Brand Kit)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 201 | **API Routes**: 392 | **Prisma Models**: 122 | **Enums**: 30 | **Components**: 116 | **Hooks**: 16 | **Lib files**: 192
+- **Pages**: 245 | **API Routes**: 507 | **Prisma Models**: 124 | **Enums**: 30 | **Components**: 125 | **Hooks**: 19 | **Lib files**: 248
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
-- **Orphan models** (no Prisma FK): 35/122 (28.7%) -- many use soft references
+- **Orphan models** (no Prisma FK): 36/124 (29.0%) -- many use soft references
 
 ---
 
@@ -237,15 +237,18 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 ---
 
-### 1.15 MEDIA (PARTIALLY STUBS)
-> **What**: Media library, videos, images, API integrations (Zoom, WhatsApp, Teams), advertising platforms
+### 1.15 MEDIA (MOSTLY COMPLETE)
+> **What**: Media library, videos, images, API integrations (Zoom, WhatsApp, Teams), advertising platforms, social media scheduling
 
 | Layer | Elements |
 |-------|----------|
-| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (COMPLETE - see 1.19 Content Hub), `/admin/media/library` (STUB), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/pub-google` (STUB), `/admin/media/pub-tiktok` (STUB), `/admin/media/pub-x` (STUB), `/admin/media/pub-youtube` (STUB), `/admin/media/connections` (COMPLETE - see 1.20 Platform Integrations), `/admin/media/imports` (COMPLETE - see 1.20 Platform Integrations) |
-| **API Routes** | `/api/admin/medias`, `/api/admin/videos`, `/api/admin/platform-connections/*`, `/api/admin/recording-imports/*` |
-| **Models** | `Media` (orphan), `PlatformConnection`, `RecordingImport` |
-| **NOTE** | 5 out of 11 original media pages are STUBS (4 ad platforms + library). Videos via Content Hub (1.19). Platform connections & recording imports via 1.20. |
+| **Pages** | `/admin/media` (STUB), `/admin/medias` (COMPLETE), `/admin/media/videos` (COMPLETE - see 1.19 Content Hub), `/admin/media/library` (STUB), `/admin/media/analytics` (NEW - KPI dashboard), `/admin/media/brand-kit` (COMPLETE - API-connected editing), `/admin/media/api-zoom` (STUB), `/admin/media/api-whatsapp` (STUB), `/admin/media/api-teams` (STUB), `/admin/media/ads-google` (COMPLETE), `/admin/media/ads-tiktok` (COMPLETE), `/admin/media/ads-x` (COMPLETE), `/admin/media/ads-youtube` (COMPLETE), `/admin/media/ads-linkedin` (COMPLETE), `/admin/media/ads-meta` (COMPLETE), `/admin/media/social-scheduler` (COMPLETE), `/admin/media/connections` (COMPLETE - see 1.20 Platform Integrations), `/admin/media/imports` (COMPLETE - see 1.20 Platform Integrations) |
+| **API Routes** | `/api/admin/medias`, `/api/admin/videos`, `/api/admin/videos/[id]/transcribe` (NEW), `/api/admin/videos/[id]/highlights` (NEW), `/api/admin/platform-connections/*`, `/api/admin/recording-imports/*`, `/api/admin/social-posts/*`, `/api/admin/ads/*`, `/api/admin/media/analytics` (NEW), `/api/admin/media/dashboard` (NEW), `/api/admin/brand-kit` (NEW - GET/PUT) |
+| **Models** | `Media` (orphan), `PlatformConnection`, `RecordingImport`, `SocialPost`, `AdCampaignSnapshot` |
+| **Components** | `AdsPlatformDashboard` (reusable ads dashboard), `MediaPicker` (NEW - modal media selector), `CalendarView` (NEW - month/week calendar) |
+| **Hooks** | `useVideos`, `useSocialPosts`, `useMedias`, `useMediaStats`, `useVideo`, `useAds`, `usePlatformConnections` (all NEW - SWR hooks in `media-hooks.ts`) |
+| **Lib** | `@/lib/social/social-publisher.ts`, `@/lib/social/social-scheduler-cron.ts`, `@/lib/ads/ads-sync.ts` (+ anomaly detection), `@/lib/media-hooks.ts` (NEW), `@/lib/media/image-pipeline.ts` (NEW), `@/lib/media/video-transcription.ts` (NEW), `@/lib/media/video-highlights.ts` (NEW), `@/lib/media/content-analytics.ts` (NEW), `@/lib/media/brand-kit.ts` (NEW), `@/lib/platform/oauth-token-refresh.ts` (NEW), `@/lib/validations/media.ts` (NEW) |
+| **NOTE** | Media audit 2026-02-28: 5 security fixes (V-025 to V-068), SWR caching, image optimization pipeline, cross-post multi-platform, Zod validation schemas, OAuth auto-refresh, video transcription, AI auto-tagging, KPI anomaly detection, MediaPicker, CalendarView, dashboard aggregation, bulk actions, video highlights, content analytics, brand kit API. 2 stubs remain (dashboard index + library). |
 
 ---
 
@@ -289,6 +292,8 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | `/api/cron/stock-alerts` | StockAlert, Product | Sends notification |
 | `/api/cron/update-exchange-rates` | Currency | External API call |
 | `/api/cron/welcome-series` | User | Sends email sequence |
+| `/api/admin/social-posts/cron` | SocialPost | Publishes scheduled social posts |
+| `/api/admin/ads/cron` | AdCampaignSnapshot | Daily sync of ads stats from 6 platforms |
 
 ---
 
@@ -382,7 +387,8 @@ User
   ├── Tracking: PriceWatch
   ├── Loyalty: Ambassador
   ├── Collections: WishlistCollection
-  └── Integrations: PlatformConnection
+  ├── Integrations: PlatformConnection
+  └── Social: SocialPost(createdBy)
 ```
 
 ---
@@ -408,6 +414,8 @@ User
 | **i18n locale files** | ALL 22 locale JSON files; Every page using `t()` calls |
 | **Platform connections** | `@/lib/platform/*` (crypto, oauth, recording-import, webhook-handlers, youtube-publish); Platform API routes; Webhook routes; Video model; RecordingImport model |
 | **Video model** (extended) | VideoCategory, VideoPlacement, VideoProductLink, VideoTag, SiteConsent, RecordingImport; Content Hub pages; Platform Integrations pages; All video API routes |
+| **SocialPost model** | social-publisher.ts, social-scheduler-cron.ts; Social scheduler page; /api/admin/social-posts/* routes |
+| **AdCampaignSnapshot model** | ads-sync.ts; 6 ads platform pages (AdsPlatformDashboard); /api/admin/ads/* routes |
 
 ---
 
@@ -449,21 +457,25 @@ User
 | Upsell | `/admin/upsell` | COMPLETE | FormField | `/api/admin/upsell-config` |
 | SEO | `/admin/seo` | COMPLETE | FormField | `/api/admin/seo` |
 
-### Media (MOSTLY STUBS)
+### Media
 | Page | Path | Status | Backend |
 |------|------|--------|---------|
 | Media Dashboard | `/admin/media` | **STUB** | - |
 | Medias Library | `/admin/medias` | COMPLETE | `/api/admin/medias` |
 | Bannieres | `/admin/bannieres` | COMPLETE | `/api/hero-slides` |
-| Videos | `/admin/media/videos` | **STUB** | `/api/admin/videos` |
+| Videos | `/admin/media/videos` | COMPLETE | `/api/admin/videos` (Content Hub 1.19) |
+| Video Detail | `/admin/media/videos/[id]` | COMPLETE | `/api/admin/videos/[id]/*` (enhanced YouTube publish modal) |
 | Library Images | `/admin/media/library` | **STUB** | - |
 | API Zoom | `/admin/media/api-zoom` | **STUB** | - |
 | API WhatsApp | `/admin/media/api-whatsapp` | **STUB** | - |
 | API Teams | `/admin/media/api-teams` | **STUB** | - |
-| Pub Google | `/admin/media/pub-google` | **STUB** | - |
-| Pub TikTok | `/admin/media/pub-tiktok` | **STUB** | - |
-| Pub X/Twitter | `/admin/media/pub-x` | **STUB** | - |
-| Pub YouTube | `/admin/media/pub-youtube` | **STUB** | - |
+| Ads Google | `/admin/media/ads-google` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Ads TikTok | `/admin/media/ads-tiktok` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Ads X/Twitter | `/admin/media/ads-x` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Ads YouTube | `/admin/media/ads-youtube` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Ads LinkedIn | `/admin/media/ads-linkedin` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Ads Meta | `/admin/media/ads-meta` | COMPLETE | `/api/admin/ads/*` (AdsPlatformDashboard) |
+| Social Scheduler | `/admin/media/social-scheduler` | COMPLETE | `/api/admin/social-posts/*` |
 | Connections | `/admin/media/connections` | COMPLETE | `/api/admin/platform-connections/*` |
 | Imports | `/admin/media/imports` | COMPLETE | `/api/admin/recording-imports/*` |
 
@@ -773,6 +785,18 @@ orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** 
 | /api/webhooks/webex | POST | RecordingImport | webhook-secret | Webex webhook |
 | /api/admin/videos/[id]/publish-youtube | POST | Video | admin-guard | YouTube upload |
 
+### Social Media & Ads (8 routes) - NEW 2026-02-28
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/social-posts | GET,POST | SocialPost,User | admin-guard | List and create social posts |
+| /api/admin/social-posts/[id] | PATCH,DELETE | SocialPost | admin-guard | Update/delete social post |
+| /api/admin/social-posts/[id]/publish | POST | SocialPost | admin-guard | Publish immediately |
+| /api/admin/social-posts/cron | POST | SocialPost | cron-secret | Cron for scheduled posts |
+| /api/admin/ads/stats | GET | AdCampaignSnapshot | admin-guard | Aggregated ads stats |
+| /api/admin/ads/[platform]/campaigns | GET | AdCampaignSnapshot | admin-guard | Campaigns by platform |
+| /api/admin/ads/sync | POST | AdCampaignSnapshot | admin-guard | Manual sync trigger |
+| /api/admin/ads/cron | POST | AdCampaignSnapshot | cron-secret | Cron for daily sync |
+
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
 
@@ -805,6 +829,11 @@ PageHeader, StatCard, Modal, Button, DataTable, FilterBar, FormField, MediaUploa
 | `VideoGrid` | /admin/media/content-hub, /videos, /account/content |
 | `VideoFilters` | /admin/media/content-hub, /videos |
 | `VideoPlacementWidget` | /admin/media/videos/[id], product pages (embedded) |
+
+### Ads & Social Components (1) - NEW 2026-02-28
+| Component | Used By (pages) |
+|-----------|-----------------|
+| `AdsPlatformDashboard` | /admin/media/ads-youtube, /admin/media/ads-google, /admin/media/ads-tiktok, /admin/media/ads-x, /admin/media/ads-linkedin, /admin/media/ads-meta (6) |
 
 ### Shop-Specific Components (57)
 Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, ProductQA, CartDrawer, CartCrossSell, SearchModal, QuickViewModal, WishlistButton, FormatSelector, PeptideCalculator, CompareButton, CompareBar, NewsletterPopup, MailingListSignup, CookieConsent, FreeShippingBanner, FlashSaleBanner, TrustBadges, ShareButtons, UpsellInterstitialModal, StickyAddToCart, BundleCard, StockAlertButton, PriceDropButton, GiftCardRedeem, RecentlyViewed, TextToSpeechButton, DisclaimerModal, QuantityTiers, CategoryScroller, ProductBadges, HeroSlider, ProductVideo, SubscriptionOfferModal...
@@ -852,7 +881,7 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 ### Hub Models (highest incoming FK)
 | Model | Incoming FK Count | Deletion Impact |
 |-------|------------------|-----------------|
-| **User** | 37 | CATASTROPHIC -- cascades to 17+ tables (incl. ForumPost, ForumReply, ForumVote, ContactMessage, PlatformConnection), blocks on 3 |
+| **User** | 38 | CATASTROPHIC -- cascades to 18+ tables (incl. ForumPost, ForumReply, ForumVote, ContactMessage, PlatformConnection, SocialPost), blocks on 3 |
 | **Product** | 14 | HIGH -- cascades formats, images, translations, modules, alerts |
 | **ChartOfAccount** | 6 | BLOCKS if JournalLines or FixedAssets reference it |
 | **Order** | 4 | Cascades OrderItems. SetNull PaymentErrors. |
@@ -893,10 +922,17 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | `PlatformConnection` | id, platform, accessToken, refreshToken, tokenExpiresAt, accountId, isEnabled, autoImport, defaultCategoryId, webhookSecret, createdAt, updatedAt | connectedBy(User), defaultCategory(VideoCategory?), recordingImports(RecordingImport[]) | OAuth tokens AES-256-GCM encrypted, unique platform |
 | `RecordingImport` | id, connectionId, externalId, meetingId, meetingTitle, status, blobUrl, fileSize, createdAt, updatedAt | connection(PlatformConnection), video(Video?) | Import lifecycle: PENDING -> DOWNLOADING -> PROCESSING -> COMPLETED/FAILED |
 
+### Social Media & Ads Models (2) - NEW 2026-02-28
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `SocialPost` | id, platform, content, imageUrl, scheduledAt, publishedAt, status, error, externalId, externalUrl | createdBy(User) | Social media post scheduling and publishing |
+| `AdCampaignSnapshot` | id, platform, campaignId, campaignName, date, impressions, clicks, spend, conversions, currency, rawData | - (orphan) | Daily snapshot of ad campaign metrics from 6 platforms |
+
 ### Updated Models (2026-02-28)
 | Model | Change | Details |
 |-------|--------|---------|
-| `Video` | Extended | Added `recordingImport` relation to RecordingImport, `platformMeetingId` field |
+| `Video` | Extended | Added `recordingImport` relation to RecordingImport, `platformMeetingId` field, enhanced YouTube publish modal |
+| `User` | New relation | Added `socialPosts(SocialPost[])` relation |
 
 ### Updated Models (2026-02-27)
 | Model | Change | Details |
@@ -913,7 +949,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | `Media` | New fields | Added `width Int?` and `height Int?` for image dimensions |
 | `User` | New relations | Added `forumPosts`, `forumReplies`, `forumVotes`, `contactMessages` relations |
 
-### Orphan Models (35 -- no Prisma @relation)
+### Orphan Models (36 -- no Prisma @relation)
 **Critical orphans** (should probably have FK):
 - `InventoryReservation` (soft: productId, formatId, orderId, cartId)
 - `InventoryTransaction` (soft: productId, formatId, orderId)
@@ -925,6 +961,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 - `UserPermissionOverride` (soft: userId, permissionCode)
 
 **Intentional orphans** (singletons/logs/polymorphic):
+- AdCampaignSnapshot (daily snapshot metrics, no FK needed)
 - AccountingSettings, ChatSettings, SiteSettings, SiteSetting
 - AuditLog, AuditTrail, SearchLog (polymorphic entityType/entityId)
 - DocumentAttachment (polymorphic)
@@ -937,7 +974,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 
 ## 13. LIB SERVICES
 
-### Root `/src/lib/` (189 files total)
+### Root `/src/lib/` (192 files total)
 | Category | Files | Used By |
 |----------|-------|---------|
 | **Auth** | auth-config, mfa, brute-force-protection, csrf, session-security, webauthn, password-history | Auth pages, middleware, API guards |
@@ -967,6 +1004,17 @@ email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, ma
 | `recording-import.ts` | Recording import service (fetch, download, create Video) | recording-imports API routes |
 | `webhook-handlers.ts` | Webhook validation & handlers (Zoom, Teams, Webex) | /api/webhooks/zoom, teams, webex |
 | `youtube-publish.ts` | YouTube resumable upload service | /api/admin/videos/[id]/publish-youtube |
+
+### `/src/lib/social/` (2 files) - NEW 2026-02-28
+| File | Purpose | Used By |
+|------|---------|---------|
+| `social-publisher.ts` | Social media publishing service (Meta, X, TikTok, LinkedIn) | /api/admin/social-posts/[id]/publish, cron |
+| `social-scheduler-cron.ts` | Cron processor for scheduled social posts | /api/admin/social-posts/cron |
+
+### `/src/lib/ads/` (1 file) - NEW 2026-02-28
+| File | Purpose | Used By |
+|------|---------|---------|
+| `ads-sync.ts` | Ads sync service for 6 platforms (Google, YouTube, Meta, TikTok, X, LinkedIn) | /api/admin/ads/sync, /api/admin/ads/cron |
 
 ### `/src/lib/admin/` (6 files)
 admin-fetch, admin-layout-context, icon-resolver, outlook-nav, ribbon-config, section-themes
@@ -1009,7 +1057,7 @@ manifest.json, sw.js, offline.html, icons
 3. ~~**Media APIs (Zoom/WhatsApp/Teams)**~~ -- FIXED 2026-02-21: Config dashboards, services, API routes, IntegrationCard
 4. ~~**Audit Logging Coverage**~~ -- FIXED 2026-02-24 (S10-06): 100% admin API audit logging with `logAdminAction()`
 5. ~~**Skeleton Loading**~~ -- FIXED 2026-02-24 (S11): 119 loading.tsx files across all admin pages
-6. **Media Section** -- 5 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Library). Videos now handled by Content Hub (1.19)
+6. ~~**Media Section Ads/Social**~~ -- FIXED 2026-02-28: 6 ads platform dashboards (AdsPlatformDashboard component) + social scheduler with real API. Only 2 STUB pages remain (media dashboard + library)
 7. ~~**Community Forum**~~ -- FIXED 2026-02-25: 5 Prisma models (ForumCategory, ForumPost, ForumReply, ForumVote, ContactMessage) + 7 API routes, /community page now uses real API
 8. **About Section** -- 6 STUB pages
 9. **Checkout Payment** -- Stripe integration incomplete
@@ -1143,3 +1191,79 @@ manifest.json, sw.js, offline.html, icons
 #### Updated Prisma Models
 - `Video` -- Added `categoryId` FK to VideoCategory, new relations: placements, productLinks, tags, consents
 - `Product` -- Added `videoLinks(VideoProductLink[])` relation
+
+### New Files (2026-02-28 Session - Social Scheduler + Ads Dashboards + Platform Integrations)
+
+#### New Prisma Models (2)
+- `SocialPost` -- Social media post scheduling/publishing (platform, content, imageUrl, scheduledAt, publishedAt, status, error, externalId, externalUrl, createdBy->User)
+- `AdCampaignSnapshot` -- Daily ads campaign metrics snapshot (platform, campaignId, campaignName, date, impressions, clicks, spend, conversions, currency, rawData)
+
+#### New API Routes (8 files)
+- `src/app/api/admin/social-posts/route.ts` -- GET,POST social posts (list and create)
+- `src/app/api/admin/social-posts/[id]/route.ts` -- PATCH,DELETE social post (update/delete)
+- `src/app/api/admin/social-posts/[id]/publish/route.ts` -- POST publish social post immediately
+- `src/app/api/admin/social-posts/cron/route.ts` -- POST cron for scheduled posts
+- `src/app/api/admin/ads/stats/route.ts` -- GET aggregated ads stats
+- `src/app/api/admin/ads/[platform]/campaigns/route.ts` -- GET campaigns by platform
+- `src/app/api/admin/ads/sync/route.ts` -- POST manual sync trigger
+- `src/app/api/admin/ads/cron/route.ts` -- POST cron for daily sync
+
+#### New Components (1)
+- `src/components/admin/AdsPlatformDashboard.tsx` -- Reusable ads dashboard component used by all 6 ads pages
+
+#### New Lib Files (3)
+- `src/lib/social/social-publisher.ts` -- Social media publishing service (Meta, X, TikTok, LinkedIn)
+- `src/lib/social/social-scheduler-cron.ts` -- Cron processor for scheduled social posts
+- `src/lib/ads/ads-sync.ts` -- Ads sync service for 6 platforms (Google, YouTube, Meta, TikTok, X, LinkedIn)
+
+#### Modified Pages (8)
+- `src/app/admin/media/social-scheduler/page.tsx` -- Rewritten with real API integration (was local state only)
+- `src/app/admin/media/ads-youtube/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/ads-google/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/ads-tiktok/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/ads-x/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/ads-linkedin/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/ads-meta/page.tsx` -- Now uses AdsPlatformDashboard component
+- `src/app/admin/media/videos/[id]/page.tsx` -- Enhanced with YouTube publish modal
+
+### New Files (2026-02-28 Session - Media Audit: Security + Improvements + Automations + UX + Evolutions)
+
+#### Phase 0: Security Fixes (5 modified files)
+- `src/app/api/admin/ads/sync/route.ts` -- V-025: Added CRON_SECRET validation for automated GET calls
+- `src/lib/validations/video.ts` -- V-032: Added `.strict()` to patchVideoSchema (mass assignment prevention)
+- `src/lib/platform/youtube-publish.ts` -- V-072: Runtime enum validation for privacyStatus
+- `src/lib/platform/oauth.ts` -- V-052: Token redaction helpers (redactSensitive, safeErrorMessage) in all logs
+- `src/app/api/admin/platform-connections/[platform]/route.ts` -- V-068: Replaced webhookId with boolean hasWebhookConfigured
+
+#### Phase 1: P0 Improvements (4 new + 2 modified files)
+- `src/lib/media-hooks.ts` -- NEW: 7 SWR hooks (useVideos, useSocialPosts, useMedias, useMediaStats, useVideo, useAds, usePlatformConnections)
+- `src/lib/media/image-pipeline.ts` -- NEW: Sharp lazy-loaded pipeline (resize, WebP, thumbnails, metadata)
+- `src/lib/validations/media.ts` -- NEW: Zod schemas for SocialPost, Consent, VideoCategory, BrandKit, MediaUpload (all .strict())
+- `src/app/api/admin/social-posts/route.ts` -- Modified: Cross-post multi-platform (platform accepts string|string[], creates N posts via $transaction)
+- `src/app/api/admin/videos/route.ts` -- Modified: Auto-tagging via ai-tagger.ts when no tags provided
+
+#### Phase 2: Automations (3 new + 1 modified)
+- `src/lib/platform/oauth-token-refresh.ts` -- NEW: ensureValidTokens() proactive refresh, getExpiringTokens()
+- `src/lib/media/video-transcription.ts` -- NEW: transcribeVideo() via OpenAI Whisper API (25MB limit)
+- `src/app/api/admin/videos/[id]/transcribe/route.ts` -- NEW: POST endpoint for video transcription
+- `src/lib/ads/ads-sync.ts` -- Modified: detectAnomalies() function (>20% variation alerts)
+
+#### Phase 3: UX/UI (3 new + 1 modified)
+- `src/components/admin/MediaPicker.tsx` -- NEW: Modal with search, folder filter, grid gallery, multi-select, preview
+- `src/components/admin/CalendarView.tsx` -- NEW: Month/week views, platform-colored events, navigation
+- `src/app/api/admin/media/dashboard/route.ts` -- NEW: Aggregated media stats (videos, posts, media counts)
+- `src/components/admin/DataTable.tsx` -- Modified: BulkAction interface + floating action bar with checkboxes
+
+#### Phase 4: Evolutions (5 new + 1 modified)
+- `src/lib/media/video-highlights.ts` -- NEW: extractHighlights() via GPT-4o-mini analysis
+- `src/app/api/admin/videos/[id]/highlights/route.ts` -- NEW: POST endpoint for highlight extraction
+- `src/lib/media/content-analytics.ts` -- NEW: getMediaAnalytics() aggregation service
+- `src/app/api/admin/media/analytics/route.ts` -- NEW: GET with ?days=N parameter
+- `src/app/admin/media/analytics/page.tsx` -- NEW: Analytics page (KPI cards, bar chart, platform breakdown, top content)
+- `src/lib/media/brand-kit.ts` -- NEW: In-memory brand kit CRUD (getActiveBrandKit, updateBrandKit, brandKitToCSSVars)
+- `src/app/api/admin/brand-kit/route.ts` -- NEW: GET/PUT with Zod validation
+- `src/app/admin/media/brand-kit/page.tsx` -- Modified: API-connected editing (fetch, editable fields, save)
+
+#### Phase 5: i18n (22 locale files updated)
+- 45+ new keys added under `admin.media.*` (analytics, brandKit, dashboard, highlights, transcription, etc.)
+- All 22 locale files updated (fr + en reference, 20 others with English fallback)

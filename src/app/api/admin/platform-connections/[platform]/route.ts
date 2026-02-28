@@ -51,7 +51,8 @@ export const GET = withAdminGuard(async (_request: NextRequest, context: RoutePa
       defaultCategory: connection?.defaultCategory ?? null,
       defaultVisibility: connection?.defaultVisibility ?? 'PRIVATE',
       defaultContentType: connection?.defaultContentType ?? 'OTHER',
-      webhookId: connection?.webhookId ?? null,
+      // V-068 FIX: webhookId stripped from response (internal identifier)
+      hasWebhookConfigured: !!connection?.webhookId,
       lastSyncAt: connection?.lastSyncAt ?? null,
       syncStatus: connection?.syncStatus ?? null,
       syncError: connection?.syncError ?? null,

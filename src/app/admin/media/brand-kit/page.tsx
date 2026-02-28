@@ -1,19 +1,70 @@
 'use client';
 
-import { useState } from 'react';
-import { Palette, Type, Image, Copy, Check } from 'lucide-react';
+/**
+ * Brand Kit Page — Chantier 4.3: Enhanced with API-connected editing.
+ */
+
+import { useState, useEffect } from 'react';
+import { Palette, Type, Image, Copy, Check, Save, Loader2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { fetchWithCSRF } from '@/lib/csrf';
+
+interface BrandKitData {
+  name: string;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  fontHeading: string | null;
+  fontBody: string | null;
+  guidelines: string | null;
+}
 
 export default function BrandKitPage() {
   const { t } = useI18n();
   const [copied, setCopied] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [brandKit, setBrandKit] = useState<BrandKitData | null>(null);
+
+  // Fetch brand kit from API
+  useEffect(() => {
+    fetch('/api/admin/brand-kit')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.brandKit) setBrandKit(data.brandKit);
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveBrandKit = async () => {
+    if (!brandKit) return;
+    setSaving(true);
+    try {
+      const res = await fetchWithCSRF('/api/admin/brand-kit', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(brandKit),
+      });
+      if (res.ok) {
+        toast.success(t('admin.media.brandKit.saved') || 'Brand kit saved');
+        setEditing(false);
+      } else {
+        toast.error(t('admin.media.brandKit.saveError') || 'Failed to save');
+      }
+    } catch {
+      toast.error(t('admin.media.brandKit.saveError') || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const colors = [
-    { nameKey: 'colorPrimary', hex: '#059669', usageKey: 'usageButtons' },
+    { nameKey: 'colorPrimary', hex: brandKit?.primaryColor || '#059669', usageKey: 'usageButtons' },
     { nameKey: 'colorPrimaryDark', hex: '#047857', usageKey: 'usageHover' },
-    { nameKey: 'colorSecondary', hex: '#0ea5e9', usageKey: 'usageInfo' },
-    { nameKey: 'colorAccent', hex: '#8b5cf6', usageKey: 'usagePremium' },
+    { nameKey: 'colorSecondary', hex: brandKit?.secondaryColor || '#0ea5e9', usageKey: 'usageInfo' },
+    { nameKey: 'colorAccent', hex: brandKit?.accentColor || '#8b5cf6', usageKey: 'usagePremium' },
     { nameKey: 'colorBackground', hex: '#f8fafc', usageKey: 'usageBackground' },
     { nameKey: 'colorText', hex: '#1e293b', usageKey: 'usageText' },
     { nameKey: 'colorMuted', hex: '#64748b', usageKey: 'usageMuted' },
@@ -23,8 +74,8 @@ export default function BrandKitPage() {
   ];
 
   const fonts = [
-    { nameKey: 'fontHeadings', family: 'Inter', weight: '700', size: '24-36px', sample: 'BioCycle Peptides' },
-    { nameKey: 'fontBody', family: 'Inter', weight: '400', size: '14-16px', sample: 'Peptides de recherche de haute qualité' },
+    { nameKey: 'fontHeadings', family: brandKit?.fontHeading || 'Inter', weight: '700', size: '24-36px', sample: 'BioCycle Peptides' },
+    { nameKey: 'fontBody', family: brandKit?.fontBody || 'Inter', weight: '400', size: '14-16px', sample: 'Peptides de recherche de haute qualité' },
     { nameKey: 'fontCaptions', family: 'Inter', weight: '500', size: '11-12px', sample: 'CODE PROMO: BIOCYCLE10' },
   ];
 
@@ -37,13 +88,106 @@ export default function BrandKitPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Palette className="w-6 h-6 text-purple-600" />
-          {t('admin.media.brandKit.title')}
-        </h1>
-        <p className="text-slate-500">{t('admin.media.brandKit.subtitle')}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <Palette className="w-6 h-6 text-purple-600" />
+            {t('admin.media.brandKit.title')}
+          </h1>
+          <p className="text-slate-500">{t('admin.media.brandKit.subtitle')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+              >
+                {t('common.cancel') || 'Cancel'}
+              </button>
+              <button
+                onClick={saveBrandKit}
+                disabled={saving}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {t('common.save') || 'Save'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              {t('common.edit') || 'Edit'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Brand Name Editor (Chantier 4.3) */}
+      {editing && brandKit && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.brandName') || 'Brand Name'}</label>
+              <input
+                type="text"
+                value={brandKit.name}
+                onChange={(e) => setBrandKit({ ...brandKit, name: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.primaryColor') || 'Primary Color'}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={brandKit.primaryColor || '#059669'}
+                  onChange={(e) => setBrandKit({ ...brandKit, primaryColor: e.target.value })}
+                  className="w-10 h-10 rounded border cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={brandKit.primaryColor || ''}
+                  onChange={(e) => setBrandKit({ ...brandKit, primaryColor: e.target.value })}
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm font-mono"
+                  placeholder="#059669"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.accentColor') || 'Accent Color'}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={brandKit.accentColor || '#8b5cf6'}
+                  onChange={(e) => setBrandKit({ ...brandKit, accentColor: e.target.value })}
+                  className="w-10 h-10 rounded border cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={brandKit.accentColor || ''}
+                  onChange={(e) => setBrandKit({ ...brandKit, accentColor: e.target.value })}
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm font-mono"
+                  placeholder="#8b5cf6"
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.guidelines') || 'Brand Guidelines'}</label>
+            <textarea
+              value={brandKit.guidelines || ''}
+              onChange={(e) => setBrandKit({ ...brandKit, guidelines: e.target.value })}
+              rows={3}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              placeholder={t('admin.media.brandKit.guidelinesPlaceholder') || 'Brand usage guidelines, tone of voice, dos & donts...'}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Colors */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">

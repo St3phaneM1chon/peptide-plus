@@ -14,6 +14,14 @@ export interface Column<T> {
   render: (row: T, index: number) => ReactNode;
 }
 
+// Chantier 3.4: Bulk action definition
+export interface BulkAction {
+  label: string;
+  icon?: ReactNode;
+  variant?: 'default' | 'danger';
+  onClick: (selectedIds: Set<string>) => void | Promise<void>;
+}
+
 interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
@@ -28,6 +36,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   selectedIds?: Set<string>;
   onSelectChange?: (ids: Set<string>) => void;
+  bulkActions?: BulkAction[];
 }
 
 export function DataTable<T>({
@@ -44,6 +53,7 @@ export function DataTable<T>({
   onRowClick,
   selectedIds,
   onSelectChange,
+  bulkActions,
 }: DataTableProps<T>) {
   const { t } = useI18n();
   const emptyTitle = emptyTitleProp || t('admin.dataTable.noData') || 'No data';
@@ -114,6 +124,36 @@ export function DataTable<T>({
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      {/* Chantier 3.4: Bulk actions bar */}
+      {selectable && selectedIds && selectedIds.size > 0 && bulkActions && bulkActions.length > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-sky-50 border-b border-sky-100">
+          <span className="text-sm font-medium text-sky-800">
+            {selectedIds.size} {t('admin.dataTable.selected') || 'selected'}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            {bulkActions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => action.onClick(selectedIds)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  action.variant === 'danger'
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+            <button
+              onClick={() => onSelectChange?.(new Set())}
+              className="text-sm text-sky-600 hover:text-sky-800 ml-2"
+            >
+              {t('common.clearSelection') || 'Clear'}
+            </button>
+          </div>
+        </div>
+      )}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {data.length} {data.length === 1 ? (t('admin.dataTable.row') || 'row') : (t('admin.dataTable.rows') || 'rows')}
       </div>

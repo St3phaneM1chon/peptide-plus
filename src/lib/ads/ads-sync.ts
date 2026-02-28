@@ -415,5 +415,93 @@ export async function syncAds(platform?: string): Promise<SyncResult[]> {
     results.push(result);
     logger.info(`[AdsSync] ${name}: ${result.success ? 'OK' : 'FAILED'} (${result.synced} records)`);
   }
+
+  // Chantier 2.4: Anomaly detection after sync
+  try {
+    const anomalies = await detectAnomalies();
+    if (anomalies.length > 0) {
+      logger.warn(`[AdsSync] ${anomalies.length} anomalies detected`, { anomalies });
+    }
+  } catch (err) {
+    logger.warn('[AdsSync] Anomaly detection failed (non-blocking)', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// Chantier 2.4: Anomaly Detection
+// ---------------------------------------------------------------------------
+
+interface Anomaly {
+  platform: string;
+  campaignId: string;
+  campaignName: string;
+  metric: string;
+  previousValue: number;
+  currentValue: number;
+  changePercent: number;
+}
+
+const ANOMALY_THRESHOLD = 0.20; // 20% variation triggers alert
+
+/**
+ * Compare yesterday's metrics to the day before for each campaign.
+ * Flags any metric that changed by more than ANOMALY_THRESHOLD.
+ */
+async function detectAnomalies(): Promise<Anomaly[]> {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dayBefore = new Date(today);
+  dayBefore.setDate(dayBefore.getDate() - 2);
+
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+  const [recentSnapshots, prevSnapshots] = await Promise.all([
+    prisma.adCampaignSnapshot.findMany({
+      where: { date: new Date(formatDate(yesterday)) },
+    }),
+    prisma.adCampaignSnapshot.findMany({
+      where: { date: new Date(formatDate(dayBefore)) },
+    }),
+  ]);
+
+  const prevMap = new Map(
+    prevSnapshots.map((s) => [`${s.platform}:${s.campaignId}`, s])
+  );
+
+  const anomalies: Anomaly[] = [];
+  const metricsToCheck = ['impressions', 'clicks', 'spend', 'conversions'] as const;
+
+  for (const recent of recentSnapshots) {
+    const key = `${recent.platform}:${recent.campaignId}`;
+    const prev = prevMap.get(key);
+    if (!prev) continue;
+
+    for (const metric of metricsToCheck) {
+      const prevVal = Number(prev[metric]) || 0;
+      const currVal = Number(recent[metric]) || 0;
+
+      if (prevVal === 0 && currVal === 0) continue;
+      if (prevVal === 0) continue; // Can't compute % change from 0
+
+      const change = Math.abs((currVal - prevVal) / prevVal);
+      if (change >= ANOMALY_THRESHOLD) {
+        anomalies.push({
+          platform: recent.platform,
+          campaignId: recent.campaignId,
+          campaignName: recent.campaignName,
+          metric,
+          previousValue: prevVal,
+          currentValue: currVal,
+          changePercent: Math.round(change * 100),
+        });
+      }
+    }
+  }
+
+  return anomalies;
 }

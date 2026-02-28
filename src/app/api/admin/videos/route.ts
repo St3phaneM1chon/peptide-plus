@@ -14,6 +14,7 @@ import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { sanitizeUrl } from '@/lib/sanitize';
+import { generateTags } from '@/lib/media/ai-tagger';
 
 // GET /api/admin/videos - List all videos
 export const GET = withAdminGuard(async (request, _ctx) => {
@@ -259,6 +260,21 @@ export const POST = withAdminGuard(async (request, { session }) => {
         videoCategory: { select: { id: true, name: true, slug: true } },
       },
     });
+
+    // Chantier 2.3: Auto-tag video if no tags were provided
+    if (!tags || (Array.isArray(tags) && tags.length === 0)) {
+      try {
+        const autoTags = generateTags(video.title, undefined, category || undefined);
+        if (autoTags.length > 0) {
+          await prisma.video.update({
+            where: { id: video.id },
+            data: { tags: JSON.stringify(autoTags) },
+          });
+        }
+      } catch (tagErr) {
+        logger.warn('Auto-tagging failed (non-blocking)', { error: tagErr instanceof Error ? tagErr.message : String(tagErr) });
+      }
+    }
 
     // F48 FIX: Catch and log enqueue errors instead of letting them fail silently
     try {

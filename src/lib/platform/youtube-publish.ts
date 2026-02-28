@@ -57,8 +57,15 @@ export async function publishToYouTube(
   const title = options?.title || video.title;
   const description = options?.description || video.description || '';
   const tags = options?.tags || video.videoTags.map((t) => t.tag);
-  const privacyStatus = options?.privacyStatus || 'unlisted';
   const categoryId = options?.categoryId || '27'; // Education
+
+  // V-072 FIX: Validate privacyStatus against allowed YouTube values
+  const VALID_PRIVACY_STATUSES = ['public', 'unlisted', 'private'] as const;
+  const rawPrivacy = options?.privacyStatus || 'unlisted';
+  if (!VALID_PRIVACY_STATUSES.includes(rawPrivacy as typeof VALID_PRIVACY_STATUSES[number])) {
+    return { success: false, error: `Invalid privacyStatus: "${rawPrivacy}". Must be one of: ${VALID_PRIVACY_STATUSES.join(', ')}` };
+  }
+  const privacyStatus = rawPrivacy;
 
   try {
     // Step 1: Initiate resumable upload

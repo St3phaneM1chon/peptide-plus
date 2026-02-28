@@ -11,8 +11,11 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
+// Chantier 1.3: Support both single platform (string) and multi-platform (array) for cross-posting
+const platformEnum = z.enum(['instagram', 'facebook', 'twitter', 'tiktok', 'linkedin']);
+
 const createSchema = z.object({
-  platform: z.enum(['instagram', 'facebook', 'twitter', 'tiktok', 'linkedin']),
+  platform: z.union([platformEnum, z.array(platformEnum).min(1).max(5)]),
   content: z.string().min(1).max(63206),
   imageUrl: z.string().url().nullable().optional(),
   scheduledAt: z.string().datetime(),
@@ -59,15 +62,36 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
   const { platform, content, imageUrl, scheduledAt, status } = parsed.data;
 
-  const post = await prisma.socialPost.create({
-    data: {
-      platform,
-      content,
-      imageUrl: imageUrl ?? null,
-      scheduledAt: new Date(scheduledAt),
-      status,
-    },
-  });
+  // Chantier 1.3: Cross-post — create one post per platform when array is provided
+  const platforms = Array.isArray(platform) ? platform : [platform];
 
-  return NextResponse.json({ post }, { status: 201 });
+  if (platforms.length === 1) {
+    const post = await prisma.socialPost.create({
+      data: {
+        platform: platforms[0],
+        content,
+        imageUrl: imageUrl ?? null,
+        scheduledAt: new Date(scheduledAt),
+        status,
+      },
+    });
+    return NextResponse.json({ post }, { status: 201 });
+  }
+
+  // Multi-platform: create all posts in a transaction
+  const posts = await prisma.$transaction(
+    platforms.map((p) =>
+      prisma.socialPost.create({
+        data: {
+          platform: p,
+          content,
+          imageUrl: imageUrl ?? null,
+          scheduledAt: new Date(scheduledAt),
+          status,
+        },
+      })
+    )
+  );
+
+  return NextResponse.json({ posts, count: posts.length }, { status: 201 });
 });
