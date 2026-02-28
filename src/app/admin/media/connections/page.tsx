@@ -44,6 +44,14 @@ const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   Play: <Play className="h-6 w-6" />,
 };
 
+const PLATFORM_DESC_KEYS: Record<string, string> = {
+  zoom: 'admin.platformConnections.descZoom',
+  teams: 'admin.platformConnections.descTeams',
+  'google-meet': 'admin.platformConnections.descGoogleMeet',
+  webex: 'admin.platformConnections.descWebex',
+  youtube: 'admin.platformConnections.descYoutube',
+};
+
 const PLATFORM_COLORS: Record<string, string> = {
   zoom: 'border-blue-500 bg-blue-50',
   teams: 'border-purple-500 bg-purple-50',
@@ -245,7 +253,7 @@ export default function PlatformConnectionsPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                  <p className="text-xs text-gray-500">{p.description}</p>
+                  <p className="text-xs text-gray-500">{PLATFORM_DESC_KEYS[p.platform] ? t(PLATFORM_DESC_KEYS[p.platform]) : p.description}</p>
                 </div>
               </div>
               {/* Status Badge */}

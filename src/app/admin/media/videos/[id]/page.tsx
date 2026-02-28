@@ -334,10 +334,10 @@ export default function VideoDetailPage() {
         toast.success(t('admin.media.tagsSaved') || 'Tags saved');
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Failed to save tags');
+        toast.error(data.error || t('admin.media.failedSaveTags') || 'Failed to save tags');
       }
     } catch {
-      toast.error('Failed to save tags');
+      toast.error(t('admin.media.failedSaveTags') || 'Failed to save tags');
     } finally {
       setSavingTags(false);
     }
@@ -370,7 +370,7 @@ export default function VideoDetailPage() {
           setPlacements(prev => prev.filter(p => p.id !== existing.id));
         } else {
           const data = await res.json().catch(() => ({}));
-          toast.error(data.error || 'Failed to remove placement');
+          toast.error(data.error || t('admin.media.failedTogglePlacement') || 'Failed to remove placement');
         }
       } else {
         // Add
@@ -384,11 +384,11 @@ export default function VideoDetailPage() {
           setPlacements(prev => [...prev, data.placement]);
         } else {
           const data = await res.json().catch(() => ({}));
-          toast.error(data.error || 'Failed to add placement');
+          toast.error(data.error || t('admin.media.failedTogglePlacement') || 'Failed to add placement');
         }
       }
     } catch {
-      toast.error('Failed to toggle placement');
+      toast.error(t('admin.media.failedTogglePlacement') || 'Failed to toggle placement');
     } finally {
       setTogglingPlacement(null);
     }
@@ -430,10 +430,10 @@ export default function VideoDetailPage() {
         toast.success(t('admin.media.productUnlinked') || 'Product unlinked');
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Failed to unlink product');
+        toast.error(data.error || t('admin.media.failedUnlinkProduct') || 'Failed to unlink product');
       }
     } catch {
-      toast.error('Failed to unlink product');
+      toast.error(t('admin.media.failedUnlinkProduct') || 'Failed to unlink product');
     } finally {
       setRemovingProduct(null);
     }
@@ -1075,13 +1075,13 @@ export default function VideoDetailPage() {
             </div>
             {video.recordingImport.meetingTitle && (
               <div>
-                <span className="text-slate-500">Meeting:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.meetingLabel') || 'Meeting'}:</span>{' '}
                 <span className="font-medium text-slate-700">{video.recordingImport.meetingTitle}</span>
               </div>
             )}
             {video.recordingImport.meetingDate && (
               <div>
-                <span className="text-slate-500">Date:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.dateLabel') || 'Date'}:</span>{' '}
                 <span className="font-medium text-slate-700">
                   {new Date(video.recordingImport.meetingDate).toLocaleDateString(undefined, {
                     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -1091,13 +1091,13 @@ export default function VideoDetailPage() {
             )}
             {video.recordingImport.hostEmail && (
               <div>
-                <span className="text-slate-500">Host:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.hostLabel') || 'Host'}:</span>{' '}
                 <span className="font-medium text-slate-700">{video.recordingImport.hostEmail}</span>
               </div>
             )}
             {video.platformMeetingId && (
               <div>
-                <span className="text-slate-500">Meeting ID:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.meetingIdLabel') || 'Meeting ID'}:</span>{' '}
                 <span className="font-mono text-xs text-slate-600">{video.platformMeetingId}</span>
               </div>
             )}

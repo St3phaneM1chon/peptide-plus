@@ -47,12 +47,12 @@ const PLATFORM_DEFS = [
   { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-blue-500', IconComp: Video },
   { key: 'whatsapp', label: 'WhatsApp', href: '/admin/media/api-whatsapp', color: 'bg-green-500', IconComp: MessageCircle },
   { key: 'teams', label: 'Teams', href: '/admin/media/api-teams', color: 'bg-purple-500', IconComp: Users },
-  { key: 'youtube', label: 'YouTube', href: '/admin/media/pub-youtube', color: 'bg-red-500', IconComp: Video },
-  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/pub-meta', color: 'bg-blue-600', IconComp: Globe },
-  { key: 'x', label: 'X (Twitter)', href: '/admin/media/pub-x', color: 'bg-slate-800', IconComp: MessageCircle },
-  { key: 'tiktok', label: 'TikTok', href: '/admin/media/pub-tiktok', color: 'bg-pink-500', IconComp: Activity },
-  { key: 'google', label: 'Google Ads', href: '/admin/media/pub-google', color: 'bg-yellow-500', IconComp: Search },
-  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/pub-linkedin', color: 'bg-blue-700', IconComp: Briefcase },
+  { key: 'youtube', label: 'YouTube', href: '/admin/media/ads-youtube', color: 'bg-red-500', IconComp: Video },
+  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/ads-meta', color: 'bg-blue-600', IconComp: Globe },
+  { key: 'x', label: 'X (Twitter)', href: '/admin/media/ads-x', color: 'bg-slate-800', IconComp: MessageCircle },
+  { key: 'tiktok', label: 'TikTok', href: '/admin/media/ads-tiktok', color: 'bg-pink-500', IconComp: Activity },
+  { key: 'google', label: 'Google Ads', href: '/admin/media/ads-google', color: 'bg-yellow-500', IconComp: Search },
+  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/ads-linkedin', color: 'bg-blue-700', IconComp: Briefcase },
 ];
 
 export default function MediaDashboardPage() {

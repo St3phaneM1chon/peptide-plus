@@ -42,7 +42,7 @@ export default function ApiGoogleMeetPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
       throw err;
     }
   };
@@ -78,7 +78,7 @@ export default function ApiGoogleMeetPage() {
   return (
     <div className="p-6 max-w-3xl">
       <IntegrationCard
-        title="Google Meet"
+        title={t('admin.media.googleMeetTitle') || 'Google Meet'}
         description={t('admin.media.googleMeetDescription') || 'Configure Google Meet API credentials for video conferencing.'}
         icon={<Settings className="w-6 h-6" />}
         color="from-teal-500 to-teal-600"

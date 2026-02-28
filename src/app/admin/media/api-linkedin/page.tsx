@@ -47,7 +47,7 @@ export default function MediaLinkedInPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
       throw err;
     }
   };

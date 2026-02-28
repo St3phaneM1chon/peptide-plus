@@ -42,7 +42,7 @@ export default function ApiWebexPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
       throw err;
     }
   };
@@ -78,7 +78,7 @@ export default function ApiWebexPage() {
   return (
     <div className="p-6 max-w-3xl">
       <IntegrationCard
-        title="Webex"
+        title={t('admin.media.webexTitle') || 'Webex'}
         description={t('admin.media.webexDescription') || 'Configure Webex API credentials for video conferencing.'}
         icon={<Settings className="w-6 h-6" />}
         color="from-emerald-500 to-emerald-600"

@@ -43,7 +43,7 @@ export default function MediaWhatsAppPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
       throw err;
     }
   };
@@ -62,7 +62,7 @@ export default function MediaWhatsAppPage() {
     const el = document.querySelector<HTMLInputElement>('input[placeholder]');
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
   }, []);
-  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success('Connection OK'); else toast.error(r.error || 'Test failed'); }); }, []);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk') || 'Connection OK'); else toast.error(r.error || t('admin.media.testFailed') || 'Test failed'); }); }, [t]);
   const onRefreshToken = useCallback(() => {
     setLoading(true);
     fetch('/api/admin/integrations/whatsapp').then(res => res.json()).then(data => {
