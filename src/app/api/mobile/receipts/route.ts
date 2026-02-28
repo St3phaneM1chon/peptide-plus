@@ -19,18 +19,34 @@ export const POST = withAdminGuard(async (request) => {
     const body = await request.json();
     const parsed = receiptSchema.parse(body);
 
+    // Find actual account IDs from codes
+    const [expenseAccount, cashAccount] = await Promise.all([
+      prisma.chartOfAccount.findFirst({ where: { code: parsed.category }, select: { id: true } }),
+      prisma.chartOfAccount.findFirst({ where: { code: '1000' }, select: { id: true } }),
+    ]);
+
+    if (!expenseAccount || !cashAccount) {
+      return NextResponse.json({ error: 'Compte comptable introuvable' }, { status: 400 });
+    }
+
+    // Generate entry number
+    const count = await prisma.journalEntry.count();
+    const entryNumber = `RCT-${String(count + 1).padStart(6, '0')}`;
+
+    const desc = `Reçu: ${parsed.vendor}${parsed.description ? ` - ${parsed.description}` : ''}`;
     const entry = await prisma.journalEntry.create({
       data: {
-        description: `Reçu: ${parsed.vendor}${parsed.description ? ` - ${parsed.description}` : ''}`,
+        entryNumber,
+        description: desc,
         date: new Date(parsed.date),
-        entryType: 'EXPENSE',
-        totalAmount: parsed.amount,
+        type: 'MANUAL',
         status: 'POSTED',
-        notes: parsed.ocrText ? `OCR: ${parsed.ocrText.slice(0, 500)}` : undefined,
+        createdBy: 'mobile-app',
+        attachments: parsed.ocrText ? `OCR: ${parsed.ocrText.slice(0, 500)}` : undefined,
         lines: {
           create: [
-            { accountId: parsed.category, description: `Reçu ${parsed.vendor}`, debit: parsed.amount, credit: 0, lineOrder: 1 },
-            { accountId: '1000', description: `Paiement ${parsed.vendor}`, debit: 0, credit: parsed.amount, lineOrder: 2 },
+            { accountId: expenseAccount.id, description: `Reçu ${parsed.vendor}`, debit: parsed.amount, credit: 0 },
+            { accountId: cashAccount.id, description: `Paiement ${parsed.vendor}`, debit: 0, credit: parsed.amount },
           ],
         },
       },

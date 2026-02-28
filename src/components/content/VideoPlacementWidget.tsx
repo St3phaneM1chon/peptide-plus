@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Play, Clock, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Clock, Eye } from 'lucide-react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 

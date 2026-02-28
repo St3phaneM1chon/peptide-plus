@@ -20,19 +20,42 @@ export const GET = withAdminGuard(async (request) => {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
 
-    const [data, total] = await Promise.all([
-      prisma.journalEntry.findMany({
-        where: { entryType: 'EXPENSE', status: 'POSTED' },
-        select: { id: true, description: true, date: true, totalAmount: true, notes: true },
-        orderBy: { date: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.journalEntry.count({ where: { entryType: 'EXPENSE', status: 'POSTED' } }),
-    ]);
+    // Expense entries: entries with lines on expense accounts (5xxx)
+    const data = await prisma.journalEntry.findMany({
+      where: {
+        status: 'POSTED',
+        lines: { some: { account: { code: { startsWith: '5' } } } },
+      },
+      select: {
+        id: true,
+        description: true,
+        date: true,
+        type: true,
+        lines: {
+          where: { account: { code: { startsWith: '5' } } },
+          select: { debit: true, credit: true },
+        },
+      },
+      orderBy: { date: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const total = await prisma.journalEntry.count({
+      where: {
+        status: 'POSTED',
+        lines: { some: { account: { code: { startsWith: '5' } } } },
+      },
+    });
 
     return NextResponse.json({
-      data: data.map(e => ({ ...e, totalAmount: Number(e.totalAmount) })),
+      data: data.map(e => ({
+        id: e.id,
+        description: e.description,
+        date: e.date,
+        type: e.type,
+        amount: e.lines.reduce((sum, l) => sum + Number(l.debit) - Number(l.credit), 0),
+      })),
       total,
       page,
       limit,
@@ -47,18 +70,33 @@ export const POST = withAdminGuard(async (request) => {
     const body = await request.json();
     const parsed = createSchema.parse(body);
 
+    // Find actual account IDs from codes
+    const [expenseAccount, cashAccount] = await Promise.all([
+      prisma.chartOfAccount.findFirst({ where: { code: parsed.accountCode }, select: { id: true } }),
+      prisma.chartOfAccount.findFirst({ where: { code: '1000' }, select: { id: true } }),
+    ]);
+
+    if (!expenseAccount || !cashAccount) {
+      return NextResponse.json({ error: 'Compte comptable introuvable' }, { status: 400 });
+    }
+
+    // Generate entry number
+    const count = await prisma.journalEntry.count();
+    const entryNumber = `EXP-${String(count + 1).padStart(6, '0')}`;
+
     const entry = await prisma.journalEntry.create({
       data: {
+        entryNumber,
         description: parsed.description,
         date: new Date(parsed.date),
-        entryType: 'EXPENSE',
-        totalAmount: parsed.amount,
+        type: 'MANUAL',
         status: 'POSTED',
-        notes: parsed.note || `Catégorie: ${parsed.category}`,
+        createdBy: 'mobile-app',
+        attachments: parsed.note ? `Note: ${parsed.note}. Catégorie: ${parsed.category}` : `Catégorie: ${parsed.category}`,
         lines: {
           create: [
-            { accountId: parsed.accountCode, description: parsed.description, debit: parsed.amount, credit: 0, lineOrder: 1 },
-            { accountId: '1000', description: parsed.description, debit: 0, credit: parsed.amount, lineOrder: 2 },
+            { accountId: expenseAccount.id, description: parsed.description, debit: parsed.amount, credit: 0 },
+            { accountId: cashAccount.id, description: parsed.description, debit: 0, credit: parsed.amount },
           ],
         },
       },

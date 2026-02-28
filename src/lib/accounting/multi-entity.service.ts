@@ -499,7 +499,7 @@ export async function updateEntity(id: string, data: UpdateEntityInput) {
         throw new Error('Circular entity hierarchy detected');
       }
       visited.add(current);
-      const parentEntity = await prisma.legalEntity.findUnique({
+      const parentEntity: { parentEntityId: string | null } | null = await prisma.legalEntity.findUnique({
         where: { id: current },
         select: { parentEntityId: true },
       });

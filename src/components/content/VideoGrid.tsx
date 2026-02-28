@@ -11,7 +11,7 @@ interface VideoGridVideo {
   description: string | null;
   thumbnailUrl: string | null;
   videoUrl: string;
-  duration: number | null;
+  duration: string | null;
   views: number;
   contentType: string;
   source: string;

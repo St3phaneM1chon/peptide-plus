@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db';
 import { getValidAccessToken, type Platform } from './oauth';
 import { logger } from '@/lib/logger';
 import { StorageService } from '@/lib/storage';
+import { VideoSource, UserRole } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -575,7 +576,7 @@ async function detectAndCreateConsent(
   const matchingClients = await prisma.user.findMany({
     where: {
       email: { in: participantEmails },
-      role: { in: ['CUSTOMER', 'CLIENT'] as unknown[] as string[] },
+      role: { in: [UserRole.CUSTOMER, UserRole.CLIENT] },
     },
     select: { id: true, name: true, email: true },
   });
@@ -625,15 +626,15 @@ async function detectAndCreateConsent(
 // Helpers
 // ---------------------------------------------------------------------------
 
-function mapPlatformToSource(platform: Platform): string {
-  const map: Record<Platform, string> = {
-    zoom: 'ZOOM',
-    teams: 'TEAMS',
-    'google-meet': 'GOOGLE_MEET',
-    webex: 'WEBEX',
-    youtube: 'YOUTUBE',
+function mapPlatformToSource(platform: Platform): VideoSource {
+  const map: Record<Platform, VideoSource> = {
+    zoom: VideoSource.ZOOM,
+    teams: VideoSource.TEAMS,
+    'google-meet': VideoSource.GOOGLE_MEET,
+    webex: VideoSource.WEBEX,
+    youtube: VideoSource.YOUTUBE,
   };
-  return map[platform] || 'OTHER';
+  return map[platform] || VideoSource.OTHER;
 }
 
 function generateSlug(title: string): string {
