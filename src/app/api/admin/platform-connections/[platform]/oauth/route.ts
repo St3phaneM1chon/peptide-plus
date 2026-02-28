@@ -18,6 +18,6 @@ export const GET = withAdminGuard(async (_request: NextRequest, context: RoutePa
     return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
 
-  const url = getAuthorizationUrl(platform as Platform);
+  const { url } = getAuthorizationUrl(platform as Platform);
   return NextResponse.json({ url });
 });
