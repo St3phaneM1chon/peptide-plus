@@ -459,7 +459,21 @@
     "sidebar": {
       "addresses": "Addresses",
       "inventory": "My Peptides",
-      "orders": "Orders"
+      "orders": "Orders",
+      "consents": "My Consents"
+    },
+    "consents": {
+      "title": "My Consents",
+      "description": "Track and manage consent requests for content featuring you.",
+      "empty": "No consent requests yet.",
+      "revokeTitle": "Revoke Consent",
+      "revokeConfirm": "Are you sure you want to revoke this consent? The associated content may be archived.",
+      "revokeReason": "Reason for revocation (optional)",
+      "revoked": "Consent revoked successfully",
+      "grantedOn": "Granted on",
+      "revokedOn": "Revoked on",
+      "requestedOn": "Requested on",
+      "viewDetails": "View details"
     }
   },
   "admin": {

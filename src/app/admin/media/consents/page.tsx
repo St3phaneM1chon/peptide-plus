@@ -279,7 +279,7 @@ export default function AdminConsentsPage() {
                             className="p-1.5 hover:bg-gray-100 rounded"
                             onClick={async () => {
                               try {
-                                const { fetchWithCSRF } = await import('@/lib/fetch-csrf');
+                                const { fetchWithCSRF } = await import('@/lib/csrf');
                                 const res = await fetchWithCSRF(`/api/admin/consents/${consent.id}`, {
                                   method: 'PATCH',
                                   headers: { 'Content-Type': 'application/json' },

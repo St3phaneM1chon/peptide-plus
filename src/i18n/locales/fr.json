@@ -460,13 +460,27 @@
       "addresses": "Adresses",
       "content": "Mon Contenu",
       "inventory": "Mes peptides",
-      "orders": "Commandes"
+      "orders": "Commandes",
+      "consents": "Mes consentements"
     },
     "content": {
       "title": "Ma Médiathèque",
       "description": "Vidéos, formations et contenus accessibles.",
       "empty": "Aucun contenu disponible pour le moment.",
       "noResults": "Aucune vidéo ne correspond à votre recherche."
+    },
+    "consents": {
+      "title": "Mes consentements",
+      "description": "Suivez et gérez les demandes de consentement pour le contenu vous mettant en scène.",
+      "empty": "Aucune demande de consentement pour le moment.",
+      "revokeTitle": "Révoquer le consentement",
+      "revokeConfirm": "Êtes-vous sûr de vouloir révoquer ce consentement ? Le contenu associé pourrait être archivé.",
+      "revokeReason": "Raison de la révocation (optionnel)",
+      "revoked": "Consentement révoqué avec succès",
+      "grantedOn": "Accordé le",
+      "revokedOn": "Révoqué le",
+      "requestedOn": "Demandé le",
+      "viewDetails": "Voir les détails"
     }
   },
   "admin": {
