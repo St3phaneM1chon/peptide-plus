@@ -1907,7 +1907,14 @@
         "loyalty": "Loyalty",
         "orders": "Đơn hàng",
         "reviews": "Đánh giá",
-        "subscriptions": "Đăng ký"
+        "subscriptions": "Đăng ký",
+        "content": "Nội dung & Đồng ý"
+      },
+      "content": {
+        "consents": "Đồng ý",
+        "videos": "Xuất hiện trong video",
+        "noConsents": "Không có đồng ý",
+        "noVideos": "Không có video liên kết"
       }
     },
     "customerInvoices": {

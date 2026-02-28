@@ -1907,7 +1907,14 @@
         "loyalty": "நம்பிக்கை",
         "orders": "ஆர்டர்கள்",
         "reviews": "மதிப்பீடுகள்",
-        "subscriptions": "சந்தா"
+        "subscriptions": "சந்தா",
+        "content": "உள்ளடக்கம் & ஒப்புதல்கள்"
+      },
+      "content": {
+        "consents": "ஒப்புதல்கள்",
+        "videos": "வீடியோக்களில் தோன்றும்",
+        "noConsents": "ஒப்புதல் இல்லை",
+        "noVideos": "தொடர்புடைய வீடியோக்கள் இல்லை"
       }
     },
     "customerInvoices": {

@@ -1907,7 +1907,14 @@
         "loyalty": "निष्ठा",
         "orders": "आदेश",
         "reviews": "समीक्षाएँ",
-        "subscriptions": "सदस्यताएँ"
+        "subscriptions": "सदस्यताएँ",
+        "content": "सामग्री और सहमति"
+      },
+      "content": {
+        "consents": "सहमति",
+        "videos": "वीडियो में दिखाई दिया",
+        "noConsents": "कोई सहमति नहीं",
+        "noVideos": "कोई संबद्ध वीडियो नहीं"
       }
     },
     "customerInvoices": {

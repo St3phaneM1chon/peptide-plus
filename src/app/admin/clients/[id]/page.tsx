@@ -28,6 +28,8 @@ import {
   Pause,
   Play,
   StarIcon,
+  FileCheck,
+  Video,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
@@ -237,7 +239,26 @@ const tierColors: Record<string, string> = {
   DIAMOND: 'bg-violet-600',
 };
 
-type TabKey = 'orders' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards';
+interface ClientConsent {
+  id: string;
+  type: string;
+  status: string;
+  grantedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+  video: { id: string; title: string } | null;
+  formTemplate: { id: string; name: string } | null;
+}
+
+interface ClientVideo {
+  id: string;
+  title: string;
+  status: string;
+  contentType: string;
+  createdAt: string;
+}
+
+type TabKey = 'orders' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'content';
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -256,6 +277,9 @@ export default function ClientDetailPage() {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [clientConsents, setClientConsents] = useState<ClientConsent[]>([]);
+  const [clientVideos, setClientVideos] = useState<ClientVideo[]>([]);
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
 
@@ -294,6 +318,30 @@ export default function ClientDetailPage() {
   useEffect(() => {
     if (id) fetchUserDetail();
   }, [id, fetchUserDetail]);
+
+  // Lazy-load content & consents when tab is opened
+  useEffect(() => {
+    if (activeTab !== 'content' || contentLoaded || !id) return;
+    (async () => {
+      try {
+        const [consentsRes, videosRes] = await Promise.all([
+          fetch(`/api/admin/consents?clientId=${id}&limit=50`),
+          fetch(`/api/admin/videos?featuredClientId=${id}&limit=50`),
+        ]);
+        if (consentsRes.ok) {
+          const data = await consentsRes.json();
+          setClientConsents(data.consents || []);
+        }
+        if (videosRes.ok) {
+          const data = await videosRes.json();
+          setClientVideos(data.videos || []);
+        }
+      } catch {
+        // Silent - data will just be empty
+      }
+      setContentLoaded(true);
+    })();
+  }, [activeTab, contentLoaded, id]);
 
   // Close points modal on Escape key
   useEffect(() => {
@@ -414,6 +462,7 @@ export default function ClientDetailPage() {
     { key: 'reviews', label: `${t('admin.customerDetail.tabs.reviews')} (${reviews.length})`, icon: Star },
     { key: 'addresses', label: `${t('admin.customerDetail.tabs.addresses')} (${user.addresses.length})`, icon: MapPin },
     { key: 'cards', label: `${t('admin.customerDetail.tabs.cards')} (${user.savedCards.length})`, icon: CreditCard },
+    { key: 'content', label: `${t('admin.customerDetail.tabs.content')} (${clientConsents.length})`, icon: FileCheck },
   ];
 
   const tierProgress = getTierProgress(user.lifetimePoints, user.loyaltyTier);
@@ -1177,6 +1226,121 @@ export default function ClientDetailPage() {
               <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.cards.empty')}</p>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ================================================================= */}
+      {/* TAB: Content & Consents                                          */}
+      {/* ================================================================= */}
+      {activeTab === 'content' && (
+        <div className="space-y-6">
+          {!contentLoaded ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-2 border-orange-600 border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            <>
+              {/* Consents */}
+              <div>
+                <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  {t('admin.customerDetail.content.consents')} ({clientConsents.length})
+                </h3>
+                {clientConsents.length > 0 ? (
+                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 border-b">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-medium text-slate-600">{t('admin.consents.consentType')}</th>
+                          <th className="text-left px-4 py-2 font-medium text-slate-600">Status</th>
+                          <th className="text-left px-4 py-2 font-medium text-slate-600">{t('admin.consents.relatedVideo')}</th>
+                          <th className="text-left px-4 py-2 font-medium text-slate-600">Date</th>
+                          <th className="text-right px-4 py-2 font-medium text-slate-600"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {clientConsents.map(consent => (
+                          <tr key={consent.id} className="hover:bg-slate-50">
+                            <td className="px-4 py-2">
+                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                                {t(`consentType.${consent.type}`)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2">
+                              <StatusBadge variant={
+                                consent.status === 'GRANTED' ? 'success'
+                                  : consent.status === 'PENDING' ? 'warning'
+                                  : consent.status === 'REVOKED' ? 'error'
+                                  : 'neutral'
+                              }>
+                                {consent.status}
+                              </StatusBadge>
+                            </td>
+                            <td className="px-4 py-2 text-xs">
+                              {consent.video ? (
+                                <Link href={`/admin/media/videos/${consent.video.id}`} className="text-orange-600 hover:underline">
+                                  {consent.video.title}
+                                </Link>
+                              ) : '—'}
+                            </td>
+                            <td className="px-4 py-2 text-xs text-slate-500">
+                              {new Date(consent.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              <Link href={`/admin/media/consents/${consent.id}`} className="text-xs text-orange-600 hover:underline">
+                                {t('common.view')}
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-white rounded-xl border border-slate-200">
+                    <FileCheck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500">{t('admin.customerDetail.content.noConsents')}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Videos */}
+              <div>
+                <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                  <Video className="h-4 w-4" />
+                  {t('admin.customerDetail.content.videos')} ({clientVideos.length})
+                </h3>
+                {clientVideos.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {clientVideos.map(video => (
+                      <Link
+                        key={video.id}
+                        href={`/admin/media/videos/${video.id}`}
+                        className="bg-white rounded-xl border border-slate-200 p-4 hover:border-orange-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-slate-900 text-sm">{video.title}</span>
+                          <StatusBadge variant={video.status === 'PUBLISHED' ? 'success' : video.status === 'DRAFT' ? 'neutral' : 'warning'}>
+                            {video.status}
+                          </StatusBadge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{t(`videoContentType.${video.contentType}`)}</span>
+                          <span>·</span>
+                          <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-white rounded-xl border border-slate-200">
+                    <Video className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500">{t('admin.customerDetail.content.noVideos')}</p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}

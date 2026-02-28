@@ -1907,7 +1907,14 @@
         "loyalty": "충성도",
         "orders": "주문",
         "reviews": "리뷰",
-        "subscriptions": "구독"
+        "subscriptions": "구독",
+        "content": "콘텐츠 및 동의"
+      },
+      "content": {
+        "consents": "동의",
+        "videos": "동영상에 출연",
+        "noConsents": "동의 기록 없음",
+        "noVideos": "관련 동영상 없음"
       }
     },
     "customerInvoices": {

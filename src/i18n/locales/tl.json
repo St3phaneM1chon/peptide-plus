@@ -1907,7 +1907,14 @@
         "loyalty": "Katapatan",
         "orders": "Mga order",
         "reviews": "Mga pagsusuri",
-        "subscriptions": "Mga subscription"
+        "subscriptions": "Mga subscription",
+        "content": "Nilalaman at Pahintulot"
+      },
+      "content": {
+        "consents": "Mga Pahintulot",
+        "videos": "Lumabas sa mga video",
+        "noConsents": "Walang pahintulot",
+        "noVideos": "Walang nauugnay na video"
       }
     },
     "customerInvoices": {

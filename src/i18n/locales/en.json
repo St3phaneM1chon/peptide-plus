@@ -1988,7 +1988,14 @@
         "loyalty": "Loyalty",
         "orders": "Orders",
         "reviews": "Reviews",
-        "subscriptions": "Subscriptions"
+        "subscriptions": "Subscriptions",
+        "content": "Content & Consents"
+      },
+      "content": {
+        "consents": "Consents",
+        "videos": "Featured In Videos",
+        "noConsents": "No consent records",
+        "noVideos": "No associated videos"
       }
     },
     "customerInvoices": {

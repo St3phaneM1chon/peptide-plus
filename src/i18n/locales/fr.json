@@ -1274,7 +1274,8 @@
         "subscriptions": "Abonnements",
         "reviews": "Avis",
         "addresses": "Adresses",
-        "cards": "Cartes"
+        "cards": "Cartes",
+        "content": "Contenu & Consentements"
       },
       "orders": {
         "pending": "En attente de traitement",
@@ -1366,6 +1367,12 @@
         "default": "Par défaut",
         "expires": "Expire",
         "empty": "Aucune carte enregistrée"
+      },
+      "content": {
+        "consents": "Consentements",
+        "videos": "Apparaît dans les vidéos",
+        "noConsents": "Aucun consentement",
+        "noVideos": "Aucune vidéo associée"
       }
     },
     "products": {

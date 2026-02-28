@@ -1907,7 +1907,14 @@
         "loyalty": "Lojalitet",
         "orders": "Beställningar",
         "reviews": "Recensioner",
-        "subscriptions": "Prenumerationer"
+        "subscriptions": "Prenumerationer",
+        "content": "Innehåll och samtycken"
+      },
+      "content": {
+        "consents": "Samtycken",
+        "videos": "Visas i videor",
+        "noConsents": "Inga samtycken",
+        "noVideos": "Inga tillhörande videor"
       }
     },
     "customerInvoices": {

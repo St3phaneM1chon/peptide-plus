@@ -1907,7 +1907,14 @@
         "loyalty": "Loyalty",
         "orders": "Kòmand",
         "reviews": "Revizyon",
-        "subscriptions": "Abònman"
+        "subscriptions": "Abònman",
+        "content": "Konteni & Konsantman"
+      },
+      "content": {
+        "consents": "Konsantman",
+        "videos": "Parèt nan vidéyo",
+        "noConsents": "Pa konsantman",
+        "noVideos": "Pa vidéyo"
       }
     },
     "customerInvoices": {

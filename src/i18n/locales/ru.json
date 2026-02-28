@@ -1907,7 +1907,14 @@
         "loyalty": "Лояльность",
         "orders": "Заказы",
         "reviews": "Отзывы",
-        "subscriptions": "Подписки"
+        "subscriptions": "Подписки",
+        "content": "Контент и согласия"
+      },
+      "content": {
+        "consents": "Согласия",
+        "videos": "Появляется в видео",
+        "noConsents": "Нет согласий",
+        "noVideos": "Нет связанных видео"
       }
     },
     "customerInvoices": {

@@ -44,6 +44,11 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       where.category = category;
     }
 
+    const featuredClientIdParam = searchParams.get('featuredClientId');
+    if (featuredClientIdParam) {
+      where.featuredClientId = featuredClientIdParam;
+    }
+
     if (search) {
       // IMP-051: TODO: Add tags to search (tags is stored as JSON string, needs contains search)
       where.OR = [

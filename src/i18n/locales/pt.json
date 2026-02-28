@@ -1907,7 +1907,14 @@
         "loyalty": "Fidelidade",
         "orders": "Pedidos",
         "reviews": "Avaliações",
-        "subscriptions": "Assinaturas"
+        "subscriptions": "Assinaturas",
+        "content": "Conteúdo e Consentimentos"
+      },
+      "content": {
+        "consents": "Consentimentos",
+        "videos": "Aparece em vídeos",
+        "noConsents": "Sem consentimentos",
+        "noVideos": "Sem vídeos associados"
       }
     },
     "customerInvoices": {

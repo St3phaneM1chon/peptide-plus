@@ -1907,7 +1907,14 @@
         "loyalty": "ਵਫਾਦਾਰੀ",
         "orders": "ਆਰਡਰ",
         "reviews": "ਸਮੀਖਿਆਵਾਂ",
-        "subscriptions": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ"
+        "subscriptions": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ",
+        "content": "ਸਮੱਗਰੀ ਅਤੇ ਸਹਿਮਤੀ"
+      },
+      "content": {
+        "consents": "ਸਹਿਮਤੀ",
+        "videos": "ਵੀਡੀਓ ਵਿੱਚ ਦਿਖਾਈ ਦਿੱਤਾ",
+        "noConsents": "ਕੋਈ ਸਹਿਮਤੀ ਨਹੀਂ",
+        "noVideos": "ਕੋਈ ਸੰਬੰਧਿਤ ਵੀਡੀਓ ਨਹੀਂ"
       }
     },
     "customerInvoices": {

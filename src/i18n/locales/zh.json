@@ -1907,7 +1907,14 @@
         "loyalty": "忠诚度",
         "orders": "订单",
         "reviews": "评论",
-        "subscriptions": "订阅"
+        "subscriptions": "订阅",
+        "content": "内容与同意"
+      },
+      "content": {
+        "consents": "同意",
+        "videos": "出现在视频中",
+        "noConsents": "无同意记录",
+        "noVideos": "无关联视频"
       }
     },
     "customerInvoices": {

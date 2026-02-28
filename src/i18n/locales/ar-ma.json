@@ -1907,7 +1907,14 @@
         "loyalty": "الولاء",
         "orders": "الطلبات",
         "reviews": "المراجعات",
-        "subscriptions": "الاشتراكات"
+        "subscriptions": "الاشتراكات",
+        "content": "المحتوى والموافقات"
+      },
+      "content": {
+        "consents": "الموافقات",
+        "videos": "يظهر في الفيديوهات",
+        "noConsents": "لا توجد موافقات",
+        "noVideos": "لا توجد فيديوهات"
       }
     },
     "customerInvoices": {
