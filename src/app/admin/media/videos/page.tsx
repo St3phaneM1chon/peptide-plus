@@ -469,7 +469,7 @@ export default function MediaVideosPage() {
           <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           {/* Content Hub fields */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.contentType} onChange={e => setForm({ ...form, contentType: e.target.value })} aria-label="Content Type">
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.contentType} onChange={e => setForm({ ...form, contentType: e.target.value })} aria-label={t('admin.media.videos.contentType')}>
               <option value="GENERAL">General</option>
               <option value="PODCAST">Podcast</option>
               <option value="TRAINING">Training</option>
@@ -481,7 +481,7 @@ export default function MediaVideosPage() {
               <option value="INTERVIEW">Interview</option>
               <option value="CONFERENCE">Conference</option>
             </select>
-            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} aria-label="Source">
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} aria-label={t('admin.media.videos.source')}>
               <option value="YOUTUBE">YouTube</option>
               <option value="VIMEO">Vimeo</option>
               <option value="TEAMS">Teams</option>
@@ -495,7 +495,7 @@ export default function MediaVideosPage() {
               <option value="INTERNAL">Internal</option>
               <option value="CLIENTS_ONLY">Clients Only</option>
             </select>
-            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} aria-label="Status">
+            <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} aria-label={t('admin.media.videos.status')}>
               <option value="DRAFT">Draft</option>
               <option value="REVIEW">Review</option>
               <option value="PUBLISHED">Published</option>
@@ -749,7 +749,7 @@ export default function MediaVideosPage() {
                       <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
                       {/* Content Hub fields */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.contentType} onChange={e => setEditForm({ ...editForm, contentType: e.target.value })} aria-label="Content Type">
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.contentType} onChange={e => setEditForm({ ...editForm, contentType: e.target.value })} aria-label={t('admin.media.videos.contentType')}>
                           <option value="GENERAL">General</option>
                           <option value="PODCAST">Podcast</option>
                           <option value="TRAINING">Training</option>
@@ -761,7 +761,7 @@ export default function MediaVideosPage() {
                           <option value="INTERVIEW">Interview</option>
                           <option value="CONFERENCE">Conference</option>
                         </select>
-                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.source} onChange={e => setEditForm({ ...editForm, source: e.target.value })} aria-label="Source">
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.source} onChange={e => setEditForm({ ...editForm, source: e.target.value })} aria-label={t('admin.media.videos.source')}>
                           <option value="YOUTUBE">YouTube</option>
                           <option value="VIMEO">Vimeo</option>
                           <option value="TEAMS">Teams</option>
@@ -775,7 +775,7 @@ export default function MediaVideosPage() {
                           <option value="INTERNAL">Internal</option>
                           <option value="CLIENTS_ONLY">Clients Only</option>
                         </select>
-                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} aria-label="Status">
+                        <select className="border border-slate-300 rounded px-3 py-2 text-sm" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} aria-label={t('admin.media.videos.status')}>
                           <option value="DRAFT">Draft</option>
                           <option value="REVIEW">Review</option>
                           <option value="PUBLISHED">Published</option>

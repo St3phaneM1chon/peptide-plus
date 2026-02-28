@@ -5703,6 +5703,7 @@ model PlatformConnection {
 
   @@index([platform, isEnabled])
   @@index([connectedById])
+  @@index([syncStatus])
 }
 
 model RecordingImport {
@@ -5759,12 +5760,30 @@ model SocialPost {
   externalId  String? // ID of the post on the platform
   externalUrl String? // URL of the published post
   createdById String?
-  createdBy   User?     @relation("SocialPosts", fields: [createdById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy    User?     @relation("SocialPosts", fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  translations SocialPostTranslation[]
 
   @@index([status, scheduledAt])
   @@index([platform])
+  @@index([createdById])
+}
+
+// ---------------------------------------------------------------------------
+// Social Post Translation (i18n)
+// ---------------------------------------------------------------------------
+model SocialPostTranslation {
+  id           String   @id @default(cuid())
+  socialPostId String
+  locale       String   @db.VarChar(10)
+  content      String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  socialPost   SocialPost @relation(fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  @@unique([socialPostId, locale])
+  @@index([socialPostId])
 }
 
 // ---------------------------------------------------------------------------

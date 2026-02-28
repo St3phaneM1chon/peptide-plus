@@ -86,7 +86,7 @@ export default function AdminConsentsPage() {
 
   const handleExportCsv = () => {
     if (consents.length === 0) {
-      toast.info('No data to export');
+      toast.info(t('admin.consents.noDataExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -250,7 +250,7 @@ export default function AdminConsentsPage() {
                 {consents.map(consent => (
                   <tr key={consent.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div className="font-medium">{consent.client.name || 'Unknown'}</div>
+                      <div className="font-medium">{consent.client.name || t('admin.consents.unknownClient')}</div>
                       <div className="text-xs text-gray-500">{consent.client.email}</div>
                     </td>
                     <td className="px-4 py-3">
@@ -276,12 +276,12 @@ export default function AdminConsentsPage() {
                       {new Date(consent.createdAt).toLocaleDateString()}
                       {consent.grantedAt && (
                         <div className="text-green-600">
-                          Granted: {new Date(consent.grantedAt).toLocaleDateString()}
+                          {t('admin.consents.labelGranted')} {new Date(consent.grantedAt).toLocaleDateString()}
                         </div>
                       )}
                       {consent.revokedAt && (
                         <div className="text-red-600">
-                          Revoked: {new Date(consent.revokedAt).toLocaleDateString()}
+                          {t('admin.consents.labelRevoked')} {new Date(consent.revokedAt).toLocaleDateString()}
                         </div>
                       )}
                     </td>
@@ -292,7 +292,7 @@ export default function AdminConsentsPage() {
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           href={`/admin/media/consents/${consent.id}`}
-                          title="View details"
+                          title={t('admin.consents.viewDetails')}
                           className="p-1.5 hover:bg-gray-100 rounded inline-flex"
                         >
                           <Eye className="h-4 w-4 text-gray-500" />
@@ -302,7 +302,7 @@ export default function AdminConsentsPage() {
                             href={consent.pdfUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="Download PDF"
+                            title={t('admin.consents.downloadPdf')}
                             className="p-1.5 hover:bg-gray-100 rounded"
                           >
                             <Download className="h-4 w-4 text-gray-500" />
@@ -310,7 +310,7 @@ export default function AdminConsentsPage() {
                         )}
                         {consent.status === 'PENDING' && (
                           <button
-                            title="Resend request"
+                            title={t('admin.consents.resendRequest')}
                             className="p-1.5 hover:bg-gray-100 rounded"
                             onClick={async () => {
                               try {
@@ -321,12 +321,12 @@ export default function AdminConsentsPage() {
                                   body: JSON.stringify({ resend: true }),
                                 });
                                 if (res.ok) {
-                                  toast.success('Consent request resent');
+                                  toast.success(t('admin.consents.resendSuccess'));
                                 } else {
-                                  toast.error('Failed to resend');
+                                  toast.error(t('admin.consents.resendError'));
                                 }
                               } catch {
-                                toast.error('Failed to resend');
+                                toast.error(t('admin.consents.resendError'));
                               }
                             }}
                           >
@@ -350,17 +350,17 @@ export default function AdminConsentsPage() {
               disabled={page === 1}
               className="flex items-center gap-1 px-3 py-1 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
             >
-              <ChevronLeft className="h-4 w-4" /> Previous
+              <ChevronLeft className="h-4 w-4" /> {t('common.previous')}
             </button>
             <span className="text-sm text-gray-600">
-              Page {page} of {totalPages}
+              {t('admin.consents.pageOf', { page: String(page), total: String(totalPages) })}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="flex items-center gap-1 px-3 py-1 text-sm rounded hover:bg-gray-200 disabled:opacity-50"
             >
-              Next <ChevronRight className="h-4 w-4" />
+              {t('common.next')} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         )}

@@ -762,7 +762,9 @@
       "statusColumn": "Statut",
       "dateColumn": "Date",
       "requestedByColumn": "Demandé par",
-      "exportCsv": "Exporter CSV"
+      "exportCsv": "Exporter CSV",
+      "noDataExport": "Aucune donnée à exporter",
+      "pageOf": "Page {page} de {total}"
     },
     "consentTemplates": {
       "title": "Modèles de Consentement",
@@ -1226,6 +1228,11 @@
       "failedSaveTags": "Échec de l'enregistrement des tags",
       "failedTogglePlacement": "Échec de la modification de l'emplacement",
       "failedUnlinkProduct": "Échec de la dissociation du produit",
+      "videos": {
+        "contentType": "Type de contenu",
+        "source": "Source",
+        "status": "Statut"
+      },
       "brandKit": {
         "title": "Kit de marque",
         "subtitle": "Couleurs, typographies et assets de la marque BioCycle Peptides",
@@ -1386,7 +1393,10 @@
         "calendarView": "Calendrier",
         "listView": "Liste",
         "statusPublishing": "Publication en cours...",
-        "imageUrlPlaceholder": "URL de l'image (optionnel)"
+        "imageUrlPlaceholder": "URL de l'image (optionnel)",
+        "createFailed": "Échec de création du post",
+        "deleteFailed": "Échec de suppression du post",
+        "publishFailed": "Échec de publication"
       },
       "ytTitle": "Titre",
       "ytDescription": "Description",

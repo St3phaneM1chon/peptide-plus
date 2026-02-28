@@ -3909,6 +3909,11 @@
       "failedSaveTags": "Failed to save tags",
       "failedTogglePlacement": "Failed to toggle placement",
       "failedUnlinkProduct": "Failed to unlink product",
+      "videos": {
+        "contentType": "Content Type",
+        "source": "Source",
+        "status": "Status"
+      },
       "brandKit": {
         "title": "Brand Kit",
         "subtitle": "Colors, typography, and assets for BioCycle Peptides brand",
@@ -4069,7 +4074,10 @@
         "calendarView": "Calendar",
         "listView": "List",
         "statusPublishing": "Publishing...",
-        "imageUrlPlaceholder": "Image URL (optional)"
+        "imageUrlPlaceholder": "Image URL (optional)",
+        "createFailed": "Failed to create post",
+        "deleteFailed": "Failed to delete post",
+        "publishFailed": "Publish failed"
       },
       "ytTitle": "Title",
       "ytDescription": "Description",
@@ -4460,7 +4468,9 @@
       "statusColumn": "Status",
       "dateColumn": "Date",
       "requestedByColumn": "Requested By",
-      "exportCsv": "Export CSV"
+      "exportCsv": "Export CSV",
+      "noDataExport": "No data to export",
+      "pageOf": "Page {page} of {total}"
     },
     "consentTemplates": {
       "title": "Consent Templates",

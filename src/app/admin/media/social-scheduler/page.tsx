@@ -170,7 +170,7 @@ export default function SocialSchedulerPage() {
       loadPosts();
       loadStats();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create post');
+      toast.error(err instanceof Error ? err.message : t('admin.media.socialScheduler.createFailed'));
     } finally {
       setCreating(false);
     }
@@ -184,7 +184,7 @@ export default function SocialSchedulerPage() {
       loadPosts();
       loadStats();
     } catch {
-      toast.error('Failed to delete post');
+      toast.error(t('admin.media.socialScheduler.deleteFailed'));
     }
   };
 
@@ -197,12 +197,12 @@ export default function SocialSchedulerPage() {
       if (data.success) {
         toast.success(t('admin.media.socialScheduler.postPublished') || 'Post published!');
       } else {
-        toast.error(data.error || 'Publish failed');
+        toast.error(data.error || t('admin.media.socialScheduler.publishFailed'));
       }
       loadPosts();
       loadStats();
     } catch {
-      toast.error('Publish failed');
+      toast.error(t('admin.media.socialScheduler.publishFailed'));
     }
   };
 
