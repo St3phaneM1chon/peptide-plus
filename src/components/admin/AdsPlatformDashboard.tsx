@@ -136,7 +136,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
             <BarChart3 className="w-6 h-6 text-sky-600" />
             {platformInfo
-              ? t(`admin.media.platform${platform.charAt(0).toUpperCase() + platform.slice(1).replace(/-./g, m => m[1].toUpperCase())}`) || platformInfo.nameKey
+              ? t(platformInfo.nameKey) || platformInfo.nameKey
               : platform}
           </h1>
           <p className="text-slate-500 text-sm mt-1">
