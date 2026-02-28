@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { resolveIcon } from '@/lib/admin/icon-resolver';
 import Link from 'next/link';
 
 // ---------------------------------------------------------------------------
@@ -339,7 +340,7 @@ export default function VideoCategoriesPage() {
           {/* Icon / folder */}
           <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
             {cat.icon ? (
-              <span className="text-base">{cat.icon}</span>
+              (() => { const Icon = resolveIcon(cat.icon); return <Icon className="w-4 h-4 text-slate-600" />; })()
             ) : (
               <FolderOpen className="w-4 h-4 text-slate-400" />
             )}

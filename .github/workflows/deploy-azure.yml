@@ -214,13 +214,20 @@ jobs:
           package: .
           clean: true
 
+      - name: Setup Node.js for Prisma
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       - name: Sync Database Schema
         if: env.DB_URL != ''
         continue-on-error: true
         run: |
-          # Use prisma from node_modules (already in the artifact)
+          # Install prisma CLI in a temp location to avoid polluting the deploy artifact.
+          # The standalone node_modules lacks the full CLI, so we install it fresh.
+          npm install --no-save prisma@5.22.0
           echo "Pushing Prisma schema to production database..."
-          npx prisma@5.22.0 db push --accept-data-loss 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
+          npx prisma db push --accept-data-loss 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

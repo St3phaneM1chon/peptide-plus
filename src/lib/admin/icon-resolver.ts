@@ -1,7 +1,9 @@
 import {
   Globe, CreditCard, Truck, ShoppingBag, Building2, Landmark,
   FileText, BarChart2, Settings, Users, Mail, Phone, Package,
-  Wallet, Receipt, ExternalLink, type LucideIcon,
+  Wallet, Receipt, ExternalLink, Podcast, GraduationCap, User,
+  Quote, HelpCircle, Monitor, BookOpen, Heart, Microscope,
+  type LucideIcon,
 } from 'lucide-react';
 
 const iconMap: Record<string, LucideIcon> = {
@@ -21,6 +23,15 @@ const iconMap: Record<string, LucideIcon> = {
   wallet: Wallet,
   receipt: Receipt,
   'external-link': ExternalLink,
+  podcast: Podcast,
+  'graduation-cap': GraduationCap,
+  user: User,
+  quote: Quote,
+  'help-circle': HelpCircle,
+  monitor: Monitor,
+  'book-open': BookOpen,
+  heart: Heart,
+  microscope: Microscope,
 };
 
 export function resolveIcon(name: string | null | undefined): LucideIcon {
