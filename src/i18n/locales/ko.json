@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "대기중",
+      "grantedLabel": "승인됨",
+      "revokedStatus": "취소됨",
+      "clientColumn": "고객",
+      "typeColumn": "유형",
+      "subjectColumn": "주제",
+      "statusColumn": "상태",
+      "dateColumn": "날짜",
+      "requestedByColumn": "요청자"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "모든 유형",
+    "allSources": "모든 소스",
+    "sortViews": "조회수순"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "팟캐스트",
+    "TRAINING": "교육",
+    "PERSONAL_SESSION": "개인 세션",
+    "PRODUCT_DEMO": "제품 데모",
+    "TESTIMONIAL": "후기",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "웨비나",
+    "TUTORIAL": "튜토리얼",
+    "BRAND_STORY": "브랜드 스토리",
+    "LIVE_STREAM": "라이브",
+    "OTHER": "기타"
   }
 }

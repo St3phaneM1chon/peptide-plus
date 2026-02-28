@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "Nakabinbin",
+      "grantedLabel": "Ipinagkaloob",
+      "revokedStatus": "Binawi",
+      "clientColumn": "Kliyente",
+      "typeColumn": "Uri",
+      "subjectColumn": "Paksa",
+      "statusColumn": "Katayuan",
+      "dateColumn": "Petsa",
+      "requestedByColumn": "Hiniling ni"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "Lahat ng Uri",
+    "allSources": "Lahat ng Pinagmulan",
+    "sortViews": "Pinakamaraming View"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "Podcast",
+    "TRAINING": "Pagsasanay",
+    "PERSONAL_SESSION": "Personal na Sesyon",
+    "PRODUCT_DEMO": "Demo ng Produkto",
+    "TESTIMONIAL": "Testimonya",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "Webinar",
+    "TUTORIAL": "Tutorial",
+    "BRAND_STORY": "Kwento ng Brand",
+    "LIVE_STREAM": "Live",
+    "OTHER": "Iba pa"
   }
 }

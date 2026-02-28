@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "معلق",
+      "grantedLabel": "ممنوح",
+      "revokedStatus": "ملغي",
+      "clientColumn": "العميل",
+      "typeColumn": "النوع",
+      "subjectColumn": "الموضوع",
+      "statusColumn": "الحالة",
+      "dateColumn": "التاريخ",
+      "requestedByColumn": "طلب بواسطة"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "جميع الأنواع",
+    "allSources": "جميع المصادر",
+    "sortViews": "الأكثر مشاهدة"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "بودكاست",
+    "TRAINING": "تدريب",
+    "PERSONAL_SESSION": "جلسة شخصية",
+    "PRODUCT_DEMO": "عرض المنتج",
+    "TESTIMONIAL": "شهادة",
+    "FAQ_VIDEO": "أسئلة شائعة",
+    "WEBINAR_RECORDING": "ندوة عبر الإنترنت",
+    "TUTORIAL": "دليل",
+    "BRAND_STORY": "قصة العلامة",
+    "LIVE_STREAM": "بث مباشر",
+    "OTHER": "أخرى"
   }
 }

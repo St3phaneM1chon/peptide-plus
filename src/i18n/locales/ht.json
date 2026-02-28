@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "An atant",
+      "grantedLabel": "Akòde",
+      "revokedStatus": "Revoke",
+      "clientColumn": "Kliyan",
+      "typeColumn": "Tip",
+      "subjectColumn": "Sijè",
+      "statusColumn": "Estati",
+      "dateColumn": "Dat",
+      "requestedByColumn": "Mande pa"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "Tout tip",
+    "allSources": "Tout sous",
+    "sortViews": "Pi gade"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "Podcast",
+    "TRAINING": "Fòmasyon",
+    "PERSONAL_SESSION": "Sesyon pèsonèl",
+    "PRODUCT_DEMO": "Demo pwodwi",
+    "TESTIMONIAL": "Temwayaj",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "Webinè",
+    "TUTORIAL": "Titoryèl",
+    "BRAND_STORY": "Istwa mak",
+    "LIVE_STREAM": "An dirèk",
+    "OTHER": "Lòt"
   }
 }

@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "लंबित",
+      "grantedLabel": "दिया गया",
+      "revokedStatus": "रद्द",
+      "clientColumn": "ग्राहक",
+      "typeColumn": "प्रकार",
+      "subjectColumn": "विषय",
+      "statusColumn": "स्थिति",
+      "dateColumn": "तारीख",
+      "requestedByColumn": "अनुरोध करने वाला"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "सभी प्रकार",
+    "allSources": "सभी स्रोत",
+    "sortViews": "सबसे ज्यादा देखे"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "पॉडकास्ट",
+    "TRAINING": "प्रशिक्षण",
+    "PERSONAL_SESSION": "व्यक्तिगत सत्र",
+    "PRODUCT_DEMO": "उत्पाद डेमो",
+    "TESTIMONIAL": "प्रशंसापत्र",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "वेबिनार",
+    "TUTORIAL": "ट्यूटोरियल",
+    "BRAND_STORY": "ब्रांड कहानी",
+    "LIVE_STREAM": "लाइव",
+    "OTHER": "अन्य"
   }
 }

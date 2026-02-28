@@ -64,26 +64,28 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
     });
 
     if (translations && translations.length > 0) {
-      for (const t of translations) {
-        await prisma.consentFormTranslation.upsert({
-          where: { formTemplateId_locale: { formTemplateId: id, locale: t.locale } },
-          update: {
-            name: t.name ?? undefined,
-            description: t.description ?? undefined,
-            questions: t.questions ?? undefined,
-            legalText: t.legalText ?? undefined,
-            isApproved: t.isApproved ?? undefined,
-          },
-          create: {
-            formTemplateId: id,
-            locale: t.locale,
-            name: t.name || null,
-            description: t.description || null,
-            questions: t.questions || null,
-            legalText: t.legalText || null,
-          },
-        });
-      }
+      await prisma.$transaction(
+        translations.map((t: { locale: string; name?: string | null; description?: string | null; questions?: unknown; legalText?: string | null; isApproved?: boolean }) =>
+          prisma.consentFormTranslation.upsert({
+            where: { formTemplateId_locale: { formTemplateId: id, locale: t.locale } },
+            update: {
+              name: t.name ?? undefined,
+              description: t.description ?? undefined,
+              questions: t.questions ?? undefined,
+              legalText: t.legalText ?? undefined,
+              isApproved: t.isApproved ?? undefined,
+            },
+            create: {
+              formTemplateId: id,
+              locale: t.locale,
+              name: t.name || null,
+              description: t.description || null,
+              questions: t.questions || null,
+              legalText: t.legalText || null,
+            },
+          })
+        )
+      );
     }
 
     logAdminAction({

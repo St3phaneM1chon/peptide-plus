@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "In attesa",
+      "grantedLabel": "Concesso",
+      "revokedStatus": "Revocato",
+      "clientColumn": "Cliente",
+      "typeColumn": "Tipo",
+      "subjectColumn": "Oggetto",
+      "statusColumn": "Stato",
+      "dateColumn": "Data",
+      "requestedByColumn": "Richiesto da"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "Tutti i tipi",
+    "allSources": "Tutte le fonti",
+    "sortViews": "Più visti"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "Podcast",
+    "TRAINING": "Formazione",
+    "PERSONAL_SESSION": "Sessione personale",
+    "PRODUCT_DEMO": "Demo prodotto",
+    "TESTIMONIAL": "Testimonianza",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "Webinar",
+    "TUTORIAL": "Tutorial",
+    "BRAND_STORY": "Storia del marchio",
+    "LIVE_STREAM": "Live stream",
+    "OTHER": "Altro"
   }
 }

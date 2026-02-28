@@ -5,9 +5,9 @@
  * Categories, content type, source, search, sort
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useI18n } from '@/i18n/client';
-import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 interface VideoCategory {
   id: string;
@@ -29,34 +29,25 @@ interface Props {
   categories?: VideoCategory[];
 }
 
-const contentTypes = [
-  { value: '', label: 'All Types' },
-  { value: 'PODCAST', label: 'Podcast' },
-  { value: 'TRAINING', label: 'Training' },
-  { value: 'PRODUCT_DEMO', label: 'Product Demo' },
-  { value: 'TESTIMONIAL', label: 'Testimonial' },
-  { value: 'FAQ_VIDEO', label: 'FAQ' },
-  { value: 'WEBINAR_RECORDING', label: 'Webinar' },
-  { value: 'TUTORIAL', label: 'Tutorial' },
-  { value: 'BRAND_STORY', label: 'Brand Story' },
-  { value: 'OTHER', label: 'Other' },
+const contentTypeKeys = [
+  { value: 'PODCAST', labelKey: 'videoContentType.PODCAST' },
+  { value: 'TRAINING', labelKey: 'videoContentType.TRAINING' },
+  { value: 'PRODUCT_DEMO', labelKey: 'videoContentType.PRODUCT_DEMO' },
+  { value: 'TESTIMONIAL', labelKey: 'videoContentType.TESTIMONIAL' },
+  { value: 'FAQ_VIDEO', labelKey: 'videoContentType.FAQ_VIDEO' },
+  { value: 'WEBINAR_RECORDING', labelKey: 'videoContentType.WEBINAR_RECORDING' },
+  { value: 'TUTORIAL', labelKey: 'videoContentType.TUTORIAL' },
+  { value: 'BRAND_STORY', labelKey: 'videoContentType.BRAND_STORY' },
+  { value: 'OTHER', labelKey: 'videoContentType.OTHER' },
 ];
 
-const sources = [
-  { value: '', label: 'All Sources' },
+const sourceEntries = [
   { value: 'YOUTUBE', label: 'YouTube' },
   { value: 'VIMEO', label: 'Vimeo' },
   { value: 'TEAMS', label: 'Teams' },
   { value: 'ZOOM', label: 'Zoom' },
   { value: 'TIKTOK', label: 'TikTok' },
   { value: 'X_TWITTER', label: 'X/Twitter' },
-];
-
-const sortOptions = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'oldest', label: 'Oldest First' },
-  { value: 'views', label: 'Most Viewed' },
-  { value: 'title', label: 'A-Z' },
 ];
 
 export default function VideoFilters({ filters, onFiltersChange, categories = [] }: Props) {
@@ -98,7 +89,7 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
           className={`px-3 py-2.5 border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1.5 ${showAdvanced ? 'bg-orange-50 border-orange-200 text-orange-700' : ''}`}
         >
           <SlidersHorizontal className="h-4 w-4" />
-          <span className="hidden sm:inline">Filters</span>
+          <span className="hidden sm:inline">{t('videos.filters')}</span>
         </button>
       </div>
 
@@ -112,7 +103,7 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
               onChange={e => onFiltersChange({ ...filters, categoryId: e.target.value })}
               className="border rounded-lg px-3 py-1.5 text-sm bg-white"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('videos.allCategories')}</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -125,8 +116,9 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
             onChange={e => onFiltersChange({ ...filters, contentType: e.target.value })}
             className="border rounded-lg px-3 py-1.5 text-sm bg-white"
           >
-            {contentTypes.map(ct => (
-              <option key={ct.value} value={ct.value}>{ct.label}</option>
+            <option value="">{t('videos.allTypes')}</option>
+            {contentTypeKeys.map(ct => (
+              <option key={ct.value} value={ct.value}>{t(ct.labelKey)}</option>
             ))}
           </select>
 
@@ -136,7 +128,8 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
             onChange={e => onFiltersChange({ ...filters, source: e.target.value })}
             className="border rounded-lg px-3 py-1.5 text-sm bg-white"
           >
-            {sources.map(s => (
+            <option value="">{t('videos.allSources')}</option>
+            {sourceEntries.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
@@ -147,9 +140,10 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
             onChange={e => onFiltersChange({ ...filters, sort: e.target.value })}
             className="border rounded-lg px-3 py-1.5 text-sm bg-white"
           >
-            {sortOptions.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
+            <option value="newest">{t('videos.sortNewest')}</option>
+            <option value="oldest">{t('videos.sortOldest')}</option>
+            <option value="views">{t('videos.sortViews')}</option>
+            <option value="title">{t('videos.sortTitle')}</option>
           </select>
 
           {/* Clear */}
@@ -158,7 +152,7 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
               onClick={clearAll}
               className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800"
             >
-              <X className="h-3 w-3" /> Clear all
+              <X className="h-3 w-3" /> {t('videos.clearFilters')}
             </button>
           )}
         </div>
@@ -185,14 +179,14 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
           )}
           {filters.contentType && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
-              {contentTypes.find(ct => ct.value === filters.contentType)?.label}
+              {t(`videoContentType.${filters.contentType}`)}
               <button onClick={() => onFiltersChange({ ...filters, contentType: '' })}>
                 <X className="h-3 w-3" />
               </button>
             </span>
           )}
           <button onClick={clearAll} className="text-xs text-gray-500 hover:text-gray-700 underline">
-            Clear all
+            {t('videos.clearFilters')}
           </button>
         </div>
       )}

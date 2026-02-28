@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "நிலுவையில்",
+      "grantedLabel": "வழங்கப்பட்டது",
+      "revokedStatus": "திரும்பப்",
+      "clientColumn": "வாடிக்கையாளர்",
+      "typeColumn": "வகை",
+      "subjectColumn": "பொருள்",
+      "statusColumn": "நிலை",
+      "dateColumn": "தேதி",
+      "requestedByColumn": "கோரியவர்"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "அனைத்து வகைகள்",
+    "allSources": "அனைத்து மூலங்கள்",
+    "sortViews": "அதிகம் பார்க்கப்பட்டவை"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "போட்காஸ்ட்",
+    "TRAINING": "பயிற்சி",
+    "PERSONAL_SESSION": "தனிப்பட்ட அமர்வு",
+    "PRODUCT_DEMO": "தயாரிப்பு டெமோ",
+    "TESTIMONIAL": "சான்று",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "வெபினார்",
+    "TUTORIAL": "பயிற்சிக்",
+    "BRAND_STORY": "பிராண்ட் கதை",
+    "LIVE_STREAM": "நேரலை",
+    "OTHER": "மற்றவை"
   }
 }

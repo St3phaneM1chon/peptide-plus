@@ -4141,7 +4141,15 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "grantedLabel": "Granted",
+      "revokedStatus": "Revoked",
+      "clientColumn": "Client",
+      "typeColumn": "Type",
+      "subjectColumn": "Subject",
+      "statusColumn": "Status",
+      "dateColumn": "Date",
+      "requestedByColumn": "Requested By"
     },
     "consentTemplates": {
       "title": "Consent Templates",
@@ -9355,7 +9363,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "All Types",
+    "allSources": "All Sources",
+    "sortViews": "Most Viewed"
   },
   "webinars": {
     "all": "All",
@@ -9436,5 +9447,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "Podcast",
+    "TRAINING": "Training",
+    "PERSONAL_SESSION": "Personal Session",
+    "PRODUCT_DEMO": "Product Demo",
+    "TESTIMONIAL": "Testimonial",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "Webinar",
+    "TUTORIAL": "Tutorial",
+    "BRAND_STORY": "Brand Story",
+    "LIVE_STREAM": "Live Stream",
+    "OTHER": "Other"
   }
 }

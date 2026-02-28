@@ -91,7 +91,7 @@ export default function AdminConsentsPage() {
         <div className="flex items-center gap-3">
           <FileCheck className="h-6 w-6 text-orange-600" />
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.consents.title') !== 'admin.consents.title' ? t('admin.consents.title') : 'Consents'}
+            {t('admin.consents.title')}
           </h1>
         </div>
       </div>
@@ -100,19 +100,19 @@ export default function AdminConsentsPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white border rounded-lg p-4">
-            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-sm text-gray-500">{t('admin.consents.total')}</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </div>
           <div className="bg-white border rounded-lg p-4">
-            <p className="text-sm text-yellow-600">Pending</p>
+            <p className="text-sm text-yellow-600">{t('admin.consents.pending')}</p>
             <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
           </div>
           <div className="bg-white border rounded-lg p-4">
-            <p className="text-sm text-green-600">Granted</p>
+            <p className="text-sm text-green-600">{t('admin.consents.grantedLabel')}</p>
             <p className="text-2xl font-bold text-green-700">{stats.granted}</p>
           </div>
           <div className="bg-white border rounded-lg p-4">
-            <p className="text-sm text-red-600">Revoked</p>
+            <p className="text-sm text-red-600">{t('admin.consents.revokedStatus')}</p>
             <p className="text-2xl font-bold text-red-700">{stats.revoked}</p>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function AdminConsentsPage() {
           <div className="flex-1 min-w-[200px]">
             <label className="text-xs text-gray-500 mb-1 block">
               <Search className="h-3 w-3 inline mr-1" />
-              {t('common.search') !== 'common.search' ? t('common.search') : 'Search'}
+              {t('common.search')}
             </label>
             <div className="flex gap-2">
               <input
@@ -143,7 +143,7 @@ export default function AdminConsentsPage() {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">
               <Filter className="h-3 w-3 inline mr-1" />
-              Status
+              {t('admin.consents.statusColumn')}
             </label>
             <select
               value={filterStatus}
@@ -189,7 +189,7 @@ export default function AdminConsentsPage() {
           </div>
         ) : consents.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            No consents found
+            {t('admin.consents.noConsents')}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -198,17 +198,17 @@ export default function AdminConsentsPage() {
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">
                     <User className="h-3 w-3 inline mr-1" />
-                    Client
+                    {t('admin.consents.clientColumn')}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Subject</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.typeColumn')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.subjectColumn')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.statusColumn')}</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">
                     <Calendar className="h-3 w-3 inline mr-1" />
-                    Date
+                    {t('admin.consents.dateColumn')}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Requested By</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-700">Actions</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.requestedByColumn')}</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-700">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

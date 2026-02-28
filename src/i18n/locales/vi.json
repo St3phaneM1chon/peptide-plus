@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "Chờ xử lý",
+      "grantedLabel": "Đã cấp",
+      "revokedStatus": "Đã thu hồi",
+      "clientColumn": "Khách hàng",
+      "typeColumn": "Loại",
+      "subjectColumn": "Chủ đề",
+      "statusColumn": "Trạng thái",
+      "dateColumn": "Ngày",
+      "requestedByColumn": "Yêu cầu bởi"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "Tất cả loại",
+    "allSources": "Tất cả nguồn",
+    "sortViews": "Xem nhiều nhất"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "Podcast",
+    "TRAINING": "Đào tạo",
+    "PERSONAL_SESSION": "Buổi cá nhân",
+    "PRODUCT_DEMO": "Demo sản phẩm",
+    "TESTIMONIAL": "Lời chứng thực",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "Hội thảo web",
+    "TUTORIAL": "Hướng dẫn",
+    "BRAND_STORY": "Câu chuyện thương hiệu",
+    "LIVE_STREAM": "Trực tiếp",
+    "OTHER": "Khác"
   }
 }

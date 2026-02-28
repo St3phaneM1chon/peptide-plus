@@ -6036,7 +6036,16 @@
       "markGranted": "Mark as Granted",
       "markRevoked": "Mark as Revoked",
       "requestedByLabel": "Requested by",
-      "notFound": "Consent not found"
+      "notFound": "Consent not found",
+      "pending": "待处理",
+      "grantedLabel": "已授予",
+      "revokedStatus": "已撤销",
+      "clientColumn": "客户",
+      "typeColumn": "类型",
+      "subjectColumn": "主题",
+      "statusColumn": "状态",
+      "dateColumn": "日期",
+      "requestedByColumn": "请求人"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -9141,7 +9150,10 @@
     "labelSearch": "Search:",
     "labelCategory": "Category:",
     "clearAll": "Clear all",
-    "noResultsCount": "No videos found"
+    "noResultsCount": "No videos found",
+    "allTypes": "所有类型",
+    "allSources": "所有来源",
+    "sortViews": "最多观看"
   },
   "webinars": {
     "all": "All",
@@ -9222,5 +9234,18 @@
     "checkbox": "Checkbox",
     "text": "Text",
     "signature": "Signature"
+  },
+  "videoContentType": {
+    "PODCAST": "播客",
+    "TRAINING": "培训",
+    "PERSONAL_SESSION": "个人会议",
+    "PRODUCT_DEMO": "产品演示",
+    "TESTIMONIAL": "客户见证",
+    "FAQ_VIDEO": "FAQ",
+    "WEBINAR_RECORDING": "网络研讨会",
+    "TUTORIAL": "教程",
+    "BRAND_STORY": "品牌故事",
+    "LIVE_STREAM": "直播",
+    "OTHER": "其他"
   }
 }
