@@ -731,7 +731,23 @@
       "downloadPdf": "Télécharger le PDF",
       "resendRequest": "Renvoyer la demande",
       "resendSuccess": "Demande de consentement renvoyée",
-      "resendError": "Échec du renvoi"
+      "resendError": "Échec du renvoi",
+      "detailTitle": "Détail du consentement",
+      "clientInfo": "Informations client",
+      "consentType": "Type de consentement",
+      "relatedVideo": "Vidéo associée",
+      "questionsAnswers": "Questions & Réponses",
+      "timeline": "Chronologie",
+      "created": "Créé",
+      "requested": "Demandé",
+      "revokedLabel": "Révoqué",
+      "expires": "Expire",
+      "revocationReason": "Raison de révocation",
+      "electronicProof": "Preuve électronique",
+      "markGranted": "Marquer comme accordé",
+      "markRevoked": "Marquer comme révoqué",
+      "requestedByLabel": "Demandé par",
+      "notFound": "Consentement introuvable"
     },
     "consentTemplates": {
       "title": "Modèles de Consentement",
@@ -7427,7 +7443,8 @@
       "slide4Subtitle": "Commandes 200$+ au Canada",
       "slide4Description": "Expédition rapide et discrète. Suivi complet de votre commande.",
       "slide4Cta": "Commander maintenant"
-    }
+    },
+    "featuredVideos": "Vidéos en vedette"
   },
   "invoice": {
     "title": "Facture",

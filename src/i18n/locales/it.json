@@ -6012,7 +6012,24 @@
       "downloadPdf": "Download PDF",
       "resendRequest": "Resend request",
       "resendSuccess": "Consent request resent",
-      "resendError": "Failed to resend"
+      "resendError": "Failed to resend",
+      "detailTitle": "Consent Detail",
+      "clientInfo": "Client Information",
+      "consentType": "Consent Type",
+      "relatedVideo": "Related Video",
+      "questionsAnswers": "Questions & Answers",
+      "timeline": "Timeline",
+      "created": "Created",
+      "requested": "Requested",
+      "granted": "Granted",
+      "revokedLabel": "Revoked",
+      "expires": "Expires",
+      "revocationReason": "Revocation reason",
+      "electronicProof": "Electronic Proof",
+      "markGranted": "Mark as Granted",
+      "markRevoked": "Mark as Revoked",
+      "requestedByLabel": "Requested by",
+      "notFound": "Consent not found"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7212,7 +7229,8 @@
     "testimonial3Author": "@QualityFirst",
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
-    "testimonialsTitle": "Cosa dicono i nostri clienti"
+    "testimonialsTitle": "Cosa dicono i nostri clienti",
+    "featuredVideos": "Video in primo piano"
   },
   "invoice": {
     "allStatuses": "Tutti gli stati",

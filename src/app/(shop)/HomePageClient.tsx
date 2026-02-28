@@ -14,6 +14,11 @@ const PeptideCalculator = dynamic(() => import('@/components/shop/PeptideCalcula
   ssr: false,
 });
 
+const VideoPlacementWidget = dynamic(() => import('@/components/content/VideoPlacementWidget'), {
+  loading: () => <div className="animate-pulse h-48 bg-gray-100 rounded-xl" />,
+  ssr: false,
+});
+
 interface ApiProduct {
   id: string;
   name: string;
@@ -443,6 +448,14 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
           </p>
         </div>
       </section>
+
+      {/* Featured Videos */}
+      <VideoPlacementWidget
+        placement="HOMEPAGE_FEATURED"
+        title={t('home.featuredVideos')}
+        limit={4}
+        className="py-16"
+      />
 
       {/* Testimonials */}
       <section className="py-16 bg-neutral-50">
