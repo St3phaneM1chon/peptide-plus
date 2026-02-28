@@ -13,37 +13,46 @@ import { logger } from '@/lib/logger';
 // GET /api/admin/content-hub/stats
 export const GET = withAdminGuard(async () => {
   try {
+    // Optimized: use groupBy to replace individual count queries (15→9 queries)
     const [
-      totalVideos,
-      publishedVideos,
-      draftVideos,
-      reviewVideos,
-      archivedVideos,
+      videoStatusGroups,
       totalCategories,
       totalPlacements,
       totalProductLinks,
-      pendingConsents,
-      grantedConsents,
-      revokedConsents,
+      consentStatusGroups,
       totalViews,
       videosByType,
       videosBySource,
     ] = await Promise.all([
-      prisma.video.count(),
-      prisma.video.count({ where: { status: 'PUBLISHED' } }),
-      prisma.video.count({ where: { status: 'DRAFT' } }),
-      prisma.video.count({ where: { status: 'REVIEW' } }),
-      prisma.video.count({ where: { status: 'ARCHIVED' } }),
+      prisma.video.groupBy({ by: ['status'], _count: { id: true } }),
       prisma.videoCategory.count({ where: { isActive: true } }),
       prisma.videoPlacement.count({ where: { isActive: true } }),
       prisma.videoProductLink.count(),
-      prisma.siteConsent.count({ where: { status: 'PENDING' } }),
-      prisma.siteConsent.count({ where: { status: 'GRANTED' } }),
-      prisma.siteConsent.count({ where: { status: 'REVOKED' } }),
+      prisma.siteConsent.groupBy({ by: ['status'], _count: { id: true } }),
       prisma.video.aggregate({ _sum: { views: true } }),
       prisma.video.groupBy({ by: ['contentType'], _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
       prisma.video.groupBy({ by: ['source'], _count: { id: true }, orderBy: { _count: { id: 'desc' } } }),
     ]);
+
+    // Derive individual counts from groupBy results
+    const videoStatusMap: Record<string, number> = {};
+    let totalVideos = 0;
+    for (const g of videoStatusGroups) {
+      videoStatusMap[g.status] = g._count.id;
+      totalVideos += g._count.id;
+    }
+    const publishedVideos = videoStatusMap['PUBLISHED'] || 0;
+    const draftVideos = videoStatusMap['DRAFT'] || 0;
+    const reviewVideos = videoStatusMap['REVIEW'] || 0;
+    const archivedVideos = videoStatusMap['ARCHIVED'] || 0;
+
+    const consentMap: Record<string, number> = {};
+    for (const g of consentStatusGroups) {
+      consentMap[g.status] = g._count.id;
+    }
+    const pendingConsents = consentMap['PENDING'] || 0;
+    const grantedConsents = consentMap['GRANTED'] || 0;
+    const revokedConsents = consentMap['REVOKED'] || 0;
 
     // Recent videos
     const recentVideos = await prisma.video.findMany({

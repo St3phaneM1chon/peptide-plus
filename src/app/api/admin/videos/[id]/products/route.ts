@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { z } from 'zod';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -52,7 +53,7 @@ export const GET = withAdminGuard(async (_request, { routeContext }) => {
 });
 
 // POST /api/admin/videos/[id]/products
-export const POST = withAdminGuard(async (request, { routeContext }) => {
+export const POST = withAdminGuard(async (request, { session, routeContext }) => {
   try {
     const { id } = await (routeContext as RouteContext).params;
     const body = await request.json();
@@ -88,6 +89,16 @@ export const POST = withAdminGuard(async (request, { routeContext }) => {
       },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'LINK_VIDEO_PRODUCT',
+      targetType: 'VideoProductLink',
+      targetId: link.id,
+      newValue: { videoId: id, productId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ productLink: link }, { status: 201 });
   } catch (error) {
     logger.error('Admin video products POST error', { error: error instanceof Error ? error.message : String(error) });
@@ -96,7 +107,7 @@ export const POST = withAdminGuard(async (request, { routeContext }) => {
 });
 
 // DELETE /api/admin/videos/[id]/products
-export const DELETE = withAdminGuard(async (request, { routeContext }) => {
+export const DELETE = withAdminGuard(async (request, { session, routeContext }) => {
   try {
     const { id } = await (routeContext as RouteContext).params;
     const body = await request.json();
@@ -114,6 +125,16 @@ export const DELETE = withAdminGuard(async (request, { routeContext }) => {
     }
 
     await prisma.videoProductLink.delete({ where: { id: link.id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UNLINK_VIDEO_PRODUCT',
+      targetType: 'VideoProductLink',
+      targetId: link.id,
+      previousValue: { videoId: id, productId: parsed.data.productId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

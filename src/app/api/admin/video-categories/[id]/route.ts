@@ -66,16 +66,33 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
 
     const { translations, parentId, name, ...rest } = parsed.data;
 
-    // Prevent circular parent reference
+    // Prevent circular parent reference (traverse full ancestry chain)
     if (parentId === id) {
       return NextResponse.json({ error: 'A category cannot be its own parent' }, { status: 400 });
     }
 
-    // Validate parentId exists if provided
+    // Validate parentId exists and check for circular reference
     if (parentId) {
-      const parent = await prisma.videoCategory.findUnique({ where: { id: parentId }, select: { id: true } });
-      if (!parent) {
-        return NextResponse.json({ error: 'Parent category not found' }, { status: 400 });
+      let currentId: string | null = parentId;
+      const visited = new Set<string>([id]);
+      let depth = 0;
+      while (currentId && depth < 20) {
+        if (visited.has(currentId)) {
+          return NextResponse.json({ error: 'Circular parent reference detected' }, { status: 400 });
+        }
+        visited.add(currentId);
+        const ancestor = await prisma.videoCategory.findUnique({
+          where: { id: currentId },
+          select: { parentId: true },
+        });
+        if (!ancestor) {
+          if (currentId === parentId) {
+            return NextResponse.json({ error: 'Parent category not found' }, { status: 400 });
+          }
+          break;
+        }
+        currentId = ancestor.parentId;
+        depth++;
       }
     }
 

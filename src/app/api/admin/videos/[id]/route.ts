@@ -19,7 +19,7 @@ import { sanitizeUrl } from '@/lib/sanitize';
 // GET /api/admin/videos/[id] - Get single video
 export const GET = withAdminGuard(async (_request, { params }) => {
   try {
-    const id = params!.id;
+    const id = params?.id as string;
 
     const video = await prisma.video.findUnique({
       where: { id },
@@ -87,7 +87,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
 // PATCH /api/admin/videos/[id] - Update video
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const id = params!.id;
+    const id = params?.id as string;
 
     const existing = await prisma.video.findUnique({ where: { id } });
     if (!existing) {
@@ -231,30 +231,28 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
-    // Handle translations if provided
+    // Handle translations if provided (batched in single transaction)
     if (translations && Array.isArray(translations)) {
-      for (const t of translations) {
-        if (!t.locale) continue;
-
-        await prisma.videoTranslation.upsert({
-          where: {
-            videoId_locale: {
-              videoId: id,
-              locale: t.locale,
-            },
-          },
-          update: {
-            ...(t.title !== undefined && { title: t.title }),
-            ...(t.description !== undefined && { description: t.description }),
-            ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
-          },
-          create: {
-            videoId: id,
-            locale: t.locale,
-            title: t.title || null,
-            description: t.description || null,
-          },
-        });
+      const validTranslations = translations.filter((t: { locale?: string }) => t.locale);
+      if (validTranslations.length > 0) {
+        await prisma.$transaction(
+          validTranslations.map((t: { locale: string; title?: string; description?: string; isApproved?: boolean }) =>
+            prisma.videoTranslation.upsert({
+              where: { videoId_locale: { videoId: id, locale: t.locale } },
+              update: {
+                ...(t.title !== undefined && { title: t.title }),
+                ...(t.description !== undefined && { description: t.description }),
+                ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
+              },
+              create: {
+                videoId: id,
+                locale: t.locale,
+                title: t.title || null,
+                description: t.description || null,
+              },
+            })
+          )
+        );
       }
 
       // Re-fetch with updated translations
@@ -279,7 +277,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 // DELETE /api/admin/videos/[id] - Delete video
 export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const id = params!.id;
+    const id = params?.id as string;
 
     const existing = await prisma.video.findUnique({ where: { id } });
     if (!existing) {

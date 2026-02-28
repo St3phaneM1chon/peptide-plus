@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { z } from 'zod';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -41,7 +42,7 @@ export const GET = withAdminGuard(async (_request, { routeContext }) => {
 });
 
 // PUT /api/admin/videos/[id]/tags - Replace all tags
-export const PUT = withAdminGuard(async (request, { routeContext }) => {
+export const PUT = withAdminGuard(async (request, { session, routeContext }) => {
   try {
     const { id } = await (routeContext as RouteContext).params;
     const body = await request.json();
@@ -55,6 +56,12 @@ export const PUT = withAdminGuard(async (request, { routeContext }) => {
     if (!video) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
+
+    // Get existing tags for audit log
+    const existingTags = await prisma.videoTag.findMany({
+      where: { videoId: id },
+      select: { tag: true },
+    });
 
     // Normalize: trim, lowercase, deduplicate
     const normalizedTags = [...new Set(parsed.data.tags.map(t => t.trim().toLowerCase()).filter(Boolean))];
@@ -73,6 +80,17 @@ export const PUT = withAdminGuard(async (request, { routeContext }) => {
       where: { id },
       data: { tags: JSON.stringify(normalizedTags) },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_VIDEO_TAGS',
+      targetType: 'Video',
+      targetId: id,
+      previousValue: { tags: existingTags.map(t => t.tag) },
+      newValue: { tags: normalizedTags },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ tags: normalizedTags });
   } catch (error) {

@@ -51,13 +51,17 @@ export const GET = withAdminGuard(async (request) => {
       prisma.siteConsent.count({ where }),
     ]);
 
-    // Stats
-    const [pendingCount, grantedCount, revokedCount, totalCount] = await Promise.all([
-      prisma.siteConsent.count({ where: { status: 'PENDING' } }),
-      prisma.siteConsent.count({ where: { status: 'GRANTED' } }),
-      prisma.siteConsent.count({ where: { status: 'REVOKED' } }),
-      prisma.siteConsent.count(),
-    ]);
+    // Stats — grouped in single query instead of 4 separate counts
+    const statusGroups = await prisma.siteConsent.groupBy({
+      by: ['status'],
+      _count: { id: true },
+    });
+    const statusMap: Record<string, number> = {};
+    let totalCount = 0;
+    for (const g of statusGroups) {
+      statusMap[g.status] = g._count.id;
+      totalCount += g._count.id;
+    }
 
     return NextResponse.json({
       consents,
@@ -69,9 +73,9 @@ export const GET = withAdminGuard(async (request) => {
         hasMore: offset + limit < total,
       },
       stats: {
-        pending: pendingCount,
-        granted: grantedCount,
-        revoked: revokedCount,
+        pending: statusMap['PENDING'] || 0,
+        granted: statusMap['GRANTED'] || 0,
+        revoked: statusMap['REVOKED'] || 0,
         total: totalCount,
       },
     });

@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { z } from 'zod';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -56,7 +57,7 @@ export const GET = withAdminGuard(async (_request, { routeContext }) => {
 });
 
 // POST /api/admin/videos/[id]/placements
-export const POST = withAdminGuard(async (request, { routeContext }) => {
+export const POST = withAdminGuard(async (request, { session, routeContext }) => {
   try {
     const { id } = await (routeContext as RouteContext).params;
     const body = await request.json();
@@ -92,6 +93,16 @@ export const POST = withAdminGuard(async (request, { routeContext }) => {
       },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ADD_VIDEO_PLACEMENT',
+      targetType: 'VideoPlacement',
+      targetId: created.id,
+      newValue: { videoId: id, placement, contextId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ placement: created }, { status: 201 });
   } catch (error) {
     logger.error('Admin video placements POST error', { error: error instanceof Error ? error.message : String(error) });
@@ -100,7 +111,7 @@ export const POST = withAdminGuard(async (request, { routeContext }) => {
 });
 
 // DELETE /api/admin/videos/[id]/placements
-export const DELETE = withAdminGuard(async (request, { routeContext }) => {
+export const DELETE = withAdminGuard(async (request, { session, routeContext }) => {
   try {
     const { id } = await (routeContext as RouteContext).params;
     const body = await request.json();
@@ -118,6 +129,16 @@ export const DELETE = withAdminGuard(async (request, { routeContext }) => {
     }
 
     await prisma.videoPlacement.delete({ where: { id: parsed.data.placementId } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'REMOVE_VIDEO_PLACEMENT',
+      targetType: 'VideoPlacement',
+      targetId: parsed.data.placementId,
+      previousValue: { videoId: id, placement: placement.placement, contextId: placement.contextId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

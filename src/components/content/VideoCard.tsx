@@ -12,7 +12,7 @@ interface VideoCardVideo {
   description: string | null;
   thumbnailUrl: string | null;
   videoUrl: string;
-  duration: number | null;
+  duration: string | null;
   views: number;
   contentType: string;
   source: string;
@@ -29,8 +29,13 @@ interface VideoCardProps {
   onClick?: (video: VideoCardVideo) => void;
 }
 
-function formatDuration(seconds: number | null): string | null {
-  if (!seconds || seconds <= 0) return null;
+function formatDuration(duration: string | null): string | null {
+  if (!duration) return null;
+  // If already formatted (e.g. "12:30", "1:00:00"), return as-is
+  if (duration.includes(':')) return duration;
+  // If numeric string (seconds), format it
+  const seconds = parseInt(duration, 10);
+  if (isNaN(seconds) || seconds <= 0) return duration;
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
