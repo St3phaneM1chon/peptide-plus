@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Video, Search, Loader2, ChevronLeft, ChevronRight,
-  Play, Clock, Eye, Filter, X,
+  Play, Clock, Eye, X,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
