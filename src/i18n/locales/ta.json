@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "வெளியிடு",
+      "bulkArchive": "காப்பகப்படுத்து",
+      "bulkPublished": "வெளியிடப்பட்டது",
+      "bulkArchived": "காப்பகப்படுத்தப்பட்டது"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "பொருள்",
       "statusColumn": "நிலை",
       "dateColumn": "தேதி",
-      "requestedByColumn": "கோரியவர்"
+      "requestedByColumn": "கோரியவர்",
+      "exportCsv": "CSV ஏற்றுமதி"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "எங்கள் வாடிக்கையாளர்கள் என்ன சொல்கிறார்கள்",
-    "featuredVideos": "சிறப்பு வீடியோக்கள்"
+    "featuredVideos": "சிறப்பு வீடியோக்கள்",
+    "heroVideo": "சிறப்பு வீடியோ"
   },
   "invoice": {
     "allStatuses": "அனைத்து நிலைகள்",

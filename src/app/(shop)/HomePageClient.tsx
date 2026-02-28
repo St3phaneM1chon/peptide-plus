@@ -256,6 +256,14 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
       {/* Trust Badges Hero */}
       <TrustBadgesHero />
 
+      {/* Hero Video (if assigned via HOMEPAGE_HERO placement) */}
+      <VideoPlacementWidget
+        placement="HOMEPAGE_HERO"
+        title={t('home.heroVideo')}
+        limit={1}
+        className="py-8 bg-neutral-50"
+      />
+
       {/* Fetch Error */}
       {fetchError && !loading && (
         <div className="max-w-7xl mx-auto px-4 py-6 text-center">

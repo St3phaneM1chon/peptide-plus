@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "Xuất bản",
+      "bulkArchive": "Lưu trữ",
+      "bulkPublished": "đã xuất bản",
+      "bulkArchived": "đã lưu trữ"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "Chủ đề",
       "statusColumn": "Trạng thái",
       "dateColumn": "Ngày",
-      "requestedByColumn": "Yêu cầu bởi"
+      "requestedByColumn": "Yêu cầu bởi",
+      "exportCsv": "Xuất CSV"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "Khách hàng nói gì",
-    "featuredVideos": "Video nổi bật"
+    "featuredVideos": "Video nổi bật",
+    "heroVideo": "Video nổi bật"
   },
   "invoice": {
     "allStatuses": "Tất cả trạng thái",

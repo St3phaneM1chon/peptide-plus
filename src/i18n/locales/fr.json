@@ -755,7 +755,8 @@
       "subjectColumn": "Sujet",
       "statusColumn": "Statut",
       "dateColumn": "Date",
-      "requestedByColumn": "Demandé par"
+      "requestedByColumn": "Demandé par",
+      "exportCsv": "Exporter CSV"
     },
     "consentTemplates": {
       "title": "Modèles de Consentement",
@@ -1105,7 +1106,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Gérer les publicités Facebook et Instagram — campagnes, audiences et performance.",
       "webexDescription": "Configurer les credentials API Webex pour la vidéoconférence.",
-      "googleMeetDescription": "Configurer les credentials API Google Meet pour la vidéoconférence."
+      "googleMeetDescription": "Configurer les credentials API Google Meet pour la vidéoconférence.",
+      "bulkPublish": "Publier",
+      "bulkArchive": "Archiver",
+      "bulkPublished": "publié(s)",
+      "bulkArchived": "archivé(s)"
     },
     "integrations": {
       "connected": "Connecté avec succès",
@@ -7459,7 +7464,8 @@
       "slide4Description": "Expédition rapide et discrète. Suivi complet de votre commande.",
       "slide4Cta": "Commander maintenant"
     },
-    "featuredVideos": "Vidéos en vedette"
+    "featuredVideos": "Vidéos en vedette",
+    "heroVideo": "Vidéo à la une"
   },
   "invoice": {
     "title": "Facture",

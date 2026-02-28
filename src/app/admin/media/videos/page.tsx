@@ -11,7 +11,7 @@ import { useI18n } from '@/i18n/client';
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
   Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
-  ImageIcon, BarChart3, House, Edit2, FileText,
+  ImageIcon, BarChart3, House, Edit2, FileText, CheckCircle, Archive,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -323,6 +323,66 @@ export default function MediaVideosPage() {
     }
   }, [selectedIds, t, loadVideos]);
 
+  // ---- Bulk publish selected videos ----
+  const handlePublishSelected = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true); // reuse loading state
+    let successCount = 0;
+    let failCount = 0;
+    for (const id of selectedIds) {
+      try {
+        const res = await fetchWithCSRF(`/api/admin/videos/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublished: true, status: 'PUBLISHED' }),
+        });
+        if (res.ok) successCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setDeleting(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('admin.media.videosTitle') || 'video(s)'} ${t('admin.media.bulkPublished') || 'published'}`);
+      loadVideos();
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed'}`);
+    }
+  }, [selectedIds, t, loadVideos]);
+
+  // ---- Bulk archive selected videos ----
+  const handleArchiveSelected = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const id of selectedIds) {
+      try {
+        const res = await fetchWithCSRF(`/api/admin/videos/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublished: false, status: 'ARCHIVED' }),
+        });
+        if (res.ok) successCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setDeleting(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('admin.media.videosTitle') || 'video(s)'} ${t('admin.media.bulkArchived') || 'archived'}`);
+      loadVideos();
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed'}`);
+    }
+  }, [selectedIds, t, loadVideos]);
+
   // ---- Export CSV ----
   const handleExportCsv = useCallback(() => {
     if (videos.length === 0) {
@@ -456,6 +516,12 @@ export default function MediaVideosPage() {
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
           <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+          <button onClick={handlePublishSelected} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs">
+            <CheckCircle className="w-3 h-3" /> {t('admin.media.bulkPublish')}
+          </button>
+          <button onClick={handleArchiveSelected} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 text-xs">
+            <Archive className="w-3 h-3" /> {t('admin.media.bulkArchive')}
+          </button>
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
           </button>

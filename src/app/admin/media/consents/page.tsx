@@ -84,6 +84,33 @@ export default function AdminConsentsPage() {
     setPage(1);
   };
 
+  const handleExportCsv = () => {
+    if (consents.length === 0) {
+      toast.info('No data to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['ID', 'Client Name', 'Client Email', 'Type', 'Status', 'Video', 'Template', 'Requested By', 'Created', 'Granted', 'Revoked'];
+    const rows = consents.map(c => [
+      c.id, c.client.name || '', c.client.email, c.type, c.status,
+      c.video?.title || '', c.formTemplate?.name || '', c.requestedBy?.name || '',
+      new Date(c.createdAt).toISOString(),
+      c.grantedAt ? new Date(c.grantedAt).toISOString() : '',
+      c.revokedAt ? new Date(c.revokedAt).toISOString() : '',
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consents-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.consents.exportCsv') + ' OK');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -94,6 +121,14 @@ export default function AdminConsentsPage() {
             {t('admin.consents.title')}
           </h1>
         </div>
+        <button
+          onClick={handleExportCsv}
+          disabled={consents.length === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" />
+          {t('admin.consents.exportCsv')}
+        </button>
       </div>
 
       {/* Stats Cards */}

@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "게시",
+      "bulkArchive": "보관",
+      "bulkPublished": "게시됨",
+      "bulkArchived": "보관됨"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "주제",
       "statusColumn": "상태",
       "dateColumn": "날짜",
-      "requestedByColumn": "요청자"
+      "requestedByColumn": "요청자",
+      "exportCsv": "CSV 내보내기"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "고객 후기",
-    "featuredVideos": "추천 동영상"
+    "featuredVideos": "추천 동영상",
+    "heroVideo": "추천 동영상"
   },
   "invoice": {
     "allStatuses": "모든 상태",

@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "发布",
+      "bulkArchive": "归档",
+      "bulkPublished": "已发布",
+      "bulkArchived": "已归档"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "主题",
       "statusColumn": "状态",
       "dateColumn": "日期",
-      "requestedByColumn": "请求人"
+      "requestedByColumn": "请求人",
+      "exportCsv": "导出CSV"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "客户评价",
-    "featuredVideos": "精选视频"
+    "featuredVideos": "精选视频",
+    "heroVideo": "精选视频"
   },
   "invoice": {
     "allStatuses": "所有状态",

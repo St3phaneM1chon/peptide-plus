@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "Опубликовать",
+      "bulkArchive": "Архивировать",
+      "bulkPublished": "опубликовано",
+      "bulkArchived": "архивировано"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "Тема",
       "statusColumn": "Статус",
       "dateColumn": "Дата",
-      "requestedByColumn": "Запрошено"
+      "requestedByColumn": "Запрошено",
+      "exportCsv": "Экспорт CSV"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "Что говорят наши клиенты",
-    "featuredVideos": "Избранные видео"
+    "featuredVideos": "Избранные видео",
+    "heroVideo": "Избранное видео"
   },
   "invoice": {
     "allStatuses": "Все статусы",

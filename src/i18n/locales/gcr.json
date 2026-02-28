@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "Publier",
+      "bulkArchive": "Archiver",
+      "bulkPublished": "publié(s)",
+      "bulkArchived": "archivé(s)"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "Sijé",
       "statusColumn": "Estati",
       "dateColumn": "Dat",
-      "requestedByColumn": "Mandé pa"
+      "requestedByColumn": "Mandé pa",
+      "exportCsv": "Exporter CSV"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "Sa kliyan nou ka di",
-    "featuredVideos": "Vidéo an vèdèt"
+    "featuredVideos": "Vidéo an vèdèt",
+    "heroVideo": "Vidéo à la une"
   },
   "invoice": {
     "allStatuses": "Tout status",

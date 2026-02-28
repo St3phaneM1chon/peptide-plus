@@ -3625,7 +3625,11 @@
       "platformMeta": "Meta Business Suite",
       "platformMetaDesc": "Manage Facebook and Instagram ads — campaigns, audiences, and performance.",
       "webexDescription": "Configure Webex API credentials for video conferencing.",
-      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing."
+      "googleMeetDescription": "Configure Google Meet API credentials for video conferencing.",
+      "bulkPublish": "ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ",
+      "bulkArchive": "ਪੁਰਾਲੇਖ",
+      "bulkPublished": "ਪ੍ਰਕਾਸ਼ਿਤ",
+      "bulkArchived": "ਪੁਰਾਲੇਖ"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6045,7 +6049,8 @@
       "subjectColumn": "ਵਿਸ਼ਾ",
       "statusColumn": "ਸਥਿਤੀ",
       "dateColumn": "ਤਾਰੀਖ",
-      "requestedByColumn": "ਬੇਨਤੀ ਕਰਨ ਵਾਲਾ"
+      "requestedByColumn": "ਬੇਨਤੀ ਕਰਨ ਵਾਲਾ",
+      "exportCsv": "CSV ਨਿਰਯਾਤ"
     },
     "consentTemplates": {
       "create": "New Template",
@@ -7246,7 +7251,8 @@
     "testimonial3Quote": "A+ service and communication. Delivery is always quick and packaged safe and sound. I love how they're transparent and also have lab results to back up their batches.",
     "testimonial3Source": "Verified Buyer",
     "testimonialsTitle": "ਸਾਡੇ ਗਾਹਕ ਕੀ ਕਹਿੰਦੇ ਹਨ",
-    "featuredVideos": "ਫੀਚਰਡ ਵੀਡੀਓਜ਼"
+    "featuredVideos": "ਫੀਚਰਡ ਵੀਡੀਓਜ਼",
+    "heroVideo": "ਵਿਸ਼ੇਸ਼ ਵੀਡੀਓ"
   },
   "invoice": {
     "allStatuses": "ਸਾਰੇ ਸਥਿਤੀਆਂ",
