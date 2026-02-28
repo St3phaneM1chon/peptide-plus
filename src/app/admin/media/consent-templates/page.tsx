@@ -178,7 +178,7 @@ export default function ConsentTemplatesPage() {
         <div className="flex items-center gap-3">
           <ClipboardCheck className="h-6 w-6 text-orange-600" />
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.consentTemplates.title') !== 'admin.consentTemplates.title' ? t('admin.consentTemplates.title') : 'Consent Templates'}
+            {t('admin.consentTemplates.title')}
           </h1>
         </div>
         {!showForm && (

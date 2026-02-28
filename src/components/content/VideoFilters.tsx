@@ -77,12 +77,12 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder={t('common.search') !== 'common.search' ? t('common.search') : 'Search videos...'}
+            placeholder={t('common.search')}
             className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-400"
           />
         </div>
         <button onClick={handleSearch} className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">
-          {t('common.search') !== 'common.search' ? t('common.search') : 'Search'}
+          {t('common.search')}
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}

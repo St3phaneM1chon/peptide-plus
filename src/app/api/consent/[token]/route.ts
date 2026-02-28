@@ -127,6 +127,22 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: 'This consent has already been processed' }, { status: 400 });
     }
 
+    // Validate responses against template questions (L10 fix)
+    if (consent.formTemplate?.questions && Array.isArray(consent.formTemplate.questions)) {
+      const questions = consent.formTemplate.questions as Array<{ id?: string; question: string; required: boolean }>;
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const key = q.id || String(i);
+        const answer = parsed.data.responses[key] ?? parsed.data.responses[String(i)];
+        if (q.required && (answer === undefined || answer === null || answer === '')) {
+          return NextResponse.json(
+            { error: `Required question "${q.question}" is not answered` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const now = new Date();
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip')
