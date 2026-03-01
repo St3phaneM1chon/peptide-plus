@@ -127,7 +127,8 @@ jobs:
               --settings \
                 WEBSITE_RUN_FROM_PACKAGE=1 \
                 SCM_COMMAND_IDLE_TIMEOUT=300 \
-                ENABLE_ORYX_BUILD=false
+                ENABLE_ORYX_BUILD=false \
+                WEBSITES_CONTAINER_START_TIME_LIMIT=600
             echo "Waiting 30s for SCM container to stabilize..."
             sleep 30
           else

@@ -188,3 +188,17 @@ L'ordre des operations est **critique**. Toujours respecter:
 - **Fix**: Separer les settings infra dans un step conditionnel AVANT le deploy. Verifier si deja configure, skip si oui. Si changement, attendre 30s pour stabilisation SCM.
 - **Prevention**: Ne changer les settings infra qu'une seule fois, pas a chaque deploy.
 - **Detecte**: 2026-03-01
+
+### KB-PP-BUILD-008: Container startup timeout (230s) killed by cert update
+- **Symptome**: `ContainerTimeout: Container did not start within expected time limit of 230s`, app 504/timeout, crash loop
+- **Cause racine**: Azure Linux App Service met a jour les certificats SSL au demarrage (`Updating certificates in /etc/ssl/certs`), prenant ~3 min. Le timeout par defaut de 230s expire AVANT que `node server.js` ne soit lance.
+- **Fix**: `az webapp config appsettings set --settings WEBSITES_CONTAINER_START_TIME_LIMIT=600` (10 min)
+- **Prevention**: TOUJOURS configurer WEBSITES_CONTAINER_START_TIME_LIMIT=600 dans le pipeline deploy. Verifier avec `az webapp config appsettings list`.
+- **Detecte**: 2026-03-01
+
+### KB-PP-BUILD-009: Webex OAuth invalid_scope
+- **Symptome**: `invalid_scope` erreur retournee par Webex lors de l'autorisation OAuth
+- **Cause racine**: Les scopes demandes dans le code ne correspondent pas aux scopes configures sur l'integration dans le Webex Developer Portal. Chaque scope doit etre a la fois dans le code ET coche dans le portail.
+- **Fix**: Verifier les scopes coches sur https://developer.webex.com/my-apps/[app-name]. Adapter le code pour ne demander QUE les scopes configures.
+- **Prevention**: Avant de modifier les scopes OAuth, toujours verifier la config du portail developpeur. Les scopes `spark:recordings_read` ne sont PAS des scopes OAuth valides (utiliser `meeting:recordings_read`).
+- **Detecte**: 2026-03-01
