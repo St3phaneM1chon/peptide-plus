@@ -6,7 +6,7 @@
 import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from './crypto';
 import { logger } from '@/lib/logger';
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -156,34 +156,8 @@ function safeErrorMessage(error: unknown): string {
 // OAuth Manager
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// PKCE helpers (V-022 fix: OAuth Authorization Code with PKCE)
-// ---------------------------------------------------------------------------
-
-function generateCodeVerifier(): string {
-  return randomBytes(32).toString('base64url');
-}
-
-function generateCodeChallenge(verifier: string): string {
-  return createHash('sha256').update(verifier).digest('base64url');
-}
-
 function generateRandomState(): string {
   return randomBytes(32).toString('hex');
-}
-
-// In-memory store for PKCE verifiers and state (per-session, short-lived)
-// In production, use a Redis/DB store with TTL
-const pkceStore = new Map<string, { codeVerifier: string; platform: Platform; createdAt: number }>();
-
-// Clean expired entries (older than 10 minutes)
-function cleanPkceStore() {
-  const now = Date.now();
-  for (const [key, val] of pkceStore.entries()) {
-    if (now - val.createdAt > 10 * 60 * 1000) {
-      pkceStore.delete(key);
-    }
-  }
 }
 
 /**
@@ -226,51 +200,24 @@ export function getAuthorizationUrl(platform: Platform, _state?: string): { url:
 }
 
 /**
- * Validate OAuth state and retrieve PKCE verifier.
- */
-export function validateOAuthState(state: string): { codeVerifier: string; platform: Platform } | null {
-  const entry = pkceStore.get(state);
-  if (!entry) return null;
-
-  // Check expiry (10 minutes)
-  if (Date.now() - entry.createdAt > 10 * 60 * 1000) {
-    pkceStore.delete(state);
-    return null;
-  }
-
-  // One-time use: delete after retrieval
-  pkceStore.delete(state);
-  return { codeVerifier: entry.codeVerifier, platform: entry.platform };
-}
-
-/**
  * Exchange authorization code for tokens and store them in PlatformConnection.
- * V-022 fix: Includes PKCE code_verifier in token exchange.
  */
 export async function handleCallback(
   platform: Platform,
   code: string,
   userId?: string,
-  codeVerifier?: string,
 ): Promise<{ success: boolean; error?: string }> {
   const config = getPlatformConfig(platform);
   const callbackUrl = getCallbackUrl(platform);
 
   try {
-    const bodyParams: Record<string, string> = {
+    const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       redirect_uri: callbackUrl,
       client_id: config.clientId,
       client_secret: config.clientSecret,
-    };
-
-    // V-022 fix: Include PKCE code_verifier if available
-    if (codeVerifier) {
-      bodyParams.code_verifier = codeVerifier;
-    }
-
-    const body = new URLSearchParams(bodyParams);
+    });
 
     const response = await fetch(config.tokenUrl, {
       method: 'POST',
