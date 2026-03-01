@@ -75,11 +75,12 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         authUrl: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID || 'common'}/oauth2/v2.0/authorize`,
         tokenUrl: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID || 'common'}/oauth2/v2.0/token`,
         revokeUrl: undefined, // Azure AD doesn't have a standard revoke endpoint
+        // Delegated permissions only — authorization code flow cannot use Application permissions
         scopes: [
-          'https://graph.microsoft.com/OnlineMeetings.Read.All',
           'https://graph.microsoft.com/OnlineMeetings.ReadWrite',
-          'https://graph.microsoft.com/CallRecords.Read.All',
+          'https://graph.microsoft.com/OnlineMeetings.Read',
           'https://graph.microsoft.com/Files.Read.All',
+          'https://graph.microsoft.com/User.Read',
           'offline_access',
         ],
         clientId: process.env.AZURE_AD_CLIENT_ID || '',
