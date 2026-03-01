@@ -458,8 +458,8 @@ export async function testConnection(platform: Platform): Promise<{
         testUrl = 'https://graph.microsoft.com/v1.0/me';
         break;
       case 'google-meet':
-        // Use Calendar API (matches calendar.events scope)
-        testUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary';
+        // Use Drive API (matches drive.readonly scope, commonly enabled)
+        testUrl = 'https://www.googleapis.com/drive/v3/about?fields=user';
         break;
       case 'youtube':
         // Use YouTube API (matches youtube.readonly scope)
@@ -479,7 +479,7 @@ export async function testConnection(platform: Platform): Promise<{
       // Extract display name based on platform response format
       let name = 'Connected';
       if (platform === 'google-meet') {
-        name = data.summary || data.id || 'Google Calendar';
+        name = data.user?.displayName || data.user?.emailAddress || 'Google Drive';
       } else if (platform === 'youtube') {
         name = data.items?.[0]?.snippet?.title || 'YouTube Channel';
       } else {
