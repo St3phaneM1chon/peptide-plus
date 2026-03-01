@@ -458,13 +458,17 @@ export async function testConnection(platform: Platform): Promise<{
         testUrl = 'https://graph.microsoft.com/v1.0/me';
         break;
       case 'google-meet':
-        // Use Drive API (matches drive.readonly scope, commonly enabled)
-        testUrl = 'https://www.googleapis.com/drive/v3/about?fields=user';
-        break;
-      case 'youtube':
-        // Use YouTube API (matches youtube.readonly scope)
-        testUrl = 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true';
-        break;
+      case 'youtube': {
+        // Use Google tokeninfo endpoint — works without enabling any specific API
+        const tokenInfoUrl = `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`;
+        const tokenInfoRes = await fetch(tokenInfoUrl);
+        if (tokenInfoRes.ok) {
+          const info = await tokenInfoRes.json();
+          const email = info.email || info.sub || 'Google Account';
+          return { success: true, message: `Connected as: ${email}` };
+        }
+        return { success: false, error: `Token validation failed (${tokenInfoRes.status})` };
+      }
       case 'webex':
         testUrl = 'https://webexapis.com/v1/people/me';
         break;
@@ -476,15 +480,7 @@ export async function testConnection(platform: Platform): Promise<{
 
     if (response.ok) {
       const data = await response.json();
-      // Extract display name based on platform response format
-      let name = 'Connected';
-      if (platform === 'google-meet') {
-        name = data.user?.displayName || data.user?.emailAddress || 'Google Drive';
-      } else if (platform === 'youtube') {
-        name = data.items?.[0]?.snippet?.title || 'YouTube Channel';
-      } else {
-        name = data.display_name || data.displayName || data.name || data.email || 'Connected';
-      }
+      const name = data.display_name || data.displayName || data.name || data.email || 'Connected';
       return { success: true, message: `Connected as: ${name}` };
     }
 
