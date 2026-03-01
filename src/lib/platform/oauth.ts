@@ -121,8 +121,8 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         tokenUrl: 'https://webexapis.com/v1/access_token',
         revokeUrl: undefined,
         scopes: [
-          'spark:recordings_read',
           'meeting:recordings_read',
+          'meeting:schedules_read',
           'meeting:schedules_write',
         ],
         clientId: process.env.WEBEX_CLIENT_ID || '',
