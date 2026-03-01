@@ -133,7 +133,7 @@ export async function sendWeeklyReport(recipientEmail?: string): Promise<void> {
     const emailModule = await import('@/lib/email');
     if (typeof emailModule.sendEmail === 'function') {
       await emailModule.sendEmail({
-        to,
+        to: { email: to, name: 'Admin' },
         subject: `Weekly Media Report - ${report.period.start} to ${report.period.end}`,
         html,
       });

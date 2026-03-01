@@ -64,7 +64,7 @@ async function getSharp() {
       throw new Error('sharp is not installed. Run: npm install sharp');
     }
   }
-  return sharpModule.default;
+  return (sharpModule as { default: typeof import('sharp')['default'] }).default;
 }
 
 // ---------------------------------------------------------------------------

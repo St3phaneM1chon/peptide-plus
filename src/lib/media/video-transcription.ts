@@ -93,7 +93,7 @@ async function transcribeBuffer(
 
     // Build multipart form data
     const formData = new FormData();
-    const blob = new Blob([buffer], { type: 'audio/mp4' });
+    const blob = new Blob([new Uint8Array(buffer)], { type: 'audio/mp4' });
     formData.append('file', blob, filename);
     formData.append('model', options?.model || 'whisper-1');
     formData.append('response_format', 'verbose_json');
