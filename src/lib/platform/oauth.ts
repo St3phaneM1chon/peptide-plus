@@ -458,8 +458,12 @@ export async function testConnection(platform: Platform): Promise<{
         testUrl = 'https://graph.microsoft.com/v1.0/me';
         break;
       case 'google-meet':
+        // Use Calendar API (matches calendar.events scope)
+        testUrl = 'https://www.googleapis.com/calendar/v3/calendars/primary';
+        break;
       case 'youtube':
-        testUrl = 'https://www.googleapis.com/oauth2/v2/userinfo';
+        // Use YouTube API (matches youtube.readonly scope)
+        testUrl = 'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true';
         break;
       case 'webex':
         testUrl = 'https://webexapis.com/v1/people/me';
@@ -472,7 +476,15 @@ export async function testConnection(platform: Platform): Promise<{
 
     if (response.ok) {
       const data = await response.json();
-      const name = data.display_name || data.displayName || data.name || data.email || 'Connected';
+      // Extract display name based on platform response format
+      let name = 'Connected';
+      if (platform === 'google-meet') {
+        name = data.summary || data.id || 'Google Calendar';
+      } else if (platform === 'youtube') {
+        name = data.items?.[0]?.snippet?.title || 'YouTube Channel';
+      } else {
+        name = data.display_name || data.displayName || data.name || data.email || 'Connected';
+      }
       return { success: true, message: `Connected as: ${name}` };
     }
 
