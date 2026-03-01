@@ -14,6 +14,7 @@
 import winston from 'winston';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import fs from 'fs';
 
 // ---------------------------------------------------------------------------
 // Format helpers
@@ -58,18 +59,26 @@ const transports: winston.transport[] = [
 ];
 
 // File transport for errors in production
+// NOTE: With WEBSITE_RUN_FROM_PACKAGE=1 on Azure, wwwroot is read-only.
+// Default to /tmp/logs which is always writable, or /home/LogFiles/app if available.
 if (isProduction) {
-  const logDir = process.env.LOG_DIR || path.join(process.cwd(), 'logs');
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      format: prodFormat,
-      maxsize: 10 * 1024 * 1024, // 10 MB
-      maxFiles: 5,
-      tailable: true,
-    }),
-  );
+  const logDir = process.env.LOG_DIR || '/tmp/logs';
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, 'error.log'),
+        level: 'error',
+        format: prodFormat,
+        maxsize: 10 * 1024 * 1024, // 10 MB
+        maxFiles: 5,
+        tailable: true,
+      }),
+    );
+  } catch {
+    // If directory creation fails (read-only FS), skip file transport.
+    // Console transport will still capture all logs.
+  }
 }
 
 // ---------------------------------------------------------------------------
