@@ -197,21 +197,15 @@ export function getAuthorizationUrl(platform: Platform, _state?: string): { url:
   // V-021 fix: Generate cryptographic random state (never use platform name)
   const oauthState = generateRandomState();
 
-  // V-022 fix: Generate PKCE code verifier and challenge
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = generateCodeChallenge(codeVerifier);
-
-  // Store verifier for the callback
-  cleanPkceStore();
-  pkceStore.set(oauthState, { codeVerifier, platform, createdAt: Date.now() });
+  // NOTE: PKCE removed — confidential clients (with client_secret) don't require PKCE,
+  // and in-memory pkceStore doesn't survive across Azure App Service instances.
+  // The client_secret in the token exchange provides sufficient security.
 
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: callbackUrl,
     response_type: 'code',
     state: oauthState,
-    code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
   });
 
   // Platform-specific scope formatting
@@ -286,8 +280,18 @@ export async function handleCallback(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`[OAuth] Token exchange failed for ${platform}:`, redactSensitive(errorText));
-      return { success: false, error: `Token exchange failed: ${response.status}` };
+      logger.error(`[OAuth] Token exchange failed for ${platform} (${response.status}):`, redactSensitive(errorText));
+      // Try to extract the specific error code from the response body
+      let errorCode = `Token exchange failed: ${response.status}`;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.error_description) {
+          errorCode = parsed.error_description;
+        } else if (parsed.error) {
+          errorCode = parsed.error;
+        }
+      } catch { /* not JSON */ }
+      return { success: false, error: errorCode };
     }
 
     const tokens: OAuthTokens & Record<string, unknown> = await response.json();

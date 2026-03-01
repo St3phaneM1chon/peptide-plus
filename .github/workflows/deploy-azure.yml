@@ -146,6 +146,15 @@ jobs:
           if [ -n "$ENC_KEY" ]; then ARGS="$ARGS ENCRYPTION_KEY=$ENC_KEY"; fi
           if [ -n "$RESEND_AK" ]; then ARGS="$ARGS RESEND_API_KEY=$RESEND_AK"; fi
           if [ -n "$RESEND_WS" ]; then ARGS="$ARGS RESEND_WEBHOOK_SECRET=$RESEND_WS"; fi
+          if [ -n "$AD_CID" ]; then ARGS="$ARGS AZURE_AD_CLIENT_ID=$AD_CID"; fi
+          if [ -n "$AD_CSEC" ]; then ARGS="$ARGS AZURE_AD_CLIENT_SECRET=$AD_CSEC"; fi
+          if [ -n "$AD_TID" ]; then ARGS="$ARGS AZURE_AD_TENANT_ID=$AD_TID"; fi
+          if [ -n "$ZOOM_CID" ]; then ARGS="$ARGS ZOOM_CLIENT_ID=$ZOOM_CID"; fi
+          if [ -n "$ZOOM_CSEC" ]; then ARGS="$ARGS ZOOM_CLIENT_SECRET=$ZOOM_CSEC"; fi
+          if [ -n "$WEBEX_CID" ]; then ARGS="$ARGS WEBEX_CLIENT_ID=$WEBEX_CID"; fi
+          if [ -n "$WEBEX_CSEC" ]; then ARGS="$ARGS WEBEX_CLIENT_SECRET=$WEBEX_CSEC"; fi
+          if [ -n "$WA_TOKEN" ]; then ARGS="$ARGS WHATSAPP_ACCESS_TOKEN=$WA_TOKEN"; fi
+          if [ -n "$WA_PHONE" ]; then ARGS="$ARGS WHATSAPP_PHONE_NUMBER_ID=$WA_PHONE"; fi
 
           if [ -n "$ARGS" ]; then
             az webapp config appsettings set \
@@ -171,6 +180,15 @@ jobs:
           ENC_KEY: ${{ secrets.ENCRYPTION_KEY }}
           RESEND_AK: ${{ secrets.RESEND_API_KEY }}
           RESEND_WS: ${{ secrets.RESEND_WEBHOOK_SECRET }}
+          AD_CID: ${{ secrets.AZURE_AD_CLIENT_ID }}
+          AD_CSEC: ${{ secrets.AZURE_AD_CLIENT_SECRET }}
+          AD_TID: ${{ secrets.AZURE_AD_TENANT_ID }}
+          ZOOM_CID: ${{ secrets.ZOOM_CLIENT_ID }}
+          ZOOM_CSEC: ${{ secrets.ZOOM_CLIENT_SECRET }}
+          WEBEX_CID: ${{ secrets.WEBEX_CLIENT_ID }}
+          WEBEX_CSEC: ${{ secrets.WEBEX_CLIENT_SECRET }}
+          WA_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+          WA_PHONE: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
 
       - name: Verify standalone package
         run: |
