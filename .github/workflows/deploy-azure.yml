@@ -65,7 +65,12 @@ jobs:
           cp prisma/schema.prisma .next/standalone/prisma/
           # Copy package.json for prisma CLI
           cp package.json .next/standalone/
-          cp package-lock.json .next/standalone/
+          # Cleanup: remove unnecessary files from standalone to reduce package size
+          find .next/standalone -name "*.map" -type f -delete 2>/dev/null || true
+          find .next/standalone -name "*.d.ts" -type f -delete 2>/dev/null || true
+          find .next/standalone/node_modules -name "*.md" -type f -delete 2>/dev/null || true
+          find .next/standalone -name "libquery_engine-darwin*" -delete 2>/dev/null || true
+          find .next/standalone -name "libquery_engine-windows*" -delete 2>/dev/null || true
           echo "Standalone package assembled:"
           du -sh .next/standalone/
           du -sh .next/standalone/node_modules/ || true
@@ -126,7 +131,10 @@ jobs:
               SMTP_HOST=smtp.office365.com \
               SMTP_PORT=587 \
               "SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>" \
-              EMAIL_PROVIDER=resend
+              EMAIL_PROVIDER=resend \
+              WEBSITE_RUN_FROM_PACKAGE=1 \
+              SCM_COMMAND_IDLE_TIMEOUT=300 \
+              ENABLE_ORYX_BUILD=false
 
       - name: Configure App Settings (secrets)
         run: |
@@ -224,6 +232,15 @@ jobs:
             --resource "https://management.azure.com" \
             --body '{"command":"find /home/site/wwwroot/node_modules/.prisma -type f -exec rm -f {} +","dir":"/home"}'
           echo "Old .prisma client files cleaned."
+
+      - name: Clear stale deployment locks
+        continue-on-error: true
+        run: |
+          az rest --method POST \
+            --url "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/command" \
+            --resource "https://management.azure.com" \
+            --body '{"command":"rm -f /home/site/locks/*.lock 2>/dev/null; rm -f /tmp/locks/*.lock 2>/dev/null; echo done","dir":"/home"}'
+          echo "Deployment locks cleared."
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3

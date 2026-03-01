@@ -14,11 +14,12 @@ import { randomBytes } from 'crypto';
 
 export type Platform = 'zoom' | 'teams' | 'google-meet' | 'webex' | 'youtube';
 
-interface OAuthTokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn?: number; // seconds
-  tokenType?: string;
+// OAuth token response uses snake_case as per RFC 6749
+interface OAuthTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number; // seconds
+  token_type?: string;
   scope?: string;
 }
 
@@ -241,27 +242,27 @@ export async function handleCallback(
       return { success: false, error: errorCode };
     }
 
-    const tokens: OAuthTokens & Record<string, unknown> = await response.json();
+    const tokens: OAuthTokenResponse = await response.json();
 
-    // Store encrypted tokens
-    const expiresAt = tokens.expiresIn
-      ? new Date(Date.now() + tokens.expiresIn * 1000)
+    // Store encrypted tokens (OAuth responses use snake_case per RFC 6749)
+    const expiresAt = tokens.expires_in
+      ? new Date(Date.now() + tokens.expires_in * 1000)
       : null;
 
     await prisma.platformConnection.upsert({
       where: { platform },
       create: {
         platform,
-        accessToken: encryptToken(tokens.accessToken),
-        refreshToken: encryptToken(tokens.refreshToken || null),
+        accessToken: encryptToken(tokens.access_token),
+        refreshToken: encryptToken(tokens.refresh_token || null),
         tokenExpiresAt: expiresAt,
         isEnabled: true,
         connectedById: userId || null,
         syncStatus: 'idle',
       },
       update: {
-        accessToken: encryptToken(tokens.accessToken),
-        refreshToken: encryptToken(tokens.refreshToken || null),
+        accessToken: encryptToken(tokens.access_token),
+        refreshToken: encryptToken(tokens.refresh_token || null),
         tokenExpiresAt: expiresAt,
         isEnabled: true,
         connectedById: userId || undefined,
@@ -327,23 +328,23 @@ export async function refreshToken(platform: Platform): Promise<{
       return { success: false, error: `Token refresh failed: ${response.status}` };
     }
 
-    const tokens: OAuthTokens = await response.json();
-    const expiresAt = tokens.expiresIn
-      ? new Date(Date.now() + tokens.expiresIn * 1000)
+    const tokens: OAuthTokenResponse = await response.json();
+    const expiresAt = tokens.expires_in
+      ? new Date(Date.now() + tokens.expires_in * 1000)
       : null;
 
     await prisma.platformConnection.update({
       where: { platform },
       data: {
-        accessToken: encryptToken(tokens.accessToken),
+        accessToken: encryptToken(tokens.access_token),
         // Some platforms return a new refresh token
-        ...(tokens.refreshToken ? { refreshToken: encryptToken(tokens.refreshToken) } : {}),
+        ...(tokens.refresh_token ? { refreshToken: encryptToken(tokens.refresh_token) } : {}),
         tokenExpiresAt: expiresAt,
         syncError: null,
       },
     });
 
-    return { success: true, accessToken: tokens.accessToken };
+    return { success: true, accessToken: tokens.access_token };
   } catch (error) {
     logger.error(`[OAuth] Refresh error for ${platform}:`, safeErrorMessage(error));
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };

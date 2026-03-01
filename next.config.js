@@ -124,9 +124,27 @@ const nextConfig = {
   // via fs.readFileSync which webpack cannot resolve during build.
   serverExternalPackages: ['isomorphic-dompurify', 'jsdom', 'nodemailer'],
 
+  // Reduce standalone package size: exclude dev/platform-specific files from trace
+  outputFileTracingExcludes: {
+    '/*': [
+      './node_modules/**/*.map',
+      './node_modules/**/*.d.ts',
+      './node_modules/**/*.md',
+      './node_modules/**/LICENSE*',
+      './node_modules/**/CHANGELOG*',
+      './node_modules/**/__tests__/**',
+      './node_modules/.prisma/client/libquery_engine-darwin*',
+      './node_modules/.prisma/client/libquery_engine-windows*',
+      './node_modules/@prisma/engines/**',
+    ],
+  },
+
   // Experimental optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-icons'],
+    optimizePackageImports: [
+      'lucide-react', 'date-fns', '@radix-ui/react-icons',
+      'recharts', 'reactflow', '@azure/identity', '@azure/storage-blob', 'jose', 'zod',
+    ],
   },
   
   // Images - Optimisation et domaines autorisés
