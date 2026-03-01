@@ -4,7 +4,6 @@
  */
 
 import { getValidAccessToken, type Platform } from './oauth';
-import { createMeeting as createZoomMeeting } from '@/lib/integrations/zoom';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -36,7 +35,34 @@ export interface MeetingResult {
 // ---------------------------------------------------------------------------
 
 async function createZoom(params: CreateMeetingParams): Promise<MeetingResult> {
-  const data = await createZoomMeeting(params.topic, params.startTime, params.duration);
+  const token = await getValidAccessToken('zoom');
+  if (!token) throw new Error('Zoom not connected or token expired');
+
+  const res = await fetch('https://api.zoom.us/v2/users/me/meetings', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      topic: params.topic,
+      type: 2, // Scheduled
+      start_time: params.startTime,
+      duration: params.duration,
+      settings: {
+        join_before_host: false,
+        waiting_room: true,
+        auto_recording: 'none',
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Zoom meeting creation failed: ${res.status} ${err}`);
+  }
+
+  const data = await res.json();
 
   return {
     meetingId: String(data.id),
