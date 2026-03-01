@@ -112,6 +112,28 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
+      - name: Configure infra settings (may restart SCM - run first)
+        run: |
+          # These settings can cause SCM container restart. Only set if changed.
+          CURRENT=$(az webapp config appsettings list \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --query "[?name=='WEBSITE_RUN_FROM_PACKAGE'].value" -o tsv)
+          if [ "$CURRENT" != "1" ]; then
+            echo "Setting WEBSITE_RUN_FROM_PACKAGE (will restart SCM)..."
+            az webapp config appsettings set \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_WEBAPP_NAME }} \
+              --settings \
+                WEBSITE_RUN_FROM_PACKAGE=1 \
+                SCM_COMMAND_IDLE_TIMEOUT=300 \
+                ENABLE_ORYX_BUILD=false
+            echo "Waiting 30s for SCM container to stabilize..."
+            sleep 30
+          else
+            echo "WEBSITE_RUN_FROM_PACKAGE already set, skipping (no SCM restart)."
+          fi
+
       - name: Configure App Settings (static)
         run: |
           az webapp config appsettings set \
@@ -131,10 +153,7 @@ jobs:
               SMTP_HOST=smtp.office365.com \
               SMTP_PORT=587 \
               "SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>" \
-              EMAIL_PROVIDER=resend \
-              WEBSITE_RUN_FROM_PACKAGE=1 \
-              SCM_COMMAND_IDLE_TIMEOUT=300 \
-              ENABLE_ORYX_BUILD=false
+              EMAIL_PROVIDER=resend
 
       - name: Configure App Settings (secrets)
         run: |

@@ -10,9 +10,9 @@ const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
 function getEncryptionKey(): Buffer {
-  const key = process.env.PLATFORM_ENCRYPTION_KEY;
+  const key = process.env.ENCRYPTION_KEY || process.env.PLATFORM_ENCRYPTION_KEY;
   if (!key) {
-    throw new Error('PLATFORM_ENCRYPTION_KEY environment variable is not set');
+    throw new Error('ENCRYPTION_KEY (or PLATFORM_ENCRYPTION_KEY) environment variable is not set');
   }
   // Accept hex-encoded 32-byte key (64 hex chars)
   if (key.length === 64) {
