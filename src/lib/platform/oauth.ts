@@ -123,7 +123,7 @@ function getPlatformConfig(platform: Platform): PlatformOAuthConfig {
         scopes: [
           'meeting:recordings_read',
           'meeting:schedules_read',
-          'meeting:schedules_write',
+          'spark:people_read',
         ],
         clientId: process.env.WEBEX_CLIENT_ID || '',
         clientSecret: process.env.WEBEX_CLIENT_SECRET || '',
