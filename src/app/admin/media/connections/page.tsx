@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import {
   Link2, Unlink, RefreshCw, CheckCircle2, XCircle, AlertCircle,
-  Loader2, Video, Users, Monitor, Globe, Play, Settings2, Download,
+  Loader2, Video, Settings2, Download,
   ToggleLeft, ToggleRight, TestTube,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,12 +36,71 @@ interface CategoryOption {
   slug: string;
 }
 
-const PLATFORM_ICONS: Record<string, React.ReactNode> = {
-  Video: <Video className="h-6 w-6" />,
-  Users: <Users className="h-6 w-6" />,
-  Monitor: <Monitor className="h-6 w-6" />,
-  Globe: <Globe className="h-6 w-6" />,
-  Play: <Play className="h-6 w-6" />,
+// Real platform logos as SVG components
+function ZoomLogo({ className = 'h-6 w-6' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="10" fill="#2D8CFF" />
+      <path d="M12 17.5C12 16.12 13.12 15 14.5 15H28.5C29.88 15 31 16.12 31 17.5V27.5L36 31V14L31 18V17.5C31 16.12 29.88 15 28.5 15" fill="white" opacity="0" />
+      <path d="M14 18C14 16.9 14.9 16 16 16H28C29.1 16 30 16.9 30 18V30C30 31.1 29.1 32 28 32H16C14.9 32 14 31.1 14 30V18Z" fill="white" />
+      <path d="M30 22L36 18V30L30 26V22Z" fill="white" />
+    </svg>
+  );
+}
+
+function TeamsLogo({ className = 'h-6 w-6' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="10" fill="#6264A7" />
+      <circle cx="30" cy="14" r="4" fill="white" opacity="0.8" />
+      <circle cx="22" cy="16" r="5" fill="white" />
+      <path d="M12 24C12 22 14 20 17 20H27C30 20 32 22 32 24V33C32 34.1 31.1 35 30 35H14C12.9 35 12 34.1 12 33V24Z" fill="white" />
+      <path d="M33 22H37C38.66 22 40 23.34 40 25V31C40 32.1 39.1 33 38 33H33V22Z" fill="white" opacity="0.8" />
+    </svg>
+  );
+}
+
+function GoogleMeetLogo({ className = 'h-6 w-6' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="10" fill="#00897B" />
+      <path d="M12 18C12 16.9 12.9 16 14 16H28C29.1 16 30 16.9 30 18V30C30 31.1 29.1 32 28 32H14C12.9 32 12 31.1 12 30V18Z" fill="white" />
+      <path d="M30 21L37 16V32L30 27V21Z" fill="#FFC107" />
+      <path d="M30 21L37 16V24L30 24V21Z" fill="#4CAF50" />
+      <path d="M30 24L37 24V32L30 27V24Z" fill="#F44336" />
+    </svg>
+  );
+}
+
+function WebexLogo({ className = 'h-6 w-6' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="10" fill="#07C160" />
+      <path d="M24 10C14 10 10 17 10 24C10 31 14 38 24 38C34 38 38 31 38 24C38 17 34 10 24 10Z" fill="white" opacity="0" />
+      <circle cx="24" cy="24" r="12" fill="white" opacity="0.2" />
+      <path d="M16 28C16 28 18 20 24 20C30 20 32 28 32 28" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <circle cx="20" cy="18" r="3" fill="white" />
+      <circle cx="28" cy="18" r="3" fill="white" />
+    </svg>
+  );
+}
+
+function YouTubeLogo({ className = 'h-6 w-6' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="10" fill="#FF0000" />
+      <path d="M38 18.3C37.7 16.7 36.5 15.5 35 15.2C32.3 14.5 24 14.5 24 14.5C24 14.5 15.7 14.5 13 15.2C11.5 15.5 10.3 16.7 10 18.3C9.5 21 9.5 24 9.5 24C9.5 24 9.5 27 10 29.7C10.3 31.3 11.5 32.5 13 32.8C15.7 33.5 24 33.5 24 33.5C24 33.5 32.3 33.5 35 32.8C36.5 32.5 37.7 31.3 38 29.7C38.5 27 38.5 24 38.5 24C38.5 24 38.5 21 38 18.3Z" fill="white" />
+      <path d="M21 29V19L30 24L21 29Z" fill="#FF0000" />
+    </svg>
+  );
+}
+
+const PLATFORM_LOGOS: Record<string, React.ReactNode> = {
+  zoom: <ZoomLogo className="h-8 w-8" />,
+  teams: <TeamsLogo className="h-8 w-8" />,
+  'google-meet': <GoogleMeetLogo className="h-8 w-8" />,
+  webex: <WebexLogo className="h-8 w-8" />,
+  youtube: <YouTubeLogo className="h-8 w-8" />,
 };
 
 const PLATFORM_DESC_KEYS: Record<string, string> = {
@@ -249,7 +308,7 @@ export default function PlatformConnectionsPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className={`rounded-lg p-2 ${p.isConnected ? 'bg-white/80' : 'bg-gray-100'}`}>
-                  {PLATFORM_ICONS[p.icon] || <Video className="h-6 w-6" />}
+                  {PLATFORM_LOGOS[p.platform] || <Video className="h-6 w-6" />}
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">{p.name}</h3>
