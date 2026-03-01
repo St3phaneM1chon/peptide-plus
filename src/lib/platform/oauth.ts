@@ -36,10 +36,18 @@ interface PlatformOAuthConfig {
 // ---------------------------------------------------------------------------
 
 function getCallbackUrl(platform: Platform): string {
-  // For OAuth callbacks, use the public-facing URL (NEXT_PUBLIC_APP_URL) first,
-  // because AUTH_URL/NEXTAUTH_URL may point to internal addresses (e.g. 0.0.0.0:3000)
+  // OAuth callbacks MUST use the public-facing URL.
+  // AUTH_URL/NEXTAUTH_URL on Azure often resolve to internal addresses (0.0.0.0, localhost)
   // which are unreachable by the OAuth provider's redirect.
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.AUTH_URL,
+    process.env.NEXTAUTH_URL,
+  ].filter(Boolean) as string[];
+
+  const baseUrl = candidates.find(u => !u.includes('localhost') && !u.includes('0.0.0.0'))
+    || 'https://biocyclepeptides.com';
+
   return `${baseUrl}/api/admin/platform-connections/${platform}/callback`;
 }
 
