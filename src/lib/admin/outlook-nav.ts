@@ -13,7 +13,7 @@ import {
   Megaphone, Inbox, FileBarChart, Layout, Receipt, CreditCard, Clock,
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
-  ClipboardCheck, Database, Sparkles, Play,
+  ClipboardCheck, Database, Sparkles, Play, Wifi,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -363,6 +363,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/employes', labelKey: 'admin.nav.employees', icon: UserCheck },
           { href: '/admin/parametres', labelKey: 'admin.nav.settings', icon: Settings },
           { href: '/admin/uat', labelKey: 'admin.nav.uatTesting', icon: FlaskConical },
+          { href: '/admin/diagnostics', labelKey: 'admin.nav.networkDiagnostics', icon: Wifi },
         ],
         defaultOpen: true,
       },
@@ -405,6 +406,6 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
   return 'dashboard';
 }

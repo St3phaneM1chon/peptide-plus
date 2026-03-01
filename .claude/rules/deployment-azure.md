@@ -166,3 +166,25 @@ L'ordre des operations est **critique**. Toujours respecter:
 - **Prevention**: Inclure `prisma db push` dans le pipeline CI/CD ou verifier manuellement avant chaque push.
 - **Exemple**: `Category.parentId` ajoute localement mais absent en production (2026-02-19)
 - **Detecte**: 2026-02-19
+
+### KB-PP-BUILD-005: OAuth tokens snake_case mismatch
+- **Symptome**: OAuth callback retourne succes mais platformConnection reste "Non connecte"
+- **Cause racine**: Interface TypeScript utilisait camelCase (`accessToken`) mais OAuth2 RFC 6749 renvoie snake_case (`access_token`). `tokens.accessToken` est `undefined`, `encryptToken(undefined)` retourne `null`.
+- **Fix**: Utiliser snake_case dans l'interface TS: `access_token`, `refresh_token`, `expires_in`
+- **Prevention**: TOUJOURS utiliser snake_case pour les reponses OAuth. TypeScript type assertions ne transforment PAS les donnees.
+- **Detecte**: 2026-03-01
+
+### KB-PP-BUILD-006: WEBSITE_RUN_FROM_PACKAGE read-only filesystem
+- **Symptome**: App crash loop, health check HTTP 000, logs: `ENOENT: mkdir '/home/site/wwwroot/logs'`
+- **Cause racine**: `WEBSITE_RUN_FROM_PACKAGE=1` monte le ZIP en lecture seule. Toute tentative d'ecriture dans wwwroot echoue.
+- **Fix**: Utiliser `/tmp/` pour les ecritures temporaires (logs, cache). Wraper mkdirSync dans try/catch.
+- **Prevention**: JAMAIS ecrire dans `process.cwd()` ou wwwroot en production Azure avec RUN_FROM_PACKAGE. Utiliser `/tmp/` ou `/home/LogFiles/`.
+- **Generalisation**: Chercher TOUT code qui ecrit des fichiers: `grep -rn "writeFile\|mkdirSync\|createWriteStream" src/ --include="*.ts"`
+- **Detecte**: 2026-03-01
+
+### KB-PP-BUILD-007: SCM container restart pendant deploy
+- **Symptome**: `Deployment has been stopped due to SCM container restart`
+- **Cause racine**: Modifier `WEBSITE_RUN_FROM_PACKAGE` via `az webapp config appsettings set` cause un restart du container SCM (Kudu), qui kill le deploy en cours.
+- **Fix**: Separer les settings infra dans un step conditionnel AVANT le deploy. Verifier si deja configure, skip si oui. Si changement, attendre 30s pour stabilisation SCM.
+- **Prevention**: Ne changer les settings infra qu'une seule fois, pas a chaque deploy.
+- **Detecte**: 2026-03-01
