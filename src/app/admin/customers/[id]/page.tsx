@@ -41,6 +41,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useSoftphone } from '@/components/voip/SoftphoneProvider';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -243,7 +244,22 @@ const tierColors: Record<string, string> = {
   DIAMOND: 'bg-violet-600',
 };
 
-type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards';
+type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'calls';
+
+interface CallLogItem {
+  id: string;
+  direction: string;
+  callerNumber: string;
+  callerName: string | null;
+  calledNumber: string;
+  status: string;
+  duration: number | null;
+  startedAt: string;
+  agentNotes: string | null;
+  recording?: { blobUrl: string | null; durationSec: number | null };
+  transcription?: { summary: string | null; sentiment: string | null };
+  survey?: { overallScore: number | null };
+}
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -253,6 +269,7 @@ export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { t, locale } = useI18n();
+  const softphone = useSoftphone();
 
   const [user, setUser] = useState<UserDetail | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -262,6 +279,8 @@ export default function ClientDetailPage() {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [calls, setCalls] = useState<CallLogItem[]>([]);
+  const [callsLoaded, setCallsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
 
@@ -300,6 +319,23 @@ export default function ClientDetailPage() {
   useEffect(() => {
     if (id) fetchUserDetail();
   }, [id, fetchUserDetail]);
+
+  // Lazy-load call history when tab is opened
+  useEffect(() => {
+    if (activeTab !== 'calls' || callsLoaded || !id) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/voip/call-logs?clientId=${id}&limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          setCalls(data.callLogs || []);
+        }
+      } catch {
+        // Silent
+      }
+      setCallsLoaded(true);
+    })();
+  }, [activeTab, callsLoaded, id]);
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -413,6 +449,7 @@ export default function ClientDetailPage() {
     { key: 'reviews', label: `${t('admin.customerDetail.tabs.reviews')} (${reviews.length})`, icon: Star },
     { key: 'addresses', label: `${t('admin.customerDetail.tabs.addresses')} (${user.addresses.length})`, icon: MapPin },
     { key: 'cards', label: `${t('admin.customerDetail.tabs.cards')} (${user.savedCards.length})`, icon: CreditCard },
+    { key: 'calls', label: `${t('admin.customerDetail.tabs.calls')} (${calls.length})`, icon: Phone },
   ];
 
   const tierProgress = getTierProgress(user.lifetimePoints, user.loyaltyTier);
@@ -539,7 +576,17 @@ export default function ClientDetailPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.phone')}</p>
-              <p className="text-sm text-slate-900">{user.phone || '-'}</p>
+              {user.phone ? (
+                <button
+                  onClick={() => softphone.makeCall(user.phone!)}
+                  className="text-sm text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1"
+                  title={t('voip.softphone.title')}
+                >
+                  <Phone className="w-3 h-3" /> {user.phone}
+                </button>
+              ) : (
+                <p className="text-sm text-slate-900">-</p>
+              )}
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.birthDate')}</p>
@@ -1276,6 +1323,81 @@ export default function ClientDetailPage() {
             <div className="col-span-3 text-center py-12 bg-white rounded-xl border border-slate-200">
               <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.cards.empty')}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============ CALLS TAB ============ */}
+      {activeTab === 'calls' && (
+        <div className="space-y-4">
+          {!callsLoaded ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-2 border-sky-600 border-t-transparent rounded-full" />
+            </div>
+          ) : calls.length === 0 ? (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+              <Phone className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+              {t('voip.dashboard.noCalls')}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {calls.map((call) => (
+                <div key={call.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        call.direction === 'INBOUND' ? 'bg-sky-50 text-sky-600' : 'bg-emerald-50 text-emerald-600'
+                      }`}>
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">
+                          {call.direction === 'INBOUND' ? call.callerNumber : call.calledNumber}
+                          {call.callerName && <span className="text-slate-500 ml-1">({call.callerName})</span>}
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
+                          <span className={call.direction === 'INBOUND' ? 'text-sky-600' : 'text-emerald-600'}>
+                            {t(`voip.callLog.${call.direction.toLowerCase()}`)}
+                          </span>
+                          {call.duration != null && (
+                            <span>{Math.floor(call.duration / 60)}:{String(call.duration % 60).padStart(2, '0')}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge variant={
+                        call.status === 'COMPLETED' ? 'success'
+                          : call.status === 'MISSED' ? 'error'
+                          : call.status === 'VOICEMAIL' ? 'warning'
+                          : 'neutral'
+                      }>
+                        {t(`voip.status.call.${call.status.toLowerCase()}`)}
+                      </StatusBadge>
+                      {call.survey?.overallScore && (
+                        <span className="flex items-center gap-0.5 text-xs text-amber-600">
+                          <Star className="w-3 h-3 fill-amber-400" /> {call.survey.overallScore}/5
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-400">
+                        {new Date(call.startedAt).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                  </div>
+                  {call.transcription?.summary && (
+                    <p className="text-sm text-slate-600 mt-1 italic">&ldquo;{call.transcription.summary}&rdquo;</p>
+                  )}
+                  {call.agentNotes && (
+                    <p className="text-xs text-slate-500 mt-1">{t('voip.callLog.agent')}: {call.agentNotes}</p>
+                  )}
+                  {call.recording?.blobUrl && (
+                    <div className="mt-2">
+                      <audio src={`/api/admin/voip/recordings/${call.id}`} controls className="w-full h-8" preload="none" />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

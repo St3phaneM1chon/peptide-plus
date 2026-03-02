@@ -18,7 +18,8 @@ import {
   Settings, Search, CreditCard, Scale, Wrench, Clock, Layers,
   FileText, AlertTriangle, DollarSign, Bookmark, Zap, Target,
   Wand2, Video, Shield, BookOpen, Scan, FileUp, LayoutGrid, List,
-  Users, Package,
+  Users, Package, Phone, PhoneIncoming, PhoneOutgoing, Voicemail as VoicemailIcon,
+  Headphones,
 } from 'lucide-react';
 
 // ── Interfaces ────────────────────────────────────────────────
@@ -75,6 +76,7 @@ const dashboardNavTabs: RibbonTab[] = [
   { key: 'nav.loyalty', labelKey: 'admin.nav.loyalty', type: 'navDropdown', railId: 'loyalty' },
   { key: 'nav.media', labelKey: 'admin.nav.mediaSection', type: 'navDropdown', railId: 'media' },
   { key: 'nav.emails', labelKey: 'admin.nav.emails', type: 'navDropdown', railId: 'emails' },
+  { key: 'nav.telephony', labelKey: 'admin.nav.telephony', type: 'navDropdown', railId: 'telephony' },
   { key: 'nav.accounting', labelKey: 'admin.nav.accounting', type: 'navDropdown', railId: 'accounting' },
   { key: 'nav.system', labelKey: 'admin.nav.system', type: 'navDropdown', railId: 'system' },
 ];
@@ -961,6 +963,122 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
       view: viewActions,
     },
   },
+
+  // ═══════════════════════════════════════════════════════════
+  // TELEPHONIE / VOIP - Section fallback
+  // ═══════════════════════════════════════════════════════════
+
+  telephonie: {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  // ── Telephonie sub-sections ──────────────────────────────
+
+  'telephonie.dashboard': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.callLogs': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download, separator: true },
+        { key: 'filter', labelKey: 'admin.ribbon.filters', icon: Filter },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.recordings': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'playSelected', labelKey: 'admin.ribbon.play', icon: Play, variant: 'primary' },
+        { key: 'download', labelKey: 'admin.ribbon.download', icon: Download, separator: true },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger' },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.voicemail': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'playSelected', labelKey: 'admin.ribbon.play', icon: Play, variant: 'primary' },
+        { key: 'markRead', labelKey: 'admin.ribbon.markRead', icon: CheckCircle, separator: true },
+        { key: 'archive', labelKey: 'admin.ribbon.archive', icon: Archive },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger' },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.extensions': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'newExtension', labelKey: 'admin.ribbon.newExtension', icon: Plus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'testConnection', labelKey: 'admin.ribbon.testConnection', icon: CheckCircle },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.phoneNumbers': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'newDID', labelKey: 'admin.ribbon.newDID', icon: Plus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'testRouting', labelKey: 'admin.ribbon.testRouting', icon: PhoneIncoming },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.connections': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'newConnection', labelKey: 'admin.ribbon.newConnection', icon: Plus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'testConnection', labelKey: 'admin.ribbon.testConnection', icon: CheckCircle },
+        { key: 'syncNow', labelKey: 'admin.ribbon.syncNow', icon: RefreshCw },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'telephonie.analytics': {
+    tabs: defaultTabs,
+    actions: {
+      home: [
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary' },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download, separator: true },
+        { key: 'dateRange', labelKey: 'admin.ribbon.dateRange', icon: Calendar },
+      ],
+      view: viewActions,
+    },
+  },
 };
 
 // ── Sub-section detection ─────────────────────────────────────
@@ -1062,6 +1180,16 @@ export function getSubSectionId(
     pathname.startsWith('/admin/comptabilite/declaration-tps-tvq') ||
     pathname.startsWith('/admin/fiscal')
   ) return 'accounting.compliance';
+
+  // ── Telephonie / VoIP ──────────────────────────
+  if (pathname === '/admin/telephonie') return 'telephonie.dashboard';
+  if (pathname.startsWith('/admin/telephonie/journal')) return 'telephonie.callLogs';
+  if (pathname.startsWith('/admin/telephonie/enregistrements')) return 'telephonie.recordings';
+  if (pathname.startsWith('/admin/telephonie/messagerie')) return 'telephonie.voicemail';
+  if (pathname.startsWith('/admin/telephonie/extensions')) return 'telephonie.extensions';
+  if (pathname.startsWith('/admin/telephonie/numeros')) return 'telephonie.phoneNumbers';
+  if (pathname.startsWith('/admin/telephonie/connexions')) return 'telephonie.connections';
+  if (pathname.startsWith('/admin/telephonie/analytics')) return 'telephonie.analytics';
 
   // ── System ──────────────────────────────────────
   if (

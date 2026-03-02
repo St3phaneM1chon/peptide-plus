@@ -633,7 +633,17 @@
       "consents": "Consentements",
       "consentTemplates": "Modèles de Consentement",
       "platformConnections": "Connexions Plateformes",
-      "recordingImports": "Imports Enregistrements"
+      "recordingImports": "Imports Enregistrements",
+      "telephony": "Téléphonie",
+      "voipDashboard": "Tableau de bord",
+      "voipCallLog": "Journal d'appels",
+      "voipRecordings": "Enregistrements",
+      "voipVoicemail": "Messagerie vocale",
+      "voipAnalytics": "Analytique",
+      "voipSettings": "Configuration VoIP",
+      "voipConnections": "Connexions",
+      "voipPhoneNumbers": "Numéros",
+      "voipExtensions": "Extensions"
     },
     "videoCategories": {
       "title": "Catégories Vidéo",
@@ -981,7 +991,15 @@
       "test": "Tester",
       "launch": "Lancer",
       "purge": "Purger",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "quickCall": "Appel rapide",
+      "download": "Télécharger",
+      "dateRange": "Période",
+      "newExtension": "Nouvelle extension",
+      "newDID": "Nouveau numéro",
+      "testRouting": "Tester routage",
+      "newConnection": "Nouvelle connexion",
+      "syncNow": "Synchroniser"
     },
     "webNavigator": {
       "title": "Navigateur web",
@@ -1604,7 +1622,8 @@
         "reviews": "Avis",
         "addresses": "Adresses",
         "cards": "Cartes",
-        "content": "Contenu & Consentements"
+        "content": "Contenu & Consentements",
+        "calls": "Appels"
       },
       "orders": {
         "pending": "En attente de traitement",
@@ -9858,5 +9877,124 @@
     "CLIENTS_ONLY": "Clients VIP uniquement",
     "EMPLOYEES_ONLY": "Employes uniquement",
     "PRIVATE": "Prive"
+  },
+  "voip": {
+    "softphone": {
+      "title": "Téléphone",
+      "connect": "Se connecter",
+      "connecting": "Connexion en cours",
+      "disconnect": "Se déconnecter",
+      "enterNumber": "Entrer un numéro"
+    },
+    "status": {
+      "online": "En ligne",
+      "busy": "Occupé",
+      "dnd": "Ne pas déranger",
+      "away": "Absent",
+      "offline": "Hors ligne",
+      "call": {
+        "ringing": "Sonnerie",
+        "in_progress": "En cours",
+        "completed": "Terminé",
+        "missed": "Manqué",
+        "voicemail": "Messagerie",
+        "failed": "Échoué",
+        "transferred": "Transféré"
+      }
+    },
+    "call": {
+      "mute": "Muet",
+      "unmute": "Activer le micro",
+      "hold": "Mettre en attente",
+      "resume": "Reprendre",
+      "hangup": "Raccrocher",
+      "transfer": "Transférer",
+      "transferTo": "Transférer vers...",
+      "transferBtn": "Transférer",
+      "keypad": "Clavier",
+      "dialing": "Appel en cours",
+      "incomingCall": "Appel entrant",
+      "unknownCaller": "Appelant inconnu",
+      "existingClient": "Client existant",
+      "answer": "Répondre",
+      "reject": "Rejeter"
+    },
+    "dashboard": {
+      "title": "Téléphonie VoIP",
+      "subtitle": "Gestion des appels et communications",
+      "callsToday": "Appels aujourd'hui",
+      "answered": "Taux de réponse",
+      "missed": "Manqués",
+      "avgDuration": "Durée moyenne",
+      "satisfaction": "Satisfaction",
+      "agentsOnline": "Agents en ligne",
+      "voicemails": "Messages vocaux",
+      "connections": "Connexions",
+      "recentCalls": "Appels récents",
+      "viewAll": "Voir tout",
+      "noCalls": "Aucun appel enregistré"
+    },
+    "callLog": {
+      "title": "Journal d'appels",
+      "searchPlaceholder": "Rechercher par numéro ou nom...",
+      "allDirections": "Toutes directions",
+      "allStatuses": "Tous statuts",
+      "inbound": "Entrant",
+      "outbound": "Sortant",
+      "internal": "Interne",
+      "direction": "Dir.",
+      "caller": "Appelant",
+      "called": "Appelé",
+      "agent": "Agent",
+      "status": "Statut",
+      "duration": "Durée",
+      "date": "Date",
+      "satisfaction": "Satisfaction",
+      "showing": "Affichage",
+      "recording": "Enregistrement",
+      "transcription": "Transcription"
+    },
+    "recordings": {
+      "title": "Enregistrements d'appels",
+      "agent": "Agent",
+      "client": "Client",
+      "summary": "Résumé",
+      "empty": "Aucun enregistrement disponible"
+    },
+    "voicemail": {
+      "title": "Messagerie vocale",
+      "unread": "non lus",
+      "markRead": "Marquer lu",
+      "archive": "Archiver",
+      "updated": "Mis à jour",
+      "updateFailed": "Échec de la mise à jour",
+      "empty": "Aucun message vocal"
+    },
+    "connections": {
+      "title": "Connexions VoIP",
+      "fusionpbxDesc": "PBX FreeSWITCH local",
+      "telnyxDesc": "Trunk SIP international",
+      "voipmsDesc": "Trunk SIP Canada",
+      "saved": "Connexion sauvegardée",
+      "saveFailed": "Échec de la sauvegarde",
+      "testFailed": "Échec du test",
+      "confirmDelete": "Supprimer cette connexion?",
+      "deleted": "Connexion supprimée",
+      "deleteFailed": "Échec de la suppression",
+      "edit": "Modifier",
+      "configure": "Configurer",
+      "enabled": "Activé",
+      "numbers": "numéros"
+    },
+    "analytics": {
+      "title": "Analytique VoIP",
+      "byDirection": "Par direction",
+      "byStatus": "Par statut",
+      "periodSummary": "Résumé de la période",
+      "totalCalls": "Total appels",
+      "answerRate": "Taux de réponse",
+      "avgDuration": "Durée moyenne",
+      "satisfaction": "Satisfaction"
+    }
   }
 }

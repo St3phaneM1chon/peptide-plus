@@ -1,11 +1,11 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-28 (Media Audit: Security fixes + SWR hooks + Image pipeline + Cross-post + Validations + OAuth refresh + Transcription + AI-tagging + Anomaly detection + MediaPicker + CalendarView + Dashboard + Bulk actions + Highlights + Analytics + Brand Kit + Meeting Creation Service)
+# LAST UPDATED: 2026-03-01 (VoIP/Telephony: 8 models, 12 API routes, 3 cron jobs, 8 admin pages, softphone WebRTC, ribbon config)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 245 | **API Routes**: 509 | **Prisma Models**: 124 | **Enums**: 30 | **Components**: 125 | **Hooks**: 19 | **Lib files**: 250
-- **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
+- **Pages**: 253 | **API Routes**: 521 | **Prisma Models**: 132 | **Enums**: 34 | **Components**: 132 | **Hooks**: 21 | **Lib files**: 255
+- **Loading skeletons**: 120 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
@@ -325,6 +325,23 @@ Each domain lists ALL pages, API routes, models, and components involved.
 
 ---
 
+### 1.21 VOIP / TELEPHONY
+> **What**: WebRTC softphone, call logging (CDR), recordings, voicemails, SIP extensions, phone numbers, analytics, post-call surveys, AI transcription
+
+| Layer | Elements |
+|-------|----------|
+| **Pages** | `/admin/telephonie` (dashboard), `/admin/telephonie/journal` (call log), `/admin/telephonie/enregistrements` (recordings), `/admin/telephonie/messagerie` (voicemail), `/admin/telephonie/connexions` (SIP config), `/admin/telephonie/analytique` (charts), `/admin/telephonie/extensions` (SIP ext), `/admin/telephonie/numeros` (DIDs) |
+| **API Routes** | `/api/admin/voip/dashboard`, `/api/admin/voip/connections`, `/api/admin/voip/extensions`, `/api/admin/voip/call-logs`, `/api/admin/voip/phone-numbers`, `/api/admin/voip/recordings/[id]`, `/api/admin/voip/voicemails`, `/api/admin/voip/cdr/ingest` (webhook), `/api/admin/voip/surveys/submit` (webhook) |
+| **Models** | `VoipConnection`, `PhoneNumber`, `SipExtension`, `CallLog`, `CallRecording`, `CallTranscription`, `CallSurvey`, `Voicemail` |
+| **Enums** | `PhoneNumberType`, `CallDirection`, `CallStatus`, `AgentStatus` |
+| **Components** | `Softphone`, `SoftphoneProvider`, `IncomingCallModal`, `CallControls`, `AgentStatus`, `AudioPlayer`, `CallStats`, `SatisfactionBadge` |
+| **Hooks** | `useVoip` (JsSIP WebRTC), `useCallState` (SWR polling) |
+| **Lib** | `voip/connection.ts`, `voip/cdr-sync.ts`, `voip/recording-upload.ts`, `voip/esl-client.ts`, `voip/transcription.ts` |
+| **External** | FreeSWITCH (ESL port 8021), FusionPBX, Telnyx SIP, VoIP.ms, OpenAI Whisper API |
+| **Affects** | User (reverse: sipExtensions, clientCalls, clientVoicemails), Company (reverse: companyCalls), Platform Integrations (reuses crypto.ts), Media (reuses StorageService for recordings) |
+
+---
+
 ## 2. DEPENDENCY CHAINS
 
 ### Order Lifecycle Chain
@@ -525,6 +542,18 @@ All pages use Outlook UI pattern (SplitLayout, ContentList, DetailPane). Key bac
 | Audit by Type | `/admin/audits/[type]` | COMPLETE | `/api/admin/audits` |
 | Audit Catalog | `/admin/audits/catalog` | COMPLETE | `/api/admin/audits` |
 | Backups Dashboard | `/admin/backups` | COMPLETE | `/api/admin/backups` |
+
+### VoIP / Telephony (8 pages)
+| Page | Path | Status | Components | API | Models |
+|------|------|--------|-----------|-----|--------|
+| Dashboard | `/admin/telephonie` | COMPLETE | VoipDashboardClient, CallStats | `/api/admin/voip/dashboard` | CallLog, VoipConnection |
+| Call Log | `/admin/telephonie/journal` | COMPLETE | CallLogClient, AudioPlayer | `/api/admin/voip/call-logs` | CallLog, CallRecording, CallTranscription |
+| Recordings | `/admin/telephonie/enregistrements` | COMPLETE | RecordingsClient, AudioPlayer | `/api/admin/voip/recordings/[id]` | CallRecording, CallTranscription |
+| Voicemail | `/admin/telephonie/messagerie` | COMPLETE | VoicemailClient, AudioPlayer | `/api/admin/voip/voicemails` | Voicemail, SipExtension |
+| Connections | `/admin/telephonie/connexions` | COMPLETE | ConnectionsClient | `/api/admin/voip/connections` | VoipConnection |
+| Analytics | `/admin/telephonie/analytique` | COMPLETE | AnalyticsClient, Recharts | `/api/admin/voip/dashboard` | CallLog, CallSurvey |
+| Extensions | `/admin/telephonie/extensions` | COMPLETE | ExtensionsClient | `/api/admin/voip/extensions` | SipExtension, User |
+| Phone Numbers | `/admin/telephonie/numeros` | COMPLETE | PhoneNumbersClient | `/api/admin/voip/phone-numbers` | PhoneNumber, VoipConnection |
 
 ### Fiscal (4 pages)
 | Page | Path | Status |
@@ -799,6 +828,22 @@ orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** 
 | /api/admin/ads/sync | POST | AdCampaignSnapshot | admin-guard | Manual sync trigger |
 | /api/admin/ads/cron | POST | AdCampaignSnapshot | cron-secret | Cron for daily sync |
 
+### VoIP / Telephony (12 routes) - NEW 2026-03-01
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/voip/dashboard | GET | CallLog,CallSurvey,SipExtension,Voicemail | admin-guard | Aggregated VoIP metrics |
+| /api/admin/voip/connections | GET,POST,PUT,DEL | VoipConnection | admin-guard | CRUD + test connection |
+| /api/admin/voip/extensions | GET,POST,PUT,DEL | SipExtension,User | admin-guard | CRUD + get SIP creds |
+| /api/admin/voip/call-logs | GET | CallLog,CallRecording,CallTranscription,User | admin-guard | Filtered + paginated |
+| /api/admin/voip/phone-numbers | GET,POST,DEL | PhoneNumber,VoipConnection | admin-guard | DID management |
+| /api/admin/voip/recordings/[id] | GET | CallRecording | admin-guard | Stream audio from Azure Blob |
+| /api/admin/voip/voicemails | GET,PUT | Voicemail,SipExtension,User | admin-guard | List + markRead/archive |
+| /api/admin/voip/cdr/ingest | POST | CallLog,CallRecording,PhoneNumber,SipExtension | cdr-secret | FreeSWITCH CDR webhook |
+| /api/admin/voip/surveys/submit | POST | CallSurvey,CallLog | cdr-secret | FreeSWITCH survey webhook |
+| /api/cron/voip-recordings | POST | CallRecording,VoipConnection | cron-secret | Upload pending PBX recordings to Azure Blob |
+| /api/cron/voip-transcriptions | POST | CallRecording,CallTranscription | cron-secret | Whisper STT + GPT-4o-mini analysis |
+| /api/cron/voip-notifications | POST | CallLog,Voicemail,SipExtension,User | cron-secret | Email alerts for missed calls + voicemails |
+
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
 
@@ -837,6 +882,18 @@ PageHeader, StatCard, Modal, Button, DataTable, FilterBar, FormField, MediaUploa
 |-----------|-----------------|
 | `AdsPlatformDashboard` | /admin/media/ads-youtube, /admin/media/ads-google, /admin/media/ads-tiktok, /admin/media/ads-x, /admin/media/ads-linkedin, /admin/media/ads-meta (6) |
 
+### VoIP Components (8) - NEW 2026-03-01
+| Component | Used By (pages) |
+|-----------|-----------------|
+| `Softphone` | Admin layout (fixed bottom bar, all admin pages) |
+| `SoftphoneProvider` | Admin layout (context wrapper) |
+| `IncomingCallModal` | Softphone (incoming call popup) |
+| `CallControls` | Softphone (mute, hold, DTMF, transfer) |
+| `AgentStatus` | Softphone (availability selector) |
+| `AudioPlayer` | /admin/telephonie/journal, /admin/telephonie/enregistrements, /admin/telephonie/messagerie |
+| `CallStats` | /admin/telephonie (dashboard), /admin/telephonie/analytique |
+| `SatisfactionBadge` | /admin/telephonie/journal (call log rows) |
+
 ### Shop-Specific Components (57)
 Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, ProductQA, CartDrawer, CartCrossSell, SearchModal, QuickViewModal, WishlistButton, FormatSelector, PeptideCalculator, CompareButton, CompareBar, NewsletterPopup, MailingListSignup, CookieConsent, FreeShippingBanner, FlashSaleBanner, TrustBadges, ShareButtons, UpsellInterstitialModal, StickyAddToCart, BundleCard, StockAlertButton, PriceDropButton, GiftCardRedeem, RecentlyViewed, TextToSpeechButton, DisclaimerModal, QuantityTiers, CategoryScroller, ProductBadges, HeroSlider, ProductVideo, SubscriptionOfferModal...
 
@@ -862,6 +919,8 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 | `useUpsell` | Upsell modal trigger | Context | Product, compare, account/products |
 | `useCurrency` | Currency conversion | Context | Shop, product, checkout, compare |
 | `useI18n` | Translations | Context | 35+ client pages |
+| `useVoip` | WebRTC softphone (JsSIP) | Memory+WSS | SoftphoneProvider |
+| `useCallState` | Real-time call stats | SWR API poll | VoipDashboardClient, AnalyticsClient |
 
 ---
 
@@ -875,6 +934,7 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 | `CurrencyProvider` | `@/contexts/CurrencyContext` | 7+ pages (shop, product, search, compare, checkout, subscriptions, gift-cards, account, account/wishlist) |
 | `UpsellProvider` | `@/contexts/UpsellContext` | 3 pages (product, compare, account/products) |
 | `LoyaltyProvider` | `@/contexts/LoyaltyContext` | 1 page (rewards) |
+| `SoftphoneProvider` | `@/components/voip/SoftphoneProvider` | All admin pages (WebRTC softphone context) |
 
 ---
 
@@ -935,6 +995,26 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 |-------|--------|---------|
 | `Video` | Extended | Added `recordingImport` relation to RecordingImport, `platformMeetingId` field, enhanced YouTube publish modal |
 | `User` | New relation | Added `socialPosts(SocialPost[])` relation |
+
+### VoIP / Telephony Models (8) + Enums (4) - NEW 2026-03-01
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `VoipConnection` | id, provider(unique), isEnabled, apiKey?, apiSecret?, accountSid?, pbxHost?, pbxPort?, eslPassword?, lastSyncAt?, syncStatus?, syncError? | configuredBy(User?), phoneNumbers[], callLogs[] | Credentials AES-256-GCM encrypted |
+| `PhoneNumber` | id, connectionId, number(unique), displayName?, country, type(PhoneNumberType), routeToIvr?, routeToQueue?, routeToExt?, isActive, monthlyCost? | connection(VoipConnection), callLogs[] | E.164 format, DID management |
+| `SipExtension` | id, userId, extension(unique), sipUsername, sipPassword, sipDomain, isRegistered, lastSeenAt?, status(AgentStatus), fusionExtId?, fusionDomainId? | user(User), callsAsAgent[], voicemails[] | SIP creds encrypted |
+| `CallLog` | id, pbxUuid?(unique), connectionId?, callerNumber, callerName?, calledNumber, direction(CallDirection), phoneNumberId?, agentId?, queue?, ivr?, startedAt, answeredAt?, endedAt?, duration?, billableSec?, waitTime?, status(CallStatus), hangupCause?, clientId?, companyId?, agentNotes?, disposition?, tags[] | connection?, phoneNumber?, agent(SipExtension), client(User?), company(Company?), recording?, survey?, transcription? | Central CDR table |
+| `CallRecording` | id, callLogId(unique), blobUrl?, localPath?, fileSize?, format, durationSec?, isUploaded, isTranscribed, consentObtained, consentMethod? | callLog(CallLog), transcription? | Azure Blob storage |
+| `CallTranscription` | id, callLogId(unique), recordingId?(unique), fullText, summary?, actionItems?, sentiment?, sentimentScore?, keywords[], language, engine, model?, confidence? | callLog(CallLog), recording?(CallRecording) | Whisper + GPT-4o-mini analysis |
+| `CallSurvey` | id, callLogId(unique), overallScore?, resolvedScore?, method, completedAt? | callLog(CallLog) | Post-call DTMF survey |
+| `Voicemail` | id, extensionId, callerNumber, callerName?, blobUrl?, localPath?, durationSec?, transcription?, isRead, isArchived, clientId? | extension(SipExtension), client(User?) | Voicemail inbox |
+
+**Enums**: `PhoneNumberType` (LOCAL/TOLL_FREE/MOBILE), `CallDirection` (INBOUND/OUTBOUND/INTERNAL), `CallStatus` (RINGING/IN_PROGRESS/COMPLETED/MISSED/VOICEMAIL/FAILED/TRANSFERRED), `AgentStatus` (ONLINE/BUSY/DND/AWAY/OFFLINE)
+
+### Updated Models (2026-03-01)
+| Model | Change | Details |
+|-------|--------|---------|
+| `User` | New relations | Added `voipConnections`, `sipExtensions`, `clientCalls`, `clientVoicemails` relations |
+| `Company` | New relation | Added `companyCalls` relation |
 
 ### Updated Models (2026-02-27)
 | Model | Change | Details |
@@ -1018,6 +1098,15 @@ email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, ma
 | File | Purpose | Used By |
 |------|---------|---------|
 | `ads-sync.ts` | Ads sync service for 6 platforms (Google, YouTube, Meta, TikTok, X, LinkedIn) | /api/admin/ads/sync, /api/admin/ads/cron |
+
+### `/src/lib/voip/` (5 files) - NEW 2026-03-01
+| File | Purpose | Used By |
+|------|---------|---------|
+| `connection.ts` | VoIP provider CRUD with encrypted credentials (Telnyx, VoIP.ms, FusionPBX) | /api/admin/voip/connections |
+| `cdr-sync.ts` | CDR ingestion from FreeSWITCH mod_json_cdr, caller-client matching | /api/admin/voip/cdr/ingest |
+| `recording-upload.ts` | Upload recordings PBX → Azure Blob, processing queue | /api/admin/voip/recordings/[id] |
+| `esl-client.ts` | FreeSWITCH ESL client (lazy singleton, esl-lite), originate/hangup/transfer/hold | Softphone actions, call controls |
+| `transcription.ts` | Whisper transcription + GPT-4o-mini analysis (sentiment, summary, keywords) | Post-call async processing |
 
 ### `/src/lib/admin/` (6 files)
 admin-fetch, admin-layout-context, icon-resolver, outlook-nav, ribbon-config, section-themes

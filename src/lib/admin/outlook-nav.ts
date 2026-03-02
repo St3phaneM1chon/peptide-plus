@@ -14,6 +14,7 @@ import {
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
   ClipboardCheck, Database, Sparkles, Play, Wifi,
+  Phone, PhoneCall, Voicemail, Headphones, BarChart3,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -35,6 +36,7 @@ export const railItems: NavRailItem[] = [
   { id: 'loyalty', labelKey: 'admin.nav.loyalty', icon: Award },
   { id: 'media', labelKey: 'admin.nav.mediaSection', icon: Video },
   { id: 'emails', labelKey: 'admin.nav.emails', icon: Mail, badge: 'inboxCount' },
+  { id: 'telephony', labelKey: 'admin.nav.telephony', icon: Phone },
   { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
 ];
@@ -266,6 +268,33 @@ export const folderSections: Record<string, NavFolderSection> = {
     ],
   },
 
+  telephony: {
+    railId: 'telephony',
+    title: 'admin.nav.telephony',
+    groups: [
+      {
+        items: [
+          { href: '/admin/telephonie', labelKey: 'admin.nav.voipDashboard', icon: Layout },
+          { href: '/admin/telephonie/journal', labelKey: 'admin.nav.voipCallLog', icon: PhoneCall },
+          { href: '/admin/telephonie/enregistrements', labelKey: 'admin.nav.voipRecordings', icon: Headphones },
+          { href: '/admin/telephonie/messagerie', labelKey: 'admin.nav.voipVoicemail', icon: Voicemail },
+          { href: '/admin/telephonie/analytique', labelKey: 'admin.nav.voipAnalytics', icon: BarChart3 },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.voipSettings',
+        items: [
+          { href: '/admin/telephonie/connexions', labelKey: 'admin.nav.voipConnections', icon: Wifi },
+          { href: '/admin/telephonie/numeros', labelKey: 'admin.nav.voipPhoneNumbers', icon: Phone },
+          { href: '/admin/telephonie/extensions', labelKey: 'admin.nav.voipExtensions', icon: Users },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+    ],
+  },
+
   accounting: {
     railId: 'accounting',
     title: 'admin.nav.accounting',
@@ -406,6 +435,7 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
+  if (pathname.startsWith('/admin/telephonie')) return 'telephony';
   if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
   return 'dashboard';
 }

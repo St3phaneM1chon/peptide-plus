@@ -675,6 +675,7 @@ model Company {
   owner          User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   customers      CompanyCustomer[]
   purchases      Purchase[]
+  companyCalls   CallLog[]         @relation("CompanyCalls")
 
   @@index([slug])
   @@index([createdAt])
@@ -2791,6 +2792,12 @@ model User {
 
   // Social & Ads relations
   socialPosts            SocialPost[]          @relation("SocialPosts")
+
+  // VoIP / Telephony relations
+  voipConnections        VoipConnection[]      @relation("VoipConfiguredBy")
+  sipExtensions          SipExtension[]        @relation("UserExtension")
+  clientCalls            CallLog[]             @relation("ClientCalls")
+  clientVoicemails       Voicemail[]           @relation("ClientVoicemails")
 
   @@index([role])
   @@index([createdAt])
@@ -5848,4 +5855,309 @@ model ContentInteraction {
   @@index([action])
   @@index([createdAt])
   @@index([contentId, action, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// VoIP / Telephony (FusionPBX + FreeSWITCH integration)
+// ---------------------------------------------------------------------------
+
+enum PhoneNumberType {
+  LOCAL
+  TOLL_FREE
+  MOBILE
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+enum CallStatus {
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  VOICEMAIL
+  FAILED
+  TRANSFERRED
+}
+
+enum AgentStatus {
+  ONLINE
+  BUSY
+  DND
+  AWAY
+  OFFLINE
+}
+
+model VoipConnection {
+  id             String   @id @default(cuid())
+  provider       String   @unique // "telnyx", "voipms", "fusionpbx"
+  isEnabled      Boolean  @default(false)
+
+  // Credentials (encrypted via crypto.ts)
+  apiKey         String?
+  apiSecret      String?
+  accountSid     String?
+
+  // FusionPBX connection
+  pbxHost        String? // "pbx.biocyclepeptides.com"
+  pbxPort        Int? // 8021 (ESL)
+  eslPassword    String? // encrypted
+
+  // Sync state
+  lastSyncAt     DateTime?
+  syncStatus     String?
+  syncError      String?
+
+  // Audit
+  configuredById String?
+  configuredBy   User?    @relation("VoipConfiguredBy", fields: [configuredById], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  phoneNumbers   PhoneNumber[]
+  callLogs       CallLog[]
+
+  @@index([provider])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model PhoneNumber {
+  id           String          @id @default(cuid())
+  connectionId String
+  connection   VoipConnection  @relation(fields: [connectionId], references: [id])
+
+  number       String          @unique // "+15145551234" E.164 format
+  displayName  String? // "Support BioCycle"
+  country      String // "CA", "US", "FR"
+  type         PhoneNumberType @default(LOCAL)
+
+  // Routing
+  routeToIvr   String? // FusionPBX IVR ID
+  routeToQueue String? // FusionPBX queue name
+  routeToExt   String? // Direct extension
+
+  isActive     Boolean         @default(true)
+  monthlyCost  Decimal?        @db.Decimal(10, 2)
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  callLogs     CallLog[]
+
+  @@index([connectionId])
+  @@index([country])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model SipExtension {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation("UserExtension", fields: [userId], references: [id])
+
+  extension      String      @unique // "1001", "1002"
+  sipUsername    String // encrypted
+  sipPassword    String // encrypted
+  sipDomain      String // "pbx.biocyclepeptides.com"
+
+  // Status
+  isRegistered   Boolean     @default(false)
+  lastSeenAt     DateTime?
+  status         AgentStatus @default(OFFLINE)
+
+  // FusionPBX reference
+  fusionExtId    String? // UUID in FusionPBX DB
+  fusionDomainId String?
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  callsAsAgent   CallLog[]   @relation("AgentCalls")
+  voicemails     Voicemail[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CallLog {
+  id             String          @id @default(cuid())
+
+  // Call identification
+  pbxUuid        String?         @unique // FreeSWITCH UUID
+  connectionId   String?
+  connection     VoipConnection? @relation(fields: [connectionId], references: [id])
+
+  // Participants
+  callerNumber   String // "+15145551234"
+  callerName     String? // Caller ID name
+  calledNumber   String // "+15145559876"
+  direction      CallDirection
+
+  // Routing
+  phoneNumberId  String?
+  phoneNumber    PhoneNumber?    @relation(fields: [phoneNumberId], references: [id])
+  agentId        String?
+  agent          SipExtension?   @relation("AgentCalls", fields: [agentId], references: [id])
+  queue          String? // Queue name if routed via queue
+  ivr            String? // IVR name if passed through IVR
+
+  // Timing
+  startedAt      DateTime
+  answeredAt     DateTime?
+  endedAt        DateTime?
+  duration       Int? // seconds (total)
+  billableSec    Int? // seconds (billable)
+  waitTime       Int? // seconds in queue
+
+  // Status
+  status         CallStatus      @default(RINGING)
+  hangupCause    String? // FreeSWITCH hangup cause
+
+  // CRM linking
+  clientId       String?
+  client         User?           @relation("ClientCalls", fields: [clientId], references: [id])
+  companyId      String?
+  company        Company?        @relation("CompanyCalls", fields: [companyId], references: [id])
+
+  // Notes
+  agentNotes     String?
+  disposition    String? // "resolved", "callback_needed", "escalated"
+  tags           String[] // ["urgent", "complaint", "billing"]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  recording      CallRecording?
+  survey         CallSurvey?
+  transcription  CallTranscription?
+
+  @@index([connectionId])
+  @@index([phoneNumberId])
+  @@index([agentId])
+  @@index([clientId])
+  @@index([companyId])
+  @@index([direction])
+  @@index([status])
+  @@index([startedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CallRecording {
+  id              String   @id @default(cuid())
+  callLogId       String   @unique
+  callLog         CallLog  @relation(fields: [callLogId], references: [id])
+
+  // Storage
+  blobUrl         String? // Azure Blob URL
+  localPath       String? // Path on PBX server (temporary)
+  fileSize        Int? // bytes
+  format          String   @default("wav") // "wav", "mp3", "ogg"
+  durationSec     Int?
+
+  // Processing
+  isUploaded      Boolean  @default(false)
+  isTranscribed   Boolean  @default(false)
+
+  // Consent
+  consentObtained Boolean  @default(false)
+  consentMethod   String? // "ivr_prompt", "agent_verbal", "pre_agreed"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transcription   CallTranscription?
+
+  @@index([isUploaded])
+  @@index([isTranscribed])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CallTranscription {
+  id             String         @id @default(cuid())
+  callLogId      String         @unique
+  callLog        CallLog        @relation(fields: [callLogId], references: [id])
+  recordingId    String?        @unique
+  recording      CallRecording? @relation(fields: [recordingId], references: [id])
+
+  // Content
+  fullText       String // Complete transcription
+  summary        String? // AI-generated summary
+  actionItems    String? // AI-extracted action items (JSON array)
+  sentiment      String? // "positive", "neutral", "negative"
+  sentimentScore Float? // 0.0 to 1.0
+  keywords       String[] // AI-extracted keywords
+  language       String         @default("fr")
+
+  // Processing
+  engine         String         @default("whisper") // "whisper", "openai", "google"
+  model          String? // "base.en", "medium", etc.
+  confidence     Float? // Average confidence score
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([sentiment])
+  @@index([language])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CallSurvey {
+  id           String    @id @default(cuid())
+  callLogId    String    @unique
+  callLog      CallLog   @relation(fields: [callLogId], references: [id])
+
+  // Scores (1-5)
+  overallScore Int? // "Comment evaluez-vous le service?"
+  resolvedScore Int? // "Votre probleme a-t-il ete resolu?"
+
+  // Method
+  method       String    @default("dtmf") // "dtmf", "web_form"
+  completedAt  DateTime?
+
+  createdAt    DateTime  @default(now())
+
+  @@index([overallScore])
+  @@index([createdAt])
+}
+
+model Voicemail {
+  id            String        @id @default(cuid())
+
+  extensionId   String
+  extension     SipExtension  @relation(fields: [extensionId], references: [id])
+
+  callerNumber  String
+  callerName    String?
+
+  blobUrl       String? // Azure Blob URL
+  localPath     String?
+  durationSec   Int?
+
+  transcription String? // Whisper transcription
+  isRead        Boolean       @default(false)
+  isArchived    Boolean       @default(false)
+
+  // CRM linking
+  clientId      String?
+  client        User?         @relation("ClientVoicemails", fields: [clientId], references: [id])
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([extensionId])
+  @@index([clientId])
+  @@index([isRead])
+  @@index([isArchived])
+  @@index([createdAt])
+  @@index([updatedAt])
 }

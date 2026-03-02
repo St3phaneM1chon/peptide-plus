@@ -1908,7 +1908,8 @@
         "orders": "Lòd",
         "reviews": "Revizyon",
         "subscriptions": "Abònman",
-        "content": "Konteni & Konsantman"
+        "content": "Konteni & Konsantman",
+        "calls": "Calls"
       },
       "content": {
         "consents": "Konsantman",
@@ -4165,7 +4166,17 @@
       "apiLinkedIn": "LinkedIn",
       "apiMeta": "Meta (Facebook)",
       "platformConnections": "Platform Connections",
-      "recordingImports": "Recording Imports"
+      "recordingImports": "Recording Imports",
+      "telephony": "Telephony",
+      "voipDashboard": "Dashboard",
+      "voipCallLog": "Call Log",
+      "voipRecordings": "Recordings",
+      "voipVoicemail": "Voicemail",
+      "voipConnections": "Connections",
+      "voipAnalytics": "Analytics",
+      "voipPhoneNumbers": "Phone Numbers",
+      "voipExtensions": "Extensions",
+      "voipSettings": "VoIP Settings"
     },
     "newsletter": {
       "activeSubscribers": "Abonnés aktif",
@@ -5188,7 +5199,15 @@
       "variables": "Variables",
       "verifyBalances": "Verify Balances",
       "viewLogs": "View Logs",
-      "visitStats": "Visit Stats"
+      "visitStats": "Visit Stats",
+      "quickCall": "Quick Call",
+      "download": "Download",
+      "dateRange": "Date Range",
+      "newExtension": "New Extension",
+      "newDID": "New DID",
+      "testRouting": "Test Routing",
+      "newConnection": "New Connection",
+      "syncNow": "Sync Now"
     },
     "search": {
       "all": "All",
@@ -9644,5 +9663,124 @@
     "CLIENTS_ONLY": "Clients Only",
     "EMPLOYEES_ONLY": "Employees Only",
     "PRIVATE": "Private"
+  },
+  "voip": {
+    "softphone": {
+      "title": "Phone",
+      "connect": "Connect",
+      "connecting": "Connecting",
+      "disconnect": "Disconnect",
+      "enterNumber": "Enter a number"
+    },
+    "status": {
+      "online": "Online",
+      "busy": "Busy",
+      "dnd": "Do Not Disturb",
+      "away": "Away",
+      "offline": "Offline",
+      "call": {
+        "ringing": "Ringing",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "missed": "Missed",
+        "voicemail": "Voicemail",
+        "failed": "Failed",
+        "transferred": "Transferred"
+      }
+    },
+    "call": {
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "hold": "Hold",
+      "resume": "Resume",
+      "hangup": "Hang Up",
+      "transfer": "Transfer",
+      "transferTo": "Transfer to...",
+      "transferBtn": "Transfer",
+      "keypad": "Keypad",
+      "dialing": "Dialing",
+      "incomingCall": "Incoming call",
+      "unknownCaller": "Unknown caller",
+      "existingClient": "Existing client",
+      "answer": "Answer",
+      "reject": "Reject"
+    },
+    "dashboard": {
+      "title": "VoIP Telephony",
+      "subtitle": "Call management and communications",
+      "callsToday": "Calls today",
+      "answered": "Answer rate",
+      "missed": "Missed",
+      "avgDuration": "Avg duration",
+      "satisfaction": "Satisfaction",
+      "agentsOnline": "Agents online",
+      "voicemails": "Voicemails",
+      "connections": "Connections",
+      "recentCalls": "Recent calls",
+      "viewAll": "View all",
+      "noCalls": "No calls recorded"
+    },
+    "callLog": {
+      "title": "Call Log",
+      "searchPlaceholder": "Search by number or name...",
+      "allDirections": "All directions",
+      "allStatuses": "All statuses",
+      "inbound": "Inbound",
+      "outbound": "Outbound",
+      "internal": "Internal",
+      "direction": "Dir.",
+      "caller": "Caller",
+      "called": "Called",
+      "agent": "Agent",
+      "status": "Status",
+      "duration": "Duration",
+      "date": "Date",
+      "satisfaction": "Satisfaction",
+      "showing": "Showing",
+      "recording": "Recording",
+      "transcription": "Transcription"
+    },
+    "recordings": {
+      "title": "Call Recordings",
+      "agent": "Agent",
+      "client": "Client",
+      "summary": "Summary",
+      "empty": "No recordings available"
+    },
+    "voicemail": {
+      "title": "Voicemail",
+      "unread": "unread",
+      "markRead": "Mark as read",
+      "archive": "Archive",
+      "updated": "Updated",
+      "updateFailed": "Update failed",
+      "empty": "No voicemail messages"
+    },
+    "connections": {
+      "title": "VoIP Connections",
+      "fusionpbxDesc": "Local FreeSWITCH PBX",
+      "telnyxDesc": "International SIP trunk",
+      "voipmsDesc": "Canada SIP trunk",
+      "saved": "Connection saved",
+      "saveFailed": "Save failed",
+      "testFailed": "Test failed",
+      "confirmDelete": "Delete this connection?",
+      "deleted": "Connection deleted",
+      "deleteFailed": "Delete failed",
+      "edit": "Edit",
+      "configure": "Configure",
+      "enabled": "Enabled",
+      "numbers": "numbers"
+    },
+    "analytics": {
+      "title": "VoIP Analytics",
+      "byDirection": "By direction",
+      "byStatus": "By status",
+      "periodSummary": "Period summary",
+      "totalCalls": "Total calls",
+      "answerRate": "Answer rate",
+      "avgDuration": "Avg duration",
+      "satisfaction": "Satisfaction"
+    }
   }
 }

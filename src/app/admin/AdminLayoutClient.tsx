@@ -14,6 +14,8 @@ import AdminCommandPalette from '@/components/admin/AdminCommandPalette';
 import NotificationCenter from '@/components/admin/NotificationCenter';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import ThemeToggle from '@/components/admin/ThemeToggle';
+import { SoftphoneProvider } from '@/components/voip/SoftphoneProvider';
+import Softphone from '@/components/voip/Softphone';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,7 +23,9 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
   return (
     <AdminLayoutProvider initialRailId={initialRailId}>
-      <AdminLayoutShell>{children}</AdminLayoutShell>
+      <SoftphoneProvider>
+        <AdminLayoutShell>{children}</AdminLayoutShell>
+      </SoftphoneProvider>
     </AdminLayoutProvider>
   );
 }
@@ -158,6 +162,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
+      <Softphone />
       <AdminCommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <KeyboardShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
       <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors closeButton dir={dir} />
