@@ -675,7 +675,11 @@ model Company {
   owner          User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   customers      CompanyCustomer[]
   purchases      Purchase[]
-  companyCalls   CallLog[]         @relation("CompanyCalls")
+  companyCalls       CallLog[]         @relation("CompanyCalls")
+  dialerCampaigns    DialerCampaign[]  @relation("CompanyCampaigns")
+  callQueues         CallQueue[]       @relation("CompanyQueues")
+  ivrMenus           IvrMenu[]         @relation("CompanyIvrMenus")
+  coachingSessions   CoachingSession[] @relation("CompanyCoaching")
 
   @@index([slug])
   @@index([createdAt])
@@ -2798,6 +2802,11 @@ model User {
   sipExtensions          SipExtension[]        @relation("UserExtension")
   clientCalls            CallLog[]             @relation("ClientCalls")
   clientVoicemails       Voicemail[]           @relation("ClientVoicemails")
+  queueMemberships       CallQueueMember[]     @relation("QueueAgent")
+  presenceStatuses       PresenceStatus[]      @relation("UserPresence")
+  coachingSessions       CoachingSession[]     @relation("CoachingCoach")
+  studentSessions        CoachingSession[]     @relation("CoachingStudent")
+  supervisedSessions     CoachingSession[]     @relation("CoachingSupervisor")
 
   @@index([role])
   @@index([createdAt])
@@ -6034,9 +6043,11 @@ model CallLog {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  recording      CallRecording?
-  survey         CallSurvey?
-  transcription  CallTranscription?
+  recording          CallRecording?
+  survey             CallSurvey?
+  transcription      CallTranscription?
+  dialerDisposition  DialerDisposition?
+  coachingSession    CoachingSession?
 
   @@index([connectionId])
   @@index([phoneNumberId])
@@ -6160,4 +6171,333 @@ model Voicemail {
   @@index([isArchived])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+// =============================================================================
+// VoIP Phase 2: Dialer, Queues, IVR, Presence, Coaching
+// =============================================================================
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum QueueStrategy {
+  RING_ALL
+  ROUND_ROBIN
+  LEAST_RECENT
+  RANDOM
+  HUNT
+}
+
+enum DialerDispositionType {
+  INTERESTED
+  NOT_INTERESTED
+  CALLBACK
+  DO_NOT_CALL
+  NO_ANSWER
+  BUSY
+  VOICEMAIL
+  WRONG_NUMBER
+  OTHER
+}
+
+enum CoachingSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model DialerCampaign {
+  id           String         @id @default(cuid())
+  companyId    String
+  company      Company        @relation("CompanyCampaigns", fields: [companyId], references: [id])
+
+  name         String
+  description  String?
+  status       CampaignStatus @default(DRAFT)
+
+  // Dialer settings
+  callerIdNumber String       // E.164 DID to use as caller ID
+  maxConcurrent  Int          @default(1)  // Max simultaneous calls
+  useAmd         Boolean      @default(true)  // Answering Machine Detection
+  amdTimeout     Int          @default(3500)  // ms before AMD decision
+
+  // Script
+  scriptTitle    String?
+  scriptBody     String?      // Rich text script for agents
+
+  // Schedule
+  startTime      String?      // "09:00" - daily start
+  endTime        String?      // "17:00" - daily end
+  timezone       String       @default("America/Montreal")
+  activeDays     String[]     // ["mon","tue","wed","thu","fri"]
+
+  // Stats (denormalized for performance)
+  totalContacts  Int          @default(0)
+  totalCalled    Int          @default(0)
+  totalConnected Int          @default(0)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  dialerList     DialerListEntry[]
+  dispositions   DialerDisposition[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model DialerListEntry {
+  id           String          @id @default(cuid())
+  campaignId   String
+  campaign     DialerCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  phoneNumber  String          // E.164 number to call
+  firstName    String?
+  lastName     String?
+  email        String?
+  customFields Json?           // Flexible extra data
+
+  // State
+  isCalled     Boolean         @default(false)
+  callAttempts Int             @default(0)
+  lastCalledAt DateTime?
+  scheduledAt  DateTime?       // For callbacks
+
+  // DNCL
+  isDncl       Boolean         @default(false)
+  dnclCheckedAt DateTime?
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  disposition  DialerDisposition?
+
+  @@index([campaignId])
+  @@index([isCalled])
+  @@index([isDncl])
+  @@index([scheduledAt])
+  @@index([createdAt])
+}
+
+model DialerDisposition {
+  id           String                @id @default(cuid())
+  campaignId   String
+  campaign     DialerCampaign        @relation(fields: [campaignId], references: [id])
+  listEntryId  String                @unique
+  listEntry    DialerListEntry       @relation(fields: [listEntryId], references: [id])
+  callLogId    String?               @unique
+  callLog      CallLog?              @relation(fields: [callLogId], references: [id])
+
+  type         DialerDispositionType
+  notes        String?
+  callbackAt   DateTime?             // When to call back
+
+  createdAt    DateTime              @default(now())
+
+  @@index([campaignId])
+  @@index([type])
+  @@index([callbackAt])
+  @@index([createdAt])
+}
+
+model CallQueue {
+  id           String           @id @default(cuid())
+  companyId    String
+  company      Company          @relation("CompanyQueues", fields: [companyId], references: [id])
+
+  name         String           // "Sales", "Support", "Formation"
+  strategy     QueueStrategy    @default(RING_ALL)
+
+  // Timing
+  ringTimeout  Int              @default(30)  // seconds per agent
+  maxWaitTime  Int              @default(300) // seconds in queue before overflow
+  wrapUpTime   Int              @default(15)  // seconds post-call wrap up
+
+  // Audio
+  holdMusicUrl String?          // URL to hold music
+  announcePosition Boolean      @default(true)
+  announceInterval Int          @default(30)  // seconds between announcements
+
+  // Overflow
+  overflowAction String         @default("voicemail") // "voicemail", "ivr", "extension"
+  overflowTarget String?        // Extension/IVR ID for overflow
+
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  members      CallQueueMember[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model CallQueueMember {
+  id          String       @id @default(cuid())
+  queueId     String
+  queue       CallQueue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation("QueueAgent", fields: [userId], references: [id])
+
+  priority    Int          @default(0)  // Lower = higher priority
+  penalty     Int          @default(0)  // Weighted routing
+
+  createdAt   DateTime     @default(now())
+
+  @@unique([queueId, userId])
+  @@index([queueId])
+  @@index([userId])
+}
+
+model IvrMenu {
+  id           String        @id @default(cuid())
+  companyId    String
+  company      Company       @relation("CompanyIvrMenus", fields: [companyId], references: [id])
+
+  name         String        // "Main Menu", "After Hours"
+  description  String?
+
+  // Greeting
+  greetingText String?       // TTS text for greeting
+  greetingUrl  String?       // URL to audio file (overrides TTS)
+  language     String        @default("fr-CA")
+
+  // Timeout
+  inputTimeout Int           @default(5)   // seconds to wait for input
+  maxRetries   Int           @default(3)   // retries before timeout action
+  timeoutAction String       @default("replay") // "replay", "operator", "voicemail"
+  timeoutTarget String?
+
+  // Schedule-based routing
+  businessHoursStart String? // "09:00"
+  businessHoursEnd   String? // "17:00"
+  afterHoursMenuId   String? // ID of after-hours IvrMenu
+
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  options      IvrMenuOption[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model IvrMenuOption {
+  id          String    @id @default(cuid())
+  menuId      String
+  menu        IvrMenu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  digit       String    // "1", "2", ... "9", "0", "*", "#"
+  label       String    // "Ventes", "Support", "Formation"
+
+  // Action
+  action      String    // "transfer_queue", "transfer_ext", "sub_menu", "voicemail", "external"
+  target      String    // Queue name, extension, menu ID, or phone number
+
+  // TTS announcement before action
+  announcement String?  // "Transfert au departement des ventes..."
+
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@unique([menuId, digit])
+  @@index([menuId])
+}
+
+model PresenceStatus {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation("UserPresence", fields: [userId], references: [id])
+
+  status      AgentStatus @default(OFFLINE)
+  statusText  String?     // "En reunion", "Pause diner"
+
+  // Connection info
+  deviceType  String?     // "ios", "macos", "web"
+  ipAddress   String?
+  userAgent   String?
+
+  // Timing
+  onlineSince DateTime?
+  lastActivity DateTime?
+
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userId, deviceType])
+  @@index([userId])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model CoachingSession {
+  id           String                @id @default(cuid())
+  companyId    String
+  company      Company               @relation("CompanyCoaching", fields: [companyId], references: [id])
+
+  coachId      String
+  coach        User                  @relation("CoachingCoach", fields: [coachId], references: [id])
+  studentId    String
+  student      User                  @relation("CoachingStudent", fields: [studentId], references: [id])
+  supervisorId String?
+  supervisor   User?                 @relation("CoachingSupervisor", fields: [supervisorId], references: [id])
+
+  // Call reference (one-to-one with CallLog)
+  callLogId    String?               @unique
+  callLog      CallLog?              @relation(fields: [callLogId], references: [id])
+
+  // Session info
+  status       CoachingSessionStatus @default(SCHEDULED)
+  scheduledAt  DateTime
+  startedAt    DateTime?
+  endedAt      DateTime?
+  durationMin  Int?
+
+  // Evaluation
+  topic        String?               // "Techniques de vente", "Reclamations"
+  objectives   String?               // What should be practiced
+  feedback     String?               // Coach's written feedback
+
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  scores       CoachingScore[]
+
+  @@index([companyId])
+  @@index([coachId])
+  @@index([studentId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([createdAt])
+}
+
+model CoachingScore {
+  id          String          @id @default(cuid())
+  sessionId   String
+  session     CoachingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  criterion   String          // "Accueil client", "Ecoute active", "Argumentation"
+  score       Int             // 1-10
+  weight      Float           @default(1.0) // Weight for weighted average
+  comment     String?         // Coach comment on this criterion
+  isAutoScored Boolean        @default(false) // AI vs manual scoring
+
+  createdAt   DateTime        @default(now())
+
+  @@unique([sessionId, criterion])
+  @@index([sessionId])
+  @@index([criterion])
 }
