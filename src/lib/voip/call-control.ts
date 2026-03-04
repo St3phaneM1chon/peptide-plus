@@ -1,13 +1,20 @@
 /**
- * Call Control Business Logic
+ * Call Control Business Logic — Central Event Router
  *
- * Processes Telnyx webhook events and manages call lifecycle.
- * Handles: call logging, IVR routing, recording, AMD, transcription.
+ * Processes Telnyx webhook events and dispatches to specialized engines:
+ * - IVR Engine: menu routing, DTMF handling, time-based routing
+ * - Queue Engine: agent ring strategies, hold music, overflow
+ * - Voicemail Engine: recording, transcription, notifications
+ * - Transfer Engine: blind/attended transfer, conference
  */
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import * as telnyx from '@/lib/telnyx';
+import { resolveIvrMenu, playIvrMenu, handleIvrInput, handleIvrTimeout } from './ivr-engine';
+import { routeToQueue, removeFromQueue } from './queue-engine';
+import { handleVoicemailSaved, isVoicemailActive, cleanupVoicemail, startVoicemail } from './voicemail-engine';
+import { cleanupTransferState } from './transfer-engine';
 
 // Event payload shape from webhook handler
 export interface CallEventPayload {
@@ -30,16 +37,20 @@ export interface CallEventPayload {
 }
 
 // Active call state cache (in-memory for now, Redis later)
-const activeCallStates = new Map<string, {
+export const activeCallStates = new Map<string, {
   callLogId?: string;
   ivrMenuId?: string;
   ivrAttempts?: number;
   campaignId?: string;
   listEntryId?: string;
+  queueId?: string;
+  isVoicemail?: boolean;
+  callerNumber?: string;
+  callerName?: string;
 }>();
 
 /**
- * Main event router - dispatches Telnyx events to handlers.
+ * Main event router — dispatches Telnyx events to handlers.
  */
 export async function handleCallEvent(eventType: string, payload: CallEventPayload) {
   switch (eventType) {
@@ -68,8 +79,17 @@ export async function handleCallEvent(eventType: string, payload: CallEventPaylo
     case 'call.transcription':
       return handleTranscription(payload);
 
+    case 'call.bridged':
+      logger.info('[CallControl] Call bridged', { callControlId: payload.callControlId });
+      break;
+
     case 'call.speak.ended':
       // TTS playback completed - no action needed
+      break;
+
+    case 'conference.participant.joined':
+    case 'conference.participant.left':
+      logger.info('[CallControl] Conference event', { eventType, callControlId: payload.callControlId });
       break;
 
     default:
@@ -99,9 +119,11 @@ async function handleCallInitiated(payload: CallEventPayload) {
     },
   });
 
-  // Cache the call log ID for later events
+  // Cache the call state for later events
   activeCallStates.set(callControlId, {
     callLogId: callLog.id,
+    callerNumber: from,
+    callerName: undefined,
     ...(payload.clientState as Record<string, string> || {}),
   });
 
@@ -112,7 +134,7 @@ async function handleCallInitiated(payload: CallEventPayload) {
     to,
   });
 
-  // For inbound calls: answer and route through IVR
+  // For inbound calls: answer and route
   if (direction === 'inbound') {
     await telnyx.answerCall(callControlId);
   }
@@ -132,7 +154,7 @@ async function handleCallAnswered(payload: CallEventPayload) {
     });
   }
 
-  // For inbound calls: play IVR greeting or route to agent
+  // For inbound calls: route through IVR/Queue/Direct
   if (payload.direction === 'inbound') {
     await routeInboundCall(callControlId, payload);
   }
@@ -142,11 +164,13 @@ async function handleCallAnswered(payload: CallEventPayload) {
     await telnyx.enableAmd(callControlId);
   }
 
-  // Start recording (with consent already announced for inbound)
-  await telnyx.startRecording(callControlId, {
-    channels: 'dual',
-    format: 'wav',
-  });
+  // Start recording (consent announced in IVR greeting)
+  if (!state?.isVoicemail) {
+    await telnyx.startRecording(callControlId, {
+      channels: 'dual',
+      format: 'wav',
+    });
+  }
 }
 
 async function handleCallHangup(payload: CallEventPayload) {
@@ -178,12 +202,14 @@ async function handleCallHangup(payload: CallEventPayload) {
     });
   }
 
-  // Cleanup
+  // Cleanup all engine states
+  removeFromQueue(callControlId);
+  cleanupVoicemail(callControlId);
+  cleanupTransferState(callControlId);
   activeCallStates.delete(callControlId);
 }
 
 async function handleDtmfReceived(payload: CallEventPayload) {
-  // Single digit received - typically handled by gather_using_speak
   logger.debug('[CallControl] DTMF received', { digit: payload.digit });
 }
 
@@ -191,40 +217,54 @@ async function handleGatherEnded(payload: CallEventPayload) {
   const { callControlId, digits } = payload;
   const state = activeCallStates.get(callControlId);
 
-  if (!digits) {
-    // Timeout - replay prompt or route to operator
-    await telnyx.speakText(callControlId,
-      "Nous n'avons pas reçu votre choix. Veuillez réessayer.");
+  if (!state?.ivrMenuId) return;
+
+  // Load the menu for timeout handling
+  const menu = await prisma.ivrMenu.findFirst({
+    where: { id: state.ivrMenuId, isActive: true },
+    include: { options: { orderBy: { sortOrder: 'asc' } } },
+  });
+
+  if (!digits || digits === '') {
+    // Timeout — delegate to IVR engine
+    const attempts = (state.ivrAttempts || 0) + 1;
+    activeCallStates.set(callControlId, { ...state, ivrAttempts: attempts });
+
+    if (menu) {
+      await handleIvrTimeout(callControlId, menu, attempts);
+    } else {
+      await telnyx.speakText(callControlId,
+        "Nous n'avons pas reçu votre choix. Transfert vers un agent.");
+    }
     return;
   }
 
   logger.info('[CallControl] IVR input received', { digits, callControlId });
 
-  // Look up IVR menu option
-  if (state?.ivrMenuId) {
-    const option = await prisma.ivrMenuOption.findUnique({
-      where: {
-        menuId_digit: {
-          menuId: state.ivrMenuId,
-          digit: digits,
-        },
-      },
-    });
+  // Delegate to IVR engine
+  const handled = await handleIvrInput(callControlId, state.ivrMenuId, digits);
 
-    if (option) {
-      await executeIvrAction(callControlId, option.action, option.target, option.announcement);
-    } else {
-      // Invalid input
-      const attempts = (state.ivrAttempts || 0) + 1;
-      activeCallStates.set(callControlId, { ...state, ivrAttempts: attempts });
+  if (!handled) {
+    // Invalid input
+    const attempts = (state.ivrAttempts || 0) + 1;
+    activeCallStates.set(callControlId, { ...state, ivrAttempts: attempts });
 
-      if (attempts >= 3) {
-        // Route to operator after max retries
-        await telnyx.speakText(callControlId,
-          "Transfert vers un agent. Veuillez patienter.");
+    if (attempts >= (menu?.maxRetries || 3)) {
+      // Max retries — route to operator or voicemail
+      if (menu?.timeoutAction === 'voicemail' && menu.timeoutTarget) {
+        await startVoicemail(callControlId, menu.timeoutTarget, {
+          from: state.callerNumber,
+        });
       } else {
         await telnyx.speakText(callControlId,
-          "Choix invalide. Veuillez réessayer.");
+          "Transfert vers un agent. Veuillez patienter.");
+      }
+    } else {
+      await telnyx.speakText(callControlId,
+        "Choix invalide. Veuillez réessayer.");
+      // Replay the menu
+      if (menu) {
+        await playIvrMenu(callControlId, menu);
       }
     }
   }
@@ -234,7 +274,16 @@ async function handleRecordingSaved(payload: CallEventPayload) {
   const { callControlId, recordingUrls } = payload;
   const state = activeCallStates.get(callControlId);
 
-  if (state?.callLogId && recordingUrls) {
+  if (!recordingUrls) return;
+
+  // Check if this is a voicemail recording
+  if (isVoicemailActive(callControlId)) {
+    await handleVoicemailSaved(callControlId, recordingUrls);
+    return;
+  }
+
+  // Regular call recording
+  if (state?.callLogId) {
     await prisma.callRecording.create({
       data: {
         callLogId: state.callLogId,
@@ -260,7 +309,7 @@ async function handleAmdResult(payload: CallEventPayload) {
   logger.info('[CallControl] AMD result', { result: amdResult, callControlId });
 
   if (amdResult === 'machine' && state?.campaignId) {
-    // Answering machine detected during dialer campaign - hang up
+    // Answering machine detected — hang up for campaigns
     await telnyx.hangupCall(callControlId);
 
     if (state.callLogId) {
@@ -274,7 +323,6 @@ async function handleAmdResult(payload: CallEventPayload) {
       });
     }
   }
-  // If human detected, continue with the call normally
 }
 
 async function handleTranscription(payload: CallEventPayload) {
@@ -282,7 +330,6 @@ async function handleTranscription(payload: CallEventPayload) {
   const state = activeCallStates.get(callControlId);
 
   if (transcriptionData?.is_final && state?.callLogId) {
-    // Append to or create transcription record
     const existing = await prisma.callTranscription.findUnique({
       where: { callLogId: state.callLogId },
     });
@@ -308,120 +355,61 @@ async function handleTranscription(payload: CallEventPayload) {
   }
 }
 
-// ── IVR Routing ─────────────────────────
+// ── Inbound Routing ─────────────────────────
 
+/**
+ * Route an inbound call based on the dialed number's configuration.
+ * Priority: IVR → Queue → Extension → Default greeting
+ */
 async function routeInboundCall(callControlId: string, payload: CallEventPayload) {
   const { to } = payload;
 
-  // Find which phone number was called
   const phoneNumber = to ? await prisma.phoneNumber.findUnique({
     where: { number: to },
   }) : null;
 
   if (!phoneNumber) {
-    // Unknown number - play generic greeting
     await telnyx.speakText(callControlId,
       "Merci d'avoir appelé. Veuillez patienter pendant que nous transférons votre appel.");
     return;
   }
 
-  // Route based on phone number configuration
+  // Route 1: IVR Menu
   if (phoneNumber.routeToIvr) {
-    // Load IVR menu and play options
-    const ivrMenu = await prisma.ivrMenu.findFirst({
-      where: { id: phoneNumber.routeToIvr, isActive: true },
-      include: { options: { orderBy: { sortOrder: 'asc' } } },
-    });
-
-    if (ivrMenu) {
+    const menu = await resolveIvrMenu(phoneNumber);
+    if (menu) {
       activeCallStates.set(callControlId, {
         ...activeCallStates.get(callControlId),
-        ivrMenuId: ivrMenu.id,
+        ivrMenuId: menu.id,
         ivrAttempts: 0,
       });
-
-      // Play consent notice then IVR greeting
-      const greeting = ivrMenu.greetingText || buildIvrGreeting(ivrMenu.options);
-
-      await telnyx.speakText(callControlId,
-        "Cet appel peut être enregistré à des fins de qualité. " + greeting,
-        { language: ivrMenu.language });
-
-      // Gather DTMF input
-      await telnyx.gatherDtmf(callControlId, {
-        prompt: greeting,
-        language: ivrMenu.language,
-        maxDigits: 1,
-        timeoutSecs: ivrMenu.inputTimeout,
-      });
+      await playIvrMenu(callControlId, menu);
+      return;
     }
-  } else {
-    // Direct routing - play consent notice then transfer
-    await telnyx.speakText(callControlId,
-      "Cet appel peut être enregistré à des fins de qualité. Veuillez patienter.");
-  }
-}
-
-function buildIvrGreeting(options: Array<{ digit: string; label: string }>): string {
-  const lines = options.map(opt => `Pour ${opt.label}, appuyez sur ${opt.digit}.`);
-  return 'Bienvenue chez BioCycle. ' + lines.join(' ');
-}
-
-async function executeIvrAction(
-  callControlId: string,
-  action: string,
-  target: string,
-  announcement?: string | null
-) {
-  if (announcement) {
-    await telnyx.speakText(callControlId, announcement);
   }
 
-  switch (action) {
-    case 'transfer_ext':
-      // Transfer to a SIP extension
-      await telnyx.transferCall(callControlId, `sip:${target}@sip.telnyx.com`);
-      break;
+  // Route 2: Queue
+  if (phoneNumber.routeToQueue) {
+    await routeToQueue(callControlId, phoneNumber.routeToQueue);
+    return;
+  }
 
-    case 'transfer_queue':
-      // TODO: Implement queue routing (ring agents in the queue)
+  // Route 3: Direct Extension
+  if (phoneNumber.routeToExt) {
+    const ext = await prisma.sipExtension.findUnique({
+      where: { extension: phoneNumber.routeToExt },
+    });
+    if (ext) {
       await telnyx.speakText(callControlId,
-        "Transfert au département. Veuillez patienter.");
-      break;
-
-    case 'sub_menu':
-      // Load sub-menu and play it
-      const subMenu = await prisma.ivrMenu.findFirst({
-        where: { id: target, isActive: true },
-        include: { options: { orderBy: { sortOrder: 'asc' } } },
-      });
-      if (subMenu) {
-        activeCallStates.set(callControlId, {
-          ...activeCallStates.get(callControlId),
-          ivrMenuId: subMenu.id,
-          ivrAttempts: 0,
-        });
-        const greeting = subMenu.greetingText || buildIvrGreeting(subMenu.options);
-        await telnyx.gatherDtmf(callControlId, {
-          prompt: greeting,
-          language: subMenu.language,
-          maxDigits: 1,
-        });
-      }
-      break;
-
-    case 'voicemail':
-      await telnyx.speakText(callControlId,
-        "Vous êtes dirigé vers la messagerie vocale. Laissez votre message après le bip.");
-      // Start recording for voicemail
-      await telnyx.startRecording(callControlId, { channels: 'single', format: 'wav' });
-      break;
-
-    case 'external':
-      // Transfer to an external number
-      await telnyx.transferCall(callControlId, target);
-      break;
+        "Cet appel peut être enregistré à des fins de qualité. Transfert en cours.");
+      await telnyx.transferCall(callControlId, `sip:${ext.sipUsername}@sip.telnyx.com`);
+      return;
+    }
   }
+
+  // Default: generic greeting
+  await telnyx.speakText(callControlId,
+    "Cet appel peut être enregistré à des fins de qualité. Veuillez patienter.");
 }
 
 // ── Outbound Dialer ─────────────────────────
@@ -451,7 +439,6 @@ export async function dialCampaignCall(options: {
     timeout: 30,
   });
 
-  // Mark the list entry as called
   await prisma.dialerListEntry.update({
     where: { id: options.listEntryId },
     data: {
@@ -461,7 +448,6 @@ export async function dialCampaignCall(options: {
     },
   });
 
-  // Update campaign stats
   await prisma.dialerCampaign.update({
     where: { id: options.campaignId },
     data: {
