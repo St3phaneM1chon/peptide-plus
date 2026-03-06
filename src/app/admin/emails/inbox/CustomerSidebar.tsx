@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   User, Mail, Phone, Globe, Calendar, ShoppingBag,
-  DollarSign, Star, MessageSquare, Crown,
+  DollarSign, Star, MessageSquare, Crown, Briefcase,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
@@ -24,6 +25,19 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
   const { t, locale } = useI18n();
   const orders = (customer.orders as Array<Record<string, unknown>>) || [];
   const tier = (customer.loyaltyTier as string) || 'BRONZE';
+  const [crmDeals, setCrmDeals] = useState<Array<{ id: string; title: string; value: number; stage: string; isWon: boolean }>>([]);
+
+  // Bridge #12: Fetch CRM deals for this customer
+  useEffect(() => {
+    const userId = customer.id as string;
+    if (!userId) return;
+    fetch(`/api/admin/customers/${userId}/crm`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (json?.data?.deals) setCrmDeals(json.data.deals);
+      })
+      .catch(() => {});
+  }, [customer.id]);
 
   return (
     <div className="w-72 border-l border-slate-200 bg-white overflow-y-auto">
@@ -101,6 +115,26 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
           </span>
         </div>
       </div>
+
+      {/* Bridge #12: CRM Deals */}
+      {crmDeals.length > 0 && (
+        <div className="p-4 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2 flex items-center gap-1">
+            <Briefcase className="h-3 w-3" />
+            {t('admin.bridges.emailCrm') || 'CRM Deals'}
+          </h4>
+          <div className="space-y-1.5">
+            {crmDeals.slice(0, 3).map((deal) => (
+              <div key={deal.id} className="flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-800 truncate">{deal.title}</span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${deal.isWon ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                  {deal.stage}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent orders */}
       {orders.length > 0 && (

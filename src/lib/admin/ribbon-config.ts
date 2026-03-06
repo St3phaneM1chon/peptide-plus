@@ -76,6 +76,7 @@ const dashboardNavTabs: RibbonTab[] = [
   { key: 'nav.media', labelKey: 'admin.nav.mediaSection', type: 'navDropdown', railId: 'media' },
   { key: 'nav.emails', labelKey: 'admin.nav.emails', type: 'navDropdown', railId: 'emails' },
   { key: 'nav.telephony', labelKey: 'admin.nav.telephony', type: 'navDropdown', railId: 'telephony' },
+  { key: 'nav.crm', labelKey: 'admin.nav.crm', type: 'navDropdown', railId: 'crm' },
   { key: 'nav.accounting', labelKey: 'admin.nav.accounting', type: 'navDropdown', railId: 'accounting' },
   { key: 'nav.system', labelKey: 'admin.nav.system', type: 'navDropdown', railId: 'system' },
 ];
@@ -103,7 +104,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   commerce: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newOrder', labelKey: 'admin.ribbon.newOrder', icon: Plus, variant: 'primary' },
@@ -120,7 +121,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Commerce sub-sections ──────────────────────────────────
 
   'commerce.orders': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newOrder', labelKey: 'admin.ribbon.newOrder', icon: Plus, variant: 'primary' },
@@ -135,7 +136,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'commerce.customers': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newCustomer', labelKey: 'admin.ribbon.newCustomer', icon: UserPlus, variant: 'primary', separator: true },
@@ -150,7 +151,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'commerce.clients': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newClient', labelKey: 'admin.ribbon.newClient', icon: UserPlus, variant: 'primary', separator: true },
@@ -165,7 +166,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'commerce.suppliers': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'addSupplier', labelKey: 'admin.ribbon.addSupplier', icon: Plus, variant: 'primary', separator: true },
@@ -179,7 +180,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'commerce.inventory': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'addStock', labelKey: 'admin.ribbon.addStock', icon: Package, variant: 'primary' },
@@ -199,7 +200,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   catalog: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newProduct', labelKey: 'admin.ribbon.newProduct', icon: Plus, variant: 'primary' },
@@ -216,7 +217,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Catalog sub-sections ───────────────────────────────────
 
   'catalog.products': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newProduct', labelKey: 'admin.ribbon.newProduct', icon: Plus, variant: 'primary' },
@@ -235,7 +236,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'catalog.categories': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newCategory', labelKey: 'admin.ribbon.newCategory', icon: Plus, variant: 'primary' },
@@ -254,7 +255,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   marketing: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newPromo', labelKey: 'admin.ribbon.newPromo', icon: Plus, variant: 'primary' },
@@ -270,7 +271,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Marketing sub-sections ─────────────────────────────────
 
   'marketing.promoCodes': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newPromo', labelKey: 'admin.ribbon.newPromo', icon: Plus, variant: 'primary' },
@@ -286,7 +287,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'marketing.promotions': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newPromotion', labelKey: 'admin.ribbon.newPromotion', icon: Plus, variant: 'primary' },
@@ -303,7 +304,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'marketing.newsletter': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newNewsletter', labelKey: 'admin.ribbon.newNewsletter', icon: Plus, variant: 'primary' },
@@ -319,7 +320,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'marketing.banners': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newBanner', labelKey: 'admin.ribbon.newBanner', icon: Plus, variant: 'primary' },
@@ -335,7 +336,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'marketing.upsell': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newRule', labelKey: 'admin.ribbon.newRule', icon: Plus, variant: 'primary' },
@@ -355,7 +356,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   community: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'reply', labelKey: 'admin.ribbon.reply', icon: Reply, variant: 'primary' },
@@ -370,7 +371,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Community sub-sections ─────────────────────────────────
 
   'community.reviews': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'respond', labelKey: 'admin.ribbon.respond', icon: MessageSquare, variant: 'primary' },
@@ -385,7 +386,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'community.questions': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'respond', labelKey: 'admin.ribbon.respond', icon: MessageSquare, variant: 'primary' },
@@ -400,7 +401,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'community.chat': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newMessage', labelKey: 'admin.ribbon.newMessage', icon: Mail, variant: 'primary' },
@@ -415,7 +416,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'community.ambassadors': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newAmbassador', labelKey: 'admin.ribbon.newAmbassador', icon: UserPlus, variant: 'primary' },
@@ -434,7 +435,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   loyalty: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newTier', labelKey: 'admin.ribbon.newTier', icon: Plus, variant: 'primary' },
@@ -448,7 +449,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Loyalty sub-sections ───────────────────────────────────
 
   'loyalty.program': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newTier', labelKey: 'admin.ribbon.newTier', icon: Plus, variant: 'primary' },
@@ -464,7 +465,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'loyalty.subscriptions': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newSubscription', labelKey: 'admin.ribbon.newSubscription', icon: Plus, variant: 'primary' },
@@ -480,7 +481,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'loyalty.webinars': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newWebinar', labelKey: 'admin.ribbon.newWebinar', icon: Plus, variant: 'primary' },
@@ -500,7 +501,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   media: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'upload', labelKey: 'admin.ribbon.upload', icon: Upload, variant: 'primary' },
@@ -515,7 +516,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Media sub-sections ─────────────────────────────────────
 
   'media.apis': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'configure', labelKey: 'admin.ribbon.configure', icon: Wrench, variant: 'primary' },
@@ -529,7 +530,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'media.ads': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newAdCampaign', labelKey: 'admin.ribbon.newAdCampaign', icon: Plus, variant: 'primary' },
@@ -546,7 +547,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'media.management': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'upload', labelKey: 'admin.ribbon.upload', icon: Upload, variant: 'primary' },
@@ -565,7 +566,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   emails: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newMessage', labelKey: 'admin.ribbon.newMessage', icon: Mail, variant: 'primary' },
@@ -585,7 +586,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Emails sub-sections ────────────────────────────────────
 
   'emails.mail': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newMessage', labelKey: 'admin.ribbon.newMessage', icon: Mail, variant: 'primary' },
@@ -603,7 +604,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.templates': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newTemplate', labelKey: 'admin.ribbon.newTemplate', icon: Plus, variant: 'primary' },
@@ -619,7 +620,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.campaigns': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newEmailCampaign', labelKey: 'admin.ribbon.newEmailCampaign', icon: Plus, variant: 'primary' },
@@ -636,7 +637,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.flows': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newFlow', labelKey: 'admin.ribbon.newFlow', icon: Plus, variant: 'primary' },
@@ -652,7 +653,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.analytics': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary', separator: true },
@@ -671,7 +672,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.segments': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newSegment', labelKey: 'admin.ribbon.newSegment', icon: Plus, variant: 'primary' },
@@ -685,7 +686,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'emails.mailingList': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'addContact', labelKey: 'admin.ribbon.addContact', icon: UserPlus, variant: 'primary' },
@@ -704,7 +705,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   accounting: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newEntry', labelKey: 'admin.ribbon.newEntry', icon: Plus, variant: 'primary' },
@@ -720,7 +721,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Accounting sub-sections ────────────────────────────────
 
   'accounting.dashboard': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary', separator: true },
@@ -738,7 +739,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.entries': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newEntry', labelKey: 'admin.ribbon.newEntry', icon: Plus, variant: 'primary' },
@@ -754,7 +755,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.ocr': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'scanDocument', labelKey: 'admin.ribbon.scanDocument', icon: Scan, variant: 'primary' },
@@ -768,7 +769,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.expenses': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newExpense', labelKey: 'admin.ribbon.newExpense', icon: Plus, variant: 'primary' },
@@ -783,7 +784,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.accounts': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'search', labelKey: 'admin.ribbon.search', icon: Search, variant: 'primary', separator: true },
@@ -797,7 +798,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.customerInvoices': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newInvoice', labelKey: 'admin.ribbon.newInvoice', icon: Plus, variant: 'primary' },
@@ -813,7 +814,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.supplierInvoices': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'enterInvoice', labelKey: 'admin.ribbon.enterInvoice', icon: Plus, variant: 'primary' },
@@ -829,7 +830,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.creditNotes': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newCreditNote', labelKey: 'admin.ribbon.newCreditNote', icon: Plus, variant: 'primary' },
@@ -844,7 +845,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.aging': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary', separator: true },
@@ -857,7 +858,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.bank': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'synchronize', labelKey: 'admin.ribbon.synchronize', icon: RefreshCw, variant: 'primary' },
@@ -872,7 +873,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.reports': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'generateReport', labelKey: 'admin.ribbon.generateReport', icon: FileText, variant: 'primary' },
@@ -887,7 +888,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'accounting.compliance': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'verifyBalances', labelKey: 'admin.ribbon.verifyBalances', icon: Scale, variant: 'primary' },
@@ -907,7 +908,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   system: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'save', labelKey: 'admin.ribbon.save', icon: Save, variant: 'primary' },
@@ -921,7 +922,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── System sub-sections ────────────────────────────────────
 
   'system.access': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newRole', labelKey: 'admin.ribbon.newRole', icon: Plus, variant: 'primary' },
@@ -936,7 +937,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'system.config': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'save', labelKey: 'admin.ribbon.save', icon: Save, variant: 'primary' },
@@ -950,7 +951,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'system.tools': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'launch', labelKey: 'admin.ribbon.launch', icon: Play, variant: 'primary' },
@@ -968,7 +969,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ═══════════════════════════════════════════════════════════
 
   telephonie: {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
@@ -982,7 +983,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   // ── Telephonie sub-sections ──────────────────────────────
 
   'telephonie.dashboard': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
@@ -994,7 +995,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.callLogs': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'quickCall', labelKey: 'admin.ribbon.quickCall', icon: Phone, variant: 'primary' },
@@ -1006,7 +1007,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.recordings': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'playSelected', labelKey: 'admin.ribbon.play', icon: Play, variant: 'primary' },
@@ -1018,7 +1019,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.voicemail': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'playSelected', labelKey: 'admin.ribbon.play', icon: Play, variant: 'primary' },
@@ -1031,7 +1032,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.extensions': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newExtension', labelKey: 'admin.ribbon.newExtension', icon: Plus, variant: 'primary' },
@@ -1043,7 +1044,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.phoneNumbers': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newDID', labelKey: 'admin.ribbon.newDID', icon: Plus, variant: 'primary' },
@@ -1055,7 +1056,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.connections': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newConnection', labelKey: 'admin.ribbon.newConnection', icon: Plus, variant: 'primary' },
@@ -1068,7 +1069,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.analytics': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary' },
@@ -1080,7 +1081,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.campaigns': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newCampaign', labelKey: 'admin.ribbon.newCampaign', icon: Plus, variant: 'primary' },
@@ -1093,7 +1094,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.coaching': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newSession', labelKey: 'admin.ribbon.newSession', icon: Plus, variant: 'primary' },
@@ -1105,7 +1106,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.forwarding': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newRule', labelKey: 'admin.ribbon.newRule', icon: Plus, variant: 'primary' },
@@ -1117,7 +1118,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.ringGroups': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newGroup', labelKey: 'admin.ribbon.newGroup', icon: Plus, variant: 'primary' },
@@ -1129,7 +1130,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.surveys': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newSurvey', labelKey: 'admin.ribbon.newSurvey', icon: Plus, variant: 'primary' },
@@ -1141,7 +1142,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.ivrBuilder': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newIvr', labelKey: 'admin.ribbon.newIvr', icon: Plus, variant: 'primary' },
@@ -1153,7 +1154,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.webhooks': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'newWebhook', labelKey: 'admin.ribbon.newWebhook', icon: Plus, variant: 'primary' },
@@ -1165,7 +1166,7 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.wallboard': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary' },
@@ -1177,11 +1178,152 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
   },
 
   'telephonie.parameters': {
-    tabs: defaultTabs,
+    tabs: dashboardNavTabs,
     actions: {
       home: [
         { key: 'save', labelKey: 'admin.ribbon.save', icon: Save, variant: 'primary' },
         { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, separator: true },
+      ],
+      view: viewActions,
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // CRM - Section fallback
+  // ═══════════════════════════════════════════════════════════
+
+  crm: {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newLead', labelKey: 'admin.ribbon.newLead', icon: UserPlus, variant: 'primary' },
+        { key: 'newDeal', labelKey: 'admin.ribbon.newDeal', icon: Plus, separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw },
+      ],
+      view: viewActions,
+    },
+  },
+
+  // ── CRM sub-sections ─────────────────────────────────────
+
+  'crm.leads': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newLead', labelKey: 'admin.ribbon.newLead', icon: UserPlus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'importCsv', labelKey: 'admin.ribbon.importCsv', icon: FileUp },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.deals': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newDeal', labelKey: 'admin.ribbon.newDeal', icon: Plus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.pipeline': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary' },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.inbox': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'reply', labelKey: 'admin.ribbon.reply', icon: Reply, variant: 'primary' },
+        { key: 'forward', labelKey: 'admin.ribbon.forward', icon: Forward, separator: true },
+        { key: 'archive', labelKey: 'admin.ribbon.archive', icon: Archive },
+        { key: 'markRead', labelKey: 'admin.ribbon.markRead', icon: MailOpen },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.campaigns': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newCampaign', labelKey: 'admin.ribbon.newCampaign', icon: Plus, variant: 'primary' },
+        { key: 'start', labelKey: 'admin.ribbon.start', icon: Play },
+        { key: 'pause', labelKey: 'admin.ribbon.pause', icon: Pause, separator: true },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger' },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.dialer': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'startSession', labelKey: 'admin.ribbon.start', icon: Play, variant: 'primary' },
+        { key: 'pause', labelKey: 'admin.ribbon.pause', icon: Pause, separator: true },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.reports': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, variant: 'primary', separator: true },
+        { key: 'exportReport', labelKey: 'admin.ribbon.exportReport', icon: Download },
+        { key: 'print', labelKey: 'admin.ribbon.print', icon: Printer },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.automation': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newWorkflow', labelKey: 'admin.ribbon.newFlow', icon: Plus, variant: 'primary' },
+        { key: 'delete', labelKey: 'admin.ribbon.delete', icon: Trash2, variant: 'danger', separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.sales': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'newQuote', labelKey: 'admin.ribbon.newQuote', icon: Plus, variant: 'primary' },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download, separator: true },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw },
+      ],
+      view: viewActions,
+    },
+  },
+
+  'crm.callCenter': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'startSession', labelKey: 'admin.ribbon.start', icon: Play, variant: 'primary' },
+        { key: 'refresh', labelKey: 'admin.ribbon.refresh', icon: RefreshCw, separator: true },
+        { key: 'export', labelKey: 'admin.ribbon.export', icon: Download },
       ],
       view: viewActions,
     },
@@ -1306,6 +1448,64 @@ export function getSubSectionId(
   if (pathname.startsWith('/admin/telephonie/webhooks')) return 'telephonie.webhooks';
   if (pathname.startsWith('/admin/telephonie/wallboard')) return 'telephonie.wallboard';
   if (pathname.startsWith('/admin/telephonie/parametres')) return 'telephonie.parameters';
+
+  // ── CRM ────────────────────────────────────────
+  if (pathname === '/admin/crm' || pathname === '/admin/crm/') return 'crm';
+  if (pathname.startsWith('/admin/crm/leads')) return 'crm.leads';
+  if (pathname.startsWith('/admin/crm/deals')) return 'crm.deals';
+  if (pathname.startsWith('/admin/crm/pipeline')) return 'crm.pipeline';
+  if (pathname.startsWith('/admin/crm/inbox')) return 'crm.inbox';
+  if (
+    pathname.startsWith('/admin/crm/campaigns') ||
+    pathname.startsWith('/admin/crm/sms-campaigns') ||
+    pathname.startsWith('/admin/crm/sms-templates') ||
+    pathname.startsWith('/admin/crm/snippets') ||
+    pathname.startsWith('/admin/crm/knowledge-base') ||
+    pathname.startsWith('/admin/crm/tickets')
+  ) return 'crm.campaigns';
+  if (
+    pathname.startsWith('/admin/crm/dialer') ||
+    pathname.startsWith('/admin/crm/wallboard') ||
+    pathname.startsWith('/admin/crm/agents') ||
+    pathname.startsWith('/admin/crm/call-analytics') ||
+    pathname.startsWith('/admin/crm/call-center-kpis') ||
+    pathname.startsWith('/admin/crm/scheduling') ||
+    pathname.startsWith('/admin/crm/adherence')
+  ) return 'crm.callCenter';
+  if (
+    pathname.startsWith('/admin/crm/workflows') ||
+    pathname.startsWith('/admin/crm/compliance') ||
+    pathname.startsWith('/admin/crm/qa') ||
+    pathname.startsWith('/admin/crm/qualification') ||
+    pathname.startsWith('/admin/crm/duplicates') ||
+    pathname.startsWith('/admin/crm/forms') ||
+    pathname.startsWith('/admin/crm/playbooks') ||
+    pathname.startsWith('/admin/crm/workflow-analytics')
+  ) return 'crm.automation';
+  if (
+    pathname.startsWith('/admin/crm/quotes') ||
+    pathname.startsWith('/admin/crm/forecast') ||
+    pathname.startsWith('/admin/crm/leaderboard') ||
+    pathname.startsWith('/admin/crm/quotas') ||
+    pathname.startsWith('/admin/crm/approvals') ||
+    pathname.startsWith('/admin/crm/contracts') ||
+    pathname.startsWith('/admin/crm/exchange-rates')
+  ) return 'crm.sales';
+  if (
+    pathname.startsWith('/admin/crm/analytics') ||
+    pathname.startsWith('/admin/crm/reports') ||
+    pathname.startsWith('/admin/crm/funnel-analysis') ||
+    pathname.startsWith('/admin/crm/activity-reports') ||
+    pathname.startsWith('/admin/crm/recurring-revenue') ||
+    pathname.startsWith('/admin/crm/attribution') ||
+    pathname.startsWith('/admin/crm/churn') ||
+    pathname.startsWith('/admin/crm/clv') ||
+    pathname.startsWith('/admin/crm/cohort-analysis') ||
+    pathname.startsWith('/admin/crm/heatmaps') ||
+    pathname.startsWith('/admin/crm/deal-journey') ||
+    pathname.startsWith('/admin/crm/snapshots') ||
+    pathname.startsWith('/admin/crm/dashboard-builder')
+  ) return 'crm.reports';
 
   // ── System ──────────────────────────────────────
   if (

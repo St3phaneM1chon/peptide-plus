@@ -16,6 +16,8 @@ import {
   ClipboardCheck, Database, Sparkles, Play, Wifi, Monitor,
   Phone, PhoneCall, Voicemail, Headphones, BarChart3, GitBranch,
   Workflow, ClipboardList, Mic, ArrowRightLeft, PhoneForwarded,
+  Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
+  ToggleRight,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -38,6 +40,7 @@ export const railItems: NavRailItem[] = [
   { id: 'media', labelKey: 'admin.nav.mediaSection', icon: Video },
   { id: 'emails', labelKey: 'admin.nav.emails', icon: Mail, badge: 'inboxCount' },
   { id: 'telephony', labelKey: 'admin.nav.telephony', icon: Phone },
+  { id: 'crm', labelKey: 'admin.nav.crm', icon: Briefcase },
   { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
 ];
@@ -319,6 +322,99 @@ export const folderSections: Record<string, NavFolderSection> = {
     ],
   },
 
+  crm: {
+    railId: 'crm',
+    title: 'admin.nav.crm',
+    groups: [
+      {
+        items: [
+          { href: '/admin/crm', labelKey: 'admin.nav.crmDashboard', icon: LayoutDashboard },
+          { href: '/admin/crm/pipeline', labelKey: 'admin.nav.crmPipeline', icon: Filter },
+          { href: '/admin/crm/leads', labelKey: 'admin.nav.crmLeads', icon: Target },
+          { href: '/admin/crm/deals', labelKey: 'admin.nav.crmDeals', icon: Briefcase },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.crmSales',
+        items: [
+          { href: '/admin/crm/quotes', labelKey: 'admin.nav.crmQuotes', icon: FileText },
+          { href: '/admin/crm/forecast', labelKey: 'admin.nav.crmForecast', icon: TrendingUp },
+          { href: '/admin/crm/leaderboard', labelKey: 'admin.nav.crmLeaderboard', icon: Trophy },
+          { href: '/admin/crm/quotas', labelKey: 'admin.nav.crmQuotas', icon: Target },
+          { href: '/admin/crm/approvals', labelKey: 'admin.nav.crmApprovals', icon: CheckSquare },
+          { href: '/admin/crm/contracts', labelKey: 'admin.nav.crmContracts', icon: FileCheck },
+          { href: '/admin/crm/exchange-rates', labelKey: 'admin.nav.crmExchangeRates', icon: DollarSign },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.crmComms',
+        items: [
+          { href: '/admin/crm/inbox', labelKey: 'admin.nav.crmInbox', icon: Inbox },
+          { href: '/admin/crm/campaigns', labelKey: 'admin.nav.crmCampaigns', icon: Megaphone },
+          { href: '/admin/crm/sms-campaigns', labelKey: 'admin.nav.crmSmsCampaigns', icon: MessageSquare },
+          { href: '/admin/crm/sms-templates', labelKey: 'admin.nav.crmSmsTemplates', icon: FileText },
+          { href: '/admin/crm/snippets', labelKey: 'admin.nav.crmSnippets', icon: FileEdit },
+          { href: '/admin/crm/knowledge-base', labelKey: 'admin.nav.crmKnowledgeBase', icon: BookOpen },
+          { href: '/admin/crm/tickets', labelKey: 'admin.nav.crmTickets', icon: ClipboardList },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.crmCallCenter',
+        items: [
+          { href: '/admin/crm/dialer', labelKey: 'admin.nav.crmDialer', icon: Phone },
+          { href: '/admin/crm/wallboard', labelKey: 'admin.nav.crmWallboard', icon: Monitor },
+          { href: '/admin/crm/agents/performance', labelKey: 'admin.nav.crmAgentPerf', icon: UserCheck },
+          { href: '/admin/crm/call-analytics', labelKey: 'admin.nav.crmCallAnalytics', icon: BarChart2 },
+          { href: '/admin/crm/call-center-kpis', labelKey: 'admin.nav.crmCallKpis', icon: Activity },
+          { href: '/admin/crm/scheduling', labelKey: 'admin.nav.crmScheduling', icon: Calendar },
+          { href: '/admin/crm/adherence', labelKey: 'admin.nav.crmAdherence', icon: ClipboardCheck },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.crmAutomation',
+        items: [
+          { href: '/admin/crm/workflows', labelKey: 'admin.nav.crmWorkflows', icon: Workflow },
+          { href: '/admin/crm/compliance', labelKey: 'admin.nav.crmCompliance', icon: Shield },
+          { href: '/admin/crm/qa', labelKey: 'admin.nav.crmQa', icon: ListChecks },
+          { href: '/admin/crm/qualification', labelKey: 'admin.nav.crmQualification', icon: Star },
+          { href: '/admin/crm/duplicates', labelKey: 'admin.nav.crmDuplicates', icon: Search },
+          { href: '/admin/crm/forms', labelKey: 'admin.nav.crmForms', icon: FileEdit },
+          { href: '/admin/crm/playbooks', labelKey: 'admin.nav.crmPlaybooks', icon: BookOpen },
+          { href: '/admin/crm/workflow-analytics', labelKey: 'admin.nav.crmWorkflowAnalytics', icon: BarChart2 },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.crmReports',
+        items: [
+          { href: '/admin/crm/analytics', labelKey: 'admin.nav.crmAnalytics', icon: BarChart3 },
+          { href: '/admin/crm/reports/builder', labelKey: 'admin.nav.crmReportBuilder', icon: FileBarChart },
+          { href: '/admin/crm/funnel-analysis', labelKey: 'admin.nav.crmFunnel', icon: Filter },
+          { href: '/admin/crm/activity-reports', labelKey: 'admin.nav.crmActivityReports', icon: FileSpreadsheet },
+          { href: '/admin/crm/recurring-revenue', labelKey: 'admin.nav.crmRecurringRevenue', icon: DollarSign },
+          { href: '/admin/crm/attribution', labelKey: 'admin.nav.crmAttribution', icon: Target },
+          { href: '/admin/crm/churn', labelKey: 'admin.nav.crmChurn', icon: TrendingUp },
+          { href: '/admin/crm/clv', labelKey: 'admin.nav.crmClv', icon: DollarSign },
+          { href: '/admin/crm/cohort-analysis', labelKey: 'admin.nav.crmCohortAnalysis', icon: BarChart2 },
+          { href: '/admin/crm/heatmaps', labelKey: 'admin.nav.crmHeatmaps', icon: Activity },
+          { href: '/admin/crm/deal-journey', labelKey: 'admin.nav.crmDealJourney', icon: GitBranch },
+          { href: '/admin/crm/snapshots', labelKey: 'admin.nav.crmSnapshots', icon: Database },
+          { href: '/admin/crm/dashboard-builder', labelKey: 'admin.nav.crmDashboardBuilder', icon: Layout },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+    ],
+  },
+
   accounting: {
     railId: 'accounting',
     title: 'admin.nav.accounting',
@@ -415,6 +511,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/logs', labelKey: 'admin.nav.logsAudit', icon: Activity },
           { href: '/admin/employes', labelKey: 'admin.nav.employees', icon: UserCheck },
           { href: '/admin/parametres', labelKey: 'admin.nav.settings', icon: Settings },
+          { href: '/admin/parametres/modules', labelKey: 'admin.nav.modules', icon: ToggleRight },
           { href: '/admin/uat', labelKey: 'admin.nav.uatTesting', icon: FlaskConical },
           { href: '/admin/diagnostics', labelKey: 'admin.nav.networkDiagnostics', icon: Wifi },
         ],
@@ -460,6 +557,7 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
+  if (pathname.startsWith('/admin/crm')) return 'crm';
   if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
   return 'dashboard';
 }

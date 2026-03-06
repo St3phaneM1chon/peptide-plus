@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import {
@@ -18,6 +19,13 @@ import {
   ArrowRightLeft,
   FileText,
   Tag,
+  ShoppingCart,
+  ExternalLink,
+  PhoneCall,
+  Inbox,
+  Star,
+  Calculator,
+  Video,
 } from 'lucide-react';
 
 interface DealDetail {
@@ -64,6 +72,34 @@ interface DealDetail {
   }>;
   createdAt: string;
   updatedAt: string;
+  purchaseHistory?: {
+    recentOrders: Array<{ id: string; orderNumber: string; status: string; total: number; createdAt: string }>;
+    totalOrders: number;
+    totalSpent: number;
+  } | null;
+  // Bridge #7: CRM → Telephonie
+  callHistory?: {
+    recentCalls: Array<{ id: string; direction: string; status: string; duration: number; startedAt: string }>;
+    totalCalls: number;
+    totalDuration: number;
+  } | null;
+  // Bridge #11: CRM → Email
+  emailHistory?: {
+    recentEmails: Array<{ id: string; subject: string; status: string; sentAt: string | null }>;
+    totalSent: number;
+  } | null;
+  // Bridge #15: CRM → Fidélité
+  loyaltyInfo?: {
+    currentTier: string;
+    currentPoints: number;
+  } | null;
+  // Bridge #50: CRM → Accounting
+  accountingInfo?: {
+    totalInvoiced: number;
+    totalPaid: number;
+    outstandingBalance: number;
+    recentEntries: Array<{ id: string; entryNumber: string; description: string | null; date: string; type: string }>;
+  } | null;
 }
 
 const ACTIVITY_ICONS: Record<string, typeof Phone> = {
@@ -84,6 +120,7 @@ export default function DealDetailPage() {
   const [deal, setDeal] = useState<DealDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'timeline' | 'tasks' | 'notes'>('timeline');
+  const [mediaBridge, setMediaBridge] = useState<{ enabled: boolean; videos?: Array<{ id: string; title: string; thumbnailUrl: string | null; duration: number | null; views: number; isPublished: boolean }> } | null>(null);
 
   const fmt = useCallback(
     (amount: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount),
@@ -104,6 +141,14 @@ export default function DealDetailPage() {
         setLoading(false);
       }
     })();
+  }, [dealId]);
+
+  // Bridge #49: CRM → Media (lazy)
+  useEffect(() => {
+    if (!dealId) return;
+    fetch(`/api/admin/crm/deals/${dealId}/media`).then(r => r.ok ? r.json() : null).then(json => {
+      if (json?.data?.enabled) setMediaBridge(json.data);
+    }).catch(() => {});
   }, [dealId]);
 
   const moveDeal = async (stageId: string) => {
@@ -406,6 +451,224 @@ export default function DealDetailPage() {
                     {deal.contact?.phone || deal.lead?.phone}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Purchase History Card (e-commerce bridge) */}
+          {deal.purchaseHistory && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <ShoppingCart className="h-4 w-4" />
+                {t('admin.crm.purchaseHistory') || 'Purchase History'}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.crm.totalOrders') || 'Total Orders'}</span>
+                  <span className="font-medium text-gray-900">{deal.purchaseHistory.totalOrders}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.crm.totalSpent') || 'Total Spent'}</span>
+                  <span className="font-medium text-green-700">{fmt(deal.purchaseHistory.totalSpent)}</span>
+                </div>
+              </div>
+              {deal.purchaseHistory.recentOrders.length > 0 && (
+                <>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentOrders') || 'Recent Orders'}</p>
+                  <div className="space-y-1.5">
+                    {deal.purchaseHistory.recentOrders.map((order) => (
+                      <Link
+                        key={order.id}
+                        href={`/admin/commandes?order=${order.id}`}
+                        className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <span className="font-mono text-gray-700">{order.orderNumber}</span>
+                        <span className="text-green-700 font-medium">{fmt(order.total)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
+              {deal.contact && (
+                <Link
+                  href={`/admin/customers/${deal.contact.id}`}
+                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 pt-1"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('admin.crm.viewFullProfile') || 'View full customer profile'}
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Bridge #7: CRM → Telephonie (Call History) */}
+          {deal.callHistory && deal.callHistory.totalCalls > 0 && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <PhoneCall className="h-4 w-4" />
+                {t('admin.crm.callHistory') || 'Call History'}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.crm.totalCalls') || 'Total Calls'}</span>
+                  <span className="font-medium text-gray-900">{deal.callHistory.totalCalls}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.crm.totalDuration') || 'Total Duration'}</span>
+                  <span className="font-medium text-gray-900">
+                    {Math.floor(deal.callHistory.totalDuration / 60)}m {deal.callHistory.totalDuration % 60}s
+                  </span>
+                </div>
+              </div>
+              {deal.callHistory.recentCalls.length > 0 && (
+                <>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentCalls') || 'Recent Calls'}</p>
+                  <div className="space-y-1.5">
+                    {deal.callHistory.recentCalls.map((call) => (
+                      <div
+                        key={call.id}
+                        className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50"
+                      >
+                        <span className={`px-1.5 py-0.5 rounded ${
+                          call.direction === 'INBOUND' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                        }`}>{call.direction}</span>
+                        <span className="text-gray-500">{Math.floor(call.duration / 60)}m {call.duration % 60}s</span>
+                        <span className="text-gray-400">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Bridge #11: CRM → Email (Email History) */}
+          {deal.emailHistory && deal.emailHistory.totalSent > 0 && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Inbox className="h-4 w-4" />
+                {t('admin.crm.emailHistory') || 'Email History'}
+              </h3>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">{t('admin.crm.totalEmails') || 'Total Emails'}</span>
+                <span className="font-medium text-gray-900">{deal.emailHistory.totalSent}</span>
+              </div>
+              {deal.emailHistory.recentEmails.length > 0 && (
+                <>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentEmails') || 'Recent Emails'}</p>
+                  <div className="space-y-1.5">
+                    {deal.emailHistory.recentEmails.map((email) => (
+                      <div
+                        key={email.id}
+                        className="text-xs p-2 rounded-md bg-gray-50"
+                      >
+                        <p className="text-gray-700 truncate">{email.subject}</p>
+                        <div className="flex items-center gap-2 mt-0.5 text-gray-400">
+                          <span className={`px-1 py-0.5 rounded ${
+                            email.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            email.status === 'opened' ? 'bg-blue-100 text-blue-700' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>{email.status}</span>
+                          {email.sentAt && <span>{new Date(email.sentAt).toLocaleDateString(locale)}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Bridge #15: CRM → Fidélité */}
+          {deal.loyaltyInfo && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Star className="h-4 w-4" />
+                {t('admin.crm.loyaltyInfo') || 'Loyalty'}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.orders.loyalty.currentTier') || 'Tier'}</span>
+                  <span className="font-medium text-purple-700">{deal.loyaltyInfo.currentTier}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.orders.loyalty.pointsEarned') || 'Points'}</span>
+                  <span className="font-medium text-gray-900">{deal.loyaltyInfo.currentPoints.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bridge #50: CRM → Accounting */}
+          {deal.accountingInfo && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Calculator className="h-4 w-4" />
+                {t('admin.bridges.accountingInfo') || 'Accounting'}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.bridges.totalInvoiced') || 'Total Invoiced'}</span>
+                  <span className="font-medium text-gray-900">{fmt(deal.accountingInfo.totalInvoiced)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t('admin.bridges.totalPaid') || 'Total Paid'}</span>
+                  <span className="font-medium text-green-700">{fmt(deal.accountingInfo.totalPaid)}</span>
+                </div>
+                {deal.accountingInfo.outstandingBalance > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{t('admin.bridges.outstandingBalance') || 'Outstanding'}</span>
+                    <span className="font-medium text-red-600">{fmt(deal.accountingInfo.outstandingBalance)}</span>
+                  </div>
+                )}
+              </div>
+              {deal.accountingInfo.recentEntries.length > 0 && (
+                <>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.bridges.recentEntries') || 'Recent Entries'}</p>
+                  <div className="space-y-1.5">
+                    {deal.accountingInfo.recentEntries.slice(0, 3).map((entry) => (
+                      <Link
+                        key={entry.id}
+                        href="/admin/comptabilite/ecritures"
+                        className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <span className="font-mono text-gray-700">{entry.entryNumber}</span>
+                        <span className="text-gray-400">{new Date(entry.date).toLocaleDateString(locale)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Bridge #49: CRM → Media */}
+          {mediaBridge?.enabled && (mediaBridge.videos ?? []).length > 0 && (
+            <div className="bg-white rounded-lg border p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <Video className="h-4 w-4" />
+                {t('admin.bridges.dealMedia') || 'Deal Videos'}
+                <span className="text-xs font-normal text-gray-400">({mediaBridge.videos?.length})</span>
+              </h3>
+              <div className="space-y-1.5">
+                {mediaBridge.videos?.slice(0, 5).map((vid) => (
+                  <Link
+                    key={vid.id}
+                    href={`/admin/media/videos/${vid.id}`}
+                    className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Video className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                      <span className="font-medium text-gray-700 truncate">{vid.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-gray-400">{vid.views} {t('admin.bridges.views')}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${vid.isPublished ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {vid.isPublished ? '●' : '○'}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           )}

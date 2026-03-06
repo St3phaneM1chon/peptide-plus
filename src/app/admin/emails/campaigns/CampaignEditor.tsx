@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Save, Send, Eye, Code,
-  Type, Variable,
+  Type, Variable, Megaphone,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -34,9 +34,23 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
+  // Bridge #44: Email delivery stats from EmailLog (campaign → emails relation)
+  const [deliveryStats, setDeliveryStats] = useState<{
+    totalSent: number; delivered: number; bounced: number; openRate: number; clickRate: number;
+  } | null>(null);
+
   useEffect(() => {
     fetchCampaign();
   }, [campaignId]);
+
+  // Bridge #44: Fetch delivery stats for SENT campaigns
+  useEffect(() => {
+    if (status !== 'SENT') return;
+    fetch(`/api/admin/newsletter/campaigns/${campaignId}/emails`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => { if (json?.data?.enabled && json.data.stats) setDeliveryStats(json.data.stats); })
+      .catch(() => {});
+  }, [campaignId, status]);
 
   const fetchCampaign = async () => {
     try {
@@ -341,6 +355,38 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               placeholder={t('admin.emails.campaigns.textVersionPlaceholder')}
             />
           </details>
+        </div>
+      )}
+
+      {/* Bridge #44: Email delivery stats for SENT campaigns */}
+      {status === 'SENT' && deliveryStats && (
+        <div className="border-t border-slate-200 bg-indigo-50 px-4 py-3 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-2">
+            <Megaphone className="h-4 w-4 text-indigo-600" />
+            <span className="text-xs font-semibold text-indigo-900">{t('admin.bridges.campaignEmails')}</span>
+          </div>
+          <div className="grid grid-cols-5 gap-3 text-center">
+            <div>
+              <div className="text-sm font-bold text-slate-900">{deliveryStats.totalSent}</div>
+              <div className="text-[10px] text-slate-500">Sent</div>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-emerald-700">{deliveryStats.delivered}</div>
+              <div className="text-[10px] text-slate-500">Delivered</div>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-red-600">{deliveryStats.bounced}</div>
+              <div className="text-[10px] text-slate-500">Bounced</div>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-sky-700">{deliveryStats.openRate}%</div>
+              <div className="text-[10px] text-slate-500">{t('admin.bridges.openRate')}</div>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-violet-700">{deliveryStats.clickRate}%</div>
+              <div className="text-[10px] text-slate-500">{t('admin.bridges.clickRate')}</div>
+            </div>
+          </div>
         </div>
       )}
 

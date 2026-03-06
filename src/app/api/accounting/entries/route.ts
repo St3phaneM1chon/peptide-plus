@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { isModuleEnabled } from '@/lib/module-flags';
 /**
  * GET /api/accounting/entries
  * List journal entries with filters
@@ -62,9 +63,25 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       prisma.journalEntry.count({ where }),
     ]);
 
+    // Bridge #4: Comptabilité → Commerce — fetch source orders for entries with orderId
+    const ecommerceEnabled = await isModuleEnabled('ecommerce');
+    const orderIds = entries
+      .map((e) => e.orderId)
+      .filter((id): id is string => !!id);
+
+    let orderMap = new Map<string, { id: string; orderNumber: string; status: string; total: number }>();
+    if (ecommerceEnabled && orderIds.length > 0) {
+      const orders = await prisma.order.findMany({
+        where: { id: { in: orderIds } },
+        select: { id: true, orderNumber: true, status: true, total: true },
+      });
+      orderMap = new Map(orders.map((o) => [o.id, { ...o, total: Number(o.total) }]));
+    }
+
     // Map to expected format
     const mapped = entries.map((e) => {
       const entryLines = (e as unknown as { lines?: { account: { code: string; name: string }; debit: unknown; credit: unknown }[] }).lines;
+      const sourceOrder = e.orderId && ecommerceEnabled ? (orderMap.get(e.orderId) ?? null) : null;
       return {
         id: e.id,
         entryNumber: e.entryNumber,
@@ -73,6 +90,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         type: e.type,
         status: e.status,
         reference: e.reference,
+        orderId: e.orderId,
+        sourceOrder,
         ...(entryLines ? {
           lines: entryLines.map((l) => ({
             accountCode: l.account.code,

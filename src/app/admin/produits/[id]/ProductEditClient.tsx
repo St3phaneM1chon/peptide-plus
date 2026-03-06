@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Plus, Trash2, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil, ClipboardList, FileEdit, Package } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil, ClipboardList, FileEdit, Package, ShoppingCart, Tag, Film, Loader2, Star, Briefcase } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -114,9 +114,75 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formatToDelete, setFormatToDelete] = useState<string | null>(null);
   const [concurrentEditConfirm, setConcurrentEditConfirm] = useState<{ format: ProductFormat; initialFormat: ProductFormat } | null>(null);
-  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
+  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats' | 'sales' | 'promos' | 'videos' | 'reviews' | 'deals'>('header');
   const [translationStatuses, setTranslationStatuses] = useState<TranslationStatus[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+
+  // Bridge states (#25: sales, #17: promos, #27: videos)
+  const [salesData, setSalesData] = useState<{
+    totalUnitsSold: number; totalOrders: number; totalRevenue: number;
+    recentOrders: Array<{ orderId: string; orderNumber: string; orderStatus: string; quantity: number; price: number; date: string }>;
+  } | null>(null);
+  const [promosData, setPromosData] = useState<Array<{
+    id: string; code: string; type: string; value: number; usageCount: number; usageLimit: number | null; endsAt: string | null;
+  }> | null>(null);
+  const [videosData, setVideosData] = useState<Array<{
+    id: string; title: string; thumbnailUrl: string | null; duration: number | null; viewCount: number; publishedAt: string | null;
+  }> | null>(null);
+  const [reviewsData, setReviewsData] = useState<{
+    avgRating: number; reviewCount: number;
+    reviews: Array<{ id: string; rating: number; title: string | null; comment: string | null; isVerified: boolean; createdAt: string; user: { id: string; name: string | null } }>;
+    questions: Array<{ id: string; question: string; answer: string | null; isPublished: boolean; createdAt: string }>;
+  } | null>(null);
+  const [dealsData, setDealsData] = useState<Array<{
+    dealId: string; dealTitle: string; dealValue: number; currency: string; stage: string; isWon: boolean; isLost: boolean;
+    quantity: number; unitPrice: number; total: number; date: string;
+  }> | null>(null);
+  const [bridgeLoading, setBridgeLoading] = useState<Record<string, boolean>>({});
+
+  // Lazy-load bridge data on tab switch
+  useEffect(() => {
+    if (activeTab === 'sales' && !salesData && !bridgeLoading.sales) {
+      setBridgeLoading((p) => ({ ...p, sales: true }));
+      fetch(`/api/admin/products/${product.id}/sales`)
+        .then((r) => r.json())
+        .then((j) => { if (j.data?.enabled) setSalesData(j.data); })
+        .catch(() => {})
+        .finally(() => setBridgeLoading((p) => ({ ...p, sales: false })));
+    }
+    if (activeTab === 'promos' && !promosData && !bridgeLoading.promos) {
+      setBridgeLoading((p) => ({ ...p, promos: true }));
+      fetch(`/api/admin/products/${product.id}/promos`)
+        .then((r) => r.json())
+        .then((j) => { if (j.data?.enabled) setPromosData(j.data.promos); })
+        .catch(() => {})
+        .finally(() => setBridgeLoading((p) => ({ ...p, promos: false })));
+    }
+    if (activeTab === 'videos' && !videosData && !bridgeLoading.videos) {
+      setBridgeLoading((p) => ({ ...p, videos: true }));
+      fetch(`/api/admin/products/${product.id}/videos`)
+        .then((r) => r.json())
+        .then((j) => { if (j.data?.enabled) setVideosData(j.data.videos); })
+        .catch(() => {})
+        .finally(() => setBridgeLoading((p) => ({ ...p, videos: false })));
+    }
+    if (activeTab === 'reviews' && !reviewsData && !bridgeLoading.reviews) {
+      setBridgeLoading((p) => ({ ...p, reviews: true }));
+      fetch(`/api/admin/products/${product.id}/reviews`)
+        .then((r) => r.json())
+        .then((j) => { if (j.data?.enabled) setReviewsData(j.data); })
+        .catch(() => {})
+        .finally(() => setBridgeLoading((p) => ({ ...p, reviews: false })));
+    }
+    if (activeTab === 'deals' && !dealsData && !bridgeLoading.deals) {
+      setBridgeLoading((p) => ({ ...p, deals: true }));
+      fetch(`/api/admin/products/${product.id}/deals`)
+        .then((r) => r.json())
+        .then((j) => { if (j.data?.enabled) setDealsData(j.data.deals); })
+        .catch(() => {})
+        .finally(() => setBridgeLoading((p) => ({ ...p, deals: false })));
+    }
+  }, [activeTab, product.id, salesData, promosData, videosData, reviewsData, dealsData, bridgeLoading]);
 
   const FORMAT_TYPES = getFormatTypes(t);
   const PRODUCT_TYPES = getProductTypes(t);
@@ -420,6 +486,11 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: tabIcons.header, count: null },
     { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: tabIcons.texts, count: productTexts.length },
     { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: tabIcons.formats, count: formats.length },
+    { id: 'sales' as const, label: t('admin.bridges.salesStats') || 'Sales', icon: <ShoppingCart className="w-4 h-4" />, count: null },
+    { id: 'promos' as const, label: t('admin.bridges.activePromos') || 'Promos', icon: <Tag className="w-4 h-4" />, count: promosData?.length ?? null },
+    { id: 'videos' as const, label: t('admin.bridges.linkedVideos') || 'Videos', icon: <Film className="w-4 h-4" />, count: videosData?.length ?? null },
+    { id: 'reviews' as const, label: t('admin.bridges.productReviews') || 'Reviews', icon: <Star className="w-4 h-4" />, count: reviewsData?.reviewCount ?? null },
+    { id: 'deals' as const, label: t('admin.bridges.productDeals') || 'Deals', icon: <Briefcase className="w-4 h-4" />, count: dealsData?.length ?? null },
   ];
 
   return (
@@ -954,6 +1025,210 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   </div>
                 );
               })
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: SALES (Bridge #25) ===== */}
+        {activeTab === 'sales' && (
+          <div className="space-y-4">
+            {bridgeLoading.sales ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
+            ) : salesData ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-neutral-900">{salesData.totalUnitsSold}</p>
+                    <p className="text-xs text-neutral-500">{t('admin.bridges.unitsSold') || 'Units sold'}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-neutral-900">{salesData.totalOrders}</p>
+                    <p className="text-xs text-neutral-500">{t('admin.bridges.ordersWithProduct') || 'Orders'}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                    <p className="text-2xl font-bold text-sky-600">{formatCurrency(salesData.totalRevenue)}</p>
+                    <p className="text-xs text-neutral-500">{t('admin.bridges.totalRevenue') || 'Revenue'}</p>
+                  </div>
+                </div>
+                {salesData.recentOrders.length > 0 && (
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-700 mb-3">{t('admin.bridges.recentOrders') || 'Recent orders'}</h3>
+                    <div className="space-y-2">
+                      {salesData.recentOrders.map((o) => (
+                        <Link
+                          key={o.orderId}
+                          href={`/admin/commandes?orderId=${o.orderId}`}
+                          className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-neutral-50 border border-neutral-100"
+                        >
+                          <span className="font-mono text-neutral-700">#{o.orderNumber}</span>
+                          <span className="text-neutral-500">{o.quantity} x {formatCurrency(o.price)}</span>
+                          <span className="text-neutral-400 text-xs">{new Date(o.date).toLocaleDateString()}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-8">{t('admin.bridges.noData') || 'No sales data available'}</p>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: PROMOS (Bridge #17) ===== */}
+        {activeTab === 'promos' && (
+          <div className="space-y-4">
+            {bridgeLoading.promos ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
+            ) : promosData && promosData.length > 0 ? (
+              <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                <h3 className="text-sm font-semibold text-neutral-700 mb-3">{t('admin.bridges.activePromos') || 'Active promo codes for this product'}</h3>
+                <div className="space-y-2">
+                  {promosData.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50 border border-neutral-100">
+                      <div>
+                        <span className="font-mono font-medium text-neutral-900">{p.code}</span>
+                        <span className="text-sm text-neutral-500 ms-2">
+                          {p.type === 'PERCENTAGE' ? `${p.value}%` : formatCurrency(p.value)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-neutral-400">
+                        {p.usageCount}{p.usageLimit ? ` / ${p.usageLimit}` : ''} {t('admin.bridges.usages') || 'uses'}
+                        {p.endsAt && <span className="ms-2">→ {new Date(p.endsAt).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-8">{t('admin.bridges.noPromos') || 'No active promo codes for this product'}</p>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: VIDEOS (Bridge #27) ===== */}
+        {activeTab === 'videos' && (
+          <div className="space-y-4">
+            {bridgeLoading.videos ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
+            ) : videosData && videosData.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {videosData.map((v) => (
+                  <div key={v.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                    {v.thumbnailUrl && (
+                      <div className="relative aspect-video bg-neutral-100">
+                        <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="p-3">
+                      <p className="text-sm font-medium text-neutral-900 truncate">{v.title}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+                        {v.duration && <span>{Math.floor(v.duration / 60)}:{String(v.duration % 60).padStart(2, '0')}</span>}
+                        <span>{v.viewCount.toLocaleString()} {t('admin.bridges.views') || 'views'}</span>
+                        {v.publishedAt && <span>{new Date(v.publishedAt).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-8">{t('admin.bridges.noVideos') || 'No videos linked to this product'}</p>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: REVIEWS (Bridge #26) ===== */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-4">
+            {bridgeLoading.reviews ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
+            ) : reviewsData ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-600 flex items-center justify-center gap-1">
+                      <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" /> {reviewsData.avgRating}/5
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">{t('admin.bridges.avgRating') || 'Average Rating'}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                    <div className="text-2xl font-bold text-neutral-900">{reviewsData.reviewCount}</div>
+                    <p className="text-xs text-neutral-500 mt-1">{t('admin.bridges.totalReviews') || 'Total Reviews'}</p>
+                  </div>
+                </div>
+                {reviewsData.reviews.length > 0 && (
+                  <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100">
+                    {reviewsData.reviews.map((r) => (
+                      <div key={r.id} className="p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="flex">{Array.from({ length: 5 }, (_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < r.rating ? 'fill-yellow-500 text-yellow-500' : 'text-neutral-300'}`} />
+                          ))}</div>
+                          <span className="text-xs text-neutral-500">{r.user.name || 'Anonymous'}</span>
+                          {r.isVerified && <span className="text-xs text-green-600 font-medium">Verified</span>}
+                        </div>
+                        {r.title && <p className="text-sm font-medium text-neutral-900">{r.title}</p>}
+                        {r.comment && <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{r.comment}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reviewsData.questions.length > 0 && (
+                  <div className="bg-white rounded-xl border border-neutral-200">
+                    <div className="px-3 py-2 border-b border-neutral-100"><span className="text-sm font-medium text-neutral-700">{t('admin.bridges.recentQuestions') || 'Recent Questions'}</span></div>
+                    <div className="divide-y divide-neutral-100">
+                      {reviewsData.questions.map((q) => (
+                        <div key={q.id} className="p-3">
+                          <p className="text-sm text-neutral-900">Q: {q.question}</p>
+                          {q.answer && <p className="text-xs text-neutral-600 mt-1">A: {q.answer}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-8">{t('admin.bridges.noReviews') || 'No reviews for this product'}</p>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: DEALS (Bridge #28) ===== */}
+        {activeTab === 'deals' && (
+          <div className="space-y-4">
+            {bridgeLoading.deals ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
+            ) : dealsData && dealsData.length > 0 ? (
+              <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-neutral-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-neutral-600">Deal</th>
+                      <th className="px-3 py-2 text-left text-neutral-600">Stage</th>
+                      <th className="px-3 py-2 text-right text-neutral-600">Qty</th>
+                      <th className="px-3 py-2 text-right text-neutral-600">Total</th>
+                      <th className="px-3 py-2 text-right text-neutral-600">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {dealsData.map((d) => (
+                      <tr key={d.dealId} className="hover:bg-neutral-50">
+                        <td className="px-3 py-2 font-medium">{d.dealTitle}</td>
+                        <td className="px-3 py-2">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${d.isWon ? 'bg-green-100 text-green-700' : d.isLost ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {d.stage}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-right">{d.quantity}</td>
+                        <td className="px-3 py-2 text-right">{formatCurrency(d.total)}</td>
+                        <td className="px-3 py-2 text-right text-neutral-500">{new Date(d.date).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-400 text-center py-8">{t('admin.bridges.noDeals') || 'No CRM deals for this product'}</p>
             )}
           </div>
         )}

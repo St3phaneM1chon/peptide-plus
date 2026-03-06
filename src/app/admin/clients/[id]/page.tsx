@@ -30,16 +30,23 @@ import {
   StarIcon,
   FileCheck,
   Video,
+  LayoutDashboard,
+  Activity,
+  Handshake,
+  Loader2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import { StatusBadge, type BadgeVariant } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
+import { BridgeCard, BridgeCardStat, BridgeCardEmpty } from '@/components/admin/BridgeCard';
+import { UnifiedTimeline } from '@/components/admin/UnifiedTimeline';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
 import { addCSRFHeader } from '@/lib/csrf';
 import { useSoftphone } from '@/components/voip/SoftphoneProvider';
+import { healthScoreColor, healthScoreLabel } from '@/lib/customer-health';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -259,7 +266,7 @@ interface ClientVideo {
   createdAt: string;
 }
 
-type TabKey = 'orders' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'content' | 'calls';
+type TabKey = 'orders' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'content' | 'calls' | '360' | 'timeline';
 
 interface CallLogItem {
   id: string;
@@ -301,6 +308,10 @@ export default function ClientDetailPage() {
   const [callsLoaded, setCallsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
+  // Customer 360 data
+  const [c360Data, setC360Data] = useState<Record<string, unknown> | null>(null);
+  const [c360Loading, setC360Loading] = useState(false);
+  const [c360Loaded, setC360Loaded] = useState(false);
 
   // Point adjustment state
   const [showPointsModal, setShowPointsModal] = useState(false);
@@ -378,6 +389,25 @@ export default function ClientDetailPage() {
       setCallsLoaded(true);
     })();
   }, [activeTab, callsLoaded, id]);
+
+  // Lazy-load Customer 360 data when tab is selected
+  useEffect(() => {
+    if (activeTab !== '360' || c360Loaded || !id) return;
+    setC360Loading(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/customers/${id}/360`);
+        if (res.ok) {
+          const json = await res.json();
+          setC360Data(json.data ?? null);
+        }
+      } catch {
+        // Silent
+      }
+      setC360Loaded(true);
+      setC360Loading(false);
+    })();
+  }, [activeTab, c360Loaded, id]);
 
   // Close points modal on Escape key
   useEffect(() => {
@@ -500,6 +530,8 @@ export default function ClientDetailPage() {
     { key: 'cards', label: `${t('admin.customerDetail.tabs.cards')} (${user.savedCards.length})`, icon: CreditCard },
     { key: 'content', label: `${t('admin.customerDetail.tabs.content')} (${clientConsents.length})`, icon: FileCheck },
     { key: 'calls', label: `${t('admin.customerDetail.tabs.calls')} (${calls.length})`, icon: Phone },
+    { key: '360', label: 'Customer 360', icon: LayoutDashboard },
+    { key: 'timeline', label: 'Timeline', icon: Activity },
   ];
 
   const tierProgress = getTierProgress(user.lifetimePoints, user.loyaltyTier);
@@ -1466,6 +1498,46 @@ export default function ClientDetailPage() {
           )}
         </div>
       )}
+
+      {/* Customer 360 Tab */}
+      {activeTab === '360' && (
+        <div className="space-y-4">
+          {c360Loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : c360Data ? (
+            <>
+              {/* Health Score */}
+              {typeof (c360Data as { healthScore?: number }).healthScore === 'number' && (
+                <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
+                  <div className={`px-3 py-1.5 rounded-lg text-lg font-bold ${healthScoreColor((c360Data as { healthScore: number }).healthScore)}`}>
+                    {(c360Data as { healthScore: number }).healthScore}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">Score santé client</p>
+                    <p className="text-xs text-slate-500 capitalize">
+                      {healthScoreLabel((c360Data as { healthScore: number }).healthScore)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Module cards grid */}
+              <Customer360Cards data={c360Data} t={t} />
+            </>
+          ) : (
+            <BridgeCardEmpty message={t('admin.bridges.noData')} />
+          )}
+        </div>
+      )}
+
+      {/* Timeline Tab */}
+      {activeTab === 'timeline' && id && (
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <UnifiedTimeline userId={id} limit={30} />
+        </div>
+      )}
     </div>
   );
 }
@@ -1570,6 +1642,70 @@ function OrderSection({
           </Link>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Customer360Cards sub-component
+// ---------------------------------------------------------------------------
+
+interface C360Modules {
+  commerce?: { enabled: boolean; totalOrders?: number; totalSpent?: number };
+  crm?: { enabled: boolean; deals?: Array<{ id: string; title: string; stageName: string; value: number }>; totalDeals?: number };
+  voip?: { enabled: boolean; totalCalls?: number; totalDuration?: number };
+  email?: { enabled: boolean; totalSent?: number };
+  loyalty?: { enabled: boolean; currentTier?: string; currentPoints?: number };
+  community?: { enabled: boolean; reviews?: number; forumPosts?: number; isAmbassador?: boolean };
+}
+
+function Customer360Cards({ data, t }: { data: Record<string, unknown>; t: (key: string) => string }) {
+  const mods = (data.modules ?? {}) as C360Modules;
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {mods.commerce?.enabled && (
+        <BridgeCard title={t('admin.modules.ecommerce')} icon={<ShoppingCart className="w-4 h-4" />} enabled>
+          <BridgeCardStat label={t('admin.bridges.totalOrders')} value={mods.commerce.totalOrders ?? 0} />
+          <BridgeCardStat label={t('admin.bridges.totalSpent')} value={`$${(mods.commerce.totalSpent ?? 0).toFixed(2)}`} />
+        </BridgeCard>
+      )}
+      {mods.crm?.enabled && (
+        <BridgeCard title={t('admin.modules.crm')} icon={<Handshake className="w-4 h-4" />} enabled viewAllHref="/admin/crm">
+          <BridgeCardStat label="Deals" value={mods.crm.totalDeals ?? 0} />
+          {mods.crm.deals?.slice(0, 3).map((d) => (
+            <div key={d.id} className="text-xs text-slate-600 flex justify-between py-0.5">
+              <span className="truncate">{d.title}</span>
+              <span className="text-slate-400 ms-2">{d.stageName}</span>
+            </div>
+          ))}
+        </BridgeCard>
+      )}
+      {mods.voip?.enabled && (
+        <BridgeCard title={t('admin.modules.voip')} icon={<Phone className="w-4 h-4" />} enabled>
+          <BridgeCardStat label={t('admin.bridges.totalCalls')} value={mods.voip.totalCalls ?? 0} />
+          <BridgeCardStat label={t('admin.bridges.duration')} value={`${Math.floor((mods.voip.totalDuration ?? 0) / 60)}m`} />
+        </BridgeCard>
+      )}
+      {mods.email?.enabled && (
+        <BridgeCard title={t('admin.modules.email')} icon={<Mail className="w-4 h-4" />} enabled>
+          <BridgeCardStat label={t('admin.bridges.totalEmails')} value={mods.email.totalSent ?? 0} />
+        </BridgeCard>
+      )}
+      {mods.loyalty?.enabled && (
+        <BridgeCard title={t('admin.modules.loyalty')} icon={<Gift className="w-4 h-4" />} enabled>
+          <BridgeCardStat label={t('admin.bridges.tier')} value={mods.loyalty.currentTier ?? '—'} />
+          <BridgeCardStat label={t('admin.bridges.points')} value={mods.loyalty.currentPoints ?? 0} />
+        </BridgeCard>
+      )}
+      {mods.community?.enabled && (
+        <BridgeCard title={t('admin.modules.community')} icon={<MessageSquare className="w-4 h-4" />} enabled>
+          <BridgeCardStat label="Avis" value={mods.community.reviews ?? 0} />
+          <BridgeCardStat label="Posts" value={mods.community.forumPosts ?? 0} />
+          {mods.community.isAmbassador && (
+            <div className="mt-1 text-xs text-amber-600 font-medium">Ambassadeur</div>
+          )}
+        </BridgeCard>
+      )}
     </div>
   );
 }

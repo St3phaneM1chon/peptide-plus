@@ -26,6 +26,9 @@ import {
   ToggleRight,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag,
+  Package,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
@@ -144,6 +147,11 @@ export default function AvisPage() {
   // F-073 FIX: Lightbox state for viewing review images at full size
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Bridge data for selected review
+  const [purchaseBridge, setPurchaseBridge] = useState<{ enabled: boolean; hasPurchased?: boolean; orders?: Array<{ id: string; orderNumber: string; total: number; status: string; createdAt: string }> } | null>(null);
+  const [productBridge, setProductBridge] = useState<{ enabled: boolean; product?: { id: string; name: string; slug: string; sku: string | null; price: number; isActive: boolean; categoryName: string | null } } | null>(null);
+  const [crmBridge, setCrmBridge] = useState<{ enabled: boolean; deals?: Array<{ id: string; title: string; value: number; stage: string; isWon: boolean }> } | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Bulk actions state
@@ -388,6 +396,20 @@ export default function AvisPage() {
   const handleSelectReview = useCallback((id: string) => {
     setSelectedReviewId(id);
   }, []);
+
+  // Fetch bridge data for selected review
+  useEffect(() => {
+    if (!selectedReviewId) { setPurchaseBridge(null); setProductBridge(null); setCrmBridge(null); return; }
+    Promise.all([
+      fetch(`/api/admin/reviews/${selectedReviewId}/purchases`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/admin/reviews/${selectedReviewId}/product`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/admin/reviews/${selectedReviewId}/crm`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([purchJson, prodJson, crmJson]) => {
+      setPurchaseBridge(purchJson?.data?.enabled ? purchJson.data : null);
+      setProductBridge(prodJson?.data?.enabled ? prodJson.data : null);
+      setCrmBridge(crmJson?.data?.enabled ? crmJson.data : null);
+    });
+  }, [selectedReviewId]);
 
   // ─── Auto-select first item ────────────────────────────────
 
@@ -805,6 +827,63 @@ export default function AvisPage() {
                       <p className="text-sm text-slate-500">{selectedReview.userEmail}</p>
                     )}
                   </div>
+
+                  {/* Bridge #34: Reviewer Purchases */}
+                  {purchaseBridge?.enabled && (
+                    <div className="bg-emerald-50 rounded-lg p-4">
+                      <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-1.5 mb-2">
+                        <ShoppingBag className="w-4 h-4" />
+                        {t('admin.bridges.reviewPurchases') || 'Reviewer Purchases'}
+                      </h3>
+                      <div className={`text-xs px-2 py-1 rounded inline-block mb-2 font-medium ${purchaseBridge.hasPurchased ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {purchaseBridge.hasPurchased ? (t('admin.bridges.verifiedPurchase') || 'Verified purchase') : (t('admin.bridges.notPurchased') || 'Not purchased')}
+                      </div>
+                      {purchaseBridge.orders && purchaseBridge.orders.length > 0 && (
+                        <div className="space-y-1">
+                          {purchaseBridge.orders.slice(0, 3).map((o) => (
+                            <div key={o.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-emerald-100/50">
+                              <span className="text-emerald-700">#{o.orderNumber}</span>
+                              <span className="text-emerald-600">${o.total.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bridge #35: Product Link */}
+                  {productBridge?.enabled && productBridge.product && (
+                    <div className="bg-amber-50 rounded-lg p-4">
+                      <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
+                        <Package className="w-4 h-4" />
+                        {t('admin.bridges.reviewProduct') || 'Reviewed Product'}
+                      </h3>
+                      <div className="text-sm text-amber-700">{productBridge.product.name}</div>
+                      {productBridge.product.sku && <div className="text-xs text-amber-500">SKU: {productBridge.product.sku}</div>}
+                      {productBridge.product.categoryName && <div className="text-xs text-amber-500">{productBridge.product.categoryName}</div>}
+                      <div className="text-xs text-amber-600 mt-1">${productBridge.product.price.toFixed(2)}</div>
+                    </div>
+                  )}
+
+                  {/* Bridge #36: Reviewer CRM */}
+                  {crmBridge?.enabled && (crmBridge.deals ?? []).length > 0 && (
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <h3 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5 mb-2">
+                        <Briefcase className="w-4 h-4" />
+                        {t('admin.bridges.reviewCrm') || 'Reviewer CRM'}
+                      </h3>
+                      <div className="space-y-1">
+                        {crmBridge.deals?.slice(0, 3).map((d) => (
+                          <div key={d.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-purple-100/50">
+                            <span className="text-purple-800 truncate">{d.title}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${d.isWon ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {d.stage}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Existing admin response */}
                   {selectedReview.adminResponse && (

@@ -27,6 +27,11 @@ import {
   MessageSquare,
   FileDown,
   Loader2,
+  BookOpen,
+  Star,
+  Megaphone,
+  Phone,
+  Handshake,
 } from 'lucide-react';
 
 import { Button } from '@/components/admin/Button';
@@ -120,6 +125,67 @@ interface OrderNotesData {
   customerNotes: string | null;
   adminNotes: string | null;
   updatedAt: string;
+}
+
+// Cross-module bridge types
+interface AccountingBridge {
+  enabled: boolean;
+  entries?: Array<{ id: string; entryNumber: string; date: string; description: string; type: string; status: string }>;
+  totalDebit?: number;
+  totalCredit?: number;
+  count?: number;
+}
+
+interface LoyaltyBridge {
+  enabled: boolean;
+  pointsEarned?: number;
+  pointsUsed?: number;
+  currentTier?: string | null;
+  currentPoints?: number;
+}
+
+interface MarketingBridge {
+  enabled: boolean;
+  promoCode?: string | null;
+  promoDiscount?: number | null;
+  discount?: number;
+  promoDetails?: { code: string; discountType: string; discountValue: number; name: string | null } | null;
+  hasPromotion?: boolean;
+}
+
+// Bridge #22: Commerce → Emails
+interface EmailsBridge {
+  enabled: boolean;
+  recentEmails?: Array<{ id: string; subject: string; status: string; sentAt: string }>;
+  totalSent?: number;
+}
+
+// Bridge #23: Commerce → Téléphonie
+interface CallsBridge {
+  enabled: boolean;
+  recentCalls?: Array<{ id: string; direction: string; status: string; duration: number; startedAt: string }>;
+  totalCalls?: number;
+  totalDuration?: number;
+}
+
+// Bridge #24: Commerce → CRM
+interface DealBridge {
+  enabled: boolean;
+  deal?: { id: string; title: string; stageName: string; value: number } | null;
+}
+
+// Bridge #19: Commerce → Catalogue
+interface ProductsBridge {
+  enabled: boolean;
+  products?: Array<{ productId: string; name: string; slug: string | null; sku: string | null; isActive: boolean | null; currentPrice: number | null; orderedPrice: number; quantity: number }>;
+}
+
+// Bridge #20: Commerce → Communauté
+interface ReviewsBridge {
+  enabled: boolean;
+  reviews?: Array<{ id: string; rating: number; title: string | null; comment: string | null; isApproved: boolean; productName: string; date: string }>;
+  hasReviewed?: boolean;
+  productCount?: number;
 }
 
 const statusOptionValues = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -418,6 +484,16 @@ export default function OrdersPage() {
   // Server-side export
   const [exportingServer, setExportingServer] = useState(false);
 
+  // Cross-module bridge data
+  const [accountingBridge, setAccountingBridge] = useState<AccountingBridge | null>(null);
+  const [loyaltyBridge, setLoyaltyBridge] = useState<LoyaltyBridge | null>(null);
+  const [marketingBridge, setMarketingBridge] = useState<MarketingBridge | null>(null);
+  const [emailsBridge, setEmailsBridge] = useState<EmailsBridge | null>(null);
+  const [callsBridge, setCallsBridge] = useState<CallsBridge | null>(null);
+  const [dealBridge, setDealBridge] = useState<DealBridge | null>(null);
+  const [productsBridge, setProductsBridge] = useState<ProductsBridge | null>(null);
+  const [reviewsBridge, setReviewsBridge] = useState<ReviewsBridge | null>(null);
+
   // Fraud detection cache (lightweight client-side assessment)
   const [fraudResults, setFraudResults] = useState<Record<string, FraudResult>>({});
 
@@ -450,7 +526,19 @@ export default function OrdersPage() {
 
   const fetchOrderDetail = useCallback(async (orderId: string) => {
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`);
+      // Fetch order detail + bridge data in parallel
+      const [res, accRes, loyRes, mktRes, emailRes, callRes, dealRes, prodRes, revRes] = await Promise.all([
+        fetch(`/api/admin/orders/${orderId}`),
+        fetch(`/api/admin/orders/${orderId}/accounting`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/loyalty`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/marketing`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/emails`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/calls`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/deal`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/products`).catch(() => null),
+        fetch(`/api/admin/orders/${orderId}/reviews`).catch(() => null),
+      ]);
+
       const data = await res.json();
       if (data.order) {
         const enrichedOrder: Order = {
@@ -477,6 +565,48 @@ export default function OrdersPage() {
         setCreditNotes(data.creditNotes || []);
         setPaymentErrors(data.paymentErrors || []);
       }
+
+      // Parse bridge responses
+      if (accRes?.ok) {
+        const accJson = await accRes.json();
+        setAccountingBridge(accJson.data ?? null);
+      } else { setAccountingBridge(null); }
+
+      if (loyRes?.ok) {
+        const loyJson = await loyRes.json();
+        setLoyaltyBridge(loyJson.data ?? null);
+      } else { setLoyaltyBridge(null); }
+
+      if (mktRes?.ok) {
+        const mktJson = await mktRes.json();
+        setMarketingBridge(mktJson.data ?? null);
+      } else { setMarketingBridge(null); }
+
+      if (emailRes?.ok) {
+        const emailJson = await emailRes.json();
+        setEmailsBridge(emailJson.data ?? null);
+      } else { setEmailsBridge(null); }
+
+      if (callRes?.ok) {
+        const callJson = await callRes.json();
+        setCallsBridge(callJson.data ?? null);
+      } else { setCallsBridge(null); }
+
+      if (dealRes?.ok) {
+        const dealJson = await dealRes.json();
+        setDealBridge(dealJson.data ?? null);
+      } else { setDealBridge(null); }
+
+      if (prodRes?.ok) {
+        const prodJson = await prodRes.json();
+        setProductsBridge(prodJson.data ?? null);
+      } else { setProductsBridge(null); }
+
+      if (revRes?.ok) {
+        const revJson = await revRes.json();
+        setReviewsBridge(revJson.data ?? null);
+      } else { setReviewsBridge(null); }
+
     } catch (err) {
       console.error('Error fetching order detail:', err);
     }
@@ -1856,6 +1986,232 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                             <span className="text-xs text-amber-600">
                               {new Date(ro.createdAt).toLocaleDateString(locale)} - {ro.status}
                             </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Cross-module Bridges ───────────────────────────── */}
+
+                  {/* Bridge #3: Commerce → Comptabilité */}
+                  {accountingBridge?.enabled && (accountingBridge.count ?? 0) > 0 && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-emerald-800 mb-3 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        {t('admin.orders.accounting.title')}
+                      </h3>
+                      <div className="flex gap-4 text-sm mb-3">
+                        <div>
+                          <span className="text-emerald-600">{t('admin.orders.accounting.totalDebit')}: </span>
+                          <span className="font-mono font-medium">{formatCurrency(accountingBridge.totalDebit ?? 0)}</span>
+                        </div>
+                        <div>
+                          <span className="text-emerald-600">{t('admin.orders.accounting.totalCredit')}: </span>
+                          <span className="font-mono font-medium">{formatCurrency(accountingBridge.totalCredit ?? 0)}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        {accountingBridge.entries?.map((entry) => (
+                          <Link
+                            key={entry.id}
+                            href="/admin/comptabilite/ecritures"
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-emerald-100/50 hover:bg-emerald-100 transition-colors"
+                          >
+                            <div>
+                              <span className="font-mono text-emerald-700">{entry.entryNumber}</span>
+                              <span className="text-emerald-600 ms-2">{entry.description}</span>
+                            </div>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              entry.status === 'POSTED' ? 'bg-green-100 text-green-700' :
+                              entry.status === 'VOIDED' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>{entry.status}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #5: Commerce → Fidélité */}
+                  {loyaltyBridge?.enabled && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                        <Star className="w-4 h-4" />
+                        {t('admin.orders.loyalty.title')}
+                      </h3>
+                      <div className="grid grid-cols-3 gap-3 text-sm">
+                        <div className="text-center p-2 bg-purple-100/50 rounded">
+                          <div className="text-lg font-bold text-green-700">+{loyaltyBridge.pointsEarned ?? 0}</div>
+                          <div className="text-xs text-purple-600">{t('admin.orders.loyalty.pointsEarned')}</div>
+                        </div>
+                        <div className="text-center p-2 bg-purple-100/50 rounded">
+                          <div className="text-lg font-bold text-red-600">-{loyaltyBridge.pointsUsed ?? 0}</div>
+                          <div className="text-xs text-purple-600">{t('admin.orders.loyalty.pointsUsed')}</div>
+                        </div>
+                        <div className="text-center p-2 bg-purple-100/50 rounded">
+                          <div className="text-lg font-bold text-purple-700">{loyaltyBridge.currentTier ?? '—'}</div>
+                          <div className="text-xs text-purple-600">{t('admin.orders.loyalty.currentTier')}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #9: Commerce → Marketing */}
+                  {marketingBridge?.enabled && marketingBridge.hasPromotion && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
+                        <Megaphone className="w-4 h-4" />
+                        {t('admin.orders.marketing.title')}
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {marketingBridge.promoDetails && (
+                          <div className="flex justify-between">
+                            <span className="text-orange-600">{t('admin.orders.marketing.couponUsed')}</span>
+                            <span className="font-mono font-medium text-orange-800">
+                              {marketingBridge.promoDetails.code}
+                              {marketingBridge.promoDetails.name && ` (${marketingBridge.promoDetails.name})`}
+                            </span>
+                          </div>
+                        )}
+                        {(marketingBridge.promoDiscount ?? 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-orange-600">{t('admin.orders.marketing.discount')}</span>
+                            <span className="font-mono font-medium text-orange-800">
+                              -{formatCurrency(marketingBridge.promoDiscount ?? 0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #22: Commerce → Emails */}
+                  {emailsBridge?.enabled && (emailsBridge.totalSent ?? 0) > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {t('admin.bridges.orderEmails')}
+                        <span className="text-xs font-normal text-blue-500 ms-auto">{emailsBridge.totalSent} {t('admin.bridges.totalEmails').toLowerCase()}</span>
+                      </h3>
+                      <div className="space-y-1.5">
+                        {emailsBridge.recentEmails?.map((email) => (
+                          <div
+                            key={email.id}
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-blue-100/50"
+                          >
+                            <span className="text-blue-800 truncate">{email.subject}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              email.status === 'delivered' || email.status === 'sent' ? 'bg-green-100 text-green-700' :
+                              email.status === 'bounced' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-600'
+                            }`}>{email.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #23: Commerce → Téléphonie */}
+                  {callsBridge?.enabled && (callsBridge.totalCalls ?? 0) > 0 && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-indigo-800 mb-3 flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        {t('admin.bridges.orderCalls')}
+                        <span className="text-xs font-normal text-indigo-500 ms-auto">{callsBridge.totalCalls} {t('admin.bridges.totalCalls').toLowerCase()}</span>
+                      </h3>
+                      <div className="space-y-1.5">
+                        {callsBridge.recentCalls?.map((call) => (
+                          <div
+                            key={call.id}
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-indigo-100/50"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-blue-600'}`}>
+                                {call.direction === 'inbound' ? '↓' : '↑'}
+                              </span>
+                              <span className="text-indigo-800">{new Date(call.startedAt).toLocaleDateString()}</span>
+                            </div>
+                            <span className="text-indigo-600">{Math.floor(call.duration / 60)}m{call.duration % 60}s</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #24: Commerce → CRM (Source Deal) */}
+                  {dealBridge?.enabled && dealBridge.deal && (
+                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-cyan-800 mb-3 flex items-center gap-2">
+                        <Handshake className="w-4 h-4" />
+                        {t('admin.bridges.orderDeal')}
+                      </h3>
+                      <Link
+                        href={`/admin/crm/deals/${dealBridge.deal.id}`}
+                        className="flex items-center justify-between text-sm p-2 rounded-md bg-cyan-100/50 hover:bg-cyan-100 transition-colors"
+                      >
+                        <div>
+                          <span className="font-medium text-cyan-800">{dealBridge.deal.title}</span>
+                          <span className="text-cyan-600 ms-2 text-xs">{dealBridge.deal.stageName}</span>
+                        </div>
+                        <span className="font-mono font-medium text-cyan-700">${dealBridge.deal.value.toFixed(2)}</span>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Bridge #19: Commerce → Catalogue (Product Links) */}
+                  {productsBridge?.enabled && (productsBridge.products ?? []).length > 0 && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-rose-800 mb-3 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        {t('admin.bridges.orderProducts')}
+                      </h3>
+                      <div className="space-y-1.5">
+                        {productsBridge.products?.map((prod) => (
+                          <Link
+                            key={prod.productId}
+                            href={`/admin/produits/${prod.productId}`}
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-rose-100/50 hover:bg-rose-100 transition-colors"
+                          >
+                            <div>
+                              <span className="font-medium text-rose-800">{prod.name}</span>
+                              {prod.sku && <span className="text-rose-500 ms-2">({prod.sku})</span>}
+                              <span className="text-rose-600 ms-2">×{prod.quantity}</span>
+                            </div>
+                            <div className="text-end">
+                              <span className="font-mono text-rose-700">{formatCurrency(prod.orderedPrice)}</span>
+                              {prod.currentPrice !== null && prod.currentPrice !== prod.orderedPrice && (
+                                <span className="text-rose-400 ms-1 text-[10px]">now {formatCurrency(prod.currentPrice)}</span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #20: Commerce → Communauté (Customer Reviews) */}
+                  {reviewsBridge?.enabled && (reviewsBridge.reviews ?? []).length > 0 && (
+                    <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-violet-800 mb-3 flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        {t('admin.bridges.orderReviews')}
+                        <span className="text-xs font-normal text-violet-500">({reviewsBridge.reviews?.length}/{reviewsBridge.productCount})</span>
+                      </h3>
+                      <div className="space-y-2">
+                        {reviewsBridge.reviews?.map((rev) => (
+                          <div key={rev.id} className="text-xs p-2 rounded-md bg-violet-100/50">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-violet-800">{rev.productName}</span>
+                              <span className="text-amber-500">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
+                            </div>
+                            {rev.title && <div className="text-violet-700 font-medium">{rev.title}</div>}
+                            {rev.comment && <div className="text-violet-600 line-clamp-2">{rev.comment}</div>}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${rev.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {rev.isApproved ? 'Approved' : 'Pending'}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>

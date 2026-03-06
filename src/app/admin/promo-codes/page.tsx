@@ -4,7 +4,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Shuffle, Tag, CheckCircle, BarChart3 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Shuffle, Tag, CheckCircle, BarChart3, ShoppingCart, Loader2, Briefcase, Package } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
@@ -75,6 +75,51 @@ export default function PromoCodesPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Bridge #10: Marketing → Commerce (revenue data for selected promo)
+  const [revenueData, setRevenueData] = useState<{
+    totalRevenue: number;
+    orderCount: number;
+    topProducts: Array<{ id: string; name: string; quantity: number; revenue: number }>;
+    recentOrders: Array<{ id: string; orderNumber: string; total: number; status: string; createdAt: string }>;
+  } | null>(null);
+  const [revenueLoading, setRevenueLoading] = useState(false);
+
+  // Bridge #16: Marketing → CRM
+  const [crmData, setCrmData] = useState<{ uniqueUsers: number; deals: Array<{ id: string; title: string; value: number; stage: string; isWon: boolean }> } | null>(null);
+  // Bridge #29: Marketing → Catalogue
+  const [productsData, setProductsData] = useState<{ products: Array<{ id: string; name: string; sku: string | null; isActive: boolean }>; categories: Array<{ id: string; name: string }>; isGlobal: boolean } | null>(null);
+
+  // Fetch revenue bridge when selection changes
+  useEffect(() => {
+    if (!selectedId) { setRevenueData(null); return; }
+    setRevenueLoading(true);
+    fetch(`/api/admin/promo-codes/${selectedId}/revenue`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.data?.enabled) {
+          setRevenueData({
+            totalRevenue: json.data.totalRevenue,
+            orderCount: json.data.orderCount,
+            topProducts: json.data.topProducts,
+            recentOrders: json.data.recentOrders,
+          });
+        } else {
+          setRevenueData(null);
+        }
+      })
+      .catch(() => setRevenueData(null))
+      .finally(() => setRevenueLoading(false));
+
+    // Bridge #16 + #29 in parallel
+    Promise.all([
+      fetch(`/api/admin/promo-codes/${selectedId}/crm`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/admin/promo-codes/${selectedId}/products`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([crmJson, prodJson]) => {
+      setCrmData(crmJson?.data?.enabled ? crmJson.data : null);
+      setProductsData(prodJson?.data?.enabled ? prodJson.data : null);
+    });
+  }, [selectedId]);
 
   // UX FIX: ConfirmDialog for delete action
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -637,6 +682,94 @@ export default function PromoCodesPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Bridge #10: Commerce Impact */}
+                  {revenueLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                    </div>
+                  ) : revenueData && revenueData.orderCount > 0 ? (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
+                        <ShoppingCart className="w-4 h-4 text-blue-600" />
+                        {t('admin.bridges.commerceImpact') || 'Commerce Impact'}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <p className="text-2xl font-bold text-blue-600">{formatCurrency(revenueData.totalRevenue)}</p>
+                          <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue') || 'Revenue generated'}</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-slate-900">{revenueData.orderCount}</p>
+                          <p className="text-xs text-slate-500">{t('admin.bridges.ordersWithPromo') || 'Orders with this code'}</p>
+                        </div>
+                      </div>
+                      {revenueData.topProducts.length > 0 && (
+                        <>
+                          <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.bridges.topProducts') || 'Top products'}</p>
+                          <div className="space-y-1">
+                            {revenueData.topProducts.slice(0, 3).map((p) => (
+                              <div key={p.id} className="flex items-center justify-between text-xs">
+                                <span className="text-slate-700 truncate">{p.name}</span>
+                                <span className="text-slate-500 ms-2 shrink-0">{p.quantity} {t('common.units') || 'units'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {/* Bridge #16: Marketing → CRM */}
+                  {crmData && crmData.deals.length > 0 && (
+                    <div className="bg-purple-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
+                        <Briefcase className="w-4 h-4 text-purple-600" />
+                        {t('admin.bridges.marketingCrm') || 'CRM Attribution'}
+                      </h3>
+                      <p className="text-sm text-purple-700 mb-2">{crmData.uniqueUsers} {t('common.users') || 'users'}</p>
+                      <div className="space-y-1">
+                        {crmData.deals.slice(0, 3).map((d) => (
+                          <div key={d.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-purple-100/50">
+                            <span className="text-purple-800 truncate">{d.title}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-purple-600">{d.stage}</span>
+                              <span className="font-mono text-purple-700">{formatCurrency(d.value)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bridge #29: Marketing → Catalogue */}
+                  {productsData && !productsData.isGlobal && (productsData.products.length > 0 || productsData.categories.length > 0) && (
+                    <div className="bg-amber-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
+                        <Package className="w-4 h-4 text-amber-600" />
+                        {t('admin.bridges.promoProducts') || 'Promo Products'}
+                      </h3>
+                      {productsData.products.length > 0 && (
+                        <div className="space-y-1 mb-2">
+                          {productsData.products.slice(0, 5).map((p) => (
+                            <div key={p.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-amber-100/50">
+                              <span className="text-amber-800 truncate">{p.name}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {p.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {productsData.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {productsData.categories.map((c) => (
+                            <span key={c.id} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px]">{c.name}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Validity dates */}
                   <div className="bg-slate-50 rounded-lg p-4">

@@ -15,6 +15,7 @@ import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
 import { Prisma } from '@prisma/client';
+import { getModuleFlags } from '@/lib/module-flags';
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -80,7 +81,166 @@ export const GET = withAdminGuard(async (
       return apiError('Deal not found', ErrorCode.NOT_FOUND, { request });
     }
 
-    return apiSuccess(deal, { request });
+    // ── Cross-module bridges (conditional on feature flags) ──────────────
+    // Fetch all relevant flags in one query
+    const flags = deal.contactId
+      ? await getModuleFlags(['ecommerce', 'voip', 'email', 'loyalty', 'accounting'])
+      : { ecommerce: false, voip: false, email: false, loyalty: false, accounting: false };
+
+    // Bridge #1/#2: Purchase history (CRM ↔ Commerce)
+    let purchaseHistory: {
+      recentOrders: Array<{ id: string; orderNumber: string; status: string; total: number; createdAt: Date }>;
+      totalOrders: number;
+      totalSpent: number;
+    } | null = null;
+
+    if (deal.contactId && flags.ecommerce) {
+      const [recentOrders, aggregation] = await Promise.all([
+        prisma.order.findMany({
+          where: { userId: deal.contactId },
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, orderNumber: true, status: true, total: true, createdAt: true },
+        }),
+        prisma.order.aggregate({
+          where: { userId: deal.contactId },
+          _count: true,
+          _sum: { total: true },
+        }),
+      ]);
+      purchaseHistory = {
+        recentOrders: recentOrders.map(o => ({
+          ...o,
+          total: Number(o.total),
+        })),
+        totalOrders: aggregation._count,
+        totalSpent: Number(aggregation._sum.total || 0),
+      };
+    }
+
+    // Bridge #7: CRM → Telephonie (call history)
+    let callHistory: {
+      recentCalls: Array<{ id: string; direction: string; status: string; duration: number; startedAt: Date }>;
+      totalCalls: number;
+      totalDuration: number;
+    } | null = null;
+
+    if (deal.contactId && flags.voip) {
+      const [recentCalls, callAgg] = await Promise.all([
+        prisma.callLog.findMany({
+          where: { clientId: deal.contactId },
+          take: 5,
+          orderBy: { startedAt: 'desc' },
+          select: { id: true, direction: true, status: true, duration: true, startedAt: true },
+        }),
+        prisma.callLog.aggregate({
+          where: { clientId: deal.contactId },
+          _count: true,
+          _sum: { duration: true },
+        }),
+      ]);
+      callHistory = {
+        recentCalls: recentCalls.map((c) => ({
+          ...c,
+          duration: c.duration ?? 0,
+        })),
+        totalCalls: callAgg._count,
+        totalDuration: callAgg._sum.duration || 0,
+      };
+    }
+
+    // Bridge #11: CRM → Email (email history)
+    let emailHistory: {
+      recentEmails: Array<{ id: string; subject: string; status: string; sentAt: Date | null }>;
+      totalSent: number;
+    } | null = null;
+
+    if (deal.contactId && flags.email) {
+      const contactUser = await prisma.user.findUnique({
+        where: { id: deal.contactId },
+        select: { email: true },
+      });
+      if (contactUser?.email) {
+        const [recentEmails, emailCount] = await Promise.all([
+          prisma.emailLog.findMany({
+            where: { to: contactUser.email },
+            take: 5,
+            orderBy: { sentAt: 'desc' },
+            select: { id: true, subject: true, status: true, sentAt: true },
+          }),
+          prisma.emailLog.count({
+            where: { to: contactUser.email },
+          }),
+        ]);
+        emailHistory = { recentEmails, totalSent: emailCount };
+      }
+    }
+
+    // Bridge #15: CRM → Fidélité (loyalty info)
+    let loyaltyInfo: {
+      currentTier: string;
+      currentPoints: number;
+    } | null = null;
+
+    if (deal.contactId && flags.loyalty) {
+      const loyaltyUser = await prisma.user.findUnique({
+        where: { id: deal.contactId },
+        select: { loyaltyTier: true, loyaltyPoints: true },
+      });
+      if (loyaltyUser) {
+        loyaltyInfo = {
+          currentTier: loyaltyUser.loyaltyTier,
+          currentPoints: loyaltyUser.loyaltyPoints,
+        };
+      }
+    }
+
+    // Bridge #50: CRM → Accounting (journal entries from deal's orders)
+    let accountingInfo: {
+      totalInvoiced: number;
+      totalPaid: number;
+      outstandingBalance: number;
+      recentEntries: Array<{ id: string; entryNumber: string; description: string | null; date: Date; type: string }>;
+    } | null = null;
+
+    if (deal.contactId && flags.accounting && purchaseHistory && purchaseHistory.totalOrders > 0) {
+      const orderIds = (await prisma.order.findMany({
+        where: { userId: deal.contactId },
+        select: { id: true },
+        take: 50,
+      })).map((o) => o.id);
+
+      if (orderIds.length > 0) {
+        const entries = await prisma.journalEntry.findMany({
+          where: { orderId: { in: orderIds } },
+          take: 10,
+          orderBy: { date: 'desc' },
+          select: { id: true, entryNumber: true, description: true, date: true, type: true },
+        });
+
+        const invoices = await prisma.customerInvoice.findMany({
+          where: { customerId: deal.contactId },
+          select: { total: true, status: true },
+        });
+
+        const totalInvoiced = invoices.reduce((s, inv) => s + Number(inv.total), 0);
+        const totalPaid = invoices
+          .filter((inv) => inv.status === 'PAID')
+          .reduce((s, inv) => s + Number(inv.total), 0);
+
+        accountingInfo = {
+          totalInvoiced,
+          totalPaid,
+          outstandingBalance: totalInvoiced - totalPaid,
+          recentEntries: entries,
+        };
+      }
+    }
+
+    return apiSuccess(
+      { ...deal, purchaseHistory, callHistory, emailHistory, loyaltyInfo, accountingInfo },
+      { request }
+    );
   } catch (error) {
     logger.error('[crm/deals/[id]] GET error', {
       error: error instanceof Error ? error.message : String(error),

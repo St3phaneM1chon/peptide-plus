@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
@@ -162,7 +162,15 @@ export default function OutlookRibbon() {
   const { t } = useI18n();
   const { activeRailId } = useAdminLayout();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+
+  // searchParams: null on SSR + initial hydration (safe), updated after mount.
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+  useEffect(() => {
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, []);
+  useEffect(() => {
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, [pathname]);
 
   const config = getRibbonConfig(activeRailId, pathname, searchParams);
   const [activeTab, setActiveTab] = useState('home');

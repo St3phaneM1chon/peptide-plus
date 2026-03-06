@@ -26,7 +26,7 @@ interface AgentRank {
 }
 
 export default function LeaderboardPage() {
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const [agents, setAgents] = useState<AgentRank[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('week');
@@ -76,15 +76,15 @@ export default function LeaderboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-500" />
-            Leaderboard
+            {t('admin.crm.leaderboard') || 'Leaderboard'}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Top performing agents</p>
+          <p className="text-sm text-gray-500 mt-1">{t('admin.crm.topAgents') || 'Top performing agents'}</p>
         </div>
         <div className="flex gap-2">
           {(['today', 'week', 'month'] as const).map(p => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`px-3 py-1.5 text-sm rounded-md ${period === p ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {p === 'today' ? 'Today' : p === 'week' ? 'This Week' : 'This Month'}
+              {p === 'today' ? (t('common.today') || 'Today') : p === 'week' ? (t('common.thisWeek') || 'This Week') : (t('common.thisMonth') || 'This Month')}
             </button>
           ))}
         </div>
@@ -93,9 +93,9 @@ export default function LeaderboardPage() {
       {/* Metric Toggle */}
       <div className="flex gap-2 mb-6">
         {([
-          { key: 'conversions' as const, label: 'Conversions', icon: <TrendingUp className="h-4 w-4" /> },
-          { key: 'calls' as const, label: 'Calls', icon: <Phone className="h-4 w-4" /> },
-          { key: 'revenue' as const, label: 'Revenue', icon: <DollarSign className="h-4 w-4" /> },
+          { key: 'conversions' as const, label: t('admin.crm.conversions') || 'Conversions', icon: <TrendingUp className="h-4 w-4" /> },
+          { key: 'calls' as const, label: t('admin.crm.calls') || 'Calls', icon: <Phone className="h-4 w-4" /> },
+          { key: 'revenue' as const, label: t('admin.crm.revenue') || 'Revenue', icon: <DollarSign className="h-4 w-4" /> },
         ]).map(m => (
           <button key={m.key} onClick={() => setMetric(m.key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -113,7 +113,7 @@ export default function LeaderboardPage() {
       ) : agents.length === 0 ? (
         <div className="text-center text-gray-400 py-16">
           <Trophy className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p>No performance data for this period</p>
+          <p>{t('admin.crm.noPerformanceData') || 'No performance data for this period'}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -150,19 +150,19 @@ export default function LeaderboardPage() {
               <div className="flex gap-6 text-sm">
                 <div className="text-center">
                   <p className="font-bold text-gray-900">{agent.callsMade}</p>
-                  <p className="text-xs text-gray-400">Calls</p>
+                  <p className="text-xs text-gray-400">{t('admin.crm.calls') || 'Calls'}</p>
                 </div>
                 <div className="text-center">
                   <p className="font-bold text-purple-600">{agent.conversions}</p>
-                  <p className="text-xs text-gray-400">Conv.</p>
+                  <p className="text-xs text-gray-400">{t('admin.crm.conv') || 'Conv.'}</p>
                 </div>
                 <div className="text-center">
                   <p className="font-bold text-emerald-600">{formatCurrency(agent.revenue)}</p>
-                  <p className="text-xs text-gray-400">Revenue</p>
+                  <p className="text-xs text-gray-400">{t('admin.crm.revenue') || 'Revenue'}</p>
                 </div>
                 <div className="text-center">
                   <p className="font-bold text-blue-600">{agent.contactRate}%</p>
-                  <p className="text-xs text-gray-400">Contact</p>
+                  <p className="text-xs text-gray-400">{t('admin.crm.contact') || 'Contact'}</p>
                 </div>
               </div>
             </div>

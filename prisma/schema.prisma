@@ -912,6 +912,12 @@ model EmailLog {
   clickCount Int       @default(0)
   // A/B test variant tracking: "A" or "B" (null = not an A/B test)
   abVariant  String?
+  // Bridge: FK to User for efficient cross-module queries
+  userId     String?
+  user       User?     @relation("UserEmailLogs", fields: [userId], references: [id], onDelete: SetNull)
+  // Bridge #33/#44: FK to EmailCampaign for Marketing↔Email bridges
+  campaignId String?
+  campaign   EmailCampaign? @relation("CampaignEmailLogs", fields: [campaignId], references: [id], onDelete: SetNull)
 
   @@index([sentAt])
   @@index([templateId])
@@ -919,6 +925,9 @@ model EmailLog {
   @@index([to, status])
   @@index([messageId])
   @@index([status])
+  @@index([userId])
+  @@index([userId, sentAt])
+  @@index([campaignId])
 }
 
 // Faille #11: Persistent bounce tracking (was in-memory only, lost on restart)
@@ -1543,12 +1552,16 @@ model Order {
   billingPostal         String?
   billingCountry        String?
   billingSameAsShipping Boolean         @default(true)
+  // Bridge: FK to CrmDeal that generated this order
+  dealId                String?
+  deal                  CrmDeal?        @relation("DealOrders", fields: [dealId], references: [id], onDelete: SetNull)
   items                 OrderItem[]
   paymentErrors         PaymentError[]
   returnRequests        ReturnRequest[]
   events                OrderEvent[]
 
   @@index([createdAt])
+  @@index([dealId])
   @@index([currencyId])
   @@index([orderNumber])
   @@index([parentOrderId])
@@ -2877,6 +2890,9 @@ model User {
   qaScoresGiven          CrmQaScore[]          @relation("CrmQaScoredBy")
   qaScoresReceived       CrmQaScore[]          @relation("CrmQaScoreAgent")
 
+  // Bridge: email logs linked to this user
+  emailLogs              EmailLog[]            @relation("UserEmailLogs")
+
   @@index([role])
   @@index([createdAt])
   @@index([loyaltyTier])
@@ -3924,6 +3940,8 @@ model EmailCampaign {
   createdBy    String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  // Bridge #33/#44: Emails sent by this campaign
+  emailLogs    EmailLog[] @relation("CampaignEmailLogs")
 
   @@index([status])
   @@index([scheduledAt])
@@ -6939,6 +6957,8 @@ model CrmDeal {
   tasks             CrmTask[]              @relation("CrmTaskDeal")
   products          CrmDealProduct[]
   quotes            CrmQuote[]
+  // Bridge: orders generated from this deal
+  orders            Order[]                @relation("DealOrders")
 
   @@index([stageId, assignedToId])
   @@index([pipelineId])

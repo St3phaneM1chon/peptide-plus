@@ -11,7 +11,7 @@ import {
   ArrowLeft, ChevronRight, House, Loader2, Save,
   Tag, X, Plus, MapPin, ShieldCheck, Package,
   Video as VideoIcon, ExternalLink, Clock, Eye,
-  MonitorPlay, Youtube,
+  MonitorPlay, Youtube, TrendingUp, MessageSquare,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -193,6 +193,10 @@ export default function VideoDetailPage() {
   const [productLinks, setProductLinks] = useState<ProductLink[]>([]);
   const [removingProduct, setRemovingProduct] = useState<string | null>(null);
 
+  // Bridge data (#39 sales, #40 products already in productLinks, #42 community)
+  const [salesBridge, setSalesBridge] = useState<{ enabled: boolean; totalRevenue?: number; totalUnits?: number; products?: Array<{ productId: string; name: string; revenue: number; unitsSold: number; orderCount: number }> } | null>(null);
+  const [communityBridge, setCommunityBridge] = useState<{ enabled: boolean; avgRating?: number | null; reviewCount?: number; reviews?: Array<{ id: string; rating: number; title: string | null; comment: string | null; product: string; author: string | null; date: string }> } | null>(null);
+
   // -- YouTube publish modal state --
   const [showYTModal, setShowYTModal] = useState(false);
   const [ytPublishing, setYtPublishing] = useState(false);
@@ -253,6 +257,18 @@ export default function VideoDetailPage() {
     };
     init();
   }, [loadVideo, loadCategories, loadConsent]);
+
+  // Bridges #39 + #42 (lazy load)
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      fetch(`/api/admin/media/videos/${id}/sales`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/admin/media/videos/${id}/community`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([salesJson, commJson]) => {
+      setSalesBridge(salesJson?.data?.enabled ? salesJson.data : null);
+      setCommunityBridge(commJson?.data?.enabled ? commJson.data : null);
+    });
+  }, [id]);
 
   // -----------------------------------------------------------------------
   // Form helpers
@@ -981,6 +997,69 @@ export default function VideoDetailPage() {
           </div>
         )}
       </div>
+
+      {/* ============================================================ */}
+      {/* Bridge #39: Video Product Sales */}
+      {/* ============================================================ */}
+      {salesBridge?.enabled && (salesBridge.totalUnits ?? 0) > 0 && (
+        <div className="bg-white rounded-xl border border-emerald-200 p-6">
+          <h2 className="text-sm font-semibold text-emerald-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <TrendingUp className="w-4 h-4 text-emerald-500" />
+            {t('admin.bridges.videoSales') || 'Video Product Sales'}
+          </h2>
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <p className="text-2xl font-bold text-emerald-600">${(salesBridge.totalRevenue ?? 0).toFixed(2)}</p>
+              <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue') || 'Revenue'}</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">{salesBridge.totalUnits}</p>
+              <p className="text-xs text-slate-500">{t('admin.bridges.unitsSold') || 'Units sold'}</p>
+            </div>
+          </div>
+          {salesBridge.products && salesBridge.products.length > 0 && (
+            <div className="space-y-1">
+              {salesBridge.products.map((p) => (
+                <div key={p.productId} className="flex items-center justify-between text-xs p-1.5 rounded bg-emerald-50">
+                  <span className="text-emerald-800 truncate">{p.name}</span>
+                  <span className="text-emerald-600 shrink-0">{p.unitsSold} units · ${p.revenue.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* Bridge #42: Video Community Reviews */}
+      {/* ============================================================ */}
+      {communityBridge?.enabled && (communityBridge.reviewCount ?? 0) > 0 && (
+        <div className="bg-white rounded-xl border border-violet-200 p-6">
+          <h2 className="text-sm font-semibold text-violet-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <MessageSquare className="w-4 h-4 text-violet-500" />
+            {t('admin.bridges.videoCommunity') || 'Video Reviews'}
+            <span className="text-xs font-normal text-violet-400">({communityBridge.reviewCount})</span>
+          </h2>
+          {communityBridge.avgRating && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-amber-500 text-sm">{'★'.repeat(Math.round(communityBridge.avgRating))}{'☆'.repeat(5 - Math.round(communityBridge.avgRating))}</span>
+              <span className="text-sm font-medium text-slate-700">{communityBridge.avgRating}</span>
+            </div>
+          )}
+          <div className="space-y-2">
+            {communityBridge.reviews?.slice(0, 5).map((r) => (
+              <div key={r.id} className="text-xs p-2 rounded bg-violet-50">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-medium text-violet-800">{r.product}</span>
+                  <span className="text-amber-500">{'★'.repeat(r.rating)}</span>
+                </div>
+                {r.comment && <p className="text-violet-600 line-clamp-2">{r.comment}</p>}
+                <p className="text-violet-400 mt-0.5">{r.author} · {new Date(r.date).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* SECTION 5: Consent (only if featuredClientId is set) */}

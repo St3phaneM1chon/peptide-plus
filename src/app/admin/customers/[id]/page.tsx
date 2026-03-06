@@ -33,6 +33,9 @@ import {
   Hash,
   ExternalLink,
   GitMerge,
+  Briefcase,
+  Target,
+  Inbox,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
@@ -245,7 +248,7 @@ const tierColors: Record<string, string> = {
   DIAMOND: 'bg-violet-600',
 };
 
-type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'calls';
+type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'calls' | 'crm';
 
 interface CallLogItem {
   id: string;
@@ -260,6 +263,74 @@ interface CallLogItem {
   recording?: { blobUrl: string | null; durationSec: number | null };
   transcription?: { summary: string | null; sentiment: string | null };
   survey?: { overallScore: number | null };
+}
+
+// ---------------------------------------------------------------------------
+// CRM Interfaces
+// ---------------------------------------------------------------------------
+
+interface CrmSummary {
+  totalDeals: number;
+  wonCount: number;
+  lostCount: number;
+  openCount: number;
+  totalDealValue: number;
+  wonDealValue: number;
+  winRate: number;
+  pendingTaskCount: number;
+  lastContacted: string | null;
+  nextTaskDue: string | null;
+}
+
+interface CrmDealItem {
+  id: string;
+  title: string;
+  value: number;
+  currency: string;
+  stage: { id: string; name: string; color: string | null; isWon: boolean; isLost: boolean };
+  pipeline: { id: string; name: string };
+  assignedTo: { id: string; name: string | null; email: string };
+  createdAt: string;
+}
+
+interface CrmActivityItem {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  performedBy: { id: string; name: string | null; email: string } | null;
+  deal: { id: string; title: string } | null;
+  createdAt: string;
+}
+
+interface CrmTaskItem {
+  id: string;
+  title: string;
+  type: string;
+  priority: string;
+  status: string;
+  dueAt: string | null;
+  assignedTo: { id: string; name: string | null; email: string };
+  deal: { id: string; title: string } | null;
+}
+
+interface CrmInboxItem {
+  id: string;
+  channel: string;
+  status: string;
+  subject: string | null;
+  lastMessageAt: string | null;
+  assignedTo: { id: string; name: string | null; email: string } | null;
+  messages: Array<{ id: string; content: string; createdAt: string }>;
+}
+
+interface CrmData {
+  enabled: boolean;
+  summary?: CrmSummary;
+  deals?: CrmDealItem[];
+  activities?: CrmActivityItem[];
+  tasks?: CrmTaskItem[];
+  inboxConversations?: CrmInboxItem[];
 }
 
 // ---------------------------------------------------------------------------
@@ -282,6 +353,9 @@ export default function ClientDetailPage() {
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [calls, setCalls] = useState<CallLogItem[]>([]);
   const [callsLoaded, setCallsLoaded] = useState(false);
+  const [crmData, setCrmData] = useState<CrmData | null>(null);
+  const [crmLoaded, setCrmLoaded] = useState(false);
+  const [crmEnabled, setCrmEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
 
@@ -342,6 +416,39 @@ export default function ClientDetailPage() {
       setCallsLoaded(true);
     })();
   }, [activeTab, callsLoaded, id]);
+
+  // Check CRM availability on mount
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/customers/${id}/crm`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.enabled) setCrmEnabled(true);
+        }
+      } catch {
+        // Silent — CRM module may not exist
+      }
+    })();
+  }, [id]);
+
+  // Lazy-load CRM data when tab is opened
+  useEffect(() => {
+    if (activeTab !== 'crm' || crmLoaded || !id) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/customers/${id}/crm`);
+        if (res.ok) {
+          const json = await res.json();
+          setCrmData(json.data || json);
+        }
+      } catch {
+        // Silent
+      }
+      setCrmLoaded(true);
+    })();
+  }, [activeTab, crmLoaded, id]);
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -490,6 +597,7 @@ export default function ClientDetailPage() {
     { key: 'addresses', label: `${t('admin.customerDetail.tabs.addresses')} (${user.addresses.length})`, icon: MapPin },
     { key: 'cards', label: `${t('admin.customerDetail.tabs.cards')} (${user.savedCards.length})`, icon: CreditCard },
     { key: 'calls', label: `${t('admin.customerDetail.tabs.calls')} (${calls.length})`, icon: Phone },
+    ...(crmEnabled ? [{ key: 'crm' as TabKey, label: `${t('admin.customerDetail.tabs.crm')} (${crmData?.summary?.totalDeals ?? '...'})`, icon: Briefcase }] : []),
   ];
 
   const tierProgress = getTierProgress(user.lifetimePoints, user.loyaltyTier);
@@ -1510,6 +1618,180 @@ export default function ClientDetailPage() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ================================================================= */}
+      {/* TAB: CRM                                                          */}
+      {/* ================================================================= */}
+      {activeTab === 'crm' && (
+        <div className="space-y-6">
+          {!crmLoaded ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-2 border-sky-600 border-t-transparent rounded-full" />
+            </div>
+          ) : !crmData?.summary ? (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+              <Briefcase className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+              {t('admin.customerDetail.crm.noDeals')}
+            </div>
+          ) : (
+            <>
+              {/* Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  label={t('admin.customerDetail.crm.totalDeals')}
+                  value={`${crmData.summary.totalDeals} (${t('admin.customerDetail.crm.openDeals')}: ${crmData.summary.openCount})`}
+                  icon={Briefcase}
+                />
+                <StatCard
+                  label={t('admin.customerDetail.crm.winRate')}
+                  value={`${crmData.summary.winRate}%`}
+                  icon={Target}
+                />
+                <StatCard
+                  label={t('admin.customerDetail.crm.totalValue')}
+                  value={formatCurrency(crmData.summary.totalDealValue)}
+                  icon={ShoppingCart}
+                />
+                <StatCard
+                  label={t('admin.customerDetail.crm.pendingTasks')}
+                  value={`${crmData.summary.pendingTaskCount}`}
+                  icon={Clock}
+                />
+              </div>
+
+              {/* Deals Section */}
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 className="font-semibold text-slate-700 mb-3">{t('admin.customerDetail.crm.deals')}</h3>
+                {crmData.deals && crmData.deals.length > 0 ? (
+                  <div className="space-y-2">
+                    {crmData.deals.map((deal) => (
+                      <Link
+                        key={deal.id}
+                        href={`/admin/crm/deals/${deal.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: deal.stage.color || '#6B7280' }}
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">{deal.title}</p>
+                            <p className="text-xs text-slate-500">
+                              {deal.pipeline.name} · {deal.stage.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-slate-900">{formatCurrency(deal.value)}</p>
+                          <StatusBadge variant={deal.stage.isWon ? 'success' : deal.stage.isLost ? 'error' : 'info'}>
+                            {deal.stage.isWon ? t('admin.customerDetail.crm.wonDeals') : deal.stage.isLost ? t('admin.customerDetail.crm.lostDeals') : t('admin.customerDetail.crm.openDeals')}
+                          </StatusBadge>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">{t('admin.customerDetail.crm.noDeals')}</p>
+                )}
+              </div>
+
+              {/* Activity Timeline */}
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 className="font-semibold text-slate-700 mb-3">{t('admin.customerDetail.crm.activityTimeline')}</h3>
+                {crmData.activities && crmData.activities.length > 0 ? (
+                  <div className="space-y-3">
+                    {crmData.activities.slice(0, 15).map((activity) => (
+                      <div key={activity.id} className="flex gap-3">
+                        <div className="mt-0.5 p-1.5 rounded-full bg-slate-100">
+                          {activity.type === 'CALL' ? <Phone className="h-3.5 w-3.5 text-slate-500" /> :
+                           activity.type === 'EMAIL' ? <Mail className="h-3.5 w-3.5 text-slate-500" /> :
+                           activity.type === 'NOTE' ? <MessageSquare className="h-3.5 w-3.5 text-slate-500" /> :
+                           <FileText className="h-3.5 w-3.5 text-slate-500" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-900">{activity.title}</p>
+                          {activity.description && <p className="text-xs text-slate-500 mt-0.5">{activity.description}</p>}
+                          <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+                            <span>{activity.performedBy?.name || activity.performedBy?.email || '-'}</span>
+                            <span>{formatDateTime(activity.createdAt)}</span>
+                            {activity.deal && (
+                              <span className="text-sky-600">→ {activity.deal.title}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">{t('admin.customerDetail.crm.noActivities')}</p>
+                )}
+              </div>
+
+              {/* Tasks */}
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 className="font-semibold text-slate-700 mb-3">{t('admin.customerDetail.crm.tasks')}</h3>
+                {crmData.tasks && crmData.tasks.filter(tk => tk.status !== 'COMPLETED').length > 0 ? (
+                  <div className="space-y-2">
+                    {crmData.tasks.filter(tk => tk.status !== 'COMPLETED').map((task) => (
+                      <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                        <div className={`w-2 h-2 rounded-full ${
+                          task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-blue-500'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-900">{task.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                            <span>{task.type}</span>
+                            {task.dueAt && <span>{formatDate(task.dueAt)}</span>}
+                            <span>{task.assignedTo.name || task.assignedTo.email}</span>
+                          </div>
+                        </div>
+                        <StatusBadge variant={task.status === 'IN_PROGRESS' ? 'primary' : 'warning'}>
+                          {task.status}
+                        </StatusBadge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">{t('admin.customerDetail.crm.noTasks')}</p>
+                )}
+              </div>
+
+              {/* Inbox Conversations */}
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 className="font-semibold text-slate-700 mb-3">{t('admin.customerDetail.crm.inboxConversations')}</h3>
+                {crmData.inboxConversations && crmData.inboxConversations.length > 0 ? (
+                  <div className="space-y-2">
+                    {crmData.inboxConversations.map((conv) => (
+                      <div key={conv.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                        <div className="flex items-center gap-3">
+                          <Inbox className="h-4 w-4 text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-900">{conv.subject || conv.channel}</p>
+                            {conv.messages[0] && (
+                              <p className="text-xs text-slate-500 mt-0.5 truncate max-w-md">{conv.messages[0].content}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge variant={conv.status === 'OPEN' ? 'warning' : conv.status === 'RESOLVED' ? 'success' : 'neutral'}>
+                            {conv.channel}
+                          </StatusBadge>
+                          {conv.lastMessageAt && (
+                            <span className="text-xs text-slate-400">{formatDateTime(conv.lastMessageAt)}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">{t('admin.customerDetail.crm.noConversations')}</p>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}

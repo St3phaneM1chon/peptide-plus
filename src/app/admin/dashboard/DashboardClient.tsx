@@ -5,7 +5,7 @@
  * Renders the dashboard UI with i18n support
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,6 +26,11 @@ import {
   UserPlus,
   BarChart3,
   Tag,
+  Briefcase,
+  BookOpen,
+  Star,
+  Megaphone,
+  PhoneCall,
 } from 'lucide-react';
 
 // --------------------------------------------------
@@ -84,9 +89,29 @@ function formatCurrency(amount: number, locale: string, currencyCode: string = '
 // Main Component
 // --------------------------------------------------
 
+interface CrossModuleData {
+  modules: {
+    commerce?: { ordersToday: number; revenueToday: number; pendingOrders: number };
+    crm?: { openDeals: number; wonToday: number; pipelineValue: number };
+    accounting?: { draftEntries: number; entriesThisMonth: number };
+    loyalty?: { newMembersToday: number; pointsDistributedToday: number };
+    marketing?: { activePromoCodes: number };
+    telephony?: { callsToday: number; avgDurationSeconds: number };
+  };
+  flags: Record<string, boolean>;
+}
+
 export default function DashboardClient({ stats, recentOrders, recentUsers }: DashboardClientProps) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const [crossModule, setCrossModule] = useState<CrossModuleData | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/dashboard/cross-module')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => { if (json?.data) setCrossModule(json.data); })
+      .catch(() => { /* silent */ });
+  }, []);
 
   // ─── Ribbon Actions ────────────────────────────────────────
 
@@ -405,6 +430,117 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
           </div>
         </section>
       </div>
+
+      {/* ── Cross-Module Widgets (Bridge #18) ───────────────────── */}
+      {crossModule && (
+        <section>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">
+            {t('admin.dashboard.crossModuleTitle') || 'Cross-Module Overview'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {crossModule.modules.crm && (
+              <Link href="/admin/crm/pipeline" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <span className="font-medium text-slate-900">CRM</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.openDeals') || 'Open Deals'}</p>
+                    <p className="font-bold text-slate-900">{crossModule.modules.crm.openDeals}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.pipelineValue') || 'Pipeline'}</p>
+                    <p className="font-bold text-green-700">{formatCurrency(crossModule.modules.crm.pipelineValue, locale)}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {crossModule.modules.accounting && (
+              <Link href="/admin/comptabilite/ecritures" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-emerald-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <span className="font-medium text-slate-900">{t('admin.dashboard.accounting') || 'Accounting'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.draftEntries') || 'Draft'}</p>
+                    <p className="font-bold text-slate-900">{crossModule.modules.accounting.draftEntries}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.entriesThisMonth') || 'This Month'}</p>
+                    <p className="font-bold text-slate-900">{crossModule.modules.accounting.entriesThisMonth}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {crossModule.modules.loyalty && (
+              <Link href="/admin/fidelite" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-purple-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
+                    <Star className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <span className="font-medium text-slate-900">{t('admin.dashboard.loyalty') || 'Loyalty'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.newMembers') || 'New Members'}</p>
+                    <p className="font-bold text-slate-900">{crossModule.modules.loyalty.newMembersToday}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.pointsDistributed') || 'Points'}</p>
+                    <p className="font-bold text-purple-700">{crossModule.modules.loyalty.pointsDistributedToday.toLocaleString()}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {crossModule.modules.marketing && (
+              <Link href="/admin/promo-codes" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-orange-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center">
+                    <Megaphone className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <span className="font-medium text-slate-900">{t('admin.dashboard.marketing') || 'Marketing'}</span>
+                </div>
+                <div className="text-sm">
+                  <p className="text-slate-500">{t('admin.dashboard.activePromos') || 'Active Promos'}</p>
+                  <p className="font-bold text-slate-900">{crossModule.modules.marketing.activePromoCodes}</p>
+                </div>
+              </Link>
+            )}
+
+            {crossModule.modules.telephony && (
+              <Link href="/admin/telephonie/journal" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-sky-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center">
+                    <PhoneCall className="w-5 h-5 text-sky-600" />
+                  </div>
+                  <span className="font-medium text-slate-900">{t('admin.dashboard.telephony') || 'Telephony'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.callsToday') || 'Calls Today'}</p>
+                    <p className="font-bold text-slate-900">{crossModule.modules.telephony.callsToday}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">{t('admin.dashboard.avgDuration') || 'Avg Duration'}</p>
+                    <p className="font-bold text-slate-900">
+                      {Math.floor(crossModule.modules.telephony.avgDurationSeconds / 60)}m {crossModule.modules.telephony.avgDurationSeconds % 60}s
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

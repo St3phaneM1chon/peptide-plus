@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Trophy,
+  Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -171,7 +172,22 @@ export default function NewsletterPage() {
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Bridge #33: Email stats for selected campaign
+  const [emailBridge, setEmailBridge] = useState<{
+    enabled: boolean;
+    stats?: { totalSent: number; delivered: number; bounced: number; opened: number; clicked: number; openRate: number; clickRate: number };
+  } | null>(null);
+
   // ─── Data fetching ──────────────────────────────────────────
+
+  // Bridge #33: Fetch email stats when a campaign is selected
+  useEffect(() => {
+    if (!selectedId || activeTab !== 'campaigns') { setEmailBridge(null); return; }
+    fetch(`/api/admin/newsletter/campaigns/${selectedId}/emails`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => { if (json?.data) setEmailBridge(json.data); })
+      .catch(() => {});
+  }, [selectedId, activeTab]);
 
   // Reset selection when switching tabs
   useEffect(() => {
@@ -1105,6 +1121,34 @@ export default function NewsletterPage() {
                             <p className="text-xs text-sky-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Bridge #33: Email delivery stats */}
+                    {emailBridge?.enabled && emailBridge.stats && emailBridge.stats.totalSent > 0 && (
+                      <div className="bg-indigo-50 rounded-lg border border-indigo-200 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Inbox className="h-4 w-4 text-indigo-600" />
+                          <h4 className="text-sm font-semibold text-indigo-900">{t('admin.bridges.campaignEmails')}</h4>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-slate-900">{emailBridge.stats.totalSent}</p>
+                            <p className="text-[10px] text-slate-500">{t('admin.bridges.campaignEmails')}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-emerald-700">{emailBridge.stats.delivered}</p>
+                            <p className="text-[10px] text-slate-500">Delivered</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-sky-700">{emailBridge.stats.openRate}%</p>
+                            <p className="text-[10px] text-slate-500">{t('admin.bridges.openRate')}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-violet-700">{emailBridge.stats.clickRate}%</p>
+                            <p className="text-[10px] text-slate-500">{t('admin.bridges.clickRate')}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
 

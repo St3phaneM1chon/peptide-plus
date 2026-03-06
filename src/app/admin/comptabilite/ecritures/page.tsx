@@ -16,7 +16,10 @@ import {
   Printer,
   Copy,
   RotateCcw,
+  ShoppingCart,
+  Briefcase,
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   PageHeader,
   Button,
@@ -49,6 +52,8 @@ interface JournalEntry {
   createdAt: string;
   reference?: string;
   attachments?: number;
+  orderId?: string | null;
+  sourceOrder?: { id: string; orderNumber: string; status: string; total: number } | null;
 }
 
 interface JournalLine {
@@ -116,6 +121,8 @@ export default function EcrituresPage() {
   const [error, setError] = useState<string | null>(null);
   const [accountOptions, setAccountOptions] = useState(defaultAccountOptions);
   const [submitting, setSubmitting] = useState(false);
+  // Bridge #14: CRM deal linked via entry → order → deal
+  const [crmDealBridge, setCrmDealBridge] = useState<{ deal: { id: string; title: string; value: number; stage: string } } | null>(null);
 
   // New entry form state
   const [newEntryDate, setNewEntryDate] = useState(new Date().toISOString().split('T')[0]);
@@ -298,6 +305,13 @@ export default function EcrituresPage() {
   const openDetail = (entry: JournalEntry) => {
     setSelectedEntry(entry);
     setShowDetailModal(true);
+    setCrmDealBridge(null);
+    if (entry.id) {
+      fetch(`/api/admin/accounting/entries/${entry.id}/crm`)
+        .then(r => r.ok ? r.json() : null)
+        .then(json => { if (json?.data?.enabled && json.data.deal) setCrmDealBridge(json.data); })
+        .catch(() => {});
+    }
   };
 
   // -- DataTable columns --
@@ -720,6 +734,58 @@ export default function EcrituresPage() {
                 </p>
               )}
             </div>
+
+            {/* Bridge #4: Comptabilité → Commerce (source order) */}
+            {selectedEntry.sourceOrder && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-1.5">
+                  <ShoppingCart className="w-4 h-4" />
+                  {t('admin.accounting.sourceOrder') || 'Source Order'}
+                </h4>
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <span className="font-mono text-blue-700">{selectedEntry.sourceOrder.orderNumber}</span>
+                    <span className={`ms-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      selectedEntry.sourceOrder.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
+                      selectedEntry.sourceOrder.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>{selectedEntry.sourceOrder.status}</span>
+                  </div>
+                  <Link
+                    href={`/admin/commandes?order=${selectedEntry.sourceOrder.id}`}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {t('admin.accounting.viewOrder') || 'View Order'} →
+                  </Link>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  {t('common.total')}: {formatCurrency(selectedEntry.sourceOrder.total)}
+                </p>
+              </div>
+            )}
+
+            {/* Bridge #14: Comptabilité → CRM (linked deal) */}
+            {crmDealBridge?.deal && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-purple-800 mb-2 flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4" />
+                  {t('admin.bridges.accountingCrm') || 'Linked CRM Deal'}
+                </h4>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-purple-700">{crmDealBridge.deal.title}</span>
+                  <Link
+                    href={`/admin/crm/deals/${crmDealBridge.deal.id}`}
+                    className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                  >
+                    {t('admin.bridges.viewAll') || 'View'} →
+                  </Link>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-purple-500">{crmDealBridge.deal.stage}</span>
+                  <span className="font-mono text-purple-600">{formatCurrency(crmDealBridge.deal.value)}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>

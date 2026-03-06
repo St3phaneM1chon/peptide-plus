@@ -65,7 +65,7 @@ const stageColors: Record<string, { bg: string; text: string }> = {
 // ── Main Component ────────────────────────────────────────────
 
 export default function CRMPage() {
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<Tab>('leads');
 
   // Leads state
@@ -248,9 +248,9 @@ export default function CRMPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">CRM - Leads & Deals</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t('admin.crm.dashboardTitle') || 'CRM - Leads & Deals'}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Manage leads and sales pipeline
+            {t('admin.crm.dashboardDesc') || 'Manage leads and sales pipeline'}
           </p>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function CRMPage() {
           }`}
         >
           <Users className="w-4 h-4" />
-          Leads
+          {t('admin.crm.leads') || 'Leads'}
         </button>
         <button
           onClick={() => setActiveTab('deals')}
@@ -277,7 +277,7 @@ export default function CRMPage() {
           }`}
         >
           <Handshake className="w-4 h-4" />
-          Deals
+          {t('admin.crm.deals') || 'Deals'}
         </button>
       </div>
 
@@ -286,15 +286,15 @@ export default function CRMPage() {
         <>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <StatCard label="Total Leads" value={leads.length} icon={Users} />
-            <StatCard label="From Signups" value={totalUserLeads} icon={User} />
-            <StatCard label="From Newsletter" value={totalNewsletterLeads} icon={Mail} />
+            <StatCard label={t('admin.crm.totalLeads') || 'Total Leads'} value={leads.length} icon={Users} />
+            <StatCard label={t('admin.crm.fromSignups') || 'From Signups'} value={totalUserLeads} icon={User} />
+            <StatCard label={t('admin.crm.fromNewsletter') || 'From Newsletter'} value={totalNewsletterLeads} icon={Mail} />
           </div>
 
           {/* Action bar */}
           <div className="flex justify-end">
             <Button variant="primary" icon={Plus} size="sm" onClick={() => setShowNewLead(true)}>
-              New Lead
+              {t('admin.crm.newLead') || 'New Lead'}
             </Button>
           </div>
 
@@ -311,10 +311,10 @@ export default function CRMPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Name</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Email</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Source</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Date</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('common.name') || 'Name'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('common.email') || 'Email'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('admin.crm.source') || 'Source'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('common.date') || 'Date'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -337,9 +337,9 @@ export default function CRMPage() {
           {!leadsLoading && leads.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">No leads found</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.crm.noLeadsFound') || 'No leads found'}</h3>
               <p className="text-sm text-slate-500 mb-4">
-                Create a lead manually or wait for signups and newsletter subscriptions.
+                {t('admin.crm.noLeadsDesc') || 'Create a lead manually or wait for signups and newsletter subscriptions.'}
               </p>
             </div>
           )}
@@ -351,15 +351,15 @@ export default function CRMPage() {
         <>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label="Total Deals" value={totalDeals} icon={Handshake} />
-            <StatCard label="Pipeline Value" value={formatCurrency(pipelineTotal)} icon={DollarSign} />
+            <StatCard label={t('admin.crm.totalDeals') || 'Total Deals'} value={totalDeals} icon={Handshake} />
+            <StatCard label={t('admin.crm.pipelineValue') || 'Pipeline Value'} value={formatCurrency(pipelineTotal)} icon={DollarSign} />
             <StatCard
-              label="Won"
+              label={t('admin.crm.won') || 'Won'}
               value={pipeline['WON']?.count || 0}
               icon={TrendingUp}
             />
             <StatCard
-              label="Won Value"
+              label={t('admin.crm.wonValue') || 'Won Value'}
               value={formatCurrency(pipeline['WON']?.totalValue || 0)}
               icon={Target}
             />
@@ -368,7 +368,7 @@ export default function CRMPage() {
           {/* Pipeline stages visual */}
           {Object.keys(pipeline).length > 0 && (
             <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="text-base font-semibold text-slate-900 mb-4">Pipeline Stages</h3>
+              <h3 className="text-base font-semibold text-slate-900 mb-4">{t('admin.crm.pipelineStages') || 'Pipeline Stages'}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {DEAL_STAGES.map((stage) => {
                   const data = pipeline[stage] || { count: 0, totalValue: 0 };
@@ -390,7 +390,7 @@ export default function CRMPage() {
           {/* Action bar */}
           <div className="flex justify-end">
             <Button variant="primary" icon={Plus} size="sm" onClick={() => setShowNewDeal(true)}>
-              New Deal
+              {t('admin.crm.newDeal') || 'New Deal'}
             </Button>
           </div>
 
@@ -407,11 +407,11 @@ export default function CRMPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Contact</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Value</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Stage</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Created By</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Date</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('admin.crm.contact') || 'Contact'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('admin.crm.dealValue') || 'Value'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('admin.crm.stage') || 'Stage'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('admin.crm.createdBy') || 'Created By'}</th>
+                    <th className="text-left px-6 py-3 font-medium text-slate-600">{t('common.date') || 'Date'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -440,9 +440,9 @@ export default function CRMPage() {
           {!dealsLoading && deals.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
               <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">No deals yet</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.crm.noDealsYet') || 'No deals yet'}</h3>
               <p className="text-sm text-slate-500 mb-4">
-                Create your first deal to start tracking your sales pipeline.
+                {t('admin.crm.noDealsDesc') || 'Create your first deal to start tracking your sales pipeline.'}
               </p>
             </div>
           )}
@@ -450,12 +450,12 @@ export default function CRMPage() {
       )}
 
       {/* ── New Lead Modal ── */}
-      <Modal isOpen={showNewLead} onClose={() => setShowNewLead(false)} title="New Lead">
+      <Modal isOpen={showNewLead} onClose={() => setShowNewLead(false)} title={t('admin.crm.newLead') || 'New Lead'}>
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <User className="w-3.5 h-3.5 inline mr-1" />
-              Name *
+              {t('common.name') || 'Name'} *
             </label>
             <input
               type="text"
@@ -468,7 +468,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <Mail className="w-3.5 h-3.5 inline mr-1" />
-              Email *
+              {t('common.email') || 'Email'} *
             </label>
             <input
               type="email"
@@ -481,7 +481,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <Phone className="w-3.5 h-3.5 inline mr-1" />
-              Source
+              {t('admin.crm.source') || 'Source'}
             </label>
             <input
               type="text"
@@ -494,7 +494,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <FileText className="w-3.5 h-3.5 inline mr-1" />
-              Notes
+              {t('common.notes') || 'Notes'}
             </label>
             <textarea
               value={leadForm.notes}
@@ -505,22 +505,22 @@ export default function CRMPage() {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" size="sm" onClick={() => setShowNewLead(false)}>
-              Cancel
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" onClick={handleCreateLead} loading={submitting}>
-              Create Lead
+              {t('admin.crm.createLead') || 'Create Lead'}
             </Button>
           </div>
         </div>
       </Modal>
 
       {/* ── New Deal Modal ── */}
-      <Modal isOpen={showNewDeal} onClose={() => setShowNewDeal(false)} title="New Deal">
+      <Modal isOpen={showNewDeal} onClose={() => setShowNewDeal(false)} title={t('admin.crm.newDeal') || 'New Deal'}>
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <User className="w-3.5 h-3.5 inline mr-1" />
-              Contact ID *
+              {t('admin.crm.contactId') || 'Contact ID'} *
             </label>
             <input
               type="text"
@@ -533,7 +533,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <DollarSign className="w-3.5 h-3.5 inline mr-1" />
-              Value (CAD) *
+              {t('admin.crm.valueCad') || 'Value (CAD)'} *
             </label>
             <input
               type="number"
@@ -548,7 +548,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <Target className="w-3.5 h-3.5 inline mr-1" />
-              Stage
+              {t('admin.crm.stage') || 'Stage'}
             </label>
             <select
               value={dealForm.stage}
@@ -563,7 +563,7 @@ export default function CRMPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <FileText className="w-3.5 h-3.5 inline mr-1" />
-              Notes
+              {t('common.notes') || 'Notes'}
             </label>
             <textarea
               value={dealForm.notes}
@@ -574,10 +574,10 @@ export default function CRMPage() {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" size="sm" onClick={() => setShowNewDeal(false)}>
-              Cancel
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button variant="primary" size="sm" onClick={handleCreateDeal} loading={submitting}>
-              Create Deal
+              {t('admin.crm.createDeal') || 'Create Deal'}
             </Button>
           </div>
         </div>
