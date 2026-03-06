@@ -1,17 +1,65 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { getRibbonConfig } from '@/lib/admin/ribbon-config';
 import { folderSections } from '@/lib/admin/outlook-nav';
+import type { NavFolderGroup } from '@/lib/admin/outlook-nav';
 import { dispatchRibbonAction } from '@/hooks/useRibbonAction';
 import type { RibbonAction, RibbonTab } from '@/lib/admin/ribbon-config';
 
-// ── NavDropdown for dashboard mega-nav ────────────────────────
+// ── Collapsible group inside mega-menu ──────────────────────
+function DropdownGroup({
+  group,
+  onClose,
+  t,
+}: {
+  group: NavFolderGroup;
+  onClose: () => void;
+  t: (key: string) => string;
+}) {
+  const [expanded, setExpanded] = useState(group.defaultOpen !== false);
+  const hasHeader = !!group.labelKey;
+  const isCollapsible = group.collapsible === true;
 
+  return (
+    <div className="min-w-0">
+      {hasHeader && (
+        <button
+          type="button"
+          onClick={isCollapsible ? () => setExpanded((v) => !v) : undefined}
+          className={`flex items-center gap-1 w-full px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 ${
+            isCollapsible ? 'cursor-pointer hover:text-slate-600' : 'cursor-default'
+          }`}
+        >
+          {isCollapsible && (
+            <ChevronRight
+              className={`w-3 h-3 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            />
+          )}
+          <span className="truncate">{t(group.labelKey!)}</span>
+        </button>
+      )}
+      {expanded &&
+        group.items.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 rounded transition-colors"
+            onClick={onClose}
+          >
+            <item.icon className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+            <span className="truncate">{t(item.labelKey)}</span>
+          </a>
+        ))}
+    </div>
+  );
+}
+
+// ── NavDropdown for dashboard mega-nav (mega-menu or simple) ─
 function NavDropdownTab({
   tab,
   isActive,
@@ -24,6 +72,8 @@ function NavDropdownTab({
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [alignRight, setAlignRight] = useState(false);
 
   // Close on outside click
   useEffect(() => {
@@ -34,6 +84,19 @@ function NavDropdownTab({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  // Detect overflow — shift to right-aligned if panel exceeds viewport
+  useEffect(() => {
+    if (!open || !panelRef.current) return;
+    const rect = panelRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      setAlignRight(true);
+    } else {
+      setAlignRight(false);
+    }
+  }, [open]);
+
+  const close = useCallback(() => setOpen(false), []);
 
   const section = tab.railId ? folderSections[tab.railId] : null;
   // Never return null — doing so removes the element and shifts siblings,
@@ -56,8 +119,18 @@ function NavDropdownTab({
     );
   }
 
-  // Flatten all items from all groups
-  const allItems = section.groups.flatMap((g) => g.items);
+  const groups = section.groups;
+  const totalItems = groups.reduce((n, g) => n + g.items.length, 0);
+  const isSimple = groups.length <= 1 && totalItems <= 8;
+
+  // Grid columns based on group count
+  const gridClass = isSimple
+    ? 'min-w-[200px]'
+    : groups.length <= 3
+      ? 'min-w-[420px] grid grid-cols-2 gap-x-3'
+      : groups.length <= 5
+        ? 'min-w-[480px] grid grid-cols-2 gap-x-3'
+        : 'min-w-[640px] grid grid-cols-3 gap-x-3';
 
   return (
     <div ref={ref} className="relative">
@@ -74,18 +147,27 @@ function NavDropdownTab({
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[200px]">
-          {allItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              <item.icon className="w-3.5 h-3.5 text-slate-400" />
-              {t(item.labelKey)}
-            </a>
-          ))}
+        <div
+          ref={panelRef}
+          className={`absolute top-full mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg p-2 max-h-[70vh] overflow-y-auto ${gridClass} ${
+            alignRight ? 'right-0' : 'left-0'
+          }`}
+        >
+          {isSimple
+            ? groups.flatMap((g) => g.items).map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 rounded transition-colors"
+                  onClick={close}
+                >
+                  <item.icon className="w-3.5 h-3.5 text-slate-400" />
+                  {t(item.labelKey)}
+                </a>
+              ))
+            : groups.map((group, i) => (
+                <DropdownGroup key={group.labelKey ?? `g${i}`} group={group} onClose={close} t={t} />
+              ))}
         </div>
       )}
     </div>
