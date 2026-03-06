@@ -25,6 +25,7 @@ export default async function GroupesPage() {
       },
     },
     orderBy: { name: 'asc' },
+    take: 200,
   });
 
   // Fetch users eligible to be members
@@ -32,6 +33,7 @@ export default async function GroupesPage() {
     where: { role: { in: ['EMPLOYEE', 'OWNER'] } },
     select: { id: true, name: true, email: true },
     orderBy: { name: 'asc' },
+    take: 200,
   });
 
   return (

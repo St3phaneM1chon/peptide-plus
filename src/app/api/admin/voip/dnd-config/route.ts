@@ -38,6 +38,7 @@ export async function GET() {
     const presenceStatuses = await prisma.presenceStatus.findMany({
       where: { userId: session.user.id },
       orderBy: { updatedAt: 'desc' },
+      take: 100,
     });
 
     const isDndInPresence = presenceStatuses.some(p => p.status === 'DND');

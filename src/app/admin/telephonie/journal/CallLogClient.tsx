@@ -12,8 +12,11 @@ import SatisfactionBadge from '@/components/voip/SatisfactionBadge';
 import AudioPlayer from '@/components/voip/AudioPlayer';
 import {
   Phone, PhoneIncoming, PhoneOutgoing, Search,
-  ChevronLeft, ChevronRight, FileText,
+  ChevronLeft, ChevronRight, FileText, Briefcase, ShoppingCart,
+  Star, Mail,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useCallback, useEffect, useRef } from 'react';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -26,6 +29,48 @@ export default function CallLogClient() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Bridges #8 + #13 + #45 + #46: CRM deals, orders, loyalty, emails for expanded call
+  const [callBridgeData, setCallBridgeData] = useState<Record<string, {
+    crmDeals?: Array<{ id: string; title: string; stageName: string; value: number }> | null;
+    recentOrders?: Array<{ id: string; orderNumber: string; status: string; total: number; createdAt: string }> | null;
+    loyaltyInfo?: { currentTier: string; currentPoints: number } | null;
+    recentEmails?: Array<{ id: string; subject: string; status: string; sentAt: string }> | null;
+  }>>({});
+  const fetchedBridgeRef = useRef<Set<string>>(new Set());
+
+  const fetchCallBridge = useCallback(async (callId: string) => {
+    if (fetchedBridgeRef.current.has(callId)) return;
+    fetchedBridgeRef.current.add(callId);
+    try {
+      // Fetch main bridge + loyalty + emails in parallel
+      const [mainRes, loyaltyRes, emailsRes] = await Promise.all([
+        fetch(`/api/admin/voip/call-logs/${callId}`),
+        fetch(`/api/admin/voip/call-logs/${callId}/loyalty`),
+        fetch(`/api/admin/voip/call-logs/${callId}/emails`),
+      ]);
+
+      const mainJson = mainRes.ok ? await mainRes.json() : null;
+      const loyaltyJson = loyaltyRes.ok ? await loyaltyRes.json() : null;
+      const emailsJson = emailsRes.ok ? await emailsRes.json() : null;
+
+      setCallBridgeData((prev) => ({
+        ...prev,
+        [callId]: {
+          crmDeals: mainJson?.data?.crmDeals ?? null,
+          recentOrders: mainJson?.data?.recentOrders ?? null,
+          loyaltyInfo: loyaltyJson?.data?.enabled ? {
+            currentTier: loyaltyJson.data.currentTier,
+            currentPoints: loyaltyJson.data.currentPoints,
+          } : null,
+          recentEmails: emailsJson?.data?.enabled ? emailsJson.data.recentEmails : null,
+        },
+      }));
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    if (expandedId) fetchCallBridge(expandedId);
+  }, [expandedId, fetchCallBridge]);
 
   const params = new URLSearchParams();
   params.set('page', page.toString());
@@ -57,6 +102,17 @@ export default function CallLogClient() {
     TRANSFERRED: 'bg-purple-100 text-purple-700',
     RINGING: 'bg-yellow-100 text-yellow-700',
   };
+
+  const statusLabelMap: Record<string, string> = {
+    COMPLETED: 'statusCompleted',
+    MISSED: 'statusMissed',
+    VOICEMAIL: 'statusVoicemail',
+    FAILED: 'statusFailed',
+    RINGING: 'statusRinging',
+    IN_PROGRESS: 'statusInProgress',
+    TRANSFERRED: 'statusTransferred',
+  };
+  const statusLabel = (s: string) => t(`voip.admin.callLog.${statusLabelMap[s] ?? s}`);
 
   return (
     <div className="space-y-4">
@@ -155,7 +211,7 @@ export default function CallLogClient() {
                         </td>
                         <td className="px-4 py-2.5">
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[call.status] || 'bg-gray-100'}`}>
-                            {call.status}
+                            {statusLabel(call.status)}
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-gray-600 tabular-nums">
@@ -209,6 +265,83 @@ export default function CallLogClient() {
                                 <div className="flex-1 min-w-[200px]">
                                   <span className="text-xs font-medium text-gray-500 block mb-1">Notes</span>
                                   <p className="text-gray-700">{call.agentNotes}</p>
+                                </div>
+                              )}
+                              {/* Bridge #8: Telephony → CRM Deals */}
+                              {callBridgeData[call.id]?.crmDeals && callBridgeData[call.id].crmDeals!.length > 0 && (
+                                <div className="flex-1 min-w-[200px]">
+                                  <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
+                                    <Briefcase className="w-3 h-3" />
+                                    {t('admin.telephony.crmDeals') || 'CRM Deals'}
+                                  </span>
+                                  <div className="space-y-1">
+                                    {callBridgeData[call.id].crmDeals!.map((deal) => (
+                                      <Link
+                                        key={deal.id}
+                                        href={`/admin/crm/deals/${deal.id}`}
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-blue-50 border border-gray-100"
+                                      >
+                                        <span className="text-gray-800 truncate">{deal.title}</span>
+                                        <span className="text-gray-500 ms-2 shrink-0">{deal.stageName}</span>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {/* Bridge #13: Telephony → Commerce (Recent Orders) */}
+                              {callBridgeData[call.id]?.recentOrders && callBridgeData[call.id].recentOrders!.length > 0 && (
+                                <div className="flex-1 min-w-[200px]">
+                                  <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
+                                    <ShoppingCart className="w-3 h-3" />
+                                    {t('admin.bridges.recentOrders')}
+                                  </span>
+                                  <div className="space-y-1">
+                                    {callBridgeData[call.id].recentOrders!.map((order) => (
+                                      <Link
+                                        key={order.id}
+                                        href={`/admin/commandes?orderId=${order.id}`}
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-blue-50 border border-gray-100"
+                                      >
+                                        <span className="text-gray-800">#{order.orderNumber}</span>
+                                        <span className="text-gray-500 ms-2 shrink-0">${order.total.toFixed(2)}</span>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {/* Bridge #45: Telephony → Loyalty */}
+                              {callBridgeData[call.id]?.loyaltyInfo && (
+                                <div className="flex-1 min-w-[150px]">
+                                  <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
+                                    <Star className="w-3 h-3" />
+                                    {t('admin.bridges.loyaltyInfo') || 'Loyalty'}
+                                  </span>
+                                  <div className="text-xs p-1.5 rounded bg-white border border-gray-100">
+                                    <span className="text-purple-700 font-medium">{callBridgeData[call.id].loyaltyInfo!.currentTier}</span>
+                                    <span className="text-gray-500 ms-2">{callBridgeData[call.id].loyaltyInfo!.currentPoints.toLocaleString()} pts</span>
+                                  </div>
+                                </div>
+                              )}
+                              {/* Bridge #46: Telephony → Email */}
+                              {callBridgeData[call.id]?.recentEmails && callBridgeData[call.id].recentEmails!.length > 0 && (
+                                <div className="flex-1 min-w-[200px]">
+                                  <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
+                                    <Mail className="w-3 h-3" />
+                                    {t('admin.bridges.recentEmails') || 'Recent Emails'}
+                                  </span>
+                                  <div className="space-y-1">
+                                    {callBridgeData[call.id].recentEmails!.slice(0, 3).map((email) => (
+                                      <div
+                                        key={email.id}
+                                        className="text-xs p-1.5 rounded bg-white border border-gray-100"
+                                      >
+                                        <p className="text-gray-700 truncate">{email.subject}</p>
+                                        <span className={`px-1 py-0.5 rounded text-[10px] ${
+                                          email.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                        }`}>{email.status}</span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>

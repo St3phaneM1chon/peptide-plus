@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { updatedAt: 'desc' },
+      take: 200,
     });
 
     // Expose calendar-sync availability hint.

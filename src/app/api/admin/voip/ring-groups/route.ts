@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { name: 'asc' },
+      take: 200,
     });
 
     return NextResponse.json({

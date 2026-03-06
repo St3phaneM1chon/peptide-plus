@@ -24,6 +24,7 @@ export default async function IvrBuilderPage() {
       options: { orderBy: { sortOrder: 'asc' } },
     },
     orderBy: { createdAt: 'desc' },
+    take: 200,
   });
 
   return <IvrBuilderClient initialMenus={JSON.parse(JSON.stringify(menus))} />;

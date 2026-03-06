@@ -269,19 +269,19 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
                       {agent.name}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Ext. {agent.extension}
+                      {t('voip.admin.wallboard.ext')} {agent.extension}
                     </div>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusBadge(agent.status)}`}>
-                  {agent.status}
+                  {t(`voip.admin.agentStatus.${agent.status.toLowerCase()}`)}
                 </span>
               </div>
             ))}
             {data.agents.length === 0 && (
               <div className="p-8 text-center text-sm text-gray-400">
                 <Users className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-                No agents configured
+                {t('voip.admin.wallboard.noAgents')}
               </div>
             )}
           </div>
@@ -322,7 +322,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
             {data.queues.length === 0 && (
               <div className="p-8 text-center text-sm text-gray-400">
                 <Phone className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-                No queues configured
+                {t('voip.admin.wallboard.noQueues')}
               </div>
             )}
           </div>

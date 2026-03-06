@@ -49,10 +49,20 @@ async function authenticateApiKey(request: NextRequest): Promise<{
   // If apiKeyHash is not set yet (migration), accept slug-only temporarily
   if (company.apiKeyHash) {
     const { createHmac } = await import('crypto');
-    const hash = createHmac('sha256', process.env.API_KEY_SALT || 'voip-api-salt')
+    const salt = process.env.API_KEY_SALT;
+    if (!salt) {
+      console.error('[VoIP Public API] API_KEY_SALT environment variable is not configured');
+      return null;
+    }
+    const { timingSafeEqual } = await import('crypto');
+    const hash = createHmac('sha256', salt)
       .update(secret)
       .digest('hex');
-    if (hash !== company.apiKeyHash) return null;
+    try {
+      if (!timingSafeEqual(Buffer.from(hash), Buffer.from(company.apiKeyHash))) return null;
+    } catch {
+      return null;
+    }
   }
 
   return { companyId: company.id, companyName: company.name };
@@ -151,8 +161,9 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error) {
+    console.error('[VoIP Public API]', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -199,7 +210,8 @@ export async function POST(request: NextRequest) {
 
         const connectionId = process.env.TELNYX_CONNECTION_ID;
         if (!connectionId) {
-          return NextResponse.json({ error: 'TELNYX_CONNECTION_ID not configured' }, { status: 500 });
+          console.error('[VoIP Public API] TELNYX_CONNECTION_ID not configured');
+          return NextResponse.json({ error: 'Call service temporarily unavailable' }, { status: 503 });
         }
         const callerIdNumber = from || process.env.TELNYX_DEFAULT_CALLER_ID;
         if (!callerIdNumber) {
@@ -233,8 +245,9 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
+    console.error('[VoIP Public API]', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

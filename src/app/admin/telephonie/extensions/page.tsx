@@ -19,6 +19,7 @@ export default async function ExtensionsPage() {
   const extensions = await prisma.sipExtension.findMany({
     include: { user: { select: { name: true, email: true } } },
     orderBy: { extension: 'asc' },
+    take: 200,
   });
 
   return <ExtensionsClient extensions={JSON.parse(JSON.stringify(extensions))} />;

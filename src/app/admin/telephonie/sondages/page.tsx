@@ -20,6 +20,7 @@ export default async function SondagesPage() {
   const surveySettings = await prisma.siteSetting.findMany({
     where: { module: 'voip', key: { startsWith: 'voip:survey_config:' } },
     orderBy: { createdAt: 'desc' },
+    take: 50,
   });
 
   // Parse survey configs from SiteSetting values

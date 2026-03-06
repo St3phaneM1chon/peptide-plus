@@ -18,6 +18,7 @@ export default async function CampagnesPage() {
 
   const campaigns = await prisma.dialerCampaign.findMany({
     orderBy: { createdAt: 'desc' },
+    take: 50,
   });
 
   return <CampagnesClient initialCampaigns={JSON.parse(JSON.stringify(campaigns))} />;

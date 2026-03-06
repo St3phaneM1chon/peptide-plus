@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         _count: { select: { members: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
 
     // Enrich queues with real-time stats from the queue engine
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: enriched, totalQueued: liveStats.totalQueued });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: queue }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
