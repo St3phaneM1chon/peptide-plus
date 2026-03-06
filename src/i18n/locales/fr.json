@@ -7682,6 +7682,18 @@
     "mfaLabel": "Code d'authentification",
     "mfaDescription": "Entrez le code de votre application d'authentification",
     "mfaPlaceholder": "000000",
+    "mfaChallenge": {
+      "title": "Vérification en deux étapes",
+      "description": "Entrez le code de votre application d'authentification pour continuer.",
+      "codeLabel": "Code de vérification",
+      "codeHint": "Code à 6 chiffres ou code de secours à 8 caractères",
+      "invalidCode": "Code invalide. Veuillez réessayer.",
+      "tooManyAttempts": "Trop de tentatives. Veuillez patienter.",
+      "verificationError": "Erreur de vérification. Veuillez réessayer.",
+      "verifying": "Vérification...",
+      "verifyButton": "Vérifier",
+      "signOutLink": "Se déconnecter et utiliser un autre compte"
+    },
     "accountCreated": "Compte créé !",
     "accountCreatedMessage": "Votre compte a été créé avec succès.",
     "redirectingToSignIn": "Redirection vers la page de connexion...",

@@ -377,7 +377,7 @@ export const authConfig: NextAuthConfig = {
     },
 
     // Enrichissement du JWT
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account, trigger, session }) {
       try {
         if (user) {
           token.id = user.id || '';
@@ -441,6 +441,18 @@ export const authConfig: NextAuthConfig = {
             }
           } catch (dbError) {
             logger.error('Database error in jwt callback', { error: dbError instanceof Error ? dbError.message : String(dbError) });
+          }
+
+          // FAILLE-059 FIX: Accept MFA verification from post-OAuth challenge flow.
+          // The /api/mfa/challenge route verifies the TOTP code server-side.
+          // The client then calls update({ mfaVerified: true }) to refresh the session.
+          // We only accept this if the user actually has MFA enabled (defense in depth).
+          if (
+            trigger === 'update' &&
+            session?.mfaVerified === true &&
+            token.mfaEnabled === true
+          ) {
+            token.mfaVerified = true;
           }
         }
 

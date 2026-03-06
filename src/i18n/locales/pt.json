@@ -7721,6 +7721,18 @@
     "mfaDescription": "Insira o código do seu aplicativo de autenticação",
     "mfaLabel": "Código de autenticação",
     "mfaPlaceholder": "000000",
+    "mfaChallenge": {
+      "title": "Two-Step Verification",
+      "description": "Enter the code from your authenticator app to continue.",
+      "codeLabel": "Verification code",
+      "codeHint": "6-digit code or 8-character backup code",
+      "invalidCode": "Invalid code. Please try again.",
+      "tooManyAttempts": "Too many attempts. Please wait.",
+      "verificationError": "Verification error. Please try again.",
+      "verifying": "Verifying...",
+      "verifyButton": "Verify",
+      "signOutLink": "Sign out and use a different account"
+    },
     "myProfile": "Meu perfil",
     "namePlaceholder": "João Silva",
     "nameRequired": "Nome é obrigatório",
