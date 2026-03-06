@@ -36,6 +36,7 @@ export default async function AgentsAnalyticsPage() {
       },
     },
     orderBy: { extension: 'asc' },
+    take: 200,
   });
 
   // Compute per-agent metrics

@@ -39,9 +39,7 @@ function addSecurityHeaders(response: NextResponse): void {
   // Note: 'unsafe-inline' is kept for styles because Tailwind requires it
   const cspDirectives = [
     "default-src 'self'",
-    process.env.NODE_ENV === 'production'
-      ? "script-src 'self' 'strict-dynamic' https://js.stripe.com"
-      : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",

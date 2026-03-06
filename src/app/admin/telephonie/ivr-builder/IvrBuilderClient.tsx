@@ -68,13 +68,13 @@ type OptionAction = 'transfer_ext' | 'transfer_queue' | 'sub_menu' | 'voicemail'
 
 const DTMF_DIGITS: DtmfDigit[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '*', '#'];
 
-const ACTION_OPTIONS: { value: OptionAction; label: string; icon: typeof Phone }[] = [
-  { value: 'transfer_ext', label: 'Transfer to Extension', icon: PhoneForwarded },
-  { value: 'transfer_queue', label: 'Transfer to Queue', icon: Users },
-  { value: 'sub_menu', label: 'Go to Submenu', icon: GitBranch },
-  { value: 'voicemail', label: 'Voicemail', icon: Voicemail },
-  { value: 'replay', label: 'Repeat Menu', icon: RotateCcw },
-  { value: 'hangup', label: 'Hang Up', icon: PhoneOff },
+const ACTION_KEYS: { value: OptionAction; labelKey: string; icon: typeof Phone }[] = [
+  { value: 'transfer_ext', labelKey: 'transferToExt', icon: PhoneForwarded },
+  { value: 'transfer_queue', labelKey: 'transferToQueue', icon: Users },
+  { value: 'sub_menu', labelKey: 'goToSubmenu', icon: GitBranch },
+  { value: 'voicemail', labelKey: 'voicemail', icon: Voicemail },
+  { value: 'replay', labelKey: 'repeatMenu', icon: RotateCcw },
+  { value: 'hangup', labelKey: 'hangUp', icon: PhoneOff },
 ];
 
 interface EditingOption {
@@ -182,7 +182,7 @@ export default function IvrBuilderClient({
 
   const handleSave = useCallback(async () => {
     if (!formName.trim()) {
-      toast.error('Menu name is required');
+      toast.error(t('voip.admin.ivrEditor.menuNameRequired'));
       return;
     }
 
@@ -239,9 +239,9 @@ export default function IvrBuilderClient({
 
       setSelectedMenuId(savedMenu.id);
       setShowEditor(false);
-      toast.success(editingMenuId ? 'IVR menu updated' : 'IVR menu created');
+      toast.success(editingMenuId ? t('voip.admin.ivrEditor.menuUpdated') : t('voip.admin.ivrEditor.menuCreated'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Save failed');
+      toast.error(error instanceof Error ? error.message : t('voip.admin.ivrEditor.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -262,7 +262,7 @@ export default function IvrBuilderClient({
 
   const handleDelete = useCallback(
     async (menuId: string) => {
-      if (!confirm('Are you sure you want to delete this IVR menu?')) return;
+      if (!confirm(t('voip.admin.ivrEditor.confirmDelete'))) return;
       setDeleting(true);
       try {
         const res = await fetch(`/api/voip/ivr/${menuId}`, { method: 'DELETE' });
@@ -272,9 +272,9 @@ export default function IvrBuilderClient({
           setSelectedMenuId(menus.find((m) => m.id !== menuId)?.id ?? null);
         }
         setShowEditor(false);
-        toast.success('IVR menu deleted');
+        toast.success(t('voip.admin.ivrEditor.menuDeleted'));
       } catch {
-        toast.error('Delete failed');
+        toast.error(t('voip.admin.ivrEditor.deleteFailed'));
       } finally {
         setDeleting(false);
       }
@@ -285,7 +285,7 @@ export default function IvrBuilderClient({
   // ------ Action icon helper ------
 
   const getActionIcon = (action: string) => {
-    const match = ACTION_OPTIONS.find((a) => a.value === action);
+    const match = ACTION_KEYS.find((a) => a.value === action);
     if (match) {
       const Icon = match.icon;
       return <Icon className="w-3.5 h-3.5" />;
@@ -294,7 +294,8 @@ export default function IvrBuilderClient({
   };
 
   const getActionLabel = (action: string) => {
-    return ACTION_OPTIONS.find((a) => a.value === action)?.label ?? action;
+    const key = ACTION_KEYS.find((a) => a.value === action)?.labelKey;
+    return key ? t(`voip.admin.ivrEditor.${key}`) : action;
   };
 
   // ------ Find submenu names for connectors ------
@@ -318,7 +319,7 @@ export default function IvrBuilderClient({
             <button
               onClick={openNewMenu}
               className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              title="New IVR"
+              title={t('voip.admin.ivrEditor.newIvr')}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -332,7 +333,7 @@ export default function IvrBuilderClient({
           {menus.length === 0 ? (
             <div className="text-center py-8">
               <GitBranch className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-xs text-gray-400">No IVR menus yet</p>
+              <p className="text-xs text-gray-400">{t('voip.admin.ivrEditor.noMenusYet')}</p>
             </div>
           ) : (
             menus.map((menu) => (
@@ -349,7 +350,7 @@ export default function IvrBuilderClient({
                   {menu.name}
                 </div>
                 <div className="text-[10px] text-gray-400 mt-0.5">
-                  {menu.options.length} option{menu.options.length !== 1 ? 's' : ''} &middot;{' '}
+                  {menu.options.length} {menu.options.length !== 1 ? t('voip.admin.ivrEditor.options') : t('voip.admin.ivrEditor.option')} &middot;{' '}
                   {menu.language}
                 </div>
               </button>
@@ -365,7 +366,7 @@ export default function IvrBuilderClient({
           <div className="max-w-2xl mx-auto bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-900">
-                {editingMenuId ? 'Edit IVR Menu' : 'New IVR Menu'}
+                {editingMenuId ? t('voip.admin.ivrEditor.editMenu') : t('voip.admin.ivrEditor.newMenu')}
               </h2>
               <button
                 onClick={() => setShowEditor(false)}
@@ -377,24 +378,24 @@ export default function IvrBuilderClient({
 
             {/* Name */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Menu Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('voip.admin.ivrEditor.menuName')}</label>
               <input
                 type="text"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="Main Menu"
+                placeholder={t('voip.admin.ivrEditor.menuNamePlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {/* Description */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('voip.admin.ivrEditor.description')}</label>
               <input
                 type="text"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder={t('voip.admin.ivrEditor.descriptionPlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -403,19 +404,19 @@ export default function IvrBuilderClient({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Volume2 className="w-3.5 h-3.5" /> Greeting Text (TTS)
+                  <Volume2 className="w-3.5 h-3.5" /> {t('voip.admin.ivrEditor.greetingTts')}
                 </label>
                 <textarea
                   value={formGreetingText}
                   onChange={(e) => setFormGreetingText(e.target.value)}
                   rows={2}
-                  placeholder="Welcome to BioCycle Peptides. Press 1 for..."
+                  placeholder={t('voip.admin.ivrEditor.greetingPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Audio URL (overrides TTS)
+                  {t('voip.admin.ivrEditor.audioUrl')}
                 </label>
                 <input
                   type="url"
@@ -431,7 +432,7 @@ export default function IvrBuilderClient({
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> Timeout (s)
+                  <Clock className="w-3.5 h-3.5" /> {t('voip.admin.ivrEditor.timeoutSeconds')}
                 </label>
                 <input
                   type="number"
@@ -443,7 +444,7 @@ export default function IvrBuilderClient({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Retries</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('voip.admin.ivrEditor.maxRetries')}</label>
                 <input
                   type="number"
                   min={0}
@@ -454,15 +455,15 @@ export default function IvrBuilderClient({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">On Timeout</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('voip.admin.ivrEditor.onTimeout')}</label>
                 <select
                   value={formTimeoutAction}
                   onChange={(e) => setFormTimeoutAction(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="replay">Replay</option>
-                  <option value="operator">Operator</option>
-                  <option value="voicemail">Voicemail</option>
+                  <option value="replay">{t('voip.admin.ivrEditor.replay')}</option>
+                  <option value="operator">{t('voip.admin.ivrEditor.operator')}</option>
+                  <option value="voicemail">{t('voip.admin.ivrEditor.voicemail')}</option>
                 </select>
               </div>
             </div>
@@ -471,7 +472,7 @@ export default function IvrBuilderClient({
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> DTMF Options
+                  <Hash className="w-4 h-4" /> {t('voip.admin.ivrEditor.dtmfOptions')}
                 </h3>
                 <button
                   onClick={addOption}
@@ -479,13 +480,13 @@ export default function IvrBuilderClient({
                   className="flex items-center gap-1 px-2.5 py-1 text-xs bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-40"
                 >
                   <Plus className="w-3 h-3" />
-                  Add Option
+                  {t('voip.admin.ivrEditor.addOption')}
                 </button>
               </div>
 
               {formOptions.length === 0 ? (
                 <div className="text-center py-4 text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg">
-                  No DTMF options. Click &quot;Add Option&quot; to add one.
+                  {t('voip.admin.ivrEditor.noDtmfOptions')}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -512,7 +513,7 @@ export default function IvrBuilderClient({
                         type="text"
                         value={opt.label}
                         onChange={(e) => updateOption(idx, 'label', e.target.value)}
-                        placeholder="Sales"
+                        placeholder={t('voip.admin.ivrEditor.labelPlaceholder')}
                         className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
 
@@ -522,9 +523,9 @@ export default function IvrBuilderClient({
                         onChange={(e) => updateOption(idx, 'action', e.target.value)}
                         className="w-44 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
-                        {ACTION_OPTIONS.map((a) => (
+                        {ACTION_KEYS.map((a) => (
                           <option key={a.value} value={a.value}>
-                            {a.label}
+                            {t(`voip.admin.ivrEditor.${a.labelKey}`)}
                           </option>
                         ))}
                       </select>
@@ -537,10 +538,10 @@ export default function IvrBuilderClient({
                           onChange={(e) => updateOption(idx, 'target', e.target.value)}
                           placeholder={
                             opt.action === 'sub_menu'
-                              ? 'Menu ID'
+                              ? t('voip.admin.ivrEditor.menuIdPlaceholder')
                               : opt.action === 'transfer_queue'
-                                ? 'Queue name'
-                                : 'Ext / Number'
+                                ? t('voip.admin.ivrEditor.queueNamePlaceholder')
+                                : t('voip.admin.ivrEditor.extNumberPlaceholder')
                           }
                           className="w-28 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
@@ -573,7 +574,7 @@ export default function IvrBuilderClient({
                     ) : (
                       <Trash2 className="w-4 h-4" />
                     )}
-                    Delete
+                    {t('voip.admin.ivrEditor.delete')}
                   </button>
                 )}
               </div>
@@ -582,7 +583,7 @@ export default function IvrBuilderClient({
                   onClick={() => setShowEditor(false)}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                 >
-                  Cancel
+                  {t('voip.admin.ivrEditor.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
@@ -594,7 +595,7 @@ export default function IvrBuilderClient({
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {editingMenuId ? 'Update' : 'Create'}
+                  {editingMenuId ? t('voip.admin.ivrEditor.update') : t('voip.admin.ivrEditor.create')}
                 </button>
               </div>
             </div>
@@ -620,7 +621,7 @@ export default function IvrBuilderClient({
                   onClick={() => openEditMenu(selectedMenu)}
                   className="px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg border border-indigo-200 transition-colors"
                 >
-                  Edit
+                  {t('voip.admin.ivrEditor.edit')}
                 </button>
               </div>
 
@@ -638,11 +639,11 @@ export default function IvrBuilderClient({
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  Timeout: {selectedMenu.inputTimeout}s
+                  {t('voip.admin.ivrEditor.timeout')}: {selectedMenu.inputTimeout}s
                 </span>
-                <span>Retries: {selectedMenu.maxRetries}</span>
-                <span>On timeout: {selectedMenu.timeoutAction}</span>
-                <span>Lang: {selectedMenu.language}</span>
+                <span>{t('voip.admin.ivrEditor.retries')}: {selectedMenu.maxRetries}</span>
+                <span>{t('voip.admin.ivrEditor.onTimeoutLabel')}: {selectedMenu.timeoutAction}</span>
+                <span>{t('voip.admin.ivrEditor.language')}: {selectedMenu.language}</span>
               </div>
             </div>
 
@@ -655,12 +656,12 @@ export default function IvrBuilderClient({
             {selectedMenu.options.length === 0 ? (
               <div className="text-center py-8 bg-white rounded-xl border border-dashed border-gray-200">
                 <Hash className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No DTMF options configured</p>
+                <p className="text-sm text-gray-400">{t('voip.admin.ivrEditor.noDtmfConfigured')}</p>
                 <button
                   onClick={() => openEditMenu(selectedMenu)}
                   className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                 >
-                  Add options
+                  {t('voip.admin.ivrEditor.addOptions')}
                 </button>
               </div>
             ) : (
@@ -706,7 +707,7 @@ export default function IvrBuilderClient({
                           className="mt-2 flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-700 font-medium"
                         >
                           <GitBranch className="w-3 h-3" />
-                          Go to &ldquo;{getMenuName(opt.target)}&rdquo;
+                          {t('voip.admin.ivrEditor.goToMenu')} &ldquo;{getMenuName(opt.target)}&rdquo;
                         </button>
                       )}
                     </div>
@@ -721,7 +722,7 @@ export default function IvrBuilderClient({
                 <div className="flex items-center gap-2 text-sm text-amber-700">
                   <Clock className="w-4 h-4" />
                   <span>
-                    After hours ({selectedMenu.businessHoursStart} - {selectedMenu.businessHoursEnd}):
+                    {t('voip.admin.ivrEditor.afterHours')} ({selectedMenu.businessHoursStart} - {selectedMenu.businessHoursEnd}):
                   </span>
                   <button
                     onClick={() => setSelectedMenuId(selectedMenu.afterHoursMenuId!)}
@@ -742,14 +743,14 @@ export default function IvrBuilderClient({
                 {t('voip.enterprise.ivrBuilder')}
               </h3>
               <p className="text-sm text-gray-400 mb-4">
-                Select an IVR menu from the sidebar or create a new one.
+                {t('voip.admin.ivrEditor.selectOrCreate')}
               </p>
               <button
                 onClick={openNewMenu}
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium mx-auto"
               >
                 <Plus className="w-4 h-4" />
-                New IVR Menu
+                {t('voip.admin.ivrEditor.newMenu')}
               </button>
             </div>
           </div>

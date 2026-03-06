@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
 import { handleCallEvent } from '@/lib/voip/call-control';
 import { WebhookDispatcher } from '@/lib/voip/webhook-dispatcher';
@@ -93,8 +93,13 @@ export async function POST(request: NextRequest) {
         .update((timestamp || '') + rawBody)
         .digest('hex');
 
-      if (signature !== expectedSignature) {
-        logger.warn('[Telnyx Webhook] Invalid signature');
+      try {
+        if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+          logger.warn('[Telnyx Webhook] Invalid signature');
+          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+        }
+      } catch {
+        logger.warn('[Telnyx Webhook] Signature comparison failed');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else {

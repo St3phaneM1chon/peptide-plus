@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { ingestCdr } from '@/lib/voip/cdr-sync';
 import { processPendingRecordings } from '@/lib/voip/recording-upload';
 import { logger } from '@/lib/logger';
@@ -34,12 +35,16 @@ function validateWebhookAuth(request: NextRequest): boolean {
 
   // Check Bearer token
   if (authHeader.startsWith('Bearer ')) {
-    return authHeader.slice(7) === secret;
+    try {
+      return timingSafeEqual(Buffer.from(authHeader.slice(7)), Buffer.from(secret));
+    } catch { return false; }
   }
 
   // Check custom header
   const customHeader = request.headers.get('x-cdr-secret') || '';
-  if (customHeader === secret) return true;
+  try {
+    if (timingSafeEqual(Buffer.from(customHeader), Buffer.from(secret))) return true;
+  } catch { /* length mismatch */ }
 
   return false;
 }

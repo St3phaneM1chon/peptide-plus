@@ -64,7 +64,7 @@ export async function GET(
     return NextResponse.json({ data: campaign, stats });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -148,7 +148,7 @@ export async function PUT(
     return NextResponse.json({ data: campaign });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -196,7 +196,7 @@ export async function DELETE(
     return NextResponse.json({ status: 'deleted' });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -19,6 +19,7 @@ export default async function ParametresPage() {
   // Fetch all VoIP settings from SiteSetting
   const settings = await prisma.siteSetting.findMany({
     where: { module: 'voip' },
+    take: 200,
   });
 
   // Convert to key-value map

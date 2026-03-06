@@ -42,6 +42,7 @@ export default async function TransfertsPage() {
   const extensions = await prisma.sipExtension.findMany({
     select: { id: true, extension: true, user: { select: { name: true } } },
     orderBy: { extension: 'asc' },
+    take: 200,
   });
 
   return (

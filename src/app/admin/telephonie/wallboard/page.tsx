@@ -30,6 +30,7 @@ export default async function WallboardPage() {
     prisma.sipExtension.findMany({
       include: { user: { select: { name: true, email: true } } },
       orderBy: { extension: 'asc' },
+      take: 200,
     }),
     prisma.callQueue.findMany({
       where: { isActive: true },
@@ -38,6 +39,7 @@ export default async function WallboardPage() {
           include: { user: { select: { name: true } } },
         },
       },
+      take: 200,
     }),
   ]);
 

@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
             },
           },
           orderBy: { updatedAt: 'desc' },
+          take: 200,
         });
 
         sendEvent('initial', initialPresences);
@@ -87,6 +88,7 @@ export async function GET(request: NextRequest) {
                 },
               },
               orderBy: { updatedAt: 'desc' },
+              take: 200,
             });
 
             lastPollTime = new Date();

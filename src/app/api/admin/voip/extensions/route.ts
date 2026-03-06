@@ -35,6 +35,7 @@ export const GET = withAdminGuard(async (request) => {
       _count: { select: { callsAsAgent: true, voicemails: true } },
     },
     orderBy: { extension: 'asc' },
+    take: 200,
   });
 
   // Mask credentials in response

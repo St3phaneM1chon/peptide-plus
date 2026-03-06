@@ -50,6 +50,7 @@ async function getVoipData() {
     }),
     prisma.voipConnection.findMany({
       select: { id: true, provider: true, isEnabled: true, lastSyncAt: true, syncStatus: true },
+      take: 100,
     }),
   ]);
 

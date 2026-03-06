@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { error: 'Failed to initiate call', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to initiate call' },
       { status: 500 }
     );
   }

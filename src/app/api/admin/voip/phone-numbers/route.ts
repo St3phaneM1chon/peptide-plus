@@ -30,6 +30,7 @@ export const GET = withAdminGuard(async () => {
       _count: { select: { callLogs: true } },
     },
     orderBy: { createdAt: 'asc' },
+    take: 200,
   });
 
   return NextResponse.json({ phoneNumbers });

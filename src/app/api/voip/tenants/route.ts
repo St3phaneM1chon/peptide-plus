@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
             },
           },
           orderBy: { name: 'asc' },
+          take: 100,
         });
         return NextResponse.json({ data: companies });
       }
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

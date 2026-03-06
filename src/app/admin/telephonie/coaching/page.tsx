@@ -31,6 +31,7 @@ export default async function CoachingPage() {
     where: { role: { in: ['EMPLOYEE', 'OWNER'] } },
     select: { id: true, name: true, email: true },
     orderBy: { name: 'asc' },
+    take: 200,
   });
 
   return (

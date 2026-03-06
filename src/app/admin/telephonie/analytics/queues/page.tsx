@@ -23,6 +23,7 @@ export default async function QueuesAnalyticsPage() {
       members: true,
     },
     orderBy: { name: 'asc' },
+    take: 200,
   });
 
   // Fetch call logs grouped by queue

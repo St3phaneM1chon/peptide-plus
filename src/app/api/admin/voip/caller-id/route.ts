@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { number: 'asc' },
+      take: 200,
     });
 
     return NextResponse.json({ data: phoneNumbers });
