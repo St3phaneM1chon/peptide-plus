@@ -3,6 +3,7 @@
  * Carte de produit pour le catalogue
  */
 
+import { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
@@ -11,7 +12,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.compareAtPrice!) * 100)
@@ -172,4 +173,4 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
     </div>
   );
-}
+});

@@ -1,0 +1,44 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Run at 8:00 AM and 8:00 PM UTC daily
+    - cron: '0 8,20 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual backup'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install psycopg2-binary azure-storage-blob
+
+      - name: Run database backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          BACKUP_CONTAINER: database-backups
+        run: |
+          echo "Starting database backup at $(date -u)"
+          python scripts/backup_database.py --production
+          echo "Backup completed at $(date -u)"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Database backup failed at $(date -u). Reason: ${{ github.event.inputs.reason || 'Scheduled run' }}"
