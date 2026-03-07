@@ -1318,6 +1318,21 @@
       "transactionsMatched": "Transactions Matched",
       "unmatched": "unmatched"
     },
+    "attachments": {
+      "allowedTypes": "Allowed types",
+      "delete": "Delete",
+      "deleteConfirmMessage": "This action cannot be undone.",
+      "deleteConfirmTitle": "Delete attachment?",
+      "download": "Download",
+      "dropzone": "Drop files here or click to select",
+      "empty": "No attachments",
+      "fileTooLarge": "File too large",
+      "imagePreview": "Image preview",
+      "invalidType": "File type not allowed",
+      "preview": "Preview",
+      "title": "Attachments",
+      "uploading": "Uploading..."
+    },
     "banners": {
       "active": "Active",
       "animationOption": "Animation",
@@ -1381,7 +1396,9 @@
       "translationLabel": "Translation: {language} ({code})",
       "translations": "Translations",
       "update": "Update",
-      "videoOption": "Video"
+      "videoOption": "Video",
+      "subtitleMayTruncate": "Subtitle may be truncated",
+      "titleMayTruncate": "Title may be truncated"
     },
     "brandName": "BioCycle Admin",
     "budget": {
@@ -2667,7 +2684,47 @@
       "recentEmails": "Recent Emails",
       "noEmails": "No emails",
       "viewEmail": "View Email",
-      "loyaltyInfo": "Loyalty"
+      "loyaltyInfo": "Loyalty",
+      "endBreak": "End break",
+      "readyForCalls": "Ready for calls",
+      "takeBreak": "Take break",
+      "forecast": {
+        "agent": "Agent",
+        "allOpenDeals": "All open deals",
+        "allPipelines": "All pipelines",
+        "bestCase": "Best case",
+        "byAgent": "By agent",
+        "byPipeline": "By pipeline",
+        "closedWon": "Closed won",
+        "deals": "Deals",
+        "highProbOnly": "High probability only",
+        "historicalTrend": "Historical trend",
+        "loadError": "Error loading forecast",
+        "lostDeals": "Lost deals",
+        "month": "Month",
+        "monthlyTimeline": "Monthly timeline",
+        "noData": "No data available",
+        "pipeline": "Pipeline",
+        "subtitle": "Sales forecasting and trends",
+        "thisMonth": "This month",
+        "thisQuarter": "This quarter",
+        "thisYear": "This year",
+        "title": "Sales Forecast",
+        "total": "Total",
+        "weighted": "Weighted",
+        "won": "Won",
+        "wonDeals": "Won deals",
+        "wonRevenue": "Won revenue",
+        "wonThisMonth": "Won this month",
+        "worstCase": "Worst case"
+      }
+    },
+    "contentList": {
+      "emptyDescription": "No items to display",
+      "emptyTitle": "No items",
+      "result": "result",
+      "results": "results",
+      "yesterday": "Yesterday"
     },
     "currencies": {
       "actions": "Actions",
@@ -3175,9 +3232,14 @@
       "avgDuration": "Avg Duration"
     },
     "dataTable": {
+      "noData": "No data",
       "row": "row",
       "rows": "rows",
       "selected": "selected"
+    },
+    "detailPane": {
+      "noItemSelected": "No item selected",
+      "selectItem": "Select an item"
     },
     "emailComposer": {
       "attachment": "Attachment",
@@ -4365,7 +4427,11 @@
       "whatsappSetupDesc": "Connect WhatsApp Business API for order notifications and customer support messaging.",
       "zoomAccountIdHint": "Found in Zoom Marketplace > App > General Information",
       "zoomClientIdHint": "Found in Zoom Marketplace > App > App Credentials",
-      "zoomSetupDesc": "Connect your Zoom account for meetings, webinars, and customer demos. Uses Server-to-Server OAuth."
+      "zoomSetupDesc": "Connect your Zoom account for meetings, webinars, and customer demos. Uses Server-to-Server OAuth.",
+      "copy": "Copy",
+      "invalidFormat": "Invalid format",
+      "testFailed": "Test failed",
+      "testSuccess": "Test successful"
     },
     "inventory": {
       "adjustmentPlaceholder": "E.g.: Stock reception, Inventory correction...",
@@ -5135,7 +5201,9 @@
       "primary": "Primary",
       "remove": "Remove image",
       "setPrimary": "Set as primary",
-      "title": "Image Gallery"
+      "sizeLimitReached": "Size limit reached",
+      "title": "Image Gallery",
+      "totalSizeLimitReached": "Total size limit reached"
     },
     "mediaManager": {
       "allTypes": "All types",
@@ -5923,6 +5991,9 @@
       "viewProduct": "View product",
       "visibleOnSite": "Visible on site",
       "volumeMl": "Volume (ml)"
+    },
+    "platform": {
+      "notFound": "Platform not found"
     },
     "products": {
       "accessories": "Accessories",
@@ -7302,7 +7373,8 @@
       "subSections": "Sub-sections",
       "subtitle": "Manage your integrated external portals and links",
       "title": "Web Navigator",
-      "unsafeUrl": "This URL is blocked for security reasons. Only HTTPS URLs are allowed."
+      "unsafeUrl": "This URL is blocked for security reasons. Only HTTPS URLs are allowed.",
+      "mayBeBlocked": "This site may block embedded display"
     },
     "webinars": {
       "atTime": "at",
@@ -8457,7 +8529,17 @@
     "filters": "Filters",
     "settings": "Settings",
     "units": "units",
-    "actions": "Actions"
+    "actions": "Actions",
+    "characters": "characters",
+    "checking": "Checking...",
+    "deleted": "Deleted",
+    "errorLoading": "Error loading",
+    "new": "New",
+    "refreshed": "Refreshed",
+    "selectAll": "Select all",
+    "selected": "selected",
+    "toSubmit": "To submit",
+    "users": "Users"
   },
   "community": {
     "allDiscussions": "All Discussions",

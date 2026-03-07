@@ -142,7 +142,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   } catch (error) {
     logger.error('[VideoSessions] Create error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create video session' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

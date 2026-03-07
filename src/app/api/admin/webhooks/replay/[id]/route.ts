@@ -87,7 +87,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Replay failed' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

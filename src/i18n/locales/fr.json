@@ -1318,6 +1318,21 @@
       "increasePriority": "Augmenter la priorité",
       "decreasePriority": "Diminuer la priorité"
     },
+    "attachments": {
+      "allowedTypes": "Types autorisés",
+      "delete": "Supprimer",
+      "deleteConfirmMessage": "Cette action est irréversible.",
+      "deleteConfirmTitle": "Supprimer la pièce jointe ?",
+      "download": "Télécharger",
+      "dropzone": "Déposez vos fichiers ici ou cliquez pour sélectionner",
+      "empty": "Aucune pièce jointe",
+      "fileTooLarge": "Fichier trop volumineux",
+      "imagePreview": "Aperçu de l'image",
+      "invalidType": "Type de fichier non autorisé",
+      "preview": "Aperçu",
+      "title": "Pièces jointes",
+      "uploading": "Envoi en cours..."
+    },
     "banners": {
       "title": "Hero Slider",
       "subtitle": "Gérez les slides du carrousel hero de la page d'accueil",
@@ -1381,7 +1396,9 @@
       "trCta2Text": "CTA2 Texte",
       "trStatsJson": "Stats JSON",
       "ctaPlaceholder": "Voir les produits",
-      "placeholderTitle": "Peptides de qualité recherche"
+      "placeholderTitle": "Peptides de qualité recherche",
+      "subtitleMayTruncate": "Le sous-titre pourrait être tronqué",
+      "titleMayTruncate": "Le titre pourrait être tronqué"
     },
     "brandName": "BioCycle Admin",
     "budget": {
@@ -2667,7 +2684,47 @@
       "recentEmails": "Emails récents",
       "noEmails": "Aucun email",
       "viewEmail": "Voir l'email",
-      "loyaltyInfo": "Fidélité"
+      "loyaltyInfo": "Fidélité",
+      "endBreak": "Fin de pause",
+      "readyForCalls": "Prêt pour les appels",
+      "takeBreak": "Prendre une pause",
+      "forecast": {
+        "agent": "Agent",
+        "allOpenDeals": "Toutes les opportunités ouvertes",
+        "allPipelines": "Tous les pipelines",
+        "bestCase": "Meilleur cas",
+        "byAgent": "Par agent",
+        "byPipeline": "Par pipeline",
+        "closedWon": "Fermées gagnées",
+        "deals": "Opportunités",
+        "highProbOnly": "Haute probabilité uniquement",
+        "historicalTrend": "Tendance historique",
+        "loadError": "Erreur de chargement des prévisions",
+        "lostDeals": "Opportunités perdues",
+        "month": "Mois",
+        "monthlyTimeline": "Timeline mensuelle",
+        "noData": "Aucune donnée disponible",
+        "pipeline": "Pipeline",
+        "subtitle": "Prévisions et tendances commerciales",
+        "thisMonth": "Ce mois",
+        "thisQuarter": "Ce trimestre",
+        "thisYear": "Cette année",
+        "title": "Prévisions de ventes",
+        "total": "Total",
+        "weighted": "Pondéré",
+        "won": "Gagné",
+        "wonDeals": "Opportunités gagnées",
+        "wonRevenue": "Revenus gagnés",
+        "wonThisMonth": "Gagnées ce mois",
+        "worstCase": "Pire cas"
+      }
+    },
+    "contentList": {
+      "emptyDescription": "Aucun élément à afficher",
+      "emptyTitle": "Aucun élément",
+      "result": "résultat",
+      "results": "résultats",
+      "yesterday": "Hier"
     },
     "currencies": {
       "title": "Devises",
@@ -3175,9 +3232,14 @@
       "avgDuration": "Durée moy."
     },
     "dataTable": {
+      "noData": "Aucune donnée",
       "row": "ligne",
       "rows": "lignes",
       "selected": "selected"
+    },
+    "detailPane": {
+      "noItemSelected": "Aucun élément sélectionné",
+      "selectItem": "Sélectionnez un élément"
     },
     "emailComposer": {
       "send": "Envoyer",
@@ -4365,7 +4427,11 @@
       "publicLinkLabel": "Lien public de contact",
       "publicLinkHint": "URL affichée sur la page contact pour que les clients vous joignent via cette plateforme",
       "publicLinkWhatsAppHint": "Format du lien WhatsApp : https://wa.me/15145551234 (avec indicatif pays, sans espaces)",
-      "publicLinkTeamsHint": "Lien de réunion ou de chat Teams que les clients peuvent utiliser pour vous contacter"
+      "publicLinkTeamsHint": "Lien de réunion ou de chat Teams que les clients peuvent utiliser pour vous contacter",
+      "copy": "Copier",
+      "invalidFormat": "Format invalide",
+      "testFailed": "Échec du test",
+      "testSuccess": "Test réussi"
     },
     "inventory": {
       "title": "Inventaire",
@@ -5135,7 +5201,9 @@
       "addPhoto": "Ajouter photo",
       "altPlaceholder": "Texte alternatif...",
       "clickToEditAlt": "Cliquez pour modifier le texte alt",
-      "emptyHint": "Ajoutez des images pour créer une galerie produit"
+      "emptyHint": "Ajoutez des images pour créer une galerie produit",
+      "sizeLimitReached": "Limite de taille atteinte",
+      "totalSizeLimitReached": "Limite de taille totale atteinte"
     },
     "mediaManager": {
       "title": "Médias",
@@ -5923,6 +5991,9 @@
       "placeholderSku": "BPC157-5MG-VIAL",
       "pdf": "PDF",
       "image": "Image"
+    },
+    "platform": {
+      "notFound": "Plateforme introuvable"
     },
     "products": {
       "title": "Gestion des produits",
@@ -7302,7 +7373,8 @@
       "openNewTab": "Ouvrir dans un nouvel onglet",
       "blockedMessage": "Ce site ne peut pas être affiché dans un cadre intégré. Cliquez ci-dessous pour l'ouvrir dans un nouvel onglet.",
       "pageNotFound": "Page introuvable",
-      "unsafeUrl": "Cette URL est bloquée pour des raisons de sécurité. Seules les URLs HTTPS sont autorisées."
+      "unsafeUrl": "Cette URL est bloquée pour des raisons de sécurité. Seules les URLs HTTPS sont autorisées.",
+      "mayBeBlocked": "Ce site pourrait bloquer l'affichage intégré"
     },
     "webinars": {
       "title": "Webinaires",
@@ -8457,7 +8529,17 @@
     "skip": "Passer",
     "filters": "Filtres",
     "settings": "Paramètres",
-    "units": "unites"
+    "units": "unites",
+    "characters": "caractères",
+    "checking": "Vérification...",
+    "deleted": "Supprimé",
+    "errorLoading": "Erreur de chargement",
+    "new": "Nouveau",
+    "refreshed": "Actualisé",
+    "selectAll": "Tout sélectionner",
+    "selected": "sélectionné(s)",
+    "toSubmit": "À soumettre",
+    "users": "Utilisateurs"
   },
   "community": {
     "title": "Forum communautaire",

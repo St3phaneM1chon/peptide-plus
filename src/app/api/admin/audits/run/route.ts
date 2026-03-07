@@ -53,7 +53,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { sessi
   } catch (error) {
     logger.error(`Audit failed: ${auditTypeCode}`, { error: error instanceof Error ? error.message : error });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Audit run failed' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -47,13 +47,10 @@ export const POST = withAdminGuard(async (_request, { session }) => {
     const duration = Date.now() - startTime;
     logger.error('[CRON:RATES] Manual refresh error', { error: error instanceof Error ? error.message : String(error) });
 
-    // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
       {
         success: false,
-        error: process.env.NODE_ENV === 'development'
-          ? (error instanceof Error ? error.message : 'Internal server error')
-          : 'Failed to refresh exchange rates',
+        error: 'Internal server error',
         durationMs: duration,
       },
       { status: 500 }

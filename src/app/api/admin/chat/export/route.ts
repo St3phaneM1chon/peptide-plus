@@ -7,22 +7,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   const { searchParams } = request.nextUrl;
   const conversationId = searchParams.get('conversationId');
   const format = searchParams.get('format') || 'csv';
@@ -114,4 +103,4 @@ export async function GET(request: NextRequest) {
     logger.error('[chat:export] Export error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

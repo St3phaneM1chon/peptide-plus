@@ -47,7 +47,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   } catch (error) {
     logger.error('[WhatsAppNotify] Send error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to send WhatsApp message' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

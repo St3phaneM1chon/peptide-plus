@@ -96,7 +96,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }) => {
   } catch (error) {
     logger.error('[VideoSessions] Update error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to update video session' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

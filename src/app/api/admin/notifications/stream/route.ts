@@ -11,6 +11,11 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 
+// NOTE: This SSE endpoint uses manual auth checks instead of withAdminGuard because
+// withAdminGuard sets rate-limit headers on the response and casts it to NextResponse,
+// which is incompatible with the streaming Response (ReadableStream) returned by SSE.
+// The auth + role checks below are equivalent to withAdminGuard's authentication layer.
+
 // Simple rate limiter for SSE connections (max 3 concurrent per IP)
 const activeConnections = new Map<string, number>();
 const MAX_CONCURRENT_SSE = 3;

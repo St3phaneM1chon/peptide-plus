@@ -78,7 +78,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   } catch (error) {
     logger.error('[MeetingsAPI] Create meeting error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create meeting' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
