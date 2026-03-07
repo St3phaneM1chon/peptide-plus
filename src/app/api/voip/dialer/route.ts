@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         if (!disposition.contactId || !disposition.result) {
           return NextResponse.json({ error: 'disposition.contactId and disposition.result required' }, { status: 400 });
         }
-        const result = await submitDisposition(agentUserId, disposition);
+        const result = await submitDisposition(agentUserId, { type: disposition.result, ...disposition });
         return NextResponse.json(result);
       }
 

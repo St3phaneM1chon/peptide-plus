@@ -45,12 +45,7 @@ export interface RibbonConfig {
   actions: Record<string, RibbonAction[]>; // key = tab key
 }
 
-// ── Shared tab sets ───────────────────────────────────────────
-
-const defaultTabs: RibbonTab[] = [
-  { key: 'home', labelKey: 'admin.ribbon.tabHome' },
-  { key: 'view', labelKey: 'admin.ribbon.tabView' },
-];
+// ── Shared action sets ────────────────────────────────────────
 
 const viewActions: RibbonAction[] = [
   { key: 'filter', labelKey: 'admin.ribbon.filters', icon: Filter },

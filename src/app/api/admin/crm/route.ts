@@ -29,7 +29,7 @@ export const GET = withAdminGuard(async () => {
       prisma.crmLead.count(),
       prisma.crmLead.count({ where: { createdAt: { gte: startOfMonth } } }),
       prisma.crmDeal.count(),
-      prisma.crmDeal.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } }),
+      prisma.crmDeal.count({ where: { actualCloseDate: null } }),
       prisma.crmTicket.count(),
       prisma.crmTicket.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } }),
       prisma.crmActivity.count(),

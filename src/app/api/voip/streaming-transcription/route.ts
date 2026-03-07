@@ -20,7 +20,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import {
-  StreamingTranscriptionService,
   type TranscriptionEvent,
   type StreamingTranscriptionConfig,
 } from '@/lib/voip/streaming-transcription';
@@ -88,10 +87,6 @@ function pushEvent(callId: string, event: TranscriptionEvent): void {
 // ---------------------------------------------------------------------------
 
 export type { StreamingTranscriptionConfig, TranscriptionEvent };
-
-// Export the service class for any component that needs to create a WebSocket
-// client-side connection (e.g., the softphone provider)
-export { StreamingTranscriptionService };
 
 // ---------------------------------------------------------------------------
 // GET: SSE stream of transcription events

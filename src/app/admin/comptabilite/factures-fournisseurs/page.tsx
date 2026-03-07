@@ -401,7 +401,7 @@ export default function FacturesFournisseursPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {inv.items.map((item, index) => (
-                    <tr key={item.id || `vendor-item-${index}`}>
+                    <tr key={`vendor-item-${index}`}>
                       <td className="px-4 py-3 text-slate-900">{item.description}</td>
                       <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.amount)}</td>
                     </tr>

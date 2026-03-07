@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Package, Pencil, Eye } from 'lucide-react';
+import { Plus, Package, Pencil, Eye } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ interface Bundle {
 }
 
 export default function AdminBundlesPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
 

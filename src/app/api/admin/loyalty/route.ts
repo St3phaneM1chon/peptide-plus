@@ -22,11 +22,11 @@ export const GET = withAdminGuard(async () => {
       prisma.loyaltyTransaction.count(),
       prisma.user.count({ where: { loyaltyPoints: { gt: 0 } } }),
       prisma.loyaltyTransaction.aggregate({
-        where: { type: { in: ['EARN', 'BONUS', 'REFERRAL'] } },
+        where: { type: { in: ['EARN_PURCHASE', 'EARN_REFERRAL', 'EARN_REVIEW', 'EARN_SIGNUP', 'EARN_BIRTHDAY', 'EARN_BONUS', 'EARN_REFERRAL_MILESTONE'] } },
         _sum: { points: true },
       }),
       prisma.loyaltyTransaction.aggregate({
-        where: { type: 'REDEEM' },
+        where: { type: { in: ['REDEEM_DISCOUNT', 'REDEEM_PRODUCT'] } },
         _sum: { points: true },
       }),
       prisma.loyaltyTransaction.findMany({
@@ -41,8 +41,8 @@ export const GET = withAdminGuard(async () => {
     return NextResponse.json({
       totalTransactions,
       totalMembers,
-      totalPointsIssued: totalPointsIssued._sum.points || 0,
-      totalPointsRedeemed: Math.abs(totalPointsRedeemed._sum.points || 0),
+      totalPointsIssued: totalPointsIssued._sum?.points || 0,
+      totalPointsRedeemed: Math.abs(totalPointsRedeemed._sum?.points || 0),
       recentTransactions,
     });
   } catch (error) {

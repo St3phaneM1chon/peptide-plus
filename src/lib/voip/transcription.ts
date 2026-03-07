@@ -116,7 +116,7 @@ export async function transcribeRecording(
     // Step 4: Store in DB
     const transcription = await prisma.callTranscription.create({
       data: {
-        callLogId: recording.callLogId,
+        callLogId: recording.callLogId!,
         recordingId: recording.id,
         fullText,
         summary: analysis.summary,

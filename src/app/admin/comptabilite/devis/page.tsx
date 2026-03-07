@@ -781,7 +781,7 @@ export default function DevisPage() {
                     const discMult = 1 - (item.discountPercent / 100);
                     const lineTotal = Math.round(item.quantity * item.unitPrice * discMult * 100) / 100;
                     return (
-                      <tr key={item.id || `quote-line-${idx}`} className="border-t">
+                      <tr key={`quote-line-${idx}`} className="border-t">
                         <td className="px-3 py-1">
                           <input
                             type="text"

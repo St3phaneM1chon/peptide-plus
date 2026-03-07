@@ -43,8 +43,7 @@ async function main() {
   console.log(`\n${'='.repeat(60)}`);
   console.log(`TOTAL: ${totalFindings} findings across ${codes.length} audits`);
 
-  // Severity breakdown
-  const bySeverity: Record<string, number> = {};
+  // Severity breakdown (placeholder for future per-finding breakdown)
   for (const r of results) {
     if (r.status === 'OK') {
       // We can't get severity from here, but we logged the count

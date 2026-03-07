@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
             firstName: c.firstName,
             lastName: c.lastName,
             email: c.email,
-            customFields: c.customFields || undefined,
+            customFields: c.customFields ? JSON.parse(JSON.stringify(c.customFields)) : undefined,
           })),
         },
       },

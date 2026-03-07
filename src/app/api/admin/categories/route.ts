@@ -33,7 +33,7 @@ export const GET = withAdminGuard(async (request) => {
           _count: { select: { products: true } },
         },
       }),
-      prisma.category.count(flat ? {} : { where: { parentId: null } }),
+      prisma.category.count(flat ? undefined : { where: { parentId: null } }),
     ]);
 
     return NextResponse.json({ data, total, page, limit });

@@ -206,11 +206,11 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
                 {item.duration && (
                   <span className="text-xs text-gray-500">{formatDuration(item.duration)}</span>
                 )}
-                {item.metadata.messageCount && (
+                {item.metadata.messageCount ? (
                   <span className="text-xs text-gray-500">
-                    {item.metadata.messageCount as number} msgs
+                    {String(item.metadata.messageCount)} msgs
                   </span>
-                )}
+                ) : null}
                 <span className="flex items-center gap-1 text-xs text-gray-400">
                   <Calendar className="w-3 h-3" />
                   {formatDate(item.date)}
@@ -219,12 +219,12 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
             </div>
 
             {/* Metadata */}
-            {item.metadata.agent && (
+            {item.metadata.agent ? (
               <div className="text-xs text-gray-500 mb-2">
-                {t('voip.recordings.agent')}: {item.metadata.agent as string}
-                {item.metadata.client && ` | ${t('voip.recordings.client')}: ${item.metadata.client as string}`}
+                {t('voip.recordings.agent')}: {String(item.metadata.agent)}
+                {item.metadata.client ? ` | ${t('voip.recordings.client')}: ${String(item.metadata.client)}` : null}
               </div>
-            )}
+            ) : null}
 
             {/* Audio/Video player */}
             {(item.type === 'audio' || item.type === 'video') && item.url && (
@@ -239,7 +239,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
                 ) : (
                   <AudioPlayer
                     src={`/api/admin/voip/recordings/${item.id}`}
-                    duration={item.duration}
+                    duration={item.duration ?? undefined}
                     filename={`recording-${item.id}.${item.metadata.format || 'wav'}`}
                   />
                 )}

@@ -32,9 +32,8 @@ export function WebVitals() {
     };
 
     // Use the web-vitals API (bundled with Next.js internals)
-    import('web-vitals').then(({ onCLS, onFID, onLCP, onTTFB, onINP }) => {
+    import('web-vitals').then(({ onCLS, onLCP, onTTFB, onINP }) => {
       onCLS(reportMetric);
-      onFID(reportMetric);
       onLCP(reportMetric);
       onTTFB(reportMetric);
       onINP(reportMetric);

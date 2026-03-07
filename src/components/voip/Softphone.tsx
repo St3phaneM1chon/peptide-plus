@@ -39,7 +39,6 @@ import {
   Lock,
   Captions,
   CaptionsOff,
-  Video,
   VideoOff,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';

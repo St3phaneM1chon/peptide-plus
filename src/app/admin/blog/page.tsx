@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Search, FileText, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, FileText, Eye, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';

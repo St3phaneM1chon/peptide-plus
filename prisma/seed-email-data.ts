@@ -283,6 +283,7 @@ async function main() {
     bcryptHash = (bcryptMod.default || bcryptMod).hash;
   } catch {
     try {
+      // @ts-expect-error bcrypt types may not be installed
       const bcryptMod = await import('bcrypt');
       bcryptHash = (bcryptMod.default || bcryptMod).hash;
     } catch {

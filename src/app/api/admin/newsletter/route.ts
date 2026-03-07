@@ -28,7 +28,7 @@ export const GET = withAdminGuard(async (request) => {
         where,
         take: limit,
         skip,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { subscribedAt: 'desc' },
       }),
       prisma.newsletterSubscriber.count({ where }),
     ]);

@@ -48,10 +48,15 @@ export async function uploadRecording(
     logger.debug(`[Recording] ${recordingId} already uploaded`);
     return {
       id: recording.id,
-      callLogId: recording.callLogId,
+      callLogId: recording.callLogId!,
       blobUrl: recording.blobUrl,
       fileSize: recording.fileSize || 0,
     };
+  }
+
+  if (!recording.callLogId) {
+    logger.warn(`[Recording] ${recordingId} has no callLogId`);
+    return null;
   }
 
   if (!recording.localPath) {
@@ -100,7 +105,7 @@ export async function uploadRecording(
 
     return {
       id: recording.id,
-      callLogId: recording.callLogId,
+      callLogId: recording.callLogId!,
       blobUrl: result.url,
       fileSize: result.size,
     };

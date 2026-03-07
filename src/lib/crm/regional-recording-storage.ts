@@ -517,7 +517,7 @@ export async function getRegionalStorageMetrics(): Promise<RegionalStorageMetric
 
   const recordingMap = new Map<string, { fileSize: number | null; durationSec: number | null }>();
   for (const rec of recordings) {
-    recordingMap.set(rec.callLogId, { fileSize: rec.fileSize, durationSec: rec.durationSec });
+    if (rec.callLogId) recordingMap.set(rec.callLogId, { fileSize: rec.fileSize, durationSec: rec.durationSec });
   }
 
   // Build metrics per region

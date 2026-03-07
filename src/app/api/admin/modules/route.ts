@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * PUT  /api/admin/modules — update module flags
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';

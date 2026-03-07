@@ -264,7 +264,7 @@ async function main() {
     const sample = TRANSCRIPTION_SAMPLES[i];
     await prisma.callTranscription.create({
       data: {
-        callLogId: toTranscribe[i].callLogId,
+        callLogId: toTranscribe[i].callLogId!,
         recordingId: toTranscribe[i].id,
         fullText: sample.text,
         summary: sample.summary,

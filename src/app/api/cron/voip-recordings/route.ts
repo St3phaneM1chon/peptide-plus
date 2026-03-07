@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         try {
           const result = await getDualChannelRecording(rec.id);
           if (result && result.channels.mixed) {
-            await saveDualChannelRecordingToDB(rec.callLogId, result);
+            await saveDualChannelRecordingToDB(rec.callLogId!, result);
             synced++;
           }
         } catch (e) {

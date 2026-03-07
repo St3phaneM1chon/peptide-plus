@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'supervisorPhone must be E.164 format (+1234567890)' }, { status: 400 });
         }
         const validModes: SupervisorMode[] = ['LISTEN', 'WHISPER', 'BARGE'];
-        if (!validModes.includes(mode)) {
+        if (!validModes.includes(mode as SupervisorMode)) {
           return NextResponse.json({ error: 'mode must be LISTEN, WHISPER, or BARGE' }, { status: 400 });
         }
 
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
           data: { supervisorId: session.user.id },
         });
 
-        const result = await supervisorJoin(sessionId, supervisorPhone, mode);
+        const result = await supervisorJoin(sessionId, supervisorPhone, mode as SupervisorMode);
 
         // Audit log: supervisor joined coaching session (whisper/barge is sensitive)
         const auditAction = mode === 'WHISPER' ? 'call.whisper' as const : mode === 'BARGE' ? 'call.barge' as const : 'call.listen' as const;
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
         if (!body.sessionId || !body.mode) {
           return NextResponse.json({ error: 'sessionId and mode required' }, { status: 400 });
         }
-        await changeSupervisorMode(body.sessionId, body.mode);
+        await changeSupervisorMode(body.sessionId, body.mode as SupervisorMode);
         return NextResponse.json({ status: 'mode_changed', mode: body.mode });
       }
 

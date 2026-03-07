@@ -965,7 +965,7 @@ export default function FacturesClientsPage() {
                   {form.items.map((item, idx) => {
                     const lineTotal = item.quantity * item.unitPrice;
                     return (
-                      <tr key={item.id || `line-${idx}`}>
+                      <tr key={`line-${idx}`}>
                         <td className="px-2 py-1.5">
                           <input
                             className={`w-full h-8 px-2 rounded border text-sm ${formErrors[`item_${idx}_desc`] ? 'border-red-300' : 'border-slate-200'} focus:outline-none focus:ring-1 focus:ring-indigo-500`}

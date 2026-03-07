@@ -1126,7 +1126,7 @@ export default function InventairePage() {
             ) : (
               <div className="space-y-3">
                 {alerts.map((alert, idx) => (
-                  <SectionCard key={alert.id || `alert-${idx}`}>
+                  <SectionCard key={`alert-${alert.productId}-${alert.warehouseCode}-${idx}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-red-50 rounded-lg">
