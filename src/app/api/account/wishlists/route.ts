@@ -2,9 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -21,13 +20,8 @@ const renameWishlistSchema = z.object({
  * GET /api/account/wishlists
  * Returns all wishlists for the authenticated user with item counts
  */
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const wishlists = await prisma.wishlistCollection.findMany({
       where: { userId: session.user.id },
@@ -67,31 +61,19 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });
 
 /**
  * POST /api/account/wishlists
  * Create a new wishlist
  * Body: { name: string }
  */
-export async function POST(request: NextRequest) {
+export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const parsed = createWishlistSchema.safeParse(body);
@@ -124,31 +106,19 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PATCH /api/account/wishlists
  * Rename a wishlist
  * Body: { id: string, name: string }
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const parsed = renameWishlistSchema.safeParse(body);
@@ -193,30 +163,18 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/account/wishlists?id=...
  * Delete a wishlist (cannot delete default, items moved to default)
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -309,4 +267,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -25,6 +25,7 @@ interface MinimalRedisClient {
   hgetall(key: string): Promise<Record<string, string>>;
   hincrby(key: string, field: string, increment: number): Promise<number>;
   setnx(key: string, value: string): Promise<number>;
+  ping(): Promise<string>;
   publish(channel: string, message: string): Promise<number>;
   subscribe(...channels: string[]): Promise<number>;
   on(event: string, callback: (...args: unknown[]) => void): void;

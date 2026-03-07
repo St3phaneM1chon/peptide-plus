@@ -7,19 +7,18 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { verifyTOTP } from '@/lib/mfa';
 import { decrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 const mfaVerifySchema = z.object({
   code: z.string().length(6, 'Code à 6 chiffres requis'),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // SECURITY (SEC-005): Rate limit MFA verify - 5 attempts per minute per IP
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -31,17 +30,6 @@ export async function POST(request: NextRequest) {
         { error: rl.error?.message || 'Too many attempts. Please try again later.' },
         { status: 429 }
       );
-    }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -123,4 +111,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

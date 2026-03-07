@@ -1,23 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { stripHtml, isValidPhone, isValidName } from '@/lib/validation';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { updateProfileSchema } from '@/lib/validations/user';
 import { logger } from '@/lib/logger';
 
 // Status codes: 200 OK, 401 Unauthorized, 404 Not Found, 500 Internal Error
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return apiError('Unauthorized', ErrorCode.UNAUTHORIZED);
-    }
 
     const user = await db.user.findUnique({
       where: { email: session.user.email },
@@ -33,26 +27,14 @@ export async function GET() {
     logger.error('Error fetching profile', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch profile', ErrorCode.INTERNAL_ERROR);
   }
-}
+}, { skipCsrf: true });
 
 // Status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 415 Unsupported Media Type, 500 Internal Error
-export async function PUT(request: NextRequest) {
+export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Item 12: Content-Type validation
     const ctError = validateContentType(request);
     if (ctError) return ctError;
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return apiError('Invalid CSRF token', ErrorCode.CSRF_INVALID, { request });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return apiError('Unauthorized', ErrorCode.UNAUTHORIZED, { request });
-    }
 
     const body = await request.json();
 
@@ -107,4 +89,4 @@ export async function PUT(request: NextRequest) {
     logger.error('Error updating profile', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to update profile', ErrorCode.INTERNAL_ERROR, { request });
   }
-}
+});

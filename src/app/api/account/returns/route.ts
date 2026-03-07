@@ -2,9 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -23,13 +22,8 @@ const updateReturnSchema = z.object({
 });
 
 // GET - List user's return requests
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -82,27 +76,15 @@ export async function GET() {
     logger.error('Error fetching return requests', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });
 
 // POST - Create new return request
-export async function POST(request: NextRequest) {
+export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/account/returns');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -220,28 +202,16 @@ export async function POST(request: NextRequest) {
     logger.error('Error creating return request', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 // PATCH - Update return request status (admin use)
 // BE-PAY-13: When a return is marked as RECEIVED, automatically trigger refund creation
-export async function PATCH(request: NextRequest) {
+export const PATCH = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/account/returns');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
-
-    // CSRF protection
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Check admin role
     const user = await prisma.user.findUnique({
@@ -344,4 +314,4 @@ export async function PATCH(request: NextRequest) {
     logger.error('Error updating return request', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

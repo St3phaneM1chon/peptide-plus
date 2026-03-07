@@ -9,6 +9,7 @@ import {
 import { PageHeader, Button, SectionCard, StatusBadge, Modal, StatCard } from '@/components/admin';
 import type { BadgeVariant } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
 
@@ -67,6 +68,7 @@ type Tab = 'projects' | 'expenses' | 'calculator' | 't661' | 'dashboard';
 // =============================================================================
 
 export default function RSDeAdminPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('projects');
   const [projects, setProjects] = useState<RSDeProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<RSDeProject | null>(null);
@@ -279,8 +281,8 @@ export default function RSDeAdminPage() {
             <textarea value={form.systematicInvestigation} onChange={e => setForm({ ...form, systematicInvestigation: e.target.value })} placeholder="Investigation systématique" className="w-full border rounded-lg px-3 py-2 text-sm" rows={2} />
             <label className="flex items-center gap-2"><input type="checkbox" checked={form.isSpcc} onChange={e => setForm({ ...form, isSpcc: e.target.checked })} className="accent-amber-600" /><span className="text-sm">SPCC (Société privée sous contrôle canadien)</span></label>
             <div className="flex gap-2 pt-2">
-              <Button onClick={handleCreateProject} className={theme.btnPrimary}>Créer</Button>
-              <Button onClick={() => setShowModal(false)} variant="outline">Annuler</Button>
+              <Button onClick={handleCreateProject} className={theme.btnPrimary}>{t('common.create')}</Button>
+              <Button onClick={() => setShowModal(false)} variant="outline">{t('common.cancel')}</Button>
             </div>
           </div>
         </Modal>

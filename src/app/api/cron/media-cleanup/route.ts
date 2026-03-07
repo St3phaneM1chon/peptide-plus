@@ -114,19 +114,34 @@ export async function POST(request: NextRequest) {
       take: 50,
     });
 
-    let stalePendingDeleted = 0;
     let stalePendingBytesFreed = 0;
-    for (const media of stalePending) {
-      try {
+
+    // Delete from storage first, collect IDs of successfully deleted files
+    const successfullyDeletedIds: string[] = [];
+    const storageDeleteResults = await Promise.allSettled(
+      stalePending.map(async (media) => {
         await storage.delete(media.url);
-        await prisma.media.delete({ where: { id: media.id } });
-        stalePendingDeleted++;
-        stalePendingBytesFreed += media.size;
-      } catch (err) {
-        logger.warn(`Failed to cleanup stale pending media ${media.id}`, {
-          error: err instanceof Error ? err.message : String(err),
+        return media;
+      })
+    );
+    for (const result of storageDeleteResults) {
+      if (result.status === 'fulfilled') {
+        successfullyDeletedIds.push(result.value.id);
+        stalePendingBytesFreed += result.value.size;
+      } else {
+        logger.warn('Failed to delete stale pending media from storage', {
+          error: result.reason instanceof Error ? result.reason.message : String(result.reason),
         });
       }
+    }
+
+    // Batch delete all successfully removed media records in one query
+    let stalePendingDeleted = 0;
+    if (successfullyDeletedIds.length > 0) {
+      const { count } = await prisma.media.deleteMany({
+        where: { id: { in: successfullyDeletedIds } },
+      });
+      stalePendingDeleted = count;
     }
 
     // 2. Find and clean up orphan media (older than 30 days)

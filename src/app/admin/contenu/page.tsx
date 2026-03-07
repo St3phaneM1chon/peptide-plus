@@ -973,7 +973,7 @@ export default function ContenuPage() {
         size="md"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>Annuler</Button>
+            <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>{t('common.cancel')}</Button>
             <Button variant="primary" onClick={saveSchedule}>Planifier</Button>
           </>
         }

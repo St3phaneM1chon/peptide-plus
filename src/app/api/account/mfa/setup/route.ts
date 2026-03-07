@@ -6,25 +6,14 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { initializeMFASetup } from '@/lib/mfa';
 import { encrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { validateCsrf } from '@/lib/csrf-middleware';
 
-export async function POST(request: NextRequest) {
+export const POST = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
 
     // Check if MFA is already enabled (select only MFA-related fields)
     const user = await prisma.user.findUnique({
@@ -71,4 +60,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

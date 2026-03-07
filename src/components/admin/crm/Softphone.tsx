@@ -1210,7 +1210,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
               <div className="mb-3 flex items-center gap-2 px-2 py-2 bg-teal-50 rounded-lg border border-teal-100">
                 <PhoneForwarded className="h-4 w-4 text-teal-500" />
                 <span className="text-xs text-teal-700 flex-1">Consulting: {warmTransferTarget}</span>
-                <button onClick={cancelWarmTransfer} className="text-xs text-red-500 hover:text-red-700 font-medium">Cancel</button>
+                <button onClick={cancelWarmTransfer} className="text-xs text-red-500 hover:text-red-700 font-medium">{t('common.cancel')}</button>
               </div>
             )}
 

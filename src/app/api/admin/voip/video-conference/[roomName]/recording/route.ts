@@ -7,30 +7,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { startRoomRecording, stopRecording } from '@/lib/voip/livekit-recording';
 import { logger } from '@/lib/logger';
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) return null;
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) return null;
-  return session;
-}
-
-export async function POST(
+export const POST = withAdminGuard(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName } = await params;
+  { params }
+) => {
+  const roomName = params!.roomName;
 
   try {
     const room = await prisma.videoRoom.findUnique({
@@ -57,18 +43,13 @@ export async function POST(
     logger.error('[conference:recording] Start error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Failed to start recording' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withAdminGuard(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName } = await params;
+  { params }
+) => {
+  const roomName = params!.roomName;
 
   try {
     const room = await prisma.videoRoom.findUnique({
@@ -106,4 +87,4 @@ export async function DELETE(
     logger.error('[conference:recording] Stop error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Failed to stop recording' }, { status: 500 });
   }
-}
+});

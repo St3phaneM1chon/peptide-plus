@@ -170,25 +170,76 @@ export default async function CategoryPage({ params }: PageProps) {
     })),
   }));
 
-  return (
-    <CategoryPageClient
-      category={{
-        slug: translatedCategory.slug,
+  // JSON-LD structured data for SEO
+  const baseUrl = 'https://biocyclepeptides.com';
+  const breadcrumbItems = [
+    { '@type': 'ListItem' as const, position: 1, name: 'Home', item: baseUrl },
+    ...(translatedParent ? [{
+      '@type': 'ListItem' as const,
+      position: 2,
+      name: translatedParent.name,
+      item: `${baseUrl}/category/${translatedParent.slug}`,
+    }] : []),
+    {
+      '@type': 'ListItem' as const,
+      position: translatedParent ? 3 : 2,
+      name: translatedCategory.name,
+      item: `${baseUrl}/category/${translatedCategory.slug}`,
+    },
+  ];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbItems,
+      },
+      {
+        '@type': 'CollectionPage',
         name: translatedCategory.name,
-        description: translatedCategory.description || '',
-        longDescription: translatedCategory.description || '',
-        parentId: category.parentId,
-        parent: translatedParent ? { name: translatedParent.name, slug: translatedParent.slug } : undefined,
-        children: translatedChildren.map(c => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          description: c.description,
-          imageUrl: c.imageUrl,
-          productCount: c._count?.products || 0,
-        })),
-      }}
-      products={products}
-    />
+        description: translatedCategory.description || undefined,
+        url: `${baseUrl}/category/${translatedCategory.slug}`,
+        numberOfItems: products.length,
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: products.length,
+          itemListElement: products.slice(0, 20).map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${baseUrl}/product/${p.slug}`,
+            name: p.name,
+          })),
+        },
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <CategoryPageClient
+        category={{
+          slug: translatedCategory.slug,
+          name: translatedCategory.name,
+          description: translatedCategory.description || '',
+          longDescription: translatedCategory.description || '',
+          parentId: category.parentId,
+          parent: translatedParent ? { name: translatedParent.name, slug: translatedParent.slug } : undefined,
+          children: translatedChildren.map(c => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            description: c.description,
+            imageUrl: c.imageUrl,
+            productCount: c._count?.products || 0,
+          })),
+        }}
+        products={products}
+      />
+    </>
   );
 }

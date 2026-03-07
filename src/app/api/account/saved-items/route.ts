@@ -15,9 +15,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -30,13 +29,8 @@ const savedItemSchema = z.object({
  * GET /api/account/saved-items
  * Returns the authenticated user's saved items with current product details.
  */
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const savedItems = await prisma.wishlist.findMany({
       where: { userId: session.user.id },
@@ -133,7 +127,7 @@ export async function GET() {
     });
     return NextResponse.json({ error: 'Failed to fetch saved items' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });
 
 /**
  * POST /api/account/saved-items
@@ -143,7 +137,7 @@ export async function GET() {
  * Note: formatId is accepted for API compatibility but the Wishlist model
  * tracks saves at the product level (userId + productId unique constraint).
  */
-export async function POST(request: NextRequest) {
+export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip =
@@ -155,18 +149,6 @@ export async function POST(request: NextRequest) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
-    }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -230,14 +212,14 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE /api/account/saved-items
  * Remove a saved item.
  * Body: { productId: string, formatId?: string }
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
     const ip =
@@ -249,18 +231,6 @@ export async function DELETE(request: NextRequest) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
-    }
-
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -299,4 +269,4 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to remove saved item' }, { status: 500 });
   }
-}
+});

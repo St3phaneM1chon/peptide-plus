@@ -7,29 +7,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { removeParticipant, muteParticipantTrack, getParticipant } from '@/lib/voip/livekit-service';
 import { logger } from '@/lib/logger';
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) return null;
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) return null;
-  return session;
-}
-
-export async function DELETE(
+export const DELETE = withAdminGuard(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string; identity: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName, identity } = await params;
+  { params }
+) => {
+  const roomName = params!.roomName;
+  const identity = params!.identity;
 
   try {
     await removeParticipant(roomName, identity);
@@ -38,18 +25,14 @@ export async function DELETE(
     logger.error('[conference:participant] Kick error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Failed to remove participant' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(
+export const PUT = withAdminGuard(async (
   request: NextRequest,
-  { params }: { params: Promise<{ roomName: string; identity: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName, identity } = await params;
+  { params }
+) => {
+  const roomName = params!.roomName;
+  const identity = params!.identity;
 
   try {
     const body = await request.json();
@@ -74,4 +57,4 @@ export async function PUT(
     logger.error('[conference:participant] Mute error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Failed to mute participant' }, { status: 500 });
   }
-}
+});

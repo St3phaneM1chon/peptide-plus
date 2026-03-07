@@ -107,31 +107,38 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    let processed = 0;
-    let updated = 0;
+    const processed = leads.length;
 
+    // Compute new scores and collect only leads that need updating
+    const leadsToUpdate: Array<{ id: string; score: number; temperature: 'HOT' | 'WARM' | 'COLD' }> = [];
     for (const lead of leads) {
-      processed++;
       const newScore = computeScore(lead);
       const newTemp = scoreToTemperature(newScore);
 
-      // Only update if score or temperature changed
       if (newScore !== lead.score || newTemp !== lead.temperature) {
-        await prisma.crmLead.update({
-          where: { id: lead.id },
-          data: {
-            score: newScore,
-            temperature: newTemp,
-          },
-        });
-        updated++;
+        leadsToUpdate.push({ id: lead.id, score: newScore, temperature: newTemp });
       }
+    }
+
+    // Batch updates using $transaction instead of N sequential updates
+    if (leadsToUpdate.length > 0) {
+      await prisma.$transaction(
+        leadsToUpdate.map((lead) =>
+          prisma.crmLead.update({
+            where: { id: lead.id },
+            data: {
+              score: lead.score,
+              temperature: lead.temperature,
+            },
+          })
+        )
+      );
     }
 
     return NextResponse.json({
       success: true,
       processed,
-      updated,
+      updated: leadsToUpdate.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -6,14 +6,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import jsPDF from 'jspdf';
 import { logger } from '@/lib/logger';
-
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
 
 // Company information (tax numbers loaded from DB at runtime)
 const COMPANY_STATIC = {
@@ -61,17 +57,9 @@ function formatDate(date: Date): string {
   });
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export const GET = withUserGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const { id } = await params;
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const id = params?.id;
 
     // Fetch order with items and currency (select only needed fields)
     const order = await prisma.order.findUnique({
@@ -530,4 +518,4 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

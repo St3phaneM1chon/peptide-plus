@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
@@ -209,20 +209,12 @@ function jsonToCsv(data: Record<string, unknown>): string {
   return sections.join('\n');
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format')?.toLowerCase() || 'json';
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
+    const userId = session.user.id!;
 
     // Rate limit check
     const allowed = await checkExportRateLimit(userId);
@@ -549,4 +541,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

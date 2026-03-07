@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -275,18 +275,9 @@ function buildReceiptHTML(params: {
 
 // ─── Route Handler ───────────────────────────────────────────────────────────
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withUserGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id: orderId } = await params;
+    const orderId = params?.id;
 
     // Resolve authenticated user
     const user = await prisma.user.findUnique({
@@ -374,4 +365,4 @@ export async function GET(
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });

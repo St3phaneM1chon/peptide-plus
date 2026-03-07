@@ -11,9 +11,8 @@ import { getToken } from 'next-auth/jwt';
 import { defaultLocale, isValidLocale, type Locale, getLocaleFromHeaders } from '@/i18n/config';
 import { roleHasPermission } from '@/lib/permission-constants';
 
-// AMELIORATION-002 / FAILLE-012 / FAILLE-017: Centralized security headers function
-// Adds HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-// to every response. CSP mitigates XSS risk from httpOnly:false CSRF cookie (FAILLE-017).
+// Security headers applied to every response (AMELIORATION-002 / FAILLE-012 / FAILLE-017).
+// NOTE: CSP is defined in next.config.js headers() only (single source of truth).
 function addSecurityHeaders(response: NextResponse): void {
   // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'DENY');
@@ -21,36 +20,16 @@ function addSecurityHeaders(response: NextResponse): void {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   // Control referrer information
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Restrict browser features
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
+  // Restrict browser features (aligned with next.config.js)
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
   // Disable DNS prefetching
   response.headers.set('X-DNS-Prefetch-Control', 'off');
-  // HSTS: Force HTTPS for 1 year (only in production to avoid local dev issues)
+  // HSTS: Force HTTPS for 2 years (aligned with next.config.js FAILLE-012)
   if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
-  // Content-Security-Policy: Mitigate XSS (FAILLE-017)
-  // - 'self' for default sources
-  // - 'unsafe-inline' for styles (Tailwind/inline styles) and 'unsafe-eval' for Next.js dev
-  // - Explicit connect-src for Stripe and API calls
-  // - img-src allows data: URIs (QR codes, base64 images) and external HTTPS
-  // F2 FIX: Remove unsafe-inline for scripts in production
-  // Use strict-dynamic with nonce for better XSS protection
-  // Note: 'unsafe-inline' is kept for styles because Tailwind requires it
-  const cspDirectives = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
-    "connect-src 'self' https://api.stripe.com https://vitals.vercel-insights.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 wss://sip.telnyx.com wss://rtc.telnyx.com https://api.telnyx.com",
-    "frame-src 'self' https://js.stripe.com",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-  ];
-  response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+  // CSP is defined in next.config.js headers() — NOT duplicated here to avoid conflicts.
+  // next.config.js has the stricter production CSP (no unsafe-eval in prod).
 }
 
 // FAILLE-099 FIX: Use crypto.getRandomValues fallback instead of Math.random

@@ -10,6 +10,7 @@ import {
 import { PageHeader, Button, SectionCard, StatusBadge, Modal, StatCard } from '@/components/admin';
 import type { BadgeVariant } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
 
@@ -237,6 +238,7 @@ function budgetBarColor(pct: number): string {
 type ActiveTab = 'projects' | 'detail' | 'profitability';
 
 export default function ProjetsCoutsPage() {
+  const { t } = useI18n();
   const theme = sectionThemes.reports;
 
   // -- State --
@@ -1326,7 +1328,7 @@ export default function ProjetsCoutsPage() {
       <Modal isOpen={showCreateProject} onClose={() => setShowCreateProject(false)} title="Nouveau projet">
         {renderProjectFormFields()}
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => setShowCreateProject(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => setShowCreateProject(false)}>{t('common.cancel')}</Button>
           <Button variant="primary" onClick={handleCreateProject} disabled={!formData.name || !formData.code}>
             Creer le projet
           </Button>
@@ -1337,8 +1339,8 @@ export default function ProjetsCoutsPage() {
       <Modal isOpen={showEditProject} onClose={() => setShowEditProject(false)} title="Modifier le projet">
         {renderProjectFormFields()}
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => setShowEditProject(false)}>Annuler</Button>
-          <Button variant="primary" onClick={handleUpdateProject}>Enregistrer</Button>
+          <Button variant="outline" onClick={() => setShowEditProject(false)}>{t('common.cancel')}</Button>
+          <Button variant="primary" onClick={handleUpdateProject}>{t('common.save')}</Button>
         </div>
       </Modal>
 
@@ -1410,7 +1412,7 @@ export default function ProjetsCoutsPage() {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => setShowAddCost(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => setShowAddCost(false)}>{t('common.cancel')}</Button>
           <Button variant="primary" onClick={handleAddCost} disabled={!costFormData.description}>
             Ajouter le cout
           </Button>
@@ -1453,7 +1455,7 @@ export default function ProjetsCoutsPage() {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => setShowAddMilestone(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => setShowAddMilestone(false)}>{t('common.cancel')}</Button>
           <Button variant="primary" onClick={handleAddMilestone} disabled={!milestoneFormData.name}>
             Ajouter le jalon
           </Button>
@@ -1537,7 +1539,7 @@ export default function ProjetsCoutsPage() {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => setShowGenerateInvoice(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => setShowGenerateInvoice(false)}>{t('common.cancel')}</Button>
           <Button variant="primary" onClick={handleGenerateInvoice}
             disabled={
               !invoiceFormData.dueDate ||

@@ -7,27 +7,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createRoom, listRooms } from '@/lib/voip/livekit-service';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) return null;
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) return null;
-  return session;
-}
-
-export async function GET() {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async () => {
   try {
     const dbRooms = await prisma.videoRoom.findMany({
       where: { status: 'ACTIVE' },
@@ -60,19 +46,14 @@ export async function GET() {
     logger.error('[video-conference] List rooms error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 const createRoomSchema = z.object({
   displayName: z.string().min(1).max(100),
   maxParticipants: z.number().min(2).max(50).optional().default(10),
 });
 
-export async function POST(request: NextRequest) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
     const parsed = createRoomSchema.safeParse(body);
@@ -112,4 +93,4 @@ export async function POST(request: NextRequest) {
     logger.error('[video-conference] Create room error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

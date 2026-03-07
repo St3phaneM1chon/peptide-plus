@@ -1,34 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
-
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
 
 /**
  * DELETE /api/account/wishlist/[id]
  * Removes a wishlist item by its ID, verifying ownership
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withUserGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params?.id;
 
     // Find the wishlist item and verify ownership
     const wishlistItem = await db.wishlist.findUnique({
@@ -62,4 +45,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
-}
+});

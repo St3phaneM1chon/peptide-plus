@@ -5,18 +5,13 @@ export const dynamic = 'force-dynamic';
  * GET /api/account/product-history - Tous les produits commandés par le client, groupés par catégorie
  */
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const user = await db.user.findUnique({
       where: { email: session.user.email },
@@ -201,4 +196,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

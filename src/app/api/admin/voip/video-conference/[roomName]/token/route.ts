@@ -6,27 +6,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { generateToken, getPublicLiveKitUrl } from '@/lib/voip/livekit-service';
 import { logger } from '@/lib/logger';
 
-export async function POST(
+export const POST = withAdminGuard(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string }> }
-) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const { roomName } = await params;
+  { session, params }
+) => {
+  const roomName = params!.roomName;
 
   try {
     // Verify room exists and is active
@@ -38,8 +28,9 @@ export async function POST(
       return NextResponse.json({ error: 'Room not found or not active' }, { status: 404 });
     }
 
-    const identity = session.user.id;
-    const name = session.user.name || session.user.email || 'User';
+    const identity = session.user!.id;
+    const name = session.user!.name || session.user!.email || 'User';
+    const role = (session.user as any)?.role as string;
     const isCreator = room.createdById === identity;
 
     const token = await generateToken(roomName, identity, {
@@ -60,4 +51,4 @@ export async function POST(
     logger.error('[conference] Token generation error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 });
   }
-}
+});

@@ -885,7 +885,8 @@
       "subtitle": "채권 및 채무 노후 분석",
       "title": "노후 보고서",
       "totalOutstanding": "총 미수금",
-      "totalOverdue": "총 연체금"
+      "totalOverdue": "총 연체금",
+      "exportCSV": "Export CSV"
     },
     "aiAssistant": {
       "assistant": "AI 어시스턴트",
@@ -1180,7 +1181,8 @@
       "title": "감사 추적",
       "totalActions": "총 작업 수",
       "typeLabel": "유형",
-      "userLabel": "사용자"
+      "userLabel": "사용자",
+      "exportCSV": "Export CSV"
     },
     "backups": {
       "subtitle": "모든 프로젝트의 자동 백업 상태",
@@ -2851,7 +2853,11 @@
         "contacted": "Has been contacted",
         "recentActivity": "Recent activity (30d)",
         "source": "Lead source quality"
-      }
+      },
+      "score": "Score",
+      "allStages": "All Stages",
+      "listView": "List View",
+      "kanbanView": "Kanban View"
     },
     "scraper": {
       "title": "Google Maps Scraper",
@@ -2874,7 +2880,9 @@
       "colEmail": "이메일",
       "colWebsite": "웹사이트",
       "colRating": "평점",
-      "colReviews": "리뷰"
+      "colReviews": "리뷰",
+      "mapSelectorLabel": "Or select an area on the map",
+      "mapSearchArea": "Search by area"
     },
     "crmLists": {
       "actions": "Actions",
@@ -3126,7 +3134,8 @@
       "to": "To",
       "update": "Update",
       "updateReport": "Update Report",
-      "useTemplate": "Use this template"
+      "useTemplate": "Use this template",
+      "exportCSV": "Export CSV"
     },
     "customerDetail": {
       "actions": {
@@ -3542,7 +3551,8 @@
       "briefingPrompt": "Click \"Get Briefing\" to see your AI-powered daily priorities",
       "overdueDeals": "Overdue Deals",
       "uncontactedLeads": "New Leads",
-      "overdueTasks": "Overdue Tasks"
+      "overdueTasks": "Overdue Tasks",
+      "ordersToday": "Orders Today"
     },
     "dataTable": {
       "noData": "No data",
@@ -5506,7 +5516,8 @@
       "ytTitle": "Title",
       "ytUnlisted": "Unlisted",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "exportCSV": "Export CSV"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6019,7 +6030,8 @@
       "templateRequired": "Template is required",
       "title": "뉴스레터",
       "unsubscribed": "구독 취소됨",
-      "welcomePopup": "환영 팝업"
+      "welcomePopup": "환영 팝업",
+      "exportCSV": "Export CSV"
     },
     "notifications": "알림",
     "ocrScan": {
@@ -11485,7 +11497,8 @@
         "startSession": "Start Session",
         "subtitle": "Monitor and coach agents in real-time",
         "title": "Coaching Dashboard",
-        "whisper": "Whisper"
+        "whisper": "Whisper",
+        "score": "Quality Score"
       },
       "forwarding": {
         "addRule": "Add Rule",
@@ -11925,7 +11938,8 @@
       "running": "Testing network...",
       "stun": "STUN Connectivity",
       "title": "Network Test",
-      "turn": "TURN Connectivity"
+      "turn": "TURN Connectivity",
+      "score": "Score: {score}/100"
     },
     "presence": {
       "available": "Available",
@@ -12089,7 +12103,9 @@
         "complete": "Complete Transfer",
         "consulting": "Consulting with",
         "title": "Warm Transfer"
-      }
+      },
+      "autoRegisterFailed": "Phone line not initialized automatically",
+      "autoRegisterAlertSent": "Owners have been notified by email"
     },
     "status": {
       "away": "Away",

@@ -98,6 +98,9 @@ export async function POST(request: NextRequest) {
 
     // Process alerts in batches of 10 to avoid overwhelming email service
     const batchSize = 10;
+    // Collect IDs of successfully notified alerts for batch DB update
+    const notifiedAlertIds: string[] = [];
+
     for (let i = 0; i < pendingAlerts.length; i += batchSize) {
       const batch = pendingAlerts.slice(i, i + batchSize);
 
@@ -171,15 +174,8 @@ export async function POST(request: NextRequest) {
             });
 
             if (emailResult.success) {
-              // Mark alert as notified
-              await prisma.stockAlert.update({
-                where: { id: alert.id },
-                data: {
-                  notified: true,
-                  notifiedAt: new Date(),
-                },
-              });
-
+              // Collect for batch update instead of individual update
+              notifiedAlertIds.push(alert.id);
               sentCount++;
               logger.info(`Sent stock alert to ${alert.email} for product ${alert.product.slug}`);
             } else {
@@ -200,6 +196,17 @@ export async function POST(request: NextRequest) {
       if (i + batchSize < pendingAlerts.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
+    }
+
+    // Batch-mark all successfully notified alerts in a single query
+    if (notifiedAlertIds.length > 0) {
+      await prisma.stockAlert.updateMany({
+        where: { id: { in: notifiedAlertIds } },
+        data: {
+          notified: true,
+          notifiedAt: new Date(),
+        },
+      });
     }
 
       return NextResponse.json({

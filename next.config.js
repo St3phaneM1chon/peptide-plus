@@ -197,7 +197,7 @@ const nextConfig = {
   // Experimental optimizations
   experimental: {
     optimizePackageImports: [
-      'date-fns', '@radix-ui/react-icons',
+      'date-fns', '@radix-ui/react-icons', 'lucide-react',
       'recharts', 'reactflow', '@azure/identity', '@azure/storage-blob', 'jose', 'zod',
     ],
   },

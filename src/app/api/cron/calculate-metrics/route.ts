@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
     });
 
     const now = new Date();
-    let processed = 0;
+
+    // Compute metrics for all customers, then batch upsert in a single transaction
+    const upsertOperations: Array<ReturnType<typeof prisma.customerMetrics.upsert>> = [];
 
     for (const customer of customers) {
       const orders = customer.orders;
@@ -92,44 +94,39 @@ export async function GET(request: NextRequest) {
         (lastOrderDays > 180 ? 0.1 : 0)
       ));
 
-      await prisma.customerMetrics.upsert({
-        where: { userId: customer.id },
-        create: {
-          userId: customer.id,
-          totalOrders,
-          totalSpent,
-          avgOrderValue,
-          orderFrequency,
-          lastOrderDays,
-          firstOrderAt: firstOrder,
-          lastOrderAt: lastOrder,
-          recencyScore,
-          frequencyScore,
-          monetaryScore,
-          rfmSegment,
-          predictedCLV,
-          churnScore,
-          calculatedAt: now,
-        },
-        update: {
-          totalOrders,
-          totalSpent,
-          avgOrderValue,
-          orderFrequency,
-          lastOrderDays,
-          firstOrderAt: firstOrder,
-          lastOrderAt: lastOrder,
-          recencyScore,
-          frequencyScore,
-          monetaryScore,
-          rfmSegment,
-          predictedCLV,
-          churnScore,
-          calculatedAt: now,
-        },
-      });
+      const metricsData = {
+        totalOrders,
+        totalSpent,
+        avgOrderValue,
+        orderFrequency,
+        lastOrderDays,
+        firstOrderAt: firstOrder,
+        lastOrderAt: lastOrder,
+        recencyScore,
+        frequencyScore,
+        monetaryScore,
+        rfmSegment,
+        predictedCLV,
+        churnScore,
+        calculatedAt: now,
+      };
 
-      processed++;
+      upsertOperations.push(
+        prisma.customerMetrics.upsert({
+          where: { userId: customer.id },
+          create: { userId: customer.id, ...metricsData },
+          update: metricsData,
+        })
+      );
+    }
+
+    // Execute all upserts in a single transaction instead of N sequential queries
+    const BATCH_SIZE = 50;
+    let processed = 0;
+    for (let i = 0; i < upsertOperations.length; i += BATCH_SIZE) {
+      const batch = upsertOperations.slice(i, i + BATCH_SIZE);
+      await prisma.$transaction(batch);
+      processed += batch.length;
     }
 
     logger.info('[CustomerMetrics] Cron completed', { processed });

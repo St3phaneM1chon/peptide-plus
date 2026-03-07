@@ -140,7 +140,7 @@ function emptyForm(): POForm {
 // ---------------------------------------------------------------------------
 
 export default function BonsCommandePage() {
-  const { locale, formatCurrency } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
   const theme = sectionThemes.accounts;
   const formatCAD = formatCurrency;
 
@@ -900,7 +900,7 @@ export default function BonsCommandePage() {
         size="lg"
         footer={
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setShowForm(false)}>Annuler</Button>
+            <Button variant="secondary" onClick={() => setShowForm(false)}>{t('common.cancel')}</Button>
             <Button
               variant="primary"
               onClick={handleSave}
@@ -1108,7 +1108,7 @@ export default function BonsCommandePage() {
         size="lg"
         footer={
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setShowReceive(false)}>Annuler</Button>
+            <Button variant="secondary" onClick={() => setShowReceive(false)}>{t('common.cancel')}</Button>
             <Button
               variant="primary"
               icon={Package}

@@ -5,18 +5,14 @@ export const dynamic = 'force-dynamic';
  * GET - List consents for the authenticated user
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { logger } from '@/lib/logger';
 
 // GET /api/account/consents
-export async function GET(request: Request) {
+export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
@@ -45,4 +41,4 @@ export async function GET(request: Request) {
     logger.error('Account consents GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });

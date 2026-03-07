@@ -207,7 +207,7 @@ function SuppliersTab() {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>{t('common.cancel')}</Button>
             <Button variant="primary" size="sm" onClick={handleCreate} loading={saving}>Create Supplier</Button>
           </div>
         </div>
@@ -484,7 +484,7 @@ function PurchaseOrdersTab() {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>{t('common.cancel')}</Button>
             <Button variant="primary" size="sm" onClick={handleCreate} loading={saving}>Create PO</Button>
           </div>
         </div>

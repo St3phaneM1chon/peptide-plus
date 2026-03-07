@@ -83,12 +83,12 @@ export async function GET(request: NextRequest) {
       agentMap.set(log.agentId, existing);
     }
 
-    let processed = 0;
-    let upserted = 0;
+    const processed = agentMap.size;
+
+    // Compute stats for all agents, then batch upsert in a single transaction
+    const upsertOperations: Array<ReturnType<typeof prisma.agentDailyStats.upsert>> = [];
 
     for (const [agentId, logs] of agentMap) {
-      processed++;
-
       const callsMade = logs.filter((l) => l.direction === 'OUTBOUND').length;
       const callsReceived = logs.filter((l) => l.direction === 'INBOUND').length;
       const callsAnswered = logs.filter(
@@ -113,43 +113,36 @@ export async function GET(request: NextRequest) {
       const loginTime = times.length > 0 ? new Date(times[0]) : dayStart;
       const logoutTime = times.length > 0 ? new Date(times[times.length - 1]) : null;
 
-      await prisma.agentDailyStats.upsert({
-        where: {
-          agentId_date: { agentId, date: dayStart },
-        },
-        update: {
-          callsMade,
-          callsReceived,
-          callsAnswered,
-          totalTalkTime: Math.round(totalTalkTime),
-          totalWrapTime: Math.round(totalWrapTime),
-          avgHandleTime: Math.round(avgHandleTime * 100) / 100,
-          avgTalkTime: Math.round(avgTalkTime * 100) / 100,
-          conversions: 0,
-          revenue: 0,
-          loginTime,
-          logoutTime,
-          breakTime: 0,
-        },
-        create: {
-          agentId,
-          date: dayStart,
-          callsMade,
-          callsReceived,
-          callsAnswered,
-          totalTalkTime: Math.round(totalTalkTime),
-          totalWrapTime: Math.round(totalWrapTime),
-          avgHandleTime: Math.round(avgHandleTime * 100) / 100,
-          avgTalkTime: Math.round(avgTalkTime * 100) / 100,
-          conversions: 0,
-          revenue: 0,
-          loginTime,
-          logoutTime,
-          breakTime: 0,
-        },
-      });
+      const statsData = {
+        callsMade,
+        callsReceived,
+        callsAnswered,
+        totalTalkTime: Math.round(totalTalkTime),
+        totalWrapTime: Math.round(totalWrapTime),
+        avgHandleTime: Math.round(avgHandleTime * 100) / 100,
+        avgTalkTime: Math.round(avgTalkTime * 100) / 100,
+        conversions: 0,
+        revenue: 0,
+        loginTime,
+        logoutTime,
+        breakTime: 0,
+      };
 
-      upserted++;
+      upsertOperations.push(
+        prisma.agentDailyStats.upsert({
+          where: {
+            agentId_date: { agentId, date: dayStart },
+          },
+          update: statsData,
+          create: { agentId, date: dayStart, ...statsData },
+        })
+      );
+    }
+
+    // Execute all upserts in a single transaction instead of N sequential queries
+    const upserted = upsertOperations.length;
+    if (upsertOperations.length > 0) {
+      await prisma.$transaction(upsertOperations);
     }
 
     return NextResponse.json({

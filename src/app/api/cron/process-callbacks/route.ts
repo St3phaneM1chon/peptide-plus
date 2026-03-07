@@ -106,56 +106,65 @@ export async function POST(request: NextRequest) {
         cutoff: cutoff.toISOString(),
       });
 
-      // Process each callback
+      // Build all transaction operations upfront, then execute in a single batch
+      const transactionOps: Array<ReturnType<typeof prisma.crmActivity.create> | ReturnType<typeof prisma.crmTask.update>> = [];
+
       for (const task of dueCallbacks) {
-        try {
-          // Build context for the notification title
-          const contactName = task.lead?.contactName || task.deal?.title || 'Contact inconnu';
-          const scheduledTime = task.dueAt
-            ? task.dueAt.toLocaleTimeString('fr-CA', {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'America/Toronto',
-              })
-            : '';
+        // Build context for the notification title
+        const contactName = task.lead?.contactName || task.deal?.title || 'Contact inconnu';
+        const scheduledTime = task.dueAt
+          ? task.dueAt.toLocaleTimeString('fr-CA', {
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'America/Toronto',
+            })
+          : '';
 
-          const activityTitle = `Rappel à effectuer${scheduledTime ? ` à ${scheduledTime}` : ''}: ${contactName}`;
-          const activityDescription = [
-            task.description ? `Note: ${task.description}` : null,
-            task.lead?.phone ? `Téléphone: ${task.lead.phone}` : null,
-            task.lead?.email ? `Email: ${task.lead.email}` : null,
-          ]
-            .filter(Boolean)
-            .join(' | ');
+        const activityTitle = `Rappel à effectuer${scheduledTime ? ` à ${scheduledTime}` : ''}: ${contactName}`;
+        const activityDescription = [
+          task.description ? `Note: ${task.description}` : null,
+          task.lead?.phone ? `Téléphone: ${task.lead.phone}` : null,
+          task.lead?.email ? `Email: ${task.lead.email}` : null,
+        ]
+          .filter(Boolean)
+          .join(' | ');
 
-          // Use a transaction to atomically create the activity and update the task
-          await prisma.$transaction([
-            // 1. Create a notification activity for the assigned agent
-            prisma.crmActivity.create({
-              data: {
-                type: 'CALL',
-                title: activityTitle,
-                description: activityDescription || null,
-                leadId: task.leadId || null,
-                dealId: task.dealId || null,
-                contactId: null,
-                performedById: task.assignedToId,
-                metadata: {
-                  callbackTaskId: task.id,
-                  scheduledAt: task.dueAt?.toISOString(),
-                  priority: task.priority,
-                  triggerSource: 'cron:process-callbacks',
-                },
+        // 1. Create a notification activity for the assigned agent
+        transactionOps.push(
+          prisma.crmActivity.create({
+            data: {
+              type: 'CALL',
+              title: activityTitle,
+              description: activityDescription || null,
+              leadId: task.leadId || null,
+              dealId: task.dealId || null,
+              contactId: null,
+              performedById: task.assignedToId,
+              metadata: {
+                callbackTaskId: task.id,
+                scheduledAt: task.dueAt?.toISOString(),
+                priority: task.priority,
+                triggerSource: 'cron:process-callbacks',
               },
-            }),
+            },
+          })
+        );
 
-            // 2. Move task to IN_PROGRESS to prevent re-triggering on the next cron run
-            prisma.crmTask.update({
-              where: { id: task.id },
-              data: { status: 'IN_PROGRESS' },
-            }),
-          ]);
+        // 2. Move task to IN_PROGRESS to prevent re-triggering on the next cron run
+        transactionOps.push(
+          prisma.crmTask.update({
+            where: { id: task.id },
+            data: { status: 'IN_PROGRESS' },
+          })
+        );
+      }
 
+      // Execute all creates + updates in a single transaction instead of N separate transactions
+      try {
+        await prisma.$transaction(transactionOps);
+        processed = dueCallbacks.length;
+
+        for (const task of dueCallbacks) {
           logger.info('[cron/process-callbacks] Callback processed', {
             taskId: task.id,
             assignedToId: task.assignedToId,
@@ -163,14 +172,60 @@ export async function POST(request: NextRequest) {
             dealId: task.dealId,
             dueAt: task.dueAt?.toISOString(),
           });
+        }
+      } catch (txError) {
+        logger.error('[cron/process-callbacks] Batch transaction failed, falling back to individual processing', {
+          error: txError instanceof Error ? txError.message : String(txError),
+        });
+        // Fallback: process individually so partial failures don't block everything
+        for (const task of dueCallbacks) {
+          try {
+            const contactName = task.lead?.contactName || task.deal?.title || 'Contact inconnu';
+            const scheduledTime = task.dueAt
+              ? task.dueAt.toLocaleTimeString('fr-CA', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZone: 'America/Toronto',
+                })
+              : '';
+            const activityTitle = `Rappel à effectuer${scheduledTime ? ` à ${scheduledTime}` : ''}: ${contactName}`;
+            const activityDescription = [
+              task.description ? `Note: ${task.description}` : null,
+              task.lead?.phone ? `Téléphone: ${task.lead.phone}` : null,
+              task.lead?.email ? `Email: ${task.lead.email}` : null,
+            ].filter(Boolean).join(' | ');
 
-          processed++;
-        } catch (taskError) {
-          logger.error('[cron/process-callbacks] Failed to process callback', {
-            taskId: task.id,
-            error: taskError instanceof Error ? taskError.message : String(taskError),
-          });
-          failed++;
+            await prisma.$transaction([
+              prisma.crmActivity.create({
+                data: {
+                  type: 'CALL',
+                  title: activityTitle,
+                  description: activityDescription || null,
+                  leadId: task.leadId || null,
+                  dealId: task.dealId || null,
+                  contactId: null,
+                  performedById: task.assignedToId,
+                  metadata: {
+                    callbackTaskId: task.id,
+                    scheduledAt: task.dueAt?.toISOString(),
+                    priority: task.priority,
+                    triggerSource: 'cron:process-callbacks',
+                  },
+                },
+              }),
+              prisma.crmTask.update({
+                where: { id: task.id },
+                data: { status: 'IN_PROGRESS' },
+              }),
+            ]);
+            processed++;
+          } catch (taskError) {
+            logger.error('[cron/process-callbacks] Failed to process callback', {
+              taskId: task.id,
+              error: taskError instanceof Error ? taskError.message : String(taskError),
+            });
+            failed++;
+          }
         }
       }
 

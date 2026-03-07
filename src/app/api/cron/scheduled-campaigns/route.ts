@@ -191,6 +191,15 @@ export async function GET(request: NextRequest) {
         let sent = 0;
         let failed = 0;
 
+        // Collect email log entries for batch creation after the send loop
+        const emailLogEntries: Array<{
+          to: string;
+          subject: string;
+          status: string;
+          templateId: string;
+          messageId?: string;
+        }> = [];
+
         for (let i = 0; i < validRecipients.length; i++) {
           if (i > 0 && i % 10 === 0) await new Promise(r => setTimeout(r, 1000));
           const recipient = validRecipients[i];
@@ -219,14 +228,13 @@ export async function GET(request: NextRequest) {
               continue;
             }
 
-            await prisma.emailLog.create({
-              data: {
-                to: recipient.email,
-                subject,
-                status: 'sent',
-                templateId: `campaign:${campaign.id}`,
-                messageId: result.messageId || undefined,
-              },
+            // Collect for batch insert instead of individual create
+            emailLogEntries.push({
+              to: recipient.email,
+              subject,
+              status: 'sent',
+              templateId: `campaign:${campaign.id}`,
+              messageId: result.messageId || undefined,
             });
             sent++;
           } catch (error) {
@@ -237,6 +245,15 @@ export async function GET(request: NextRequest) {
             });
             failed++;
           }
+        }
+
+        // Batch-create all email log entries in a single transaction
+        if (emailLogEntries.length > 0) {
+          await prisma.$transaction(
+            emailLogEntries.map((entry) =>
+              prisma.emailLog.create({ data: entry })
+            )
+          );
         }
 
         // Update campaign status and stats

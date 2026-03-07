@@ -268,19 +268,33 @@ export async function GET(request: NextRequest) {
           const prefsMap = new Map(allPrefs.map(p => [p.userId, p]));
           const consentEmails = new Set(allConsents.map(c => c.email.toLowerCase()));
 
-          const validRemainder: typeof remainderRecipients = [];
-          for (const r of remainderRecipients) {
-            const { suppressed } = await shouldSuppressEmail(r.email);
-            if (suppressed) continue;
+          // Apply non-async filters first, then batch bounce check
+          const preFiltered = remainderRecipients.filter(r => {
             const prefs = prefsMap.get(r.id);
-            if (prefs && !prefs.newsletter && !prefs.promotions) continue;
-            if (!consentEmails.has(r.email.toLowerCase())) continue;
-            validRemainder.push(r);
+            if (prefs && !prefs.newsletter && !prefs.promotions) return false;
+            if (!consentEmails.has(r.email.toLowerCase())) return false;
+            return true;
+          });
+
+          // Batch bounce suppression check in parallel (instead of sequential N+1)
+          const validRemainder: typeof remainderRecipients = [];
+          const BOUNCE_BATCH = 50;
+          for (let b = 0; b < preFiltered.length; b += BOUNCE_BATCH) {
+            const chunk = preFiltered.slice(b, b + BOUNCE_BATCH);
+            const suppressResults = await Promise.all(
+              chunk.map(r => shouldSuppressEmail(r.email).then(res => ({ r, suppressed: res.suppressed })))
+            );
+            for (const { r, suppressed } of suppressResults) {
+              if (!suppressed) validRemainder.push(r);
+            }
           }
 
           // Send winning variant to remainder
           let sentToRemainder = 0;
           let failedRemainder = 0;
+
+          // Collect email log updates for batch execution
+          const emailLogUpdates: Array<ReturnType<typeof prisma.emailLog.update>> = [];
 
           for (let i = 0; i < validRemainder.length; i++) {
             if (i > 0 && i % 10 === 0) await new Promise(r => setTimeout(r, 1000));
@@ -319,18 +333,22 @@ export async function GET(request: NextRequest) {
               });
 
               if (!result.success) {
-                await prisma.emailLog.update({
-                  where: { id: emailLog.id },
-                  data: { status: 'failed', error: result.error || 'Send failed' },
-                });
+                emailLogUpdates.push(
+                  prisma.emailLog.update({
+                    where: { id: emailLog.id },
+                    data: { status: 'failed', error: result.error || 'Send failed' },
+                  })
+                );
                 failedRemainder++;
                 continue;
               }
 
-              await prisma.emailLog.update({
-                where: { id: emailLog.id },
-                data: { status: 'sent', messageId: result.messageId || undefined },
-              });
+              emailLogUpdates.push(
+                prisma.emailLog.update({
+                  where: { id: emailLog.id },
+                  data: { status: 'sent', messageId: result.messageId || undefined },
+                })
+              );
               sentToRemainder++;
             } catch (error) {
               logger.error('[AB Test Check] Failed to send winner to remainder recipient', {
@@ -340,6 +358,11 @@ export async function GET(request: NextRequest) {
               });
               failedRemainder++;
             }
+          }
+
+          // Batch-execute all email log status updates in a single transaction
+          if (emailLogUpdates.length > 0) {
+            await prisma.$transaction(emailLogUpdates);
           }
 
           // Update campaign to SENT with final stats

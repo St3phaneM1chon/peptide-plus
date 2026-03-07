@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { formatDateForCSV } from '@/lib/csv-export';
 import { logger } from '@/lib/logger';
@@ -39,13 +39,8 @@ function csvRow(fields: (string | number | null | undefined)[]): string {
   return fields.map(escapeCSVField).join(',') + '\n';
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    // Authentication check
-    const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -220,4 +215,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

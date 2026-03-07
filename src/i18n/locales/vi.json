@@ -885,7 +885,8 @@
       "subtitle": "Phân tích tuổi nợ phải thu và phải trả",
       "title": "Báo cáo Tuổi nợ",
       "totalOutstanding": "Tổng Số dư",
-      "totalOverdue": "Tổng Số quá hạn"
+      "totalOverdue": "Tổng Số quá hạn",
+      "exportCSV": "Export CSV"
     },
     "aiAssistant": {
       "assistant": "AI Assistant",
@@ -1180,7 +1181,8 @@
       "title": "Dấu vết kiểm toán",
       "totalActions": "Tổng số hành động",
       "typeLabel": "Loại",
-      "userLabel": "Người dùng"
+      "userLabel": "Người dùng",
+      "exportCSV": "Export CSV"
     },
     "backups": {
       "subtitle": "Trạng thái sao lưu tự động cho tất cả dự án",
@@ -2851,7 +2853,11 @@
         "contacted": "Has been contacted",
         "recentActivity": "Recent activity (30d)",
         "source": "Lead source quality"
-      }
+      },
+      "score": "Score",
+      "allStages": "All Stages",
+      "listView": "List View",
+      "kanbanView": "Kanban View"
     },
     "scraper": {
       "title": "Google Maps Scraper",
@@ -2874,7 +2880,9 @@
       "colEmail": "Email",
       "colWebsite": "Website",
       "colRating": "Đánh giá",
-      "colReviews": "Nhận xét"
+      "colReviews": "Nhận xét",
+      "mapSelectorLabel": "Or select an area on the map",
+      "mapSearchArea": "Search by area"
     },
     "crmLists": {
       "actions": "Actions",
@@ -3126,7 +3134,8 @@
       "to": "To",
       "update": "Update",
       "updateReport": "Update Report",
-      "useTemplate": "Use this template"
+      "useTemplate": "Use this template",
+      "exportCSV": "Export CSV"
     },
     "customerDetail": {
       "actions": {
@@ -3542,7 +3551,8 @@
       "briefingPrompt": "Click \"Get Briefing\" to see your AI-powered daily priorities",
       "overdueDeals": "Overdue Deals",
       "uncontactedLeads": "New Leads",
-      "overdueTasks": "Overdue Tasks"
+      "overdueTasks": "Overdue Tasks",
+      "ordersToday": "Orders Today"
     },
     "dataTable": {
       "noData": "No data",
@@ -5506,7 +5516,8 @@
       "ytTitle": "Title",
       "ytUnlisted": "Unlisted",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "exportCSV": "Export CSV"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6019,7 +6030,8 @@
       "templateRequired": "Template is required",
       "title": "Bản tin",
       "unsubscribed": "Đã hủy đăng ký",
-      "welcomePopup": "Popup chào mừng"
+      "welcomePopup": "Popup chào mừng",
+      "exportCSV": "Export CSV"
     },
     "notifications": "Thông báo",
     "ocrScan": {
@@ -11485,7 +11497,8 @@
         "startSession": "Start Session",
         "subtitle": "Monitor and coach agents in real-time",
         "title": "Coaching Dashboard",
-        "whisper": "Whisper"
+        "whisper": "Whisper",
+        "score": "Quality Score"
       },
       "forwarding": {
         "addRule": "Add Rule",
@@ -11925,7 +11938,8 @@
       "running": "Testing network...",
       "stun": "STUN Connectivity",
       "title": "Network Test",
-      "turn": "TURN Connectivity"
+      "turn": "TURN Connectivity",
+      "score": "Score: {score}/100"
     },
     "presence": {
       "available": "Available",
@@ -12089,7 +12103,9 @@
         "complete": "Complete Transfer",
         "consulting": "Consulting with",
         "title": "Warm Transfer"
-      }
+      },
+      "autoRegisterFailed": "Phone line not initialized automatically",
+      "autoRegisterAlertSent": "Owners have been notified by email"
     },
     "status": {
       "away": "Away",

@@ -2,10 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
-import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
 const notificationPrefsSchema = z.object({
@@ -21,13 +19,8 @@ const notificationPrefsSchema = z.object({
 }).strict(); // reject unknown fields
 
 // GET - Fetch user's notification preferences
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get or create notification preferences (select only preference fields)
     let prefs = await prisma.notificationPreference.findUnique({
@@ -86,32 +79,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });
 
 // PUT - Update notification preferences
-export async function PUT(request: NextRequest) {
+export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/account/notifications');
-    if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Zod schema validation
     const body = await request.json();
@@ -163,4 +135,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

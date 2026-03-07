@@ -6,23 +6,16 @@ export const dynamic = 'force-dynamic';
  * PATCH - Revoke consent
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { revokeConsentSchema } from '@/lib/validations/consent';
 import { logger } from '@/lib/logger';
 
-type RouteContext = { params: Promise<{ id: string }> };
-
 // GET /api/account/consents/[id]
-export async function GET(_request: Request, context: RouteContext) {
+export const GET = withUserGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await context.params;
+    const id = params?.id;
 
     const consent = await prisma.siteConsent.findFirst({
       where: { id, clientId: session.user.id },
@@ -41,17 +34,12 @@ export async function GET(_request: Request, context: RouteContext) {
     logger.error('Account consent GET [id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });
 
 // PATCH /api/account/consents/[id] - Revoke consent
-export async function PATCH(request: Request, context: RouteContext) {
+export const PATCH = withUserGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await context.params;
+    const id = params?.id;
     const body = await request.json();
 
     const parsed = revokeConsentSchema.safeParse(body);
@@ -103,4 +91,4 @@ export async function PATCH(request: Request, context: RouteContext) {
     logger.error('Account consent PATCH [id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

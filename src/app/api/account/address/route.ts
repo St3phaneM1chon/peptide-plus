@@ -7,10 +7,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
-import { validateCsrf } from '@/lib/csrf-middleware';
-import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
 
@@ -32,29 +30,8 @@ const addressSchema = z.object({
   label: z.string().max(50).optional().default('Principal'),
 });
 
-export async function PUT(request: NextRequest) {
+export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/account/address');
-    if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const user = await db.user.findUnique({
       where: { email: session.user.email },
@@ -133,15 +110,10 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const user = await db.user.findUnique({
       where: { email: session.user.email },
@@ -179,4 +151,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

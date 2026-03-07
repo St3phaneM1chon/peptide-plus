@@ -69,6 +69,9 @@ export async function POST(request: NextRequest) {
         take: 50,
       });
 
+      // Send all missed call emails, then batch-update the notified tags
+      const notifiedCallIds: string[] = [];
+
       for (const call of missedCalls) {
         const agentEmail = call.agent?.user?.email;
         if (!agentEmail) continue;
@@ -82,12 +85,7 @@ export async function POST(request: NextRequest) {
             emailType: 'transactional',
           });
 
-          // Mark as notified via tags
-          await prisma.callLog.update({
-            where: { id: call.id },
-            data: { tags: { push: 'notified' } },
-          });
-
+          notifiedCallIds.push(call.id);
           missedCallsNotified++;
         } catch (err) {
           logger.warn('[VoIP Notify] Failed to send missed call email', {
@@ -95,6 +93,18 @@ export async function POST(request: NextRequest) {
             error: err instanceof Error ? err.message : String(err),
           });
         }
+      }
+
+      // Batch-mark all successfully notified calls via a single transaction
+      if (notifiedCallIds.length > 0) {
+        await prisma.$transaction(
+          notifiedCallIds.map((id) =>
+            prisma.callLog.update({
+              where: { id },
+              data: { tags: { push: 'notified' } },
+            })
+          )
+        );
       }
 
       // ------------------------------------------------------------------

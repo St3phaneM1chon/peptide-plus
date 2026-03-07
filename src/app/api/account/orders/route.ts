@@ -1,17 +1,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Pagination parameters
     const { searchParams } = new URL(request.url);
@@ -114,4 +109,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

@@ -2,10 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { passwordSchema } from '@/lib/security';
 import bcrypt from 'bcryptjs';
@@ -16,19 +15,8 @@ const changePasswordBodySchema = z.object({
   newPassword: z.string().min(1, 'New password is required').max(256),
 });
 
-export async function PUT(request: NextRequest) {
+export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // SEC-27: Rate limit password changes - 5 per user per hour
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -125,4 +113,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

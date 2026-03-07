@@ -163,53 +163,58 @@ async function syncFxRates(): Promise<{
     where: { isActive: true },
   });
 
-  // 3. Update each currency
+  // 3. Determine which currencies need updating and batch the updates
   const now = new Date();
+  const updateOperations: Array<ReturnType<typeof prisma.currency.update>> = [];
 
   for (const currency of currencies) {
-    try {
-      if (currency.isDefault || currency.code === 'CAD') {
-        skipped.push(currency.code);
-        continue;
-      }
+    if (currency.isDefault || currency.code === 'CAD') {
+      skipped.push(currency.code);
+      continue;
+    }
 
-      const newRate = rates[currency.code];
-      if (newRate === undefined) {
-        skipped.push(currency.code);
-        continue;
-      }
+    const newRate = rates[currency.code];
+    if (newRate === undefined) {
+      skipped.push(currency.code);
+      continue;
+    }
 
-      const oldRate = Number(currency.exchangeRate);
+    const oldRate = Number(currency.exchangeRate);
 
-      // Skip if rate hasn't changed (within 6-decimal precision)
-      if (Math.abs(oldRate - newRate) < 0.000001) {
-        skipped.push(currency.code);
-        continue;
-      }
+    // Skip if rate hasn't changed (within 6-decimal precision)
+    if (Math.abs(oldRate - newRate) < 0.000001) {
+      skipped.push(currency.code);
+      continue;
+    }
 
-      await prisma.currency.update({
+    updateOperations.push(
+      prisma.currency.update({
         where: { id: currency.id },
         data: {
           exchangeRate: newRate,
           rateUpdatedAt: now,
         },
-      });
+      })
+    );
 
-      updated.push({ code: currency.code, oldRate, newRate });
+    updated.push({ code: currency.code, oldRate, newRate });
 
-      logger.info('[fx-rate-sync] Rate updated', {
-        code: currency.code,
-        oldRate: oldRate.toFixed(6),
-        newRate: newRate.toFixed(6),
-        change: ((newRate - oldRate) / oldRate * 100).toFixed(4) + '%',
-      });
+    logger.info('[fx-rate-sync] Rate updated', {
+      code: currency.code,
+      oldRate: oldRate.toFixed(6),
+      newRate: newRate.toFixed(6),
+      change: ((newRate - oldRate) / oldRate * 100).toFixed(4) + '%',
+    });
+  }
+
+  // Execute all currency updates in a single transaction
+  if (updateOperations.length > 0) {
+    try {
+      await prisma.$transaction(updateOperations);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      errors.push(`${currency.code}: ${msg}`);
-      logger.error('[fx-rate-sync] Failed to update currency', {
-        code: currency.code,
-        error: msg,
-      });
+      errors.push(`Batch update failed: ${msg}`);
+      logger.error('[fx-rate-sync] Batch currency update failed', { error: msg });
     }
   }
 

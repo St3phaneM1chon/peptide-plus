@@ -7,30 +7,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { deleteRoom, listParticipants, getRoom } from '@/lib/voip/livekit-service';
 import { logger } from '@/lib/logger';
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) return null;
-  const role = session.user.role as string;
-  if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) return null;
-  return session;
-}
-
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName } = await params;
+export const GET = withAdminGuard(async (
+  request: NextRequest,
+  { params }
+) => {
+  const roomName = params!.roomName;
 
   try {
     const dbRoom = await prisma.videoRoom.findUnique({
@@ -73,18 +59,13 @@ export async function GET(
     logger.error('[conference] Get room error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
+export const DELETE = withAdminGuard(async (
   _request: NextRequest,
-  { params }: { params: Promise<{ roomName: string }> }
-) {
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { roomName } = await params;
+  { params }
+) => {
+  const roomName = params!.roomName;
 
   try {
     const dbRoom = await prisma.videoRoom.findUnique({
@@ -116,4 +97,4 @@ export async function DELETE(
     logger.error('[conference] Delete room error', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

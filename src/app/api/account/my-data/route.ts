@@ -9,23 +9,14 @@ export const dynamic = 'force-dynamic';
  * organized by category. Used by the "My Data" page.
  */
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
+    const userId = session.user.id!;
     const userEmail = session.user.email;
 
     // Fetch all data categories in parallel
@@ -277,4 +268,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

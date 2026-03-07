@@ -1,17 +1,12 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-export async function GET() {
+export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get user from database — select only id (password excluded for safety)
     const user = await db.user.findUnique({
@@ -71,4 +66,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}, { skipCsrf: true });

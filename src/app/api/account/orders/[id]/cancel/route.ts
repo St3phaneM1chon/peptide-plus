@@ -6,11 +6,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { validateTransition } from '@/lib/order-status-machine';
 import { sendOrderCancellation } from '@/lib/email-service';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import Stripe from 'stripe';
@@ -28,10 +27,7 @@ function getStripe(): Stripe {
   return _stripe;
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withUserGuard(async (request: NextRequest, { session, params }) => {
   try {
     // Rate limiting for payment-related endpoint
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -43,19 +39,11 @@ export async function POST(
       return res;
     }
 
-    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    const orderId = params?.id;
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
-
-    const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id: orderId } = await params;
 
     // Find the user
     const user = await prisma.user.findUnique({
@@ -404,4 +392,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

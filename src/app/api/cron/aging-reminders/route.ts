@@ -270,6 +270,10 @@ export async function GET(request: NextRequest) {
         count: overdueInvoices.length,
       });
 
+      // Collect DB operations for batch execution after email sends
+      const invoiceUpdateOps: Array<ReturnType<typeof prisma.customerInvoice.update>> = [];
+      const emailLogCreateOps: Array<ReturnType<typeof prisma.emailLog.create>> = [];
+
       for (const invoice of overdueInvoices) {
         const daysPastDue = Math.floor(
           (now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -322,16 +326,18 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
-          // Update invoice: increment remindersSent and set lastReminderAt
-          await prisma.customerInvoice.update({
-            where: { id: invoice.id },
-            data: {
-              remindersSent: invoice.remindersSent + 1,
-              lastReminderAt: now,
-              // Auto-transition to OVERDUE if still SENT
-              ...(invoice.status === 'SENT' ? { status: 'OVERDUE' } : {}),
-            },
-          });
+          // Collect invoice update for batch execution
+          invoiceUpdateOps.push(
+            prisma.customerInvoice.update({
+              where: { id: invoice.id },
+              data: {
+                remindersSent: invoice.remindersSent + 1,
+                lastReminderAt: now,
+                // Auto-transition to OVERDUE if still SENT
+                ...(invoice.status === 'SENT' ? { status: 'OVERDUE' } : {}),
+              },
+            })
+          );
 
           // Audit trail
           logAuditTrail({
@@ -351,9 +357,9 @@ export async function GET(request: NextRequest) {
             },
           });
 
-          // Log to EmailLog (non-blocking)
-          try {
-            await prisma.emailLog.create({
+          // Collect email log for batch creation
+          emailLogCreateOps.push(
+            prisma.emailLog.create({
               data: {
                 to: invoice.customerEmail,
                 subject,
@@ -361,10 +367,8 @@ export async function GET(request: NextRequest) {
                 status: 'sent',
                 messageId: emailResult.messageId || undefined,
               },
-            });
-          } catch {
-            // Non-fatal
-          }
+            })
+          );
 
           results.sent.push({
             invoiceId: invoice.id,
@@ -376,6 +380,17 @@ export async function GET(request: NextRequest) {
           results.failed.push({
             invoiceId: invoice.id,
             error: invoiceError instanceof Error ? invoiceError.message : String(invoiceError),
+          });
+        }
+      }
+
+      // Batch-execute all invoice updates and email log creates in a single transaction
+      if (invoiceUpdateOps.length > 0 || emailLogCreateOps.length > 0) {
+        try {
+          await prisma.$transaction([...invoiceUpdateOps, ...emailLogCreateOps]);
+        } catch (batchErr) {
+          logger.error('[aging-reminders] Batch DB update failed', {
+            error: batchErr instanceof Error ? batchErr.message : String(batchErr),
           });
         }
       }

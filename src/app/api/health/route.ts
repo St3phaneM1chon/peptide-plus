@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { checkEnvironment } from '@/lib/env-check';
+import { getRedisClient } from '@/lib/redis';
 
 interface HealthCheck {
   name: string;
@@ -103,30 +104,27 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Check 4: Redis connectivity (optional - only if REDIS_URL is configured)
+  // Check 4: Redis connectivity (uses shared client from src/lib/redis.ts)
   if (process.env.REDIS_URL) {
     const redisStart = Date.now();
-    let client: InstanceType<typeof import('ioredis').default> | null = null;
     try {
-      const Redis = (await import('ioredis')).default;
-      client = new Redis(process.env.REDIS_URL, {
-        connectTimeout: 3000,
-        maxRetriesPerRequest: 1,
-        lazyConnect: true,
-      });
-
-      const pingPromise = client.connect().then(() => client!.ping());
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Redis health check timed out after 5s')), 5000)
-      );
-      await Promise.race([pingPromise, timeoutPromise]);
-
-      checks.push({
-        name: 'redis',
-        status: 'pass',
-        message: 'Redis connection OK',
-        duration: Date.now() - redisStart,
-      });
+      const redis = await getRedisClient();
+      if (redis) {
+        await redis.ping();
+        checks.push({
+          name: 'redis',
+          status: 'pass',
+          message: 'Redis connection OK',
+          duration: Date.now() - redisStart,
+        });
+      } else {
+        checks.push({
+          name: 'redis',
+          status: 'warn',
+          message: 'Redis client could not connect',
+          duration: Date.now() - redisStart,
+        });
+      }
     } catch (redisError) {
       const errorMsg = redisError instanceof Error ? redisError.message : 'Unknown error';
       logger.warn('Health check: Redis connectivity failed', { error: errorMsg });
@@ -136,10 +134,6 @@ export async function GET(request: NextRequest) {
         message: `Redis connection failed: ${errorMsg}`,
         duration: Date.now() - redisStart,
       });
-    } finally {
-      try { await client?.quit(); } catch (cleanupError) {
-        logger.warn('[Health] Redis client cleanup error (ignored)', { error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError) });
-      }
     }
   } else {
     checks.push({

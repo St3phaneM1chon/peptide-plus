@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 import {
   summarizeCustomer,
@@ -25,15 +25,8 @@ import {
   type CopilotRequest,
 } from '@/lib/ai/copilot-service';
 
-const ALLOWED_ROLES = ['ADMIN', 'OWNER', 'MANAGER', 'EMPLOYEE'];
-
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const session = await auth();
-    if (!session?.user?.role || !ALLOWED_ROLES.includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json() as CopilotRequest;
     const { action, context, message, locale = 'en' } = body;
 
@@ -139,8 +132,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('[AI Copilot] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
-}
+});

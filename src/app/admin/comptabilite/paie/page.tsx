@@ -119,7 +119,7 @@ function formatMoney(n: number): string {
 // =============================================================================
 
 export default function PayrollPage() {
-  useI18n(); // Ensure locale context is available
+  const { t } = useI18n();
   const theme = sectionThemes.compliance;
 
   const [activeTab, setActiveTab] = useState<'runs' | 'employees' | 'stubs' | 'reports'>('runs');
@@ -916,7 +916,7 @@ export default function PayrollPage() {
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" onClick={() => setShowNewRunModal(false)}>Annuler</Button>
+              <Button variant="secondary" onClick={() => setShowNewRunModal(false)}>{t('common.cancel')}</Button>
               <Button variant="primary" icon={Plus} onClick={createPayrollRun}>Creer</Button>
             </div>
           </div>
@@ -1082,7 +1082,7 @@ export default function PayrollPage() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" onClick={() => setShowNewEmployeeModal(false)}>Annuler</Button>
+              <Button variant="secondary" onClick={() => setShowNewEmployeeModal(false)}>{t('common.cancel')}</Button>
               <Button variant="primary" icon={Plus} onClick={createEmployee}>Creer</Button>
             </div>
           </div>

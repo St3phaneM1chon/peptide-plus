@@ -885,7 +885,8 @@
       "subtitle": "Analiz vye kont ak dèt",
       "title": "Rapò Vye",
       "totalOutstanding": "Total Ki Dwe",
-      "totalOverdue": "Total Ki Anreta"
+      "totalOverdue": "Total Ki Anreta",
+      "exportCSV": "Export CSV"
     },
     "aiAssistant": {
       "assistant": "AI Assistant",
@@ -1180,7 +1181,8 @@
       "title": "Tras Odit",
       "totalActions": "Total Aksyon",
       "typeLabel": "Kalite",
-      "userLabel": "Itilizatè"
+      "userLabel": "Itilizatè",
+      "exportCSV": "Export CSV"
     },
     "backups": {
       "subtitle": "Eta backup otomatik pou tout pwojè yo",
@@ -2851,7 +2853,11 @@
         "contacted": "Has been contacted",
         "recentActivity": "Recent activity (30d)",
         "source": "Lead source quality"
-      }
+      },
+      "score": "Score",
+      "allStages": "All Stages",
+      "listView": "List View",
+      "kanbanView": "Kanban View"
     },
     "scraper": {
       "title": "Google Maps Scraper",
@@ -2874,7 +2880,9 @@
       "colEmail": "Imèl",
       "colWebsite": "Sit Wèb",
       "colRating": "Nòt",
-      "colReviews": "Revizyon"
+      "colReviews": "Revizyon",
+      "mapSelectorLabel": "Or select an area on the map",
+      "mapSearchArea": "Search by area"
     },
     "crmLists": {
       "actions": "Actions",
@@ -3126,7 +3134,8 @@
       "to": "To",
       "update": "Update",
       "updateReport": "Update Report",
-      "useTemplate": "Use this template"
+      "useTemplate": "Use this template",
+      "exportCSV": "Export CSV"
     },
     "customerDetail": {
       "actions": {
@@ -3542,7 +3551,8 @@
       "briefingPrompt": "Click \"Get Briefing\" to see your AI-powered daily priorities",
       "overdueDeals": "Overdue Deals",
       "uncontactedLeads": "New Leads",
-      "overdueTasks": "Overdue Tasks"
+      "overdueTasks": "Overdue Tasks",
+      "ordersToday": "Orders Today"
     },
     "dataTable": {
       "noData": "No data",
@@ -5506,7 +5516,8 @@
       "ytTitle": "Title",
       "ytUnlisted": "Unlisted",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "exportCSV": "Export CSV"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
@@ -6019,7 +6030,8 @@
       "templateRequired": "Template is required",
       "title": "Bilten",
       "unsubscribed": "Dezabòne",
-      "welcomePopup": "Popup akeyi"
+      "welcomePopup": "Popup akeyi",
+      "exportCSV": "Export CSV"
     },
     "notifications": "Notifikasyon",
     "ocrScan": {
@@ -11485,7 +11497,8 @@
         "startSession": "Start Session",
         "subtitle": "Monitor and coach agents in real-time",
         "title": "Coaching Dashboard",
-        "whisper": "Whisper"
+        "whisper": "Whisper",
+        "score": "Quality Score"
       },
       "forwarding": {
         "addRule": "Add Rule",
@@ -11925,7 +11938,8 @@
       "running": "Testing network...",
       "stun": "STUN Connectivity",
       "title": "Network Test",
-      "turn": "TURN Connectivity"
+      "turn": "TURN Connectivity",
+      "score": "Score: {score}/100"
     },
     "presence": {
       "available": "Available",
@@ -12089,7 +12103,9 @@
         "complete": "Complete Transfer",
         "consulting": "Consulting with",
         "title": "Warm Transfer"
-      }
+      },
+      "autoRegisterFailed": "Phone line not initialized automatically",
+      "autoRegisterAlertSent": "Owners have been notified by email"
     },
     "status": {
       "away": "Away",

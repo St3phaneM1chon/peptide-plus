@@ -5,18 +5,14 @@ export const dynamic = 'force-dynamic';
  * GET - List all videos accessible to the authenticated client
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withUserGuard } from '@/lib/user-api-guard';
 import { logger } from '@/lib/logger';
 
 // GET /api/account/content
-export async function GET(request: Request) {
+export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const userId = session.user.id;
     const userRole = session.user.role || 'CUSTOMER';
@@ -109,4 +105,4 @@ export async function GET(request: Request) {
     logger.error('Account content GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+}, { skipCsrf: true });
