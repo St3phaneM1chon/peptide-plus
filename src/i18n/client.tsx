@@ -5,7 +5,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { type Locale, defaultLocale, locales, localeNames, localeFlags, localeDirections } from './config';
 
@@ -147,7 +147,9 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     return new Intl.NumberFormat(locale).format(amount);
   }, [locale]);
 
-  const contextValue: I18nContextType = {
+  const dir = localeDirections[locale];
+
+  const contextValue: I18nContextType = useMemo(() => ({
     locale,
     messages,
     setLocale,
@@ -156,8 +158,8 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     formatDate,
     formatCurrency,
     formatNumber,
-    dir: localeDirections[locale],
-  };
+    dir,
+  }), [locale, messages, setLocale, t, tp, formatDate, formatCurrency, formatNumber, dir]);
 
   return (
     <I18nContext.Provider value={contextValue}>
