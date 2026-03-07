@@ -258,12 +258,18 @@ export async function syncInvoicesToErp(
   const erp = provider || 'quickbooks';
   const results: ErpInvoiceSyncResult[] = [];
 
+  // Batch fetch all quotes at once to avoid N+1
+  const allQuotes = invoiceIds.length > 0
+    ? await prisma.crmQuote.findMany({
+        where: { id: { in: invoiceIds } },
+        include: { items: true, deal: true },
+      })
+    : [];
+  const quoteMap = new Map(allQuotes.map(q => [q.id, q]));
+
   for (const invoiceId of invoiceIds) {
     try {
-      const quote = await prisma.crmQuote.findUnique({
-        where: { id: invoiceId },
-        include: { items: true, deal: true },
-      });
+      const quote = quoteMap.get(invoiceId) ?? null;
 
       if (!quote) {
         results.push({ invoiceId, erpInvoiceId: null, success: false, error: 'Invoice not found' });

@@ -27,6 +27,7 @@ export const GET = withAdminGuard(async (request, { params }: { params: Promise<
     const result = await listExpenses(id, { category: category || undefined, page, limit });
     return NextResponse.json(result);
   } catch (error) {
+    console.error('Error fetching RS&DE expenses:', error);
     return NextResponse.json({ error: 'Erreur lors de la récupération des dépenses' }, { status: 500 });
   }
 });
@@ -42,6 +43,7 @@ export const POST = withAdminGuard(async (request, { params }: { params: Promise
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
     }
+    console.error('Error creating RS&DE expense:', error);
     return NextResponse.json({ error: 'Erreur lors de la création de la dépense' }, { status: 500 });
   }
 });

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import {
   Calendar, Clock, Users, ChevronLeft, ChevronRight, Plus, X, Save,
   ArrowUpDown, Zap, GraduationCap, Star, Check, Filter,
@@ -633,7 +634,7 @@ export default function SchedulingPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {agent.image ? (
-                            <img src={agent.image} alt="" className="h-7 w-7 rounded-full" />
+                            <Image src={agent.image} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
                           ) : (
                             <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                               {(agent.name || agent.email || '?').charAt(0).toUpperCase()}
@@ -893,7 +894,7 @@ export default function SchedulingPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {agent.image ? (
-                              <img src={agent.image} alt="" className="h-7 w-7 rounded-full" />
+                              <Image src={agent.image} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
                             ) : (
                               <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                                 {(agent.name || agent.email || '?').charAt(0).toUpperCase()}

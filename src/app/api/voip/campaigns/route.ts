@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { markCampaignDncl } from '@/lib/voip/dncl';
@@ -55,29 +56,49 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      companyId: z.string().min(1),
+      name: z.string().min(1),
+      description: z.string().optional(),
+      callerIdNumber: z.string().min(1),
+      maxConcurrent: z.number().int().positive().optional().default(1),
+      useAmd: z.boolean().optional().default(true),
+      scriptTitle: z.string().optional(),
+      scriptBody: z.string().optional(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      timezone: z.string().optional().default('America/Montreal'),
+      activeDays: z.array(z.string()).optional().default(['mon', 'tue', 'wed', 'thu', 'fri']),
+      contacts: z.array(z.object({
+        phoneNumber: z.string(),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        email: z.string().optional(),
+        customFields: z.record(z.unknown()).optional(),
+      })).optional().default([]),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       companyId,
       name,
       description,
       callerIdNumber,
-      maxConcurrent = 1,
-      useAmd = true,
+      maxConcurrent,
+      useAmd,
       scriptTitle,
       scriptBody,
       startTime,
       endTime,
-      timezone = 'America/Montreal',
-      activeDays = ['mon', 'tue', 'wed', 'thu', 'fri'],
-      contacts = [],
-    } = body;
-
-    if (!companyId || !name || !callerIdNumber) {
-      return NextResponse.json(
-        { error: 'companyId, name, and callerIdNumber required' },
-        { status: 400 }
-      );
-    }
+      timezone,
+      activeDays,
+      contacts,
+    } = parsed.data;
 
     const campaign = await prisma.dialerCampaign.create({
       data: {

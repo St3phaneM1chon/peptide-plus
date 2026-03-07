@@ -16,43 +16,50 @@ export async function processScheduledPosts(): Promise<{
   succeeded: number;
   failed: number;
 }> {
-  const now = new Date();
+  try {
+    const now = new Date();
 
-  const duePosts = await prisma.socialPost.findMany({
-    where: {
-      status: 'scheduled',
-      scheduledAt: { lte: now },
-    },
-    orderBy: { scheduledAt: 'asc' },
-    take: 50, // process max 50 per cron run
-  });
+    const duePosts = await prisma.socialPost.findMany({
+      where: {
+        status: 'scheduled',
+        scheduledAt: { lte: now },
+      },
+      orderBy: { scheduledAt: 'asc' },
+      take: 50, // process max 50 per cron run
+    });
 
-  let succeeded = 0;
-  let failed = 0;
+    let succeeded = 0;
+    let failed = 0;
 
-  for (const post of duePosts) {
-    try {
-      const result = await publishPost(post.id);
-      if (result.success) {
-        succeeded++;
-      } else {
+    for (const post of duePosts) {
+      try {
+        const result = await publishPost(post.id);
+        if (result.success) {
+          succeeded++;
+        } else {
+          failed++;
+          logger.warn(`[SocialCron] Post ${post.id} failed: ${result.error}`);
+        }
+      } catch (error) {
         failed++;
-        logger.warn(`[SocialCron] Post ${post.id} failed: ${result.error}`);
+        logger.error(`[SocialCron] Post ${post.id} unexpected error:`, error);
+        await prisma.socialPost.update({
+          where: { id: post.id },
+          data: {
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unexpected error',
+          },
+        });
       }
-    } catch (error) {
-      failed++;
-      logger.error(`[SocialCron] Post ${post.id} unexpected error:`, error);
-      await prisma.socialPost.update({
-        where: { id: post.id },
-        data: {
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unexpected error',
-        },
-      });
     }
+
+    logger.info(`[SocialCron] Processed ${duePosts.length} posts: ${succeeded} succeeded, ${failed} failed`);
+
+    return { processed: duePosts.length, succeeded, failed };
+  } catch (error) {
+    logger.error('[SocialCron] Fatal error in processScheduledPosts', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { processed: 0, succeeded: 0, failed: 0 };
   }
-
-  logger.info(`[SocialCron] Processed ${duePosts.length} posts: ${succeeded} succeeded, ${failed} failed`);
-
-  return { processed: duePosts.length, succeeded, failed };
 }

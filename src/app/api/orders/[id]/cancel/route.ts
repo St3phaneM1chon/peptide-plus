@@ -9,11 +9,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { canCancel } from '@/lib/order-status';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+
+const cancelOrderSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
 
 export async function POST(
   request: NextRequest,
@@ -73,9 +78,10 @@ export async function POST(
     // Parse optional reason from body
     let reason = 'Cancelled by customer';
     try {
-      const body = await request.json();
-      if (body?.reason && typeof body.reason === 'string') {
-        reason = body.reason.substring(0, 500);
+      const raw = await request.json();
+      const parsed = cancelOrderSchema.safeParse(raw);
+      if (parsed.success && parsed.data.reason) {
+        reason = parsed.data.reason;
       }
     } catch {
       // No body or invalid JSON is fine, use default reason

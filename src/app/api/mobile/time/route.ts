@@ -20,8 +20,8 @@ export const GET = withAdminGuard(async () => {
 
     const [runningTimer, todayEntries, weekEntries] = await Promise.all([
       prisma.timeEntry.findFirst({ where: { endTime: null }, orderBy: { startTime: 'desc' } }),
-      prisma.timeEntry.findMany({ where: { startTime: { gte: today } }, orderBy: { startTime: 'desc' } }),
-      prisma.timeEntry.findMany({ where: { startTime: { gte: weekStart } }, select: { hoursWorked: true } }),
+      prisma.timeEntry.findMany({ where: { startTime: { gte: today } }, orderBy: { startTime: 'desc' }, take: 100 }),
+      prisma.timeEntry.findMany({ where: { startTime: { gte: weekStart } }, select: { hoursWorked: true }, take: 1000 }),
     ]);
 
     const todayTotal = todayEntries.reduce((s, e) => s + Number(e.hoursWorked || 0), 0);

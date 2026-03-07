@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { z } from 'zod';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   createTrainingRoom,
   addStudent,
@@ -18,36 +19,42 @@ import {
   getRoomStatus,
 } from '@/lib/voip/training-conference';
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+const conferenceSchema = z.object({
+  action: z.enum(['create', 'add-participant', 'status', 'end']),
+  name: z.string().optional(),
+  instructorPhone: z.string().optional(),
+  conferenceId: z.string().optional(),
+  participantPhone: z.string().optional(),
+  participantName: z.string().optional(),
+});
 
+export const GET = withAdminGuard(async () => {
   try {
     const rooms = listActiveRooms();
     return NextResponse.json({ conferences: rooms });
   } catch {
     return NextResponse.json({ error: 'Failed to list conferences' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { action } = body as { action: string };
+    const raw = await request.json();
+    const parsed = conferenceSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
+    const { action } = body;
 
     switch (action) {
       case 'create': {
-        const { name, instructorPhone } = body as {
-          name: string;
-          instructorPhone?: string;
-        };
+        const { name, instructorPhone } = body;
 
         if (!name) {
           return NextResponse.json({ error: 'name required' }, { status: 400 });
@@ -63,11 +70,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'add-participant': {
-        const { conferenceId, participantPhone, participantName } = body as {
-          conferenceId: string;
-          participantPhone: string;
-          participantName?: string;
-        };
+        const { conferenceId, participantPhone, participantName } = body;
 
         if (!conferenceId || !participantPhone) {
           return NextResponse.json(
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'status': {
-        const { conferenceId } = body as { conferenceId: string };
+        const { conferenceId } = body;
         if (!conferenceId) {
           return NextResponse.json({ error: 'conferenceId required' }, { status: 400 });
         }
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'end': {
-        const { conferenceId: endId } = body as { conferenceId: string };
+        const { conferenceId: endId } = body;
         if (!endId) {
           return NextResponse.json({ error: 'conferenceId required' }, { status: 400 });
         }
@@ -120,4 +123,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Conference operation failed' }, { status: 500 });
   }
-}
+});

@@ -66,7 +66,7 @@ export default function WebhooksClient({
 }: {
   initialWebhooks: WebhookConfig[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>(initialWebhooks);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -397,7 +397,7 @@ export default function WebhooksClient({
                           {wh.lastDeliveryStatus}
                         </span>
                         <span className="text-[10px] text-gray-400">
-                          {new Date(wh.lastDeliveryAt).toLocaleString()}
+                          {new Date(wh.lastDeliveryAt).toLocaleString(locale)}
                         </span>
                         {wh.deliveryLog.length > 0 && (
                           <button
@@ -490,7 +490,7 @@ export default function WebhooksClient({
                         )}
                       </div>
                       <span className="text-gray-400">
-                        {new Date(entry.timestamp).toLocaleString()}
+                        {new Date(entry.timestamp).toLocaleString(locale)}
                       </span>
                     </div>
                   ))}

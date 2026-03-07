@@ -9,6 +9,7 @@ export const GET = withAdminGuard(async () => {
     const summary = await getDashboardSummary();
     return NextResponse.json(summary);
   } catch (error) {
+    console.error('Error fetching RS&DE summary:', error);
     return NextResponse.json({ error: 'Erreur lors de la récupération du résumé RS&DE' }, { status: 500 });
   }
 });

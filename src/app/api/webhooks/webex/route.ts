@@ -15,16 +15,25 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
 
-    // Validate signature
-    const signature = request.headers.get('x-spark-signature') || '';
+    // Validate Webex webhook signature (HMAC-SHA1 via x-spark-signature)
+    const signature = request.headers.get('x-spark-signature');
+
+    // Try DB-stored secret first, fall back to env var
     const connection = await prisma.platformConnection.findUnique({
       where: { platform: 'webex' },
       select: { webhookSecret: true },
     });
+    const webhookSecret = connection?.webhookSecret || process.env.WEBEX_WEBHOOK_SECRET;
 
-    if (connection?.webhookSecret && signature) {
-      if (!validateWebexSignature(rawBody, signature, connection.webhookSecret)) {
-        logger.warn('[Webhook] Webex signature validation failed');
+    if (!webhookSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        logger.error('[Webhook] Webex webhook secret not configured in production');
+        return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+      }
+      logger.warn('[Webhook] Webex webhook secret not set — skipping verification (dev mode)');
+    } else {
+      if (!signature || !validateWebexSignature(rawBody, signature, webhookSecret)) {
+        logger.warn('[Webhook] Webex: invalid or missing x-spark-signature');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     }

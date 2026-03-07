@@ -138,12 +138,26 @@ export async function scanAllDuplicates(limit: number = 100): Promise<DuplicateM
     LIMIT ${limit}
   `;
 
+  // Batch fetch all leads with duplicate emails in one query
+  const dupEmails = emailDups.map((d) => d.email);
+  const allDupLeads = dupEmails.length > 0
+    ? await prisma.crmLead.findMany({
+        where: { email: { in: dupEmails } },
+        select: { id: true, contactName: true, email: true, phone: true, companyName: true, createdAt: true },
+        orderBy: { createdAt: 'asc' },
+      })
+    : [];
+
+  // Group by email
+  const leadsByEmail = new Map<string, typeof allDupLeads>();
+  for (const lead of allDupLeads) {
+    if (!lead.email) continue;
+    if (!leadsByEmail.has(lead.email)) leadsByEmail.set(lead.email, []);
+    leadsByEmail.get(lead.email)!.push(lead);
+  }
+
   for (const dup of emailDups) {
-    const leads = await prisma.crmLead.findMany({
-      where: { email: dup.email },
-      select: { id: true, contactName: true, email: true, phone: true, companyName: true },
-      orderBy: { createdAt: 'asc' },
-    });
+    const leads = leadsByEmail.get(dup.email) || [];
 
     for (let i = 0; i < leads.length - 1; i++) {
       for (let j = i + 1; j < leads.length; j++) {

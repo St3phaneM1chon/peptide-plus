@@ -7,6 +7,9 @@ export const dynamic = 'force-dynamic';
  *
  * Update your Stripe dashboard webhook endpoint to:
  *   https://biocyclepeptides.com/api/payments/webhook
+ *
+ * AUDIT: Signature verified via stripe.webhooks.constructEvent() in /api/payments/webhook.
+ * This stub route performs NO webhook processing — it only returns 410 Gone.
  */
 
 import { NextResponse } from 'next/server';

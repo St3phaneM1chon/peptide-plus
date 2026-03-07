@@ -58,29 +58,34 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       return NextResponse.json({ updated: 0, message: 'No products found matching filter' });
     }
 
-    // Update all active formats for these products
-    const result = await prisma.productFormat.updateMany({
-      where: {
-        productId: { in: productIds },
-        isActive: true,
-      },
-      data: {
-        price: {
-          multiply: multiplier,
+    // Use a transaction to ensure format + product price updates are atomic
+    const result = await prisma.$transaction(async (tx) => {
+      // Update all active formats for these products
+      const formatResult = await tx.productFormat.updateMany({
+        where: {
+          productId: { in: productIds },
+          isActive: true,
         },
-      },
-    });
+        data: {
+          price: {
+            multiply: multiplier,
+          },
+        },
+      });
 
-    // Also update the base product prices
-    await prisma.product.updateMany({
-      where: {
-        id: { in: productIds },
-      },
-      data: {
-        price: {
-          multiply: multiplier,
+      // Also update the base product prices
+      await tx.product.updateMany({
+        where: {
+          id: { in: productIds },
         },
-      },
+        data: {
+          price: {
+            multiply: multiplier,
+          },
+        },
+      });
+
+      return formatResult;
     });
 
     logger.info('Bulk price update', {

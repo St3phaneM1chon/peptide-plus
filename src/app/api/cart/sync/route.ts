@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+
+const cartItemSchema = z.object({
+  productId: z.string().min(1),
+  formatId: z.string().optional(),
+  quantity: z.number().int().min(1),
+  price: z.number().min(0),
+});
+
+const cartSyncSchema = z.object({
+  items: z.array(cartItemSchema),
+});
 
 // GET: Load cart from DB for authenticated user
 export async function GET() {
@@ -57,10 +69,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { items } = await request.json();
-  if (!Array.isArray(items)) {
-    return NextResponse.json({ error: 'Invalid items' }, { status: 400 });
+  const raw = await request.json();
+  const parsed = cartSyncSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
+
+  const { items } = parsed.data;
 
   // Upsert cart
   const cart = await prisma.cart.upsert({

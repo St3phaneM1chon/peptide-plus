@@ -219,6 +219,7 @@ export async function getAgentWellness(
         createdAt: { gte: period.start, lte: period.end },
       },
       orderBy: { createdAt: 'asc' },
+      take: 1000,
     }),
   ]);
 
@@ -304,10 +305,12 @@ export async function detectBurnoutRisk(agentId: string): Promise<BurnoutRiskAss
     prisma.agentDailyStats.findMany({
       where: { agentId, date: { gte: lookbackStart } },
       orderBy: { date: 'asc' },
+      take: 1000,
     }),
     prisma.crmQaScore.findMany({
       where: { agentId, createdAt: { gte: lookbackStart } },
       orderBy: { createdAt: 'asc' },
+      take: 1000,
     }),
   ]);
 
@@ -445,6 +448,7 @@ export async function getTeamWellness(_managerId?: string): Promise<TeamWellness
   const agents = await prisma.user.findMany({
     where: agentWhere,
     select: { id: true },
+    take: 1000,
   });
 
   const agentIds = agents.map((a) => a.id);
@@ -458,6 +462,7 @@ export async function getTeamWellness(_managerId?: string): Promise<TeamWellness
       metadata: { path: ['source'], equals: WELLNESS_SOURCE },
       createdAt: { gte: sevenDaysAgo },
     },
+    take: 1000,
   });
 
   const respondentIds = new Set<string>();
@@ -599,6 +604,7 @@ export async function getWellnessAlerts(): Promise<WellnessAlert[]> {
   const agents = await prisma.user.findMany({
     where: { role: { in: ['EMPLOYEE', 'OWNER'] } },
     select: { id: true, name: true },
+    take: 1000,
   });
 
   const sevenDaysAgo = new Date();

@@ -13,17 +13,74 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
+const emailInboundSchema = z.object({
+  from: z.union([z.string(), z.object({ address: z.string(), name: z.string().optional() })]).optional(),
+  From: z.union([z.string(), z.object({ address: z.string(), name: z.string().optional() })]).optional(),
+  sender: z.string().optional(),
+  envelope: z.object({ from: z.string().optional() }).optional(),
+  data: z.object({ from: z.string().optional() }).optional(),
+  subject: z.string().optional(),
+  Subject: z.string().optional(),
+  text: z.string().optional(),
+  html: z.string().optional(),
+  body: z.string().optional(),
+  messageId: z.string().optional(),
+  message_id: z.string().optional(),
+  'Message-ID': z.string().optional(),
+  fromName: z.string().optional(),
+  from_name: z.string().optional(),
+}).passthrough();
+
+/**
+ * Timing-safe comparison of webhook secret to prevent timing attacks.
+ */
+function verifyWebhookSecret(provided: string, expected: string): boolean {
+  try {
+    const a = Buffer.from(provided);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    let body: Record<string, any>;
+    // Verify webhook secret
+    const webhookSecret = process.env.EMAIL_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        logger.error('[EmailToLead] EMAIL_WEBHOOK_SECRET not configured in production');
+        return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+      }
+      logger.warn('[EmailToLead] EMAIL_WEBHOOK_SECRET not set — skipping verification (dev mode)');
+    } else {
+      const providedSecret = request.headers.get('x-webhook-secret') || '';
+      if (!providedSecret || !verifyWebhookSecret(providedSecret, webhookSecret)) {
+        logger.warn('[EmailToLead] Invalid or missing x-webhook-secret header');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
+
+    const parsedResult = emailInboundSchema.safeParse(rawBody);
+    if (!parsedResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsedResult.error.flatten() }, { status: 400 });
+    }
+
+    const body: Record<string, any> = parsedResult.data;
 
     // Normalize the inbound email payload from various providers
     const senderEmail = extractSenderEmail(body);

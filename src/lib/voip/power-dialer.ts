@@ -99,31 +99,36 @@ export async function startDialerSession(
  */
 async function dialNextContact(agentUserId: string): Promise<void> {
   // Iterative loop — replaces recursive calls for DNCL skips
+  const session = activeSessions.get(agentUserId);
+  if (!session || session.state === 'PAUSED') return;
+
+  // Fetch campaign once before the loop (avoid re-fetching on each DNCL skip)
+  const campaign = await prisma.dialerCampaign.findUnique({
+    where: { id: session.campaignId },
+  });
+
+  if (!campaign || campaign.status !== 'ACTIVE') {
+    session.state = 'IDLE';
+    return;
+  }
+
+  // Check schedule once
+  if (!isWithinSchedule(campaign)) {
+    session.state = 'PAUSED';
+    logger.info('[Dialer] Paused - outside schedule', { agentUserId });
+    return;
+  }
+
   while (true) {
-    const session = activeSessions.get(agentUserId);
-    if (!session || session.state === 'PAUSED') return;
-
-    const campaign = await prisma.dialerCampaign.findUnique({
-      where: { id: session.campaignId },
-    });
-
-    if (!campaign || campaign.status !== 'ACTIVE') {
-      session.state = 'IDLE';
-      return;
-    }
-
-    // Check schedule
-    if (!isWithinSchedule(campaign)) {
-      session.state = 'PAUSED';
-      logger.info('[Dialer] Paused - outside schedule', { agentUserId });
-      return;
-    }
+    // Re-check session state (could change between iterations)
+    const currentSession = activeSessions.get(agentUserId);
+    if (!currentSession || currentSession.state === 'PAUSED') return;
 
     // Get next uncalled, non-DNCL contact
     // Priority: scheduled callbacks first, then uncalled contacts
     const nextEntry = await prisma.dialerListEntry.findFirst({
       where: {
-        campaignId: session.campaignId,
+        campaignId: currentSession.campaignId,
         isCalled: false,
         isDncl: false,
         OR: [
@@ -139,13 +144,13 @@ async function dialNextContact(agentUserId: string): Promise<void> {
 
     if (!nextEntry) {
       // No more contacts — campaign done
-      session.state = 'IDLE';
+      currentSession.state = 'IDLE';
       await prisma.dialerCampaign.update({
-        where: { id: session.campaignId },
+        where: { id: currentSession.campaignId },
         data: { status: 'COMPLETED' },
       });
       logger.info('[Dialer] Campaign completed - no more contacts', {
-        campaignId: session.campaignId,
+        campaignId: currentSession.campaignId,
       });
       return;
     }

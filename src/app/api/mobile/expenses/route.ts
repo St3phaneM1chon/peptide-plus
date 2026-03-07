@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { checkPeriodLock } from '@/lib/accounting/period-close.service';
 
 const createSchema = z.object({
   description: z.string().min(1).max(500),
@@ -61,6 +62,7 @@ export const GET = withAdminGuard(async (request) => {
       limit,
     });
   } catch (error) {
+    console.error('Error fetching expenses:', error);
     return NextResponse.json({ error: 'Erreur récupération dépenses' }, { status: 500 });
   }
 });
@@ -69,6 +71,12 @@ export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
     const parsed = createSchema.parse(body);
+
+    // Check if the target accounting period is locked
+    const periodLockError = await checkPeriodLock(new Date(parsed.date));
+    if (periodLockError) {
+      return NextResponse.json({ error: periodLockError }, { status: 403 });
+    }
 
     // Find actual account IDs from codes
     const [expenseAccount, cashAccount] = await Promise.all([
@@ -83,6 +91,17 @@ export const POST = withAdminGuard(async (request) => {
     // Generate entry number
     const count = await prisma.journalEntry.count();
     const entryNumber = `EXP-${String(count + 1).padStart(6, '0')}`;
+
+    // Validate debit/credit balance
+    const lines = [
+      { accountId: expenseAccount.id, description: parsed.description, debit: parsed.amount, credit: 0, type: 'DEBIT' as const },
+      { accountId: cashAccount.id, description: parsed.description, debit: 0, credit: parsed.amount, type: 'CREDIT' as const },
+    ];
+    const totalDebits = lines.filter(l => l.type === 'DEBIT').reduce((sum, l) => sum + Number(l.debit), 0);
+    const totalCredits = lines.filter(l => l.type === 'CREDIT').reduce((sum, l) => sum + Number(l.credit), 0);
+    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      return NextResponse.json({ error: 'Journal entry debits must equal credits' }, { status: 400 });
+    }
 
     const entry = await prisma.journalEntry.create({
       data: {
@@ -107,6 +126,7 @@ export const POST = withAdminGuard(async (request) => {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
     }
+    console.error('Error creating expense:', error);
     return NextResponse.json({ error: 'Erreur création dépense' }, { status: 500 });
   }
 });

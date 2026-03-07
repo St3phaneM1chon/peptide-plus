@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ConnectionsClient - Manage VoIP provider connections.
+ * ConnectionsClient - Manage VoIP provider connections (Telnyx, VoIP.ms).
  */
 
 import { useState } from 'react';
@@ -12,17 +12,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type Provider = 'telnyx' | 'voipms' | 'fusionpbx';
+type Provider = 'telnyx' | 'voipms';
 
 interface Connection {
   id: string;
   provider: string;
   isEnabled: boolean;
-  pbxHost: string | null;
-  pbxPort: number | null;
   hasApiKey: boolean;
   hasApiSecret: boolean;
-  hasEslPassword: boolean;
   lastSyncAt: string | null;
   syncStatus: string | null;
   phoneNumberCount: number;
@@ -38,9 +35,6 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
     provider: '' as Provider,
     apiKey: '',
     apiSecret: '',
-    pbxHost: '',
-    pbxPort: 8021,
-    eslPassword: '',
     isEnabled: true,
   });
 
@@ -102,7 +96,6 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
   };
 
   const providers: { id: Provider; label: string; description: string }[] = [
-    { id: 'fusionpbx', label: 'FusionPBX', description: t('voip.connections.fusionpbxDesc') },
     { id: 'telnyx', label: 'Telnyx', description: t('voip.connections.telnyxDesc') },
     { id: 'voipms', label: 'VoIP.ms', description: t('voip.connections.voipmsDesc') },
   ];
@@ -113,7 +106,6 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
         <h1 className="text-2xl font-bold text-gray-900">{t('voip.connections.title')}</h1>
       </div>
 
-      {/* Existing connections */}
       <div className="grid gap-4">
         {providers.map((prov) => {
           const conn = connections.find((c) => c.provider === prov.id);
@@ -159,9 +151,6 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
                         provider: prov.id,
                         apiKey: '',
                         apiSecret: '',
-                        pbxHost: conn?.pbxHost || '',
-                        pbxPort: conn?.pbxPort || 8021,
-                        eslPassword: '',
                         isEnabled: conn?.isEnabled ?? true,
                       });
                     }}
@@ -179,16 +168,10 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
                     {conn.hasApiKey ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-gray-300" />}
                     API Key
                   </div>
-                  {prov.id === 'fusionpbx' && (
-                    <>
-                      <div>Host: {conn.pbxHost || '-'}</div>
-                      <div>Port: {conn.pbxPort || '-'}</div>
-                      <div className="flex items-center gap-1">
-                        {conn.hasEslPassword ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-gray-300" />}
-                        ESL
-                      </div>
-                    </>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {conn.hasApiSecret ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-gray-300" />}
+                    API Secret
+                  </div>
                   <div>{conn.phoneNumberCount} {t('voip.connections.numbers')}</div>
                 </div>
               )}
@@ -196,64 +179,28 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
               {/* Edit form */}
               {isEditing && (
                 <div className="mt-3 border-t border-gray-100 pt-3 space-y-3">
-                  {(prov.id === 'telnyx' || prov.id === 'voipms') && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-gray-500">API Key</label>
-                        <input
-                          type="password"
-                          value={form.apiKey}
-                          onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
-                          placeholder={conn?.hasApiKey ? '••••••••' : 'Enter API key'}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-500">API Secret</label>
-                        <input
-                          type="password"
-                          value={form.apiSecret}
-                          onChange={(e) => setForm({ ...form, apiSecret: e.target.value })}
-                          placeholder={conn?.hasApiSecret ? '••••••••' : 'Enter API secret'}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">API Key</label>
+                      <input
+                        type="password"
+                        value={form.apiKey}
+                        onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+                        placeholder={conn?.hasApiKey ? '••••••••' : 'Enter API key'}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
                     </div>
-                  )}
-
-                  {prov.id === 'fusionpbx' && (
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-gray-500">PBX Host</label>
-                        <input
-                          type="text"
-                          value={form.pbxHost}
-                          onChange={(e) => setForm({ ...form, pbxHost: e.target.value })}
-                          placeholder="pbx.biocyclepeptides.com"
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-500">ESL Port</label>
-                        <input
-                          type="number"
-                          value={form.pbxPort}
-                          onChange={(e) => setForm({ ...form, pbxPort: parseInt(e.target.value) || 8021 })}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-500">ESL Password</label>
-                        <input
-                          type="password"
-                          value={form.eslPassword}
-                          onChange={(e) => setForm({ ...form, eslPassword: e.target.value })}
-                          placeholder={conn?.hasEslPassword ? '••••••••' : 'Enter password'}
-                          className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">API Secret</label>
+                      <input
+                        type="password"
+                        value={form.apiSecret}
+                        onChange={(e) => setForm({ ...form, apiSecret: e.target.value })}
+                        placeholder={conn?.hasApiSecret ? '••••••••' : 'Enter API secret'}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
                     </div>
-                  )}
+                  </div>
 
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 text-sm">

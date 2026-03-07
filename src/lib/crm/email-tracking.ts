@@ -119,6 +119,7 @@ export async function syncEmailEngagementsToCrm(sinceMinutes: number = 15): Prom
       openCount: { gte: 1 },
     },
     select: { recipientEmail: true, subject: true, openedAt: true },
+    take: 1000,
   });
 
   for (const engagement of recentOpens) {
@@ -138,6 +139,7 @@ export async function syncEmailEngagementsToCrm(sinceMinutes: number = 15): Prom
       clickCount: { gte: 1 },
     },
     select: { recipientEmail: true, subject: true, clickedAt: true, clickedLinks: true },
+    take: 1000,
   });
 
   for (const engagement of recentClicks) {

@@ -7,9 +7,28 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { getQueueStats } from '@/lib/voip/queue-engine';
+
+const queueCreateSchema = z.object({
+  companyId: z.string().min(1, 'companyId is required'),
+  name: z.string().min(1, 'name is required'),
+  strategy: z.enum(['RING_ALL', 'ROUND_ROBIN', 'LEAST_RECENT', 'RANDOM', 'HUNT']).default('RING_ALL'),
+  ringTimeout: z.number().int().positive().default(30),
+  maxWaitTime: z.number().int().positive().default(300),
+  wrapUpTime: z.number().int().nonnegative().default(15),
+  holdMusicUrl: z.string().url().nullable().optional(),
+  announcePosition: z.boolean().default(true),
+  announceInterval: z.number().int().positive().default(30),
+  overflowAction: z.string().default('voicemail'),
+  overflowTarget: z.string().nullable().optional(),
+  members: z.array(z.object({
+    userId: z.string().min(1),
+    priority: z.number().int().nonnegative().optional(),
+  })).default([]),
+});
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -65,28 +84,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = queueCreateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
     const {
       companyId,
       name,
-      strategy = 'RING_ALL',
-      ringTimeout = 30,
-      maxWaitTime = 300,
-      wrapUpTime = 15,
+      strategy,
+      ringTimeout,
+      maxWaitTime,
+      wrapUpTime,
       holdMusicUrl,
-      announcePosition = true,
-      announceInterval = 30,
-      overflowAction = 'voicemail',
+      announcePosition,
+      announceInterval,
+      overflowAction,
       overflowTarget,
-      members = [],
-    } = body;
-
-    if (!companyId || !name) {
-      return NextResponse.json(
-        { error: 'companyId and name are required' },
-        { status: 400 }
-      );
-    }
+      members,
+    } = parsed.data;
 
     const queue = await prisma.callQueue.create({
       data: {

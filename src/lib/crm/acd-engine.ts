@@ -133,13 +133,13 @@ export async function routeCall(callData: CallRoutingData): Promise<RoutingResul
   if (callData.queueId) {
     queue = await prisma.callQueue.findUnique({
       where: { id: callData.queueId },
-      include: { members: { include: { user: true } } },
+      include: { members: { include: { user: { select: { id: true, name: true, email: true, image: true, role: true } } } } },
     });
   } else {
     // Default: first active queue
     queue = await prisma.callQueue.findFirst({
       where: { isActive: true },
-      include: { members: { include: { user: true } } },
+      include: { members: { include: { user: { select: { id: true, name: true, email: true, image: true, role: true } } } } },
       orderBy: { createdAt: 'asc' },
     });
   }

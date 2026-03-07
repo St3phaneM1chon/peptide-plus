@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -27,12 +28,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { to, from, userId } = body;
-
-    if (!to) {
-      return NextResponse.json({ error: 'Missing "to" phone number' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = z.object({
+      to: z.string().min(1),
+      from: z.string().optional(),
+      userId: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { to, from, userId } = parsed.data;
 
     // Normalize number to E.164
     const toNumber = normalizeE164(to);

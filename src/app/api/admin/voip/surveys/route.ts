@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   createSurveyTemplate,
   validateSurveyQuestions,
@@ -87,12 +87,7 @@ function getDefaultSurveyConfigs(): SurveyConfig[] {
 /**
  * GET - List all survey configurations.
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
@@ -110,17 +105,12 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to list survey configs' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Create a new survey configuration.
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { name, questions, isActive } = body;
@@ -157,17 +147,12 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to create survey config' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update an existing survey configuration.
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { id, name, questions, isActive } = body;
@@ -203,17 +188,12 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update survey config' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE - Deactivate a survey configuration (soft delete).
  */
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const DELETE = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -247,4 +227,4 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to deactivate survey config' }, { status: 500 });
   }
-}
+});

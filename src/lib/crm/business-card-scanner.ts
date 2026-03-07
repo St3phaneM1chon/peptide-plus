@@ -419,6 +419,7 @@ export async function getScannerStats(
       },
     },
     select: { metadata: true, createdAt: true },
+    take: 1000,
   });
 
   let leadsCreated = 0;

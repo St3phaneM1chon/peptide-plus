@@ -25,6 +25,7 @@ export const GET = withAdminGuard(async (_request, { params }: { params: Promise
     if (!project) return NextResponse.json({ error: 'Projet non trouvé' }, { status: 404 });
     return NextResponse.json(project);
   } catch (error) {
+    console.error('Error fetching RS&DE project:', error);
     return NextResponse.json({ error: 'Erreur lors de la récupération du projet' }, { status: 500 });
   }
 });
@@ -40,6 +41,7 @@ export const PUT = withAdminGuard(async (request, { params }: { params: Promise<
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
     }
+    console.error('Error updating RS&DE project:', error);
     return NextResponse.json({ error: 'Erreur lors de la mise à jour du projet' }, { status: 500 });
   }
 });
@@ -50,6 +52,7 @@ export const DELETE = withAdminGuard(async (_request, { params }: { params: Prom
     await deleteProject(id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Error deleting RS&DE project:', error);
     return NextResponse.json({ error: 'Erreur lors de la suppression du projet' }, { status: 500 });
   }
 });

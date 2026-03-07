@@ -1599,7 +1599,11 @@
       "noRecentMessages": "Aucun message dans les dernières 24h",
       "timeNow": "maintenant",
       "timeMinute": "min",
-      "timeHour": "h"
+      "timeHour": "h",
+      "typing": "{name} est en train d'écrire...",
+      "read": "Lu",
+      "delivered": "Livré",
+      "userIsTyping": "{name} est en train d'écrire..."
     },
     "clientPortal": {
       "title": "Portail Client",
@@ -5332,6 +5336,7 @@
       "customerInvoices": "Factures Clients",
       "banks": "Banques",
       "financialStatements": "États Financiers",
+      "fiscal": "Fiscal",
       "permissions": "Permissions",
       "fiscalTaxes": "Fiscal & Taxes",
       "reports": "Rapports",
@@ -5975,7 +5980,8 @@
       "schedulePublishSuccess": "Publication planifiée avec succès",
       "scheduleUnpublishSuccess": "Dépublication planifiée avec succès",
       "schedulePublishPreview": "Le produit sera publié le",
-      "scheduleUnpublishPreview": "Le produit sera dépublié le"
+      "scheduleUnpublishPreview": "Le produit sera dépublié le",
+      "filterByCategory": "Filtrer par catégorie"
     },
     "promoCodes": {
       "title": "Codes Promo",
@@ -7386,7 +7392,38 @@
       "dealValue": "Valeur",
       "dealStage": "Étape",
       "noDeals": "Aucun deal",
-      "viewDeal": "Voir le deal"
+      "viewDeal": "Voir le deal",
+      "conference": {
+        "title": "Vidéoconférence",
+        "subtitle": "Créer et rejoindre des salles de vidéoconférence",
+        "create": "Créer une salle",
+        "createTitle": "Créer une salle de conférence",
+        "roomName": "Nom de la salle",
+        "roomNamePlaceholder": "ex. Réunion d'équipe, Démo commerciale...",
+        "maxParticipants": "Participants max",
+        "noRooms": "Aucune salle de conférence active",
+        "noRoomsDesc": "Créez une salle pour démarrer une vidéoconférence",
+        "join": "Rejoindre",
+        "end": "Terminer",
+        "leave": "Quitter",
+        "ended": "Conférence terminée",
+        "created": "Salle de conférence créée",
+        "confirmEnd": "Terminer cette conférence ? Tous les participants seront déconnectés.",
+        "createdBy": "Créée par",
+        "participants": "Participants",
+        "mute": "Couper le son",
+        "kick": "Retirer",
+        "confirmKick": "Retirer ce participant de la conférence ?",
+        "participantKicked": "Participant retiré",
+        "participantMuted": "Participant mis en sourdine",
+        "connecting": "Connexion à la conférence...",
+        "connectionError": "Erreur de connexion",
+        "backToLobby": "Retour au lobby",
+        "recordingStarted": "Enregistrement démarré",
+        "recordingStopped": "Enregistrement arrêté",
+        "liveKitReady": "Vidéoconférence prête",
+        "liveKitConfig": "Configurez les variables d'environnement LIVEKIT_URL, LIVEKIT_API_KEY et LIVEKIT_API_SECRET pour activer la vidéoconférence LiveKit."
+      }
     },
     "modules": {
       "title": "Gestion des Modules",
@@ -10867,7 +10904,9 @@
       },
       "video": {
         "enable": "Activer la vidéo",
-        "disable": "Désactiver la vidéo"
+        "disable": "Désactiver la vidéo",
+        "noCamera": "Aucune caméra détectée",
+        "cameraInUse": "La caméra est utilisée par une autre application"
       },
       "notes": {
         "title": "Notes d'appel",
@@ -11149,11 +11188,17 @@
       "transcription": "Transcription"
     },
     "recordings": {
-      "title": "Enregistrements d'appels",
+      "title": "Enregistrements et contenu",
       "agent": "Agent",
       "client": "Client",
       "summary": "Résumé",
-      "empty": "Aucun enregistrement disponible"
+      "empty": "Aucun enregistrement disponible",
+      "all": "Tous",
+      "audioTab": "Audio",
+      "videoTab": "Vidéo",
+      "chatTab": "Chat",
+      "searchPlaceholder": "Rechercher enregistrements, transcriptions, chats...",
+      "lastMessage": "Dernier message"
     },
     "voicemail": {
       "title": "Messagerie vocale",

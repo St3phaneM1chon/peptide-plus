@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { AuditLogger } from '@/lib/voip/audit-log';
 import type { Prisma } from '@prisma/client';
@@ -14,92 +15,97 @@ import type { Prisma } from '@prisma/client';
 const auditLogger = new AuditLogger({ flushSize: 20, flushIntervalMs: 60_000 });
 
 export const GET = withAdminGuard(async (request, { session }) => {
-  const { searchParams } = new URL(request.url);
+  try {
+    const { searchParams } = new URL(request.url);
 
-  // Pagination
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25', 10)));
-  const skip = (page - 1) * limit;
+    // Pagination
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25', 10)));
+    const skip = (page - 1) * limit;
 
-  // Filters
-  const direction = searchParams.get('direction'); // INBOUND, OUTBOUND, INTERNAL
-  const status = searchParams.get('status'); // COMPLETED, MISSED, etc.
-  const agentId = searchParams.get('agentId');
-  const clientId = searchParams.get('clientId');
-  const phoneNumberId = searchParams.get('phoneNumberId');
-  const dateFrom = searchParams.get('dateFrom');
-  const dateTo = searchParams.get('dateTo');
-  const search = searchParams.get('search'); // Search in caller/called numbers
+    // Filters
+    const direction = searchParams.get('direction'); // INBOUND, OUTBOUND, INTERNAL
+    const status = searchParams.get('status'); // COMPLETED, MISSED, etc.
+    const agentId = searchParams.get('agentId');
+    const clientId = searchParams.get('clientId');
+    const phoneNumberId = searchParams.get('phoneNumberId');
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    const search = searchParams.get('search'); // Search in caller/called numbers
 
-  const where: Prisma.CallLogWhereInput = {};
+    const where: Prisma.CallLogWhereInput = {};
 
-  if (direction) where.direction = direction as Prisma.EnumCallDirectionFilter;
-  if (status) where.status = status as Prisma.EnumCallStatusFilter;
-  if (agentId) where.agentId = agentId;
-  if (clientId) where.clientId = clientId;
-  if (phoneNumberId) where.phoneNumberId = phoneNumberId;
+    if (direction) where.direction = direction as Prisma.EnumCallDirectionFilter;
+    if (status) where.status = status as Prisma.EnumCallStatusFilter;
+    if (agentId) where.agentId = agentId;
+    if (clientId) where.clientId = clientId;
+    if (phoneNumberId) where.phoneNumberId = phoneNumberId;
 
-  if (dateFrom || dateTo) {
-    where.startedAt = {};
-    if (dateFrom) where.startedAt.gte = new Date(dateFrom);
-    if (dateTo) where.startedAt.lte = new Date(dateTo);
-  }
+    if (dateFrom || dateTo) {
+      where.startedAt = {};
+      if (dateFrom) where.startedAt.gte = new Date(dateFrom);
+      if (dateTo) where.startedAt.lte = new Date(dateTo);
+    }
 
-  if (search) {
-    where.OR = [
-      { callerNumber: { contains: search } },
-      { calledNumber: { contains: search } },
-      { callerName: { contains: search, mode: 'insensitive' } },
-    ];
-  }
+    if (search) {
+      where.OR = [
+        { callerNumber: { contains: search } },
+        { calledNumber: { contains: search } },
+        { callerName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-  const [callLogs, total] = await prisma.$transaction([
-    prisma.callLog.findMany({
-      where,
-      include: {
-        phoneNumber: { select: { number: true, displayName: true } },
-        agent: {
-          select: {
-            extension: true,
-            user: { select: { name: true, email: true } },
+    const [callLogs, total] = await prisma.$transaction([
+      prisma.callLog.findMany({
+        where,
+        include: {
+          phoneNumber: { select: { number: true, displayName: true } },
+          agent: {
+            select: {
+              extension: true,
+              user: { select: { name: true, email: true } },
+            },
           },
+          client: { select: { id: true, name: true, email: true, phone: true } },
+          recording: { select: { id: true, isUploaded: true, durationSec: true } },
+          survey: { select: { overallScore: true } },
+          transcription: { select: { id: true, sentiment: true, summary: true } },
         },
-        client: { select: { id: true, name: true, email: true, phone: true } },
-        recording: { select: { id: true, isUploaded: true, durationSec: true } },
-        survey: { select: { overallScore: true } },
-        transcription: { select: { id: true, sentiment: true, summary: true } },
-      },
-      orderBy: { startedAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.callLog.count({ where }),
-  ]);
+        orderBy: { startedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.callLog.count({ where }),
+    ]);
 
-  // Log call log access for compliance audit trail when export or filtered queries are made
-  const isExport = searchParams.get('export') === 'true';
-  if (isExport) {
-    await auditLogger.log({
-      userId: session.user.id,
-      action: 'report.export',
-      resource: 'CallLog',
-      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      userAgent: request.headers.get('user-agent') || undefined,
-      result: 'success',
-      details: {
-        filters: { direction, status, agentId, clientId, dateFrom, dateTo, search },
-        resultCount: total,
+    // Log call log access for compliance audit trail when export or filtered queries are made
+    const isExport = searchParams.get('export') === 'true';
+    if (isExport) {
+      await auditLogger.log({
+        userId: session.user.id,
+        action: 'report.export',
+        resource: 'CallLog',
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+        result: 'success',
+        details: {
+          filters: { direction, status, agentId, clientId, dateFrom, dateTo, search },
+          resultCount: total,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      callLogs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
+  } catch (error) {
+    logger.error('[Admin Call Logs] Error fetching call logs', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-
-  return NextResponse.json({
-    callLogs,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
 }, { skipCsrf: true });

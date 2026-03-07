@@ -156,6 +156,11 @@ export async function POST(request: NextRequest) {
 
     logger.info('Media cleanup completed', result);
 
+    // Return 204 if nothing was cleaned up, 200 with details otherwise
+    if (stalePendingDeleted === 0 && orphansDeleted === 0) {
+      return new NextResponse(null, { status: 204 });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     logger.error('Media cleanup POST error', { error: error instanceof Error ? error.message : String(error) });

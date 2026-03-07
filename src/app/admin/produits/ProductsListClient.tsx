@@ -168,7 +168,7 @@ export default function ProductsListClient({
   stats,
   isOwner,
 }: Props) {
-  const { t, tp, formatCurrency } = useI18n();
+  const { t, tp, locale, formatCurrency } = useI18n();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState('');
@@ -610,7 +610,7 @@ export default function ProductsListClient({
   // ─── Render ─────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" role="main" aria-label={t('admin.products.title')}>
       {/* Hidden file input for CSV import */}
       <input
         ref={fileInputRef}
@@ -618,6 +618,7 @@ export default function ProductsListClient({
         accept=".csv,text/csv"
         onChange={handleImport}
         className="hidden"
+        aria-label={t('admin.products.importCsv') || 'Import CSV file'}
       />
 
       {/* Header + Stats */}
@@ -711,6 +712,7 @@ export default function ProductsListClient({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
+              aria-label={t('admin.products.filterByCategory') || 'Filter by category'}
               className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
               <option value="">{t('admin.products.allCategories')}</option>
@@ -1044,7 +1046,7 @@ export default function ProductsListClient({
                   ? (t('admin.products.schedulePublishPreview') || 'Le produit sera publié le')
                   : (t('admin.products.scheduleUnpublishPreview') || 'Le produit sera dépublié le')
                 }{' '}
-                <strong>{new Date(scheduleDate).toLocaleString('fr-CA')}</strong>
+                <strong>{new Date(scheduleDate).toLocaleString(locale)}</strong>
               </p>
             </div>
           )}

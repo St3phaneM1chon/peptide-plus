@@ -16,9 +16,18 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import * as telnyx from '@/lib/telnyx';
 import { checkDncl } from '@/lib/voip/dncl';
+
+const publicPostSchema = z.object({
+  action: z.string().min(1, 'action is required'),
+  to: z.string().optional(),
+  from: z.string().optional(),
+  webhookUrl: z.string().url().optional(),
+});
 
 // ── API Key Auth ──────────────────
 
@@ -51,7 +60,7 @@ async function authenticateApiKey(request: NextRequest): Promise<{
     const { createHmac } = await import('crypto');
     const salt = process.env.API_KEY_SALT;
     if (!salt) {
-      console.error('[VoIP Public API] API_KEY_SALT environment variable is not configured');
+      logger.error('[VoIP Public API] API_KEY_SALT environment variable is not configured');
       return null;
     }
     const { timingSafeEqual } = await import('crypto');
@@ -161,7 +170,7 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('[VoIP Public API]', error);
+    logger.error('[VoIP Public API] Request failed', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -179,12 +188,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { action } = body;
+    const raw = await request.json();
+    const parsed = publicPostSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const { action } = parsed.data;
 
     switch (action) {
       case 'call-initiate': {
-        const { to, from, webhookUrl: customWebhook } = body;
+        const { to, from, webhookUrl: customWebhook } = parsed.data;
         if (!to) {
           return NextResponse.json({ error: 'to (phone number) required' }, { status: 400 });
         }
@@ -210,7 +224,7 @@ export async function POST(request: NextRequest) {
 
         const connectionId = process.env.TELNYX_CONNECTION_ID;
         if (!connectionId) {
-          console.error('[VoIP Public API] TELNYX_CONNECTION_ID not configured');
+          logger.error('[VoIP Public API] TELNYX_CONNECTION_ID not configured');
           return NextResponse.json({ error: 'Call service temporarily unavailable' }, { status: 503 });
         }
         const callerIdNumber = from || process.env.TELNYX_DEFAULT_CALLER_ID;
@@ -245,7 +259,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('[VoIP Public API]', error);
+    logger.error('[VoIP Public API] Request failed', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -373,7 +373,7 @@ interface CampaignRowProps {
 }
 
 function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [stats, setStats] = useState<CampaignStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -660,16 +660,16 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                   <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>
                     {campaign.startAt
-                      ? new Date(campaign.startAt).toLocaleDateString()
+                      ? new Date(campaign.startAt).toLocaleDateString(locale)
                       : (t('admin.crm.campaigns.noStartDate') || 'No start date')}
-                    {campaign.endAt && ` → ${new Date(campaign.endAt).toLocaleDateString()}`}
+                    {campaign.endAt && ` → ${new Date(campaign.endAt).toLocaleDateString(locale)}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>
                     {t('admin.crm.campaigns.created') || 'Created'}:{' '}
-                    {new Date(campaign.createdAt).toLocaleDateString()}
+                    {new Date(campaign.createdAt).toLocaleDateString(locale)}
                   </span>
                 </div>
               </div>

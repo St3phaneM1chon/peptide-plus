@@ -590,3 +590,26 @@ export async function rollbackYearEndClose(
     periodsReopened: result.periodsReopened,
   };
 }
+
+/**
+ * Check if the accounting period for a given date is locked.
+ * Returns null if no period is locked (safe to write), or an error message if locked.
+ *
+ * Used by API routes that create journal entries to prevent writes to locked periods.
+ */
+export async function checkPeriodLock(entryDate: Date): Promise<string | null> {
+  const lockedPeriod = await prisma.accountingPeriod.findFirst({
+    where: {
+      status: 'LOCKED',
+      startDate: { lte: entryDate },
+      endDate: { gte: entryDate },
+    },
+    select: { code: true, name: true },
+  });
+
+  if (lockedPeriod) {
+    return `La période comptable "${lockedPeriod.name}" (${lockedPeriod.code}) est verrouillée. Impossible de créer des écritures dans une période fermée.`;
+  }
+
+  return null;
+}

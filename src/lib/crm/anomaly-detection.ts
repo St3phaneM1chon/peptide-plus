@@ -129,23 +129,36 @@ export async function detectPipelineAnomalies(): Promise<AnomalyReport> {
   // 2. Stage bottleneck - deals sitting in a stage longer than average
   const stages = await prisma.crmPipelineStage.findMany({
     select: { id: true, name: true },
+    take: 1000,
   });
 
-  for (const stage of stages) {
-    const dealsInStage = await prisma.crmDeal.count({
+  // Batch: get deal counts per stage (stale and total) with groupBy instead of N+1
+  const [staleDealsGrouped, totalDealsGrouped] = await Promise.all([
+    prisma.crmDeal.groupBy({
+      by: ['stageId'],
+      _count: { id: true },
       where: {
-        stageId: stage.id,
+        stageId: { in: stages.map(s => s.id) },
         stage: { isWon: false, isLost: false },
         updatedAt: { lt: sevenDaysAgo },
       },
-    });
-
-    const totalActiveDeals = await prisma.crmDeal.count({
+    }),
+    prisma.crmDeal.groupBy({
+      by: ['stageId'],
+      _count: { id: true },
       where: {
-        stageId: stage.id,
+        stageId: { in: stages.map(s => s.id) },
         stage: { isWon: false, isLost: false },
       },
-    });
+    }),
+  ]);
+
+  const staleByStage = new Map(staleDealsGrouped.map(g => [g.stageId, g._count.id]));
+  const totalByStage = new Map(totalDealsGrouped.map(g => [g.stageId, g._count.id]));
+
+  for (const stage of stages) {
+    const dealsInStage = staleByStage.get(stage.id) ?? 0;
+    const totalActiveDeals = totalByStage.get(stage.id) ?? 0;
 
     if (totalActiveDeals >= 3 && dealsInStage / totalActiveDeals > 0.6) {
       anomalies.push({
@@ -164,10 +177,12 @@ export async function detectPipelineAnomalies(): Promise<AnomalyReport> {
   const historicalValues = await prisma.crmDeal.findMany({
     where: { createdAt: { gte: thirtyDaysAgo, lt: sevenDaysAgo } },
     select: { value: true },
+    take: 1000,
   });
   const recentValues = await prisma.crmDeal.findMany({
     where: { createdAt: { gte: sevenDaysAgo } },
     select: { value: true },
+    take: 1000,
   });
 
   if (historicalValues.length >= 5 && recentValues.length >= 1) {
@@ -222,6 +237,7 @@ export async function detectPerformanceAnomalies(
       duration: { not: null },
     },
     select: { duration: true },
+    take: 1000,
   });
 
   const recentCalls = await prisma.callLog.findMany({
@@ -231,6 +247,7 @@ export async function detectPerformanceAnomalies(
       duration: { not: null },
     },
     select: { duration: true },
+    take: 1000,
   });
 
   if (historicalCalls.length >= 5 && recentCalls.length >= 1) {
@@ -259,6 +276,7 @@ export async function detectPerformanceAnomalies(
       createdAt: { gte: thirtyDaysAgo, lt: sevenDaysAgo },
     },
     select: { createdAt: true },
+    take: 1000,
   });
 
   const recentActivities = await prisma.crmActivity.findMany({
@@ -267,6 +285,7 @@ export async function detectPerformanceAnomalies(
       createdAt: { gte: sevenDaysAgo },
     },
     select: { createdAt: true },
+    take: 1000,
   });
 
   if (historicalActivities.length >= 5) {

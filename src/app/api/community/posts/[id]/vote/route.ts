@@ -9,12 +9,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+
+const voteSchema = z.object({
+  value: z.union([z.literal(1), z.literal(-1)]),
+});
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -51,17 +56,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       });
     }
 
-    const body = await request.json();
-    const { value } = body as { value?: number };
+    const raw = await request.json();
+    const parsed = voteSchema.safeParse(raw);
 
-    // Validate vote value: must be +1 or -1
-    if (value !== 1 && value !== -1) {
+    if (!parsed.success) {
       return apiError(
         'Vote value must be 1 (upvote) or -1 (downvote)',
         ErrorCode.VALIDATION_ERROR,
         { request }
       );
     }
+
+    const { value } = parsed.data;
 
     // Verify the post exists and is not deleted
     const post = await prisma.forumPost.findFirst({

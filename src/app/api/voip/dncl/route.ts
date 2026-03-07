@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import {
   checkDncl,
@@ -41,7 +42,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      action: z.enum(['check', 'bulk-check', 'import', 'add', 'remove']),
+      phoneNumber: z.string().optional(),
+      phoneNumbers: z.array(z.string()).optional(),
+      source: z.string().optional(),
+      reason: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const { action } = body;
 
     switch (action) {

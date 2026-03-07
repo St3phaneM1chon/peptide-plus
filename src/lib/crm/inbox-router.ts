@@ -133,6 +133,7 @@ export async function autoAssignConversation(
   const employees = await prisma.user.findMany({
     where: { role: 'EMPLOYEE' },
     select: { id: true },
+    take: 1000,
   });
 
   if (employees.length === 0) {

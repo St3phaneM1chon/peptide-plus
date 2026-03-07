@@ -4,28 +4,20 @@ export const dynamic = 'force-dynamic';
  * Gestion complète pour Employee et Owner
  */
 
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import ProductsListClient from './ProductsListClient';
+import Loading from './loading';
 
 export const metadata = {
   title: 'Gestion des produits | Admin',
   description: 'Créer, modifier et supprimer des produits.',
 };
 
-export default async function AdminProductsPage() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-    redirect('/dashboard');
-  }
-
+async function ProductsContent({ isOwner }: { isOwner: boolean }) {
   // Récupérer les produits avec catégories et formats
   const products = await prisma.product.findMany({
     include: {
@@ -64,11 +56,29 @@ export default async function AdminProductsPage() {
   };
 
   return (
-    <ProductsListClient 
+    <ProductsListClient
       initialProducts={JSON.parse(JSON.stringify(products))}
       categories={JSON.parse(JSON.stringify(categories))}
       stats={stats}
-      isOwner={session.user.role === UserRole.OWNER}
+      isOwner={isOwner}
     />
+  );
+}
+
+export default async function AdminProductsPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect('/auth/signin');
+  }
+
+  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+    redirect('/dashboard');
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <ProductsContent isOwner={session.user.role === UserRole.OWNER} />
+    </Suspense>
   );
 }

@@ -6,7 +6,7 @@
  * - Push notification handler
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `biocycle-crm-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `biocycle-crm-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = '/offline.html';
@@ -89,6 +89,12 @@ self.addEventListener('fetch', (event) => {
 
   // API requests: Network-first with cache fallback
   if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Next.js build assets: Network-first (content-hashed, Turbopack manages caching)
+  if (url.pathname.startsWith('/_next/')) {
     event.respondWith(networkFirst(request));
     return;
   }

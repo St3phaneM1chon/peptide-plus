@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getDndState,
   setDndConfig,
@@ -20,16 +21,25 @@ import {
   type DndConfig,
 } from '@/lib/voip/dnd-manager';
 
+const dndPutSchema = z.object({
+  toggle: z.boolean().optional(),
+  addException: z.string().optional(),
+  removeException: z.string().optional(),
+  config: z.object({
+    mode: z.string().optional(),
+    exceptions: z.array(z.string()).optional(),
+    schedules: z.array(z.unknown()).optional(),
+    autoCalendarDnd: z.boolean().optional(),
+    goToVoicemail: z.boolean().optional(),
+    message: z.string().optional(),
+  }).optional(),
+});
+
 /**
  * GET - Get DND configuration and current state for the current user.
  * Also reads PresenceStatus from DB for consistency.
  */
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
     // Get in-memory DND state
     const dndState = getDndState(session.user.id);
@@ -66,7 +76,7 @@ export async function GET() {
     });
     return NextResponse.json({ error: 'Failed to get DND config' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update DND configuration.
@@ -75,14 +85,19 @@ export async function GET() {
  *    or { addException: string } — add a number to whitelist
  *    or { removeException: string } — remove a number from whitelist
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = dndPutSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
 
     // Quick toggle
     if (body.toggle === true) {
@@ -116,7 +131,7 @@ export async function PUT(request: NextRequest) {
 
     // Full config update
     if (body.config) {
-      const config = body.config as Partial<DndConfig>;
+      const config = body.config as unknown as Partial<DndConfig>;
       const state = await setDndConfig(session.user.id, config);
 
       // Sync with PresenceStatus in DB
@@ -142,4 +157,4 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update DND config' }, { status: 500 });
   }
-}
+});

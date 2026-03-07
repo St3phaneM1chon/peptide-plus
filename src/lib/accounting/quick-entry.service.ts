@@ -5,6 +5,7 @@
 
 import { JournalEntry, JournalLine } from './types';
 import { logger } from '@/lib/logger';
+import { GST_RATE, QST_RATE, QC_COMBINED_RATE } from '@/lib/tax/tax-constants';
 
 // ============================================
 // ENTRY TEMPLATES
@@ -45,8 +46,8 @@ export const DEFAULT_TEMPLATES: EntryTemplate[] = [
     lines: [
       { accountCode: '1110', accountName: 'Comptes clients', debitFormula: 'total' },
       { accountCode: '4010', accountName: 'Ventes', creditFormula: 'amount' },
-      { accountCode: '2110', accountName: 'TPS à payer', creditFormula: 'amount * 0.05' },
-      { accountCode: '2120', accountName: 'TVQ à payer', creditFormula: 'amount * 0.09975' },
+      { accountCode: '2110', accountName: 'TPS à payer', creditFormula: `amount * ${GST_RATE}` },
+      { accountCode: '2120', accountName: 'TVQ à payer', creditFormula: `amount * ${QST_RATE}` },
     ],
     variables: [
       { name: 'amount', label: 'Montant HT', type: 'number', required: true },
@@ -62,8 +63,8 @@ export const DEFAULT_TEMPLATES: EntryTemplate[] = [
     description: 'Achat fournisseur avec CTI/RTI',
     lines: [
       { accountCode: '5010', accountName: 'Achats', debitFormula: 'amount' },
-      { accountCode: '1115', accountName: 'TPS à recevoir (CTI)', debitFormula: 'amount * 0.05' },
-      { accountCode: '1116', accountName: 'TVQ à recevoir (RTI)', debitFormula: 'amount * 0.09975' },
+      { accountCode: '1115', accountName: 'TPS à recevoir (CTI)', debitFormula: `amount * ${GST_RATE}` },
+      { accountCode: '1116', accountName: 'TVQ à recevoir (RTI)', debitFormula: `amount * ${QST_RATE}` },
       { accountCode: '2000', accountName: 'Comptes fournisseurs', creditFormula: 'total' },
     ],
     variables: [
@@ -283,7 +284,7 @@ export function generateEntryFromTemplate(
   // Also FIX (F030): Use parameterized tax rate instead of hardcoded QC rate
   if (numericValues.amount) {
     // Default to QC rate; in future, accept province as a parameter
-    const taxRate = numericValues.taxRate || 0.14975; // TPS 5% + TVQ 9.975%
+    const taxRate = numericValues.taxRate || QC_COMBINED_RATE; // TPS 5% + TVQ 9.975%
     numericValues.total = numericValues.amount * (1 + taxRate);
   }
 

@@ -9,15 +9,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { z } from 'zod';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getParkedCalls, parkCall, retrieveParkedCall } from '@/lib/voip/call-park';
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+const parkPostSchema = z.object({
+  action: z.enum(['park', 'retrieve']),
+  callControlId: z.string().optional(),
+  orbit: z.number().optional(),
+});
 
+export const GET = withAdminGuard(async () => {
   try {
     const companyId = 'default';
     const parkedCalls = getParkedCalls(companyId);
@@ -29,21 +31,21 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to list parked calls' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { action, callControlId, orbit } = body as {
-      action: 'park' | 'retrieve';
-      callControlId?: string;
-      orbit?: number;
-    };
+    const raw = await request.json();
+    const parsed = parkPostSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { action, callControlId, orbit } = parsed.data;
 
     if (action === 'retrieve' && orbit && callControlId) {
       const result = await retrieveParkedCall(orbit, callControlId);
@@ -65,4 +67,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Park operation failed' }, { status: 500 });
   }
-}
+});

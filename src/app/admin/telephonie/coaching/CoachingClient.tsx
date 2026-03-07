@@ -55,7 +55,7 @@ export default function CoachingClient({
   availableUsers: AvailableUser[];
   currentUserId: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [sessions, setSessions] = useState<CoachingSession[]>(initialSessions);
   const [showNewSession, setShowNewSession] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -417,7 +417,7 @@ export default function CoachingClient({
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">
-                        {new Date(session.scheduledAt).toLocaleDateString()}
+                        {new Date(session.scheduledAt).toLocaleDateString(locale)}
                       </td>
                     </tr>
                   );

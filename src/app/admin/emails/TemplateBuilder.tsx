@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import NextImage from 'next/image';
 import { Plus, GripVertical, Trash2, Type, Image, ShoppingBag, MousePointer, Minus, Eye, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -247,7 +248,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
       case 'text':
         return <p style={{ textAlign: (block.content.align as 'left' | 'center' | 'right') || 'left', whiteSpace: 'pre-wrap' }}>{block.content.text}</p>;
       case 'image':
-        return block.content.url ? <img src={block.content.url} alt={block.content.alt} style={{ maxWidth: '100%' }} /> : <div className="h-32 bg-slate-100 rounded flex items-center justify-center text-slate-400">Image placeholder</div>;
+        return block.content.url ? <NextImage src={block.content.url} alt={block.content.alt || ''} width={200} height={200} style={{ maxWidth: '100%', height: 'auto' }} unoptimized /> : <div className="h-32 bg-slate-100 rounded flex items-center justify-center text-slate-400">Image placeholder</div>;
       case 'product_grid':
         return <div className="grid grid-cols-4 gap-2 py-4">{Array.from({ length: Number(block.content.count) || 4 }).map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded flex items-center justify-center text-xs text-slate-400">Produit {i + 1}</div>)}</div>;
       case 'cta':

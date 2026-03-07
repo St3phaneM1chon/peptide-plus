@@ -8,10 +8,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { markVoicemailRead, archiveVoicemail } from '@/lib/voip/voicemail-engine';
 import { AuditLogger } from '@/lib/voip/audit-log';
+
+const voicemailUpdateSchema = z.object({
+  isRead: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+});
 
 const auditLogger = new AuditLogger({ flushSize: 10, flushIntervalMs: 60_000 });
 
@@ -78,8 +84,12 @@ export async function PUT(
 
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { isRead, isArchived } = body;
+    const raw = await request.json();
+    const parsed = voicemailUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+    const { isRead, isArchived } = parsed.data;
 
     // Use voicemail-engine functions for state changes (they handle
     // business logic consistently, matching the recording engine pattern)

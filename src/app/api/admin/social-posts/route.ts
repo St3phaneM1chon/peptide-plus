@@ -54,44 +54,49 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 });
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
-  const body = await request.json();
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid data', details: parsed.error.flatten() }, { status: 400 });
-  }
+  try {
+    const body = await request.json();
+    const parsed = createSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const { platform, content, imageUrl, scheduledAt, status } = parsed.data;
+    const { platform, content, imageUrl, scheduledAt, status } = parsed.data;
 
-  // Chantier 1.3: Cross-post — create one post per platform when array is provided
-  const platforms = Array.isArray(platform) ? platform : [platform];
+    // Chantier 1.3: Cross-post — create one post per platform when array is provided
+    const platforms = Array.isArray(platform) ? platform : [platform];
 
-  if (platforms.length === 1) {
-    const post = await prisma.socialPost.create({
-      data: {
-        platform: platforms[0],
-        content,
-        imageUrl: imageUrl ?? null,
-        scheduledAt: new Date(scheduledAt),
-        status,
-      },
-    });
-    return NextResponse.json({ post }, { status: 201 });
-  }
-
-  // Multi-platform: create all posts in a transaction
-  const posts = await prisma.$transaction(
-    platforms.map((p) =>
-      prisma.socialPost.create({
+    if (platforms.length === 1) {
+      const post = await prisma.socialPost.create({
         data: {
-          platform: p,
+          platform: platforms[0],
           content,
           imageUrl: imageUrl ?? null,
           scheduledAt: new Date(scheduledAt),
           status,
         },
-      })
-    )
-  );
+      });
+      return NextResponse.json({ post }, { status: 201 });
+    }
 
-  return NextResponse.json({ posts, count: posts.length }, { status: 201 });
+    // Multi-platform: create all posts in a transaction
+    const posts = await prisma.$transaction(
+      platforms.map((p) =>
+        prisma.socialPost.create({
+          data: {
+            platform: p,
+            content,
+            imageUrl: imageUrl ?? null,
+            scheduledAt: new Date(scheduledAt),
+            status,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json({ posts, count: posts.length }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating social post:', error);
+    return NextResponse.json({ error: 'Failed to create social post' }, { status: 500 });
+  }
 });

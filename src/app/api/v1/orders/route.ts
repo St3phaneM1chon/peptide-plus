@@ -121,6 +121,36 @@ export const POST = withApiAuth(async (request: NextRequest) => {
     return jsonError('Order must contain at least one item', 400);
   }
 
+  // Validate items early
+  for (const item of items) {
+    if (!item.productId || !item.quantity || item.quantity < 1) {
+      return jsonError('Each item must have productId and quantity >= 1', 400);
+    }
+  }
+
+  // Batch fetch all products at once instead of one query per item
+  const productIds = [...new Set(items.map((i) => i.productId))];
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      sku: true,
+      isActive: true,
+      formats: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          sku: true,
+          inStock: true,
+        },
+      },
+    },
+  });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
   // Validate items and calculate totals
   let subtotal = 0;
   const orderItems: Array<{
@@ -136,30 +166,7 @@ export const POST = withApiAuth(async (request: NextRequest) => {
   }> = [];
 
   for (const item of items) {
-    if (!item.productId || !item.quantity || item.quantity < 1) {
-      return jsonError('Each item must have productId and quantity >= 1', 400);
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id: item.productId },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        sku: true,
-        isActive: true,
-        formats: {
-          where: item.formatId ? { id: item.formatId } : undefined,
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            sku: true,
-            inStock: true,
-          },
-        },
-      },
-    });
+    const product = productMap.get(item.productId);
 
     if (!product || !product.isActive) {
       return jsonError(`Product ${item.productId} not found or inactive`, 400);
@@ -220,56 +227,61 @@ export const POST = withApiAuth(async (request: NextRequest) => {
   const tax = typeof body.tax === 'number' ? body.tax : 0;
   const total = subtotal + shippingCost + tax;
 
-  const order = await prisma.order.create({
-    data: {
-      orderNumber,
-      userId: typeof body.userId === 'string' ? body.userId : null,
-      subtotal,
-      shippingCost,
-      discount: 0,
-      tax,
-      taxTps: typeof body.taxTps === 'number' ? body.taxTps : 0,
-      taxTvq: typeof body.taxTvq === 'number' ? body.taxTvq : 0,
-      taxTvh: typeof body.taxTvh === 'number' ? body.taxTvh : 0,
-      taxPst: typeof body.taxPst === 'number' ? body.taxPst : 0,
-      total,
-      currencyId: defaultCurrency.id,
-      status: 'PENDING',
-      paymentStatus: 'PENDING',
-      shippingName: body.shippingName as string,
-      shippingAddress1: body.shippingAddress1 as string,
-      shippingAddress2: (body.shippingAddress2 as string) || null,
-      shippingCity: body.shippingCity as string,
-      shippingState: body.shippingState as string,
-      shippingPostal: body.shippingPostal as string,
-      shippingCountry: (body.shippingCountry as string) || 'CA',
-      shippingPhone: (body.shippingPhone as string) || null,
-      customerNotes: (body.customerNotes as string) || null,
-      items: {
-        create: orderItems,
-      },
-    },
-    select: {
-      id: true,
-      orderNumber: true,
-      subtotal: true,
-      shippingCost: true,
-      tax: true,
-      total: true,
-      status: true,
-      paymentStatus: true,
-      createdAt: true,
-      items: {
-        select: {
-          id: true,
-          productName: true,
-          formatName: true,
-          quantity: true,
-          unitPrice: true,
-          total: true,
+  // Use a transaction to ensure order + items creation is atomic
+  const order = await prisma.$transaction(async (tx) => {
+    const created = await tx.order.create({
+      data: {
+        orderNumber,
+        userId: typeof body.userId === 'string' ? body.userId : null,
+        subtotal,
+        shippingCost,
+        discount: 0,
+        tax,
+        taxTps: typeof body.taxTps === 'number' ? body.taxTps : 0,
+        taxTvq: typeof body.taxTvq === 'number' ? body.taxTvq : 0,
+        taxTvh: typeof body.taxTvh === 'number' ? body.taxTvh : 0,
+        taxPst: typeof body.taxPst === 'number' ? body.taxPst : 0,
+        total,
+        currencyId: defaultCurrency.id,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        shippingName: body.shippingName as string,
+        shippingAddress1: body.shippingAddress1 as string,
+        shippingAddress2: (body.shippingAddress2 as string) || null,
+        shippingCity: body.shippingCity as string,
+        shippingState: body.shippingState as string,
+        shippingPostal: body.shippingPostal as string,
+        shippingCountry: (body.shippingCountry as string) || 'CA',
+        shippingPhone: (body.shippingPhone as string) || null,
+        customerNotes: (body.customerNotes as string) || null,
+        items: {
+          create: orderItems,
         },
       },
-    },
+      select: {
+        id: true,
+        orderNumber: true,
+        subtotal: true,
+        shippingCost: true,
+        tax: true,
+        total: true,
+        status: true,
+        paymentStatus: true,
+        createdAt: true,
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            formatName: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+          },
+        },
+      },
+    });
+
+    return created;
   });
 
   return jsonSuccess(order, undefined, 201);

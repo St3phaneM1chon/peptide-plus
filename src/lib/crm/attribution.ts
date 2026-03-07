@@ -59,6 +59,7 @@ async function getLeadsBySource(dateRange: { start: Date; end: Date }) {
         },
       },
     },
+    take: 1000,
   });
 
   return leads;
@@ -77,6 +78,7 @@ async function getLeadActivities(leadId: string) {
       createdAt: true,
       metadata: true,
     },
+    take: 1000,
   });
 
   return activities;
@@ -193,6 +195,7 @@ export async function calculateLastTouchAttribution(
         },
       },
     },
+    take: 1000,
   });
 
   const sourceMap = new Map<string, { leads: number; deals: number; revenue: number }>();
@@ -267,6 +270,7 @@ export async function calculateMultiTouchAttribution(
         },
       },
     },
+    take: 1000,
   });
 
   const sourceMap = new Map<string, { leads: number; deals: number; revenue: number }>();
@@ -334,6 +338,7 @@ export async function getAttributionByChannel(): Promise<ChannelAttribution[]> {
         },
       },
     },
+    take: 1000,
   });
 
   const channelMap = new Map<string, { leads: number; revenue: number }>();

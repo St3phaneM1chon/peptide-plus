@@ -39,7 +39,14 @@ function timingSafeSecretMatch(provided: string, expected: string): boolean {
 export async function POST(request: NextRequest) {
   // Validate webhook auth using timing-safe comparison (I-SECURITY: prevent timing attacks)
   const secret = process.env.VOIP_CDR_WEBHOOK_SECRET;
-  if (secret) {
+  if (!secret) {
+    // Reject in production if no secret configured — never allow open access
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('[Survey] VOIP_CDR_WEBHOOK_SECRET not set in production — rejecting request');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    logger.warn('[Survey] No VOIP_CDR_WEBHOOK_SECRET configured (dev mode — allowing request)');
+  } else {
     const authHeader = request.headers.get('authorization') || '';
     const customHeader = request.headers.get('x-cdr-secret') || '';
     // Extract Bearer token if present

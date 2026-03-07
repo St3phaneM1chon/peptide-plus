@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import {
   ShieldCheck, Clock, Users, RefreshCw, Calendar, ChevronLeft, ChevronRight,
 } from 'lucide-react';
@@ -297,7 +298,7 @@ export default function AdherencePage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {agent.agentImage ? (
-                            <img src={agent.agentImage} alt="" className="h-7 w-7 rounded-full" />
+                            <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
                           ) : (
                             <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                               {agent.agentName.charAt(0).toUpperCase()}
@@ -428,7 +429,7 @@ export default function AdherencePage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {agent.agentImage ? (
-                              <img src={agent.agentImage} alt="" className="h-7 w-7 rounded-full" />
+                              <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
                             ) : (
                               <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                                 {agent.agentName.charAt(0).toUpperCase()}

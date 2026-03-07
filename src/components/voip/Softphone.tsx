@@ -39,6 +39,8 @@ import {
   Lock,
   Captions,
   CaptionsOff,
+  Video,
+  VideoOff,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useSoftphone } from './SoftphoneProvider';
@@ -177,8 +179,12 @@ export default function Softphone() {
     toggleRecording,
     screenShare: hookScreenShare,
     stopScreenShare: hookStopScreenShare,
+    toggleVideo,
     noiseCancelEnabled,
     isScreenSharing,
+    isVideoEnabled,
+    localVideoStream,
+    remoteVideoStream,
   } = useSoftphone();
 
   // ---- Core UI state ----
@@ -239,9 +245,27 @@ export default function Softphone() {
   const [transcriptLines, setTranscriptLines] = useState<string[]>([]);
   const transcriptContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // ---- Video refs (1:1 video panel) ----
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+
   // =========================================================================
   // EFFECTS
   // =========================================================================
+
+  // Wire local video stream to <video> element
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localVideoStream ?? null;
+    }
+  }, [localVideoStream]);
+
+  // Wire remote video stream to <video> element
+  useEffect(() => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteVideoStream ?? null;
+    }
+  }, [remoteVideoStream]);
 
   // Call timer
   useEffect(() => {
@@ -993,6 +1017,35 @@ export default function Softphone() {
                     </div>
                   )}
 
+                  {/* Video Panel (1:1) - shown when video is enabled */}
+                  {isVideoEnabled && (
+                    <div className="relative w-full rounded-lg overflow-hidden bg-black mb-2" style={{ aspectRatio: '16/9', maxHeight: '240px' }}>
+                      {/* Remote video (full area) */}
+                      <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Local video PiP (small corner overlay) */}
+                      <video
+                        ref={localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="absolute bottom-2 right-2 w-24 h-18 rounded-lg border-2 border-white shadow-lg object-cover"
+                      />
+                      {/* Video off button overlay */}
+                      <button
+                        onClick={toggleVideo}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                        title={t('voip.softphone.video.disable')}
+                      >
+                        <VideoOff className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
                   {/* CallControls */}
                   <CallControls
                     call={currentCall!}
@@ -1012,9 +1065,11 @@ export default function Softphone() {
                     onToggleRecording={toggleRecording}
                     onToggleNoiseCancel={handleToggleNoiseCancellation}
                     onScreenShare={isScreenSharing ? hookStopScreenShare : hookScreenShare}
+                    onToggleVideo={toggleVideo}
                     isRecording={currentCall?.isRecording ?? false}
                     isNoiseCancelActive={noiseCancelEnabled}
                     isScreenSharing={isScreenSharing}
+                    isVideoEnabled={isVideoEnabled}
                   />
 
                   {/* ---- In-call extra controls row ---- */}

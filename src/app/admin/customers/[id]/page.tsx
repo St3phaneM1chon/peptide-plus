@@ -675,6 +675,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setMergeTargetId(e.target.value)}
                   placeholder="e.g. cm123abc..."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label="Secondary Customer ID to merge"
                 />
               </div>
               <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600">
@@ -730,6 +731,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
                 <p className="text-xs text-slate-400 mt-1">
                   {t('admin.customerDetail.pointsModal.amountHint')}
@@ -745,6 +747,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
             </div>
@@ -1258,6 +1261,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
               </div>
               <div className="flex-[2]">
@@ -1270,6 +1274,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
               <Button

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { clientConfig } from './config';
 
 export default function ClientsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const ribbonNewClient = useCallback(() => {
     toast.info(
@@ -89,7 +89,7 @@ export default function ClientsPage() {
       const withReferral = users.filter((u: { referralCode?: string }) => !!u.referralCode).length;
       const totalPoints = users.reduce((sum: number, u: { loyaltyPoints?: number }) => sum + (u.loyaltyPoints || 0), 0);
       toast.success(
-        `${t('admin.clients.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.clients.withReferralCode') || 'avec code parrainage'} | ${totalPoints.toLocaleString()} ${t('admin.clients.totalPoints') || 'points au total'}`
+        `${t('admin.clients.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.clients.withReferralCode') || 'avec code parrainage'} | ${totalPoints.toLocaleString(locale)} ${t('admin.clients.totalPoints') || 'points au total'}`
       );
     } catch {
       toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
@@ -118,7 +118,7 @@ export default function ClientsPage() {
         u.totalSpent || 0,
         u._count?.purchases || 0,
         u.referralCode || '',
-        new Date(u.createdAt).toLocaleDateString('fr-CA'),
+        new Date(u.createdAt).toLocaleDateString(locale),
       ]);
       const csvContent = '\uFEFF' + [headers, ...rows].map(row =>
         row.map((cell: string | number) => `"${String(cell).replace(/"/g, '""')}"`).join(',')

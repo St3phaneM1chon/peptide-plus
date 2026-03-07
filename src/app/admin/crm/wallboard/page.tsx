@@ -27,7 +27,7 @@ interface WallboardData {
 }
 
 export default function WallboardPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<WallboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -81,7 +81,7 @@ export default function WallboardPage() {
         <div>
           <h1 className="text-3xl font-bold">{t('admin.crm.wallboard') || 'Call Center Wallboard'}</h1>
           <p className="text-gray-400 text-sm mt-1">
-            Last updated: {lastRefresh.toLocaleTimeString()}
+            Last updated: {lastRefresh.toLocaleTimeString(locale)}
           </p>
         </div>
         <button onClick={fetchData} className="p-2 rounded-lg hover:bg-gray-800">

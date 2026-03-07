@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { retrieveParkedCall } from '@/lib/voip/call-park';
 
@@ -18,12 +19,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { orbit } = body as { orbit: number };
-
-    if (orbit == null) {
-      return NextResponse.json({ error: 'orbit required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = z.object({
+      orbit: z.number().int(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { orbit } = parsed.data;
 
     // Use the session user's call control ID for retrieval
     const result = await retrieveParkedCall(orbit, session.user.id);

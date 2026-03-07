@@ -48,7 +48,7 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
 };
 
 export default function AdminConsentDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -224,34 +224,34 @@ export default function AdminConsentDetailPage() {
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5 text-gray-400" />
             <span className="text-gray-500">{t('admin.consents.created')}:</span>
-            <span>{new Date(consent.createdAt).toLocaleString()}</span>
+            <span>{new Date(consent.createdAt).toLocaleString(locale)}</span>
           </div>
           {consent.requestedAt && (
             <div className="flex items-center gap-2">
               <RefreshCw className="h-3.5 w-3.5 text-blue-400" />
               <span className="text-gray-500">{t('admin.consents.requested')}:</span>
-              <span>{new Date(consent.requestedAt).toLocaleString()}</span>
+              <span>{new Date(consent.requestedAt).toLocaleString(locale)}</span>
             </div>
           )}
           {consent.grantedAt && (
             <div className="flex items-center gap-2">
               <Shield className="h-3.5 w-3.5 text-green-500" />
               <span className="text-gray-500">{t('admin.consents.granted')}:</span>
-              <span className="text-green-600">{new Date(consent.grantedAt).toLocaleString()}</span>
+              <span className="text-green-600">{new Date(consent.grantedAt).toLocaleString(locale)}</span>
             </div>
           )}
           {consent.revokedAt && (
             <div className="flex items-center gap-2">
               <ShieldOff className="h-3.5 w-3.5 text-red-500" />
               <span className="text-gray-500">{t('admin.consents.revokedLabel')}:</span>
-              <span className="text-red-600">{new Date(consent.revokedAt).toLocaleString()}</span>
+              <span className="text-red-600">{new Date(consent.revokedAt).toLocaleString(locale)}</span>
             </div>
           )}
           {consent.expiresAt && (
             <div className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-orange-400" />
               <span className="text-gray-500">{t('admin.consents.expires')}:</span>
-              <span>{new Date(consent.expiresAt).toLocaleString()}</span>
+              <span>{new Date(consent.expiresAt).toLocaleString(locale)}</span>
             </div>
           )}
           {consent.revocationReason && (

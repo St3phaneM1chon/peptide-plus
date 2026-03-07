@@ -50,6 +50,7 @@ export async function generateRevenueForecast(
       actualCloseDate: true,
     },
     orderBy: { actualCloseDate: 'asc' },
+    take: 1000,
   });
 
   // Also fetch pipeline deals for weighted projection
@@ -64,6 +65,7 @@ export async function generateRevenueForecast(
         select: { probability: true },
       },
     },
+    take: 1000,
   });
 
   // Group historical revenue by month
@@ -164,31 +166,44 @@ export async function getWinProbabilityByStage(): Promise<Record<string, number>
       name: true,
       probability: true,
     },
+    take: 1000,
   });
 
-  // Get historical deal outcomes per stage (from stage history)
+  // Batch fetch deal stage history counts to avoid N+1
+  const stageIds = stages.map(s => s.id);
+
+  const [totalByStage, wonByStage] = await Promise.all([
+    // Count all deals that passed through each stage
+    prisma.crmDealStageHistory.groupBy({
+      by: ['toStageId'],
+      _count: { id: true },
+      where: { toStageId: { in: stageIds } },
+    }),
+    // Count deals that eventually won after each stage
+    prisma.crmDealStageHistory.groupBy({
+      by: ['toStageId'],
+      _count: { id: true },
+      where: {
+        toStageId: { in: stageIds },
+        deal: { stage: { isWon: true } },
+      },
+    }),
+  ]);
+
+  const totalMap = new Map(totalByStage.map(g => [g.toStageId, g._count.id]));
+  const wonMap = new Map(wonByStage.map(g => [g.toStageId, g._count.id]));
+
   const result: Record<string, number> = {};
 
   for (const stage of stages) {
-    // Count deals that passed through this stage
-    const totalDeals = await prisma.crmDealStageHistory.count({
-      where: { toStageId: stage.id },
-    });
+    const totalDeals = totalMap.get(stage.id) ?? 0;
 
     if (totalDeals === 0) {
       result[stage.name] = stage.probability;
       continue;
     }
 
-    // Count deals that eventually won after this stage
-    const wonDeals = await prisma.crmDealStageHistory.count({
-      where: {
-        toStageId: stage.id,
-        deal: {
-          stage: { isWon: true },
-        },
-      },
-    });
+    const wonDeals = wonMap.get(stage.id) ?? 0;
 
     // Blend historical data with configured probability
     const historicalRate = wonDeals / totalDeals;
@@ -259,6 +274,7 @@ export async function getForecastAccuracy(): Promise<{
       value: true,
       actualCloseDate: true,
     },
+    take: 1000,
   });
 
   // Group by month

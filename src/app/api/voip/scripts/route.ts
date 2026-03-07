@@ -7,8 +7,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+
+const scriptCreateSchema = z.object({
+  companyId: z.string().min(1, 'companyId is required'),
+  name: z.string().min(1, 'name is required'),
+  content: z.string().min(1, 'content is required'),
+  category: z.string().optional(),
+});
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -47,15 +55,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { companyId, name, content, category } = body;
-
-    if (!companyId || !name || !content) {
-      return NextResponse.json(
-        { error: 'companyId, name, and content required' },
-        { status: 400 }
-      );
+    const raw = await request.json();
+    const parsed = scriptCreateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
+
+    const { companyId, name, content, category } = parsed.data;
 
     const script = await prisma.dialerScript.create({
       data: {

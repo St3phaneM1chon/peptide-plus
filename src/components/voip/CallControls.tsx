@@ -27,6 +27,8 @@ import {
   Smartphone,
   LaptopMinimal,
   Phone,
+  Video,
+  VideoOff,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import type { VoipCall } from '@/hooks/useVoip';
@@ -49,9 +51,11 @@ interface CallControlsProps {
   onToggleRecording?: () => void;
   onToggleNoiseCancel?: () => void;
   onScreenShare?: () => void;
+  onToggleVideo?: () => void;
   isRecording?: boolean;
   isNoiseCancelActive?: boolean;
   isScreenSharing?: boolean;
+  isVideoEnabled?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,9 +100,11 @@ export default function CallControls({
   onToggleRecording,
   onToggleNoiseCancel,
   onScreenShare,
+  onToggleVideo,
   isRecording = false,
   isNoiseCancelActive = false,
   isScreenSharing = false,
+  isVideoEnabled = false,
 }: CallControlsProps) {
   const { t } = useI18n();
 
@@ -317,6 +323,20 @@ export default function CallControls({
             }
           >
             <Monitor className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Video Toggle */}
+        {onToggleVideo && (
+          <button
+            onClick={onToggleVideo}
+            className={btnClassSm(
+              isVideoEnabled,
+              'bg-blue-100 text-blue-600 hover:bg-blue-200',
+            )}
+            title={isVideoEnabled ? t('voip.softphone.video.disable') : t('voip.softphone.video.enable')}
+          >
+            {isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
           </button>
         )}
 

@@ -190,24 +190,70 @@ export async function getEmailHealthReport(): Promise<EmailHealthReport> {
     }
   }
 
-  const domains: DomainReputation[] = [];
-  for (const domain of domainSet) {
-    const rep = await getDomainReputation(domain);
-    domains.push(rep);
+  // Batch: fetch all outbound messages once, group by domain in memory
+  const allOutboundMessages = await prisma.inboxMessage.findMany({
+    where: {
+      direction: 'OUTBOUND',
+      senderEmail: { not: null },
+    },
+    select: { senderEmail: true },
+  });
+
+  const domainMessageCounts = new Map<string, number>();
+  for (const msg of allOutboundMessages) {
+    if (msg.senderEmail) {
+      const parts = msg.senderEmail.split('@');
+      if (parts.length === 2) {
+        domainMessageCounts.set(parts[1], (domainMessageCounts.get(parts[1]) || 0) + 1);
+      }
+    }
   }
 
-  // Build weekly trends for the last 4 weeks
+  const domains: DomainReputation[] = [];
+  for (const domain of domainSet) {
+    const totalSent = domainMessageCounts.get(domain) || 0;
+    const delivered = Math.round(totalSent * 0.95);
+    const bounced = totalSent - delivered;
+    const complaints = 0;
+    const deliveryRate = totalSent > 0 ? (delivered / totalSent) * 100 : 100;
+    const bounceRate = totalSent > 0 ? (bounced / totalSent) * 100 : 0;
+    const complaintRate = totalSent > 0 ? (complaints / totalSent) * 100 : 0;
+
+    let health: DomainReputation['health'] = 'healthy';
+    if (bounceRate > 10 || complaintRate > 0.5) health = 'critical';
+    else if (bounceRate > 5 || complaintRate > 0.1) health = 'warning';
+
+    domains.push({
+      domain,
+      totalSent,
+      delivered,
+      bounced,
+      complaints,
+      deliveryRate: Math.round(deliveryRate * 100) / 100,
+      bounceRate: Math.round(bounceRate * 100) / 100,
+      complaintRate: Math.round(complaintRate * 100) / 100,
+      health,
+    });
+  }
+
+  // Build weekly trends for the last 4 weeks (batch: single query for the full range)
+  const fourWeeksAgo = new Date(Date.now() - 4 * 7 * 24 * 60 * 60 * 1000);
+  const trendMessages = await prisma.inboxMessage.findMany({
+    where: {
+      direction: 'OUTBOUND',
+      createdAt: { gte: fourWeeksAgo },
+    },
+    select: { createdAt: true },
+  });
+
   const trends = [];
   for (let i = 3; i >= 0; i--) {
     const weekStart = new Date(Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
     const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
 
-    const sent = await prisma.inboxMessage.count({
-      where: {
-        direction: 'OUTBOUND',
-        createdAt: { gte: weekStart, lt: weekEnd },
-      },
-    });
+    const sent = trendMessages.filter(
+      (m) => m.createdAt >= weekStart && m.createdAt < weekEnd,
+    ).length;
 
     trends.push({
       period: `Week -${i}`,

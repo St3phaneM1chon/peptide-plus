@@ -186,8 +186,20 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       return results;
     }
 
-    // Parse models and their fields
-    const modelBlocks = schema.match(/model\s+\w+\s*\{[^}]+\}/g) || [];
+    // Parse models and their fields (brace-matching to handle } in comments/defaults)
+    const modelBlocks: string[] = [];
+    const modelStartRe = /^model\s+\w+\s*\{/gm;
+    let mStart: RegExpExecArray | null;
+    while ((mStart = modelStartRe.exec(schema)) !== null) {
+      let depth = 1;
+      let i = mStart.index + mStart[0].length;
+      while (i < schema.length && depth > 0) {
+        if (schema[i] === '{') depth++;
+        else if (schema[i] === '}') depth--;
+        i++;
+      }
+      modelBlocks.push(schema.substring(mStart.index, i));
+    }
     const missingIndexes: { model: string; field: string; lineNum: number }[] = [];
 
     for (const block of modelBlocks) {

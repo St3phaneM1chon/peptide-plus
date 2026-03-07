@@ -108,7 +108,7 @@ const PROJECT_LABELS: Record<string, { label: string; icon: typeof Database; des
 };
 
 export default function BackupsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<BackupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
@@ -135,7 +135,7 @@ export default function BackupsPage() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto" role="main" aria-label={t('admin.backups.title') || 'Sauvegardes Multi-Projets'}>
       <PageHeader
         title={t('admin.backups.title') || 'Sauvegardes Multi-Projets'}
         subtitle={t('admin.backups.subtitle') || 'Etat des sauvegardes automatiques de tous les projets'}
@@ -199,7 +199,7 @@ export default function BackupsPage() {
               <span className="text-slate-300">|</span>
               <span>Disque libre: <strong>{data.status.storage.disk_free_gb} GB</strong></span>
               <span className="text-slate-300">|</span>
-              <span>Genere: {new Date(data.generatedAt).toLocaleString('fr-FR')}</span>
+              <span>Genere: {new Date(data.generatedAt).toLocaleString(locale)}</span>
             </div>
           )}
 
@@ -293,6 +293,7 @@ export default function BackupsPage() {
                         <div className="text-sm text-slate-400 italic py-2">Aucune sauvegarde disponible</div>
                       ) : (
                         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                          <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="bg-slate-50 text-left text-xs text-slate-500 uppercase tracking-wider">
@@ -331,6 +332,7 @@ export default function BackupsPage() {
                               ))}
                             </tbody>
                           </table>
+                          </div>
                           {versions.length > 20 && (
                             <div className="px-3 py-2 text-xs text-slate-400 bg-slate-50 border-t">
                               ... et {versions.length - 20} autres versions

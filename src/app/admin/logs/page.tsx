@@ -358,7 +358,7 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" role="main" aria-label={t('admin.logs.title')}>
       {/* Stat cards row */}
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">

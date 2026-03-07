@@ -2,6 +2,9 @@
  * Public API v1 - Webhooks
  * GET  /api/v1/webhooks - List registered webhooks for this API key
  * POST /api/v1/webhooks - Register a new webhook endpoint
+ *
+ * AUDIT: This is a webhook REGISTRATION endpoint, NOT a webhook receiver.
+ * Auth: withApiAuth middleware validates API key on every request.
  */
 
 import { NextRequest } from 'next/server';

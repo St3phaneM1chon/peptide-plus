@@ -491,11 +491,11 @@ export default function ApiDocsPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'endpoints' | 'errors' | 'examples'>('overview');
 
   const curlExample = `curl -X GET "${BASE_URL}/api/v1/products?limit=5" \\
-  -H "Authorization: Bearer bp_live_YOUR_API_KEY"`;
+  -H "Authorization: Bearer YOUR_API_KEY_HERE"`;
 
   const jsExample = `const response = await fetch('${BASE_URL}/api/v1/products?limit=5', {
   headers: {
-    'Authorization': 'Bearer bp_live_YOUR_API_KEY',
+    'Authorization': 'Bearer YOUR_API_KEY_HERE',
     'Content-Type': 'application/json',
   },
 });
@@ -508,7 +508,7 @@ data.forEach(product => {
 
   const pythonExample = `import requests
 
-API_KEY = "bp_live_YOUR_API_KEY"
+API_KEY = "YOUR_API_KEY_HERE"
 BASE = "${BASE_URL}/api/v1"
 headers = {"Authorization": f"Bearer {API_KEY}"}
 
@@ -589,9 +589,9 @@ print(order.json())`;
             <p className="text-slate-600 mb-3">{t('apiDocs.authDescription')}</p>
             <div className="relative">
               <pre className="bg-slate-900 text-green-400 rounded-lg p-4 text-sm">
-{`Authorization: Bearer bp_live_YOUR_API_KEY`}
+{`Authorization: Bearer YOUR_API_KEY_HERE`}
               </pre>
-              <CopyButton text="Authorization: Bearer bp_live_YOUR_API_KEY" />
+              <CopyButton text="Authorization: Bearer YOUR_API_KEY_HERE" />
             </div>
             <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
               <strong>{t('apiDocs.authNote')}:</strong> {t('apiDocs.authNoteText')}

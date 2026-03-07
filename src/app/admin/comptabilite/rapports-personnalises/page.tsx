@@ -143,7 +143,7 @@ const theme = sectionThemes.reports;
 // ---------------------------------------------------------------------------
 
 export default function RapportsPersonnalisesPage() {
-  const { t, formatCurrency } = useI18n();
+  const { t, formatCurrency, locale } = useI18n();
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'saved' | 'builder' | 'templates'>('saved');
@@ -642,7 +642,7 @@ export default function RapportsPersonnalisesPage() {
                     )}
                     <p className="text-xs text-gray-400 mt-1">
                       {report.lastRunAt
-                        ? `${t('admin.customReports.lastRun')}: ${new Date(report.lastRunAt).toLocaleString()}`
+                        ? `${t('admin.customReports.lastRun')}: ${new Date(report.lastRunAt).toLocaleString(locale)}`
                         : t('admin.customReports.neverRun')}
                     </p>
                   </div>

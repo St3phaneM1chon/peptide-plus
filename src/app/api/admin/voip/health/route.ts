@@ -6,16 +6,11 @@ export const dynamic = 'force-dynamic';
  * HEAD /api/admin/voip/health — Quick connectivity check
  */
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
     // Check DB connectivity
     const dbOk = await prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false);
@@ -54,12 +49,8 @@ export async function GET() {
       error: error instanceof Error ? error.message : 'Health check failed',
     }, { status: 500 });
   }
-}
+});
 
-export async function HEAD() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return new NextResponse(null, { status: 401 });
-  }
+export const HEAD = withAdminGuard(async () => {
   return new NextResponse(null, { status: 200 });
-}
+});

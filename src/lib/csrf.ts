@@ -4,8 +4,6 @@
  */
 
 import { randomBytes, createHmac } from 'crypto';
-// NOTE: logger is loaded dynamically (not at top-level) to avoid bundling
-// winston/fs/path into client components that import addCSRFHeader/fetchWithCSRF.
 // NOTE: cookies() from 'next/headers' is loaded dynamically inside server-only
 // functions to avoid breaking client component imports of this module.
 // See: verifyCSRFMiddleware() and setCSRFCookie()
@@ -138,23 +136,20 @@ export async function verifyCSRFMiddleware(request: Request): Promise<{
   const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
 
-  // Dynamic import to avoid bundling winston/fs into client code
-  const { logger } = await import('@/lib/logger');
-
   if (!cookieToken) {
     // FAILLE-079 FIX: Log CSRF validation failures for security monitoring
-    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'missing_cookie', method: request.method, url: request.url });
+    console.warn('[CSRF] Validation failed', JSON.stringify({ event: 'csrf_failed', reason: 'missing_cookie', method: request.method, url: request.url }));
     return { valid: false, error: 'Cookie CSRF manquant' };
   }
 
   if (!headerToken) {
-    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'missing_header', method: request.method, url: request.url });
+    console.warn('[CSRF] Validation failed', JSON.stringify({ event: 'csrf_failed', reason: 'missing_header', method: request.method, url: request.url }));
     return { valid: false, error: 'Header CSRF manquant' };
   }
 
   const result = verifyCSRFToken(cookieToken, headerToken);
   if (!result.valid) {
-    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'invalid_token', method: request.method, url: request.url });
+    console.warn('[CSRF] Validation failed', JSON.stringify({ event: 'csrf_failed', reason: 'invalid_token', method: request.method, url: request.url }));
   }
   return result;
 }

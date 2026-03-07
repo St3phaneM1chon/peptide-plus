@@ -158,6 +158,19 @@ async function loadAuditor(code: string): Promise<Auditor> {
     'API-CONTRACTS': () => import('@/lib/auditors/api-contracts'),
     'AZURE-LOCAL-SYNC': () => import('@/lib/auditors/azure-local-sync'),
     'ADMIN-BACKEND-MEGA': () => import('@/lib/auditors/admin-backend-mega'),
+    // Section auditors (12)
+    'SECTION-DASHBOARD': () => import('@/lib/auditors/section/section-dashboard'),
+    'SECTION-COMMERCE': () => import('@/lib/auditors/section/section-commerce'),
+    'SECTION-CATALOG': () => import('@/lib/auditors/section/section-catalog'),
+    'SECTION-MARKETING': () => import('@/lib/auditors/section/section-marketing'),
+    'SECTION-COMMUNITY': () => import('@/lib/auditors/section/section-community'),
+    'SECTION-LOYALTY': () => import('@/lib/auditors/section/section-loyalty'),
+    'SECTION-MEDIA': () => import('@/lib/auditors/section/section-media'),
+    'SECTION-EMAILS': () => import('@/lib/auditors/section/section-emails'),
+    'SECTION-TELEPHONY': () => import('@/lib/auditors/section/section-telephony'),
+    'SECTION-CRM': () => import('@/lib/auditors/section/section-crm'),
+    'SECTION-ACCOUNTING': () => import('@/lib/auditors/section/section-accounting'),
+    'SECTION-SYSTEM': () => import('@/lib/auditors/section/section-system'),
   };
 
   const loader = auditorMap[code];

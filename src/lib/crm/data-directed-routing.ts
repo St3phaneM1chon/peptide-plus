@@ -271,6 +271,30 @@ export async function evaluateRoutingRules(
   callerData: CallerData,
   callContext?: CallContext,
 ): Promise<RoutingDecision> {
+  // Pre-fetch availability for all agent targets + affinity agent to avoid N+1
+  const agentUserIds = new Set<string>();
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    if (rule.target.type === 'agent') agentUserIds.add(rule.target.value);
+    if (rule.type === 'affinity' && callerData.lastAgentId) agentUserIds.add(callerData.lastAgentId);
+  }
+
+  const availableExtensions = agentUserIds.size > 0
+    ? await prisma.sipExtension.findMany({
+        where: {
+          userId: { in: [...agentUserIds] },
+          status: { in: ['ONLINE', 'BUSY'] },
+        },
+        select: { userId: true, status: true },
+      })
+    : [];
+
+  // Maps for quick lookup
+  const agentOnlineOrBusy = new Set(availableExtensions.map(e => e.userId).filter(Boolean));
+  const agentOnlineOnly = new Set(
+    availableExtensions.filter(e => e.status === 'ONLINE').map(e => e.userId).filter(Boolean)
+  );
+
   // Evaluate each rule in priority order
   for (const rule of rules) {
     if (!rule.enabled) continue;
@@ -283,15 +307,8 @@ export async function evaluateRoutingRules(
       let queueName: string | null = null;
 
       if (rule.target.type === 'agent') {
-        // Check if the target agent is available
-        const agentAvailable = await prisma.sipExtension.findFirst({
-          where: {
-            userId: rule.target.value,
-            status: { in: ['ONLINE', 'BUSY'] },
-          },
-          select: { userId: true },
-        });
-        agentId = agentAvailable ? rule.target.value : null;
+        // Check if the target agent is available (using pre-fetched data)
+        agentId = agentOnlineOrBusy.has(rule.target.value) ? rule.target.value : null;
         if (!agentId) {
           // Agent not available, continue to next rule
           continue;
@@ -302,14 +319,7 @@ export async function evaluateRoutingRules(
 
       // Special handling for affinity routing
       if (rule.type === 'affinity' && callerData.lastAgentId) {
-        const affinityAvailable = await prisma.sipExtension.findFirst({
-          where: {
-            userId: callerData.lastAgentId,
-            status: 'ONLINE',
-          },
-          select: { userId: true },
-        });
-        if (affinityAvailable) {
+        if (agentOnlineOnly.has(callerData.lastAgentId)) {
           agentId = callerData.lastAgentId;
         } else {
           // Affinity agent not available, skip this rule
@@ -582,6 +592,7 @@ export async function getDataRoutingMetrics(period: {
     select: {
       metadata: true,
     },
+    take: 1000,
   });
 
   let totalRouted = 0;

@@ -11,8 +11,18 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+
+const chatPostSchema = z.object({
+  action: z.enum(['start', 'message', 'end']),
+  name: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  conversationId: z.string().optional(),
+  message: z.string().max(5000).optional(),
+  senderName: z.string().optional(),
+});
 
 // Simple rate limiter: max 30 requests per minute per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -36,7 +46,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = chatPostSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
     const { action } = body;
 
     switch (action) {
@@ -86,10 +106,6 @@ export async function POST(request: NextRequest) {
 
         if (!conversationId || !message?.trim()) {
           return NextResponse.json({ success: false, error: 'conversationId and message required' }, { status: 400 });
-        }
-
-        if (message.length > 5000) {
-          return NextResponse.json({ success: false, error: 'Message too long' }, { status: 400 });
         }
 
         // Verify conversation exists and is open

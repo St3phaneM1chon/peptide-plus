@@ -8,25 +8,28 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { z } from 'zod';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { flipCall, getUserDevices } from '@/lib/voip/call-flip';
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+const callFlipSchema = z.object({
+  callId: z.string().min(1),
+  target: z.string().optional(),
+});
 
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { callId, target } = body as {
-      callId?: string;
-      target?: string;
-    };
+    const raw = await request.json();
+    const parsed = callFlipSchema.safeParse(raw);
 
-    if (!callId) {
-      return NextResponse.json({ error: 'callId required' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+
+    const { callId, target } = parsed.data;
 
     // Map target name to a device from user's device list
     const devices = await getUserDevices(session.user.id);
@@ -46,4 +49,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Call flip operation failed' }, { status: 500 });
   }
-}
+});

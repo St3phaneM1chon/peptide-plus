@@ -11,10 +11,27 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { timingSafeEqual, createHash } from 'crypto';
 import { prisma } from '@/lib/db';
 import { validateTransition } from '@/lib/order-status-machine';
 import { logger } from '@/lib/logger';
+
+const trackingUpdateSchema = z.object({
+  orderNumber: z.string().optional(),
+  trackingNumber: z.string().optional(),
+  status: z.string().min(1, 'status is required'),
+  carrier: z.string().optional(),
+  trackingUrl: z.string().url().optional(),
+  timestamp: z.string().optional(),
+  location: z.string().optional(),
+  details: z.string().optional(),
+});
+
+const shippingPayloadSchema = z.union([
+  z.array(trackingUpdateSchema),
+  trackingUpdateSchema,
+]);
 
 // ---------------------------------------------------------------------------
 // Rate limiting (in-memory, single-instance safe)
@@ -148,15 +165,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse body
-    let body: unknown;
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
+    const parsed = shippingPayloadSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
     // Support single update or batch of updates
-    const updates: TrackingUpdate[] = Array.isArray(body) ? body : [body as TrackingUpdate];
+    const updates: TrackingUpdate[] = Array.isArray(parsed.data) ? parsed.data : [parsed.data];
 
     if (updates.length === 0) {
       return NextResponse.json({ error: 'Empty payload' }, { status: 400 });

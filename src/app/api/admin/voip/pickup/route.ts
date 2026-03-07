@@ -9,15 +9,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { z } from 'zod';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getVisibleRingingCalls, directedPickup } from '@/lib/voip/call-pickup';
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+const pickupPostSchema = z.object({
+  targetExtension: z.string().min(1),
+  callControlId: z.string().min(1),
+});
 
+export const GET = withAdminGuard(async () => {
   try {
     // Extension and companyId would come from user's SipExtension in production
     const ringingCalls = getVisibleRingingCalls('*', 'default');
@@ -29,27 +30,21 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to list ringing calls' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { targetExtension, callControlId } = body as {
-      targetExtension: string;
-      callControlId: string;
-    };
+    const raw = await request.json();
+    const parsed = pickupPostSchema.safeParse(raw);
 
-    if (!targetExtension || !callControlId) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'targetExtension and callControlId required' },
+        { error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { targetExtension, callControlId } = parsed.data;
 
     const result = await directedPickup(targetExtension, callControlId);
 
@@ -61,4 +56,4 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Pickup operation failed' }, { status: 500 });
   }
-}
+});

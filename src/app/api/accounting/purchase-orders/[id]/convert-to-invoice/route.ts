@@ -29,8 +29,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       if (body.invoiceNumber) invoiceNumber = body.invoiceNumber;
       if (body.invoiceDate) invoiceDate = new Date(body.invoiceDate);
       if (body.dueDate) dueDate = new Date(body.dueDate);
-    } catch {
-      // Body is optional for this route
+    } catch (bodyErr) {
+      // Body is optional for this route — log at debug level
+      logger.debug('[PO Convert] No JSON body provided (optional)', {
+        error: bodyErr instanceof Error ? bodyErr.message : String(bodyErr),
+      });
     }
 
     const po = await prisma.purchaseOrder.findFirst({
@@ -128,7 +131,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         supplierInvoiceId: result.supplierInvoice.id,
         supplierInvoiceNumber: generatedInvoiceNumber,
       },
-    }).catch(() => { /* non-blocking */ });
+    }).catch((auditErr) => {
+      logger.debug('[PO Convert] Non-blocking audit trail error', {
+        error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+      });
+    });
 
     // Audit trail for supplier invoice
     logAuditTrail({
@@ -143,7 +150,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         poNumber: po.poNumber,
         purchaseOrderId: id,
       },
-    }).catch(() => { /* non-blocking */ });
+    }).catch((auditErr) => {
+      logger.debug('[PO Convert] Non-blocking audit trail error', {
+        error: auditErr instanceof Error ? auditErr.message : String(auditErr),
+      });
+    });
 
     logger.info('Purchase order converted to supplier invoice', {
       poNumber: po.poNumber,

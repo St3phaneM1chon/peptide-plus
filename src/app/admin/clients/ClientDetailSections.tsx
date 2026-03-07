@@ -42,6 +42,7 @@ export function RoleManagementSection({ item, updateItem, t }: RoleManagementPro
         disabled={saving}
         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+        aria-label={t('admin.clients.role')}
       >
         <option value="PUBLIC">{t('admin.clients.rolePublic')}</option>
         <option value="CUSTOMER">{t('admin.clients.roleCustomer')}</option>

@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       code = generateCode(user.name);
       const existing = await prisma.user.findFirst({
         where: { referralCode: code },
+        select: { id: true },
       });
       if (!existing) break;
       attempts++;

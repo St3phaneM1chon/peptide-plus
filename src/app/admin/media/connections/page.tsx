@@ -126,7 +126,7 @@ const CONTENT_TYPE_OPTIONS = [
 ] as const;
 
 export default function PlatformConnectionsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const searchParams = useSearchParams();
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -474,7 +474,7 @@ export default function PlatformConnectionsPage() {
                   {p.lastSyncAt && (
                     <span className="inline-flex items-center gap-1">
                       <RefreshCw className="h-3 w-3" />
-                      {new Date(p.lastSyncAt).toLocaleDateString()}
+                      {new Date(p.lastSyncAt).toLocaleDateString(locale)}
                     </span>
                   )}
                   {p.connectedBy && (

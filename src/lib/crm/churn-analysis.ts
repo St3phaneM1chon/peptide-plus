@@ -47,56 +47,64 @@ export interface ChurnPrediction {
  * Churn = customers who had orders before the period but none during.
  */
 export async function calculateChurnRate(months: number = 3): Promise<ChurnRateResult[]> {
-  const results: ChurnRateResult[] = [];
   const now = new Date();
 
+  // Build all period boundaries first, then execute all queries in parallel
+  const periods: Array<{ periodStart: Date; periodEnd: Date; prePeriod: Date }> = [];
   for (let i = 0; i < 6; i++) {
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() - i * months);
     const periodStart = new Date(periodEnd);
     periodStart.setMonth(periodStart.getMonth() - months);
-
     const prePeriod = new Date(periodStart);
     prePeriod.setMonth(prePeriod.getMonth() - months);
+    periods.push({ periodStart, periodEnd, prePeriod });
+  }
 
-    // Customers active before period
-    const activeBefore = await prisma.user.count({
-      where: {
-        orders: { some: { createdAt: { gte: prePeriod, lt: periodStart }, status: { not: 'CANCELLED' } } },
-      },
-    });
-
-    // Of those, who also ordered during the period
-    const stillActive = await prisma.user.count({
-      where: {
-        orders: {
-          some: {
-            createdAt: { gte: prePeriod, lt: periodStart },
-            status: { not: 'CANCELLED' },
+  // Execute all 12 queries (2 per period) in parallel instead of sequentially
+  const queryResults = await Promise.all(
+    periods.map(({ periodStart, periodEnd, prePeriod }) =>
+      Promise.all([
+        prisma.user.count({
+          where: {
+            orders: { some: { createdAt: { gte: prePeriod, lt: periodStart }, status: { not: 'CANCELLED' } } },
           },
-        },
-        AND: {
-          orders: {
-            some: {
-              createdAt: { gte: periodStart, lt: periodEnd },
-              status: { not: 'CANCELLED' },
+        }),
+        prisma.user.count({
+          where: {
+            orders: {
+              some: {
+                createdAt: { gte: prePeriod, lt: periodStart },
+                status: { not: 'CANCELLED' },
+              },
+            },
+            AND: {
+              orders: {
+                some: {
+                  createdAt: { gte: periodStart, lt: periodEnd },
+                  status: { not: 'CANCELLED' },
+                },
+              },
             },
           },
-        },
-      },
-    });
+        }),
+      ])
+    )
+  );
 
+  const results: ChurnRateResult[] = queryResults.map(([activeBefore, stillActive], i) => {
+    const { periodStart, periodEnd } = periods[i];
     const churned = activeBefore - stillActive;
     const churnRate = activeBefore > 0 ? Math.round((churned / activeBefore) * 10000) / 100 : 0;
 
-    results.push({
+    return {
       period: `${periodStart.toISOString().slice(0, 7)} - ${periodEnd.toISOString().slice(0, 7)}`,
       startCustomers: activeBefore,
       endCustomers: stillActive,
       churned,
       churnRate,
-    });
-  }
+    };
+  });
 
   return results.reverse();
 }

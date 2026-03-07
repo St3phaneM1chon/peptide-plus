@@ -17,7 +17,7 @@ import Link from 'next/link';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function VoipDashboardClient({ data }: { data: any }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const directionIcon = (dir: string) => {
     switch (dir) {
@@ -45,7 +45,7 @@ export default function VoipDashboardClient({ data }: { data: any }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="main" aria-label={t('voip.dashboard.title')}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -131,7 +131,7 @@ export default function VoipDashboardClient({ data }: { data: any }) {
                     {call.duration ? formatDuration(call.duration) : '-'}
                   </td>
                   <td className="px-4 py-2.5 text-gray-500 text-xs">
-                    {new Date(call.startedAt).toLocaleString('fr-CA', { dateStyle: 'short', timeStyle: 'short' })}
+                    {new Date(call.startedAt).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' })}
                   </td>
                   <td className="px-4 py-2.5">
                     <SatisfactionBadge score={call.survey?.overallScore || null} />

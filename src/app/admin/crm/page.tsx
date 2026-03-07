@@ -308,6 +308,7 @@ export default function CRMPage() {
           {/* Leads table */}
           {!leadsLoading && leads.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
@@ -330,6 +331,7 @@ export default function CRMPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 
@@ -404,6 +406,7 @@ export default function CRMPage() {
           {/* Deals table */}
           {!dealsLoading && deals.length > 0 && (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
@@ -433,6 +436,7 @@ export default function CRMPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 

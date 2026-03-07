@@ -17,44 +17,46 @@ const extensionSchema = z.object({
   extension: z.string().min(3).max(6),
   sipUsername: z.string().min(1),
   sipPassword: z.string().min(8),
-  sipDomain: z.string().min(1),
-  fusionExtId: z.string().optional(),
-  fusionDomainId: z.string().optional(),
+  sipDomain: z.string().min(1).default('sip.telnyx.com'),
 });
 
 export const GET = withAdminGuard(async (request) => {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
-  const where = userId ? { userId } : {};
+    const where = userId ? { userId } : {};
 
-  const extensions = await prisma.sipExtension.findMany({
-    where,
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-      _count: { select: { callsAsAgent: true, voicemails: true } },
-    },
-    orderBy: { extension: 'asc' },
-    take: 200,
-  });
+    const extensions = await prisma.sipExtension.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        _count: { select: { callsAsAgent: true, voicemails: true } },
+      },
+      orderBy: { extension: 'asc' },
+      take: 200,
+    });
 
-  // Mask credentials in response
-  const masked = extensions.map((ext) => ({
-    id: ext.id,
-    userId: ext.userId,
-    userName: ext.user?.name || ext.user?.email,
-    extension: ext.extension,
-    sipDomain: ext.sipDomain,
-    isRegistered: ext.isRegistered,
-    lastSeenAt: ext.lastSeenAt,
-    status: ext.status,
-    fusionExtId: ext.fusionExtId,
-    callCount: ext._count.callsAsAgent,
-    voicemailCount: ext._count.voicemails,
-    createdAt: ext.createdAt,
-  }));
+    // Mask credentials in response
+    const masked = extensions.map((ext) => ({
+      id: ext.id,
+      userId: ext.userId,
+      userName: ext.user?.name || ext.user?.email,
+      extension: ext.extension,
+      sipDomain: ext.sipDomain,
+      isRegistered: ext.isRegistered,
+      lastSeenAt: ext.lastSeenAt,
+      status: ext.status,
+      callCount: ext._count.callsAsAgent,
+      voicemailCount: ext._count.voicemails,
+      createdAt: ext.createdAt,
+    }));
 
-  return NextResponse.json({ extensions: masked });
+    return NextResponse.json({ extensions: masked });
+  } catch (error) {
+    console.error('Extensions error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }, { skipCsrf: true });
 
 export const POST = withAdminGuard(async (request) => {
@@ -86,8 +88,6 @@ export const POST = withAdminGuard(async (request) => {
       sipUsername: encryptToken(parsed.data.sipUsername) || '',
       sipPassword: encryptToken(parsed.data.sipPassword) || '',
       sipDomain: parsed.data.sipDomain,
-      fusionExtId: parsed.data.fusionExtId || null,
-      fusionDomainId: parsed.data.fusionDomainId || null,
     },
   });
 
@@ -130,13 +130,8 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       return NextResponse.json({ error: 'No extension assigned' }, { status: 404 });
     }
 
-    // Determine WebSocket URL based on SIP domain / provider
-    // Telnyx credential connections use wss://sip.telnyx.com:7443
-    // FusionPBX uses wss://{sipDomain}:7443
-    const isTelnyx = ext.sipDomain.includes('telnyx.com');
-    const wsUrl = isTelnyx
-      ? 'wss://sip.telnyx.com:7443'
-      : `wss://${ext.sipDomain}:7443`;
+    // Telnyx WebRTC endpoint
+    const wsUrl = 'wss://sip.telnyx.com:7443';
 
     return NextResponse.json({
       extension: ext.extension,

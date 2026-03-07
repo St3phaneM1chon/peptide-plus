@@ -455,12 +455,12 @@ export class StorageService {
         select: { id: true, url: true },
       });
 
-      let deletedCount = 0;
+      // Delete storage files first, track successfully deleted IDs
+      const deletedIds: string[] = [];
       for (const orphan of orphans) {
         try {
           await this.delete(orphan.url);
-          await prisma.media.delete({ where: { id: orphan.id } });
-          deletedCount++;
+          deletedIds.push(orphan.id);
         } catch (err) {
           logger.warn(`[Storage] Failed to cleanup orphan media ${orphan.id}`, {
             error: err instanceof Error ? err.message : String(err),
@@ -468,7 +468,12 @@ export class StorageService {
         }
       }
 
-      return deletedCount;
+      // Batch delete DB records for all successfully deleted files
+      if (deletedIds.length > 0) {
+        await prisma.media.deleteMany({ where: { id: { in: deletedIds } } });
+      }
+
+      return deletedIds.length;
     } catch (error) {
       logger.error('[Storage] Failed to cleanup orphan media batch', {
         error: error instanceof Error ? error.message : String(error),
@@ -489,6 +494,7 @@ export class StorageService {
       // HeroSlide background URLs
       const slides = await prisma.heroSlide.findMany({
         select: { backgroundUrl: true, backgroundMobile: true },
+        take: 1000,
       });
       for (const s of slides) {
         if (s.backgroundUrl) urls.push(s.backgroundUrl);
@@ -498,6 +504,7 @@ export class StorageService {
       // Product image URLs (ProductImage model has url field)
       const productImages = await prisma.productImage.findMany({
         select: { url: true },
+        take: 1000,
       });
       for (const pi of productImages) {
         if (pi.url) urls.push(pi.url);
@@ -506,6 +513,7 @@ export class StorageService {
       // Product main imageUrl and videoUrl
       const products = await prisma.product.findMany({
         select: { imageUrl: true, videoUrl: true, certificateUrl: true },
+        take: 1000,
       });
       for (const p of products) {
         if (p.imageUrl) urls.push(p.imageUrl);
@@ -516,6 +524,7 @@ export class StorageService {
       // Review images
       const reviewImages = await prisma.reviewImage.findMany({
         select: { url: true },
+        take: 1000,
       });
       for (const ri of reviewImages) {
         if (ri.url) urls.push(ri.url);

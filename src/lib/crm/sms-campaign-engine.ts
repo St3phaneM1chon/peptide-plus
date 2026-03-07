@@ -51,21 +51,6 @@ function mergeVariables(
 }
 
 // ---------------------------------------------------------------------------
-// Opt-out scrubbing
-// ---------------------------------------------------------------------------
-
-async function isOptedOut(phone: string): Promise<boolean> {
-  const normalised = phone.replace(/\D/g, '');
-  const record = await prisma.smsOptOut.findFirst({
-    where: {
-      phone: { in: [phone, normalised, `+${normalised}`, `+1${normalised}`] },
-    },
-    select: { id: true },
-  });
-  return !!record;
-}
-
-// ---------------------------------------------------------------------------
 // Campaign execution
 // ---------------------------------------------------------------------------
 
@@ -124,9 +109,26 @@ export async function executeCampaign(campaignId: string): Promise<CampaignSendR
       break;
     }
 
+    // Batch opt-out check: collect all phone numbers and check at once
+    const allPhones = pendingMessages.map(m => m.phone);
+    const normalizedPhoneVariants = allPhones.flatMap(phone => {
+      const normalised = phone.replace(/\D/g, '');
+      return [phone, normalised, `+${normalised}`, `+1${normalised}`];
+    });
+    const optedOutRecords = await prisma.smsOptOut.findMany({
+      where: { phone: { in: normalizedPhoneVariants } },
+      select: { phone: true },
+    });
+    const optedOutPhones = new Set(optedOutRecords.map(r => r.phone));
+    const isPhoneOptedOut = (phone: string): boolean => {
+      const normalised = phone.replace(/\D/g, '');
+      return optedOutPhones.has(phone) || optedOutPhones.has(normalised) ||
+             optedOutPhones.has(`+${normalised}`) || optedOutPhones.has(`+1${normalised}`);
+    };
+
     for (const msg of pendingMessages) {
-      // Check opt-out
-      if (await isOptedOut(msg.phone)) {
+      // Check opt-out (using batch-fetched data)
+      if (isPhoneOptedOut(msg.phone)) {
         await prisma.smsCampaignMessage.update({
           where: { id: msg.id },
           data: { status: 'OPTED_OUT' },

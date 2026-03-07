@@ -146,6 +146,7 @@ export async function getEngagementHeatmap(
       createdAt: true,
       metadata: true,
     },
+    take: 1000,
   });
 
   // Initialize 7x24 matrix with zeros

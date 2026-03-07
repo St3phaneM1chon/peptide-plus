@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Globe, Pencil, FileCode, BarChart3, Save, Sparkles, Eye, Code2, ShoppingBag } from 'lucide-react';
 import {
   PageHeader,
@@ -587,6 +588,14 @@ export default function SEOPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
+            {pages.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                  <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">{t('admin.seo.noPages') || 'Aucune page SEO configurée'}</p>
+                </td>
+              </tr>
+            )}
             {pages.map((page) => (
               <React.Fragment key={page.id}>
               <tr className="hover:bg-slate-50/50">
@@ -644,7 +653,7 @@ export default function SEOPage() {
                       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                         <div className="h-32 bg-slate-100 flex items-center justify-center">
                           {page.ogImage ? (
-                            <img src={page.ogImage} alt="OG" className="w-full h-full object-cover" />
+                            <Image src={page.ogImage} alt="OG" width={200} height={200} className="w-full h-full object-cover" unoptimized />
                           ) : (
                             <span className="text-slate-400 text-xs">Image: {globalSettings.defaultOgImage}</span>
                           )}
@@ -749,7 +758,7 @@ export default function SEOPage() {
                             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                               <div className="h-32 bg-slate-100 flex items-center justify-center">
                                 {product.imageUrl ? (
-                                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                  <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full h-full object-cover" unoptimized />
                                 ) : (
                                   <span className="text-slate-400 text-xs">{globalSettings.defaultOgImage}</span>
                                 )}
@@ -957,7 +966,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
               <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm max-w-sm">
                 <div className="h-24 bg-slate-100 flex items-center justify-center">
                   {editingProduct.imageUrl ? (
-                    <img src={editingProduct.imageUrl} alt={editingProduct.name} className="w-full h-full object-cover" />
+                    <Image src={editingProduct.imageUrl} alt={editingProduct.name} width={200} height={200} className="w-full h-full object-cover" unoptimized />
                   ) : (
                     <span className="text-slate-400 text-[10px]">{globalSettings.defaultOgImage}</span>
                   )}

@@ -8,8 +8,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+
+const scriptUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  content: z.string().optional(),
+  category: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
 
 export async function GET(
   _request: NextRequest,
@@ -51,9 +59,13 @@ export async function PUT(
 
   try {
     const { id } = await params;
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = scriptUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
 
-    const { name, content, category, isActive } = body;
+    const { name, content, category, isActive } = parsed.data;
 
     const script = await prisma.dialerScript.update({
       where: { id },

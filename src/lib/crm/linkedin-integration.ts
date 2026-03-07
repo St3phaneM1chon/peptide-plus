@@ -334,6 +334,34 @@ export async function syncLinkedInConnections(
   let skipped = 0;
   let errors = 0;
 
+  // Pre-collect emails and names to batch-check for existing leads
+  const connectionEmails: string[] = [];
+  const connectionNames: string[] = [];
+  for (const connection of result.elements) {
+    const email = connection.emailAddress ? String(connection.emailAddress) : null;
+    const contactName = `${connection.firstName || ''} ${connection.lastName || ''}`.trim();
+    if (email) connectionEmails.push(email);
+    if (contactName) connectionNames.push(contactName);
+  }
+
+  // Batch fetch existing leads by email and name
+  const [existingByEmail, existingByName] = await Promise.all([
+    connectionEmails.length > 0
+      ? prisma.crmLead.findMany({
+          where: { email: { in: connectionEmails } },
+          select: { email: true },
+        })
+      : [],
+    connectionNames.length > 0
+      ? prisma.crmLead.findMany({
+          where: { contactName: { in: connectionNames } },
+          select: { contactName: true },
+        })
+      : [],
+  ]);
+  const existingEmails = new Set(existingByEmail.map(l => l.email).filter(Boolean));
+  const existingNames = new Set(existingByName.map(l => l.contactName));
+
   for (const connection of result.elements) {
     try {
       const email = connection.emailAddress ? String(connection.emailAddress) : null;
@@ -344,12 +372,8 @@ export async function syncLinkedInConnections(
         continue;
       }
 
-      // Check if lead already exists (by email or name)
-      const existing = email
-        ? await prisma.crmLead.findFirst({ where: { email } })
-        : await prisma.crmLead.findFirst({ where: { contactName } });
-
-      if (existing) {
+      // Check if lead already exists (using batch-fetched sets)
+      if ((email && existingEmails.has(email)) || existingNames.has(contactName)) {
         skipped++;
         continue;
       }
@@ -371,6 +395,10 @@ export async function syncLinkedInConnections(
         },
       });
       imported++;
+
+      // Track newly created leads to prevent duplicates within this batch
+      if (email) existingEmails.add(email);
+      existingNames.add(contactName);
     } catch (err) {
       errors++;
       logger.warn('[LinkedIn] Failed to import connection', {

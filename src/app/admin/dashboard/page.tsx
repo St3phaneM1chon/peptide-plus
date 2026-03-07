@@ -5,11 +5,13 @@ export const dynamic = 'force-dynamic';
  * Rendering delegated to DashboardClient for i18n support
  */
 
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import DashboardClient from './DashboardClient';
+import Loading from './loading';
 
 // --------------------------------------------------
 // Data fetching
@@ -139,17 +141,7 @@ async function fetchAdminData() {
 // Page Component
 // --------------------------------------------------
 
-export default async function AdminDashboard() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/auth/signin');
-  }
-
-  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-    redirect('/dashboard');
-  }
-
+async function DashboardContent() {
   let stats: Awaited<ReturnType<typeof fetchAdminData>>['stats'];
   let recentOrders: Awaited<ReturnType<typeof fetchAdminData>>['recentOrders'];
   let recentUsers: Awaited<ReturnType<typeof fetchAdminData>>['recentUsers'];
@@ -168,5 +160,23 @@ export default async function AdminDashboard() {
       recentOrders={JSON.parse(JSON.stringify(recentOrders))}
       recentUsers={JSON.parse(JSON.stringify(recentUsers))}
     />
+  );
+}
+
+export default async function AdminDashboard() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect('/auth/signin');
+  }
+
+  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+    redirect('/dashboard');
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <DashboardContent />
+    </Suspense>
   );
 }

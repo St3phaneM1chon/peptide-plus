@@ -30,7 +30,7 @@ export const GET = withApiAuth(async (_request: NextRequest, { params }) => {
       lifetimePoints: true,
       loyaltyTier: true,
       referralCode: true,
-      stripeCustomerId: true,
+      // stripeCustomerId excluded — sensitive payment data (API-LEAKAGE fix)
       createdAt: true,
       updatedAt: true,
       addresses: {

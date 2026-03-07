@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const categories = await prisma.forumCategory.findMany({
       orderBy: { sortOrder: 'asc' },
+      take: 100,
       include: {
         _count: {
           select: {

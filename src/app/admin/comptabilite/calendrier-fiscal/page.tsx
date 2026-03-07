@@ -666,6 +666,7 @@ export default function CalendrierFiscalPage() {
                 onChange={(e) => setFormCategory(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
+                aria-label={t('admin.accounting.fiscal.category')}
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -678,6 +679,7 @@ export default function CalendrierFiscalPage() {
                 onChange={(e) => setFormAuthority(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
+                aria-label={t('admin.accounting.fiscal.authority')}
               >
                 {authorityOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -694,6 +696,7 @@ export default function CalendrierFiscalPage() {
                 onChange={(e) => setFormFrequency(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
+                aria-label={t('admin.accounting.fiscal.frequency')}
               >
                 {frequencyOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>

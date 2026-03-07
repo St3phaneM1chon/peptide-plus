@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { resolveTenant } from '@/lib/voip/tenant-context';
@@ -97,7 +98,27 @@ export async function PUT(
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      name: z.string().optional(),
+      description: z.string().optional(),
+      status: z.enum(['DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED']).optional(),
+      callerIdNumber: z.string().optional(),
+      maxConcurrent: z.number().int().positive().optional(),
+      useAmd: z.boolean().optional(),
+      scriptTitle: z.string().optional(),
+      scriptBody: z.string().optional(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      timezone: z.string().optional(),
+      activeDays: z.array(z.string()).optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const {
       name,
@@ -112,17 +133,7 @@ export async function PUT(
       endTime,
       timezone,
       activeDays,
-    } = body;
-
-    if (status !== undefined) {
-      const validStatuses = ['DRAFT', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED'];
-      if (!validStatuses.includes(status)) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-          { status: 400 }
-        );
-      }
-    }
+    } = parsed.data;
 
     const campaign = await prisma.dialerCampaign.update({
       where: { id },

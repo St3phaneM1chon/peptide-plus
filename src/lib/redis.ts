@@ -25,6 +25,9 @@ interface MinimalRedisClient {
   hgetall(key: string): Promise<Record<string, string>>;
   hincrby(key: string, field: string, increment: number): Promise<number>;
   setnx(key: string, value: string): Promise<number>;
+  publish(channel: string, message: string): Promise<number>;
+  subscribe(...channels: string[]): Promise<number>;
+  on(event: string, callback: (...args: unknown[]) => void): void;
   status?: string;
   quit(): Promise<string>;
 }
@@ -91,6 +94,31 @@ export function isRedisAvailable(): boolean {
 /** Get the raw client (may be null) */
 export function getRedisClientSync(): MinimalRedisClient | null {
   return _client;
+}
+
+/**
+ * Create a dedicated Redis client for Pub/Sub subscriptions.
+ * ioredis requires a separate connection for subscriptions because
+ * a subscribed client can only receive messages, not issue commands.
+ * Returns null if Redis is unavailable.
+ */
+export async function getRedisPubSubClient(): Promise<MinimalRedisClient | null> {
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) return null;
+
+  try {
+    const Redis = (await import('ioredis')).default;
+    const client = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      lazyConnect: true,
+    });
+    await client.connect();
+    return client as unknown as MinimalRedisClient;
+  } catch (err) {
+    logger.warn(`[redis] PubSub client unavailable: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
 }
 
 // Kick off connection on module load

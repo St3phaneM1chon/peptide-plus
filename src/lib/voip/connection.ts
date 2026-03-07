@@ -1,6 +1,6 @@
 /**
  * VoIP Connection Service
- * CRUD operations for VoIP provider connections (Telnyx, VoIP.ms, FusionPBX)
+ * CRUD operations for VoIP provider connections (Telnyx, VoIP.ms)
  * Credentials encrypted via crypto.ts (AES-256-GCM)
  */
 
@@ -12,16 +12,13 @@ import { logger } from '@/lib/logger';
 // Types
 // ---------------------------------------------------------------------------
 
-export type VoipProvider = 'telnyx' | 'voipms' | 'fusionpbx';
+export type VoipProvider = 'telnyx' | 'voipms';
 
 export interface VoipConnectionInput {
   provider: VoipProvider;
   apiKey?: string;
   apiSecret?: string;
   accountSid?: string;
-  pbxHost?: string;
-  pbxPort?: number;
-  eslPassword?: string;
   isEnabled?: boolean;
 }
 
@@ -29,14 +26,11 @@ export interface VoipConnectionPublic {
   id: string;
   provider: string;
   isEnabled: boolean;
-  pbxHost: string | null;
-  pbxPort: number | null;
   lastSyncAt: Date | null;
   syncStatus: string | null;
   syncError: string | null;
   hasApiKey: boolean;
   hasApiSecret: boolean;
-  hasEslPassword: boolean;
   phoneNumberCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -59,9 +53,6 @@ export async function upsertVoipConnection(
     apiKey: encryptToken(input.apiKey),
     apiSecret: encryptToken(input.apiSecret),
     accountSid: input.accountSid || null,
-    pbxHost: input.pbxHost || null,
-    pbxPort: input.pbxPort || null,
-    eslPassword: encryptToken(input.eslPassword),
     configuredById: userId,
   };
 
@@ -124,9 +115,6 @@ export async function getVoipCredentials(provider: string) {
     apiKey: decryptToken(conn.apiKey),
     apiSecret: decryptToken(conn.apiSecret),
     accountSid: conn.accountSid,
-    pbxHost: conn.pbxHost,
-    pbxPort: conn.pbxPort,
-    eslPassword: decryptToken(conn.eslPassword),
   };
 }
 
@@ -152,13 +140,6 @@ export async function testVoipConnection(
 
   try {
     switch (provider) {
-      case 'fusionpbx': {
-        if (!creds.pbxHost || !creds.eslPassword) {
-          return { ok: false, message: 'PBX host and ESL password required' };
-        }
-        // ESL connection test will be implemented when esl-lite is available
-        return { ok: true, message: 'FusionPBX credentials configured' };
-      }
       case 'telnyx': {
         if (!creds.apiKey) {
           return { ok: false, message: 'Telnyx API key required' };
@@ -223,14 +204,11 @@ function toPublic(conn: any): VoipConnectionPublic {
     id: conn.id,
     provider: conn.provider,
     isEnabled: conn.isEnabled,
-    pbxHost: conn.pbxHost,
-    pbxPort: conn.pbxPort,
     lastSyncAt: conn.lastSyncAt,
     syncStatus: conn.syncStatus,
     syncError: conn.syncError,
     hasApiKey: !!conn.apiKey,
     hasApiSecret: !!conn.apiSecret,
-    hasEslPassword: !!conn.eslPassword,
     phoneNumberCount: conn._count?.phoneNumbers ?? 0,
     createdAt: conn.createdAt,
     updatedAt: conn.updatedAt,

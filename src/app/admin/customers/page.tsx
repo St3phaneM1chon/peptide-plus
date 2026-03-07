@@ -149,7 +149,7 @@ export default function CustomersPage() {
         u.loyaltyTier === 'GOLD' || u.loyaltyTier === 'PLATINUM' || u.loyaltyTier === 'DIAMOND'
       ).length;
       toast.success(
-        `${t('admin.customers.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.customers.withReferralCode') || 'avec code parrainage'} | ${vipCount} VIP (Gold+) | ${totalPoints.toLocaleString()} ${t('admin.customers.totalPoints') || 'points au total'}`
+        `${t('admin.customers.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.customers.withReferralCode') || 'avec code parrainage'} | ${vipCount} VIP (Gold+) | ${totalPoints.toLocaleString(locale)} ${t('admin.customers.totalPoints') || 'points au total'}`
       );
     } catch {
       toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
@@ -177,7 +177,7 @@ export default function CustomersPage() {
         u.totalSpent || 0,
         u._count?.purchases || 0,
         u.referralCode || '',
-        new Date(u.createdAt).toLocaleDateString('fr-CA'),
+        new Date(u.createdAt).toLocaleDateString(locale),
       ]);
       const csvContent = '\uFEFF' + [headers, ...rows].map(row =>
         row.map((cell: string | number) => `"${String(cell).replace(/"/g, '""')}"`).join(',')

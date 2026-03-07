@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import NextImage from 'next/image';
 import {
   MessageCircle,
   Globe,
@@ -20,6 +21,8 @@ import {
   ArrowLeftRight,
   Image as ImageIcon,
   Smile,
+  CheckCheck,
+  Check,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -32,6 +35,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useChatSSE, type ChatEvent } from '@/hooks/useChatSSE';
 
 interface Message {
   id: string;
@@ -84,6 +88,29 @@ export default function AdminChatPage() {
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadConversationsRef = useRef<() => void>(() => {});
+
+  // SSE real-time chat events
+  const handleSSEMessage = useCallback((event: ChatEvent) => {
+    const msgData = event.data.message as Message | undefined;
+    if (!msgData) return;
+
+    // If this message belongs to the currently selected conversation, add it
+    setMessages(prev => {
+      // Avoid duplicates (message may already be in state from optimistic update)
+      if (prev.some(m => m.id === msgData.id)) return prev;
+      return [...prev, msgData];
+    });
+
+    // Also refresh conversation list to update last message preview
+    loadConversationsRef.current();
+  }, []);
+
+  const { typingUsers, sendTyping, markRead } = useChatSSE({
+    conversationId: selectedConversation?.id || null,
+    onMessage: handleSSEMessage,
+  });
 
   // Charger les settings
   useEffect(() => {
@@ -104,6 +131,7 @@ export default function AdminChatPage() {
       toast.error(t('common.errorOccurred'));
     }
   }, []);
+  loadConversationsRef.current = loadConversations;
 
   useEffect(() => {
     loadConversations();
@@ -129,13 +157,14 @@ export default function AdminChatPage() {
     }
   }, [t]);
 
-  // Polling pour les nouveaux messages
+  // Fallback polling for messages (30s) - SSE handles real-time delivery
+  // This catches any events missed during SSE reconnection
   useEffect(() => {
     if (!selectedConversation) return;
 
     const interval = setInterval(() => {
       loadMessages(selectedConversation.id);
-    }, 3000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [selectedConversation, loadMessages]);
@@ -149,6 +178,8 @@ export default function AdminChatPage() {
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     await loadMessages(conversation.id);
+    // Mark messages as read when opening a conversation
+    markRead(conversation.id);
   };
 
   // Envoyer un message
@@ -259,7 +290,29 @@ export default function AdminChatPage() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+      // Stop typing indicator on send
+      if (selectedConversation) {
+        sendTyping(selectedConversation.id, false);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      }
     }
+  };
+
+  // Send typing indicator with debounce
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (!selectedConversation) return;
+
+    // Send typing=true and reset the timeout
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    sendTyping(selectedConversation.id, true);
+
+    // Auto-stop typing after 2s of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      if (selectedConversation) {
+        sendTyping(selectedConversation.id, false);
+      }
+    }, 2000);
   };
 
   const getLanguageName = (code: string): string => {
@@ -408,7 +461,7 @@ export default function AdminChatPage() {
   useRibbonAction('exportHistory', handleRibbonExportHistory);
 
   return (
-    <>
+    <div role="main" aria-label={t('admin.chat.title')}>
       <PageHeader
         title={t('admin.chat.title')}
         subtitle={t('admin.chat.subtitle')}
@@ -587,10 +640,13 @@ export default function AdminChatPage() {
                       {/* Message content: image or text */}
                       {message.type === 'IMAGE' && message.attachmentUrl ? (
                         <a href={message.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                          <img
+                          <NextImage
                             src={message.attachmentUrl}
                             alt={message.attachmentName || 'Image'}
+                            width={240}
+                            height={240}
                             className="max-w-[240px] max-h-[240px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            unoptimized
                           />
                         </a>
                       ) : (
@@ -607,12 +663,38 @@ export default function AdminChatPage() {
                         </details>
                       )}
 
-                      <p className="text-xs mt-2 opacity-50">
-                        {new Date(message.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      <div className="flex items-center gap-1 mt-2">
+                        <p className="text-xs opacity-50">
+                          {new Date(message.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        {message.sender === 'ADMIN' && (
+                          <span className="inline-flex items-center">
+                            {message.isRead ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-sky-200" aria-label={t('admin.chat.read')} />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 opacity-50" aria-label={t('admin.chat.delivered')} />
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
+
+                {/* Typing indicator */}
+                {typingUsers.length > 0 && (
+                  <div className="flex justify-start">
+                    <div className="bg-white text-slate-500 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm text-sm italic">
+                      {t('admin.chat.typing', { name: typingUsers.map(u => u.userName).join(', ') })}
+                      <span className="inline-flex ml-1 gap-0.5">
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -663,7 +745,7 @@ export default function AdminChatPage() {
                   <Input
                     type="text"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     placeholder={t('admin.chat.replyPlaceholder', { language: getLanguageName(selectedConversation.visitorLanguage) })}
                     className="flex-1 !h-11 !rounded-xl"
@@ -690,6 +772,6 @@ export default function AdminChatPage() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

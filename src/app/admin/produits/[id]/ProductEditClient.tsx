@@ -108,7 +108,7 @@ import { addCSRFHeader } from '@/lib/csrf';
 // BUG-080 FIX: Track unsaved changes and warn before navigating away
 export default function ProductEditClient({ product, categories, isOwner }: Props) {
   const router = useRouter();
-  const { t, formatCurrency } = useI18n();
+  const { t, formatCurrency, locale } = useI18n();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1062,7 +1062,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                         >
                           <span className="font-mono text-neutral-700">#{o.orderNumber}</span>
                           <span className="text-neutral-500">{o.quantity} x {formatCurrency(o.price)}</span>
-                          <span className="text-neutral-400 text-xs">{new Date(o.date).toLocaleDateString()}</span>
+                          <span className="text-neutral-400 text-xs">{new Date(o.date).toLocaleDateString(locale)}</span>
                         </Link>
                       ))}
                     </div>
@@ -1094,7 +1094,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       </div>
                       <div className="text-xs text-neutral-400">
                         {p.usageCount}{p.usageLimit ? ` / ${p.usageLimit}` : ''} {t('admin.bridges.usages') || 'uses'}
-                        {p.endsAt && <span className="ms-2">→ {new Date(p.endsAt).toLocaleDateString()}</span>}
+                        {p.endsAt && <span className="ms-2">→ {new Date(p.endsAt).toLocaleDateString(locale)}</span>}
                       </div>
                     </div>
                   ))}
@@ -1117,7 +1117,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <div key={v.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
                     {v.thumbnailUrl && (
                       <div className="relative aspect-video bg-neutral-100">
-                        <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
+                        <Image src={v.thumbnailUrl} alt={v.title} width={200} height={200} className="w-full h-full object-cover" unoptimized />
                       </div>
                     )}
                     <div className="p-3">
@@ -1125,7 +1125,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                         {v.duration && <span>{Math.floor(v.duration / 60)}:{String(v.duration % 60).padStart(2, '0')}</span>}
                         <span>{v.viewCount.toLocaleString()} {t('admin.bridges.views') || 'views'}</span>
-                        {v.publishedAt && <span>{new Date(v.publishedAt).toLocaleDateString()}</span>}
+                        {v.publishedAt && <span>{new Date(v.publishedAt).toLocaleDateString(locale)}</span>}
                       </div>
                     </div>
                   </div>
@@ -1221,7 +1221,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                         </td>
                         <td className="px-3 py-2 text-right">{d.quantity}</td>
                         <td className="px-3 py-2 text-right">{formatCurrency(d.total)}</td>
-                        <td className="px-3 py-2 text-right text-neutral-500">{new Date(d.date).toLocaleDateString()}</td>
+                        <td className="px-3 py-2 text-right text-neutral-500">{new Date(d.date).toLocaleDateString(locale)}</td>
                       </tr>
                     ))}
                   </tbody>

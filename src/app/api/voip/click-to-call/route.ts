@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -27,23 +28,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { to, from, agentId } = body;
-
-    if (!to) {
+    const raw = await request.json();
+    const parsed = z.object({
+      to: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Must be E.164 format (e.g., +15145551234)'),
+      from: z.string().optional(),
+      agentId: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required field: to (E.164 phone number)' },
+        { error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-
-    // Validate E.164 format
-    if (!/^\+[1-9]\d{1,14}$/.test(to)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format. Must be E.164 (e.g., +15145551234)' },
-        { status: 400 }
-      );
-    }
+    const { to, from, agentId } = parsed.data;
 
     // Determine which agent is making the call
     const effectiveAgentId = agentId || session.user.id;

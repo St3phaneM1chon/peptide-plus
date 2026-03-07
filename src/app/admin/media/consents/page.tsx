@@ -45,7 +45,7 @@ const statusColors: Record<string, string> = {
 // Consent type labels resolved via i18n (see consentType.* keys)
 
 export default function AdminConsentsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [consents, setConsents] = useState<ConsentItem[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -273,15 +273,15 @@ export default function AdminConsentsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-600">
-                      {new Date(consent.createdAt).toLocaleDateString()}
+                      {new Date(consent.createdAt).toLocaleDateString(locale)}
                       {consent.grantedAt && (
                         <div className="text-green-600">
-                          {t('admin.consents.labelGranted')} {new Date(consent.grantedAt).toLocaleDateString()}
+                          {t('admin.consents.labelGranted')} {new Date(consent.grantedAt).toLocaleDateString(locale)}
                         </div>
                       )}
                       {consent.revokedAt && (
                         <div className="text-red-600">
-                          {t('admin.consents.labelRevoked')} {new Date(consent.revokedAt).toLocaleDateString()}
+                          {t('admin.consents.labelRevoked')} {new Date(consent.revokedAt).toLocaleDateString(locale)}
                         </div>
                       )}
                     </td>

@@ -32,15 +32,21 @@ export const GET = withAdminGuard(async (_request, { params }) => {
 
     try {
       if (job.resultData) resultData = JSON.parse(job.resultData);
-    } catch { /* ignore parse errors */ }
+    } catch (parseErr) {
+      logger.warn('Failed to parse batch job resultData as JSON', { jobId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+    }
 
     try {
       if (job.errorLog) errorLog = JSON.parse(job.errorLog);
-    } catch { /* ignore parse errors */ }
+    } catch (parseErr) {
+      logger.warn('Failed to parse batch job errorLog as JSON', { jobId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+    }
 
     try {
       if (job.inputData) inputData = JSON.parse(job.inputData);
-    } catch { /* ignore parse errors */ }
+    } catch (parseErr) {
+      logger.warn('Failed to parse batch job inputData as JSON', { jobId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+    }
 
     return apiSuccess({
       id: job.id,

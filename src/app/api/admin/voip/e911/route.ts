@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   validateE911Address,
   registerE911,
@@ -20,15 +21,25 @@ import {
   type E911Address,
 } from '@/lib/voip/e911';
 
+const e911AddressSchema = z.object({
+  street1: z.string().min(1),
+  street2: z.string().optional(),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  zip: z.string().min(1),
+  country: z.string().optional(),
+});
+
+const e911PostSchema = z.object({
+  action: z.enum(['validate', 'register', 'remove']),
+  phoneNumberId: z.string().optional(),
+  address: e911AddressSchema.optional(),
+});
+
 /**
  * GET - Get E911 registration status for a phone number.
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const phoneNumberId = searchParams.get('phoneNumberId');
@@ -49,7 +60,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to get E911 status' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Validate or register an E911 address.
@@ -59,19 +70,20 @@ export async function GET(request: NextRequest) {
  * - phoneNumberId: string (required for register/remove)
  * - address: E911Address (required for validate/register)
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { action, phoneNumberId, address } = body as {
-      action: string;
-      phoneNumberId?: string;
-      address?: E911Address;
-    };
+    const raw = await request.json();
+    const parsed = e911PostSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { action, phoneNumberId, address: rawAddress } = parsed.data;
+    const address = rawAddress as unknown as E911Address | undefined;
 
     if (action === 'validate') {
       if (!address) {
@@ -119,4 +131,4 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'E911 operation failed' }, { status: 500 });
   }
-}
+});

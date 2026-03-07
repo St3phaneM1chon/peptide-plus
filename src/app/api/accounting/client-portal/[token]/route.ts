@@ -64,6 +64,13 @@ export async function GET(
     logger.error('Validate portal access error', {
       error: error instanceof Error ? error.message : String(error),
     });
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('not found') || message.includes('introuvable')) {
+      return NextResponse.json(
+        { error: 'Acces portail non trouve' },
+        { status: 404 }
+      );
+    }
     return NextResponse.json(
       { error: 'Erreur lors de la validation de l\'acces portail' },
       { status: 500 }

@@ -9,11 +9,39 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
+const zapierPostSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('create_lead'),
+    contactName: z.string().min(1, 'contactName is required'),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    companyName: z.string().optional(),
+    source: z.enum(['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER', 'EMAIL', 'SOCIAL', 'CHATBOT']).optional(),
+  }),
+  z.object({
+    action: z.literal('update_deal'),
+    dealId: z.string().min(1, 'dealId is required'),
+    title: z.string().optional(),
+    value: z.number().optional(),
+    stageId: z.string().optional(),
+  }),
+  z.object({
+    action: z.literal('create_deal'),
+    title: z.string().min(1, 'title is required'),
+    value: z.number().optional(),
+    pipelineId: z.string().min(1, 'pipelineId is required'),
+    stageId: z.string().min(1, 'stageId is required'),
+    assignedToId: z.string().min(1, 'assignedToId is required'),
+  }),
+]);
+
 // ---------------------------------------------------------------------------
-// API Key Validation
+// API Key Validation (timing-safe)
 // ---------------------------------------------------------------------------
 
 function validateApiKey(request: NextRequest): boolean {
@@ -25,7 +53,16 @@ function validateApiKey(request: NextRequest): boolean {
     return false;
   }
 
-  return apiKey === expectedKey;
+  if (!apiKey) return false;
+
+  try {
+    const a = Buffer.from(apiKey);
+    const b = Buffer.from(expectedKey);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -111,22 +148,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const action = body.action as string;
-
-    if (!action) {
-      return NextResponse.json({ error: 'action field is required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = zapierPostSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    logger.info('[zapier] Action received', { action, body: JSON.stringify(body).slice(0, 500) });
+    const { action } = parsed.data;
+
+    logger.info('[zapier] Action received', { action, body: JSON.stringify(parsed.data).slice(0, 500) });
 
     switch (action) {
       case 'create_lead': {
-        const { contactName, email, phone, companyName, source } = body;
-
-        if (!contactName) {
-          return NextResponse.json({ error: 'contactName is required' }, { status: 400 });
-        }
+        const { contactName, email, phone, companyName, source } = parsed.data;
 
         const lead = await prisma.crmLead.create({
           data: {
@@ -144,11 +178,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'update_deal': {
-        const { dealId, title, value, stageId } = body;
-
-        if (!dealId) {
-          return NextResponse.json({ error: 'dealId is required' }, { status: 400 });
-        }
+        const { dealId, title, value, stageId } = parsed.data;
 
         const existing = await prisma.crmDeal.findUnique({
           where: { id: dealId },
@@ -176,13 +206,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'create_deal': {
-        const { title: dealTitle, value: dealValue, pipelineId, stageId: dealStageId, assignedToId } = body;
-
-        if (!dealTitle || !pipelineId || !dealStageId || !assignedToId) {
-          return NextResponse.json({
-            error: 'title, pipelineId, stageId, and assignedToId are required',
-          }, { status: 400 });
-        }
+        const { title: dealTitle, value: dealValue, pipelineId, stageId: dealStageId, assignedToId } = parsed.data;
 
         const newDeal = await prisma.crmDeal.create({
           data: {
