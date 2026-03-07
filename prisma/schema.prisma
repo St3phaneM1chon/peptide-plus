@@ -2853,6 +2853,8 @@ model User {
   consentsGiven          SiteConsent[]         @relation("ConsentClient")
   consentsRequested      SiteConsent[]         @relation("ConsentRequester")
   platformConnections    PlatformConnection[]  @relation("PlatformConnections")
+  videoSessionsAsClient  VideoSession[]        @relation("VideoSessionClient")
+  videoSessionsCreated   VideoSession[]        @relation("VideoSessionCreatedBy")
 
   // Social & Ads relations
   socialPosts            SocialPost[]          @relation("SocialPosts")
@@ -3037,6 +3039,7 @@ model Video {
   videoTags        VideoTag[]
   consents         SiteConsent[]
   recordingImport  RecordingImport?
+  videoSession     VideoSession?
 
   @@index([category])
   @@index([isPublished])
@@ -5542,6 +5545,13 @@ enum VideoSource {
   OTHER
 }
 
+enum VideoSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 enum ContentVisibility {
   PUBLIC
   CUSTOMERS_ONLY
@@ -5874,8 +5884,9 @@ model RecordingImport {
   updatedAt DateTime @updatedAt
 
   // Relations
-  connection PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  video      Video?             @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  connection   PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  video        Video?             @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  videoSession VideoSession?
 
   @@unique([connectionId, externalId])
   @@index([status])
@@ -5884,6 +5895,52 @@ model RecordingImport {
   @@index([externalId])
   @@index([meetingId])
   @@index([videoId])
+}
+
+// ---------------------------------------------------------------------------
+// Video Session (admin-initiated video calls with clients)
+// ---------------------------------------------------------------------------
+
+model VideoSession {
+  id          String              @id @default(cuid())
+  platform    String              // zoom, teams, google-meet, webex
+  topic       String
+  contentType VideoContentType    @default(OTHER)
+  status      VideoSessionStatus  @default(SCHEDULED)
+
+  // Scheduling
+  scheduledAt DateTime
+  duration    Int                 @default(30) // minutes
+  startedAt   DateTime?
+  endedAt     DateTime?
+
+  // Platform meeting info
+  meetingId    String?            // External meeting ID on the platform
+  hostJoinUrl  String?
+  clientJoinUrl String?
+  password     String?
+
+  // Relations
+  clientId          String?
+  createdById       String
+  recordingImportId String?       @unique
+  videoId           String?       @unique
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client          User?             @relation("VideoSessionClient", fields: [clientId], references: [id], onDelete: SetNull)
+  createdBy       User              @relation("VideoSessionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  recordingImport RecordingImport?  @relation(fields: [recordingImportId], references: [id], onDelete: SetNull)
+  video           Video?            @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([platform])
+  @@index([status])
+  @@index([clientId])
+  @@index([createdById])
+  @@index([scheduledAt])
+  @@index([meetingId])
 }
 
 // ---------------------------------------------------------------------------

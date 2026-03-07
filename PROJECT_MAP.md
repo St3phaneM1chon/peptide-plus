@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-05 (Cross-Module Bridges Phase 0-5: 43 bridges done, 35 new API routes, bridge infra, 18 i18n keys, 8 frontend integrations)
+# LAST UPDATED: 2026-03-07 (Backups API live + Video Sessions: Prisma model, API CRUD, admin page, nav, auto-link recording→session)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 285 | **API Routes**: 760 | **Prisma Models**: 266 | **Enums**: 60 | **Components**: 141 | **Hooks**: 24 | **Lib files**: 368
+- **Pages**: 286 | **API Routes**: 762 | **Prisma Models**: 267 | **Enums**: 61 | **Components**: 141 | **Hooks**: 24 | **Lib files**: 369
 - **Loading skeletons**: 198 loading.tsx files (coverage expanded beyond admin pages)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -318,7 +318,7 @@ Each domain lists ALL pages, API routes, models, and components involved.
 |-------|----------|
 | **Pages** | `/admin/media/connections` (COMPLETE), `/admin/media/imports` (COMPLETE) |
 | **API Routes** | `/api/admin/platform-connections/*`, `/api/admin/recording-imports/*`, `/api/webhooks/zoom`, `/api/webhooks/teams`, `/api/webhooks/webex`, `/api/admin/videos/[id]/publish-youtube` |
-| **Models** | `PlatformConnection`, `RecordingImport`, `Video` (extended with recordingImport relation, platformMeetingId field) |
+| **Models** | `PlatformConnection`, `RecordingImport`, `VideoSession`, `Video` (extended with recordingImport relation, platformMeetingId field) |
 | **Components** | (inline in pages: PlatformConnectionCard, Toggle, Select, ImportRow, StatusBadge, Pagination) |
 | **Lib** | `platform/crypto.ts`, `platform/oauth.ts`, `platform/recording-import.ts`, `platform/webhook-handlers.ts`, `platform/youtube-publish.ts` |
 | **Affects** | Content Hub (Video), Consents (SiteConsent auto-create), Users (participant matching) |
@@ -553,6 +553,7 @@ User
 | Social Scheduler | `/admin/media/social-scheduler` | COMPLETE | `/api/admin/social-posts/*` |
 | Connections | `/admin/media/connections` | COMPLETE | `/api/admin/platform-connections/*` |
 | Imports | `/admin/media/imports` | COMPLETE | `/api/admin/recording-imports/*` |
+| Video Sessions | `/admin/media/sessions` | COMPLETE | `/api/admin/video-sessions/*` |
 
 ### Content & Reviews
 | Page | Path | Status | Components | API |
@@ -901,6 +902,8 @@ orders, users/[id], users/[id]/points, **users/[id]/email** (POST - admin transa
 | /api/admin/recording-imports/[id] | GET,PATCH | RecordingImport | admin-guard | Detail/retry |
 | /api/admin/recording-imports/[id]/import | POST | RecordingImport,Video | admin-guard | Import recording |
 | /api/admin/recording-imports/bulk-import | POST | RecordingImport,Video | admin-guard | Bulk import |
+| /api/admin/video-sessions | GET,POST | VideoSession,User | admin-guard | List/create sessions |
+| /api/admin/video-sessions/[id] | GET,PUT | VideoSession | admin-guard | Detail/update session |
 | /api/webhooks/zoom | POST | RecordingImport | webhook-secret | Zoom webhook |
 | /api/webhooks/teams | POST | RecordingImport | webhook-secret | Teams webhook |
 | /api/webhooks/webex | POST | RecordingImport | webhook-secret | Webex webhook |
@@ -1423,7 +1426,7 @@ email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, ma
 |------|---------|---------|
 | `crypto.ts` | AES-256-GCM token encryption/decryption | platform-connections API routes |
 | `oauth.ts` | Unified OAuth manager (Zoom, Teams, Meet, Webex, YouTube) | platform-connections OAuth/callback routes |
-| `recording-import.ts` | Recording import service (fetch, download, create Video) | recording-imports API routes |
+| `recording-import.ts` | Recording import service (fetch, download, create Video, auto-link VideoSession) | recording-imports API routes, video-sessions |
 | `webhook-handlers.ts` | Webhook validation & handlers (Zoom, Teams, Webex) | /api/webhooks/zoom, teams, webex |
 | `youtube-publish.ts` | YouTube resumable upload service | /api/admin/videos/[id]/publish-youtube |
 | `meeting-creation.ts` | Unified meeting creation service (Zoom, Teams, Google Meet, Webex) | /api/admin/meetings/create |
@@ -1638,8 +1641,12 @@ DATABASE_URL, NEXTAUTH_*, OAuth (Google/Apple/Azure), STRIPE_*, PAYPAL_*, EMAIL_
 - `src/app/admin/audits/page.tsx` -- Audit dashboard page
 - `src/app/admin/audits/[type]/page.tsx` -- Audit detail by type
 - `src/app/admin/audits/catalog/page.tsx` -- Audit catalog page
-- `src/app/api/admin/backups/route.ts` -- GET multi-project backup status
+- `src/lib/backup-storage.ts` -- Azure Blob + local backup listing, health computation
+- `src/app/api/admin/backups/route.ts` -- GET real backup status from Azure Blob Storage
 - `src/app/admin/backups/page.tsx` -- Multi-project backup dashboard
+- `src/app/api/admin/video-sessions/route.ts` -- POST create + GET list video sessions
+- `src/app/api/admin/video-sessions/[id]/route.ts` -- GET detail + PUT update video session
+- `src/app/admin/media/sessions/page.tsx` -- Video sessions admin page (table, filters, create modal)
 - All admin API routes now call `logAdminAction()` for CREATE/UPDATE/DELETE operations
 
 #### S11: Skeleton Loading (100% coverage)

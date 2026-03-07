@@ -503,6 +503,41 @@ export async function importRecording(importId: string): Promise<ImportResult> {
       },
     });
 
+    // Auto-link to VideoSession if one exists with the same meetingId
+    if (importRecord.meetingId) {
+      try {
+        const matchingSession = await prisma.videoSession.findFirst({
+          where: { meetingId: importRecord.meetingId, recordingImportId: null },
+        });
+        if (matchingSession) {
+          await prisma.videoSession.update({
+            where: { id: matchingSession.id },
+            data: {
+              recordingImportId: importId,
+              videoId: video.id,
+              status: 'COMPLETED',
+              endedAt: matchingSession.endedAt || new Date(),
+            },
+          });
+          // Auto-assign video to session client
+          if (matchingSession.clientId) {
+            await prisma.video.update({
+              where: { id: video.id },
+              data: {
+                featuredClientId: matchingSession.clientId,
+                visibility: 'PRIVATE',
+              },
+            });
+          }
+          logger.info(`[RecordingImport] Auto-linked import ${importId} to session ${matchingSession.id}`);
+        }
+      } catch (linkError) {
+        logger.warn('[RecordingImport] Failed to auto-link session', {
+          error: linkError instanceof Error ? linkError.message : String(linkError),
+        });
+      }
+    }
+
     // Auto-detect clients from participants
     const consentCreated = await detectAndCreateConsent(
       importRecord,
