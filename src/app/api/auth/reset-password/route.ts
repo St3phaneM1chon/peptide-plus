@@ -19,7 +19,13 @@ import { stripHtml, stripControlChars } from '@/lib/sanitize';
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token requis').max(256),
   email: z.string().email('Email invalide').max(255),
-  password: z.string().min(PASSWORD_MIN_LENGTH, `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères`).max(128),
+  password: z.string()
+    .min(PASSWORD_MIN_LENGTH, `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères`)
+    .max(128)
+    .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
+    .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
+    .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Le mot de passe doit contenir au moins un caractère spécial'),
 });
 
 export async function POST(request: NextRequest) {

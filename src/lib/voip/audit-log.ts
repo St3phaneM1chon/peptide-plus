@@ -216,8 +216,8 @@ export class AuditLogger {
           result: string;
         }>>(
           `SELECT * FROM "VoipAuditLog" WHERE ${whereClause}
-           ORDER BY "timestamp" DESC LIMIT ${limit} OFFSET ${offset}`,
-          ...params
+           ORDER BY "timestamp" DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          ...params, Number(limit), Number(offset)
         ),
         prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
           `SELECT COUNT(*) as count FROM "VoipAuditLog" WHERE ${whereClause}`,
