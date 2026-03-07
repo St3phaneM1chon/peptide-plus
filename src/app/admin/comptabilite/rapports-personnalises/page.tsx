@@ -807,7 +807,7 @@ export default function RapportsPersonnalisesPage() {
                 {activeFilters.map((filter, idx) => {
                   const filterDef = availableFilters.find((f) => f.field === filter.field);
                   return (
-                    <div key={idx} className="flex items-center gap-2">
+                    <div key={`filter-${filter.field}-${idx}`} className="flex items-center gap-2">
                       <select
                         value={filter.field}
                         onChange={(e) => updateFilter(idx, { field: e.target.value, value: '' })}
@@ -1139,7 +1139,7 @@ export default function RapportsPersonnalisesPage() {
                 </thead>
                 <tbody>
                   {result.rows.slice(0, 500).map((row, idx) => (
-                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                    <tr key={`row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                       {result.columns.map((col) => (
                         <td
                           key={col.key}
@@ -1200,7 +1200,7 @@ export default function RapportsPersonnalisesPage() {
                     </thead>
                     <tbody>
                       {result.comparison.rows.slice(0, 500).map((row, idx) => (
-                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'}>
+                        <tr key={`cmp-row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'}>
                           {result.columns.map((col) => (
                             <td
                               key={col.key}

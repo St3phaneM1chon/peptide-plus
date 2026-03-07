@@ -874,7 +874,7 @@ export default function BonsCommandePage() {
                         {receipt.items.map((ri, idx) => {
                           const poItem = po.items.find((i) => i.id === ri.purchaseOrderItemId);
                           return (
-                            <li key={idx}>
+                            <li key={ri.purchaseOrderItemId || `receipt-item-${idx}`}>
                               {poItem?.productName || poItem?.description || ri.purchaseOrderItemId}: {ri.quantityReceived} recu(s)
                             </li>
                           );
@@ -993,7 +993,7 @@ export default function BonsCommandePage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {form.items.map((item, idx) => (
-                    <tr key={idx}>
+                    <tr key={item.id || `po-item-${idx}`}>
                       <td className="px-3 py-1.5">
                         <input
                           className="w-full h-8 px-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"

@@ -832,7 +832,7 @@ export default function EcrituresPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {newEntryLines.map((line, idx) => (
-                    <tr key={idx}>
+                    <tr key={`entry-line-${idx}-${line.accountCode}`}>
                       <td className="px-4 py-2">
                         <select
                           className="w-full px-2 py-1 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"

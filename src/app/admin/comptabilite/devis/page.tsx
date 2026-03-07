@@ -781,7 +781,7 @@ export default function DevisPage() {
                     const discMult = 1 - (item.discountPercent / 100);
                     const lineTotal = Math.round(item.quantity * item.unitPrice * discMult * 100) / 100;
                     return (
-                      <tr key={idx} className="border-t">
+                      <tr key={item.id || `quote-line-${idx}`} className="border-t">
                         <td className="px-3 py-1">
                           <input
                             type="text"
@@ -978,7 +978,7 @@ export default function DevisPage() {
                 </thead>
                 <tbody>
                   {selectedEstimate.items.map((item, idx) => (
-                    <tr key={idx} className="border-t">
+                    <tr key={item.id || `est-item-${idx}`} className="border-t">
                       <td className="px-3 py-2 font-medium">{item.productName}</td>
                       <td className="px-3 py-2 text-gray-600">{item.description || '-'}</td>
                       <td className="px-3 py-2 text-right">{item.quantity}</td>

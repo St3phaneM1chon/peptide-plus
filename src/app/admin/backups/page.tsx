@@ -160,6 +160,7 @@ export default function BackupsPage() {
       {data && (
         <>
           {/* ─── Safety Gate Status ─── */}
+          {data.safety && (
           <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {[
               { key: 'ram', icon: HardDrive, label: 'RAM' },
@@ -169,7 +170,7 @@ export default function BackupsPage() {
               { key: 'backup', icon: Clock, label: 'Backup' },
               { key: 'overall', icon: Shield, label: 'Global' },
             ].map(({ key, icon: Icon, label }) => {
-              const val = data.safety[key] || '?';
+              const val = data.safety?.[key] || '?';
               const isOk = val.includes('OK') || val === 'OK';
               const isWarn = val.includes('WARNING') || val.includes('STALE') || val.includes('HIGH');
               return (
@@ -190,6 +191,7 @@ export default function BackupsPage() {
               );
             })}
           </div>
+          )}
 
           {/* ─── Storage Summary ─── */}
           {data.status.storage && (

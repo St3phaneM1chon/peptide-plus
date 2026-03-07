@@ -685,7 +685,7 @@ export default function BatchOperationsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {importPreview.preview.slice(0, 10).map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
+                      <tr key={`preview-row-${idx}`} className="hover:bg-slate-50">
                         <td className="px-3 py-1.5 text-slate-400">{idx + 1}</td>
                         {importPreview.headers.slice(0, 6).map((h) => (
                           <td key={h} className="px-3 py-1.5 truncate max-w-[120px]">
@@ -814,7 +814,7 @@ export default function BatchOperationsPage() {
                 </h4>
                 <div className="max-h-[200px] overflow-auto border border-red-200 rounded-lg divide-y divide-red-100">
                   {selectedJob.errorLog.map((err, idx) => (
-                    <div key={idx} className="px-3 py-2 text-xs">
+                    <div key={`err-${err.index}-${idx}`} className="px-3 py-2 text-xs">
                       <span className="text-red-500 font-mono mr-2">#{err.index + 1}</span>
                       <span className="text-slate-700">{err.error}</span>
                     </div>
@@ -832,7 +832,7 @@ export default function BatchOperationsPage() {
                 <div className="max-h-[200px] overflow-auto border rounded-lg divide-y divide-slate-100">
                   {selectedJob.resultData.map((result, idx) => (
                     <div
-                      key={idx}
+                      key={`result-${result.id || idx}`}
                       className={`px-3 py-2 text-xs flex items-center gap-2 ${
                         result.success ? 'bg-green-50' : 'bg-red-50'
                       }`}

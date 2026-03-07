@@ -965,7 +965,7 @@ export default function FacturesClientsPage() {
                   {form.items.map((item, idx) => {
                     const lineTotal = item.quantity * item.unitPrice;
                     return (
-                      <tr key={idx}>
+                      <tr key={item.id || `line-${idx}`}>
                         <td className="px-2 py-1.5">
                           <input
                             className={`w-full h-8 px-2 rounded border text-sm ${formErrors[`item_${idx}_desc`] ? 'border-red-300' : 'border-slate-200'} focus:outline-none focus:ring-1 focus:ring-indigo-500`}
@@ -1214,7 +1214,7 @@ export default function FacturesClientsPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {inv.items.map((item, index) => (
-                  <tr key={index}>
+                  <tr key={item.id || `inv-item-${index}`}>
                     <td className="px-4 py-3 text-slate-900">{item.description}</td>
                     <td className="px-4 py-3 text-center text-slate-600">{item.quantity}</td>
                     <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(Number(item.unitPrice))}</td>

@@ -1126,7 +1126,7 @@ export default function InventairePage() {
             ) : (
               <div className="space-y-3">
                 {alerts.map((alert, idx) => (
-                  <SectionCard key={idx}>
+                  <SectionCard key={alert.id || `alert-${idx}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-red-50 rounded-lg">
@@ -1245,7 +1245,7 @@ export default function InventairePage() {
                       </thead>
                       <tbody>
                         {valuation.lines.map((line, idx) => (
-                          <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                          <tr key={`val-${line.productId}-${line.warehouseCode}-${idx}`} className="border-b last:border-0 hover:bg-gray-50">
                             <td className="py-2 pr-4 font-mono">{line.productId}</td>
                             <td className="py-2 pr-4">{line.warehouseName} <span className="text-gray-400">({line.warehouseCode})</span></td>
                             <td className="py-2 pr-4 text-right">{line.quantity.toFixed(2)}</td>
@@ -1414,7 +1414,7 @@ export default function InventairePage() {
               </div>
 
               {trfItems.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded">
+                <div key={`trf-${item.productId || idx}`} className="grid grid-cols-12 gap-2 items-end bg-gray-50 p-2 rounded">
                   <div className="col-span-3">
                     <label className="text-xs text-gray-500">{t('admin.inventory.adv.colProductId')}</label>
                     <input
