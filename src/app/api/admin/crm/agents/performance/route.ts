@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Agent Performance API
  * GET: Aggregated performance metrics for all agents

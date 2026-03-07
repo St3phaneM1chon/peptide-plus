@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Products (list)
  * GET /api/v1/products - List products with pagination and filtering

@@ -33,7 +33,7 @@ export type ReconciliationStatus = 'PENDING' | 'MATCHED' | 'UNMATCHED' | 'MANUAL
 
 // F048 FIX: Define valid AccountingPeriod statuses so 'IN_REVIEW' is an explicit, documented value
 // instead of an undocumented string that might conflict with strict validation.
-export type AccountingPeriodStatus = 'OPEN' | 'IN_REVIEW' | 'LOCKED';
+export type AccountingPeriodStatus = 'OPEN' | 'IN_REVIEW' | 'CLOSED' | 'LOCKED';
 
 export type TaxType = 'TPS' | 'TVQ' | 'TVH' | 'PST' | 'GST' | 'SALES_TAX' | 'VAT';
 

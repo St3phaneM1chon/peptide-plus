@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin API - API Key Management
  * GET  /api/admin/api-keys - List all API keys with usage stats

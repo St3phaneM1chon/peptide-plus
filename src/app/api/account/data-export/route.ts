@@ -206,7 +206,8 @@ function jsonToCsv(data: Record<string, unknown>): string {
     }
   }
 
-  return sections.join('\n');
+  // UTF-8 BOM for Excel compatibility with French accents
+  return '\uFEFF' + sections.join('\n');
 }
 
 export const GET = withUserGuard(async (request: NextRequest, { session }) => {

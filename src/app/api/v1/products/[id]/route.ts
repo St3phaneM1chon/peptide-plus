@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Products (single)
  * GET /api/v1/products/:id - Get a single product by ID or slug

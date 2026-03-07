@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * CRM Compliance API
  * GET: Compliance stats + calling rules

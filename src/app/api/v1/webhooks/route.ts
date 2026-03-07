@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Webhooks
  * GET  /api/v1/webhooks - List registered webhooks for this API key

@@ -204,7 +204,8 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       rows.push(row.map(csvEscape).join(','));
     }
 
-    const csv = rows.join('\n');
+    // UTF-8 BOM for Excel compatibility with French accents
+    const csv = '\uFEFF' + rows.join('\n');
 
     // Generate filename with date
     const now = new Date();

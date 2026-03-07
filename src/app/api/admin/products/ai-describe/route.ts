@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';

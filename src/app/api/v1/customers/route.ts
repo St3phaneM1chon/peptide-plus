@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Customers (list)
  * GET /api/v1/customers - List customers (users with role CUSTOMER)

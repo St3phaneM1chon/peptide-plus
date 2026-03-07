@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * CRM Lead Capture Forms API
  * GET: List forms
