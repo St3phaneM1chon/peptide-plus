@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { flipCall, getUserDevices } from '@/lib/voip/call-flip';
 
@@ -34,17 +35,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { callControlId, targetDeviceId, targetNumber, targetType } = body as {
-      callControlId: string;
-      targetDeviceId?: string;
-      targetNumber?: string;
-      targetType?: string;
-    };
-
-    if (!callControlId) {
-      return NextResponse.json({ error: 'callControlId required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = z.object({
+      callControlId: z.string().min(1),
+      targetDeviceId: z.string().optional(),
+      targetNumber: z.string().optional(),
+      targetType: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { callControlId, targetDeviceId, targetNumber, targetType } = parsed.data;
 
     // Build a FlipDevice from the request
     const devices = await getUserDevices(session.user.id);

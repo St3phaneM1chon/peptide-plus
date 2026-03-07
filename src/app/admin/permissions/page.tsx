@@ -383,7 +383,7 @@ export default function PermissionsPage() {
   useRibbonAction('export', handleRibbonExport);
 
   return (
-    <div>
+    <div role="main" aria-label={t('admin.permissions.title')}>
       <PageHeader
         title={t('admin.permissions.title')}
         subtitle={t('admin.permissions.subtitle')}

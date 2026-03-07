@@ -156,7 +156,7 @@ function formatEnum(value: string): string {
 // ---------------------------------------------------------------------------
 
 export default function VideoDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams();
   const id = params.id as string;
 
@@ -802,8 +802,8 @@ export default function VideoDetailPage() {
             <div className="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-500 space-y-1">
               <p>{t('admin.media.videoId') || 'ID'}: <span className="font-mono">{video.id}</span></p>
               <p>{t('admin.media.views') || 'Views'}: <span className="font-semibold text-slate-700">{video.views.toLocaleString()}</span></p>
-              <p>{t('admin.media.createdAt') || 'Created'}: {new Date(video.createdAt).toLocaleString()}</p>
-              <p>{t('admin.media.updatedAt') || 'Updated'}: {new Date(video.updatedAt).toLocaleString()}</p>
+              <p>{t('admin.media.createdAt') || 'Created'}: {new Date(video.createdAt).toLocaleString(locale)}</p>
+              <p>{t('admin.media.updatedAt') || 'Updated'}: {new Date(video.updatedAt).toLocaleString(locale)}</p>
               {video.videoUrl && (
                 <a
                   href={video.videoUrl}
@@ -1054,7 +1054,7 @@ export default function VideoDetailPage() {
                   <span className="text-amber-500">{'★'.repeat(r.rating)}</span>
                 </div>
                 {r.comment && <p className="text-violet-600 line-clamp-2">{r.comment}</p>}
-                <p className="text-violet-400 mt-0.5">{r.author} · {new Date(r.date).toLocaleDateString()}</p>
+                <p className="text-violet-400 mt-0.5">{r.author} · {new Date(r.date).toLocaleDateString(locale)}</p>
               </div>
             ))}
           </div>
@@ -1116,7 +1116,7 @@ export default function VideoDetailPage() {
                         )}
                       </span>
                       <span className="text-xs text-slate-400">
-                        {new Date(consent.createdAt).toLocaleDateString()}
+                        {new Date(consent.createdAt).toLocaleDateString(locale)}
                       </span>
                     </div>
                   ))}
@@ -1189,7 +1189,7 @@ export default function VideoDetailPage() {
             <div>
               <span className="text-slate-500">{t('admin.recordingImports.importAction') || 'Imported'}:</span>{' '}
               <span className="font-medium text-slate-700">
-                {new Date(video.recordingImport.createdAt).toLocaleDateString()}
+                {new Date(video.recordingImport.createdAt).toLocaleDateString(locale)}
               </span>
             </div>
           </div>

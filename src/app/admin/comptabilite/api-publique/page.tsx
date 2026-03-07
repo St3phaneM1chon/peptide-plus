@@ -513,6 +513,7 @@ export default function ApiPubliquePage() {
                   onChange={(e) => setFormName(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder={t('admin.apiPublique.keyNamePlaceholder')}
+                  aria-label={t('admin.apiPublique.keyName')}
                 />
               </div>
 
@@ -571,6 +572,7 @@ export default function ApiPubliquePage() {
                     className="w-32 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
                     min={10}
                     max={100000}
+                    aria-label={t('admin.apiPublique.rateLimit')}
                   />
                   <span className="text-sm text-slate-500">{t('admin.apiPublique.requestsPerHour')}</span>
                 </div>
@@ -585,6 +587,7 @@ export default function ApiPubliquePage() {
                   value={formExpiresInDays ?? ''}
                   onChange={(e) => setFormExpiresInDays(e.target.value ? parseInt(e.target.value, 10) : null)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                  aria-label={t('admin.apiPublique.expiration')}
                 >
                   <option value="">{t('admin.apiPublique.noExpiration')}</option>
                   <option value="30">30 {t('admin.apiPublique.days')}</option>

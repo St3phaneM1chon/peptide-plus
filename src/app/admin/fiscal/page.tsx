@@ -707,7 +707,7 @@ export default function FiscalPage() {
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscal.errorPrefix')} {error}</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="main" aria-label={t('admin.fiscal.title')}>
       <PageHeader
         title={t('admin.fiscal.title')}
         subtitle={t('admin.fiscal.subtitle')}

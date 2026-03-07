@@ -38,14 +38,14 @@ const createPurchaseOrderSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Tax calculation helpers (GST 5%, QST 9.975%)
+// Tax calculation helpers — uses centralized constants
 // ---------------------------------------------------------------------------
+
+import { calculateQuebecTaxes } from '@/lib/tax/tax-constants';
 
 function calculateTotals(items: { quantity: number; unitCost: number }[]) {
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
-  const taxTps = Math.round(subtotal * 0.05 * 100) / 100;       // GST 5%
-  const taxTvq = Math.round(subtotal * 0.09975 * 100) / 100;    // QST 9.975%
-  const total = Math.round((subtotal + taxTps + taxTvq) * 100) / 100;
+  const { taxTps, taxTvq, total } = calculateQuebecTaxes(subtotal);
   return { subtotal, taxTps, taxTvq, total };
 }
 

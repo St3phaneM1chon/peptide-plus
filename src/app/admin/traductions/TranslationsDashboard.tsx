@@ -895,7 +895,7 @@ export default function TranslationsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="main" aria-label={t('admin.translationsDashboard.title')}>
       {/* Wizard Modal */}
       {showWizard && (
         <TranslationWizard

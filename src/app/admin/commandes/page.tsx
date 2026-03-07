@@ -2130,7 +2130,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                               <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-blue-600'}`}>
                                 {call.direction === 'inbound' ? '↓' : '↑'}
                               </span>
-                              <span className="text-indigo-800">{new Date(call.startedAt).toLocaleDateString()}</span>
+                              <span className="text-indigo-800">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
                             </div>
                             <span className="text-indigo-600">{Math.floor(call.duration / 60)}m{call.duration % 60}s</span>
                           </div>

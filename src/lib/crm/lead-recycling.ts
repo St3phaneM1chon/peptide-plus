@@ -121,6 +121,9 @@ export async function recycleLeads(campaignId: string): Promise<RecyclingResult>
     include: { disposition: true },
   });
 
+  // Collect updates, then batch via transaction instead of N individual updates
+  const updateOps: ReturnType<typeof prisma.dialerListEntry.update>[] = [];
+
   for (const entry of entries) {
     const rule = rules.find((r) => r.disposition === entry.disposition?.type);
     if (!rule) { skipped++; continue; }
@@ -128,8 +131,14 @@ export async function recycleLeads(campaignId: string): Promise<RecyclingResult>
     const scheduledAt = rule.useScheduledTime && entry.disposition?.callbackAt
       ? new Date(entry.disposition.callbackAt)
       : new Date(Date.now() + rule.delayMinutes * 60_000);
-    await prisma.dialerListEntry.update({ where: { id: entry.id }, data: { isCalled: false, scheduledAt } });
+    updateOps.push(
+      prisma.dialerListEntry.update({ where: { id: entry.id }, data: { isCalled: false, scheduledAt } })
+    );
     recycled++;
+  }
+
+  if (updateOps.length > 0) {
+    await prisma.$transaction(updateOps);
   }
 
   logger.info('Lead recycling: batch complete', { event: 'leads_recycled', campaignId, recycled, skipped, exhausted });

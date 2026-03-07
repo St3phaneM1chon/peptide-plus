@@ -472,6 +472,7 @@ export async function getAutoQADashboard(
       agent: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: 'desc' },
+    take: 1000,
   });
 
   // Total interactions in period (approximate from call logs + activities)
@@ -621,6 +622,7 @@ export async function identifyCoachingOpportunities(
         feedback: { contains: '[AI_AUTO' },
       },
       orderBy: { createdAt: 'desc' },
+      take: 1000,
     }),
     getDefaultQAForm(),
   ]);
@@ -721,6 +723,7 @@ export async function compareAutoVsHumanQA(
       callLogId: { not: null },
     },
     select: { callLogId: true, percentage: true },
+    take: 1000,
   });
 
   // Get human-scored evaluations for the same calls
@@ -735,6 +738,7 @@ export async function compareAutoVsHumanQA(
       callLogId: { in: callLogIds },
     },
     select: { callLogId: true, percentage: true },
+    take: 1000,
   });
 
   // Build pairs (same callLogId evaluated by both AI and human)

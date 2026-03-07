@@ -10,12 +10,15 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import {
   processWhatsAppWebhook,
   createWhatsAppConversation,
   validateTwilioSignature,
 } from '@/lib/crm/whatsapp';
+
+const whatsappJsonSchema = z.record(z.string(), z.string());
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,29 +35,48 @@ export async function POST(request: NextRequest) {
     } else {
       // JSON fallback
       try {
-        payload = await request.json();
+        const rawJson = await request.json();
+        const parsed = whatsappJsonSchema.safeParse(rawJson);
+        if (!parsed.success) {
+          return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+        }
+        payload = parsed.data;
       } catch {
         return NextResponse.json({ success: true }); // Acknowledge silently
       }
     }
 
-    // Validate Twilio signature if header present
+    // Validate Twilio signature — REQUIRED in production to prevent spoofing
     const twilioSignature = request.headers.get('x-twilio-signature');
-    if (twilioSignature) {
+    const hasTwilioAuth = !!process.env.TWILIO_AUTH_TOKEN;
+
+    if (hasTwilioAuth) {
+      // Auth token configured: signature MUST be present and valid
+      if (!twilioSignature) {
+        logger.warn('[WhatsApp Webhook] Missing x-twilio-signature header');
+        return NextResponse.json(
+          { error: 'Missing signature' },
+          { status: 401 },
+        );
+      }
+
       const requestUrl =
         process.env.WHATSAPP_WEBHOOK_URL ||
         `${request.nextUrl.origin}${request.nextUrl.pathname}`;
 
       const isValid = validateTwilioSignature(requestUrl, payload, twilioSignature);
       if (!isValid) {
-        logger.warn('[WhatsApp Webhook] Invalid Twilio signature', {
-          url: requestUrl,
-        });
+        logger.warn('[WhatsApp Webhook] Invalid Twilio signature');
         return NextResponse.json(
           { error: 'Invalid signature' },
           { status: 401 },
         );
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      logger.error('[WhatsApp Webhook] TWILIO_AUTH_TOKEN not configured in production');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+    } else {
+      logger.warn('[WhatsApp Webhook] TWILIO_AUTH_TOKEN not set — skipping verification (dev mode)');
     }
 
     // Ignore non-message events (e.g., status callbacks)

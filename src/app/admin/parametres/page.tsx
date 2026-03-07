@@ -39,7 +39,7 @@ interface NotificationPreferences {
 }
 
 export default function ParametresPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [settings, setSettings] = useState({
     // General
     siteName: 'BioCycle Peptides',
@@ -337,9 +337,9 @@ export default function ParametresPage() {
     `absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${active ? 'right-1' : 'left-1'}`;
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col md:flex-row gap-6" role="main" aria-label={t('admin.settingsPage.sidebarTitle') || 'Parametres'}>
       {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
+      <div className="w-full md:w-64 flex-shrink-0">
         <div className="bg-white rounded-xl border border-slate-200 p-4 sticky top-4">
           <h2 className="font-semibold text-slate-900 mb-4">{t('admin.settingsPage.sidebarTitle')}</h2>
           <nav className="space-y-1">
@@ -365,11 +365,11 @@ export default function ParametresPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 min-w-0 space-y-6">
         {activeSection === 'general' && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-6">{t('admin.settingsPage.generalTitle')}</h3>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField label={t('admin.settingsPage.siteName')}>
                 <Input
                   type="text"
@@ -425,7 +425,7 @@ export default function ParametresPage() {
         {activeSection === 'store' && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-6">{t('admin.settingsPage.storeTitle')}</h3>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField label={t('admin.settingsPage.defaultCurrency')}>
                 <select
                   value={settings.currency}
@@ -473,7 +473,7 @@ export default function ParametresPage() {
         {activeSection === 'orders' && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-6">{t('admin.settingsPage.ordersTitle')}</h3>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField label={t('admin.settingsPage.orderPrefix')} hint={t('admin.settingsPage.orderPrefixHint')}>
                 <Input
                   type="text"
@@ -573,7 +573,7 @@ export default function ParametresPage() {
                 </button>
               </label>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <FormField label={t('admin.settingsPage.sessionTimeout')}>
                   <Input
                     type="number"
@@ -698,7 +698,7 @@ export default function ParametresPage() {
                         {session.browser} &middot; IP: {session.ip} &middot; {session.location}
                       </p>
                       <p className="text-xs text-slate-400">
-                        Derniere activite: {new Date(session.lastActivity).toLocaleString('fr-CA')}
+                        Derniere activite: {new Date(session.lastActivity).toLocaleString(locale)}
                       </p>
                     </div>
                   </div>

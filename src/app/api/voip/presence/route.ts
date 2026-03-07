@@ -8,10 +8,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import type { CalendarSyncConfig } from '@/lib/voip/calendar-sync';
+
+const presenceUpdateSchema = z.object({
+  status: z.string().min(1, 'Missing status'),
+  statusText: z.string().optional(),
+  deviceType: z.string().optional(),
+});
 
 /**
  * GET - List agents with their current presence status.
@@ -73,27 +80,30 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { status, statusText, deviceType } = body;
+    const raw = await request.json();
+    const parsed = presenceUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const { status: rawStatus, statusText, deviceType } = parsed.data;
     // Force userId from session to prevent privilege escalation
     // (ignore any userId provided in the request body)
     const userId = session.user.id;
 
-    if (!status) {
-      return NextResponse.json(
-        { error: 'Missing status' },
-        { status: 400 }
-      );
-    }
+    const statusUpper = rawStatus.toUpperCase();
 
     // MEETING status is derived from calendar-sync integration (CalendarSync.getCalendarPresence())
     const validStatuses = ['ONLINE', 'BUSY', 'DND', 'AWAY', 'OFFLINE', 'MEETING'];
-    if (!validStatuses.includes(status.toUpperCase())) {
+    if (!validStatuses.includes(statusUpper)) {
       return NextResponse.json(
         { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
         { status: 400 }
       );
     }
+
+    // Cast validated status to Prisma enum type
+    const status = statusUpper as import('@prisma/client').AgentStatus;
 
     const presence = await prisma.presenceStatus.upsert({
       where: {
@@ -104,18 +114,18 @@ export async function PUT(request: NextRequest) {
       },
       create: {
         userId,
-        status: status.toUpperCase(),
+        status,
         statusText,
         deviceType: deviceType || 'unknown',
-        onlineSince: status.toUpperCase() === 'ONLINE' ? new Date() : null,
+        onlineSince: statusUpper === 'ONLINE' ? new Date() : null,
         lastActivity: new Date(),
       },
       update: {
-        status: status.toUpperCase(),
+        status,
         statusText,
         lastActivity: new Date(),
-        ...(status.toUpperCase() === 'ONLINE' ? { onlineSince: new Date() } : {}),
-        ...(status.toUpperCase() === 'OFFLINE' ? { onlineSince: null } : {}),
+        ...(statusUpper === 'ONLINE' ? { onlineSince: new Date() } : {}),
+        ...(statusUpper === 'OFFLINE' ? { onlineSince: null } : {}),
       },
     });
 

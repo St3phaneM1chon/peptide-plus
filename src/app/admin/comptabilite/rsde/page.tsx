@@ -187,6 +187,7 @@ export default function RSDeAdminPage() {
           {!selectedProject ? <p className="py-8 text-center text-gray-400">Sélectionnez un projet dans l&apos;onglet Projets</p> : (
             <>
               <h3 className="text-lg font-semibold mb-4">Dépenses — {selectedProject.name}</h3>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b text-left text-gray-500"><th className="pb-2">Date</th><th className="pb-2">Description</th><th className="pb-2">Catégorie</th><th className="pb-2 text-right">Montant</th><th className="pb-2">Éligible</th></tr></thead>
                 <tbody>
@@ -201,6 +202,7 @@ export default function RSDeAdminPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
               {expenses.length === 0 && <p className="py-6 text-center text-gray-400">Aucune dépense pour ce projet</p>}
             </>
           )}
@@ -265,12 +267,12 @@ export default function RSDeAdminPage() {
       {/* Create Project Modal */}
       <Modal isOpen={showModal} title="Nouveau Projet RS&DE" onClose={() => setShowModal(false)}>
           <div className="space-y-3">
-            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nom du projet *" className="w-full border rounded-lg px-3 py-2 text-sm" />
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nom du projet *" className="w-full border rounded-lg px-3 py-2 text-sm" aria-label="Nom du projet" />
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description" className="w-full border rounded-lg px-3 py-2 text-sm" rows={3} />
             <div className="grid grid-cols-3 gap-3">
-              <input type="number" value={form.fiscalYear} onChange={e => setForm({ ...form, fiscalYear: parseInt(e.target.value) })} className="border rounded-lg px-3 py-2 text-sm" />
-              <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" />
-              <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" />
+              <input type="number" value={form.fiscalYear} onChange={e => setForm({ ...form, fiscalYear: parseInt(e.target.value) })} className="border rounded-lg px-3 py-2 text-sm" aria-label="Annee fiscale" />
+              <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" aria-label="Date de debut" />
+              <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" aria-label="Date de fin" />
             </div>
             <textarea value={form.technologicalUncertainty} onChange={e => setForm({ ...form, technologicalUncertainty: e.target.value })} placeholder="Incertitudes technologiques" className="w-full border rounded-lg px-3 py-2 text-sm" rows={2} />
             <textarea value={form.technologicalAdvancement} onChange={e => setForm({ ...form, technologicalAdvancement: e.target.value })} placeholder="Avancements technologiques visés" className="w-full border rounded-lg px-3 py-2 text-sm" rows={2} />

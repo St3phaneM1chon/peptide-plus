@@ -9,15 +9,53 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
 import {
   processFacebookMessage,
   processInstagramMessage,
 } from '@/lib/crm/social-inbox';
 
+const metaWebhookSchema = z.object({
+  object: z.string(),
+  entry: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
+/**
+ * Verify Meta/Facebook webhook signature (HMAC-SHA256).
+ * Meta sends x-hub-signature-256 header as "sha256=<hex>".
+ */
+function verifyMetaSignature(body: string, signature: string | null, secret: string): boolean {
+  if (!signature) return false;
+  try {
+    const expected = createHmac('sha256', secret).update(body).digest('hex');
+    const sigHex = signature.replace('sha256=', '');
+    if (sigHex.length !== expected.length) return false;
+    return timingSafeEqual(Buffer.from(sigHex, 'hex'), Buffer.from(expected, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // GET: Webhook verification
 // ---------------------------------------------------------------------------
+
+/**
+ * Timing-safe comparison of verify token to prevent timing attacks.
+ */
+function verifyTokenSafe(provided: string | null, expected: string): boolean {
+  if (!provided) return false;
+  try {
+    const a = Buffer.from(provided);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('hub.mode');
@@ -27,7 +65,7 @@ export async function GET(request: NextRequest) {
   const verifyToken =
     process.env.META_WEBHOOK_VERIFY_TOKEN || 'biocycle_meta_verify';
 
-  if (mode === 'subscribe' && token === verifyToken) {
+  if (mode === 'subscribe' && verifyTokenSafe(token, verifyToken)) {
     logger.info('[Meta Webhook] Verification successful');
     // Meta expects the challenge value as plain text response
     return new NextResponse(challenge || '', {
@@ -38,7 +76,7 @@ export async function GET(request: NextRequest) {
 
   logger.warn('[Meta Webhook] Verification failed', {
     mode,
-    tokenMatch: token === verifyToken,
+    tokenMatch: false,
   });
   return NextResponse.json(
     { error: 'Verification failed' },
@@ -52,7 +90,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json();
+    const rawBody = await request.text();
+
+    // Verify Meta webhook signature (HMAC-SHA256)
+    const appSecret = process.env.META_APP_SECRET;
+    if (!appSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        logger.error('[Meta Webhook] META_APP_SECRET not configured in production');
+        return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+      }
+      logger.warn('[Meta Webhook] META_APP_SECRET not set — skipping signature verification (dev mode)');
+    } else {
+      const signature = request.headers.get('x-hub-signature-256');
+      if (!verifyMetaSignature(rawBody, signature, appSecret)) {
+        logger.warn('[Meta Webhook] Invalid or missing x-hub-signature-256');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    }
+
+    const rawParsed = JSON.parse(rawBody);
+    const parsed = metaWebhookSchema.safeParse(rawParsed);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const payload = parsed.data;
 
     // Determine the source: Facebook Messenger or Instagram
     const objectType = payload.object;

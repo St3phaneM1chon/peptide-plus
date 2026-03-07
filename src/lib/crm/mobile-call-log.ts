@@ -264,21 +264,30 @@ export async function syncMobileCallLog(
   let skipped = 0;
   const errors: string[] = [];
 
+  // Batch-fetch existing activities for this user to check duplicates (avoid N+1)
+  const existingActivities = await prisma.crmActivity.findMany({
+    where: {
+      performedById: userId,
+      type: 'CALL',
+      metadata: {
+        path: ['source'],
+        equals: 'MOBILE',
+      },
+    },
+    select: { metadata: true },
+    take: 1000,
+  });
+  const existingPhones = new Set(
+    existingActivities.map((a) => {
+      const meta = (a.metadata || {}) as Record<string, unknown>;
+      return meta.phone as string;
+    }).filter(Boolean)
+  );
+
   for (const call of calls) {
     try {
-      // Check for duplicate based on phone + startedAt
-      const existing = await prisma.crmActivity.findFirst({
-        where: {
-          performedById: userId,
-          type: 'CALL',
-          metadata: {
-            path: ['phone'],
-            equals: call.phone,
-          },
-        },
-      });
-
-      if (existing) {
+      // Check for duplicate using pre-fetched set
+      if (existingPhones.has(call.phone)) {
         skipped++;
         continue;
       }
@@ -294,6 +303,7 @@ export async function syncMobileCallLog(
         leadId: call.leadId,
       });
       synced++;
+      existingPhones.add(call.phone); // Track newly added to avoid re-logging within same batch
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       errors.push(`Failed to sync call ${call.phone} at ${call.startedAt}: ${msg}`);

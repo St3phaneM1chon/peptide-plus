@@ -540,7 +540,7 @@ export default function CategoriesPage() {
   ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild, fixOrphan, reorderMode, reordering, handleMoveCategory]);
 
   return (
-    <>
+    <div role="main" aria-label={t('admin.categories.title')}>
       <PageHeader
         title={t('admin.categories.title')}
         subtitle={t('admin.categories.subtitle')}
@@ -736,6 +736,6 @@ export default function CategoriesPage() {
           </Button>
         }
       />
-    </>
+    </div>
   );
 }

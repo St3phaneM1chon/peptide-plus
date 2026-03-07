@@ -381,6 +381,13 @@ export async function getHighIntentLeads(
 
   const uniqueLeadIds = [...new Set(leadIds.map((l) => l.leadId).filter(Boolean))] as string[];
 
+  // Batch fetch all lead details at once instead of one query per lead
+  const allLeads = await prisma.crmLead.findMany({
+    where: { id: { in: uniqueLeadIds } },
+    select: { id: true, contactName: true, companyName: true, email: true },
+  });
+  const leadMap = new Map(allLeads.map((l) => [l.id, l]));
+
   // Calculate scores for all leads with intent data
   const results: HighIntentLead[] = [];
 
@@ -389,10 +396,7 @@ export async function getHighIntentLeads(
       const intentScore = await calculateIntentScore(leadId);
 
       if (intentScore.score >= threshold) {
-        const lead = await prisma.crmLead.findUnique({
-          where: { id: leadId },
-          select: { contactName: true, companyName: true, email: true },
-        });
+        const lead = leadMap.get(leadId);
 
         if (lead) {
           results.push({

@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { getSessionScores } from '@/lib/voip/scoring-engine';
@@ -95,7 +96,21 @@ export async function PUT(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      scheduledAt: z.string().optional(),
+      topic: z.string().optional(),
+      objectives: z.string().optional(),
+      feedback: z.string().optional(),
+      status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
+      supervisorId: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const {
       scheduledAt,
@@ -104,17 +119,7 @@ export async function PUT(
       feedback,
       status,
       supervisorId,
-    } = body;
-
-    if (status !== undefined) {
-      const validStatuses = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
-      if (!validStatuses.includes(status)) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-          { status: 400 }
-        );
-      }
-    }
+    } = parsed.data;
 
     const updated = await prisma.coachingSession.update({
       where: { id },

@@ -97,7 +97,12 @@ export function validateCode(code: string): CodeValidationResult {
     }
   }
 
-  // Basic syntax check via Function constructor (does not execute)
+  // SECURITY NOTE: new Function(code) is used here ONLY for syntax validation.
+  // It parses the code into a function but does NOT execute it. The actual
+  // execution happens in a sandboxed vm.Context (see executeCodeStep below)
+  // with strict timeout, frozen context, and blocked API access.
+  // User-submitted code is additionally blocked from using Function() via
+  // BLOCKED_PATTERNS above, preventing sandbox escapes.
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     new Function(code);

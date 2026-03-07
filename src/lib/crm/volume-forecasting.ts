@@ -151,20 +151,25 @@ export async function forecastCallVolume(
   // Aggregate calls per interval across historical same-day data
   const intervalCounts: number[][] = Array.from({ length: intervalsPerDay }, () => []);
 
-  for (const histDay of historicalDays) {
-    const dayStart = new Date(histDay.getFullYear(), histDay.getMonth(), histDay.getDate());
-    const dayEnd = new Date(dayStart.getTime() + 86400000);
+  // Batch-fetch all historical calls in a single query instead of N+1 per day
+  if (historicalDays.length > 0) {
+    const orConditions = historicalDays.map((histDay) => {
+      const dayStart = new Date(histDay.getFullYear(), histDay.getMonth(), histDay.getDate());
+      const dayEnd = new Date(dayStart.getTime() + 86400000);
+      return { startedAt: { gte: dayStart, lt: dayEnd } };
+    });
 
-    const calls = await prisma.callLog.findMany({
+    const allCalls = await prisma.callLog.findMany({
       where: {
-        startedAt: { gte: dayStart, lt: dayEnd },
+        OR: orConditions,
         direction: 'INBOUND',
       },
       select: { startedAt: true },
     });
 
-    for (const call of calls) {
-      const slotIdx = Math.floor((call.startedAt.getTime() - dayStart.getTime()) / intervalMs);
+    for (const call of allCalls) {
+      const callDate = new Date(call.startedAt.getFullYear(), call.startedAt.getMonth(), call.startedAt.getDate());
+      const slotIdx = Math.floor((call.startedAt.getTime() - callDate.getTime()) / intervalMs);
       if (slotIdx >= 0 && slotIdx < intervalsPerDay) {
         intervalCounts[slotIdx].push(1);
       }

@@ -3,7 +3,7 @@
  * Validates incoming webhook payloads and triggers recording imports.
  */
 
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { syncRecordings } from './recording-import';
 import { logger } from '@/lib/logger';
@@ -23,10 +23,15 @@ export function validateZoomSignature(
   signature: string,
   secret: string
 ): boolean {
-  const message = `v0:${timestamp}:${body}`;
-  const hash = createHmac('sha256', secret).update(message).digest('hex');
-  const expected = `v0=${hash}`;
-  return expected === signature;
+  try {
+    const message = `v0:${timestamp}:${body}`;
+    const hash = createHmac('sha256', secret).update(message).digest('hex');
+    const expected = `v0=${hash}`;
+    if (expected.length !== signature.length) return false;
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -135,8 +140,13 @@ export function validateWebexSignature(
   signature: string,
   secret: string
 ): boolean {
-  const hash = createHmac('sha1', secret).update(body).digest('hex');
-  return hash === signature;
+  try {
+    const hash = createHmac('sha1', secret).update(body).digest('hex');
+    if (hash.length !== signature.length) return false;
+    return timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+  } catch {
+    return false;
+  }
 }
 
 /**

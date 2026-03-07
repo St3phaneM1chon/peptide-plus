@@ -26,7 +26,7 @@ const SAMPLE_DATA: Record<string, string> = {
   dealTitle: 'Enterprise License',
   dealValue: '$15,000',
   agentName: 'Sarah',
-  date: new Date().toLocaleDateString(),
+  date: new Date().toLocaleDateString('en-US'),
   time: '2:00 PM',
   productName: 'BPC-157',
   orderNumber: 'ORD-12345',

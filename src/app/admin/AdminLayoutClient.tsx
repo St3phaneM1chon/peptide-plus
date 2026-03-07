@@ -96,7 +96,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
     <div className="admin-outlook min-h-screen bg-slate-50">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-sky-700 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-sky-500"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-sky-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-sky-400"
       >
         {t('admin.skipToContent')}
       </a>

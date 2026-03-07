@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import {
   ClipboardCheck, Star, BarChart, Plus, Filter, X, ChevronDown,
   Scale, Play,
@@ -800,7 +801,7 @@ export default function QaPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {score.agent.image ? (
-                        <img src={score.agent.image} alt="" className="h-9 w-9 rounded-full" />
+                        <Image src={score.agent.image} alt="" width={40} height={40} className="h-9 w-9 rounded-full" unoptimized />
                       ) : (
                         <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
                           {(score.agent.name || score.agent.email || '?').charAt(0).toUpperCase()}

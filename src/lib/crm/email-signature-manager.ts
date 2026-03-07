@@ -158,9 +158,24 @@ export async function assignSignature(templateId: string, agentIds: string[]): P
  * List all signature templates with their assigned agents.
  */
 export async function getTeamSignatures(): Promise<SignatureTemplate[]> {
-  const settings = await prisma.siteSetting.findMany({
-    where: { key: { startsWith: SIGNATURE_PREFIX } },
-  });
+  // Batch: fetch both signature templates and all assignments in parallel
+  const [settings, allAssignments] = await Promise.all([
+    prisma.siteSetting.findMany({
+      where: { key: { startsWith: SIGNATURE_PREFIX } },
+    }),
+    prisma.siteSetting.findMany({
+      where: { key: { startsWith: ASSIGNMENT_PREFIX } },
+    }),
+  ]);
+
+  // Group assignments by template ID (the value field)
+  const assignmentsByTemplateId = new Map<string, string[]>();
+  for (const a of allAssignments) {
+    const agentId = a.key.split(ASSIGNMENT_PREFIX)[1] || '';
+    if (!agentId || !a.value) continue;
+    if (!assignmentsByTemplateId.has(a.value)) assignmentsByTemplateId.set(a.value, []);
+    assignmentsByTemplateId.get(a.value)!.push(agentId);
+  }
 
   const templates: SignatureTemplate[] = [];
 
@@ -174,18 +189,7 @@ export async function getTeamSignatures(): Promise<SignatureTemplate[]> {
         isDefault: boolean;
       };
 
-      // Get assigned agents for this template
-      const assignments = await prisma.siteSetting.findMany({
-        where: {
-          key: { startsWith: ASSIGNMENT_PREFIX },
-          value: templateId,
-        },
-      });
-
-      const assignedAgentIds = assignments.map((a) => {
-        const parts = a.key.split(ASSIGNMENT_PREFIX);
-        return parts[1] || '';
-      }).filter(Boolean);
+      const assignedAgentIds = assignmentsByTemplateId.get(templateId) || [];
 
       templates.push({
         id: templateId,

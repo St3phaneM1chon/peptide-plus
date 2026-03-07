@@ -910,6 +910,7 @@ export default function FacturesClientsPage() {
                 value={form.paymentTerms}
                 onChange={(e) => setForm(prev => ({ ...prev, paymentTerms: e.target.value as InvoiceForm['paymentTerms'] }))}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                aria-label={t('admin.customerInvoices.paymentTerms')}
               >
                 <option value="NET15">{t('admin.customerInvoices.net15')}</option>
                 <option value="NET30">{t('admin.customerInvoices.net30')}</option>
@@ -971,6 +972,7 @@ export default function FacturesClientsPage() {
                             value={item.description}
                             onChange={(e) => updateLine(idx, { description: e.target.value })}
                             placeholder={t('admin.customerInvoices.description')}
+                            aria-label={`${t('admin.customerInvoices.description')}, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-2 py-1.5">
@@ -980,6 +982,7 @@ export default function FacturesClientsPage() {
                             className="w-full h-8 px-2 rounded border border-slate-200 text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             value={item.quantity}
                             onChange={(e) => updateLine(idx, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                            aria-label={`Quantité, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-2 py-1.5">
@@ -990,6 +993,7 @@ export default function FacturesClientsPage() {
                             className="w-full h-8 px-2 rounded border border-slate-200 text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             value={item.unitPrice}
                             onChange={(e) => updateLine(idx, { unitPrice: Math.max(0, parseFloat(e.target.value) || 0) })}
+                            aria-label={`Prix unitaire, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-2 py-1.5 text-center">
@@ -998,6 +1002,7 @@ export default function FacturesClientsPage() {
                             checked={item.applyGst}
                             onChange={(e) => updateLine(idx, { applyGst: e.target.checked })}
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            aria-label={`Appliquer TPS, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-2 py-1.5 text-center">
@@ -1006,6 +1011,7 @@ export default function FacturesClientsPage() {
                             checked={item.applyQst}
                             onChange={(e) => updateLine(idx, { applyQst: e.target.checked })}
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            aria-label={`Appliquer TVQ, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1.5 text-end text-sm font-medium text-slate-900">
@@ -1328,6 +1334,7 @@ export default function FacturesClientsPage() {
               value={paymentForm.method}
               onChange={(e) => setPaymentForm(prev => ({ ...prev, method: e.target.value }))}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              aria-label={t('admin.customerInvoices.paymentMethod')}
             >
               <option value="BANK">{t('admin.customerInvoices.methodBank')}</option>
               <option value="CARD">{t('admin.customerInvoices.methodCard')}</option>

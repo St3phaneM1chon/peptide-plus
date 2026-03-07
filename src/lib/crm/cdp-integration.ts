@@ -310,11 +310,17 @@ export async function syncLeadsToCdp(
     };
   }
 
+  // Batch fetch all leads at once instead of one query per lead
+  const allLeads = await prisma.crmLead.findMany({
+    where: { id: { in: leadIds } },
+  });
+  const leadMap = new Map(allLeads.map((l) => [l.id, l]));
+
   const result: CdpSyncResult = { synced: 0, skipped: 0, errors: 0, details: [] };
 
   for (const leadId of leadIds) {
     try {
-      const lead = await prisma.crmLead.findUnique({ where: { id: leadId } });
+      const lead = leadMap.get(leadId);
       if (!lead) {
         result.skipped++;
         result.details.push({ leadId, success: false, error: 'Lead not found' });

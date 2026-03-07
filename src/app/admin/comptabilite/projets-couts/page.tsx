@@ -619,6 +619,7 @@ export default function ProjetsCoutsPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+          aria-label="Filtrer par statut"
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
@@ -881,6 +882,7 @@ export default function ProjetsCoutsPage() {
                         value=""
                         onChange={(e) => { if (e.target.value) handleUpdateMilestoneStatus(m.id, e.target.value); }}
                         className="text-xs border rounded px-2 py-1"
+                        aria-label="Changer le statut du jalon"
                       >
                         <option value="">Changer...</option>
                         {MILESTONE_STATUSES.filter((s) => s.value !== m.status).map((s) => (
@@ -1191,7 +1193,7 @@ export default function ProjetsCoutsPage() {
         <div>
           <label className="block text-sm font-medium mb-1">Statut</label>
           <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg text-sm">
+            className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Statut">
             {STATUS_OPTIONS.filter((s) => s.value).map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
@@ -1200,19 +1202,19 @@ export default function ProjetsCoutsPage() {
         <div>
           <label className="block text-sm font-medium mb-1">Date debut</label>
           <input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg text-sm" />
+            className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Date debut" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Date fin</label>
           <input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg text-sm" />
+            className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Date fin" />
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Methode de facturation</label>
           <select value={formData.billingMethod} onChange={(e) => setFormData({ ...formData, billingMethod: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg text-sm">
+            className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Methode de facturation">
             {BILLING_METHODS.map((m) => (
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
@@ -1246,7 +1248,7 @@ export default function ProjetsCoutsPage() {
           <div>
             <label className="block text-sm font-medium mb-1">Periode</label>
             <select value={formData.retainerPeriod} onChange={(e) => setFormData({ ...formData, retainerPeriod: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg text-sm">
+              className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Periode de provision">
               <option value="">-</option>
               <option value="MONTHLY">Mensuel</option>
               <option value="QUARTERLY">Trimestriel</option>
@@ -1347,7 +1349,7 @@ export default function ProjetsCoutsPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Type *</label>
               <select value={costFormData.type} onChange={(e) => setCostFormData({ ...costFormData, type: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg text-sm">
+                className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Type de cout">
                 {COST_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
@@ -1442,7 +1444,7 @@ export default function ProjetsCoutsPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Statut</label>
               <select value={milestoneFormData.status} onChange={(e) => setMilestoneFormData({ ...milestoneFormData, status: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg text-sm">
+                className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Statut du jalon">
                 {MILESTONE_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
@@ -1512,6 +1514,7 @@ export default function ProjetsCoutsPage() {
                 value={invoiceFormData.milestoneId}
                 onChange={(e) => setInvoiceFormData({ ...invoiceFormData, milestoneId: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm"
+                aria-label="Jalon a facturer"
               >
                 <option value="">Selectionner un jalon...</option>
                 {milestones.filter((m) => m.status === 'COMPLETED' && m.amount).map((m) => (

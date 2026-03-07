@@ -243,6 +243,7 @@ export async function getCheckIns(
       lead: { select: { contactName: true, companyName: true } },
     },
     orderBy: { createdAt: 'desc' },
+    take: 1000,
   });
 
   return activities.map((a) => {
@@ -285,6 +286,7 @@ export async function getTeamLocations(): Promise<TeamLocationEntry[]> {
       lead: { select: { contactName: true, companyName: true } },
     },
     orderBy: { createdAt: 'desc' },
+    take: 1000,
   });
 
   return activeCheckins.map((a) => {
@@ -324,6 +326,7 @@ export async function getVisitHistory(leadId: string): Promise<VisitHistoryEntry
       performedBy: { select: { name: true } },
     },
     orderBy: { createdAt: 'desc' },
+    take: 1000,
   });
 
   return activities.map((a) => {

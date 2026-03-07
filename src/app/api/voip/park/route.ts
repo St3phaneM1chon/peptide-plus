@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { parkCall, getParkedCalls } from '@/lib/voip/call-park';
 
@@ -32,16 +33,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { callId } = body as {
-      callId: string;
-      lineNumber?: number;
-      remoteNumber?: string;
-    };
-
-    if (!callId) {
-      return NextResponse.json({ error: 'callId required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = z.object({
+      callId: z.string().min(1),
+      lineNumber: z.number().int().optional(),
+      remoteNumber: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { callId } = parsed.data;
 
     const result = await parkCall(callId, session.user.id, 'default');
 

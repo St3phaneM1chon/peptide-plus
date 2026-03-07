@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { buildGreetingText } from '@/lib/voip/ivr-engine';
@@ -79,29 +80,50 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      companyId: z.string().min(1),
+      name: z.string().min(1),
+      description: z.string().optional(),
+      greetingText: z.string().optional(),
+      language: z.string().optional().default('fr-CA'),
+      inputTimeout: z.number().int().optional().default(5),
+      maxRetries: z.number().int().optional().default(3),
+      timeoutAction: z.string().optional().default('replay'),
+      timeoutTarget: z.string().optional(),
+      businessHoursStart: z.string().optional(),
+      businessHoursEnd: z.string().optional(),
+      afterHoursMenuId: z.string().optional(),
+      options: z.array(z.object({
+        digit: z.string(),
+        label: z.string(),
+        action: z.string(),
+        target: z.string(),
+        announcement: z.string().optional(),
+        sortOrder: z.number().int().optional(),
+      })).optional().default([]),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       companyId,
       name,
       description,
       greetingText,
-      language = 'fr-CA',
-      inputTimeout = 5,
-      maxRetries = 3,
-      timeoutAction = 'replay',
+      language,
+      inputTimeout,
+      maxRetries,
+      timeoutAction,
       timeoutTarget,
       businessHoursStart,
       businessHoursEnd,
       afterHoursMenuId,
-      options = [],
-    } = body;
-
-    if (!companyId || !name) {
-      return NextResponse.json(
-        { error: 'companyId and name are required' },
-        { status: 400 }
-      );
-    }
+      options,
+    } = parsed.data;
 
     const menu = await prisma.ivrMenu.create({
       data: {

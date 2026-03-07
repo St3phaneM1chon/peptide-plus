@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -12,6 +13,7 @@ export default function ThemeToggle() {
       setDark(true);
       document.documentElement.classList.add('dark');
     }
+    setMounted(true);
   }, []);
 
   const toggle = useCallback(() => {
@@ -27,6 +29,19 @@ export default function ThemeToggle() {
       return next;
     });
   }, []);
+
+  // Render placeholder until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <button
+        className="p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+        aria-label="Mode sombre"
+        title="Mode sombre"
+      >
+        <Moon className="w-5 h-5" />
+      </button>
+    );
+  }
 
   return (
     <button

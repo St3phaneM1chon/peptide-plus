@@ -26,6 +26,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
+import { publishChatEvent } from '@/lib/chat/realtime';
 import type { ChatSender, ChatMessageType } from '@prisma/client';
 import { z } from 'zod';
 
@@ -325,11 +326,21 @@ export async function POST(request: NextRequest) {
     // Mettre à jour le timestamp de la conversation
     await db.chatConversation.update({
       where: { id: conversationId },
-      data: { 
+      data: {
         lastMessageAt: new Date(),
         isOnline: sender === 'VISITOR' ? true : conversation.isOnline,
       },
     });
+
+    // Publish real-time event for the saved message (fire and forget)
+    publishChatEvent({
+      type: 'message',
+      conversationId,
+      userId: session?.user?.id,
+      userName: sender === 'ADMIN' ? (session?.user?.name || 'Support') : undefined,
+      data: { message: savedMessage },
+      timestamp: Date.now(),
+    }).catch(() => {});
 
     // Si réponse du bot, la sauvegarder aussi
     // FIX: F-062 - Removed duplicate lastMessageAt update; the update above already covers this
@@ -346,6 +357,16 @@ export async function POST(request: NextRequest) {
           isFromBot: true,
         },
       });
+
+      // Publish real-time event for the bot message (fire and forget)
+      publishChatEvent({
+        type: 'message',
+        conversationId,
+        userId: undefined,
+        userName: 'BioCycle Assistant',
+        data: { message: savedBotMessage, botMessage: true },
+        timestamp: Date.now(),
+      }).catch(() => {});
     }
 
     return NextResponse.json({

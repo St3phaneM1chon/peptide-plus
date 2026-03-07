@@ -6,7 +6,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import {
   screenPop,
   clickToCall,
@@ -22,7 +24,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      action: z.enum(['screen-pop', 'click-to-call', 'call-history', 'link-call', 'add-notes']),
+      phoneNumber: z.string().optional(),
+      clientId: z.string().optional(),
+      callerIdNumber: z.string().optional(),
+      page: z.number().int().optional(),
+      limit: z.number().int().optional(),
+      callLogId: z.string().optional(),
+      notes: z.string().optional(),
+      disposition: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const { action } = body;
 
     switch (action) {
@@ -81,7 +102,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (error) {
-    console.error('[VoIP CRM]', error);
+    logger.error('[VoIP CRM] Request failed', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

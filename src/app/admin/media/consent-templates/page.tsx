@@ -45,7 +45,7 @@ const emptyQuestion = (): Question => ({
 });
 
 export default function ConsentTemplatesPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -357,7 +357,7 @@ export default function ConsentTemplatesPage() {
                     <p className="text-sm text-gray-500 mt-0.5">{template.description}</p>
                   )}
                   <p className="text-xs text-gray-400 mt-1">
-                    {(template.questions as Question[]).length} question(s) · {template._count.consents} consent(s) · {new Date(template.createdAt).toLocaleDateString()}
+                    {(template.questions as Question[]).length} question(s) · {template._count.consents} consent(s) · {new Date(template.createdAt).toLocaleDateString(locale)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">

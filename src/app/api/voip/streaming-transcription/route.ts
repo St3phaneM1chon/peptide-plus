@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import {
   StreamingTranscriptionService,
@@ -24,6 +25,14 @@ import {
   type StreamingTranscriptionConfig,
 } from '@/lib/voip/streaming-transcription';
 import { logger } from '@/lib/logger';
+
+const transcriptionEventSchema = z.object({
+  callId: z.string().min(1, 'callId is required'),
+  text: z.string().min(1, 'text is required'),
+  type: z.enum(['interim', 'final']),
+  speaker: z.enum(['agent', 'customer']).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+});
 
 // ---------------------------------------------------------------------------
 // In-memory event bus for SSE (per-call transcription events)
@@ -163,22 +172,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { callId, text, type, speaker, confidence } = body;
-
-    if (!callId || !text || !type) {
-      return NextResponse.json(
-        { error: 'callId, text, and type are required' },
-        { status: 400 }
-      );
+    const raw = await request.json();
+    const parsed = transcriptionEventSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    if (!['interim', 'final'].includes(type)) {
-      return NextResponse.json(
-        { error: 'type must be "interim" or "final"' },
-        { status: 400 }
-      );
-    }
+    const { callId, text, type, speaker, confidence } = parsed.data;
 
     const event: TranscriptionEvent = {
       type,

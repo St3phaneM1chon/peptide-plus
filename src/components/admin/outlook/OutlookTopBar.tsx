@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import {
   Menu,
   Search,
@@ -75,8 +76,17 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Safe window width detection (avoid hydration mismatch)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -134,7 +144,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
         <button
           type="button"
           onClick={() => {
-            if (onMobileMenuToggle && window.innerWidth < 1024) {
+            if (onMobileMenuToggle && isMobile) {
               onMobileMenuToggle();
             } else {
               toggleFolderPane();
@@ -146,14 +156,16 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
           <Menu className="w-5 h-5 text-slate-600" />
         </button>
 
-        {/* Logo */}
-        <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-sky-700 rounded-md flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-[11px] leading-none">BC</span>
-          </div>
-          <span className="font-semibold text-sm text-slate-800 hidden md:inline">
-            {t('admin.brandName')}
-          </span>
+        {/* Logo — Suite Kor@line signature */}
+        <Link href="/admin/dashboard" className="flex items-center">
+          <Image
+            src="/images/koraline-signature.png"
+            alt="Suite Kor@line"
+            width={120}
+            height={41}
+            className="h-8 w-auto object-contain"
+            priority
+          />
         </Link>
       </div>
 

@@ -157,7 +157,7 @@ type TabId = 'entities' | 'interco' | 'consolidation' | 'comparison';
 // ---------------------------------------------------------------------------
 
 export default function MultiEntityPage() {
-  const { t, formatCurrency } = useI18n();
+  const { t, formatCurrency, locale } = useI18n();
 
   const [activeTab, setActiveTab] = useState<TabId>('entities');
 
@@ -650,7 +650,7 @@ export default function MultiEntityPage() {
     {
       key: 'createdAt',
       header: t('admin.multiEntity.date'),
-      render: (tx) => new Date(tx.createdAt).toLocaleDateString(),
+      render: (tx) => new Date(tx.createdAt).toLocaleDateString(locale),
     },
   ];
 

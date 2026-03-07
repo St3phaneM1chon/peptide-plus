@@ -8,8 +8,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getSimRingConfig,
   configureSimultaneousRing,
@@ -17,16 +18,19 @@ import {
   type SimultaneousRingConfig,
 } from '@/lib/voip/simultaneous-ring';
 
+const simRingPutSchema = z.object({
+  autoSetup: z.boolean().optional(),
+  enabled: z.boolean().optional(),
+  endpoints: z.array(z.unknown()).optional(),
+  voicemailFallback: z.boolean().optional(),
+  totalTimeout: z.number().optional(),
+});
+
 /**
  * GET - Get simultaneous ring configuration for the current user.
  * Query: ?autoDetect=true — auto-discover endpoints from user's devices
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const autoDetect = searchParams.get('autoDetect');
@@ -57,7 +61,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to get sim-ring config' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update simultaneous ring configuration.
@@ -65,14 +69,19 @@ export async function GET(request: NextRequest) {
  *   { enabled?, endpoints?, voicemailFallback?, totalTimeout? }
  *   or { autoSetup: true } — auto-configure from user's devices
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = simRingPutSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
 
     // Auto-setup from user's registered devices
     if (body.autoSetup === true) {
@@ -85,12 +94,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Manual config update
-    const { enabled, endpoints, voicemailFallback, totalTimeout } =
-      body as Partial<SimultaneousRingConfig>;
+    const { enabled, endpoints, voicemailFallback, totalTimeout } = body;
 
     const updates: Partial<SimultaneousRingConfig> = {};
     if (typeof enabled === 'boolean') updates.enabled = enabled;
-    if (endpoints) updates.endpoints = endpoints;
+    if (endpoints) updates.endpoints = endpoints as SimultaneousRingConfig['endpoints'];
     if (typeof voicemailFallback === 'boolean') updates.voicemailFallback = voicemailFallback;
     if (typeof totalTimeout === 'number') updates.totalTimeout = totalTimeout;
 
@@ -110,4 +118,4 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update sim-ring config' }, { status: 500 });
   }
-}
+});

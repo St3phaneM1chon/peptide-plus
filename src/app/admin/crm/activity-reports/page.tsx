@@ -129,15 +129,15 @@ export default function ActivityReportsPage() {
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-gray-400" />
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            className="text-sm border rounded-md px-3 py-2" />
+            className="text-sm border rounded-md px-3 py-2" aria-label="Date from" />
           <span className="text-gray-400">-</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            className="text-sm border rounded-md px-3 py-2" />
+            className="text-sm border rounded-md px-3 py-2" aria-label="Date to" />
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-gray-400" />
           <select value={agentFilter} onChange={e => setAgentFilter(e.target.value)}
-            className="text-sm border rounded-md px-3 py-2">
+            className="text-sm border rounded-md px-3 py-2" aria-label="Filter by agent">
             <option value="">All Agents</option>
             {uniqueAgents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>

@@ -79,6 +79,12 @@ export interface UseVoipReturn {
   noiseCancelEnabled: boolean;
   /** Whether screen sharing is active */
   isScreenSharing: boolean;
+  /** Whether video is enabled on the current call */
+  isVideoEnabled: boolean;
+  /** Local camera video stream (for PiP preview) */
+  localVideoStream: MediaStream | null;
+  /** Remote video stream from the other party */
+  remoteVideoStream: MediaStream | null;
   /** Real-time call quality metrics (MOS, jitter, etc.) */
   callQualityMetrics: CallQualityMetrics | null;
   /** Current user presence status */
@@ -130,6 +136,8 @@ export interface UseVoipReturn {
   screenShare: () => Promise<void>;
   /** Stop screen sharing */
   stopScreenShare: () => void;
+  /** Toggle video on/off for the active call */
+  toggleVideo: () => Promise<void>;
 
   // --- Presence ---
   /** Set user presence status */
@@ -189,6 +197,9 @@ export function useVoip(): UseVoipReturn {
   const [error, setError] = useState<string | null>(null);
   const [noiseCancelEnabled, setNoiseCancelEnabled] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  const [localVideoStream, setLocalVideoStream] = useState<MediaStream | null>(null);
+  const [remoteVideoStream, setRemoteVideoStream] = useState<MediaStream | null>(null);
   const [callQualityMetrics, setCallQualityMetrics] = useState<CallQualityMetrics | null>(null);
   const [presenceStatus, setPresenceStatusState] = useState<PresenceStatus>('available');
 
@@ -425,6 +436,18 @@ export function useVoip(): UseVoipReturn {
           audioEl.srcObject = stream;
         }
 
+        // Extract remote video tracks (if any) into remoteVideoStream
+        const videoReceivers = receivers.filter(
+          (r: RTCRtpReceiver) => r.track && r.track.kind === 'video',
+        );
+        if (videoReceivers.length > 0) {
+          const videoStream = new MediaStream();
+          videoReceivers.forEach((r: RTCRtpReceiver) => {
+            if (r.track) videoStream.addTrack(r.track);
+          });
+          setRemoteVideoStream(videoStream);
+        }
+
         // Start CallQualityMonitor on the peer connection
         import('@/lib/voip/call-quality-monitor').then(({ CallQualityMonitor }) => {
           const monitor = new CallQualityMonitor();
@@ -463,6 +486,14 @@ export function useVoip(): UseVoipReturn {
         setCallQualityMetrics(null);
       }
 
+      // Clean up video streams
+      if (localVideoStream) {
+        localVideoStream.getTracks().forEach((t) => t.stop());
+        setLocalVideoStream(null);
+      }
+      setRemoteVideoStream(null);
+      setIsVideoEnabled(false);
+
       // Restore presence to available
       fetch('/api/voip/presence', {
         method: 'PUT',
@@ -486,6 +517,14 @@ export function useVoip(): UseVoipReturn {
         qualityMonitorRef.current = null;
         setCallQualityMetrics(null);
       }
+
+      // Clean up video streams
+      if (localVideoStream) {
+        localVideoStream.getTracks().forEach((t) => t.stop());
+        setLocalVideoStream(null);
+      }
+      setRemoteVideoStream(null);
+      setIsVideoEnabled(false);
 
       // Restore presence
       setPresenceStatusState('available');
@@ -614,22 +653,6 @@ export function useVoip(): UseVoipReturn {
       }
 
       const creds = await res.json();
-
-      // Pre-check: test WebSocket reachability before handing off to JsSIP.
-      // Skip for cloud providers (Telnyx) — their endpoints are always available
-      // and JsSIP handles reconnection natively. Only test local PBX endpoints.
-      const isTelnyxWs = creds.wsUrl.includes('telnyx.com');
-      if (!isTelnyxWs) {
-        const wsReachable = await new Promise<boolean>((resolve) => {
-          const testWs = new WebSocket(creds.wsUrl, 'sip');
-          const timer = setTimeout(() => { try { testWs.close(); } catch {} resolve(false); }, 10000);
-          testWs.onopen = () => { clearTimeout(timer); testWs.close(); resolve(true); };
-          testWs.onerror = () => { clearTimeout(timer); try { testWs.close(); } catch {} resolve(false); };
-        });
-        if (!wsReachable) {
-          throw new Error(`Impossible de se connecter au PBX (${creds.sipDomain}). Vérifiez que le serveur est en ligne.`);
-        }
-      }
 
       // Dynamic import JsSIP (only loaded when needed)
       const JsSIP = await import('jssip');
@@ -790,7 +813,7 @@ export function useVoip(): UseVoipReturn {
       if (!uaRef.current || status !== 'registered') return;
 
       const options = {
-        mediaConstraints: { audio: true, video: false },
+        mediaConstraints: { audio: true, video: isVideoEnabled },
         pcConfig: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -818,7 +841,7 @@ export function useVoip(): UseVoipReturn {
       if (session && call?.state === 'ringing') {
         stopRingtone(id);
         session.answer({
-          mediaConstraints: { audio: true, video: false },
+          mediaConstraints: { audio: true, video: isVideoEnabled },
           pcConfig: {
             iceServers: [
               { urls: 'stun:stun.l.google.com:19302' },
@@ -1042,7 +1065,7 @@ export function useVoip(): UseVoipReturn {
 
         // Initiate the new call (JsSIP will fire newRTCSession)
         const options = {
-          mediaConstraints: { audio: true, video: false },
+          mediaConstraints: { audio: true, video: isVideoEnabled },
           pcConfig: {
             iceServers: [
               { urls: 'stun:stun.l.google.com:19302' },
@@ -1299,6 +1322,81 @@ export function useVoip(): UseVoipReturn {
   }, []);
 
   // ---------------------------------------------------------------------------
+  // Video toggle (1:1 video calling)
+  // ---------------------------------------------------------------------------
+
+  const toggleVideo = useCallback(async () => {
+    if (!focusedCallId) return;
+
+    const session = sessionsRef.current.get(focusedCallId);
+    if (!session?.connection) return;
+
+    const pc = session.connection as RTCPeerConnection;
+
+    if (isVideoEnabled) {
+      // Disable video: stop local video tracks and remove from peer connection
+      if (localVideoStream) {
+        localVideoStream.getTracks().forEach((track) => track.stop());
+      }
+      const senders = pc.getSenders();
+      senders.forEach((sender) => {
+        if (sender.track && sender.track.kind === 'video') {
+          pc.removeTrack(sender);
+        }
+      });
+      setLocalVideoStream(null);
+      setRemoteVideoStream(null);
+      setIsVideoEnabled(false);
+    } else {
+      // Enable video: get camera stream and add to peer connection
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+          pc.addTrack(videoTrack, stream);
+        }
+        setLocalVideoStream(stream);
+        setIsVideoEnabled(true);
+
+        // Listen for incoming video tracks from the remote party
+        const receivers = pc.getReceivers();
+        const videoReceivers = receivers.filter(
+          (r) => r.track && r.track.kind === 'video',
+        );
+        if (videoReceivers.length > 0) {
+          const remoteStream = new MediaStream();
+          videoReceivers.forEach((r) => {
+            if (r.track) remoteStream.addTrack(r.track);
+          });
+          setRemoteVideoStream(remoteStream);
+        }
+
+        // Also listen for future negotiation/track events
+        pc.addEventListener('track', (event) => {
+          if (event.track.kind === 'video') {
+            setRemoteVideoStream((prev) => {
+              const s = prev ?? new MediaStream();
+              s.addTrack(event.track);
+              return s;
+            });
+          }
+        });
+      } catch (err) {
+        // Camera access failed
+        const message =
+          err instanceof DOMException && err.name === 'NotFoundError'
+            ? 'No camera detected'
+            : err instanceof DOMException && err.name === 'NotAllowedError'
+              ? 'Camera permission denied'
+              : err instanceof DOMException && err.name === 'NotReadableError'
+                ? 'Camera is in use by another application'
+                : 'Failed to enable video';
+        setError(message);
+      }
+    }
+  }, [focusedCallId, isVideoEnabled, localVideoStream]);
+
+  // ---------------------------------------------------------------------------
   // Call pickup (uses @/lib/voip/call-pickup via API route)
   // The CallPickup lib runs server-side with Telnyx answer/bridge APIs.
   // ---------------------------------------------------------------------------
@@ -1389,6 +1487,9 @@ export function useVoip(): UseVoipReturn {
     error,
     noiseCancelEnabled,
     isScreenSharing,
+    isVideoEnabled,
+    localVideoStream,
+    remoteVideoStream,
     callQualityMetrics,
     presenceStatus,
 
@@ -1427,6 +1528,7 @@ export function useVoip(): UseVoipReturn {
     toggleRecording,
     screenShare,
     stopScreenShare: stopScreenShareHook,
+    toggleVideo,
 
     // Presence
     setPresence,

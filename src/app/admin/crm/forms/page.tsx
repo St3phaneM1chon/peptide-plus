@@ -33,7 +33,7 @@ interface LeadForm {
 }
 
 export default function LeadFormsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [forms, setForms] = useState<LeadForm[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -230,7 +230,7 @@ ${form.fields.map(f => `
               <div>
                 <h3 className="font-medium text-gray-900">{form.name}</h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {(form.fields as FormField[]).length} fields | {form.submissions} submissions | Created {new Date(form.createdAt).toLocaleDateString()}
+                  {(form.fields as FormField[]).length} fields | {form.submissions} submissions | Created {new Date(form.createdAt).toLocaleDateString(locale)}
                 </p>
               </div>
               <div className="flex items-center gap-2">

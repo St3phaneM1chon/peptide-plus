@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import {
   blindTransfer,
@@ -18,6 +19,23 @@ import {
   endConference,
 } from '@/lib/voip/transfer-engine';
 
+const transferSchema = z.object({
+  action: z.enum([
+    'blind_transfer',
+    'attended_start',
+    'attended_complete',
+    'attended_cancel',
+    'conference_create',
+    'conference_add',
+    'conference_dial',
+    'conference_end',
+  ]),
+  callControlId: z.string().optional(),
+  destination: z.string().optional(),
+  conferenceId: z.string().optional(),
+  conferenceName: z.string().optional(),
+});
+
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
@@ -25,12 +43,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { action, callControlId, destination, conferenceId, conferenceName } = body;
-
-    if (!action) {
-      return NextResponse.json({ error: 'action is required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = transferSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
+
+    const { action, callControlId, destination, conferenceId, conferenceName } = parsed.data;
 
     switch (action) {
       case 'blind_transfer': {

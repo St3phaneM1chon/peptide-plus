@@ -185,15 +185,18 @@ export async function markCampaignDncl(campaignId: string): Promise<number> {
   const phones = entries.map(e => e.phoneNumber);
   const blockedSet = await bulkCheckDncl(phones);
 
+  // Batch update all blocked entries instead of N+1 individual updates
+  const blockedEntryIds = entries
+    .filter(e => blockedSet.has(normalizePhone(e.phoneNumber)))
+    .map(e => e.id);
+
   let marked = 0;
-  for (const entry of entries) {
-    if (blockedSet.has(normalizePhone(entry.phoneNumber))) {
-      await prisma.dialerListEntry.update({
-        where: { id: entry.id },
-        data: { isDncl: true, dnclCheckedAt: new Date() },
-      });
-      marked++;
-    }
+  if (blockedEntryIds.length > 0) {
+    const result = await prisma.dialerListEntry.updateMany({
+      where: { id: { in: blockedEntryIds } },
+      data: { isDncl: true, dnclCheckedAt: new Date() },
+    });
+    marked = result.count;
   }
 
   logger.info('[DNCL] Campaign pre-check completed', {

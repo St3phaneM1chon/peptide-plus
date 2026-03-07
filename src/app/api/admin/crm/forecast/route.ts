@@ -105,6 +105,36 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     // ---------------------------------------------------------------------------
     // 2. Monthly timeline - deals grouped by expectedCloseDate month
     // ---------------------------------------------------------------------------
+
+    // Batch: fetch all deals within the full timeline range in one query
+    const timelineRangeStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastYear = now.getFullYear() + Math.floor((now.getMonth() + months - 1) / 12);
+    const lastMonth = (now.getMonth() + months - 1) % 12;
+    const timelineRangeEnd = new Date(lastYear, lastMonth + 1, 0, 23, 59, 59, 999);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const timelineWhere: Record<string, any> = {
+      expectedCloseDate: { gte: timelineRangeStart, lte: timelineRangeEnd },
+    };
+    if (pipelineId) timelineWhere.pipelineId = pipelineId;
+
+    const allTimelineDeals = await prisma.crmDeal.findMany({
+      where: timelineWhere,
+      include: {
+        stage: { select: { probability: true, isWon: true } },
+      },
+    });
+
+    // Group deals by month label
+    const dealsByMonth = new Map<string, typeof allTimelineDeals>();
+    for (const deal of allTimelineDeals) {
+      if (!deal.expectedCloseDate) continue;
+      const d = new Date(deal.expectedCloseDate);
+      const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!dealsByMonth.has(label)) dealsByMonth.set(label, []);
+      dealsByMonth.get(label)!.push(deal);
+    }
+
     const timeline: Array<{
       month: string;
       totalValue: number;
@@ -116,22 +146,9 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     for (let i = 0; i < months; i++) {
       const year = now.getFullYear() + Math.floor((now.getMonth() + i) / 12);
       const month = (now.getMonth() + i) % 12;
-      const mStart = new Date(year, month, 1);
-      const mEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
       const monthLabel = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const where: Record<string, any> = {
-        expectedCloseDate: { gte: mStart, lte: mEnd },
-      };
-      if (pipelineId) where.pipelineId = pipelineId;
-
-      const deals = await prisma.crmDeal.findMany({
-        where,
-        include: {
-          stage: { select: { probability: true, isWon: true } },
-        },
-      });
+      const deals = dealsByMonth.get(monthLabel) || [];
 
       let totalValue = 0;
       let weightedValue = 0;
@@ -217,8 +234,63 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       .sort((a, b) => b.weighted - a.weighted);
 
     // ---------------------------------------------------------------------------
-    // 5. Historical won/lost trend - last 6 months
+    // 5. Historical won/lost trend - last 6 months (batch query)
     // ---------------------------------------------------------------------------
+
+    // Compute the full 6-month range once
+    const histStart = new Date(
+      now.getFullYear() + Math.floor((now.getMonth() - 5) / 12),
+      ((now.getMonth() - 5) % 12 + 12) % 12,
+      1,
+    );
+    const histEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const histWonWhere: Record<string, any> = {
+      stage: { isWon: true },
+      actualCloseDate: { gte: histStart, lte: histEnd },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const histLostWhere: Record<string, any> = {
+      stage: { isWon: false, probability: 0 },
+      updatedAt: { gte: histStart, lte: histEnd },
+    };
+    if (pipelineId) {
+      histWonWhere.pipelineId = pipelineId;
+      histLostWhere.pipelineId = pipelineId;
+    }
+
+    const [allWonDeals, allLostDeals] = await Promise.all([
+      prisma.crmDeal.findMany({
+        where: histWonWhere,
+        select: { value: true, actualCloseDate: true },
+      }),
+      prisma.crmDeal.findMany({
+        where: histLostWhere,
+        select: { updatedAt: true },
+      }),
+    ]);
+
+    // Group won deals by month
+    const wonByMonth = new Map<string, { value: number; count: number }>();
+    for (const d of allWonDeals) {
+      if (!d.actualCloseDate) continue;
+      const dt = new Date(d.actualCloseDate);
+      const label = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+      const entry = wonByMonth.get(label) || { value: 0, count: 0 };
+      entry.value += Number(d.value);
+      entry.count++;
+      wonByMonth.set(label, entry);
+    }
+
+    // Group lost deals by month
+    const lostByMonth = new Map<string, number>();
+    for (const d of allLostDeals) {
+      const dt = new Date(d.updatedAt);
+      const label = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+      lostByMonth.set(label, (lostByMonth.get(label) || 0) + 1);
+    }
+
     const historicalTrend: Array<{
       month: string;
       wonValue: number;
@@ -229,39 +301,15 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     for (let i = 5; i >= 0; i--) {
       const year = now.getFullYear() + Math.floor((now.getMonth() - i) / 12);
       const month = ((now.getMonth() - i) % 12 + 12) % 12;
-      const hStart = new Date(year, month, 1);
-      const hEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
       const monthLabel = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const wonWhere: Record<string, any> = {
-        stage: { isWon: true },
-        actualCloseDate: { gte: hStart, lte: hEnd },
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const lostWhere: Record<string, any> = {
-        stage: { isWon: false, probability: 0 },
-        updatedAt: { gte: hStart, lte: hEnd },
-      };
-      if (pipelineId) {
-        wonWhere.pipelineId = pipelineId;
-        lostWhere.pipelineId = pipelineId;
-      }
-
-      const [wonDeals, lostCount] = await Promise.all([
-        prisma.crmDeal.findMany({
-          where: wonWhere,
-          select: { value: true },
-        }),
-        prisma.crmDeal.count({ where: lostWhere }),
-      ]);
-
-      const wonValue = wonDeals.reduce((sum, d) => sum + Number(d.value), 0);
+      const won = wonByMonth.get(monthLabel) || { value: 0, count: 0 };
+      const lostCount = lostByMonth.get(monthLabel) || 0;
 
       historicalTrend.push({
         month: monthLabel,
-        wonValue: Math.round(wonValue * 100) / 100,
-        wonCount: wonDeals.length,
+        wonValue: Math.round(won.value * 100) / 100,
+        wonCount: won.count,
         lostCount,
       });
     }

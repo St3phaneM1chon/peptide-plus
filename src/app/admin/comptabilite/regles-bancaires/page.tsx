@@ -733,6 +733,7 @@ export default function ReglesBancairesPage() {
                   value={form.transactionType}
                   onChange={e => updateForm('transactionType', e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.bankRules.transactionType') || 'Transaction type'}
                 >
                   <option value="">{t('admin.bankRules.anyType') || '-- Any type --'}</option>
                   <option value="DEBIT">{t('admin.bankRules.debit') || 'Debit'}</option>
@@ -787,6 +788,7 @@ export default function ReglesBancairesPage() {
                   value={form.accountId}
                   onChange={e => updateForm('accountId', e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.bankRules.account') || 'Account'}
                 >
                   <option value="">{t('admin.bankRules.selectAccount') || '-- Select account --'}</option>
                   {accounts.map(a => (
@@ -806,6 +808,7 @@ export default function ReglesBancairesPage() {
                   value={form.taxCode}
                   onChange={e => updateForm('taxCode', e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.bankRules.taxCode') || 'Tax code'}
                 >
                   {TAX_CODES.map(tc => (
                     <option key={tc.value} value={tc.value}>{tc.label}</option>

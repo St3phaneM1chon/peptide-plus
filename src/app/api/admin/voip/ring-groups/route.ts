@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getRingGroupsForCompany,
   getRingGroup,
@@ -22,16 +23,37 @@ import {
   type RingStrategy,
 } from '@/lib/voip/ring-groups';
 
+const ringGroupPostSchema = z.object({
+  name: z.string().min(1),
+  companyId: z.string().min(1),
+  strategy: z.string().optional().default('simultaneous'),
+  members: z.array(z.string()).min(1),
+  ringTimeout: z.number().optional().default(20),
+  totalTimeout: z.number().optional().default(60),
+  overflowAction: z.enum(['voicemail', 'extension', 'external', 'ivr']).optional().default('voicemail'),
+  overflowTarget: z.string().optional().default(''),
+  skipBusy: z.boolean().optional().default(true),
+  useDatabase: z.boolean().optional().default(false),
+});
+
+const ringGroupPutSchema = z.object({
+  id: z.string().optional(),
+  queueId: z.string().optional(),
+  name: z.string().optional(),
+  strategy: z.string().optional(),
+  members: z.array(z.string()).optional(),
+  ringTimeout: z.number().optional(),
+  totalTimeout: z.number().optional(),
+  overflowAction: z.enum(['voicemail', 'extension', 'external', 'ivr']).optional(),
+  overflowTarget: z.string().optional(),
+  skipBusy: z.boolean().optional(),
+});
+
 /**
  * GET - List ring groups for the user's company.
  * Also fetches CallQueue entries with RING_ALL strategy from DB.
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get('companyId');
@@ -78,57 +100,36 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to list ring groups' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Create a new ring group.
  * Body: { name, companyId, strategy?, members[], ringTimeout?, totalTimeout?, overflowAction?, overflowTarget?, skipBusy? }
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = ringGroupPostSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
       name,
       companyId,
-      strategy = 'simultaneous',
-      members = [],
-      ringTimeout = 20,
-      totalTimeout = 60,
-      overflowAction = 'voicemail',
-      overflowTarget = '',
-      skipBusy = true,
-      useDatabase = false,
-    } = body as {
-      name: string;
-      companyId: string;
-      strategy?: RingStrategy;
-      members: string[];
-      ringTimeout?: number;
-      totalTimeout?: number;
-      overflowAction?: 'voicemail' | 'extension' | 'external' | 'ivr';
-      overflowTarget?: string;
-      skipBusy?: boolean;
-      useDatabase?: boolean;
-    };
-
-    if (!name || !companyId) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, companyId' },
-        { status: 400 }
-      );
-    }
-
-    if (!members.length) {
-      return NextResponse.json(
-        { error: 'Ring group must have at least one member' },
-        { status: 400 }
-      );
-    }
+      strategy,
+      members,
+      ringTimeout,
+      totalTimeout,
+      overflowAction,
+      overflowTarget,
+      skipBusy,
+      useDatabase,
+    } = parsed.data;
 
     // If useDatabase, create a CallQueue with RING_ALL strategy + members
     if (useDatabase) {
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
       id,
       name,
       companyId,
-      strategy,
+      strategy: strategy as RingStrategy,
       members,
       ringTimeout,
       totalTimeout,
@@ -180,32 +181,25 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to create ring group' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update an existing ring group.
  * Body: { id, ...fields to update }
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { id, queueId, ...updates } = body as {
-      id?: string;
-      queueId?: string;
-      name?: string;
-      strategy?: RingStrategy;
-      members?: string[];
-      ringTimeout?: number;
-      totalTimeout?: number;
-      overflowAction?: 'voicemail' | 'extension' | 'external' | 'ivr';
-      overflowTarget?: string;
-      skipBusy?: boolean;
-    };
+    const raw = await request.json();
+    const parsed = ringGroupPutSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { id, queueId, ...updates } = parsed.data;
 
     // Update a DB-backed queue
     if (queueId) {
@@ -237,7 +231,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updated: RingGroup = { ...existing, ...updates, id };
+    const updated: RingGroup = { ...existing, ...updates, id } as RingGroup;
     upsertRingGroup(updated);
 
     return NextResponse.json({ data: updated });
@@ -247,18 +241,13 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update ring group' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE - Delete a ring group (or soft-delete a DB queue).
  * Query: ?id=xxx or ?queueId=xxx
  */
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const DELETE = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -290,4 +279,4 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to delete ring group' }, { status: 500 });
   }
-}
+});

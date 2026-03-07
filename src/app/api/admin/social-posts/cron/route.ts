@@ -4,20 +4,24 @@ export const dynamic = 'force-dynamic';
  * Social Scheduler Cron Endpoint
  * POST - Process all scheduled posts that are due
  *
- * Can be called by Vercel Cron, Azure Timer, or manually.
- * Optionally secured with a CRON_SECRET header.
+ * Can be called by Vercel Cron, Azure Timer, or manually by an admin.
+ * Auth: Accepts EITHER a valid admin session (OWNER/EMPLOYEE) OR the CRON_SECRET Bearer token.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
 import { processScheduledPosts } from '@/lib/social/social-scheduler-cron';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
-  // Optional: verify cron secret
+  // Allow cron secret OR admin session
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${cronSecret}`) {
+  const authHeader = request.headers.get('authorization');
+  const isCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  if (!isCronAuth) {
+    const session = await auth();
+    if (!session?.user?.id || !['OWNER', 'EMPLOYEE'].includes((session.user as any).role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

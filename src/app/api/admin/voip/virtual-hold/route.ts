@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 interface VirtualHoldConfig {
   enabled: boolean;
@@ -79,12 +79,7 @@ function getDefaultConfig(): VirtualHoldConfig {
 /**
  * GET - Get virtual hold / callback queue settings.
  */
-export async function GET(_request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async () => {
   try {
     const config = await loadVirtualHoldConfig();
     return NextResponse.json({ data: config });
@@ -94,17 +89,12 @@ export async function GET(_request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to get virtual hold settings' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update virtual hold / callback queue settings.
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { enabled, ewtThreshold, maxCallbackAttempts, callbackMessage, callbackRetryDelay, maxQueueSize } = body;
@@ -145,4 +135,4 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update virtual hold settings' }, { status: 500 });
   }
-}
+});

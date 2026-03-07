@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { checkPeriodLock } from '@/lib/accounting/period-close.service';
 
 const receiptSchema = z.object({
   vendor: z.string().min(1).max(200),
@@ -19,6 +20,12 @@ export const POST = withAdminGuard(async (request) => {
     const body = await request.json();
     const parsed = receiptSchema.parse(body);
 
+    // Check if the target accounting period is locked
+    const periodLockError = await checkPeriodLock(new Date(parsed.date));
+    if (periodLockError) {
+      return NextResponse.json({ error: periodLockError }, { status: 403 });
+    }
+
     // Find actual account IDs from codes
     const [expenseAccount, cashAccount] = await Promise.all([
       prisma.chartOfAccount.findFirst({ where: { code: parsed.category }, select: { id: true } }),
@@ -32,6 +39,17 @@ export const POST = withAdminGuard(async (request) => {
     // Generate entry number
     const count = await prisma.journalEntry.count();
     const entryNumber = `RCT-${String(count + 1).padStart(6, '0')}`;
+
+    // Validate debit/credit balance
+    const lines = [
+      { accountId: expenseAccount.id, description: `Reçu ${parsed.vendor}`, debit: parsed.amount, credit: 0, type: 'DEBIT' as const },
+      { accountId: cashAccount.id, description: `Paiement ${parsed.vendor}`, debit: 0, credit: parsed.amount, type: 'CREDIT' as const },
+    ];
+    const totalDebits = lines.filter(l => l.type === 'DEBIT').reduce((sum, l) => sum + Number(l.debit), 0);
+    const totalCredits = lines.filter(l => l.type === 'CREDIT').reduce((sum, l) => sum + Number(l.credit), 0);
+    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      return NextResponse.json({ error: 'Journal entry debits must equal credits' }, { status: 400 });
+    }
 
     const desc = `Reçu: ${parsed.vendor}${parsed.description ? ` - ${parsed.description}` : ''}`;
     const entry = await prisma.journalEntry.create({
@@ -57,6 +75,7 @@ export const POST = withAdminGuard(async (request) => {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
     }
+    console.error('Error creating receipt entry:', error);
     return NextResponse.json({ error: 'Erreur enregistrement reçu' }, { status: 500 });
   }
 });

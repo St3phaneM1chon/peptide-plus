@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   matchLocalCallerId,
   matchLocalCallerIdBatch,
@@ -19,15 +20,29 @@ import {
   addCallerIdToPool,
 } from '@/lib/voip/local-presence';
 
+const callerIdPostSchema = z.object({
+  action: z.enum(['match', 'match-batch', 'pool', 'pool-add', 'pool-stats']),
+  destinationNumber: z.string().optional(),
+  destinationNumbers: z.array(z.string()).optional(),
+  number: z.string().optional(),
+  areaCode: z.string().optional(),
+  region: z.string().optional(),
+});
+
+const callerIdPutSchema = z.object({
+  campaignId: z.string().optional(),
+  defaultCallerId: z.string().min(1),
+  areaCodeMatching: z.boolean().optional(),
+  displayName: z.string().optional(),
+  routeToIvr: z.string().optional(),
+  routeToQueue: z.string().optional(),
+  routeToExt: z.string().optional(),
+});
+
 /**
  * GET - List PhoneNumber records with their routing configuration.
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const country = searchParams.get('country');
@@ -60,19 +75,24 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to list caller ID settings' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Local presence actions (match, batch match, pool management).
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = callerIdPostSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
     const { action } = body;
 
     switch (action) {
@@ -155,27 +175,25 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Caller ID operation failed' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Update caller ID configuration for campaigns/outbound.
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { campaignId, defaultCallerId, areaCodeMatching } = body;
+    const raw = await request.json();
+    const parsed = callerIdPutSchema.safeParse(raw);
 
-    if (!defaultCallerId) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing defaultCallerId' },
+        { error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+
+    const body = parsed.data;
+    const { campaignId, defaultCallerId, areaCodeMatching } = body;
 
     // Verify the caller ID phone number exists
     const phoneNumber = await prisma.phoneNumber.findUnique({
@@ -236,4 +254,4 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to update caller ID' }, { status: 500 });
   }
-}
+});

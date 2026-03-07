@@ -201,13 +201,28 @@ async function anonymizeOldRecords(entityType: string, retentionDays: number): P
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
 
   if (entityType === 'lead') {
+    // Batch fetch all leads to anonymize with their PII fields
     const leads = await prisma.crmLead.findMany({
       where: { createdAt: { lt: cutoff } },
-      select: { id: true },
+      select: { id: true, contactName: true, email: true, phone: true, companyName: true },
     });
 
-    for (const lead of leads) {
-      await anonymizeRecord('lead', lead.id);
+    // Batch anonymize using a transaction instead of N individual updates
+    if (leads.length > 0) {
+      await prisma.$transaction(
+        leads.map((lead) =>
+          prisma.crmLead.update({
+            where: { id: lead.id },
+            data: {
+              contactName: `ANON-${hashPII(lead.contactName)}`,
+              email: lead.email ? `${hashPII(lead.email)}@anonymized.local` : null,
+              phone: lead.phone ? `ANON-${hashPII(lead.phone)}` : null,
+              companyName: lead.companyName ? `ANON-${hashPII(lead.companyName)}` : null,
+              customFields: Prisma.DbNull,
+            },
+          })
+        ),
+      );
     }
 
     return leads.length;
@@ -228,14 +243,18 @@ async function archiveOldRecords(entityType: string, retentionDays: number): Pro
       select: { id: true },
     });
 
-    // Mark deals with a custom tag for archival
-    for (const deal of deals) {
-      await prisma.crmDeal.update({
-        where: { id: deal.id },
-        data: {
-          tags: { push: '_archived' },
-        },
-      });
+    // Batch archive using a transaction instead of N individual updates
+    if (deals.length > 0) {
+      await prisma.$transaction(
+        deals.map((deal) =>
+          prisma.crmDeal.update({
+            where: { id: deal.id },
+            data: {
+              tags: { push: '_archived' },
+            },
+          })
+        ),
+      );
     }
 
     return deals.length;

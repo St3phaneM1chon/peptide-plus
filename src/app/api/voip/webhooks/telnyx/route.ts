@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
         const decoded = Buffer.from(payload.client_state, 'base64').toString('utf-8');
         clientState = JSON.parse(decoded);
       } catch {
-        // client_state is opaque, not always JSON
+        // client_state is opaque, not always JSON — safe to ignore parse failures
+        logger.debug('[Telnyx Webhook] client_state is not valid JSON (opaque value)', { callControlId });
       }
     }
 
@@ -181,7 +182,11 @@ export async function POST(request: NextRequest) {
           error: err instanceof Error ? err.message : String(err),
         });
       });
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.warn('[Telnyx Webhook] Dispatcher init failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
 
     // Always return 200 to Telnyx to acknowledge receipt
     return NextResponse.json({ status: 'ok' });

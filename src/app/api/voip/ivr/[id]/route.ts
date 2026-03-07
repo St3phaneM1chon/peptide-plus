@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { resolveTenant } from '@/lib/voip/tenant-context';
@@ -89,7 +90,36 @@ export async function PUT(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const ivrOptionSchema = z.object({
+      digit: z.string(),
+      label: z.string(),
+      action: z.string(),
+      target: z.string(),
+      announcement: z.string().optional(),
+      sortOrder: z.number().int().optional(),
+    });
+    const parsed = z.object({
+      name: z.string().optional(),
+      description: z.string().optional(),
+      greetingText: z.string().optional(),
+      language: z.string().optional(),
+      inputTimeout: z.number().int().optional(),
+      maxRetries: z.number().int().optional(),
+      timeoutAction: z.string().optional(),
+      timeoutTarget: z.string().optional(),
+      businessHoursStart: z.string().optional(),
+      businessHoursEnd: z.string().optional(),
+      afterHoursMenuId: z.string().optional(),
+      isActive: z.boolean().optional(),
+      options: z.array(ivrOptionSchema).optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const {
       name,
@@ -105,7 +135,7 @@ export async function PUT(
       afterHoursMenuId,
       isActive,
       options,
-    } = body;
+    } = parsed.data;
 
     // Update menu
     await prisma.ivrMenu.update({
@@ -191,12 +221,17 @@ export async function POST(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { digit } = body;
-
-    if (!digit || typeof digit !== 'string') {
-      return NextResponse.json({ error: 'digit is required (string)' }, { status: 400 });
+    const rawPost = await request.json();
+    const parsedPost = z.object({
+      digit: z.string().min(1),
+    }).safeParse(rawPost);
+    if (!parsedPost.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsedPost.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { digit } = parsedPost.data;
 
     // Look up the option for this digit (dry-run — no call control)
     const option = await prisma.ivrMenuOption.findUnique({

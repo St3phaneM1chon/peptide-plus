@@ -95,7 +95,7 @@ const emptySlide: Omit<HeroSlide, 'id' | 'translations'> = {
 };
 
 export default function BannieresPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -550,12 +550,12 @@ export default function BannieresPage() {
                     {/* IMP-067: Schedule-aware status indicators */}
                     {slide.startDate && new Date(slide.startDate) > new Date() && (
                       <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-medium">
-                        {t('admin.banners.scheduled') || 'Scheduled'}: {new Date(slide.startDate).toLocaleDateString()}
+                        {t('admin.banners.scheduled') || 'Scheduled'}: {new Date(slide.startDate).toLocaleDateString(locale)}
                       </span>
                     )}
                     {slide.endDate && new Date(slide.endDate) < new Date() && (
                       <span className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-500 rounded text-[10px] font-medium">
-                        {t('admin.banners.expired') || 'Expired'}: {new Date(slide.endDate).toLocaleDateString()}
+                        {t('admin.banners.expired') || 'Expired'}: {new Date(slide.endDate).toLocaleDateString(locale)}
                       </span>
                     )}
                   </div>

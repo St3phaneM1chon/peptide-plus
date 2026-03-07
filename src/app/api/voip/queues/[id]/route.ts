@@ -8,10 +8,29 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { resolveTenant } from '@/lib/voip/tenant-context';
 import { getQueueStats } from '@/lib/voip/queue-engine';
+
+const queueUpdateSchema = z.object({
+  name: z.string().optional(),
+  strategy: z.enum(['RING_ALL', 'ROUND_ROBIN', 'LEAST_RECENT', 'RANDOM', 'HUNT']).optional(),
+  ringTimeout: z.number().int().positive().optional(),
+  maxWaitTime: z.number().int().positive().optional(),
+  wrapUpTime: z.number().int().nonnegative().optional(),
+  holdMusicUrl: z.string().url().nullable().optional(),
+  announcePosition: z.boolean().optional(),
+  announceInterval: z.number().int().positive().optional(),
+  overflowAction: z.string().optional(),
+  overflowTarget: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  members: z.array(z.object({
+    userId: z.string().min(1),
+    priority: z.number().int().nonnegative().optional(),
+  })).optional(),
+});
 
 export async function GET(
   _request: NextRequest,
@@ -97,7 +116,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = queueUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
 
     const {
       name,
@@ -112,7 +135,7 @@ export async function PUT(
       overflowTarget,
       isActive,
       members,
-    } = body;
+    } = parsed.data;
 
     await prisma.callQueue.update({
       where: { id },

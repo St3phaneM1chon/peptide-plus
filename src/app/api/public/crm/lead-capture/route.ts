@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { processWorkflowTrigger } from '@/lib/crm/workflow-engine';
@@ -41,15 +42,24 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { formId, contactName, email, phone, companyName, message, source, customFields } = body;
-
-    if (!contactName) {
+    const raw = await request.json();
+    const parsed = z.object({
+      formId: z.string().optional(),
+      contactName: z.string().min(1),
+      email: z.string().email().optional(),
+      phone: z.string().optional(),
+      companyName: z.string().optional(),
+      message: z.string().optional(),
+      source: z.string().optional(),
+      customFields: z.record(z.unknown()).optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'contactName is required' },
+        { success: false, error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+    const { formId, contactName, email, phone, companyName, message, source, customFields } = parsed.data;
 
     // Validate form exists if formId provided
     let form = null;

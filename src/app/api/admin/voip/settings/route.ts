@@ -10,17 +10,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { z } from 'zod';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+
+const settingsPatchSchema = z.object({
+  noiseCancellation: z.boolean().optional(),
+  ringtone: z.string().optional(),
+  virtualBackground: z.string().optional(),
+}).passthrough();
 
 // In-memory store keyed by userId (production would use DB)
 const userSettings = new Map<string, Record<string, unknown>>();
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   const settings = userSettings.get(session.user.id) ?? {
     noiseCancellation: false,
     ringtone: 'default',
@@ -28,16 +30,21 @@ export async function GET() {
   };
 
   return NextResponse.json(settings);
-}
+});
 
-export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PATCH = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = settingsPatchSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const body = parsed.data;
     const current = userSettings.get(session.user.id) ?? {
       noiseCancellation: false,
       ringtone: 'default',
@@ -51,4 +58,4 @@ export async function PATCH(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
-}
+});

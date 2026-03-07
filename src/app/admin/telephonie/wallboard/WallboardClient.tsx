@@ -50,7 +50,7 @@ function formatSeconds(seconds: number): string {
 }
 
 export default function WallboardClient({ initialData }: { initialData: WallboardData }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<WallboardData>(initialData);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
@@ -215,7 +215,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-400">
-            {lastRefresh.toLocaleTimeString()}
+            {lastRefresh.toLocaleTimeString(locale)}
           </span>
           <button
             onClick={refreshData}

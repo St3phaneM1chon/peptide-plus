@@ -369,6 +369,10 @@ export async function completePayment(
     return { success: false, error: 'Session not found' };
   }
 
+  if (session.status === 'completed') {
+    return { success: false, error: 'Payment already completed for this session' };
+  }
+
   if (session.status !== 'ready') {
     return { success: false, error: `Payment not ready. Current status: ${session.status}` };
   }
@@ -412,6 +416,8 @@ export async function completePayment(
           callId: session.callId,
           channel: 'ivr',
         },
+      }, {
+        idempotencyKey: `ivr_${session.sessionId}`,
       });
 
       transactionId = paymentIntent.id;

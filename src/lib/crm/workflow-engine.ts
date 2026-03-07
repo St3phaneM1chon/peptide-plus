@@ -841,19 +841,29 @@ export async function processWorkflowTrigger(event: WorkflowTriggerEvent): Promi
 
   let executedCount = 0;
 
+  // Batch-fetch running executions for all matching workflows to avoid N+1
+  const matchingWorkflowIds = workflows
+    .filter(w => matchesTrigger(w, event))
+    .map(w => w.id);
+
+  const runningExecutions = matchingWorkflowIds.length > 0
+    ? await prisma.crmWorkflowExecution.findMany({
+        where: {
+          workflowId: { in: matchingWorkflowIds },
+          entityType: event.entityType,
+          entityId: event.entityId,
+          status: 'RUNNING',
+        },
+        select: { workflowId: true },
+      })
+    : [];
+  const runningWorkflowIds = new Set(runningExecutions.map(e => e.workflowId));
+
   for (const workflow of workflows) {
     if (!matchesTrigger(workflow, event)) continue;
 
     // Check for duplicate execution (same entity, same workflow, still running)
-    const existing = await prisma.crmWorkflowExecution.findFirst({
-      where: {
-        workflowId: workflow.id,
-        entityType: event.entityType,
-        entityId: event.entityId,
-        status: 'RUNNING',
-      },
-    });
-    if (existing) continue;
+    if (runningWorkflowIds.has(workflow.id)) continue;
 
     // Create execution record
     const execution = await prisma.crmWorkflowExecution.create({

@@ -9,8 +9,15 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { directedPickup, groupPickup } from '@/lib/voip/call-pickup';
+
+const pickupSchema = z.object({
+  action: z.enum(['directed', 'group']),
+  targetExtension: z.string().optional(),
+  callControlId: z.string().min(1, 'callControlId required'),
+});
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -19,16 +26,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { action, targetExtension, callControlId } = body as {
-      action: 'directed' | 'group';
-      targetExtension?: string;
-      callControlId: string;
-    };
-
-    if (!callControlId) {
-      return NextResponse.json({ error: 'callControlId required' }, { status: 400 });
+    const raw = await request.json();
+    const parsed = pickupSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
+
+    const { action, targetExtension, callControlId } = parsed.data;
 
     if (action === 'directed') {
       if (!targetExtension) {

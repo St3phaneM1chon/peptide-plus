@@ -273,7 +273,7 @@ function SuppliersTab() {
 // ── Purchase Orders Sub-Component ────────────────────────────
 
 function PurchaseOrdersTab() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -523,10 +523,10 @@ function PurchaseOrdersTab() {
                     <td className="px-4 py-3 font-medium text-slate-900">${Number(po.totalCost).toFixed(2)}</td>
                     <td className="px-4 py-3">{poStatusBadge(po.status)}</td>
                     <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">
-                      {po.expectedDelivery ? new Date(po.expectedDelivery).toLocaleDateString() : '-'}
+                      {po.expectedDelivery ? new Date(po.expectedDelivery).toLocaleDateString(locale) : '-'}
                     </td>
                     <td className="px-4 py-3 text-slate-600 hidden lg:table-cell">
-                      {new Date(po.createdAt).toLocaleDateString()}
+                      {new Date(po.createdAt).toLocaleDateString(locale)}
                     </td>
                   </tr>
                 );
@@ -561,6 +561,7 @@ interface ReconciliationData {
 }
 
 function ReconciliationTab() {
+  const { locale } = useI18n();
   const [data, setData] = useState<ReconciliationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'discrepancy'>('all');
@@ -639,7 +640,7 @@ function ReconciliationTab() {
         <StatCard label="Discrepancies" value={data.discrepancyCount} icon={AlertTriangle} />
         <StatCard
           label="Last Reconciled"
-          value={data.lastReconciled ? new Date(data.lastReconciled).toLocaleDateString() : 'Never'}
+          value={data.lastReconciled ? new Date(data.lastReconciled).toLocaleDateString(locale) : 'Never'}
           icon={Clock}
         />
       </div>

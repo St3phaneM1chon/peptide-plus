@@ -49,7 +49,7 @@ export default function IconRail() {
 
   return (
     <nav
-      className="w-12 h-full bg-sky-950 flex flex-col flex-shrink-0"
+      className="w-12 h-full bg-[#0a1628] flex flex-col flex-shrink-0"
       aria-label={t('admin.outlook.mainNavigationRail') || 'Main navigation rail'}
     >
       {/* Rail items */}
@@ -71,12 +71,12 @@ export default function IconRail() {
               className={`
                 relative w-12 h-12 flex items-center justify-center transition-colors
                 ${isActive
-                  ? 'bg-sky-700 border-s-[3px] border-s-white'
-                  : 'border-s-[3px] border-s-transparent hover:bg-sky-800'
+                  ? 'bg-sky-600 border-s-[3px] border-s-sky-300'
+                  : 'border-s-[3px] border-s-transparent hover:bg-white/10'
                 }
               `}
             >
-              <Icon className="w-5 h-5 text-white" />
+              <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
 
               {/* Badge */}
               {badgeCount > 0 && (
@@ -94,16 +94,16 @@ export default function IconRail() {
       </div>
 
       {/* Bottom section */}
-      <div className="border-t border-sky-800 flex flex-col items-center py-1">
+      <div className="border-t border-white/10 flex flex-col items-center py-1">
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
           title={t('admin.outlook.viewSite')}
           aria-label={t('admin.outlook.viewSite')}
-          className="w-12 h-12 flex items-center justify-center hover:bg-sky-800 transition-colors"
+          className="w-12 h-12 flex items-center justify-center hover:bg-white/10 transition-colors"
         >
-          <ExternalLink className="w-5 h-5 text-white" />
+          <ExternalLink className="w-5 h-5 text-slate-400" />
         </a>
       </div>
     </nav>

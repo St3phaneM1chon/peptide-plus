@@ -151,6 +151,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Idempotency: Generate a unique request key from userId + paymentIntentId (or amount+timestamp)
+    // to prevent duplicate gift card creation from double-clicks or retries.
+    const idempotencyKey = paymentIntentId
+      ? `gift_${session.user.id}_${paymentIntentId}`
+      : `gift_${session.user.id}_${parsedAmount}_${Date.now()}`;
+
+    // Duplicate purchase check: if a non-admin provides a paymentIntentId, verify it wasn't already used
+    // (This is already checked above for Stripe verification, but also guard the admin path)
+    if (paymentIntentId) {
+      const existingByPI = await prisma.giftCard.findUnique({
+        where: { stripePaymentIntentId: paymentIntentId },
+      });
+      if (existingByPI) {
+        logger.warn('Duplicate gift card purchase attempt', {
+          paymentIntentId,
+          existingGiftCardId: existingByPI.id,
+          userId: session.user.id,
+          idempotencyKey,
+        });
+        // Return the existing card (idempotent response)
+        return NextResponse.json({
+          success: true,
+          giftCard: {
+            id: existingByPI.id,
+            code: existingByPI.code,
+            amount: Number(existingByPI.initialAmount),
+            status: existingByPI.isActive ? 'ACTIVE' : 'PENDING_PAYMENT',
+            recipientEmail: existingByPI.recipientEmail,
+            recipientName: existingByPI.recipientName,
+            expiresAt: existingByPI.expiresAt,
+          },
+          idempotent: true,
+        });
+      }
+    }
+
     // Rate limit: max 5 gift cards per user per day
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentCount = await prisma.giftCard.count({
@@ -188,7 +224,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
-    // Create gift card as PENDING with zero balance.
+    // Create gift card as PENDING with zero balance inside a transaction for atomicity.
     // The card will be activated (isActive=true, balance=initialAmount)
     // only after payment is confirmed via the /api/gift-cards/activate endpoint
     // which is called by the Stripe/PayPal webhook after successful payment.

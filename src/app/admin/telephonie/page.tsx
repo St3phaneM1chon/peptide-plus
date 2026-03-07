@@ -5,11 +5,13 @@ export const dynamic = 'force-dynamic';
  * Shows KPI cards, recent calls, and agent status.
  */
 
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import VoipDashboardClient from './VoipDashboardClient';
+import Loading from './loading';
 
 async function getVoipData() {
   const now = new Date();
@@ -79,13 +81,20 @@ async function getVoipData() {
   };
 }
 
+async function VoipContent() {
+  const data = await getVoipData();
+  return <VoipDashboardClient data={data} />;
+}
+
 export default async function VoipDashboardPage() {
   const session = await auth();
   if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
     redirect('/auth/signin');
   }
 
-  const data = await getVoipData();
-
-  return <VoipDashboardClient data={data} />;
+  return (
+    <Suspense fallback={<Loading />}>
+      <VoipContent />
+    </Suspense>
+  );
 }

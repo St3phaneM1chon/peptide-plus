@@ -322,6 +322,7 @@ export default function RapportsComptablesPage() {
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
               className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              aria-label={t('admin.reports.filterYear')}
             >
               <option value="2026">2026</option>
               <option value="2025">2025</option>

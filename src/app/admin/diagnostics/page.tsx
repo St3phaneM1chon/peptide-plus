@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useI18n } from '@/i18n/client';
 import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Clock, Zap, Globe, Server } from 'lucide-react';
 
 interface DiagnosticResult {
@@ -37,6 +38,7 @@ function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' }) {
 }
 
 export default function NetworkDiagnosticsPage() {
+  const { locale } = useI18n();
   const [data, setData] = useState<NetworkDiagnostics | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,13 +54,13 @@ export default function NetworkDiagnosticsPage() {
       }
       const result: NetworkDiagnostics = await res.json();
       setData(result);
-      setLastRun(new Date().toLocaleTimeString());
+      setLastRun(new Date().toLocaleTimeString(locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   // Group checks by category
   const dnsChecks = data?.checks.filter(c => c.name.startsWith('DNS')) || [];
@@ -66,7 +68,7 @@ export default function NetworkDiagnosticsPage() {
   const speedChecks = data?.checks.filter(c => c.name.startsWith('Download')) || [];
 
   return (
-    <div className="space-y-6 p-6 max-w-4xl">
+    <div className="space-y-6 p-6 max-w-4xl" role="main" aria-label="Diagnostics Reseau">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -148,7 +150,7 @@ export default function NetworkDiagnosticsPage() {
           {/* Footer */}
           <div className="flex items-center justify-between text-xs text-gray-400 pt-2">
             <span>Derniere execution: {lastRun}</span>
-            <span>Timestamp serveur: {new Date(data.timestamp).toLocaleString()}</span>
+            <span>Timestamp serveur: {new Date(data.timestamp).toLocaleString(locale)}</span>
           </div>
         </>
       )}

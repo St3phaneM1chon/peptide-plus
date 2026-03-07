@@ -40,8 +40,10 @@ export const GET = withAdminGuard(async () => {
       try {
         const rate = await getExchangeRate(pair.from, pair.to);
         liveRates[pair.from] = rate;
-      } catch {
-        // Live rate unavailable -- will fall back to DB value
+      } catch (rateErr) {
+        logger.debug(`[fx-rates] Live rate unavailable for ${pair.from}/${pair.to}, falling back to DB`, {
+          error: rateErr instanceof Error ? rateErr.message : String(rateErr),
+        });
       }
     });
     await Promise.all(livePromises);

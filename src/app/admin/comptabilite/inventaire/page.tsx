@@ -184,7 +184,7 @@ function movementTypeBadge(type: string): BadgeVariant {
 // ---------------------------------------------------------------------------
 
 export default function InventairePage() {
-  const { t, formatCurrency } = useI18n();
+  const { t, formatCurrency, locale } = useI18n();
   // Tab state
   const [activeTab, setActiveTab] = useState<TabId>('stock');
 
@@ -768,7 +768,7 @@ export default function InventairePage() {
     {
       key: 'createdAt',
       header: t('admin.inventory.adv.colDate'),
-      render: (row) => <span className="text-sm text-gray-500">{new Date(row.createdAt).toLocaleDateString()}</span>,
+      render: (row) => <span className="text-sm text-gray-500">{new Date(row.createdAt).toLocaleDateString(locale)}</span>,
     },
     {
       key: 'actions',
@@ -815,7 +815,7 @@ export default function InventairePage() {
     {
       key: 'createdAt',
       header: t('admin.inventory.adv.colDate'),
-      render: (row) => <span className="text-sm">{new Date(row.createdAt).toLocaleString()}</span>,
+      render: (row) => <span className="text-sm">{new Date(row.createdAt).toLocaleString(locale)}</span>,
     },
     {
       key: 'type',

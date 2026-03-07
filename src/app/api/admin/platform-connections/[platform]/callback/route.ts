@@ -41,9 +41,16 @@ export async function GET(request: NextRequest, context: RouteParams) {
     );
   }
 
-  // Get current user ID
+  // Verify admin session — only EMPLOYEE/OWNER can connect platforms
   const session = await auth();
   const userId = session?.user?.id;
+  const userRole = (session?.user as any)?.role;
+
+  if (!userId || !['OWNER', 'EMPLOYEE'].includes(userRole)) {
+    return NextResponse.redirect(
+      publicRedirect('/admin/media/connections?error=unauthorized')
+    );
+  }
 
   const result = await handleCallback(platform as Platform, code, userId);
 

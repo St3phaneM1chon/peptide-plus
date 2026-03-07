@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { auth } from '@/lib/auth-config';
 import {
@@ -104,22 +105,29 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      provider: z.enum(['google', 'outlook']).optional(),
+      accessToken: z.string().optional(),
+      refreshToken: z.string().optional(),
+      syncInterval: z.number().int().positive().optional().default(5),
+      autoPresence: z.boolean().optional().default(true),
+      action: z.enum(['sync', 'configure', 'stop']).optional().default('configure'),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       provider,
       accessToken,
       refreshToken,
-      syncInterval = 5,
-      autoPresence = true,
-      action = 'configure',
-    } = body as {
-      provider?: 'google' | 'outlook';
-      accessToken?: string;
-      refreshToken?: string;
-      syncInterval?: number;
-      autoPresence?: boolean;
-      action?: 'sync' | 'configure' | 'stop';
-    };
+      syncInterval,
+      autoPresence,
+      action,
+    } = parsed.data;
 
     // Stop auto-sync
     if (action === 'stop') {

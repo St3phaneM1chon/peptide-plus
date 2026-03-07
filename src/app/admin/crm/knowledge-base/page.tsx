@@ -44,7 +44,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function KnowledgeBasePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [articles, setArticles] = useState<KBArticle[]>([]);
   const [categories, setCategories] = useState<KBCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -258,7 +258,7 @@ export default function KnowledgeBasePage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs">
-                    {new Date(article.updatedAt).toLocaleDateString()}
+                    {new Date(article.updatedAt).toLocaleDateString(locale)}
                   </td>
                 </tr>
               ))}

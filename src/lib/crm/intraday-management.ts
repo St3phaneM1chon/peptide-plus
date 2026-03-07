@@ -76,31 +76,34 @@ export async function getIntradayForecast(): Promise<IntradayComparison[]> {
   }
 
   // Get historical average for this day of week (simple forecast)
+  // Batch: fetch all historical calls in a single query spanning the last 4 weeks
   const dayOfWeek = now.getDay();
   const historicalWeeks = 4;
   const historicalCounts = new Array(24).fill(0);
   let weeksWithData = 0;
 
-  for (let w = 1; w <= historicalWeeks; w++) {
-    const histDay = new Date(todayStart);
-    histDay.setDate(histDay.getDate() - w * 7);
-    const histEnd = new Date(histDay.getTime() + 86400000);
+  const histRangeStart = new Date(todayStart);
+  histRangeStart.setDate(histRangeStart.getDate() - historicalWeeks * 7);
 
-    if (histDay.getDay() !== dayOfWeek) continue;
+  const allHistCalls = await prisma.callLog.findMany({
+    where: {
+      startedAt: { gte: histRangeStart, lt: todayStart },
+      direction: 'INBOUND',
+    },
+    select: { startedAt: true },
+  });
 
-    const histCalls = await prisma.callLog.findMany({
-      where: {
-        startedAt: { gte: histDay, lt: histEnd },
-        direction: 'INBOUND',
-      },
-      select: { startedAt: true },
-    });
-
-    if (histCalls.length > 0) weeksWithData++;
-    for (const c of histCalls) {
-      historicalCounts[c.startedAt.getHours()]++;
-    }
+  // Group by week and filter to matching day-of-week
+  const weeksWithCallData = new Set<number>();
+  for (const c of allHistCalls) {
+    const callDate = new Date(c.startedAt);
+    if (callDate.getDay() !== dayOfWeek) continue;
+    // Identify which week this belongs to
+    const weekNum = Math.floor((todayStart.getTime() - callDate.getTime()) / (7 * 86400000));
+    weeksWithCallData.add(weekNum);
+    historicalCounts[callDate.getHours()]++;
   }
+  weeksWithData = weeksWithCallData.size;
 
   const divisor = Math.max(1, weeksWithData);
 

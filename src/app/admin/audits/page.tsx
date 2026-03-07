@@ -154,6 +154,7 @@ const categoryLabels: Record<string, { en: string; fr: string }> = {
   compliance: { en: 'Compliance', fr: 'Conformité' },
   performance: { en: 'Performance', fr: 'Performance' },
   quality: { en: 'Quality', fr: 'Qualité' },
+  section: { en: 'Section', fr: 'Section' },
 };
 
 export default function AuditDashboardPage() {

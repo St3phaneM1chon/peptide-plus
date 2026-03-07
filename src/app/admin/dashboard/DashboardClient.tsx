@@ -197,7 +197,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="main" aria-label={t('admin.dashboard.title')}>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -393,7 +393,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {user.image ? (
-                      <Image src={user.image} alt="" width={36} height={36} className="w-9 h-9 rounded-full object-cover" unoptimized />
+                      <Image src={user.image} alt={user.name ? `${user.name} avatar` : 'User avatar'} width={36} height={36} className="w-9 h-9 rounded-full object-cover" unoptimized />
                     ) : (
                       <span className="text-slate-600 font-semibold text-sm">
                         {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}
@@ -495,7 +495,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
                   </div>
                   <div>
                     <p className="text-slate-500">{t('admin.dashboard.pointsDistributed') || 'Points'}</p>
-                    <p className="font-bold text-purple-700">{crossModule.modules.loyalty.pointsDistributedToday.toLocaleString()}</p>
+                    <p className="font-bold text-purple-700">{crossModule.modules.loyalty.pointsDistributedToday.toLocaleString(locale)}</p>
                   </div>
                 </div>
               </Link>

@@ -463,9 +463,11 @@ async function detectAnomalies(): Promise<Anomaly[]> {
   const [recentSnapshots, prevSnapshots] = await Promise.all([
     prisma.adCampaignSnapshot.findMany({
       where: { date: new Date(formatDate(yesterday)) },
+      take: 1000,
     }),
     prisma.adCampaignSnapshot.findMany({
       where: { date: new Date(formatDate(dayBefore)) },
+      take: 1000,
     }),
   ]);
 

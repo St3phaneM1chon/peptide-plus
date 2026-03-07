@@ -1599,7 +1599,11 @@
       "you": "You",
       "timeNow": "ahora",
       "timeMinute": "min",
-      "timeHour": "h"
+      "timeHour": "h",
+      "typing": "{name} is typing...",
+      "read": "Read",
+      "delivered": "Delivered",
+      "userIsTyping": "{name} is typing..."
     },
     "clientPortal": {
       "title": "Client Portal",
@@ -5507,7 +5511,8 @@
       "crmDealJourney": "Deal Journey",
       "crmSnapshots": "Snapshots",
       "crmDashboardBuilder": "Dashboard Builder",
-      "modules": "Modules"
+      "modules": "Modules",
+      "fiscal": "Fiscal"
     },
     "newsletter": {
       "activeSubscribers": "Suscriptores activos",
@@ -5975,7 +5980,8 @@
       "schedulePublishSuccess": "Publication scheduled successfully",
       "scheduleUnpublishSuccess": "Unpublication scheduled successfully",
       "schedulePublishPreview": "The product will be published on",
-      "scheduleUnpublishPreview": "The product will be unpublished on"
+      "scheduleUnpublishPreview": "The product will be unpublished on",
+      "filterByCategory": "Filter by category"
     },
     "promoCodes": {
       "active": "Activo",
@@ -7386,7 +7392,38 @@
       "dealValue": "Value",
       "dealStage": "Stage",
       "noDeals": "No deals",
-      "viewDeal": "View Deal"
+      "viewDeal": "View Deal",
+      "conference": {
+        "title": "Video Conference",
+        "subtitle": "Create and join video conference rooms",
+        "create": "Create Room",
+        "createTitle": "Create Conference Room",
+        "roomName": "Room Name",
+        "roomNamePlaceholder": "e.g. Team Standup, Sales Demo...",
+        "maxParticipants": "Max Participants",
+        "noRooms": "No active conference rooms",
+        "noRoomsDesc": "Create a room to start a video conference",
+        "join": "Join",
+        "end": "End",
+        "leave": "Leave",
+        "ended": "Conference ended",
+        "created": "Conference room created",
+        "confirmEnd": "End this conference? All participants will be disconnected.",
+        "createdBy": "Created by",
+        "participants": "Participants",
+        "mute": "Mute",
+        "kick": "Remove",
+        "confirmKick": "Remove this participant from the conference?",
+        "participantKicked": "Participant removed",
+        "participantMuted": "Participant muted",
+        "connecting": "Connecting to conference...",
+        "connectionError": "Connection Error",
+        "backToLobby": "Back to Lobby",
+        "recordingStarted": "Recording started",
+        "recordingStopped": "Recording stopped",
+        "liveKitReady": "Video Conference Ready",
+        "liveKitConfig": "Configure LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET environment variables to enable LiveKit video conferencing."
+      }
     },
     "modules": {
       "title": "Module Management",
@@ -8273,7 +8310,8 @@
     "skip": "Skip",
     "filters": "Filters",
     "settings": "Settings",
-    "units": "units"
+    "units": "units",
+    "actions": "Acciones"
   },
   "community": {
     "allDiscussions": "Todas las discusiones",
@@ -10854,7 +10892,9 @@
       },
       "video": {
         "enable": "Enable Video",
-        "disable": "Disable Video"
+        "disable": "Disable Video",
+        "noCamera": "No camera detected",
+        "cameraInUse": "Camera is in use by another application"
       },
       "notes": {
         "title": "Call Notes",
@@ -11048,7 +11088,9 @@
       "startRecording": "Start Recording",
       "startScreenShare": "Start Screen Sharing",
       "startVideoRecord": "Start Video Recording",
-      "conferenceNumber": "Conference number"
+      "conferenceNumber": "Conference number",
+      "stopScreenShare2": "Dejar de compartir",
+      "stopVideoRecord2": "Detener grabación de video"
     },
     "dashboard": {
       "title": "VoIP Telephony",
@@ -11090,7 +11132,13 @@
       "agent": "Agent",
       "client": "Client",
       "summary": "Summary",
-      "empty": "No recordings available"
+      "empty": "No recordings available",
+      "all": "All",
+      "audioTab": "Audio",
+      "videoTab": "Video",
+      "chatTab": "Chat",
+      "searchPlaceholder": "Search recordings, transcriptions, chats...",
+      "lastMessage": "Last message"
     },
     "voicemail": {
       "title": "Voicemail",

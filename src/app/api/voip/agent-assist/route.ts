@@ -20,6 +20,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { AgentAssist, type Suggestion } from '@/lib/voip/agent-assist';
 import { logger } from '@/lib/logger';
@@ -51,23 +52,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { action } = body;
+    const raw = await request.json();
+    const parsed = z.object({
+      action: z.enum(['suggest', 'response', 'knowledge', 'dismiss', 'reset']),
+      speaker: z.enum(['agent', 'customer']).optional(),
+      text: z.string().optional(),
+      crmContext: z.record(z.unknown()).optional(),
+      query: z.string().optional(),
+      suggestionId: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { action, speaker, text, crmContext, query, suggestionId } = parsed.data;
 
     const assist = getAssistForUser(session.user.id);
 
     switch (action) {
       case 'suggest': {
-        const { speaker, text, crmContext } = body;
         if (!speaker || !text) {
           return NextResponse.json(
             { error: 'speaker and text are required' },
-            { status: 400 }
-          );
-        }
-        if (!['agent', 'customer'].includes(speaker)) {
-          return NextResponse.json(
-            { error: 'speaker must be "agent" or "customer"' },
             { status: 400 }
           );
         }
@@ -95,7 +103,6 @@ export async function POST(request: NextRequest) {
       }
 
       case 'knowledge': {
-        const { query } = body;
         if (!query) {
           return NextResponse.json(
             { error: 'query is required' },
@@ -110,7 +117,6 @@ export async function POST(request: NextRequest) {
       }
 
       case 'dismiss': {
-        const { suggestionId } = body;
         if (!suggestionId) {
           return NextResponse.json(
             { error: 'suggestionId is required' },

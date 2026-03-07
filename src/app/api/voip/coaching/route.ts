@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import {
@@ -92,7 +93,39 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = z.object({
+      action: z.enum([
+        'create', 'start-call', 'end-call', 'supervisor-join', 'supervisor-mode',
+        'score', 'feedback', 'live-score', 'create-room', 'add-student',
+        'unmute-student', 'mute-student', 'mute-all', 'raise-hand', 'room-status', 'end-room',
+      ]),
+      companyId: z.string().optional(),
+      coachId: z.string().optional(),
+      studentId: z.string().optional(),
+      scheduledAt: z.string().optional(),
+      topic: z.string().optional(),
+      objectives: z.string().optional(),
+      sessionId: z.string().optional(),
+      callerIdNumber: z.string().optional(),
+      supervisorPhone: z.string().optional(),
+      mode: z.string().optional(),
+      feedback: z.string().optional(),
+      name: z.string().optional(),
+      instructorPhone: z.string().optional(),
+      conferenceId: z.string().optional(),
+      studentPhone: z.string().optional(),
+      studentUserId: z.string().optional(),
+      studentName: z.string().optional(),
+      callControlId: z.string().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const { action } = body;
 
     switch (action) {

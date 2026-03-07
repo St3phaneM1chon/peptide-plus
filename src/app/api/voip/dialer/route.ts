@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import {
   startDialerSession,
@@ -25,8 +26,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { action, campaignId, disposition } = body;
+    const raw = await request.json();
+    const parsed = z.object({
+      action: z.enum(['start', 'pause', 'resume', 'stop', 'disposition']),
+      campaignId: z.string().optional(),
+      disposition: z.object({
+        contactId: z.string(),
+        result: z.string(),
+      }).passthrough().optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { action, campaignId, disposition } = parsed.data;
     const agentUserId = session.user.id;
 
     switch (action) {

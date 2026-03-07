@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import NextImage from 'next/image';
 import {
   Plus, Eye, Send, FileText, Copy, Trash2,
   CheckCircle, XCircle, Clock,
@@ -788,6 +789,7 @@ export default function DevisPage() {
                             onChange={(e) => updateLine(idx, 'productName', e.target.value)}
                             className="w-full border-0 bg-transparent text-sm focus:ring-0 p-1"
                             placeholder="Nom du produit"
+                            aria-label={`Nom du produit, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1">
@@ -797,6 +799,7 @@ export default function DevisPage() {
                             onChange={(e) => updateLine(idx, 'description', e.target.value)}
                             className="w-full border-0 bg-transparent text-sm focus:ring-0 p-1"
                             placeholder="Description"
+                            aria-label={`Description, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1">
@@ -807,6 +810,7 @@ export default function DevisPage() {
                             value={item.quantity}
                             onChange={(e) => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
                             className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            aria-label={`Quantité, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1">
@@ -817,6 +821,7 @@ export default function DevisPage() {
                             value={item.unitPrice}
                             onChange={(e) => updateLine(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
                             className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            aria-label={`Prix unitaire, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1">
@@ -828,6 +833,7 @@ export default function DevisPage() {
                             value={item.discountPercent}
                             onChange={(e) => updateLine(idx, 'discountPercent', parseFloat(e.target.value) || 0)}
                             className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            aria-label={`Rabais %, ligne ${idx + 1}`}
                           />
                         </td>
                         <td className="px-3 py-1 text-right font-medium text-sm">
@@ -1037,11 +1043,13 @@ export default function DevisPage() {
                     <span> le {new Date(selectedEstimate.acceptedAt).toLocaleDateString('fr-CA')}</span>
                   )}
                 </p>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <NextImage
                   src={selectedEstimate.signatureData}
                   alt="Signature du client"
+                  width={200}
+                  height={96}
                   className="max-h-24 border rounded bg-white p-2"
+                  unoptimized
                 />
               </div>
             )}

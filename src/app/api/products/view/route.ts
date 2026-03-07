@@ -14,9 +14,14 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+
+const productViewSchema = z.object({
+  productId: z.string().min(1),
+});
 
 const DEDUP_MINUTES = 5; // Don't log same product view within 5 minutes
 
@@ -27,12 +32,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { productId } = body;
+    const raw = await request.json();
+    const parsed = productViewSchema.safeParse(raw);
 
-    if (!productId || typeof productId !== 'string') {
-      return NextResponse.json({ error: 'productId is required' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+
+    const { productId } = parsed.data;
 
     // Dedup: skip if the same user viewed this product within the last N minutes
     const dedupWindow = new Date(Date.now() - DEDUP_MINUTES * 60 * 1000);

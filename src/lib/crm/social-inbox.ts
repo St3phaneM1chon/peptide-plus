@@ -22,6 +22,66 @@ export async function processFacebookMessage(payload: any): Promise<void> {
     return;
   }
 
+  // Collect all unique sender IDs from all entries
+  const allSenderIds = new Set<string>();
+  for (const entry of entries) {
+    const messaging = entry.messaging;
+    if (!Array.isArray(messaging)) continue;
+    for (const event of messaging) {
+      if (event.sender?.id && event.message?.text) {
+        allSenderIds.add(event.sender.id);
+      }
+    }
+  }
+
+  // Batch fetch sender names
+  const senderNameMap = new Map<string, string | null>();
+  await Promise.all(
+    [...allSenderIds].map(async (senderId) => {
+      const name = await fetchFacebookUserName(senderId);
+      senderNameMap.set(senderId, name);
+    })
+  );
+
+  // Batch fetch existing conversations for all sender IDs
+  const existingConversations = allSenderIds.size > 0
+    ? await prisma.inboxConversation.findMany({
+        where: {
+          channel: 'FACEBOOK',
+          status: { not: 'RESOLVED' },
+          messages: {
+            some: {
+              metadata: {
+                path: ['platformSenderId'],
+                string_contains: '', // We'll filter client-side
+              },
+            },
+          },
+        },
+        include: {
+          messages: {
+            where: { direction: 'INBOUND' },
+            select: { metadata: true },
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+        orderBy: { lastMessageAt: 'desc' },
+      })
+    : [];
+
+  // Build a map of senderId -> conversation
+  const conversationBySender = new Map<string, typeof existingConversations[0]>();
+  for (const conv of existingConversations) {
+    for (const msg of conv.messages) {
+      const meta = msg.metadata as Record<string, unknown> | null;
+      const sid = meta?.platformSenderId as string | undefined;
+      if (sid && allSenderIds.has(sid) && !conversationBySender.has(sid)) {
+        conversationBySender.set(sid, conv);
+      }
+    }
+  }
+
   for (const entry of entries) {
     const messaging = entry.messaging;
     if (!Array.isArray(messaging)) continue;
@@ -32,28 +92,13 @@ export async function processFacebookMessage(payload: any): Promise<void> {
 
       if (!senderId || !message?.text) continue;
 
-      const senderName = await fetchFacebookUserName(senderId);
+      const senderName = senderNameMap.get(senderId) ?? null;
 
-      // Find or create conversation
-      let conversation = await prisma.inboxConversation.findFirst({
-        where: {
-          channel: 'FACEBOOK',
-          status: { not: 'RESOLVED' },
-          // Match by metadata containing senderId
-          messages: {
-            some: {
-              metadata: {
-                path: ['platformSenderId'],
-                equals: senderId,
-              },
-            },
-          },
-        },
-        orderBy: { lastMessageAt: 'desc' },
-      });
+      // Find or create conversation (using pre-fetched map)
+      let conversation = conversationBySender.get(senderId) ?? null;
 
       if (!conversation) {
-        conversation = await prisma.inboxConversation.create({
+        const created = await prisma.inboxConversation.create({
           data: {
             channel: 'FACEBOOK',
             status: 'OPEN',
@@ -61,6 +106,9 @@ export async function processFacebookMessage(payload: any): Promise<void> {
             lastMessageAt: new Date(),
           },
         });
+        // Store as a compatible object for the map
+        conversation = { ...created, messages: [] } as typeof existingConversations[0];
+        conversationBySender.set(senderId, conversation);
       }
 
       // Create message
@@ -109,6 +157,66 @@ export async function processInstagramMessage(payload: any): Promise<void> {
     return;
   }
 
+  // Collect all unique sender IDs from all entries
+  const allSenderIds = new Set<string>();
+  for (const entry of entries) {
+    const messaging = entry.messaging;
+    if (!Array.isArray(messaging)) continue;
+    for (const event of messaging) {
+      if (event.sender?.id && event.message?.text) {
+        allSenderIds.add(event.sender.id);
+      }
+    }
+  }
+
+  // Batch fetch sender names
+  const senderNameMap = new Map<string, string | null>();
+  await Promise.all(
+    [...allSenderIds].map(async (senderId) => {
+      const name = await fetchInstagramUserName(senderId);
+      senderNameMap.set(senderId, name);
+    })
+  );
+
+  // Batch fetch existing conversations for all sender IDs
+  const existingConversations = allSenderIds.size > 0
+    ? await prisma.inboxConversation.findMany({
+        where: {
+          channel: 'INSTAGRAM',
+          status: { not: 'RESOLVED' },
+          messages: {
+            some: {
+              metadata: {
+                path: ['platformSenderId'],
+                string_contains: '',
+              },
+            },
+          },
+        },
+        include: {
+          messages: {
+            where: { direction: 'INBOUND' },
+            select: { metadata: true },
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+        orderBy: { lastMessageAt: 'desc' },
+      })
+    : [];
+
+  // Build a map of senderId -> conversation
+  const conversationBySender = new Map<string, typeof existingConversations[0]>();
+  for (const conv of existingConversations) {
+    for (const msg of conv.messages) {
+      const meta = msg.metadata as Record<string, unknown> | null;
+      const sid = meta?.platformSenderId as string | undefined;
+      if (sid && allSenderIds.has(sid) && !conversationBySender.has(sid)) {
+        conversationBySender.set(sid, conv);
+      }
+    }
+  }
+
   for (const entry of entries) {
     const messaging = entry.messaging;
     if (!Array.isArray(messaging)) continue;
@@ -119,27 +227,13 @@ export async function processInstagramMessage(payload: any): Promise<void> {
 
       if (!senderId || !message?.text) continue;
 
-      const senderName = await fetchInstagramUserName(senderId);
+      const senderName = senderNameMap.get(senderId) ?? null;
 
-      // Find or create conversation
-      let conversation = await prisma.inboxConversation.findFirst({
-        where: {
-          channel: 'INSTAGRAM',
-          status: { not: 'RESOLVED' },
-          messages: {
-            some: {
-              metadata: {
-                path: ['platformSenderId'],
-                equals: senderId,
-              },
-            },
-          },
-        },
-        orderBy: { lastMessageAt: 'desc' },
-      });
+      // Find or create conversation (using pre-fetched map)
+      let conversation = conversationBySender.get(senderId) ?? null;
 
       if (!conversation) {
-        conversation = await prisma.inboxConversation.create({
+        const created = await prisma.inboxConversation.create({
           data: {
             channel: 'INSTAGRAM',
             status: 'OPEN',
@@ -147,6 +241,8 @@ export async function processInstagramMessage(payload: any): Promise<void> {
             lastMessageAt: new Date(),
           },
         });
+        conversation = { ...created, messages: [] } as typeof existingConversations[0];
+        conversationBySender.set(senderId, conversation);
       }
 
       // Create message

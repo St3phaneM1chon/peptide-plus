@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import {
@@ -19,6 +20,27 @@ import {
   provisionAttitudesBrands,
   getOnboardingStatus,
 } from '@/lib/voip/tenant-onboarding';
+
+const tenantPostSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('onboard'),
+    name: z.string().min(1, 'name is required'),
+    slug: z.string().min(1, 'slug is required'),
+    contactEmail: z.string().email('valid contactEmail is required'),
+    phone: z.string().optional(),
+    assignDid: z.string().optional(),
+    brandKey: z.string().optional(),
+  }),
+  z.object({
+    action: z.literal('provision-brands'),
+    contactEmail: z.string().email('contactEmail is required'),
+  }),
+  z.object({
+    action: z.literal('assign-did'),
+    companyId: z.string().min(1, 'companyId is required'),
+    phoneNumber: z.string().min(1, 'phoneNumber is required'),
+  }),
+]);
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -118,18 +140,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { action } = body;
+    const raw = await request.json();
+    const parsed = tenantPostSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const { action } = parsed.data;
 
     switch (action) {
       case 'onboard': {
-        const { name, slug, contactEmail, phone, assignDid, brandKey } = body;
-        if (!name || !slug || !contactEmail) {
-          return NextResponse.json(
-            { error: 'name, slug, contactEmail required' },
-            { status: 400 }
-          );
-        }
+        const { name, slug, contactEmail, phone, assignDid, brandKey } = parsed.data;
         const result = await onboardTenant({
           ownerId: session.user.id,
           name,
@@ -143,22 +164,13 @@ export async function POST(request: NextRequest) {
       }
 
       case 'provision-brands': {
-        const { contactEmail } = body;
-        if (!contactEmail) {
-          return NextResponse.json({ error: 'contactEmail required' }, { status: 400 });
-        }
+        const { contactEmail } = parsed.data;
         const results = await provisionAttitudesBrands(session.user.id, contactEmail);
         return NextResponse.json({ data: results }, { status: 201 });
       }
 
       case 'assign-did': {
-        const { companyId: targetCompanyId, phoneNumber } = body;
-        if (!targetCompanyId || !phoneNumber) {
-          return NextResponse.json(
-            { error: 'companyId and phoneNumber required' },
-            { status: 400 }
-          );
-        }
+        const { companyId: targetCompanyId, phoneNumber } = parsed.data;
         // Verify caller has access
         const tenant = await resolveTenant(session.user.id, targetCompanyId);
         if (!tenant?.isAdmin) {

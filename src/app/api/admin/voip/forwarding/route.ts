@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getForwardingConfig,
   setForwardingRules,
@@ -22,15 +23,28 @@ import {
   type ForwardingRule,
 } from '@/lib/voip/call-forwarding';
 
+const forwardingRuleSchema = z.object({
+  type: z.string(),
+  destination: z.string(),
+  enabled: z.boolean().optional(),
+  ringTimeout: z.number().optional(),
+  description: z.string().optional(),
+});
+
+const forwardingPostSchema = z.object({
+  rules: z.array(forwardingRuleSchema),
+});
+
+const forwardingPutSchema = z.object({
+  ruleId: z.string().optional(),
+  enabled: z.boolean().optional(),
+  globalEnabled: z.boolean().optional(),
+});
+
 /**
  * GET - Get call forwarding configuration for the current user.
  */
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
     const config = getForwardingConfig(session.user.id);
 
@@ -48,30 +62,27 @@ export async function GET() {
     });
     return NextResponse.json({ error: 'Failed to get forwarding config' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Set forwarding rules for the current user.
  * Body: { rules: ForwardingRule[] }
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { rules } = body as { rules: ForwardingRule[] };
+    const raw = await request.json();
+    const parsed = forwardingPostSchema.safeParse(raw);
 
-    if (!rules || !Array.isArray(rules)) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing or invalid rules array' },
+        { error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
-    const config = await setForwardingRules(session.user.id, rules);
+    const { rules } = parsed.data;
+
+    const config = await setForwardingRules(session.user.id, rules as ForwardingRule[]);
 
     return NextResponse.json({ data: config });
   } catch (error) {
@@ -80,25 +91,25 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to set forwarding rules' }, { status: 500 });
   }
-}
+});
 
 /**
  * PUT - Toggle a specific rule or global forwarding.
  * Body: { ruleId?: string, enabled: boolean } or { globalEnabled: boolean }
  */
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { ruleId, enabled, globalEnabled } = body as {
-      ruleId?: string;
-      enabled?: boolean;
-      globalEnabled?: boolean;
-    };
+    const raw = await request.json();
+    const parsed = forwardingPutSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { ruleId, enabled, globalEnabled } = parsed.data;
 
     if (typeof globalEnabled === 'boolean') {
       toggleGlobalForwarding(session.user.id, globalEnabled);
@@ -119,18 +130,13 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to toggle forwarding' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE - Remove a forwarding rule or clear all rules.
  * Query: ?ruleId=xxx or ?clearAll=true
  */
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const ruleId = searchParams.get('ruleId');
@@ -158,4 +164,4 @@ export async function DELETE(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to remove forwarding rule' }, { status: 500 });
   }
-}
+});

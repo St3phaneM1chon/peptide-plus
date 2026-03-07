@@ -492,8 +492,8 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         labelKey: 'admin.nav.accountingFiscalReports',
         items: [
-          { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
-          { href: '/admin/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
+          { href: '/admin/comptabilite/declaration-tps-tvq', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
+          { href: '/admin/comptabilite/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -548,7 +548,7 @@ export const folderSections: Record<string, NavFolderSection> = {
 
 /** Determine which rail section is active based on the current pathname */
 export function getActiveRailId(pathname: string): string {
-  if (pathname.startsWith('/admin/comptabilite') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports')) return 'accounting';
+  if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
   if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories')) return 'catalog';

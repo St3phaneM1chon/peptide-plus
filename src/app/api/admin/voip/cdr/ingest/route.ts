@@ -10,10 +10,25 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { timingSafeEqual } from 'crypto';
 import { ingestCdr } from '@/lib/voip/cdr-sync';
 import { processPendingRecordings } from '@/lib/voip/recording-upload';
 import { logger } from '@/lib/logger';
+
+const cdrIngestSchema = z.object({
+  callId: z.string().optional(),
+  uuid: z.string().optional(),
+  caller_id_number: z.string().optional(),
+  destination_number: z.string().optional(),
+  start_stamp: z.string().optional(),
+  end_stamp: z.string().optional(),
+  duration: z.number().optional(),
+  billsec: z.number().optional(),
+  hangup_cause: z.string().optional(),
+  direction: z.string().optional(),
+  recording_file: z.string().optional(),
+}).passthrough();
 
 /**
  * Validate webhook authentication.
@@ -56,7 +71,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const cdr = await request.json();
+    const raw = await request.json();
+    const parsed = cdrIngestSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid CDR payload', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const cdr = parsed.data as Record<string, unknown>;
     const callLogId = await ingestCdr(cdr);
 
     if (!callLogId) {

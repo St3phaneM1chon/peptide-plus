@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { auth } from '@/lib/auth-config';
 import { MessagingChannel, type Message } from '@/lib/voip/messaging-channel';
@@ -99,29 +100,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const reqBody = await request.json();
-    const { to, body, channel = 'sms', from, mediaUrls } = reqBody as {
-      to: string;
-      body: string;
-      channel?: 'sms' | 'whatsapp' | 'mms';
-      from?: string;
-      mediaUrls?: string[];
-    };
-
-    if (!to || !body) {
+    const raw = await request.json();
+    const parsed = z.object({
+      to: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Must be E.164 format (e.g., +15145551234)'),
+      body: z.string().min(1),
+      channel: z.enum(['sms', 'whatsapp', 'mms']).optional().default('sms'),
+      from: z.string().optional(),
+      mediaUrls: z.array(z.string().url()).optional(),
+    }).safeParse(raw);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: to, body' },
+        { error: 'Invalid input', details: parsed.error.flatten() },
         { status: 400 },
       );
     }
-
-    // Validate E.164 format
-    if (!/^\+[1-9]\d{1,14}$/.test(to)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format. Must be E.164 (e.g., +15145551234)' },
-        { status: 400 },
-      );
-    }
+    const { to, body, channel, from, mediaUrls } = parsed.data;
 
     const messaging = getMessaging();
     let message: Message;

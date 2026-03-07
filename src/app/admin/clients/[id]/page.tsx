@@ -593,6 +593,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
                 <p className="text-xs text-slate-400 mt-1">
                   {t('admin.customerDetail.pointsModal.amountHint')}
@@ -608,6 +609,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
             </div>
@@ -1020,6 +1022,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
               </div>
               <div className="flex-[2]">
@@ -1032,6 +1035,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
               <Button
@@ -1364,7 +1368,7 @@ export default function ClientDetailPage() {
                               ) : '—'}
                             </td>
                             <td className="px-4 py-2 text-xs text-slate-500">
-                              {new Date(consent.createdAt).toLocaleDateString()}
+                              {new Date(consent.createdAt).toLocaleDateString(locale)}
                             </td>
                             <td className="px-4 py-2 text-right">
                               <Link href={`/admin/media/consents/${consent.id}`} className="text-xs text-orange-600 hover:underline">
@@ -1407,7 +1411,7 @@ export default function ClientDetailPage() {
                         <div className="flex items-center gap-2 text-xs text-slate-500">
                           <span>{t(`videoContentType.${video.contentType}`)}</span>
                           <span>·</span>
-                          <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+                          <span>{new Date(video.createdAt).toLocaleDateString(locale)}</span>
                         </div>
                       </Link>
                     ))}
