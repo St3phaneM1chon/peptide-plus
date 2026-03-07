@@ -130,13 +130,27 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       return NextResponse.json({ error: 'No extension assigned' }, { status: 404 });
     }
 
-    // Telnyx WebRTC endpoint
-    const wsUrl = 'wss://sip.telnyx.com:7443';
+    // Derive WebSocket URL from the extension's SIP domain
+    const domain = ext.sipDomain || 'sip.telnyx.com';
+    const wsUrl = domain === 'sip.telnyx.com'
+      ? 'wss://sip.telnyx.com:7443'
+      : `wss://${domain}:7443`;
+
+    const sipUsername = decryptToken(ext.sipUsername);
+    const sipPassword = decryptToken(ext.sipPassword);
+
+    if (!sipUsername || !sipPassword) {
+      console.error('SIP credential decryption failed for user', session.user.id, '- check ENCRYPTION_KEY');
+      return NextResponse.json(
+        { error: 'SIP credentials could not be decrypted. Contact administrator.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       extension: ext.extension,
-      sipUsername: decryptToken(ext.sipUsername),
-      sipPassword: decryptToken(ext.sipPassword),
+      sipUsername,
+      sipPassword,
       sipDomain: ext.sipDomain,
       wsUrl,
     });
@@ -161,4 +175,4 @@ export const PUT = withAdminGuard(async (request, { session }) => {
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
-});
+}, { skipCsrf: true });

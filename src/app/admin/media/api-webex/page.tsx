@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings } from 'lucide-react';
+import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -72,7 +72,7 @@ export default function ApiWebexPage() {
   useRibbonAction('documentation', useCallback(() => { window.open('https://developer.webex.com/docs/api/getting-started', '_blank'); }, []));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500" /></div>;
   }
 
   return (
@@ -80,8 +80,8 @@ export default function ApiWebexPage() {
       <IntegrationCard
         title={t('admin.media.webexTitle') || 'Webex'}
         description={t('admin.media.webexDescription') || 'Configure Webex API credentials for video conferencing.'}
-        icon={<Settings className="w-6 h-6" />}
-        color="from-emerald-500 to-emerald-600"
+        icon={<Video className="w-6 h-6" />}
+        color="from-cyan-500 to-cyan-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings } from 'lucide-react';
+import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -72,7 +72,7 @@ export default function ApiGoogleMeetPage() {
   useRibbonAction('documentation', useCallback(() => { window.open('https://developers.google.com/meet/api', '_blank'); }, []));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" /></div>;
   }
 
   return (
@@ -80,8 +80,8 @@ export default function ApiGoogleMeetPage() {
       <IntegrationCard
         title={t('admin.media.googleMeetTitle') || 'Google Meet'}
         description={t('admin.media.googleMeetDescription') || 'Configure Google Meet API credentials for video conferencing.'}
-        icon={<Settings className="w-6 h-6" />}
-        color="from-teal-500 to-teal-600"
+        icon={<Video className="w-6 h-6" />}
+        color="from-green-500 to-green-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

@@ -519,14 +519,19 @@ export async function importRecording(importId: string): Promise<ImportResult> {
               endedAt: matchingSession.endedAt || new Date(),
             },
           });
-          // Auto-assign video to session client
+          // Auto-assign video to session client + inherit contentType
+          const videoUpdate: Record<string, unknown> = {};
           if (matchingSession.clientId) {
+            videoUpdate.featuredClientId = matchingSession.clientId;
+            videoUpdate.visibility = 'PRIVATE';
+          }
+          if (matchingSession.contentType && matchingSession.contentType !== 'OTHER') {
+            videoUpdate.contentType = matchingSession.contentType;
+          }
+          if (Object.keys(videoUpdate).length > 0) {
             await prisma.video.update({
               where: { id: video.id },
-              data: {
-                featuredClientId: matchingSession.clientId,
-                visibility: 'PRIVATE',
-              },
+              data: videoUpdate,
             });
           }
           logger.info(`[RecordingImport] Auto-linked import ${importId} to session ${matchingSession.id}`);

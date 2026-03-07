@@ -332,6 +332,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/crm', labelKey: 'admin.nav.crmDashboard', icon: LayoutDashboard },
           { href: '/admin/crm/pipeline', labelKey: 'admin.nav.crmPipeline', icon: Filter },
           { href: '/admin/crm/leads', labelKey: 'admin.nav.crmLeads', icon: Target },
+          { href: '/admin/crm/lists', labelKey: 'admin.nav.crmLists', icon: ListChecks },
           { href: '/admin/crm/deals', labelKey: 'admin.nav.crmDeals', icon: Briefcase },
         ],
         defaultOpen: true,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Users } from 'lucide-react';
+import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { toast } from 'sonner';
@@ -70,7 +70,7 @@ export default function MediaTeamsPage() {
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
   const onViewLogs = useCallback(() => { window.open('/admin/logs?filter=teams', '_self'); }, []);
-  const onDocumentation = useCallback(() => { window.open('https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook', '_blank'); }, []);
+  const onDocumentation = useCallback(() => { window.open('https://learn.microsoft.com/en-us/graph/api/resources/onlinemeeting', '_blank'); }, []);
 
   useRibbonAction('configure', onConfigure);
   useRibbonAction('testConnection', onTestConnection);
@@ -79,7 +79,7 @@ export default function MediaTeamsPage() {
   useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" /></div>;
   }
 
   return (
@@ -87,7 +87,7 @@ export default function MediaTeamsPage() {
       <IntegrationCard
         title={t('admin.media.teamsTitle')}
         description={t('admin.integrations.teamsSetupDesc')}
-        icon={<Users className="w-6 h-6" />}
+        icon={<Video className="w-6 h-6" />}
         color="from-purple-500 to-purple-600"
         enabled={enabled}
         onToggle={setEnabled}
@@ -138,7 +138,7 @@ export default function MediaTeamsPage() {
         ]}
         onSave={handleSave}
         onTest={handleTest}
-        docsUrl="https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook"
+        docsUrl="https://learn.microsoft.com/en-us/graph/api/resources/onlinemeeting"
       />
     </div>
   );

@@ -36,6 +36,7 @@ import {
   Briefcase,
   Target,
   Inbox,
+  Video,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
@@ -46,6 +47,7 @@ import { toast } from 'sonner';
 import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
 import { addCSRFHeader } from '@/lib/csrf';
 import { useSoftphone } from '@/components/voip/SoftphoneProvider';
+import CustomerVideos from '@/components/admin/CustomerVideos';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -248,7 +250,7 @@ const tierColors: Record<string, string> = {
   DIAMOND: 'bg-violet-600',
 };
 
-type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'calls' | 'crm';
+type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards' | 'calls' | 'crm' | 'videos';
 
 interface CallLogItem {
   id: string;
@@ -598,6 +600,7 @@ export default function ClientDetailPage() {
     { key: 'cards', label: `${t('admin.customerDetail.tabs.cards')} (${user.savedCards.length})`, icon: CreditCard },
     { key: 'calls', label: `${t('admin.customerDetail.tabs.calls')} (${calls.length})`, icon: Phone },
     ...(crmEnabled ? [{ key: 'crm' as TabKey, label: `${t('admin.customerDetail.tabs.crm')} (${crmData?.summary?.totalDeals ?? '...'})`, icon: Briefcase }] : []),
+    { key: 'videos' as TabKey, label: t('admin.customerDetail.tabs.videos'), icon: Video },
   ];
 
   const tierProgress = getTierProgress(user.lifetimePoints, user.loyaltyTier);
@@ -1799,6 +1802,13 @@ export default function ClientDetailPage() {
             </>
           )}
         </div>
+      )}
+
+      {/* ================================================================= */}
+      {/* TAB: VIDEOS                                                       */}
+      {/* ================================================================= */}
+      {activeTab === 'videos' && (
+        <CustomerVideos clientId={id as string} />
       )}
     </div>
   );

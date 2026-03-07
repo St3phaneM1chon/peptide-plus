@@ -654,6 +654,10 @@ export function useVoip(): UseVoipReturn {
 
       const creds = await res.json();
 
+      if (!creds.sipUsername || !creds.sipPassword) {
+        throw new Error('SIP credentials are missing or could not be decrypted');
+      }
+
       // Dynamic import JsSIP (only loaded when needed)
       const JsSIP = await import('jssip');
 
