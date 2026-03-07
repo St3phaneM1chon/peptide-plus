@@ -148,7 +148,7 @@ function SuppliersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -173,37 +173,37 @@ function SuppliersTab() {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Name *</label>
               <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Supplier name" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Supplier name" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Contact Name</label>
               <input type="text" value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Contact person" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Contact person" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
               <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="email@supplier.com" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="email@supplier.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
               <input type="text" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="+1 555 123 4567" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="+1 555 123 4567" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs font-medium text-slate-600 mb-1">Address</label>
               <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="123 Supplier St, City" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="123 Supplier St, City" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Website</label>
               <input type="url" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="https://supplier.com" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="https://supplier.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
               <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Internal notes" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Internal notes" />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -245,7 +245,7 @@ function SuppliersTab() {
                   <td className="px-4 py-3 text-slate-600 hidden md:table-cell">{s.contactName || '-'}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     {s.email ? (
-                      <a href={`mailto:${s.email}`} className="text-sky-600 hover:underline flex items-center gap-1">
+                      <a href={`mailto:${s.email}`} className="text-teal-600 hover:underline flex items-center gap-1">
                         <Mail className="w-3 h-3" /> {s.email}
                       </a>
                     ) : '-'}
@@ -255,7 +255,7 @@ function SuppliersTab() {
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     {s.website ? (
-                      <a href={s.website} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline flex items-center gap-1">
+                      <a href={s.website} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline flex items-center gap-1">
                         <Globe className="w-3 h-3" /> Visit
                       </a>
                     ) : '-'}
@@ -368,7 +368,7 @@ function PurchaseOrdersTab() {
   const poStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; text: string }> = {
       DRAFT: { bg: 'bg-slate-100', text: 'text-slate-700' },
-      ORDERED: { bg: 'bg-sky-100', text: 'text-sky-700' },
+      ORDERED: { bg: 'bg-teal-100', text: 'text-teal-700' },
       PARTIAL: { bg: 'bg-amber-100', text: 'text-amber-700' },
       RECEIVED: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
       CANCELLED: { bg: 'bg-red-100', text: 'text-red-700' },
@@ -380,7 +380,7 @@ function PurchaseOrdersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -405,7 +405,7 @@ function PurchaseOrdersTab() {
             onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
               statusFilter === s
-                ? 'bg-sky-50 text-sky-700 border-sky-200'
+                ? 'bg-teal-50 text-teal-700 border-teal-200'
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
           >
@@ -425,7 +425,7 @@ function PurchaseOrdersTab() {
               <select
                 value={form.supplierId}
                 onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="">Select supplier</option>
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -434,12 +434,12 @@ function PurchaseOrdersTab() {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Expected Delivery</label>
               <input type="date" value={form.expectedDelivery} onChange={e => setForm(f => ({ ...f, expectedDelivery: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
               <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Internal notes" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Internal notes" />
             </div>
           </div>
 
@@ -447,7 +447,7 @@ function PurchaseOrdersTab() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-slate-600">Line Items *</label>
-              <button onClick={addItem} className="text-xs text-sky-600 hover:text-sky-700 font-medium">+ Add Item</button>
+              <button onClick={addItem} className="text-xs text-teal-600 hover:text-teal-700 font-medium">+ Add Item</button>
             </div>
             <div className="space-y-2">
               {form.items.map((item, idx) => (
@@ -622,7 +622,7 @@ function ReconciliationTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -650,7 +650,7 @@ function ReconciliationTab() {
         <button
           onClick={() => setFilter('all')}
           className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-            filter === 'all' ? 'bg-sky-100 text-sky-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
+            filter === 'all' ? 'bg-teal-100 text-teal-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
           }`}
         >
           All ({data.totalProducts})
@@ -827,7 +827,7 @@ function reorderUrgency(item: ProductFormat): number {
 
 const ABC_BADGE: Record<string, { bg: string; text: string }> = {
   A: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  B: { bg: 'bg-sky-100', text: 'text-sky-800' },
+  B: { bg: 'bg-teal-100', text: 'text-teal-800' },
   C: { bg: 'bg-slate-100', text: 'text-slate-600' },
 };
 
@@ -1180,7 +1180,7 @@ export default function InventairePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -1208,7 +1208,7 @@ export default function InventairePage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 activeTab === tab.key
-                  ? 'border-sky-500 text-sky-700'
+                  ? 'border-teal-500 text-teal-700'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
@@ -1426,23 +1426,23 @@ export default function InventairePage() {
                   </div>
 
                   {/* Lead Time Tracking */}
-                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-4 h-4 text-sky-600" />
-                      <h4 className="text-sm font-semibold text-sky-800">Delai d&apos;approvisionnement</h4>
+                      <Clock className="w-4 h-4 text-teal-600" />
+                      <h4 className="text-sm font-semibold text-teal-800">Delai d&apos;approvisionnement</h4>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="text-center p-2 bg-white rounded border border-sky-100">
-                        <p className="text-lg font-bold text-sky-700">5j</p>
-                        <p className="text-[10px] text-sky-600">Delai moyen</p>
+                      <div className="text-center p-2 bg-white rounded border border-teal-100">
+                        <p className="text-lg font-bold text-teal-700">5j</p>
+                        <p className="text-[10px] text-teal-600">Delai moyen</p>
                       </div>
-                      <div className="text-center p-2 bg-white rounded border border-sky-100">
-                        <p className="text-lg font-bold text-sky-700">3j</p>
-                        <p className="text-[10px] text-sky-600">Dernier delai</p>
+                      <div className="text-center p-2 bg-white rounded border border-teal-100">
+                        <p className="text-lg font-bold text-teal-700">3j</p>
+                        <p className="text-[10px] text-teal-600">Dernier delai</p>
                       </div>
-                      <div className="text-center p-2 bg-white rounded border border-sky-100">
-                        <p className="text-lg font-bold text-sky-700">10j</p>
-                        <p className="text-[10px] text-sky-600">Delai max</p>
+                      <div className="text-center p-2 bg-white rounded border border-teal-100">
+                        <p className="text-lg font-bold text-teal-700">10j</p>
+                        <p className="text-[10px] text-teal-600">Delai max</p>
                       </div>
                     </div>
                   </div>
@@ -1493,7 +1493,7 @@ export default function InventairePage() {
                         <p className="text-xs text-slate-500 mb-1">{t('admin.inventory.colProduct')}</p>
                         <Link
                           href={`/admin/produits/${selectedItem.productId}`}
-                          className="text-sky-600 hover:underline font-medium"
+                          className="text-teal-600 hover:underline font-medium"
                         >
                           {selectedItem.productName}
                         </Link>
@@ -1527,7 +1527,7 @@ export default function InventairePage() {
                             value={editValue}
                             onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
                             className="w-24 h-9 px-3 border border-slate-300 rounded-lg text-center text-sm
-                              focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                              focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                             autoFocus
                           />
                         </div>
@@ -1600,7 +1600,7 @@ export default function InventairePage() {
       >
         {historyLoading ? (
           <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
             <span className="sr-only">Loading...</span>
           </div>
         ) : historyData.length === 0 ? (
@@ -1844,7 +1844,7 @@ export default function InventairePage() {
                   </div>
 
                   <div className="text-center px-3">
-                    <div className="flex items-center gap-1 text-sky-600">
+                    <div className="flex items-center gap-1 text-teal-600">
                       <Clock className="w-3 h-3" />
                       <span className="text-sm font-medium">{item.estimatedLeadDays}j</span>
                     </div>
@@ -1871,10 +1871,10 @@ export default function InventairePage() {
         size="md"
       >
         <div className="space-y-4">
-          <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-center">
-            <ArrowRightLeft className="w-8 h-8 text-sky-400 mx-auto mb-2" />
-            <p className="text-sm text-sky-800 font-medium">Module de transfert inter-entrepots</p>
-            <p className="text-xs text-sky-600 mt-1">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-center">
+            <ArrowRightLeft className="w-8 h-8 text-teal-400 mx-auto mb-2" />
+            <p className="text-sm text-teal-800 font-medium">Module de transfert inter-entrepots</p>
+            <p className="text-xs text-teal-600 mt-1">
               Selectionnez un produit, la quantite a transferer et l&apos;emplacement de destination.
             </p>
           </div>

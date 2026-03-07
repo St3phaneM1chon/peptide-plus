@@ -66,7 +66,7 @@ export default function CampagnesClient({
       case 'ACTIVE': return { color: 'bg-emerald-50 text-emerald-700', label: t('voip.admin.campaigns.active') };
       case 'PAUSED': return { color: 'bg-amber-50 text-amber-700', label: t('voip.admin.campaigns.paused') };
       case 'COMPLETED': return { color: 'bg-gray-100 text-gray-600', label: t('voip.admin.campaigns.completed') };
-      case 'DRAFT': return { color: 'bg-sky-50 text-sky-700', label: t('voip.admin.campaigns.draft') };
+      case 'DRAFT': return { color: 'bg-teal-50 text-teal-700', label: t('voip.admin.campaigns.draft') };
       case 'ARCHIVED': return { color: 'bg-gray-100 text-gray-500', label: 'Archived' };
       default: return { color: 'bg-gray-100 text-gray-500', label: status };
     }
@@ -166,7 +166,7 @@ export default function CampagnesClient({
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t('voip.admin.campaigns.addCampaign')}
         </button>
@@ -235,7 +235,7 @@ export default function CampagnesClient({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => openEdit(campaign)} className="p-1.5 text-gray-400 hover:text-sky-600 rounded">
+                      <button onClick={() => openEdit(campaign)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDelete(campaign.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded">
@@ -281,7 +281,7 @@ export default function CampagnesClient({
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
                 <div>
@@ -293,7 +293,7 @@ export default function CampagnesClient({
                     value={form.callerIdNumber}
                     onChange={(e) => setForm((f) => ({ ...f, callerIdNumber: e.target.value }))}
                     placeholder="+15145551234"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function CampagnesClient({
                     max={50}
                     value={form.maxConcurrent}
                     onChange={(e) => setForm((f) => ({ ...f, maxConcurrent: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
                 <div className="flex items-end">
@@ -319,7 +319,7 @@ export default function CampagnesClient({
                       type="checkbox"
                       checked={form.useAmd}
                       onChange={(e) => setForm((f) => ({ ...f, useAmd: e.target.checked }))}
-                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                     />
                     AMD (Answering Machine Detection)
                   </label>
@@ -336,14 +336,14 @@ export default function CampagnesClient({
                   value={form.scriptTitle}
                   onChange={(e) => setForm((f) => ({ ...f, scriptTitle: e.target.value }))}
                   placeholder="Script title"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
                 <textarea
                   value={form.scriptBody}
                   onChange={(e) => setForm((f) => ({ ...f, scriptBody: e.target.value }))}
                   placeholder="Agent script content..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-y"
                 />
               </div>
 
@@ -398,8 +398,8 @@ export default function CampagnesClient({
                       onClick={() => toggleDay(day)}
                       className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                         form.activeDays.includes(day)
-                          ? 'bg-sky-600 text-white border-sky-600'
-                          : 'bg-white text-gray-500 border-gray-300 hover:border-sky-400'
+                          ? 'bg-teal-600 text-white border-teal-600'
+                          : 'bg-white text-gray-500 border-gray-300 hover:border-teal-400'
                       }`}
                     >
                       {DAY_LABELS[day]}
@@ -420,7 +420,7 @@ export default function CampagnesClient({
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name.trim() || !form.callerIdNumber.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {t('common.save')}
               </button>

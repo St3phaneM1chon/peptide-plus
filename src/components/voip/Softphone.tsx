@@ -184,6 +184,9 @@ export default function Softphone() {
     isVideoEnabled,
     localVideoStream,
     remoteVideoStream,
+    autoRegisterAttempted: _autoRegisterAttempted,
+    healthError,
+    retryRegister,
   } = useSoftphone();
 
   // ---- Core UI state ----
@@ -814,7 +817,7 @@ export default function Softphone() {
             <div className="flex items-center gap-2">
               {/* Feature 1: Multi-line badge */}
               {totalActiveLines > 1 && (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-500 text-white text-[10px] font-bold">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-500 text-white text-[10px] font-bold">
                   {totalActiveLines}
                 </span>
               )}
@@ -843,7 +846,7 @@ export default function Softphone() {
               {showPreCallTest && (
                 <div className="mb-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
                   <div className="flex items-center gap-2 mb-2">
-                    <Wifi className="w-4 h-4 text-sky-600" />
+                    <Wifi className="w-4 h-4 text-teal-600" />
                     <span className="text-sm font-medium">
                       {t('voip.softphone.preCallTest.title')}
                     </span>
@@ -851,7 +854,7 @@ export default function Softphone() {
 
                   {preCallTesting && (
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <div className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
                       {t('voip.softphone.preCallTest.testing')}
                     </div>
                   )}
@@ -899,7 +902,7 @@ export default function Softphone() {
 
                       <button
                         onClick={handleProceedAfterTest}
-                        className="w-full py-2 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors"
+                        className="w-full py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
                       >
                         {preCallTestResult.passed
                           ? t('voip.softphone.connect')
@@ -910,15 +913,31 @@ export default function Softphone() {
                 </div>
               )}
 
+              {/* ---- Health error from auto-register ---- */}
+              {healthError && status !== 'registered' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-2.5 mb-3">
+                  <div className="text-xs text-red-700 font-medium mb-1">
+                    {t('voip.softphone.autoRegisterFailed') || 'Ligne non initialisée automatiquement'}
+                  </div>
+                  <div className="text-xs text-red-600">{healthError}</div>
+                  <button
+                    onClick={retryRegister}
+                    className="mt-2 w-full py-1.5 bg-red-600 text-white rounded-md text-xs font-medium hover:bg-red-700 transition-colors"
+                  >
+                    {t('voip.softphone.retry') || 'Réessayer'}
+                  </button>
+                </div>
+              )}
+
               {/* ---- Connection controls ---- */}
-              {(status === 'disconnected' || connectTimeoutError) && !showPreCallTest && (
+              {(status === 'disconnected' || connectTimeoutError) && !showPreCallTest && !healthError && (
                 <>
                   {connectTimeoutError && (
                     <div className="text-sm text-red-600 text-center mb-2">{connectTimeoutError}</div>
                   )}
                   <button
                     onClick={handleConnect}
-                    className="w-full py-2 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors mb-3"
+                    className="w-full py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors mb-3"
                   >
                     {connectTimeoutError ? (t('voip.softphone.retry') || 'Réessayer') : t('voip.softphone.connect')}
                   </button>
@@ -936,7 +955,7 @@ export default function Softphone() {
                   <div className="text-sm text-red-600 mb-2">{error}</div>
                   <button
                     onClick={handleConnect}
-                    className="px-4 py-1.5 bg-sky-500 text-white rounded-lg text-xs font-medium hover:bg-sky-600 transition-colors"
+                    className="px-4 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 transition-colors"
                   >
                     {t('voip.softphone.retry') || 'Réessayer'}
                   </button>
@@ -957,7 +976,7 @@ export default function Softphone() {
                             onClick={() => { switchLine(line.id); setActiveLineId(line.id); }}
                             className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
                               activeLineId === line.id
-                                ? 'border-sky-500 bg-sky-50 text-sky-700'
+                                ? 'border-teal-500 bg-teal-50 text-teal-700'
                                 : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                           >
@@ -1090,7 +1109,7 @@ export default function Softphone() {
                       disabled={!isActiveCall}
                       className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         showConferenceInput
-                          ? 'bg-sky-100 text-sky-700'
+                          ? 'bg-teal-100 text-teal-700'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                       title={t('voip.softphone.conference.add')}
@@ -1098,7 +1117,7 @@ export default function Softphone() {
                       <UserPlus className="w-3.5 h-3.5" />
                       {t('voip.softphone.conference.add')}
                       {conferenceParticipants.length > 0 && (
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-sky-500 text-white text-[9px]">
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-500 text-white text-[9px]">
                           {conferenceParticipants.length + 1}
                         </span>
                       )}
@@ -1111,7 +1130,7 @@ export default function Softphone() {
                         disabled={!isActiveCall}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           showFlipMenu
-                            ? 'bg-sky-100 text-sky-700'
+                            ? 'bg-teal-100 text-teal-700'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                         title={t('voip.softphone.flip.title')}
@@ -1172,7 +1191,7 @@ export default function Softphone() {
                       disabled={!isActiveCall}
                       className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         isScreenSharing
-                          ? 'bg-sky-100 text-sky-700'
+                          ? 'bg-teal-100 text-teal-700'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                       title={
@@ -1195,7 +1214,7 @@ export default function Softphone() {
                           onClick={() => setShowBgPicker(!showBgPicker)}
                           className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                             showBgPicker
-                              ? 'bg-sky-100 text-sky-700'
+                              ? 'bg-teal-100 text-teal-700'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                           title={t('voip.softphone.virtualBg.title')}
@@ -1213,12 +1232,12 @@ export default function Softphone() {
                                     key={bg}
                                     onClick={() => handleSelectBackground(bg)}
                                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 ${
-                                      virtualBackground === bg ? 'text-sky-700 font-medium' : 'text-gray-700'
+                                      virtualBackground === bg ? 'text-teal-700 font-medium' : 'text-gray-700'
                                     }`}
                                   >
                                     {t(`voip.softphone.virtualBg.${bg}`)}
                                     {virtualBackground === bg && (
-                                      <span className="ms-auto text-xs text-sky-500">&#10003;</span>
+                                      <span className="ms-auto text-xs text-teal-500">&#10003;</span>
                                     )}
                                   </button>
                                 ),
@@ -1260,7 +1279,7 @@ export default function Softphone() {
                       disabled={!isActiveCall}
                       className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         captionsEnabled
-                          ? 'bg-sky-100 text-sky-700'
+                          ? 'bg-teal-100 text-teal-700'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                       title={t('voip.softphone.closedCaptions')}
@@ -1314,12 +1333,12 @@ export default function Softphone() {
                         onChange={(e) => setConferenceNumber(e.target.value.replace(/[^0-9+*#]/g, ''))}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddConferenceParticipant()}
                         placeholder={t('voip.softphone.conference.enterNumber')}
-                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                       <button
                         onClick={handleAddConferenceParticipant}
                         disabled={!conferenceNumber}
-                        className="px-3 py-1.5 bg-sky-500 text-white rounded-lg text-sm hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Phone className="w-4 h-4" />
                       </button>
@@ -1329,14 +1348,14 @@ export default function Softphone() {
                   {/* Conference participants list */}
                   {conferenceParticipants.length > 0 && (
                     <div className="flex items-center gap-1 flex-wrap mt-1">
-                      <Users className="w-3.5 h-3.5 text-sky-600" />
+                      <Users className="w-3.5 h-3.5 text-teal-600" />
                       <span className="text-xs text-gray-500">
                         {t('voip.softphone.conference.active')}:
                       </span>
                       {conferenceParticipants.map((p, i) => (
                         <span
                           key={i}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded bg-sky-50 text-xs text-sky-700"
+                          className="inline-flex items-center px-1.5 py-0.5 rounded bg-teal-50 text-xs text-teal-700"
                         >
                           {p}
                         </span>
@@ -1367,7 +1386,7 @@ export default function Softphone() {
                           onClick={() => setActiveTab(tab.key)}
                           className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium border-b-2 transition-colors ${
                             isActive
-                              ? 'border-sky-500 text-sky-600'
+                              ? 'border-teal-500 text-teal-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                         >
@@ -1401,7 +1420,7 @@ export default function Softphone() {
                           onChange={(e) => setDialNumber(e.target.value.replace(/[^0-9+*#]/g, ''))}
                           onKeyDown={(e) => e.key === 'Enter' && handleDial()}
                           placeholder={t('voip.softphone.enterNumber')}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <button
                           onClick={handleDial}
@@ -1441,7 +1460,7 @@ export default function Softphone() {
                               key={line.id}
                               className={`flex items-center justify-between p-2.5 rounded-lg border ${
                                 activeLineId === line.id
-                                  ? 'border-sky-300 bg-sky-50'
+                                  ? 'border-teal-300 bg-teal-50'
                                   : 'border-gray-200 bg-white'
                               }`}
                             >
@@ -1469,7 +1488,7 @@ export default function Softphone() {
                                 )}
                                 <button
                                   onClick={() => { switchLine(line.id); setActiveLineId(line.id); }}
-                                  className="px-2 py-1 text-xs bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors"
+                                  className="px-2 py-1 text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-colors"
                                 >
                                   {t('voip.softphone.lines.switch')}
                                 </button>

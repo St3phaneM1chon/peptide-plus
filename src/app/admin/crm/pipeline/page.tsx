@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import PipelineKanban from '@/components/admin/crm/PipelineKanban';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
+import { X, List, LayoutGrid } from 'lucide-react';
 
 export default function PipelinePage() {
   const { t } = useI18n();
@@ -92,6 +92,24 @@ export default function PipelinePage() {
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
+      {/* View Toggle */}
+      <div className="flex items-center justify-end px-4 pt-3 pb-1">
+        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+          <button
+            onClick={() => router.push('/admin/crm/deals')}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-sm text-gray-500 hover:bg-gray-50 border-r border-gray-300"
+            title={t('admin.crm.listView') || 'List View'}
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            className="flex items-center gap-1 px-2.5 py-1.5 text-sm bg-teal-50 text-teal-700"
+            title={t('admin.crm.kanbanView') || 'Kanban View'}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
       <PipelineKanban onDealClick={handleDealClick} onCreateDeal={handleCreateDeal} />
 
       {/* Create Deal Modal */}
@@ -111,7 +129,7 @@ export default function PipelinePage() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
                   placeholder="e.g. Enterprise Contract - Acme Inc"
                   autoFocus
                 />
@@ -122,7 +140,7 @@ export default function PipelinePage() {
                   type="number"
                   value={formData.value}
                   onChange={(e) => setFormData((prev) => ({ ...prev, value: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
                   placeholder="0.00"
                   min="0"
                   step="0.01"
@@ -133,7 +151,7 @@ export default function PipelinePage() {
                 <select
                   value={formData.assignedToId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, assignedToId: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="">{t('common.select') || 'Select...'}</option>
                   {agents.map((a) => (
@@ -147,7 +165,7 @@ export default function PipelinePage() {
                   type="date"
                   value={formData.expectedCloseDate}
                   onChange={(e) => setFormData((prev) => ({ ...prev, expectedCloseDate: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -161,7 +179,7 @@ export default function PipelinePage() {
               <button
                 onClick={submitCreate}
                 disabled={creating}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50"
               >
                 {creating ? '...' : t('common.create') || 'Create'}
               </button>

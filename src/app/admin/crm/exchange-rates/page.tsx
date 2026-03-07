@@ -165,7 +165,7 @@ export default function ExchangeRatesPage() {
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{rate.toCurrency}</td>
                   <td className="px-4 py-3 text-sm text-right font-mono text-gray-700">{Number(rate.rate).toFixed(4)}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${rate.source === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{rate.source}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${rate.source === 'api' ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'}`}>{rate.source}</span>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">{new Date(rate.fetchedAt).toLocaleString(locale)}</td>
                 </tr>

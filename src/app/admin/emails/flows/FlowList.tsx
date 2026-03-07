@@ -41,7 +41,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
 
   const triggerLabels: Record<string, { label: string; icon: typeof Zap; color: string }> = {
     'order.created': { label: t('admin.emails.flows.triggerOrderCreated'), icon: Zap, color: 'text-green-500' },
-    'order.shipped': { label: t('admin.emails.flows.triggerOrderShipped'), icon: Zap, color: 'text-blue-500' },
+    'order.shipped': { label: t('admin.emails.flows.triggerOrderShipped'), icon: Zap, color: 'text-teal-500' },
     'order.delivered': { label: t('admin.emails.flows.triggerOrderDelivered'), icon: Zap, color: 'text-emerald-500' },
     'cart.abandoned': { label: t('admin.emails.flows.triggerCartAbandoned'), icon: Zap, color: 'text-orange-500' },
     'user.registered': { label: t('admin.emails.flows.triggerUserRegistered'), icon: Zap, color: 'text-purple-500' },
@@ -98,7 +98,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" /><span className="sr-only">Loading...</span></div>;
+    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" /><span className="sr-only">Loading...</span></div>;
   }
 
   return (
@@ -110,7 +110,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
         </div>
         <button
           onClick={onCreateFlow}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg"
         >
           <Plus className="h-4 w-4" /> {t('admin.emails.flows.newWorkflow')}
         </button>
@@ -123,7 +123,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
           <p className="text-sm text-slate-500 mb-4">{t('admin.emails.flows.createFirstFlow')}</p>
           <button
             onClick={onCreateFlow}
-            className="px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg"
+            className="px-4 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg"
           >
             {t('admin.emails.flows.getStarted')}
           </button>

@@ -26,7 +26,7 @@ const MODULE_COLORS: Record<string, string> = {
   ecommerce: 'bg-blue-100 text-blue-700 border-blue-200',
   crm: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   voip: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  email: 'bg-sky-100 text-sky-700 border-sky-200',
+  email: 'bg-teal-100 text-teal-700 border-teal-200',
   loyalty: 'bg-purple-100 text-purple-700 border-purple-200',
   marketing: 'bg-orange-100 text-orange-700 border-orange-200',
   community: 'bg-pink-100 text-pink-700 border-pink-200',
@@ -202,7 +202,7 @@ export function UnifiedTimeline({
           <button
             onClick={loadMore}
             disabled={loadingMore}
-            className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+            className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 px-4 py-2 rounded-lg hover:bg-teal-50 transition-colors"
           >
             {loadingMore ? (
               <Loader2 className="w-4 h-4 animate-spin" />

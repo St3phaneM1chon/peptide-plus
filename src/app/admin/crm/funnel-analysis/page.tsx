@@ -152,7 +152,7 @@ export default function FunnelAnalysisPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
         </div>
       ) : (
         <>
@@ -160,7 +160,7 @@ export default function FunnelAnalysisPage() {
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-white rounded-xl border p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">Entered Pipeline</p>
-              <p className="text-3xl font-bold text-blue-600">{totalInitial}</p>
+              <p className="text-3xl font-bold text-teal-600">{totalInitial}</p>
             </div>
             <div className="bg-white rounded-xl border p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">Reached Final Stage</p>
@@ -198,7 +198,7 @@ export default function FunnelAnalysisPage() {
                       </div>
                     </div>
                     <div className="w-20 text-sm text-right shrink-0">
-                      <span className={i === 0 ? 'text-blue-600 font-medium' : 'text-gray-600'}>
+                      <span className={i === 0 ? 'text-teal-600 font-medium' : 'text-gray-600'}>
                         {stage.conversionRate}%
                       </span>
                     </div>

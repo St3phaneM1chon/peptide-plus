@@ -258,7 +258,7 @@ export default function RapprochementPage() {
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
               className="h-9 px-4 border border-slate-300 rounded-lg bg-white text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               {bankAccounts.map(acc => (
                 <option key={acc.id} value={acc.id}>
@@ -274,7 +274,7 @@ export default function RapprochementPage() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="h-9 px-4 border border-slate-300 rounded-lg text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
         </div>
@@ -297,9 +297,9 @@ export default function RapprochementPage() {
           </p>
         </div>
         <div className={`rounded-xl p-4 border ${theme.borderLight} ${theme.surfaceLight}`}>
-          <p className="text-sm text-sky-600">{t('admin.reconciliation.progress')}</p>
-          <p className="text-2xl font-bold text-sky-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
-          <p className="text-xs text-sky-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
+          <p className="text-sm text-teal-600">{t('admin.reconciliation.progress')}</p>
+          <p className="text-2xl font-bold text-teal-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
+          <p className="text-xs text-teal-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
         </div>
       </div>
 
@@ -337,7 +337,7 @@ export default function RapprochementPage() {
                       ) : (
                         <button
                           onClick={() => handleMatch(tx)}
-                          className={`px-2 py-1 ${theme.surfaceLight} text-sky-700 rounded text-xs hover:bg-sky-100`}
+                          className={`px-2 py-1 ${theme.surfaceLight} text-teal-700 rounded text-xs hover:bg-teal-100`}
                         >
                           {t('admin.reconciliation.reconcileBtn')}
                         </button>
@@ -436,10 +436,10 @@ export default function RapprochementPage() {
       >
         {selectedBankTx && (
           <div className="space-y-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-600">{t('admin.reconciliation.bankTransaction')}</p>
-              <p className="font-medium text-blue-900">{selectedBankTx.description}</p>
-              <p className="text-lg font-bold text-blue-900">
+            <div className="bg-teal-50 rounded-lg p-4">
+              <p className="text-sm text-teal-600">{t('admin.reconciliation.bankTransaction')}</p>
+              <p className="font-medium text-teal-900">{selectedBankTx.description}</p>
+              <p className="text-lg font-bold text-teal-900">
                 {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(selectedBankTx.amount)}
               </p>
             </div>

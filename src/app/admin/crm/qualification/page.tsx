@@ -149,7 +149,7 @@ export default function QualificationPage() {
           <p className="text-xs text-gray-500">{t('admin.crm.totalLeads') || 'Total Leads'}</p>
         </div>
         <div className="bg-white border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">{leads.filter(l => l.qualificationFramework === 'BANT').length}</p>
+          <p className="text-2xl font-bold text-teal-600">{leads.filter(l => l.qualificationFramework === 'BANT').length}</p>
           <p className="text-xs text-gray-500">BANT</p>
         </div>
         <div className="bg-white border rounded-lg p-3 text-center">
@@ -194,7 +194,7 @@ export default function QualificationPage() {
                       </div>
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
                         <span>{t('admin.crm.score') || 'Score'}: {lead.score}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full ${lead.temperature === 'HOT' ? 'bg-red-50 text-red-600' : lead.temperature === 'WARM' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
+                        <span className={`px-1.5 py-0.5 rounded-full ${lead.temperature === 'HOT' ? 'bg-red-50 text-red-600' : lead.temperature === 'WARM' ? 'bg-orange-50 text-orange-600' : 'bg-teal-50 text-teal-600'}`}>
                           {lead.temperature}
                         </span>
                         <span>{lead.status}</span>
@@ -203,7 +203,7 @@ export default function QualificationPage() {
                     <div className="flex items-center gap-2">
                       {fw ? (
                         <>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fw === 'BANT' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fw === 'BANT' ? 'bg-teal-50 text-teal-700' : 'bg-purple-50 text-purple-700'}`}>
                             {fw}
                           </span>
                           <span className={`text-xs font-medium ${score!.percentage >= 75 ? 'text-green-600' : score!.percentage >= 50 ? 'text-yellow-600' : 'text-gray-400'}`}>
@@ -224,7 +224,7 @@ export default function QualificationPage() {
                         <div className="flex gap-2">
                           {(['BANT', 'MEDDIC'] as Framework[]).map(fw => (
                             <button key={fw} onClick={() => setEditingFramework(fw)}
-                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white') : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>
+                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-teal-600 text-white' : 'bg-purple-600 text-white') : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>
                               {fw}
                             </button>
                           ))}

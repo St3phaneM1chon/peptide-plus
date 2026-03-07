@@ -73,7 +73,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
 
       {/* Bundle Info */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
           {bundle.name}
         </h3>
 
@@ -138,7 +138,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
             <span className="text-sm text-gray-500 line-through">
               {formatPrice(bundle.originalPrice)}
             </span>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-teal-600">
               {formatPrice(bundle.bundlePrice)}
             </span>
           </div>

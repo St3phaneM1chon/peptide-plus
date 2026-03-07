@@ -36,13 +36,13 @@ const PRIORITY_COLORS: Record<string, string> = {
   CRITICAL: 'bg-red-100 text-red-700 border-red-300',
   URGENT: 'bg-orange-100 text-orange-700 border-orange-300',
   HIGH: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  MEDIUM: 'bg-blue-100 text-blue-700 border-blue-300',
+  MEDIUM: 'bg-teal-100 text-teal-700 border-teal-300',
   LOW: 'bg-gray-100 text-gray-600 border-gray-300',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-700',
-  OPEN: 'bg-sky-100 text-sky-700',
+  NEW: 'bg-teal-100 text-teal-700',
+  OPEN: 'bg-teal-100 text-teal-700',
   IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
   WAITING_CUSTOMER: 'bg-yellow-100 text-yellow-700',
   WAITING_INTERNAL: 'bg-amber-100 text-amber-700',
@@ -169,7 +169,7 @@ export default function TicketsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Ticket className="w-7 h-7 text-sky-600" />
+            <Ticket className="w-7 h-7 text-teal-600" />
             {t('admin.tickets.title') || 'Support Tickets'}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -178,7 +178,7 @@ export default function TicketsPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           {t('admin.tickets.newTicket') || 'New Ticket'}
@@ -194,7 +194,7 @@ export default function TicketsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.tickets.searchPlaceholder') || 'Search tickets...'}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
         <select
@@ -343,7 +343,7 @@ export default function TicketsPage() {
                   type="text"
                   value={formSubject}
                   onChange={(e) => setFormSubject(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
                 />
               </div>
 
@@ -355,7 +355,7 @@ export default function TicketsPage() {
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
                 />
               </div>
 
@@ -439,7 +439,7 @@ export default function TicketsPage() {
               <button
                 onClick={handleCreate}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? (t('common.saving') || 'Saving...') : (t('admin.tickets.create') || 'Create')}

@@ -352,7 +352,7 @@ export default function VideoCategoriesPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  className="border border-sky-300 rounded px-2 py-1 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                  className="border border-teal-300 rounded px-2 py-1 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-teal-400 focus:outline-none"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => {
@@ -365,7 +365,7 @@ export default function VideoCategoriesPage() {
                   <span>{t('admin.videoCategories.sortOrder') || 'Order'}:</span>
                   <input
                     type="number"
-                    className="border border-slate-300 rounded px-2 py-1 text-sm w-16 focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                    className="border border-slate-300 rounded px-2 py-1 text-sm w-16 focus:ring-2 focus:ring-teal-400 focus:outline-none"
                     value={editSortOrder}
                     onChange={e => setEditSortOrder(parseInt(e.target.value) || 0)}
                     onKeyDown={e => {
@@ -403,7 +403,7 @@ export default function VideoCategoriesPage() {
           {/* Video count badge */}
           {!isEditing && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg flex-shrink-0" title={`${totalVideos} ${t('admin.videoCategories.videos') || 'videos'}`}>
-              <Video className="w-3.5 h-3.5 text-sky-500" />
+              <Video className="w-3.5 h-3.5 text-teal-500" />
               <span className="text-xs font-semibold text-slate-700">{totalVideos}</span>
             </div>
           )}
@@ -437,7 +437,7 @@ export default function VideoCategoriesPage() {
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => startInlineEdit(cat)}
-                className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-colors"
+                className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors"
                 title={t('admin.videoCategories.edit') || 'Edit'}
               >
                 <Edit2 className="w-4 h-4" />
@@ -471,11 +471,11 @@ export default function VideoCategoriesPage() {
     <div className="p-6 max-w-5xl space-y-4">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-sky-600 transition-colors">
+        <Link href="/admin" className="hover:text-teal-600 transition-colors">
           {t('admin.nav.dashboard') || 'Admin'}
         </Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">
+        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">
           {t('admin.nav.media') || 'Media'}
         </Link>
         <ChevronRight className="w-3 h-3" />
@@ -496,7 +496,7 @@ export default function VideoCategoriesPage() {
         </div>
         <button
           onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
           {t('admin.videoCategories.create') || 'New Category'}
@@ -521,14 +521,14 @@ export default function VideoCategoriesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
               placeholder={t('admin.videoCategories.namePlaceholder') || 'Category name *'}
               value={createForm.name}
               onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
               required
             />
             <select
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
               value={createForm.parentId}
               onChange={e => setCreateForm({ ...createForm, parentId: e.target.value })}
             >
@@ -540,21 +540,21 @@ export default function VideoCategoriesPage() {
               ))}
             </select>
             <input
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
               placeholder={t('admin.videoCategories.iconPlaceholder') || 'Icon (emoji or code)'}
               value={createForm.icon}
               onChange={e => setCreateForm({ ...createForm, icon: e.target.value })}
             />
             <input
               type="number"
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
               placeholder={t('admin.videoCategories.sortOrderPlaceholder') || 'Sort order'}
               value={createForm.sortOrder}
               onChange={e => setCreateForm({ ...createForm, sortOrder: parseInt(e.target.value) || 0 })}
             />
           </div>
           <textarea
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
             placeholder={t('admin.videoCategories.descriptionPlaceholder') || 'Description (optional)'}
             rows={2}
             value={createForm.description}
@@ -580,7 +580,7 @@ export default function VideoCategoriesPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 {t('admin.videoCategories.create') || 'Create'}
@@ -593,7 +593,7 @@ export default function VideoCategoriesPage() {
       {/* Category tree */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
         </div>
       ) : categories.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
@@ -606,7 +606,7 @@ export default function VideoCategoriesPage() {
           </p>
           <button
             onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             {t('admin.videoCategories.create') || 'New Category'}

@@ -20,7 +20,7 @@ interface CampaignCalendarProps {
 }
 
 const typeConfig = {
-  scheduled: { icon: Mail, color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  scheduled: { icon: Mail, color: 'bg-teal-100 text-teal-700 border-teal-200' },
   sent: { icon: Mail, color: 'bg-green-100 text-green-700 border-green-200' },
   flow: { icon: GitBranch, color: 'bg-purple-100 text-purple-700 border-purple-200' },
 };
@@ -162,11 +162,11 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
           {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
           {/* Legend */}
           <div className="flex items-center gap-3 text-[10px]">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Planifie</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-500" /> Planifie</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Envoye</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> Flow actif</span>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700">
+          <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700">
             <Plus className="w-4 h-4" /> Evenement
           </button>
         </div>
@@ -180,8 +180,8 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
           <div key={`empty-${i}`} className="min-h-[100px] border-b border-e border-slate-100 bg-slate-50/50" />
         ))}
         {days.map(({ day, events: dayEvents, isToday }) => (
-          <div key={day} className={`min-h-[100px] border-b border-e border-slate-100 p-1.5 ${isToday ? 'bg-sky-50/50' : ''}`}>
-            <div className={`text-sm mb-1 ${isToday ? 'w-7 h-7 bg-sky-600 text-white rounded-full flex items-center justify-center font-bold' : 'text-slate-600 ps-1'}`}>
+          <div key={day} className={`min-h-[100px] border-b border-e border-slate-100 p-1.5 ${isToday ? 'bg-teal-50/50' : ''}`}>
+            <div className={`text-sm mb-1 ${isToday ? 'w-7 h-7 bg-teal-600 text-white rounded-full flex items-center justify-center font-bold' : 'text-slate-600 ps-1'}`}>
               {day}
             </div>
             <div className="space-y-1">

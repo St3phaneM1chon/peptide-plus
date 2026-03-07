@@ -128,7 +128,7 @@ export default function MediaMetaPage() {
   useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in Meta Business Suite.'); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -138,7 +138,7 @@ export default function MediaMetaPage() {
         title={t('admin.media.metaTitle') || 'Meta (Facebook + Instagram)'}
         description={t('admin.media.metaDescription') || 'Connect Meta Marketing API, Instagram Graph API, Meta Pixel, and Conversions API.'}
         icon={<Globe className="w-6 h-6" />}
-        color="from-blue-600 to-indigo-600"
+        color="from-teal-600 to-indigo-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

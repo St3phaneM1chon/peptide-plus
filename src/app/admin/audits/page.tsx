@@ -138,14 +138,14 @@ const severityColors: Record<string, { bg: string; text: string; border: string 
   CRITICAL: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
   HIGH: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
   MEDIUM: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
-  LOW: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  LOW: { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
 };
 
 const severityBadge: Record<string, string> = {
   CRITICAL: 'bg-red-100 text-red-800',
   HIGH: 'bg-orange-100 text-orange-800',
   MEDIUM: 'bg-yellow-100 text-yellow-800',
-  LOW: 'bg-blue-100 text-blue-800',
+  LOW: 'bg-teal-100 text-teal-800',
 };
 
 const categoryLabels: Record<string, { en: string; fr: string }> = {
@@ -512,7 +512,7 @@ export default function AuditDashboardPage() {
         <StatBox label={isFr ? 'Critique' : 'Critical'} value={stats.critical} color="bg-red-100" />
         <StatBox label={isFr ? 'Élevé' : 'High'} value={stats.high} color="bg-orange-100" />
         <StatBox label={isFr ? 'Moyen' : 'Medium'} value={stats.medium} color="bg-yellow-100" />
-        <StatBox label={isFr ? 'Faible' : 'Low'} value={stats.low} color="bg-blue-100" />
+        <StatBox label={isFr ? 'Faible' : 'Low'} value={stats.low} color="bg-teal-100" />
         <StatBox label={isFr ? 'Trouvailles' : 'Findings'} value={stats.totalFindings} color="bg-purple-100" />
         <StatBox label={isFr ? 'Exécutés' : 'Executed'} value={`${stats.ranAtLeastOnce}/${stats.total}`} color="bg-green-100" />
       </div>
@@ -543,7 +543,7 @@ export default function AuditDashboardPage() {
         </select>
         <Link
           href="/admin/audits/catalog"
-          className="ms-auto text-sm text-sky-600 hover:text-sky-800 font-medium"
+          className="ms-auto text-sm text-teal-600 hover:text-teal-800 font-medium"
         >
           {isFr ? 'Catalogue de fonctions' : 'Function Catalog'} &rarr;
         </Link>
@@ -558,7 +558,7 @@ export default function AuditDashboardPage() {
           return (
             <div
               key={at.id}
-              className={`rounded-lg border ${colors.border} ${colors.bg} p-4 transition-shadow hover:shadow-md ${isRunning ? 'ring-2 ring-sky-400' : ''}`}
+              className={`rounded-lg border ${colors.border} ${colors.bg} p-4 transition-shadow hover:shadow-md ${isRunning ? 'ring-2 ring-teal-400' : ''}`}
             >
               {/* Header */}
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -608,7 +608,7 @@ export default function AuditDashboardPage() {
                       <button
                         onClick={() => handleRunAudit(at.code)}
                         disabled={isAnyRunning}
-                        className="px-2.5 py-1 bg-sky-600 text-white rounded hover:bg-sky-700 disabled:opacity-50 text-xs"
+                        className="px-2.5 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 text-xs"
                       >
                         {isRunning ? (
                           <span className="inline-block animate-spin">&#8635;</span>
@@ -631,7 +631,7 @@ export default function AuditDashboardPage() {
                       <button
                         onClick={() => handleRunAudit(at.code)}
                         disabled={isAnyRunning}
-                        className="px-2.5 py-1 bg-sky-600 text-white rounded hover:bg-sky-700 disabled:opacity-50 text-xs"
+                        className="px-2.5 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 text-xs"
                       >
                         {isRunning ? (
                           <span className="inline-block animate-spin">&#8635;</span>
@@ -719,7 +719,7 @@ export default function AuditDashboardPage() {
               <button
                 onClick={() => setShowLogFilters(!showLogFilters)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                  showLogFilters ? 'bg-sky-50 border-sky-300 text-sky-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  showLogFilters ? 'bg-teal-50 border-teal-300 text-teal-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
@@ -835,7 +835,7 @@ export default function AuditDashboardPage() {
             {/* Audit Log Table */}
             {auditLogsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
               </div>
             ) : auditLogs.length === 0 ? (
               <div className="py-8 text-center text-slate-400 text-sm">
@@ -891,7 +891,7 @@ export default function AuditDashboardPage() {
                                   : entry.action.includes('CREATE') || entry.action.includes('APPROVE') || entry.action.includes('REGISTER')
                                   ? 'bg-green-100 text-green-700'
                                   : entry.action.includes('LOGIN') || entry.action.includes('LOGOUT')
-                                  ? 'bg-blue-100 text-blue-700'
+                                  ? 'bg-teal-100 text-teal-700'
                                   : 'bg-slate-100 text-slate-700'
                               }`}>
                                 {formatAuditAction(entry.action)}

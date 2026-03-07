@@ -152,7 +152,7 @@ export default function CompliancePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
       </div>
     );
   }
@@ -162,7 +162,7 @@ export default function CompliancePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
+            <Shield className="h-6 w-6 text-teal-600" />
             {t('admin.crm.compliance') || 'Compliance Center'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">CRTC / TCPA / CASL compliance management</p>
@@ -176,7 +176,7 @@ export default function CompliancePage() {
             key={key}
             onClick={() => setTab(key)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              tab === key ? 'border-teal-600 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {icon} {label}
@@ -190,7 +190,7 @@ export default function CompliancePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <StatCard icon={<Ban className="h-5 w-5 text-red-500" />} label="Internal DNC" value={stats.internalDncCount} />
             <StatCard icon={<Phone className="h-5 w-5 text-orange-500" />} label="National DNCL" value={stats.nationalDnclCount} />
-            <StatCard icon={<FileText className="h-5 w-5 text-blue-500" />} label="Consent Records" value={stats.consentRecords} />
+            <StatCard icon={<FileText className="h-5 w-5 text-teal-500" />} label="Consent Records" value={stats.consentRecords} />
             <StatCard icon={<CheckCircle2 className="h-5 w-5 text-green-500" />} label="Active Consents" value={stats.activeConsents} />
             <StatCard icon={<XCircle className="h-5 w-5 text-gray-500" />} label="Revoked" value={stats.revokedConsents} />
             <StatCard icon={<Settings className="h-5 w-5 text-purple-500" />} label="Calling Rules" value={stats.callingRules} />
@@ -281,7 +281,7 @@ export default function CompliancePage() {
       {/* Rules Tab */}
       {tab === 'rules' && (
         <div className="space-y-4">
-          <button onClick={() => setShowAddRule(!showAddRule)} className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button onClick={() => setShowAddRule(!showAddRule)} className="flex items-center gap-2 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700">
             <Plus className="h-4 w-4" /> New Calling Rule
           </button>
 
@@ -334,7 +334,7 @@ export default function CompliancePage() {
                   onChange={e => setNewRule(r => ({ ...r, weekendAllowed: e.target.checked }))} className="rounded" />
                 <label className="text-sm">Allow weekend calls</label>
               </div>
-              <button onClick={handleCreateRule} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <button onClick={handleCreateRule} className="px-4 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700">
                 Create Rule
               </button>
             </div>

@@ -1,221 +1,271 @@
 /**
- * Google Maps Places Scraper for CRM Prospect Lists
+ * Google Maps Playwright Scraper for CRM Prospect Lists
  *
- * Uses Google Places API (Text Search + Place Details) — legal and reliable.
- * Env var: GOOGLE_PLACES_API_KEY
+ * Scrapes Google Maps directly via headless browser (no API key needed).
+ * - Infinite scroll to collect all results
+ * - Clicks each result to extract full details
+ * - Website crawl for email extraction
+ * - Saves directly to Prospect table in DB
+ *
+ * Dedup strategy: MERGE, not skip.
+ *   - If a prospect already exists: fill in missing fields + update with newer data
+ *   - Existing data is preserved if the new scrape has null/empty for that field
+ *   - If both have a value and they differ: take the most recent (new scrape wins)
  */
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { updateListCounters } from './prospect-dedup';
+import { scrapeGoogleMaps, type ScrapedPlace } from '@/lib/scraper/google-maps-playwright';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface PlaceSearchResult {
-  place_id: string;
-  name: string;
-  formatted_address?: string;
-  geometry?: { location: { lat: number; lng: number } };
-  rating?: number;
-  user_ratings_total?: number;
-  types?: string[];
-  business_status?: string;
-}
-
-interface PlaceDetails {
-  place_id: string;
-  name: string;
-  formatted_address?: string;
-  formatted_phone_number?: string;
-  international_phone_number?: string;
-  website?: string;
-  rating?: number;
-  user_ratings_total?: number;
-  types?: string[];
-  geometry?: { location: { lat: number; lng: number } };
-  opening_hours?: { weekday_text?: string[] };
-  address_components?: { long_name: string; short_name: string; types: string[] }[];
-}
-
 export interface ScrapeOptions {
   query: string;
   location?: string;
-  radius?: number; // in meters
+  latitude?: number;
+  longitude?: number;
+  zoom?: number;
+  radius?: number;
   maxResults?: number;
+  enableNearbyFallback?: boolean;
+  crawlWebsites?: boolean;
+  scrollTimeout?: number;
 }
 
 export interface ScrapeResult {
   scraped: number;
   duplicates: number;
+  updated: number;
   added: number;
-  prospects: { id: string; contactName: string; googlePlaceId: string }[];
+  emailsFound: number;
+  prospects: { id: string; contactName: string; companyName: string | null }[];
 }
 
 // ---------------------------------------------------------------------------
-// API helpers
+// Main scraper — scrapes Google Maps and saves/merges to DB
 // ---------------------------------------------------------------------------
 
-function getApiKey(): string {
-  const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) throw new Error('GOOGLE_PLACES_API_KEY not configured');
-  return key;
-}
-
-async function searchPlaces(
-  query: string,
-  pageToken?: string,
-): Promise<{ results: PlaceSearchResult[]; nextPageToken?: string }> {
-  const apiKey = getApiKey();
-  const params = new URLSearchParams({ query, key: apiKey });
-  if (pageToken) params.set('pagetoken', pageToken);
-
-  const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Google Places API error: ${res.status}`);
-
-  const data = await res.json();
-  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    throw new Error(`Google Places API status: ${data.status} - ${data.error_message || ''}`);
-  }
-
-  return {
-    results: data.results || [],
-    nextPageToken: data.next_page_token,
-  };
-}
-
-async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-  const apiKey = getApiKey();
-  const fields = 'place_id,name,formatted_address,formatted_phone_number,international_phone_number,website,rating,user_ratings_total,types,geometry,opening_hours,address_components';
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${apiKey}`;
-
-  const res = await fetch(url);
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  if (data.status !== 'OK') return null;
-
-  return data.result;
-}
-
-// ---------------------------------------------------------------------------
-// Main scraper
-// ---------------------------------------------------------------------------
-
-/**
- * Search Google Maps and add results as Prospects to a list.
- */
 export async function scrapePlacesToProspects(
   listId: string,
   options: ScrapeOptions,
 ): Promise<ScrapeResult> {
-  const maxResults = Math.min(options.maxResults || 60, 60); // Google max = 60 (3 pages × 20)
-  const fullQuery = options.location ? `${options.query} near ${options.location}` : options.query;
+  const maxResults = options.maxResults || 200;
+  const crawlWebsites = options.crawlWebsites ?? true;
 
-  let allResults: PlaceSearchResult[] = [];
-  let nextPageToken: string | undefined;
+  // ---- Scrape Google Maps via Playwright ----
+  const places = await scrapeGoogleMaps({
+    query: options.query,
+    location: options.location,
+    latitude: options.latitude,
+    longitude: options.longitude,
+    zoom: options.zoom,
+    maxResults,
+    crawlWebsites,
+    scrollTimeout: options.scrollTimeout ?? 30000,
+  });
 
-  // Fetch up to 3 pages (max 60 results)
-  for (let page = 0; page < 3 && allResults.length < maxResults; page++) {
-    const { results, nextPageToken: npt } = await searchPlaces(fullQuery, nextPageToken);
-    allResults = allResults.concat(results);
-    nextPageToken = npt;
+  // ---- Load ALL existing prospects in this list for dedup matching ----
+  const existingProspects = await prisma.prospect.findMany({
+    where: { listId },
+  });
 
-    if (!nextPageToken) break;
-    // Google requires a short delay before using nextPageToken
-    await new Promise((r) => setTimeout(r, 2000));
+  // Build a lookup map by dedup key → existing prospect
+  const existingByKey = new Map<string, typeof existingProspects[0]>();
+  for (const p of existingProspects) {
+    existingByKey.set(dedupKey(p.contactName, p.address, p.phone), p);
   }
 
-  allResults = allResults.slice(0, maxResults);
-
-  // Check existing placeIds in this list to skip duplicates
-  const existingPlaceIds = new Set(
-    (await prisma.prospect.findMany({
-      where: { listId, googlePlaceId: { not: null } },
-      select: { googlePlaceId: true },
-    })).map((p) => p.googlePlaceId),
-  );
-
   let duplicates = 0;
+  let updated = 0;
   let added = 0;
-  const prospects: { id: string; contactName: string; googlePlaceId: string }[] = [];
+  let emailsFound = 0;
+  const prospects: { id: string; contactName: string; companyName: string | null }[] = [];
 
-  for (const place of allResults) {
-    if (existingPlaceIds.has(place.place_id)) {
+  for (const place of places) {
+    const key = dedupKey(place.name, place.address, place.phone);
+    const existing = existingByKey.get(key);
+
+    if (existing) {
+      // ---- MERGE: complete missing fields, update with newer data ----
+      const updates = buildMergeUpdate(existing, place);
+
+      if (Object.keys(updates).length > 0) {
+        const updatedProspect = await prisma.prospect.update({
+          where: { id: existing.id },
+          data: updates,
+        });
+
+        updated++;
+        if (updates.email && !existing.email) emailsFound++;
+
+        prospects.push({
+          id: updatedProspect.id,
+          contactName: updatedProspect.contactName,
+          companyName: updatedProspect.companyName,
+        });
+
+        // Update the map with merged data for subsequent dedup checks
+        existingByKey.set(key, updatedProspect);
+      }
+
       duplicates++;
-      continue;
+    } else {
+      // ---- NEW: create prospect ----
+      const prospect = await prisma.prospect.create({
+        data: {
+          listId,
+          contactName: place.name,
+          companyName: place.name,
+          email: place.email,
+          phone: place.phone,
+          website: place.website,
+          address: place.address,
+          city: place.city,
+          province: place.province,
+          postalCode: place.postalCode,
+          country: place.country,
+          googleRating: place.googleRating,
+          googleReviewCount: place.googleReviewCount,
+          googleCategory: place.category,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          openingHours: place.openingHours ? { days: place.openingHours } : undefined,
+          enrichmentSource: place.email ? 'website_crawl' : null,
+          enrichedAt: place.email ? new Date() : null,
+          status: 'NEW',
+        },
+      });
+
+      if (place.email) emailsFound++;
+      existingByKey.set(key, prospect);
+      prospects.push({
+        id: prospect.id,
+        contactName: prospect.contactName,
+        companyName: prospect.companyName,
+      });
+      added++;
     }
-
-    // Get full details
-    const details = await getPlaceDetails(place.place_id);
-    if (!details) continue;
-
-    const addressParts = parseAddressComponents(details.address_components || []);
-
-    const prospect = await prisma.prospect.create({
-      data: {
-        listId,
-        contactName: details.name,
-        companyName: details.name,
-        email: null,
-        phone: details.formatted_phone_number || details.international_phone_number || null,
-        website: details.website || null,
-        address: details.formatted_address || null,
-        city: addressParts.city,
-        province: addressParts.province,
-        postalCode: addressParts.postalCode,
-        country: addressParts.country,
-        googlePlaceId: details.place_id,
-        googleRating: details.rating || null,
-        googleReviewCount: details.user_ratings_total || null,
-        googleCategory: details.types?.[0] || null,
-        latitude: details.geometry?.location.lat || null,
-        longitude: details.geometry?.location.lng || null,
-        openingHours: details.opening_hours?.weekday_text ? { days: details.opening_hours.weekday_text } : undefined,
-        status: 'NEW',
-      },
-    });
-
-    existingPlaceIds.add(details.place_id);
-    prospects.push({ id: prospect.id, contactName: prospect.contactName, googlePlaceId: details.place_id });
-    added++;
   }
 
   // Update list metadata
   await prisma.prospectList.update({
     where: { id: listId },
-    data: { sourceQuery: fullQuery },
+    data: {
+      sourceQuery: `${options.query}${options.location ? ` near ${options.location}` : ''}`,
+    },
   });
   await updateListCounters(listId);
 
-  logger.info('Google Maps scrape completed', { listId, query: fullQuery, scraped: allResults.length, duplicates, added });
+  logger.info('Google Maps Playwright scrape completed', {
+    listId,
+    query: options.query,
+    location: options.location,
+    scraped: places.length,
+    duplicates,
+    updated,
+    added,
+    emailsFound,
+  });
 
-  return { scraped: allResults.length, duplicates, added, prospects };
+  return { scraped: places.length, duplicates, updated, added, emailsFound, prospects };
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Merge logic: complete missing fields + update with newer data
 // ---------------------------------------------------------------------------
 
-function parseAddressComponents(components: { long_name: string; short_name: string; types: string[] }[]): {
-  city: string | null;
-  province: string | null;
-  postalCode: string | null;
-  country: string | null;
-} {
-  let city: string | null = null;
-  let province: string | null = null;
-  let postalCode: string | null = null;
-  let country: string | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildMergeUpdate(existing: any, newPlace: ScrapedPlace): Record<string, unknown> {
+  const updates: Record<string, unknown> = {};
 
-  for (const comp of components) {
-    if (comp.types.includes('locality')) city = comp.long_name;
-    if (comp.types.includes('administrative_area_level_1')) province = comp.short_name;
-    if (comp.types.includes('postal_code')) postalCode = comp.long_name;
-    if (comp.types.includes('country')) country = comp.short_name;
+  // For each field: if existing is empty/null and new has data → fill in
+  // If both have data and they differ → take new (most recent)
+  // If existing has data and new is empty → keep existing (no update)
+
+  mergeStr(updates, 'email', existing.email, newPlace.email);
+  mergeStr(updates, 'phone', existing.phone, newPlace.phone);
+  mergeStr(updates, 'website', existing.website, newPlace.website);
+  mergeStr(updates, 'address', existing.address, newPlace.address);
+  mergeStr(updates, 'city', existing.city, newPlace.city);
+  mergeStr(updates, 'province', existing.province, newPlace.province);
+  mergeStr(updates, 'postalCode', existing.postalCode, newPlace.postalCode);
+  mergeStr(updates, 'country', existing.country, newPlace.country);
+  mergeStr(updates, 'googleCategory', existing.googleCategory, newPlace.category);
+
+  // Numeric fields: update if new has data
+  mergeNum(updates, 'googleRating', existing.googleRating, newPlace.googleRating);
+  mergeNum(updates, 'googleReviewCount', existing.googleReviewCount, newPlace.googleReviewCount);
+  mergeNum(updates, 'latitude', existing.latitude, newPlace.latitude);
+  mergeNum(updates, 'longitude', existing.longitude, newPlace.longitude);
+
+  // Opening hours: update if new has data
+  if (newPlace.openingHours && newPlace.openingHours.length > 0) {
+    const existingHours = existing.openingHours as { days?: string[] } | null;
+    if (!existingHours?.days || existingHours.days.length === 0) {
+      updates.openingHours = { days: newPlace.openingHours };
+    } else {
+      // Both have hours — take the new (most recent scrape)
+      const existingStr = JSON.stringify(existingHours.days);
+      const newStr = JSON.stringify(newPlace.openingHours);
+      if (existingStr !== newStr) {
+        updates.openingHours = { days: newPlace.openingHours };
+      }
+    }
   }
 
-  return { city, province, postalCode, country };
+  // If email was just filled in, update enrichment fields
+  if (updates.email && !existing.email) {
+    updates.enrichmentSource = 'website_crawl';
+    updates.enrichedAt = new Date();
+  }
+
+  return updates;
+}
+
+/** Merge a string field: fill if empty, update if different (new wins) */
+function mergeStr(
+  updates: Record<string, unknown>,
+  field: string,
+  existingVal: string | null,
+  newVal: string | null,
+): void {
+  if (!newVal) return; // New has nothing → keep existing
+  if (!existingVal) {
+    // Existing is empty → fill in
+    updates[field] = newVal;
+  } else if (existingVal.trim().toLowerCase() !== newVal.trim().toLowerCase()) {
+    // Both have values but different → take the most recent (new scrape)
+    updates[field] = newVal;
+  }
+}
+
+/** Merge a numeric field: fill if null, update if different (new wins) */
+function mergeNum(
+  updates: Record<string, unknown>,
+  field: string,
+  existingVal: number | null,
+  newVal: number | null,
+): void {
+  if (newVal == null) return; // New has nothing → keep existing
+  if (existingVal == null) {
+    // Existing is null → fill in
+    updates[field] = newVal;
+  } else if (existingVal !== newVal) {
+    // Both have values but different → take the most recent
+    updates[field] = newVal;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dedup key helper
+// ---------------------------------------------------------------------------
+
+function dedupKey(name: string, address: string | null, phone: string | null): string {
+  const n = name.toLowerCase().trim();
+  const a = (address || '').toLowerCase().trim().slice(0, 50);
+  const p = (phone || '').replace(/\D/g, '').slice(-10);
+  return `${n}|${a}|${p}`;
 }

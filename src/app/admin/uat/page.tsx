@@ -499,7 +499,7 @@ export default function UatPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; icon: React.ReactNode }> = {
-    RUNNING: { color: 'bg-blue-100 text-blue-700', icon: <Loader2 className="w-3 h-3 animate-spin" /> },
+    RUNNING: { color: 'bg-teal-100 text-teal-700', icon: <Loader2 className="w-3 h-3 animate-spin" /> },
     COMPLETED: { color: 'bg-green-100 text-green-700', icon: <CheckCircle2 className="w-3 h-3" /> },
     FAILED: { color: 'bg-red-100 text-red-700', icon: <XCircle className="w-3 h-3" /> },
     CANCELLED: { color: 'bg-slate-100 text-slate-600', icon: <Clock className="w-3 h-3" /> },
@@ -853,13 +853,13 @@ function ErrorCard({
   const severityColor = {
     ERROR: 'border-red-200 bg-red-50',
     WARNING: 'border-amber-200 bg-amber-50',
-    INFO: 'border-blue-200 bg-blue-50',
+    INFO: 'border-teal-200 bg-teal-50',
   }[error.severity] || 'border-slate-200 bg-slate-50';
 
   const severityIcon = {
     ERROR: <XCircle className="w-3.5 h-3.5 text-red-500" />,
     WARNING: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />,
-    INFO: <Info className="w-3.5 h-3.5 text-blue-500" />,
+    INFO: <Info className="w-3.5 h-3.5 text-teal-500" />,
   }[error.severity];
 
   return (

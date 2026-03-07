@@ -183,7 +183,7 @@ export default function SondagesClient({
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" /> {t('voip.admin.surveys.addSurvey')}
         </button>
@@ -258,7 +258,7 @@ export default function SondagesClient({
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => openEdit(survey)}
-                      className="p-1.5 text-gray-400 hover:text-sky-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="p-1.5 text-gray-400 hover:text-teal-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                       title={t('voip.admin.surveys.editSurvey')}
                     >
                       <Pencil className="w-4 h-4" />
@@ -348,7 +348,7 @@ export default function SondagesClient({
                   </label>
                   <button
                     onClick={addQuestion}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-sky-600 bg-sky-50 dark:bg-sky-900/30 rounded-lg hover:bg-sky-100"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-600 bg-teal-50 dark:bg-teal-900/30 rounded-lg hover:bg-teal-100"
                   >
                     <Plus className="w-3 h-3" /> {t('voip.admin.surveys.addQuestion')}
                   </button>
@@ -410,7 +410,7 @@ export default function SondagesClient({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
               >
                 {saving ? t('common.loading') : t('common.save')}
               </button>

@@ -122,7 +122,7 @@ export default function CLVPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
         </div>
       ) : (
         <>
@@ -139,7 +139,7 @@ export default function CLVPage() {
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Users className="h-4 w-4" /> Customers
               </div>
-              <p className="text-2xl font-bold text-blue-600">{data?.customerCount || 0}</p>
+              <p className="text-2xl font-bold text-teal-600">{data?.customerCount || 0}</p>
               <p className="text-xs text-gray-400 mt-1">with orders</p>
             </div>
             <div className="bg-white rounded-xl border p-5">

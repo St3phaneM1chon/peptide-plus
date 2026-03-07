@@ -312,7 +312,7 @@ export default function ParametresPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -351,7 +351,7 @@ export default function ParametresPage() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-start transition-colors ${
                     activeSection === section.id
-                      ? 'bg-sky-100 text-sky-900'
+                      ? 'bg-teal-100 text-teal-900'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -410,7 +410,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.timezone}
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="America/Toronto">{t('admin.settingsPage.timezoneToronto') || 'Toronto (EST)'}</option>
                   <option value="America/Montreal">{t('admin.settingsPage.timezoneMontreal') || 'Montreal (EST)'}</option>
@@ -430,7 +430,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.currency}
                   onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="CAD">{t('admin.settingsPage.cadOption')}</option>
                   <option value="USD">{t('admin.settingsPage.usdOption')}</option>
@@ -448,7 +448,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.weightUnit}
                   onChange={(e) => setSettings({ ...settings, weightUnit: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="g">{t('admin.settingsPage.gramsOption')}</option>
                   <option value="kg">{t('admin.settingsPage.kilogramsOption')}</option>
@@ -460,7 +460,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.dimensionUnit}
                   onChange={(e) => setSettings({ ...settings, dimensionUnit: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="cm">{t('admin.settingsPage.centimetersOption')}</option>
                   <option value="in">{t('admin.settingsPage.inchesOption')}</option>
@@ -501,7 +501,7 @@ export default function ParametresPage() {
                     type="checkbox"
                     checked={settings.guestCheckout}
                     onChange={(e) => setSettings({ ...settings, guestCheckout: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-sky-500"
+                    className="w-4 h-4 rounded border-slate-300 text-teal-500"
                   />
                   <span className="text-slate-700">{t('admin.settingsPage.guestCheckout')}</span>
                 </label>
@@ -599,8 +599,8 @@ export default function ParametresPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 font-bold">S</span>
+                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                    <span className="text-teal-600 font-bold">S</span>
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">Stripe</p>
@@ -612,15 +612,15 @@ export default function ParametresPage() {
 
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-800 font-bold">P</span>
+                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                    <span className="text-teal-800 font-bold">P</span>
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">PayPal</p>
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.paypalPayments')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200" onClick={() => {
+                <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700 bg-teal-100 hover:bg-teal-200" onClick={() => {
                   // TODO: Create PayPal integration settings modal/page
                   toast.info('PayPal ' + t('admin.settingsPage.configure') + ' - Coming soon');
                 }}>
@@ -638,7 +638,7 @@ export default function ParametresPage() {
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.trafficStats')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200" onClick={() => {
+                <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700 bg-teal-100 hover:bg-teal-200" onClick={() => {
                   // TODO: Create Google Analytics integration settings modal/page
                   toast.info('Google Analytics ' + t('admin.settingsPage.configure') + ' - Coming soon');
                 }}>

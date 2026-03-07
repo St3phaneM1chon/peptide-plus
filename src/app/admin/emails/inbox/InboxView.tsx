@@ -37,7 +37,7 @@ const statusIcons: Record<string, typeof Circle> = {
 };
 
 const statusColors: Record<string, string> = {
-  NEW: 'text-blue-500',
+  NEW: 'text-teal-500',
   OPEN: 'text-orange-500',
   PENDING: 'text-yellow-500',
   RESOLVED: 'text-green-500',
@@ -117,7 +117,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
             placeholder={t('admin.emails.inbox.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
       </div>
@@ -130,14 +130,14 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
             onClick={() => setStatusFilter(s.key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
               statusFilter === s.key
-                ? 'bg-sky-100 text-sky-700'
+                ? 'bg-teal-100 text-teal-700'
                 : 'text-slate-500 hover:bg-slate-100'
             }`}
           >
             {s.label}
             {s.count > 0 && (
               <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                statusFilter === s.key ? 'bg-sky-200' : 'bg-slate-200'
+                statusFilter === s.key ? 'bg-teal-200' : 'bg-slate-200'
               }`}>
                 {s.count}
               </span>
@@ -150,7 +150,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center h-32" role="status" aria-label="Loading">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
             <span className="sr-only">Loading...</span>
           </div>
         ) : conversations.length === 0 ? (
@@ -175,7 +175,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
                 onClick={() => onSelectConversation(conv.id)}
                 className={`w-full text-left p-3 border-b border-slate-100 border-l-4 transition-colors ${
                   priorityColors[conv.priority] || ''
-                } ${isSelected ? 'bg-sky-50' : 'hover:bg-slate-50'}`}
+                } ${isSelected ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar */}

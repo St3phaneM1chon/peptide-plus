@@ -124,7 +124,7 @@ function FolderItem({
           flex items-center gap-2.5 px-2.5 py-[6px] rounded-sm transition-colors
           text-[13px] group
           ${isActive
-            ? 'bg-sky-50 text-sky-800 border-s-[3px] border-s-sky-600'
+            ? 'bg-teal-50 text-teal-800 border-s-[3px] border-s-teal-600'
             : 'border-s-[3px] border-s-transparent text-slate-700 hover:bg-slate-50'
           }
           ${depth > 0 ? 'ps-8' : ''}
@@ -140,7 +140,7 @@ function FolderItem({
             className="w-[18px] h-[18px] object-contain flex-shrink-0 transition-transform duration-200 group-hover:scale-125"
           />
         ) : (
-          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-sky-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
         )}
         <span className="flex-1 truncate">{item.labelKey.startsWith('_dynamic_:') ? item.labelKey.slice(10) : t(item.labelKey)}</span>
 

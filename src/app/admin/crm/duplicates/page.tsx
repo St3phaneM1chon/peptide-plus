@@ -32,7 +32,7 @@ interface DuplicatePair {
 
 const MATCH_TYPE_CONFIG: Record<MatchType, { label: string; color: string }> = {
   email_exact: { label: 'Email Match', color: 'bg-green-100 text-green-700' },
-  phone_exact: { label: 'Phone Match', color: 'bg-blue-100 text-blue-700' },
+  phone_exact: { label: 'Phone Match', color: 'bg-teal-100 text-teal-700' },
   name_fuzzy: { label: 'Name Fuzzy', color: 'bg-yellow-100 text-yellow-700' },
   name_company_fuzzy: { label: 'Name + Company', color: 'bg-orange-100 text-orange-700' },
 };
@@ -86,7 +86,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
   const leadCardCls = (side: 'A' | 'B') =>
     `flex-1 p-4 rounded-xl border-2 cursor-pointer transition-all ${
       selectedSurvivor === side
-        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+        ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-200'
         : 'border-gray-200 hover:border-gray-300 bg-white'
     }`;
 
@@ -121,7 +121,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {selectedSurvivor === 'A' && (
-                  <span className="text-xs font-bold text-blue-600 uppercase">
+                  <span className="text-xs font-bold text-teal-600 uppercase">
                     {t('admin.crm.duplicates.keeper') || 'Keep'}
                   </span>
                 )}
@@ -150,7 +150,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {selectedSurvivor === 'B' && (
-                  <span className="text-xs font-bold text-blue-600 uppercase">
+                  <span className="text-xs font-bold text-teal-600 uppercase">
                     {t('admin.crm.duplicates.keeper') || 'Keep'}
                   </span>
                 )}

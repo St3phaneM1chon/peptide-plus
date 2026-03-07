@@ -40,9 +40,9 @@ export default function MailingListSignup() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-200 rounded-xl p-6">
+    <div className="bg-gradient-to-br from-teal-50 to-indigo-50 border border-teal-200 rounded-xl p-6">
       <div className="flex items-center gap-2 mb-3">
-        <Mail className="w-5 h-5 text-sky-600" />
+        <Mail className="w-5 h-5 text-teal-600" />
         <h3 className="font-semibold text-slate-900">{t('mailingList.title')}</h3>
       </div>
       <p className="text-sm text-slate-600 mb-4">{t('mailingList.description')}</p>
@@ -53,7 +53,7 @@ export default function MailingListSignup() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('mailingList.namePlaceholder')}
-          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
         />
         <input
           type="email"
@@ -61,7 +61,7 @@ export default function MailingListSignup() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('mailingList.emailPlaceholder')}
-          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
         />
 
         {/* CASL explicit consent checkbox */}
@@ -70,7 +70,7 @@ export default function MailingListSignup() {
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             required
           />
           <span className="text-xs text-slate-600 leading-tight">
@@ -88,7 +88,7 @@ export default function MailingListSignup() {
         <button
           type="submit"
           disabled={!consent || status === 'loading'}
-          className="w-full py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {status === 'loading' ? t('common.loading') : t('mailingList.subscribe')}
         </button>

@@ -158,7 +158,7 @@ ${form.fields.map(f => `
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -166,12 +166,12 @@ ${form.fields.map(f => `
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileInput className="h-6 w-6 text-blue-600" />
+            <FileInput className="h-6 w-6 text-teal-600" />
             {t('admin.crm.webForms') || 'Web-to-Lead Forms'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">Capture leads from your website</p>
         </div>
-        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm">
           <Plus className="h-4 w-4" /> New Form
         </button>
       </div>
@@ -216,7 +216,7 @@ ${form.fields.map(f => `
             ))}
           </div>
 
-          <button onClick={handleCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+          <button onClick={handleCreate} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm">
             Create Form
           </button>
         </div>

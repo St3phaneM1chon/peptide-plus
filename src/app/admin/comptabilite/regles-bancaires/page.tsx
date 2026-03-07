@@ -399,9 +399,9 @@ export default function ReglesBancairesPage() {
 
   const conditionBadges = (rule: BankRule) => {
     const badges: Array<{ label: string; color: string }> = [];
-    if (rule.descriptionContains) badges.push({ label: `"...${rule.descriptionContains}..."`, color: 'bg-sky-100 text-sky-700' });
-    if (rule.descriptionStartsWith) badges.push({ label: `"${rule.descriptionStartsWith}..."`, color: 'bg-sky-100 text-sky-700' });
-    if (rule.descriptionExact) badges.push({ label: `="${rule.descriptionExact}"`, color: 'bg-sky-100 text-sky-700' });
+    if (rule.descriptionContains) badges.push({ label: `"...${rule.descriptionContains}..."`, color: 'bg-teal-100 text-teal-700' });
+    if (rule.descriptionStartsWith) badges.push({ label: `"${rule.descriptionStartsWith}..."`, color: 'bg-teal-100 text-teal-700' });
+    if (rule.descriptionExact) badges.push({ label: `="${rule.descriptionExact}"`, color: 'bg-teal-100 text-teal-700' });
     if (rule.amountMin !== null) badges.push({ label: `>= $${rule.amountMin}`, color: 'bg-emerald-100 text-emerald-700' });
     if (rule.amountMax !== null) badges.push({ label: `<= $${rule.amountMax}`, color: 'bg-emerald-100 text-emerald-700' });
     if (rule.amountExact !== null) badges.push({ label: `= $${rule.amountExact}`, color: 'bg-emerald-100 text-emerald-700' });
@@ -457,7 +457,7 @@ export default function ReglesBancairesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -628,7 +628,7 @@ export default function ReglesBancairesPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEditModal(rule)}
-                          className="p-1.5 rounded-lg hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors"
                           title={t('admin.bankRules.edit') || 'Edit'}
                           aria-label="Modifier la regle"
                         >
@@ -697,7 +697,7 @@ export default function ReglesBancairesPage() {
           {/* Conditions */}
           <div>
             <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-sky-500" />
+              <span className="w-2 h-2 rounded-full bg-teal-500" />
               {t('admin.bankRules.conditionsSection') || 'Conditions'} <span className="text-xs font-normal text-slate-400">({t('admin.bankRules.andLogic') || 'AND logic'})</span>
             </h3>
             {formErrors.conditions && (
@@ -732,7 +732,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.transactionType}
                   onChange={e => updateForm('transactionType', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.bankRules.transactionType') || 'Transaction type'}
                 >
                   <option value="">{t('admin.bankRules.anyType') || '-- Any type --'}</option>
@@ -787,7 +787,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.accountId}
                   onChange={e => updateForm('accountId', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.bankRules.account') || 'Account'}
                 >
                   <option value="">{t('admin.bankRules.selectAccount') || '-- Select account --'}</option>
@@ -807,7 +807,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.taxCode}
                   onChange={e => updateForm('taxCode', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.bankRules.taxCode') || 'Tax code'}
                 >
                   {TAX_CODES.map(tc => (

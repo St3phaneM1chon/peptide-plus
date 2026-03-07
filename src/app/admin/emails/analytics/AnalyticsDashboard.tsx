@@ -64,7 +64,7 @@ export default function AnalyticsDashboard() {
   };
 
   if (loading || !data) {
-    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" /><span className="sr-only">Loading...</span></div>;
+    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" /><span className="sr-only">Loading...</span></div>;
   }
 
   const { overview } = data;
@@ -197,7 +197,7 @@ export default function AnalyticsDashboard() {
           {data.topTemplates.length > 0 ? data.topTemplates.map((tmpl, i) => (
             <div key={tmpl.templateId || i} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-600 text-[10px] font-bold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-600 text-[10px] font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
                 <span className="text-sm text-slate-700">{tmpl.templateName}</span>

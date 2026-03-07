@@ -73,7 +73,7 @@ export default function GroupesClient({
 
   const strategyColor = (s: string) => {
     switch (s) {
-      case 'RING_ALL': return 'bg-sky-50 text-sky-700';
+      case 'RING_ALL': return 'bg-teal-50 text-teal-700';
       case 'ROUND_ROBIN': return 'bg-violet-50 text-violet-700';
       case 'HUNT': return 'bg-amber-50 text-amber-700';
       case 'RANDOM': return 'bg-emerald-50 text-emerald-700';
@@ -169,7 +169,7 @@ export default function GroupesClient({
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t('voip.admin.ringGroups.addGroup')}
         </button>
@@ -188,7 +188,7 @@ export default function GroupesClient({
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => openEdit(group)} className="p-1.5 text-gray-400 hover:text-sky-600 rounded">
+                  <button onClick={() => openEdit(group)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded">
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button onClick={() => handleDelete(group.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded">
@@ -255,7 +255,7 @@ export default function GroupesClient({
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Sales, Support..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function GroupesClient({
                 <select
                   value={form.strategy}
                   onChange={(e) => setForm((f) => ({ ...f, strategy: e.target.value as Strategy }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   {STRATEGIES.map((s) => (
                     <option key={s} value={s}>{strategyLabel(s)}</option>
@@ -287,7 +287,7 @@ export default function GroupesClient({
                   step={5}
                   value={form.ringTimeout}
                   onChange={(e) => setForm((f) => ({ ...f, ringTimeout: parseInt(e.target.value) }))}
-                  className="w-full accent-sky-600"
+                  className="w-full accent-teal-600"
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>10s</span>
@@ -310,10 +310,10 @@ export default function GroupesClient({
                         type="button"
                         onClick={() => toggleMember(user.id)}
                         className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                          isSelected ? 'bg-sky-50' : ''
+                          isSelected ? 'bg-teal-50' : ''
                         }`}
                       >
-                        <span className={isSelected ? 'text-sky-700 font-medium' : 'text-gray-700'}>
+                        <span className={isSelected ? 'text-teal-700 font-medium' : 'text-gray-700'}>
                           {user.name || user.email}
                         </span>
                         {isSelected ? (
@@ -342,7 +342,7 @@ export default function GroupesClient({
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {t('common.save')}
               </button>

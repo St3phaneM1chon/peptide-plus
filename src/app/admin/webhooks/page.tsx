@@ -64,12 +64,12 @@ export default function WebhooksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Webhook className="w-6 h-6 text-sky-600" />
+            <Webhook className="w-6 h-6 text-teal-600" />
             Webhooks
           </h1>
           <p className="text-slate-500">Gérez les intégrations par événements</p>
         </div>
-        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">
+        <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium">
           <Plus className="w-4 h-4" /> Nouveau webhook
         </button>
       </div>
@@ -104,7 +104,7 @@ export default function WebhooksPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => testWebhook(webhook.id)} className="p-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg" title="Tester">
+                <button onClick={() => testWebhook(webhook.id)} className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg" title="Tester">
                   <Play className="w-4 h-4" />
                 </button>
                 <button onClick={() => toggleActive(webhook.id)} className="p-2 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg" title={webhook.active ? 'Désactiver' : 'Activer'}>
@@ -118,7 +118,7 @@ export default function WebhooksPage() {
 
             <div className="flex flex-wrap gap-1.5 mb-4">
               {webhook.events.map(evt => (
-                <span key={evt} className="px-2 py-0.5 bg-sky-50 text-sky-700 rounded text-xs font-mono">{evt}</span>
+                <span key={evt} className="px-2 py-0.5 bg-teal-50 text-teal-700 rounded text-xs font-mono">{evt}</span>
               ))}
             </div>
 

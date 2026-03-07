@@ -25,9 +25,9 @@ interface AuditEntry {
 
 const actionColors: Record<string, string> = {
   CREATE: 'bg-green-100 text-green-700',
-  UPDATE: 'bg-blue-100 text-blue-700',
+  UPDATE: 'bg-teal-100 text-teal-700',
   DELETE: 'bg-red-100 text-red-700',
-  POST: 'bg-sky-100 text-sky-700',
+  POST: 'bg-teal-100 text-teal-700',
   VOID: 'bg-red-100 text-red-700',
   APPROVE: 'bg-green-100 text-green-700',
   RECONCILE: 'bg-purple-100 text-purple-700',

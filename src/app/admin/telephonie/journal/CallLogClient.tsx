@@ -87,7 +87,7 @@ export default function CallLogClient() {
 
   const directionIcon = (dir: string) => {
     switch (dir) {
-      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-sky-600" />;
+      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-teal-600" />;
       case 'OUTBOUND': return <PhoneOutgoing className="w-4 h-4 text-emerald-600" />;
       default: return <Phone className="w-4 h-4 text-gray-400" />;
     }
@@ -97,7 +97,7 @@ export default function CallLogClient() {
     COMPLETED: 'bg-emerald-100 text-emerald-700',
     MISSED: 'bg-red-100 text-red-700',
     VOICEMAIL: 'bg-orange-100 text-orange-700',
-    IN_PROGRESS: 'bg-sky-100 text-sky-700',
+    IN_PROGRESS: 'bg-teal-100 text-teal-700',
     FAILED: 'bg-gray-100 text-gray-600',
     TRANSFERRED: 'bg-purple-100 text-purple-700',
     RINGING: 'bg-yellow-100 text-yellow-700',
@@ -128,7 +128,7 @@ export default function CallLogClient() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder={t('voip.callLog.searchPlaceholder')}
-              className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function CallLogClient() {
         <select
           value={direction}
           onChange={(e) => { setDirection(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">{t('voip.callLog.allDirections')}</option>
           <option value="INBOUND">{t('voip.callLog.inbound')}</option>
@@ -147,7 +147,7 @@ export default function CallLogClient() {
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">{t('voip.callLog.allStatuses')}</option>
           <option value="COMPLETED">{t('voip.status.call.completed')}</option>
@@ -160,13 +160,13 @@ export default function CallLogClient() {
           type="date"
           value={dateFrom}
           onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
         <input
           type="date"
           value={dateTo}
           onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
       </div>
 
@@ -279,7 +279,7 @@ export default function CallLogClient() {
                                       <Link
                                         key={deal.id}
                                         href={`/admin/crm/deals/${deal.id}`}
-                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-blue-50 border border-gray-100"
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-teal-50 border border-gray-100"
                                       >
                                         <span className="text-gray-800 truncate">{deal.title}</span>
                                         <span className="text-gray-500 ms-2 shrink-0">{deal.stageName}</span>
@@ -300,7 +300,7 @@ export default function CallLogClient() {
                                       <Link
                                         key={order.id}
                                         href={`/admin/commandes?orderId=${order.id}`}
-                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-blue-50 border border-gray-100"
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-teal-50 border border-gray-100"
                                       >
                                         <span className="text-gray-800">#{order.orderNumber}</span>
                                         <span className="text-gray-500 ms-2 shrink-0">${order.total.toFixed(2)}</span>

@@ -504,7 +504,7 @@ export default function DepensesPage() {
       render: (exp) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedExpense(exp); setShowDetailModal(true); }}
-          className="font-mono text-sm text-blue-600 hover:underline"
+          className="font-mono text-sm text-teal-600 hover:underline"
         >
           {exp.expenseNumber}
         </button>
@@ -580,7 +580,7 @@ export default function DepensesPage() {
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); openEditForm(exp); }}
-                className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
+                className="p-1.5 text-slate-400 hover:text-teal-600 rounded-lg hover:bg-teal-50"
                 title={t('common.edit')}
                 aria-label="Modifier la depense"
               >
@@ -1013,11 +1013,11 @@ export default function DepensesPage() {
 
             {/* Mileage */}
             {selectedExpense.mileageKm && (
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                <p className="text-sm font-medium text-blue-700 mb-1 flex items-center gap-1.5">
+              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200">
+                <p className="text-sm font-medium text-teal-700 mb-1 flex items-center gap-1.5">
                   <Car className="w-4 h-4" /> {t('admin.expenses.mileageSection')}
                 </p>
-                <div className="text-sm text-blue-600 space-y-1">
+                <div className="text-sm text-teal-600 space-y-1">
                   <p>{t('admin.expenses.mileageKm')}: {selectedExpense.mileageKm} km</p>
                   <p>{t('admin.expenses.mileageRate')}: ${selectedExpense.mileageRate}/km</p>
                   <p className="font-medium">{t('admin.expenses.mileageTotal')}: {formatCAD((selectedExpense.mileageKm || 0) * (selectedExpense.mileageRate || 0))}</p>
@@ -1029,7 +1029,7 @@ export default function DepensesPage() {
             <div>
               <p className="text-sm font-medium text-slate-500 mb-1">{t('admin.expenses.receiptUpload')}</p>
               {selectedExpense.receiptUrl ? (
-                <a href={selectedExpense.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1.5">
+                <a href={selectedExpense.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline flex items-center gap-1.5">
                   <Eye className="w-4 h-4" /> {t('admin.expenses.receiptPreview')}
                 </a>
               ) : (
@@ -1094,7 +1094,7 @@ export default function DepensesPage() {
                 </>
               )}
               {selectedExpense.status === 'APPROVED' && (
-                <Button onClick={() => handleStatusChange(selectedExpense.id, 'REIMBURSED')} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={() => handleStatusChange(selectedExpense.id, 'REIMBURSED')} className="bg-teal-600 hover:bg-teal-700 text-white">
                   <DollarSign className="w-4 h-4 mr-1.5" /> {t('admin.expenses.markReimbursed')}
                 </Button>
               )}

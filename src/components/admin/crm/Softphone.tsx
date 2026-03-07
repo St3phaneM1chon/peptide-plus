@@ -956,7 +956,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                   onClick={() => setIdleTab(tab.key)}
                   className={`flex-1 flex items-center justify-center gap-1 py-2 text-xs border-b-2 transition-colors ${
                     idleTab === tab.key
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-teal-500 text-teal-600'
                       : 'border-transparent text-gray-400 hover:text-gray-600'
                   }`}
                 >
@@ -974,7 +974,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full text-center text-xl font-mono border-b border-gray-200 pb-2 mb-3 focus:outline-none focus:border-blue-500"
+                  className="w-full text-center text-xl font-mono border-b border-gray-200 pb-2 mb-3 focus:outline-none focus:border-teal-500"
                   onKeyDown={(e) => e.key === 'Enter' && dial()}
                 />
                 {showDialPad && (
@@ -1058,7 +1058,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                     const phone = window.prompt('Phone number:');
                     if (name && phone) saveSpeedDial(name, phone);
                   }}
-                  className="w-full mt-2 py-2 text-xs text-blue-500 hover:text-blue-700 border border-dashed border-gray-200 rounded-lg"
+                  className="w-full mt-2 py-2 text-xs text-teal-500 hover:text-teal-700 border border-dashed border-gray-200 rounded-lg"
                 >
                   + Add Speed Dial
                 </button>
@@ -1075,7 +1075,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search contacts..."
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto">
@@ -1178,7 +1178,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                 <button
                   onClick={warmTransferActive ? completeWarmTransfer : startWarmTransfer}
                   className={`flex flex-col items-center gap-1 py-2 rounded-lg text-xs ${
-                    warmTransferActive ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                    warmTransferActive ? 'bg-teal-100 text-teal-600' : 'hover:bg-gray-100'
                   }`}
                 >
                   <PhoneForwarded className="h-4 w-4" />
@@ -1187,7 +1187,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                 <button
                   onClick={() => setVideoEnabled(!videoEnabled)}
                   className={`flex flex-col items-center gap-1 py-2 rounded-lg text-xs ${
-                    videoEnabled ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                    videoEnabled ? 'bg-teal-100 text-teal-600' : 'hover:bg-gray-100'
                   }`}
                 >
                   {videoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
@@ -1207,9 +1207,9 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
 
             {/* Warm transfer cancel */}
             {warmTransferActive && (
-              <div className="mb-3 flex items-center gap-2 px-2 py-2 bg-blue-50 rounded-lg border border-blue-100">
-                <PhoneForwarded className="h-4 w-4 text-blue-500" />
-                <span className="text-xs text-blue-700 flex-1">Consulting: {warmTransferTarget}</span>
+              <div className="mb-3 flex items-center gap-2 px-2 py-2 bg-teal-50 rounded-lg border border-teal-100">
+                <PhoneForwarded className="h-4 w-4 text-teal-500" />
+                <span className="text-xs text-teal-700 flex-1">Consulting: {warmTransferTarget}</span>
                 <button onClick={cancelWarmTransfer} className="text-xs text-red-500 hover:text-red-700 font-medium">Cancel</button>
               </div>
             )}
@@ -1221,7 +1221,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                   value={callNotes}
                   onChange={(e) => setCallNotes(e.target.value)}
                   placeholder="Call notes (auto-saved)..."
-                  className="w-full h-16 text-xs p-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-500"
+                  className="w-full h-16 text-xs p-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-teal-500"
                 />
               </div>
             )}
@@ -1239,7 +1239,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                 onClick={() => setShowTranscript(!showTranscript)}
                 disabled={state !== 'connected'}
                 className={`flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors ${
-                  showTranscript ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                  showTranscript ? 'bg-teal-100 text-teal-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 } disabled:opacity-40`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -1304,7 +1304,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                   <span>ACW: {formatDuration(acwCountdown)}</span>
                   <button
                     onClick={forceReady}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-teal-600 hover:text-teal-800 font-medium"
                   >
                     Skip ACW
                   </button>

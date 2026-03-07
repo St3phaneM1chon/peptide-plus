@@ -219,7 +219,7 @@ function formatDate(d: string | null): string {
 
 function profitabilityColor(pct: number): string {
   if (pct >= 30) return 'text-emerald-600';
-  if (pct >= 15) return 'text-blue-600';
+  if (pct >= 15) return 'text-teal-600';
   if (pct >= 0) return 'text-amber-600';
   return 'text-red-600';
 }
@@ -612,7 +612,7 @@ export default function ProjetsCoutsPage() {
             placeholder="Rechercher par nom, code ou client..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
           />
         </div>
         <select
@@ -660,7 +660,7 @@ export default function ProjetsCoutsPage() {
               <tbody>
                 {projects.map((p) => (
                   <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer" onClick={() => openProjectDetail(p)}>
-                    <td className="py-3 px-3 font-mono text-xs text-blue-600">{p.code}</td>
+                    <td className="py-3 px-3 font-mono text-xs text-teal-600">{p.code}</td>
                     <td className="py-3 px-3">
                       <div className="font-medium">{p.name}</div>
                       {p.description && <div className="text-xs text-gray-400 truncate max-w-[200px]">{p.description}</div>}
@@ -698,7 +698,7 @@ export default function ProjetsCoutsPage() {
                     </td>
                     <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openProfitability(p)} className="p-1.5 hover:bg-blue-50 rounded text-blue-600" aria-label="Rentabilite">
+                        <button onClick={() => openProfitability(p)} className="p-1.5 hover:bg-teal-50 rounded text-teal-600" aria-label="Rentabilite">
                           <BarChart3 className="h-4 w-4" />
                         </button>
                         <button onClick={() => { setSelectedProject(p); openEditProject(p); }} className="p-1.5 hover:bg-gray-100 rounded text-gray-600" aria-label="Modifier">
@@ -752,7 +752,7 @@ export default function ProjetsCoutsPage() {
     return (
       <div className="space-y-4">
         {/* Back link */}
-        <button onClick={() => setActiveTab('projects')} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+        <button onClick={() => setActiveTab('projects')} className="text-sm text-teal-600 hover:underline flex items-center gap-1">
           <ChevronRight className="h-4 w-4 rotate-180" />
           Retour a la liste
         </button>
@@ -762,7 +762,7 @@ export default function ProjetsCoutsPage() {
           <div>
             <h2 className="text-xl font-bold">{selectedProject.name}</h2>
             <div className="flex items-center gap-3 mt-1">
-              <span className="font-mono text-sm text-blue-600">{selectedProject.code}</span>
+              <span className="font-mono text-sm text-teal-600">{selectedProject.code}</span>
               <StatusBadge variant={statusBadgeVariant(selectedProject.status)} dot>{statusLabel(selectedProject.status)}</StatusBadge>
               <span className="text-sm text-gray-500">{billingMethodLabel(selectedProject.billingMethod)}</span>
             </div>
@@ -861,7 +861,7 @@ export default function ProjetsCoutsPage() {
                     {m.status === 'COMPLETED' ? (
                       <CheckCircle className="h-5 w-5 text-emerald-500" />
                     ) : m.status === 'IN_PROGRESS' ? (
-                      <Clock className="h-5 w-5 text-blue-500" />
+                      <Clock className="h-5 w-5 text-teal-500" />
                     ) : m.status === 'CANCELLED' ? (
                       <XCircle className="h-5 w-5 text-red-400" />
                     ) : (
@@ -976,7 +976,7 @@ export default function ProjetsCoutsPage() {
 
     return (
       <div className="space-y-4">
-        <button onClick={() => setActiveTab('projects')} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+        <button onClick={() => setActiveTab('projects')} className="text-sm text-teal-600 hover:underline flex items-center gap-1">
           <ChevronRight className="h-4 w-4 rotate-180" />
           Retour a la liste
         </button>
@@ -994,8 +994,8 @@ export default function ProjetsCoutsPage() {
         {/* Billing */}
         <SectionCard title="Facturation" theme={theme}>
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="text-sm text-blue-600">Total facturable</div>
+            <div className="p-4 bg-teal-50 rounded-lg">
+              <div className="text-sm text-teal-600">Total facturable</div>
               <div className="text-xl font-bold">{formatMoney(p.financial.totalBillable)}</div>
             </div>
             <div className="p-4 bg-emerald-50 rounded-lg">
@@ -1111,7 +1111,7 @@ export default function ProjetsCoutsPage() {
                 <div key={type} className="flex items-center gap-3">
                   <div className="w-32 text-sm font-medium">{costTypeLabel(type)}</div>
                   <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${data.pct}%` }} />
+                    <div className="h-full bg-teal-500 rounded-full" style={{ width: `${data.pct}%` }} />
                   </div>
                   <div className="w-24 text-sm text-right font-medium">{formatMoney(data.cost)}</div>
                   <div className="w-12 text-xs text-gray-400 text-right">{data.pct}%</div>
@@ -1495,9 +1495,9 @@ export default function ProjetsCoutsPage() {
                 )}
               </div>
               {invoiceFormData.selectedCostEntryIds.length > 0 && (
-                <div className="bg-blue-50 p-2 rounded mt-2 text-right">
-                  <span className="text-sm text-blue-600 mr-2">Total selectionne:</span>
-                  <span className="font-bold text-blue-800">
+                <div className="bg-teal-50 p-2 rounded mt-2 text-right">
+                  <span className="text-sm text-teal-600 mr-2">Total selectionne:</span>
+                  <span className="font-bold text-teal-800">
                     {formatMoney(
                       costEntries
                         .filter((e) => invoiceFormData.selectedCostEntryIds.includes(e.id))

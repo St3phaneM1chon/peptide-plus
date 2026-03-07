@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import {
   User,
   Building2,
@@ -164,7 +165,7 @@ export default function ContactCard({
   if (compact) {
     return (
       <div className={`flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 ${className}`}>
-        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
+        <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-sm font-medium text-teal-600 dark:text-teal-400">
           {contact.name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
@@ -185,9 +186,9 @@ export default function ContactCard({
       {/* Header */}
       <div className="p-3 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-lg font-semibold text-blue-600 dark:text-blue-400 shrink-0">
+          <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-lg font-semibold text-teal-600 dark:text-teal-400 shrink-0">
             {contact.photoUrl ? (
-              <img src={contact.photoUrl} alt={contact.name} className="w-12 h-12 rounded-full object-cover" />
+              <Image src={contact.photoUrl} alt={contact.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover" />
             ) : (
               contact.name.charAt(0).toUpperCase()
             )}
@@ -205,7 +206,7 @@ export default function ContactCard({
           </div>
           <div className="flex flex-col items-end gap-0.5">
             {contact.tags.slice(0, 2).map((tag) => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+              <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-full">
                 {tag}
               </span>
             ))}
@@ -295,7 +296,7 @@ export default function ContactCard({
             href={`/admin/crm/leads/${contact.entityId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center justify-center gap-1 text-xs text-teal-600 hover:text-teal-700 transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
             Open in CRM

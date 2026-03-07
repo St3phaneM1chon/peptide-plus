@@ -95,7 +95,7 @@ export default function NotificationCenter() {
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-semibold text-slate-800">Notifications</h3>
             {unreadCount > 0 && (
-              <button onClick={markAllRead} className="text-xs text-sky-600 hover:text-sky-800 flex items-center gap-1">
+              <button onClick={markAllRead} className="text-xs text-teal-600 hover:text-teal-800 flex items-center gap-1">
                 <CheckCheck className="w-3.5 h-3.5" /> Tout marquer lu
               </button>
             )}
@@ -107,7 +107,7 @@ export default function NotificationCenter() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-2.5 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
-                  filter === f ? 'bg-sky-100 text-sky-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
+                  filter === f ? 'bg-teal-100 text-teal-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
                 }`}
               >
                 {f === 'all' ? 'Tout' : f === 'order' ? 'Commandes' : f === 'stock' ? 'Stock' : f === 'review' ? 'Avis' : 'Erreurs'}
@@ -130,7 +130,7 @@ export default function NotificationCenter() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className={`text-sm ${!n.read ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
-                      {!n.read && <span className="w-2 h-2 bg-sky-500 rounded-full flex-shrink-0" />}
+                      {!n.read && <span className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-slate-500 truncate">{n.message}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{timeAgo(n.createdAt)}</p>

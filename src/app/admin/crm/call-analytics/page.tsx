@@ -143,7 +143,7 @@ export default function CallAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
       </div>
     );
   }
@@ -171,7 +171,7 @@ export default function CallAnalyticsPage() {
                 onClick={() => setDateRange(range)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   dateRange === range
-                    ? 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-teal-600 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -190,7 +190,7 @@ export default function CallAnalyticsPage() {
         {/* AHT */}
         <div className="bg-white rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Timer className="h-4 w-4 text-blue-500" />
+            <Timer className="h-4 w-4 text-teal-500" />
             <span className="text-xs text-gray-500 font-medium">AHT</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatDuration(kpis?.aht || 0)}</p>
@@ -254,11 +254,11 @@ export default function CallAnalyticsPage() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-xl p-4 flex items-center gap-3">
-          <Phone className="h-8 w-8 text-blue-500" />
+        <div className="bg-teal-50 rounded-xl p-4 flex items-center gap-3">
+          <Phone className="h-8 w-8 text-teal-500" />
           <div>
-            <p className="text-2xl font-bold text-blue-700">{kpis?.totalCalls || 0}</p>
-            <p className="text-sm text-blue-500">Total Calls</p>
+            <p className="text-2xl font-bold text-teal-700">{kpis?.totalCalls || 0}</p>
+            <p className="text-sm text-teal-500">Total Calls</p>
           </div>
         </div>
         <div className="bg-green-50 rounded-xl p-4 flex items-center gap-3">

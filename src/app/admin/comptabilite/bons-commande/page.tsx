@@ -505,7 +505,7 @@ export default function BonsCommandePage() {
       render: (po) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedOrder(po); }}
-          className="font-mono text-sm text-blue-600 hover:underline"
+          className="font-mono text-sm text-teal-600 hover:underline"
         >
           {po.poNumber}
         </button>
@@ -556,7 +556,7 @@ export default function BonsCommandePage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedOrder(po)}
-            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
             title="Voir"
           >
             <Eye className="w-4 h-4" />
@@ -764,7 +764,7 @@ export default function BonsCommandePage() {
               {po.supplierInvoiceId && (
                 <div>
                   <p className="text-xs text-slate-500">Facture fournisseur</p>
-                  <p className="font-medium text-blue-600">{po.supplierInvoiceId}</p>
+                  <p className="font-medium text-teal-600">{po.supplierInvoiceId}</p>
                 </div>
               )}
             </div>

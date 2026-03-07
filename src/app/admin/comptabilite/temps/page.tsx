@@ -680,14 +680,14 @@ export default function TimeTrackingPage() {
             value={timerDescription}
             onChange={(e) => setTimerDescription(e.target.value)}
             disabled={timerRunning}
-            className="flex-1 min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50"
+            className="flex-1 min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-50"
           />
 
           <select
             value={timerProject}
             onChange={(e) => setTimerProject(e.target.value)}
             disabled={timerRunning}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50"
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-50"
           >
             <option value="">Projet (optionnel)</option>
             {projects.filter((p) => p.status === 'ACTIVE').map((p) => (
@@ -699,7 +699,7 @@ export default function TimeTrackingPage() {
             value={timerCategory}
             onChange={(e) => setTimerCategory(e.target.value)}
             disabled={timerRunning}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-50"
+            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-50"
           >
             <option value="">Categorie</option>
             {TASK_CATEGORIES.map((c) => (
@@ -731,8 +731,8 @@ export default function TimeTrackingPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-50 rounded-lg">
-              <Clock className="w-5 h-5 text-sky-600" />
+            <div className="p-2 bg-teal-50 rounded-lg">
+              <Clock className="w-5 h-5 text-teal-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{formatHours(entries.reduce((s, e) => s + e.hoursWorked, 0))}</p>
@@ -896,7 +896,7 @@ export default function TimeTrackingPage() {
                             <>
                               <button
                                 title="Modifier"
-                                className="p-1.5 rounded hover:bg-sky-50 text-sky-600"
+                                className="p-1.5 rounded hover:bg-teal-50 text-teal-600"
                                 onClick={() => startEditing(entry)}
                               >
                                 <Edit3 className="w-4 h-4" />
@@ -1218,7 +1218,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={entryForm.userName}
                   onChange={(e) => setEntryForm({ ...entryForm, userName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="Jean Dupont"
                 />
               </div>
@@ -1228,7 +1228,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={entryForm.date}
                   onChange={(e) => setEntryForm({ ...entryForm, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
             </div>
@@ -1243,7 +1243,7 @@ export default function TimeTrackingPage() {
                   max="24"
                   value={entryForm.hoursWorked}
                   onChange={(e) => setEntryForm({ ...entryForm, hoursWorked: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="8.00"
                 />
               </div>
@@ -1252,7 +1252,7 @@ export default function TimeTrackingPage() {
                 <select
                   value={entryForm.taskCategory}
                   onChange={(e) => setEntryForm({ ...entryForm, taskCategory: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Selectionner...</option>
                   {TASK_CATEGORIES.map((c) => (
@@ -1267,7 +1267,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={entryForm.description}
                 onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 rows={2}
                 placeholder="Description de la tache..."
               />
@@ -1279,7 +1279,7 @@ export default function TimeTrackingPage() {
                 <select
                   value={entryForm.projectName}
                   onChange={(e) => setEntryForm({ ...entryForm, projectName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Aucun projet</option>
                   {projects.filter((p) => p.status === 'ACTIVE').map((p) => (
@@ -1293,7 +1293,7 @@ export default function TimeTrackingPage() {
                     type="checkbox"
                     checked={entryForm.isBillable}
                     onChange={(e) => setEntryForm({ ...entryForm, isBillable: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                   />
                   <span className="text-sm text-slate-700">Facturable</span>
                 </label>
@@ -1305,7 +1305,7 @@ export default function TimeTrackingPage() {
                       min="0"
                       value={entryForm.billableRate}
                       onChange={(e) => setEntryForm({ ...entryForm, billableRate: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                       placeholder="Taux $/h"
                     />
                   </div>
@@ -1318,7 +1318,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={entryForm.notes}
                 onChange={(e) => setEntryForm({ ...entryForm, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 rows={2}
                 placeholder="Notes internes (non visibles sur rapports)..."
               />
@@ -1353,7 +1353,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.name}
                   onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="Site Web BioCycle"
                 />
               </div>
@@ -1363,7 +1363,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.code}
                   onChange={(e) => setProjectForm({ ...projectForm, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="WEB-001"
                 />
               </div>
@@ -1374,7 +1374,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={projectForm.description}
                 onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 rows={2}
                 placeholder="Description du projet..."
               />
@@ -1387,7 +1387,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.clientName}
                   onChange={(e) => setProjectForm({ ...projectForm, clientName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="Nom du client"
                 />
               </div>
@@ -1399,7 +1399,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.defaultRate}
                   onChange={(e) => setProjectForm({ ...projectForm, defaultRate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="75.00"
                 />
               </div>
@@ -1414,7 +1414,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.budget}
                   onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="100"
                 />
               </div>
@@ -1426,7 +1426,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.budgetAmount}
                   onChange={(e) => setProjectForm({ ...projectForm, budgetAmount: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="7500.00"
                 />
               </div>
@@ -1439,7 +1439,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={projectForm.startDate}
                   onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
               <div>
@@ -1448,7 +1448,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={projectForm.endDate}
                   onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
             </div>
@@ -1480,7 +1480,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 rows={3}
                 placeholder="Indiquez la raison du rejet..."
                 autoFocus

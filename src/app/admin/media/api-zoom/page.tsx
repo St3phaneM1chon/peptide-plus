@@ -79,7 +79,7 @@ export default function MediaZoomPage() {
   useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -88,7 +88,7 @@ export default function MediaZoomPage() {
         title={t('admin.media.zoomTitle')}
         description={t('admin.integrations.zoomSetupDesc')}
         icon={<Video className="w-6 h-6" />}
-        color="from-blue-500 to-blue-600"
+        color="from-teal-500 to-teal-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

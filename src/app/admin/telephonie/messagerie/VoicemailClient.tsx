@@ -114,7 +114,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">{t('voip.voicemail.title')}</h1>
           {unreadCount > 0 && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
               {unreadCount} {t('voip.voicemail.unread')}
             </span>
           )}
@@ -148,7 +148,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
               const unreadIds = voicemails.filter((vm) => !vm.isRead).map((vm) => vm.id);
               handleAction(unreadIds, 'markRead');
             }}
-            className="text-xs text-sky-600 hover:text-sky-700 font-medium"
+            className="text-xs text-teal-600 hover:text-teal-700 font-medium"
           >
             {t('voip.voicemail.markAllRead') || 'Mark all as read'}
           </button>
@@ -164,7 +164,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
             <div
               key={vm.id}
               className={`bg-white border rounded-xl overflow-hidden transition-shadow ${
-                vm.isRead ? 'border-gray-200' : 'border-sky-200 bg-sky-50/30 shadow-sm'
+                vm.isRead ? 'border-gray-200' : 'border-teal-200 bg-teal-50/30 shadow-sm'
               }`}
             >
               {/* Main row */}
@@ -174,7 +174,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     {vm.isRead ? (
                       <MailOpen className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     ) : (
-                      <Mail className="w-5 h-5 text-sky-600 flex-shrink-0" />
+                      <Mail className="w-5 h-5 text-teal-600 flex-shrink-0" />
                     )}
                     <div>
                       <div className="font-medium text-gray-900">
@@ -216,7 +216,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     {!vm.isRead && (
                       <button
                         onClick={() => handleAction([vm.id], 'markRead')}
-                        className="text-xs text-sky-600 hover:text-sky-700 font-medium"
+                        className="text-xs text-teal-600 hover:text-teal-700 font-medium"
                       >
                         {t('voip.voicemail.markRead')}
                       </button>

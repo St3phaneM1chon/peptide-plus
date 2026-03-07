@@ -422,9 +422,9 @@ export default function MediaImagesPage() {
     <div className="p-6 max-w-5xl space-y-4">
       {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium">{t('admin.media.imagesTitle') || 'Images'}</span>
       </nav>
@@ -435,7 +435,7 @@ export default function MediaImagesPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F37 - Use i18n instead of hardcoded "Upload" */}
@@ -446,8 +446,8 @@ export default function MediaImagesPage() {
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
-          <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+        <div className="flex items-center gap-3 p-2 bg-teal-50 border border-teal-200 rounded-lg text-sm">
+          <span className="text-teal-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
           </button>
@@ -477,7 +477,7 @@ export default function MediaImagesPage() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
-          isDragOver ? 'border-sky-400 bg-sky-50' : 'border-slate-300 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50'
+          isDragOver ? 'border-teal-400 bg-teal-50' : 'border-slate-300 bg-slate-50 hover:border-teal-300 hover:bg-teal-50/50'
         }`}
         onClick={() => bulkInputRef.current?.click()}
       >
@@ -490,7 +490,7 @@ export default function MediaImagesPage() {
           className="hidden"
           aria-label="Sélectionner des images pour envoi groupé"
         />
-        <UploadCloud className={`w-10 h-10 mx-auto mb-2 ${isDragOver ? 'text-sky-500' : 'text-slate-400'}`} />
+        <UploadCloud className={`w-10 h-10 mx-auto mb-2 ${isDragOver ? 'text-teal-500' : 'text-slate-400'}`} />
         <p className="text-sm font-medium text-slate-700">
           Glissez-déposez vos images ici ou cliquez pour sélectionner
         </p>
@@ -511,7 +511,7 @@ export default function MediaImagesPage() {
               {bulkFiles.some(f => f.status === 'pending') && (
                 <button
                   onClick={startBulkUpload}
-                  className="px-3 py-1 bg-sky-600 text-white rounded text-xs hover:bg-sky-700"
+                  className="px-3 py-1 bg-teal-600 text-white rounded text-xs hover:bg-teal-700"
                 >
                   Démarrer l&apos;envoi
                 </button>
@@ -534,7 +534,7 @@ export default function MediaImagesPage() {
                     className={`h-2 rounded-full transition-all duration-300 ${
                       bf.status === 'done' ? 'bg-green-500' :
                       bf.status === 'error' ? 'bg-red-500' :
-                      bf.status === 'uploading' ? 'bg-sky-500' : 'bg-slate-300'
+                      bf.status === 'uploading' ? 'bg-teal-500' : 'bg-slate-300'
                     }`}
                     style={{ width: `${bf.progress}%` }}
                   />
@@ -542,7 +542,7 @@ export default function MediaImagesPage() {
                 <span className="text-xs w-16 text-right">
                   {bf.status === 'done' && <span className="text-green-600">Terminé</span>}
                   {bf.status === 'error' && <span className="text-red-600">Erreur</span>}
-                  {bf.status === 'uploading' && <span className="text-sky-600">En cours...</span>}
+                  {bf.status === 'uploading' && <span className="text-teal-600">En cours...</span>}
                   {bf.status === 'pending' && <span className="text-slate-400">En attente</span>}
                 </span>
               </div>
@@ -580,7 +580,7 @@ export default function MediaImagesPage() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {images.map(img => (
-            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-sky-300 transition-colors ${selectedIds.has(img.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200'}`}>
+            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(img.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
               {/* Selection checkbox */}
               <div className="absolute top-2 left-2 z-10">
                 <input
@@ -663,7 +663,7 @@ export default function MediaImagesPage() {
                     <button
                       key={preset.id}
                       onClick={() => handleCropPreset(img.id, preset)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 rounded transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 rounded transition-colors text-left"
                     >
                       <ScissorsIcon className="w-3 h-3 text-slate-400" />
                       <div className="flex-1 min-w-0">
@@ -730,7 +730,7 @@ export default function MediaImagesPage() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>
-                <button onClick={() => copyUrl(preview)} className="text-sky-600 hover:text-sky-700" aria-label="Copier l'URL">
+                <button onClick={() => copyUrl(preview)} className="text-teal-600 hover:text-teal-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
@@ -783,7 +783,7 @@ export default function MediaImagesPage() {
                     <button
                       key={preset.id}
                       onClick={() => handleCropPreset(preview.id, preset)}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded hover:bg-sky-100 hover:text-sky-700 transition-colors"
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded hover:bg-teal-100 hover:text-teal-700 transition-colors"
                     >
                       <ScissorsIcon className="w-3 h-3" />
                       {preset.nameFr} ({preset.aspectRatio})

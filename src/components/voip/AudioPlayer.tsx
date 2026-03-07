@@ -104,7 +104,7 @@ export default function AudioPlayer({ src, duration: initialDuration, filename, 
       {/* Play/Pause */}
       <button
         onClick={togglePlay}
-        className="p-2 rounded-full bg-sky-500 text-white hover:bg-sky-600 transition-colors flex-shrink-0"
+        className="p-2 rounded-full bg-teal-500 text-white hover:bg-teal-600 transition-colors flex-shrink-0"
       >
         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
       </button>
@@ -121,7 +121,7 @@ export default function AudioPlayer({ src, duration: initialDuration, filename, 
           step={0.1}
           value={currentTime}
           onChange={handleSeek}
-          className="flex-1 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-sky-500 [&::-webkit-slider-thumb]:rounded-full"
+          className="flex-1 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-teal-500 [&::-webkit-slider-thumb]:rounded-full"
         />
         <span className="text-xs text-gray-500 tabular-nums w-10">
           {formatTime(duration)}
@@ -141,7 +141,7 @@ export default function AudioPlayer({ src, duration: initialDuration, filename, 
         <a
           href={src}
           download={filename}
-          className="p-1.5 rounded text-gray-500 hover:text-sky-600 transition-colors"
+          className="p-1.5 rounded text-gray-500 hover:text-teal-600 transition-colors"
         >
           <Download className="w-4 h-4" />
         </a>

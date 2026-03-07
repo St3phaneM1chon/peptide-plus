@@ -52,10 +52,17 @@ export const GET = withAdminGuard(async (
       assignedTo: {
         select: { id: true, name: true, email: true },
       },
-      deals: true,
-      tasks: true,
+      deals: {
+        include: { stage: { select: { name: true, color: true } } },
+      },
+      tasks: {
+        orderBy: { createdAt: 'desc' },
+      },
       activities: {
         orderBy: { createdAt: 'desc' },
+        include: {
+          performedBy: { select: { id: true, name: true, email: true } },
+        },
       },
     },
   });

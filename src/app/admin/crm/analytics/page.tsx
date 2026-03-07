@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
           onClick={() => setActiveTab('pipeline')}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'pipeline'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-teal-600 text-teal-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
         >
@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
           onClick={() => setActiveTab('forecast')}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'forecast'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-teal-600 text-teal-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
         >
@@ -127,7 +127,7 @@ export default function AnalyticsPage() {
         <>
           {loading ? (
             <div className="flex items-center justify-center h-96">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
             </div>
           ) : (
             <>
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
                   <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                     <Target className="h-4 w-4" /> Win Rate
                   </div>
-                  <p className="text-2xl font-bold text-blue-600">{Math.round((stats?.winRate || 0) * 100)}%</p>
+                  <p className="text-2xl font-bold text-teal-600">{Math.round((stats?.winRate || 0) * 100)}%</p>
                   <p className="text-xs text-gray-400 mt-1">{stats?.wonCount || 0} won / {stats?.lostCount || 0} lost</p>
                 </div>
                 <div className="bg-white rounded-xl border p-5">
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
+                            className="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-600 transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
                   Switch to the{' '}
                   <button
                     onClick={() => setActiveTab('forecast')}
-                    className="text-blue-600 underline hover:text-blue-800"
+                    className="text-teal-600 underline hover:text-teal-800"
                   >
                     Revenue Forecast tab
                   </button>

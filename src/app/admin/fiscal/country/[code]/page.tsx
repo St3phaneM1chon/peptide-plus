@@ -100,7 +100,7 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-900 mb-4">{t('admin.fiscalCountry.countryNotFound')}</h1>
           <p className="text-slate-600 mb-6">{t('admin.fiscalCountry.countryNotConfigured', { code: countryCode })}</p>
-          <Link href="/admin/fiscal" className="text-blue-600 hover:underline">
+          <Link href="/admin/fiscal" className="text-teal-600 hover:underline">
             &larr; {t('admin.fiscalCountry.backToList')}
           </Link>
         </div>
@@ -168,7 +168,7 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-teal-500 text-teal-600'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -207,14 +207,14 @@ function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   return (
     <div className="space-y-6">
       {/* Canadian Export Obligations */}
-      <div className="bg-blue-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4">
+      <div className="bg-teal-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-teal-900 mb-4">
           {t('admin.fiscalCountry.canadianExportObligations')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4">
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.canadianTaxes')}</div>
-            <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-sky-600'}`}>
+            <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-teal-600'}`}>
               {country.canadianObligations.zeroRated ? t('admin.fiscalCountry.zeroRated') : t('admin.fiscalCountry.taxable')}
             </div>
           </div>
@@ -427,7 +427,7 @@ function OrdersTab({ country, orders, t }: { country: CountryCompliance; orders:
     {
       key: 'id',
       header: t('admin.fiscalCountry.orderNumberCol'),
-      render: (order) => <span className="font-medium text-blue-600">{order.id}</span>,
+      render: (order) => <span className="font-medium text-teal-600">{order.id}</span>,
     },
     {
       key: 'date',
@@ -534,7 +534,7 @@ function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompl
       key: 'taxCollected',
       header: t('admin.fiscalCountry.taxCollectedCol'),
       align: 'right',
-      render: (m) => <span className="text-sky-600">${m.taxCollected.toLocaleString(locale)}</span>,
+      render: (m) => <span className="text-teal-600">${m.taxCollected.toLocaleString(locale)}</span>,
     },
     {
       key: 'avgOrder',
@@ -575,29 +575,29 @@ function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompl
           <div>TOTAL</div>
           <div className="text-end">{totals.orders}</div>
           <div className="text-end text-green-600">${totals.revenue.toLocaleString(locale)}</div>
-          <div className="text-end text-sky-600">${totals.tax.toLocaleString(locale)}</div>
+          <div className="text-end text-teal-600">${totals.tax.toLocaleString(locale)}</div>
           <div className="text-end">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</div>
         </div>
       )}
 
       {/* Tax Remittance Summary */}
-      <div className="bg-sky-50 rounded-lg p-6 border border-sky-200">
-        <h4 className="font-semibold text-sky-900 mb-4">{t('admin.fiscalCountry.taxRemittanceSummary')}</h4>
+      <div className="bg-teal-50 rounded-lg p-6 border border-teal-200">
+        <h4 className="font-semibold text-teal-900 mb-4">{t('admin.fiscalCountry.taxRemittanceSummary')}</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.taxCollected6months')}</div>
-            <div className="text-2xl font-bold text-sky-900">${totals.tax.toLocaleString(locale)}</div>
+            <div className="text-sm text-teal-600">{t('admin.fiscalCountry.taxCollected6months')}</div>
+            <div className="text-2xl font-bold text-teal-900">${totals.tax.toLocaleString(locale)}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.currency')}</div>
-            <div className="text-2xl font-bold text-sky-900">{country.localCurrency}</div>
+            <div className="text-sm text-teal-600">{t('admin.fiscalCountry.currency')}</div>
+            <div className="text-2xl font-bold text-teal-900">{country.localCurrency}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.nextDeadline')}</div>
-            <div className="text-2xl font-bold text-sky-900">{getNextFiscalDeadline(locale)}</div>
+            <div className="text-sm text-teal-600">{t('admin.fiscalCountry.nextDeadline')}</div>
+            <div className="text-2xl font-bold text-teal-900">{getNextFiscalDeadline(locale)}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.statusLabel')}</div>
+            <div className="text-sm text-teal-600">{t('admin.fiscalCountry.statusLabel')}</div>
             <div className="text-lg font-bold text-green-600">{t('admin.fiscalCountry.upToDate')}</div>
           </div>
         </div>

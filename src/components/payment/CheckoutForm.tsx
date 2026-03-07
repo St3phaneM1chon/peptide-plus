@@ -99,7 +99,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             onClick={() => setPaymentMethod('apple-pay')}
             className={`p-4 rounded-lg border-2 transition-all ${
               paymentMethod === 'apple-pay'
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-teal-500 bg-teal-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -117,7 +117,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             onClick={() => setPaymentMethod('google-pay')}
             className={`p-4 rounded-lg border-2 transition-all ${
               paymentMethod === 'google-pay'
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-teal-500 bg-teal-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -142,7 +142,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
           onClick={() => setPaymentMethod('paypal')}
           className={`w-full p-4 rounded-lg border-2 transition-all ${
             paymentMethod === 'paypal'
-              ? 'border-blue-500 bg-blue-50'
+              ? 'border-teal-500 bg-teal-50'
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
@@ -166,7 +166,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
               onClick={() => setPaymentMethod('saved-card')}
               className={`w-full p-4 rounded-lg border-2 transition-all text-start ${
                 paymentMethod === 'saved-card'
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-teal-500 bg-teal-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -178,7 +178,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
                       key={card.id}
                       className={`flex items-center p-3 rounded-lg border cursor-pointer ${
                         selectedCardId === card.id
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-teal-500 bg-teal-50'
                           : 'border-gray-200'
                       }`}
                     >
@@ -211,7 +211,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
           onClick={() => setPaymentMethod('card')}
           className={`w-full p-4 rounded-lg border-2 transition-all text-start ${
             paymentMethod === 'card'
-              ? 'border-blue-500 bg-blue-50'
+              ? 'border-teal-500 bg-teal-50'
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
@@ -233,7 +233,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             appearance: {
               theme: 'stripe',
               variables: {
-                colorPrimary: '#2563eb',
+                colorPrimary: '#0d9488',
               },
             },
           }}

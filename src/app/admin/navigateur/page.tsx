@@ -183,7 +183,7 @@ export default function NavigateurPage() {
   useRibbonAction('settings', handleRibbonSettings);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -207,7 +207,7 @@ export default function NavigateurPage() {
                 key={sec.id}
                 onClick={() => { setSelectedSection(sec); setSelectedSubSection(null); }}
                 className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
-                  selectedSection?.id === sec.id ? 'bg-sky-50 border-s-[3px] border-s-sky-600' : ''
+                  selectedSection?.id === sec.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
                 }`}
               >
                 <span className="text-sm text-slate-900 truncate">{sec.title}</span>
@@ -240,7 +240,7 @@ export default function NavigateurPage() {
                 key={sub.id}
                 onClick={() => setSelectedSubSection(sub)}
                 className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
-                  selectedSubSection?.id === sub.id ? 'bg-sky-50 border-s-[3px] border-s-sky-600' : ''
+                  selectedSubSection?.id === sub.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
                 }`}
               >
                 <span className="text-sm text-slate-900 truncate">{sub.title}</span>

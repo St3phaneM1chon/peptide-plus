@@ -30,7 +30,7 @@ export default function OrdersError({
         </p>
         <button
           onClick={reset}
-          className="px-6 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+          className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
         >
           {t('admin.errors.tryAgain')}
         </button>

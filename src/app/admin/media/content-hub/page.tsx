@@ -39,7 +39,7 @@ const STATUS_BADGES: Record<string, { bg: string; text: string; key: string }> =
 };
 
 const BAR_COLORS = [
-  'bg-sky-500',
+  'bg-teal-500',
   'bg-emerald-500',
   'bg-violet-500',
   'bg-amber-500',
@@ -87,13 +87,13 @@ export default function ContentHubPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
 
   const kpiCards = [
-    { label: t('admin.contentHub.totalVideos') || 'Total Videos', value: stats?.totalVideos ?? 0, icon: <Video className="w-5 h-5" />, color: 'text-sky-600' },
+    { label: t('admin.contentHub.totalVideos') || 'Total Videos', value: stats?.totalVideos ?? 0, icon: <Video className="w-5 h-5" />, color: 'text-teal-600' },
     { label: t('admin.contentHub.published') || 'Published', value: stats?.published ?? 0, icon: <FileCheck className="w-5 h-5" />, color: 'text-green-600' },
     { label: t('admin.contentHub.draft') || 'Draft', value: stats?.draft ?? 0, icon: <Clock className="w-5 h-5" />, color: 'text-gray-600' },
     { label: t('admin.contentHub.inReview') || 'In Review', value: stats?.inReview ?? 0, icon: <Eye className="w-5 h-5" />, color: 'text-yellow-600' },
@@ -116,7 +116,7 @@ export default function ContentHubPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Layout className="w-6 h-6 text-sky-600" />
+          <Layout className="w-6 h-6 text-teal-600" />
           <h1 className="text-2xl font-bold text-slate-900">
             {t('admin.contentHub.title') || 'Content Hub'}
           </h1>
@@ -244,7 +244,7 @@ export default function ContentHubPage() {
                         </span>
                       </td>
                       <td className="py-2.5 pr-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 capitalize">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 capitalize">
                           {video.contentType}
                         </span>
                       </td>
@@ -266,8 +266,8 @@ export default function ContentHubPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/admin/media/videos">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all">
-            <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
               <Plus className="w-5 h-5" />
             </div>
             <div>
@@ -281,7 +281,7 @@ export default function ContentHubPage() {
           </div>
         </Link>
         <Link href="/admin/media/video-categories">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <FolderOpen className="w-5 h-5" />
             </div>
@@ -296,7 +296,7 @@ export default function ContentHubPage() {
           </div>
         </Link>
         <Link href="/admin/media/consents">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
               <FileCheck className="w-5 h-5" />
             </div>

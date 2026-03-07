@@ -344,7 +344,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={fiscalYearDisplay}
                   onChange={(e) => handleFiscalYearChange(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="12-31">{t('admin.accountingSettings.december31')}</option>
                   <option value="03-31">{t('admin.accountingSettings.march31')}</option>
@@ -356,7 +356,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.accountingMethod}
                   onChange={(e) => setSettings({ ...settings, accountingMethod: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="ACCRUAL">{t('admin.accountingSettings.accrualAccounting')}</option>
                   <option value="CASH">{t('admin.accountingSettings.cashAccounting')}</option>
@@ -366,7 +366,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.defaultCurrency}
                   onChange={(e) => setSettings({ ...settings, defaultCurrency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="CAD">{t('admin.accountingSettings.cadLabel')}</option>
                   <option value="USD">{t('admin.accountingSettings.usdLabel')}</option>
@@ -655,12 +655,12 @@ export default function ParametresComptablesPage() {
             </div>
           </SectionCard>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <span className="text-blue-500">&#8505;&#65039;</span>
+              <span className="text-teal-500">&#8505;&#65039;</span>
               <div>
-                <p className="font-medium text-blue-900">{t('admin.accountingSettings.autoRateUpdate')}</p>
-                <p className="text-sm text-blue-700">{t('admin.accountingSettings.autoRateUpdateDesc')}</p>
+                <p className="font-medium text-teal-900">{t('admin.accountingSettings.autoRateUpdate')}</p>
+                <p className="text-sm text-teal-700">{t('admin.accountingSettings.autoRateUpdateDesc')}</p>
               </div>
             </div>
           </div>
@@ -693,7 +693,7 @@ export default function ParametresComptablesPage() {
                     <div className="mt-3">
                       {integration.status === 'connected' ? (
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" icon={RefreshCw} className="text-blue-700 hover:bg-blue-50">
+                          <Button variant="ghost" size="sm" icon={RefreshCw} className="text-teal-700 hover:bg-teal-50">
                             {t('admin.accountingSettings.syncBtn')}
                           </Button>
                           <Button variant="ghost" size="sm" icon={Settings}>

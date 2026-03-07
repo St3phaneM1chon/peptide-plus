@@ -188,7 +188,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  audit: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  audit: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300',
   system: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   memory: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
 };
@@ -221,7 +221,7 @@ export default function MotsMagiquesPage() {
       {/* Methodology Section */}
       <section>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <ClipboardCheck className="w-5 h-5 text-blue-600" />
+          <ClipboardCheck className="w-5 h-5 text-teal-600" />
           {t('admin.magicWords.methodology')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -231,7 +231,7 @@ export default function MotsMagiquesPage() {
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-2">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-bold">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-sm font-bold">
                   {step}
                 </span>
                 <Icon className="w-5 h-5 text-gray-500" />

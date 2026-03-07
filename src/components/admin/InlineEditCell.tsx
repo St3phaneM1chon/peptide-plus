@@ -93,7 +93,7 @@ export default function InlineEditCell({
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           disabled={saving}
-          className="w-full px-1.5 py-0.5 text-sm border border-sky-400 rounded focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white"
+          className="w-full px-1.5 py-0.5 text-sm border border-teal-400 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white"
         />
         {suffix && <span className="text-slate-400 text-sm">{suffix}</span>}
         <button onClick={handleSave} disabled={saving} className="p-0.5 text-green-600 hover:bg-green-50 rounded" title="Save">
@@ -108,7 +108,7 @@ export default function InlineEditCell({
 
   return (
     <span
-      className={`group cursor-pointer hover:bg-sky-50 rounded px-1 py-0.5 inline-flex items-center gap-1 ${className}`}
+      className={`group cursor-pointer hover:bg-teal-50 rounded px-1 py-0.5 inline-flex items-center gap-1 ${className}`}
       onDoubleClick={() => setEditing(true)}
       title="Double-click to edit"
     >

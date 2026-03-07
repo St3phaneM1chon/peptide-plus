@@ -37,7 +37,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
 
   const statusConfig: Record<string, { label: string; color: string }> = {
     DRAFT: { label: t('admin.emails.campaigns.statusDraft'), color: 'bg-slate-100 text-slate-600' },
-    SCHEDULED: { label: t('admin.emails.campaigns.statusScheduled'), color: 'bg-blue-100 text-blue-700' },
+    SCHEDULED: { label: t('admin.emails.campaigns.statusScheduled'), color: 'bg-teal-100 text-teal-700' },
     SENDING: { label: t('admin.emails.campaigns.statusSending'), color: 'bg-yellow-100 text-yellow-700' },
     SENT: { label: t('admin.emails.campaigns.statusSent'), color: 'bg-green-100 text-green-700' },
     CANCELLED: { label: t('admin.emails.campaigns.statusCancelled'), color: 'bg-red-100 text-red-700' },
@@ -114,7 +114,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" /><span className="sr-only">Loading...</span></div>;
+    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" /><span className="sr-only">Loading...</span></div>;
   }
 
   return (
@@ -127,7 +127,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
         <button
           onClick={createCampaign}
           disabled={creating}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg disabled:opacity-50"
         >
           <Plus className="h-4 w-4" /> {t('admin.emails.campaigns.newCampaign')}
         </button>
@@ -138,7 +138,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
           <Megaphone className="h-12 w-12 text-slate-300 mx-auto mb-3" />
           <h4 className="text-lg font-medium text-slate-900 mb-1">{t('admin.emails.campaigns.noCampaigns')}</h4>
           <p className="text-sm text-slate-500 mb-4">{t('admin.emails.campaigns.createFirstCampaign')}</p>
-          <button onClick={createCampaign} className="px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg">
+          <button onClick={createCampaign} className="px-4 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg">
             {t('admin.emails.campaigns.createCampaign')}
           </button>
         </div>

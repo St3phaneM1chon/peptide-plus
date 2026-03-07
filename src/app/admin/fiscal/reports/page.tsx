@@ -167,7 +167,7 @@ export default function GlobalReportsPage() {
     {
       key: 'id',
       header: t('admin.fiscalReports.orderNumberCol'),
-      render: (row) => <span className="font-medium text-blue-600">{row.id}</span>,
+      render: (row) => <span className="font-medium text-teal-600">{row.id}</span>,
     },
     {
       key: 'date',
@@ -224,7 +224,7 @@ export default function GlobalReportsPage() {
             <Button variant="secondary" icon={FileSpreadsheet} className="bg-green-500 text-white hover:bg-green-600 border-transparent">
               {t('admin.fiscalReports.exportExcel')}
             </Button>
-            <Button variant="secondary" icon={FileText} className="bg-blue-500 text-white hover:bg-blue-600 border-transparent">
+            <Button variant="secondary" icon={FileText} className="bg-teal-500 text-white hover:bg-teal-600 border-transparent">
               {t('admin.fiscalReports.printPdf')}
             </Button>
           </>
@@ -241,7 +241,7 @@ export default function GlobalReportsPage() {
               onClick={() => setSelectedPeriod(period.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedPeriod === period.value
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-teal-500 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -253,20 +253,20 @@ export default function GlobalReportsPage() {
 
       {/* Global Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-blue-100 text-sm">{t('admin.fiscalReports.totalOrders')}</div>
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-sm p-6 text-white">
+          <div className="text-teal-100 text-sm">{t('admin.fiscalReports.totalOrders')}</div>
           <div className="text-4xl font-bold mt-1">{totals.totalOrders.toLocaleString(locale)}</div>
-          <div className="text-blue-200 text-sm mt-2">{t('admin.fiscalReports.allCountries')}</div>
+          <div className="text-teal-200 text-sm mt-2">{t('admin.fiscalReports.allCountries')}</div>
         </div>
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-sm p-6 text-white">
           <div className="text-green-100 text-sm">{t('admin.fiscalReports.totalRevenue')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalRevenue / 1000).toFixed(0)}K</div>
           <div className="text-green-200 text-sm mt-2">CAD</div>
         </div>
-        <div className="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-sky-100 text-sm">{t('admin.fiscalReports.taxCollected')}</div>
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-sm p-6 text-white">
+          <div className="text-teal-100 text-sm">{t('admin.fiscalReports.taxCollected')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalTax / 1000).toFixed(0)}K</div>
-          <div className="text-sky-200 text-sm mt-2">{t('admin.fiscalReports.toRemit')}</div>
+          <div className="text-teal-200 text-sm mt-2">{t('admin.fiscalReports.toRemit')}</div>
         </div>
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
           <div className="text-purple-100 text-sm">{t('admin.fiscalReports.avgGrowth')}</div>
@@ -286,7 +286,7 @@ export default function GlobalReportsPage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="revenue">{t('admin.fiscalReports.sortByRevenue')}</option>
                   <option value="orders">{t('admin.fiscalReports.sortByOrders')}</option>
@@ -337,7 +337,7 @@ export default function GlobalReportsPage() {
                     <td className="py-3 px-4 text-center">
                       <Link
                         href={`/admin/fiscal/country/${country.code}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-teal-600 hover:text-teal-800 text-sm font-medium"
                       >
                         {t('admin.fiscalReports.details')}
                       </Link>
@@ -380,7 +380,7 @@ export default function GlobalReportsPage() {
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
-                          className="bg-blue-500 h-2 rounded-full transition-all"
+                          className="bg-teal-500 h-2 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -452,7 +452,7 @@ export default function GlobalReportsPage() {
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">{t('admin.fiscalReports.recentOrdersAllCountries')}</h2>
-            <Link href="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <Link href="/admin" className="text-teal-600 hover:text-teal-800 text-sm font-medium">
               {t('admin.fiscalReports.viewAll')}
             </Link>
           </div>

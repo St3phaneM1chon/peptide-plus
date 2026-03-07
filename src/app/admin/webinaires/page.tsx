@@ -414,7 +414,7 @@ export default function WebinairesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -491,7 +491,7 @@ export default function WebinairesPage() {
                   <div className="flex flex-wrap gap-3 items-center">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       selectedWebinar.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
-                      selectedWebinar.status === 'SCHEDULED' ? 'bg-sky-100 text-sky-800' :
+                      selectedWebinar.status === 'SCHEDULED' ? 'bg-teal-100 text-teal-800' :
                       selectedWebinar.status === 'LIVE' ? 'bg-red-100 text-red-800' :
                       selectedWebinar.status === 'CANCELLED' ? 'bg-slate-100 text-slate-700' :
                       'bg-slate-100 text-slate-600'
@@ -572,7 +572,7 @@ export default function WebinairesPage() {
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
-                          className="bg-sky-500 h-2 rounded-full transition-all"
+                          className="bg-teal-500 h-2 rounded-full transition-all"
                           style={{ width: `${Math.min((selectedWebinar.registeredCount / selectedWebinar.maxAttendees) * 100, 100)}%` }}
                         />
                       </div>
@@ -586,7 +586,7 @@ export default function WebinairesPage() {
                         href={selectedWebinar.meetingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-3 bg-sky-50 border border-sky-200 rounded-lg text-sky-700 hover:bg-sky-100 transition-colors"
+                        className="flex items-center gap-2 px-4 py-3 bg-teal-50 border border-teal-200 rounded-lg text-teal-700 hover:bg-teal-100 transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span className="text-sm font-medium">{t('admin.webinars.formMeetingLink')}</span>

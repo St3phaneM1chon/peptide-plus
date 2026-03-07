@@ -41,10 +41,10 @@ const platformConfig: Record<Platform, {
   maxChars: number;
 }> = {
   instagram: { icon: Instagram, color: 'text-pink-600 bg-pink-100', label: 'Instagram', maxChars: 2200 },
-  facebook: { icon: Facebook, color: 'text-blue-600 bg-blue-100', label: 'Facebook', maxChars: 63206 },
-  twitter: { icon: Twitter, color: 'text-sky-500 bg-sky-100', label: 'X / Twitter', maxChars: 280 },
+  facebook: { icon: Facebook, color: 'text-teal-600 bg-teal-100', label: 'Facebook', maxChars: 63206 },
+  twitter: { icon: Twitter, color: 'text-teal-500 bg-teal-100', label: 'X / Twitter', maxChars: 280 },
   tiktok: { icon: Send, color: 'text-slate-800 bg-slate-100', label: 'TikTok', maxChars: 2200 },
-  linkedin: { icon: Send, color: 'text-blue-700 bg-blue-100', label: 'LinkedIn', maxChars: 3000 },
+  linkedin: { icon: Send, color: 'text-teal-700 bg-teal-100', label: 'LinkedIn', maxChars: 3000 },
 };
 
 const PLATFORMS = Object.keys(platformConfig) as Platform[];
@@ -226,7 +226,7 @@ export default function SocialSchedulerPage() {
   const statusBadge = (s: string) => {
     switch (s) {
       case 'published': return 'bg-green-100 text-green-700';
-      case 'scheduled': return 'bg-blue-100 text-blue-700';
+      case 'scheduled': return 'bg-teal-100 text-teal-700';
       case 'publishing': return 'bg-amber-100 text-amber-700';
       case 'failed': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-600';
@@ -271,7 +271,7 @@ export default function SocialSchedulerPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -306,7 +306,7 @@ export default function SocialSchedulerPage() {
           </button>
           <button
             onClick={() => setShowComposer(!showComposer)}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" /> {t('admin.media.socialScheduler.newPost') || 'New Post'}
           </button>
@@ -316,7 +316,7 @@ export default function SocialSchedulerPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: t('admin.media.socialScheduler.statsScheduled') || 'Scheduled', count: stats.scheduled, color: 'text-blue-600' },
+          { label: t('admin.media.socialScheduler.statsScheduled') || 'Scheduled', count: stats.scheduled, color: 'text-teal-600' },
           { label: t('admin.media.socialScheduler.statsDraft') || 'Drafts', count: stats.draft, color: 'text-slate-600' },
           { label: t('admin.media.socialScheduler.statsPublished') || 'Published', count: stats.published, color: 'text-green-600' },
           { label: t('admin.media.socialScheduler.statsFailed') || 'Failed', count: stats.failed, color: 'text-red-600' },
@@ -333,7 +333,7 @@ export default function SocialSchedulerPage() {
         <select
           value={filterPlatform}
           onChange={e => { setFilterPlatform(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
         >
           <option value="">{t('admin.media.socialScheduler.allPlatforms') || 'All Platforms'}</option>
           {PLATFORMS.map(p => (
@@ -343,7 +343,7 @@ export default function SocialSchedulerPage() {
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
         >
           <option value="">{t('admin.media.socialScheduler.allStatuses') || 'All Statuses'}</option>
           <option value="draft">{t('admin.media.socialScheduler.statusDraft') || 'Draft'}</option>
@@ -368,7 +368,7 @@ export default function SocialSchedulerPage() {
                     key={key}
                     onClick={() => setNewPost(prev => ({ ...prev, platform: key }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                      newPost.platform === key ? 'border-sky-400 bg-sky-50 text-sky-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      newPost.platform === key ? 'border-teal-400 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -386,7 +386,7 @@ export default function SocialSchedulerPage() {
                 placeholder={t('admin.media.socialScheduler.writePlaceholder') || 'Write your post...'}
                 rows={4}
                 maxLength={platformConfig[newPost.platform].maxChars}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 text-sm resize-none"
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 text-sm resize-none"
               />
               <div className="absolute bottom-2 end-2 text-xs text-slate-400">
                 {newPost.content.length}/{platformConfig[newPost.platform].maxChars}
@@ -401,7 +401,7 @@ export default function SocialSchedulerPage() {
                 value={newPost.imageUrl}
                 onChange={e => setNewPost(prev => ({ ...prev, imageUrl: e.target.value }))}
                 placeholder={t('admin.media.socialScheduler.imageUrlPlaceholder') || 'Image URL (optional)'}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
               />
             </div>
 
@@ -411,12 +411,12 @@ export default function SocialSchedulerPage() {
                 type="datetime-local"
                 value={newPost.scheduledAt}
                 onChange={e => setNewPost(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
               />
               <select
                 value={newPost.status}
                 onChange={e => setNewPost(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
               >
                 <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled') || 'Scheduled'}</option>
                 <option value="draft">{t('admin.media.socialScheduler.statusDraft') || 'Draft'}</option>
@@ -431,7 +431,7 @@ export default function SocialSchedulerPage() {
               <button
                 onClick={createPost}
                 disabled={creating}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
                 {t('admin.media.socialScheduler.schedule') || 'Schedule'}
@@ -509,7 +509,7 @@ export default function SocialSchedulerPage() {
                     </div>
                     <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3">{post.content}</p>
                     {post.imageUrl && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-sky-600">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-teal-600">
                         <ImageIcon className="w-3 h-3" />
                         <span className="truncate max-w-[200px]">{post.imageUrl}</span>
                       </div>
@@ -520,7 +520,7 @@ export default function SocialSchedulerPage() {
                         {formatDate(post.scheduledAt)}
                       </div>
                       {post.externalUrl && (
-                        <a href={post.externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sky-600 hover:underline">
+                        <a href={post.externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-teal-600 hover:underline">
                           <ExternalLink className="w-3 h-3" />
                           {t('admin.media.socialScheduler.viewExternal') || 'View post'}
                         </a>

@@ -45,7 +45,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<Buffer> {
   const pageWidth = doc.internal.pageSize.getWidth();
   
   // Couleurs - typées comme tuples pour éviter les erreurs avec spread
-  const primaryColor: [number, number, number] = [37, 99, 235]; // blue-600
+  const primaryColor: [number, number, number] = [13, 148, 136]; // teal-600
   const textColor: [number, number, number] = [31, 41, 55]; // gray-800
   const lightGray: [number, number, number] = [156, 163, 175]; // gray-400
 

@@ -20,7 +20,7 @@ interface AuditFn {
 
 const typeColors: Record<string, string> = {
   api_handler: 'bg-emerald-100 text-emerald-800',
-  page: 'bg-sky-100 text-sky-800',
+  page: 'bg-teal-100 text-teal-800',
   component: 'bg-purple-100 text-purple-800',
   hook: 'bg-amber-100 text-amber-800',
   lib: 'bg-slate-100 text-slate-800',
@@ -78,7 +78,7 @@ export default function AuditCatalogPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/admin/audits" className="hover:text-sky-600">
+        <Link href="/admin/audits" className="hover:text-teal-600">
           {isFr ? 'Audits' : 'Audits'}
         </Link>
         <span>/</span>
@@ -97,7 +97,7 @@ export default function AuditCatalogPage() {
         <button
           onClick={() => setTypeFilter('')}
           className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-            !typeFilter ? 'bg-sky-50 border-sky-300 text-sky-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            !typeFilter ? 'bg-teal-50 border-teal-300 text-teal-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
           {isFr ? 'Tous' : 'All'} ({totalFunctions})
@@ -110,7 +110,7 @@ export default function AuditCatalogPage() {
               onClick={() => setTypeFilter(type === typeFilter ? '' : type)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                 typeFilter === type
-                  ? 'bg-sky-50 border-sky-300 text-sky-700'
+                  ? 'bg-teal-50 border-teal-300 text-teal-700'
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -126,7 +126,7 @@ export default function AuditCatalogPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={isFr ? 'Rechercher par nom, fichier ou description...' : 'Search by name, file, or description...'}
-          className="w-full sm:w-96 text-sm border border-slate-300 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          className="w-full sm:w-96 text-sm border border-slate-300 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
         />
       </div>
 

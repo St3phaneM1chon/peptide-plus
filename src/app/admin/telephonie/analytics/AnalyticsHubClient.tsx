@@ -38,8 +38,8 @@ export default function AnalyticsHubClient({ stats }: { stats: SummaryStats }) {
       icon: Users,
       metric: String(stats.agentCount),
       metricLabel: t('voip.admin.wallboard.agentsOnline'),
-      color: 'text-sky-600',
-      bg: 'bg-sky-50 dark:bg-sky-900/20',
+      color: 'text-teal-600',
+      bg: 'bg-teal-50 dark:bg-teal-900/20',
     },
     {
       title: t('voip.admin.queueAnalytics.title'),
@@ -97,11 +97,11 @@ export default function AnalyticsHubClient({ stats }: { stats: SummaryStats }) {
               <div className={`p-3 rounded-xl ${card.bg}`}>
                 <card.icon className={`w-6 h-6 ${card.color}`} />
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
             </div>
 
             <div className="mt-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-sky-600 transition-colors">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 transition-colors">
                 {card.title}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">

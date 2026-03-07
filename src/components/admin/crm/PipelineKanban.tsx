@@ -82,7 +82,7 @@ function DealCard({ deal, isDragging, onClick }: { deal: Deal; isDragging?: bool
   return (
     <div
       className={`bg-white rounded-lg border p-3 cursor-pointer transition-shadow hover:shadow-md ${
-        isDragging ? 'shadow-lg ring-2 ring-blue-400 opacity-90' : ''
+        isDragging ? 'shadow-lg ring-2 ring-teal-400 opacity-90' : ''
       } ${isRotting ? 'border-red-300' : 'border-gray-200'}`}
       onClick={onClick}
     >
@@ -191,7 +191,7 @@ function StageColumn({
     <div
       ref={setNodeRef}
       className={`flex flex-col w-72 min-w-[288px] shrink-0 rounded-lg transition-colors ${
-        isOver ? 'bg-blue-50 ring-2 ring-blue-300' : 'bg-gray-50'
+        isOver ? 'bg-teal-50 ring-2 ring-teal-300' : 'bg-gray-50'
       }`}
     >
       {/* Column Header */}
@@ -373,7 +373,7 @@ export default function PipelineKanban({ onDealClick, onCreateDeal }: PipelineKa
               placeholder={t('common.search') || 'Search...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
 
@@ -387,7 +387,7 @@ export default function PipelineKanban({ onDealClick, onCreateDeal }: PipelineKa
       {/* Kanban Board */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-gray-400">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : (
         <DndContext

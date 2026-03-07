@@ -339,7 +339,7 @@ export default function ConsentTemplatesPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-gray-900">{template.name}</h3>
-                    <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                    <span className="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded">
                       {t(`consentType.${template.type}`)}
                     </span>
                     {template.isActive ? (

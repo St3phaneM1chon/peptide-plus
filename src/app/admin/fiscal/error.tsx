@@ -30,7 +30,7 @@ export default function FiscalError({
         </p>
         <button
           onClick={reset}
-          className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+          className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
         >
           {t('admin.errors.tryAgain')}
         </button>

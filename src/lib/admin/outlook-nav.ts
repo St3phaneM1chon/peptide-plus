@@ -530,6 +530,14 @@ export const folderSections: Record<string, NavFolderSection> = {
         defaultOpen: true,
       },
       {
+        labelKey: 'admin.nav.tools',
+        items: [
+          { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
         labelKey: 'admin.nav.configuration',
         items: [
           { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: Truck },
@@ -560,6 +568,6 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/media')) return 'media';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
   if (pathname.startsWith('/admin/crm')) return 'crm';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
+  if (pathname.startsWith('/admin/scraper') || pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
   return 'dashboard';
 }

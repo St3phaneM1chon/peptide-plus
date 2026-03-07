@@ -21,7 +21,7 @@ export default function VoipDashboardClient({ data }: { data: any }) {
 
   const directionIcon = (dir: string) => {
     switch (dir) {
-      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-sky-600" />;
+      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-teal-600" />;
       case 'OUTBOUND': return <PhoneOutgoing className="w-4 h-4 text-emerald-600" />;
       default: return <Phone className="w-4 h-4 text-gray-400" />;
     }
@@ -32,7 +32,7 @@ export default function VoipDashboardClient({ data }: { data: any }) {
       COMPLETED: 'bg-emerald-100 text-emerald-700',
       MISSED: 'bg-red-100 text-red-700',
       VOICEMAIL: 'bg-orange-100 text-orange-700',
-      IN_PROGRESS: 'bg-sky-100 text-sky-700',
+      IN_PROGRESS: 'bg-teal-100 text-teal-700',
       FAILED: 'bg-gray-100 text-gray-600',
       TRANSFERRED: 'bg-purple-100 text-purple-700',
       RINGING: 'bg-yellow-100 text-yellow-700',
@@ -91,7 +91,7 @@ export default function VoipDashboardClient({ data }: { data: any }) {
           <h3 className="text-sm font-semibold text-gray-700">{t('voip.dashboard.recentCalls')}</h3>
           <Link
             href="/admin/telephonie/journal"
-            className="text-sm text-sky-600 hover:text-sky-700 flex items-center gap-1"
+            className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1"
           >
             {t('voip.dashboard.viewAll')} <ArrowRight className="w-3.5 h-3.5" />
           </Link>

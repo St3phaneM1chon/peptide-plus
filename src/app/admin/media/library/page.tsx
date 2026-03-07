@@ -58,7 +58,7 @@ function getFileIcon(mimeType: string) {
     return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
   // A76: Word/document formats (DOC, DOCX, ODT)
   if (mimeType.includes('wordprocessing') || mimeType.includes('msword'))
-    return <FileType className="w-5 h-5 text-blue-600" />;
+    return <FileType className="w-5 h-5 text-teal-600" />;
   // A76: Archive formats (ZIP, RAR, TAR, GZ)
   if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar') || mimeType.includes('gzip') || mimeType.includes('compressed'))
     return <FileArchive className="w-5 h-5 text-amber-600" />;
@@ -357,9 +357,9 @@ export default function MediaLibraryPage() {
     <div className="p-6 max-w-6xl space-y-4">
       {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium">{t('admin.media.libraryTitle') || 'Library'}</span>
       </nav>
@@ -368,14 +368,14 @@ export default function MediaLibraryPage() {
         <div className="flex items-center gap-2">
           <div className="flex border border-slate-300 rounded-lg overflow-hidden">
             {/* FIX: F88 - Added aria-label for accessibility */}
-            <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-teal-50 text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-teal-50 text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
           </div>
           <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload files'} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F36 - Use i18n instead of hardcoded "Upload" */}
@@ -386,8 +386,8 @@ export default function MediaLibraryPage() {
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
-          <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+        <div className="flex items-center gap-3 p-2 bg-teal-50 border border-teal-200 rounded-lg text-sm">
+          <span className="text-teal-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
           </button>
@@ -474,7 +474,7 @@ export default function MediaLibraryPage() {
           {/* A100 FIX: Animate-in on view switch with fade transition */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 animate-in fade-in duration-200">
             {items.map(item => (
-              <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-sky-300 transition-colors ${selectedIds.has(item.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200'}`}>
+              <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(item.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
                 {/* Selection checkbox */}
                 <div className="absolute top-2 left-2 z-10">
                   <input
@@ -528,7 +528,7 @@ export default function MediaLibraryPage() {
             <span>{t('common.selectAll') || 'Select all'}</span>
           </div>
           {items.map(item => (
-            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${selectedIds.has(item.id) ? 'bg-sky-50' : ''}`}>
+            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${selectedIds.has(item.id) ? 'bg-teal-50' : ''}`}>
               <input
                 type="checkbox"
                 checked={selectedIds.has(item.id)}
@@ -625,7 +625,7 @@ export default function MediaLibraryPage() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>
-                <button onClick={() => copyUrl(preview)} className="text-sky-600 hover:text-sky-700" aria-label="Copier l'URL">
+                <button onClick={() => copyUrl(preview)} className="text-teal-600 hover:text-teal-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>

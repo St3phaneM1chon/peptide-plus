@@ -263,7 +263,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
   if (loadingTemplate) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <Loader2 className="w-6 h-6 animate-spin text-sky-600" />
+        <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
         <span className="ml-2 text-sm text-slate-500">Chargement du template...</span>
       </div>
     );
@@ -280,7 +280,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
             value={templateName}
             onChange={e => setTemplateName(e.target.value)}
             placeholder="ex: welcome-new-customer"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-sky-400 focus:border-sky-400"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
           />
         </div>
         <div className="flex-1">
@@ -290,7 +290,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
             value={templateSubject}
             onChange={e => setTemplateSubject(e.target.value)}
             placeholder="ex: Bienvenue chez BioCycle Peptides!"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-sky-400 focus:border-sky-400"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
           />
         </div>
       </div>
@@ -304,7 +304,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
               <button
                 key={bt.type}
                 onClick={() => addBlock(bt.type)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-sky-50 hover:border-sky-300 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-teal-50 hover:border-teal-300 transition-colors"
               >
                 <bt.icon className="w-4 h-4" />
                 {bt.label}
@@ -319,7 +319,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full mt-2 px-3 py-2 text-sm bg-sky-600 text-white rounded-lg hover:bg-sky-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-2 px-3 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {saving && <Loader2 className="w-3 h-3 animate-spin" />}
             {saving ? 'Sauvegarde...' : (templateId ? 'Mettre a jour' : 'Sauvegarder')}
@@ -338,7 +338,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
               blocks.map((block) => (
                 <div
                   key={block.id}
-                  className={`relative group ${selectedBlock === block.id ? 'ring-2 ring-sky-400' : ''} ${!previewMode ? 'hover:ring-1 hover:ring-slate-300 cursor-pointer' : ''}`}
+                  className={`relative group ${selectedBlock === block.id ? 'ring-2 ring-teal-400' : ''} ${!previewMode ? 'hover:ring-1 hover:ring-slate-300 cursor-pointer' : ''}`}
                   onClick={() => !previewMode && setSelectedBlock(block.id)}
                 >
                   {!previewMode && (
@@ -377,14 +377,14 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
                           value={val}
                           onChange={e => updateBlockContent(block.id, key, e.target.value)}
                           rows={4}
-                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-sky-400 focus:border-sky-400"
+                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
                         />
                       ) : (
                         <input
                           type="text"
                           value={val}
                           onChange={e => updateBlockContent(block.id, key, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-sky-400 focus:border-sky-400"
+                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-teal-400 focus:border-teal-400"
                         />
                       )}
                     </div>

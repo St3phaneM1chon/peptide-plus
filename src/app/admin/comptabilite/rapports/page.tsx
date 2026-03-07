@@ -321,7 +321,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               aria-label={t('admin.reports.filterYear')}
             >
               <option value="2026">2026</option>
@@ -331,7 +331,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               aria-label={t('admin.reports.filterRegion')}
             >
               {REGION_OPTIONS.map((opt) => (
@@ -420,11 +420,11 @@ export default function RapportsComptablesPage() {
       {/* Annual Reports */}
       <SectionCard title={t('admin.reports.annualReports')} theme={theme}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-600">{t('admin.reports.federalDeclaration')}</p>
-            <p className="font-bold text-blue-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-blue-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
-            <button className="mt-3 text-sm text-blue-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
+          <div className="p-4 bg-teal-50 rounded-lg border border-teal-200">
+            <p className="text-sm text-teal-600">{t('admin.reports.federalDeclaration')}</p>
+            <p className="font-bold text-teal-900 mt-1">{parseInt(selectedYear) - 1}</p>
+            <p className="text-xs text-teal-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
+            <button className="mt-3 text-sm text-teal-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <p className="text-sm text-purple-600">{t('admin.reports.quebecDeclaration')}</p>
@@ -443,11 +443,11 @@ export default function RapportsComptablesPage() {
               {t('admin.reports.generate')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="p-4 bg-sky-50 rounded-lg border border-sky-200">
-            <p className="text-sm text-sky-600">{t('admin.reports.auditReport')}</p>
-            <p className="font-bold text-sky-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-sky-600 mt-2">{t('admin.reports.optional')}</p>
-            <button className="mt-3 text-sm text-sky-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
+          <div className="p-4 bg-teal-50 rounded-lg border border-teal-200">
+            <p className="text-sm text-teal-600">{t('admin.reports.auditReport')}</p>
+            <p className="font-bold text-teal-900 mt-1">{parseInt(selectedYear) - 1}</p>
+            <p className="text-xs text-teal-600 mt-2">{t('admin.reports.optional')}</p>
+            <button className="mt-3 text-sm text-teal-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
         </div>
       </SectionCard>

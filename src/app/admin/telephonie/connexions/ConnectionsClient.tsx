@@ -154,7 +154,7 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
                         isEnabled: conn?.isEnabled ?? true,
                       });
                     }}
-                    className="px-3 py-1.5 text-sm bg-sky-500 text-white rounded-lg hover:bg-sky-600"
+                    className="px-3 py-1.5 text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600"
                   >
                     {conn ? t('voip.connections.edit') : t('voip.connections.configure')}
                   </button>
@@ -216,7 +216,7 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
                       <button onClick={() => setEditing(null)} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
                         {t('common.cancel')}
                       </button>
-                      <button onClick={handleSave} className="flex items-center gap-1 px-3 py-1.5 text-sm bg-sky-500 text-white rounded-lg hover:bg-sky-600">
+                      <button onClick={handleSave} className="flex items-center gap-1 px-3 py-1.5 text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600">
                         <Save className="w-3.5 h-3.5" /> {t('common.save')}
                       </button>
                     </div>

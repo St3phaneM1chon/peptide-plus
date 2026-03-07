@@ -115,7 +115,7 @@ export default function AgingPage() {
   const getBucketColor = (index: number) => {
     const colors = [
       'bg-green-100 text-green-800',
-      'bg-blue-100 text-blue-800',
+      'bg-teal-100 text-teal-800',
       'bg-yellow-100 text-yellow-800',
       'bg-amber-100 text-amber-800',
       'bg-red-100 text-red-800',
@@ -215,7 +215,7 @@ export default function AgingPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500" />
           <span className="sr-only">Loading...</span>
         </div>
       ) : report && stats ? (
@@ -370,7 +370,7 @@ export default function AgingPage() {
                       <td className="text-end py-3 px-4 text-green-600">
                         {customer.current > 0 ? formatCurrency(customer.current) : '-'}
                       </td>
-                      <td className="text-end py-3 px-4 text-blue-600">
+                      <td className="text-end py-3 px-4 text-teal-600">
                         {customer.days1to30 > 0 ? formatCurrency(customer.days1to30) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-yellow-600">

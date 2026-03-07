@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { stripPhone } from './phone-utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,7 +31,7 @@ export interface ProspectMergeResult {
 // ---------------------------------------------------------------------------
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/\D/g, '').replace(/^1/, '');
+  return stripPhone(phone).replace(/^1/, '');
 }
 
 function normalizeName(name: string): string {
@@ -167,6 +168,125 @@ export async function findCrossListDuplicates(
   }
 
   return matches;
+}
+
+// ---------------------------------------------------------------------------
+// Cross-list duplicate detection (against ALL other ProspectLists)
+// ---------------------------------------------------------------------------
+
+export async function findCrossListProspectDuplicates(
+  prospect: { id: string; email?: string | null; phone?: string | null; website?: string | null; contactName: string; companyName?: string | null; googlePlaceId?: string | null; latitude?: number | null; longitude?: number | null; googleCategory?: string | null },
+  excludeListId: string,
+): Promise<ProspectDuplicateMatch[]> {
+  const matches: ProspectDuplicateMatch[] = [];
+  const seenIds = new Set<string>();
+
+  // 1. Google Place ID
+  if (prospect.googlePlaceId) {
+    const placeMatches = await prisma.prospect.findMany({
+      where: { googlePlaceId: prospect.googlePlaceId, listId: { not: excludeListId }, id: { not: prospect.id }, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+      select: { id: true },
+      take: 10,
+    });
+    for (const m of placeMatches) {
+      seenIds.add(m.id);
+      matches.push({ prospectId: prospect.id, matchedId: m.id, matchType: 'google_place_id', confidence: 0.98 });
+    }
+  }
+
+  // 2. Email exact
+  if (prospect.email) {
+    const emailMatches = await prisma.prospect.findMany({
+      where: { email: { equals: prospect.email, mode: 'insensitive' }, listId: { not: excludeListId }, id: { not: prospect.id }, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+      select: { id: true },
+      take: 10,
+    });
+    for (const m of emailMatches) {
+      if (!seenIds.has(m.id)) {
+        seenIds.add(m.id);
+        matches.push({ prospectId: prospect.id, matchedId: m.id, matchType: 'email_exact', confidence: 0.95 });
+      }
+    }
+  }
+
+  // 3. Phone normalized
+  if (prospect.phone) {
+    const normalizedPhone = normalizePhone(prospect.phone);
+    const candidates = await prisma.prospect.findMany({
+      where: { phone: { not: null }, listId: { not: excludeListId }, id: { not: prospect.id }, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+      select: { id: true, phone: true },
+      take: 500,
+    });
+    for (const m of candidates) {
+      if (seenIds.has(m.id) || !m.phone) continue;
+      if (normalizePhone(m.phone) === normalizedPhone) {
+        seenIds.add(m.id);
+        matches.push({ prospectId: prospect.id, matchedId: m.id, matchType: 'phone_exact', confidence: 0.9 });
+      }
+    }
+  }
+
+  // 4. Website/domain dedup
+  if (prospect.website) {
+    let domain: string | undefined;
+    try { domain = new URL(prospect.website).hostname.replace(/^www\./, ''); } catch { /* */ }
+    if (domain) {
+      const domainMatches = await prisma.prospect.findMany({
+        where: {
+          website: { contains: domain, mode: 'insensitive' },
+          listId: { not: excludeListId },
+          id: { not: prospect.id },
+          status: { notIn: ['MERGED', 'EXCLUDED'] },
+        },
+        select: { id: true },
+        take: 10,
+      });
+      for (const m of domainMatches) {
+        if (!seenIds.has(m.id)) {
+          seenIds.add(m.id);
+          matches.push({ prospectId: prospect.id, matchedId: m.id, matchType: 'name_company_fuzzy', confidence: 0.85 });
+        }
+      }
+    }
+  }
+
+  // 5. Address proximity dedup (GPS < 50m + same category)
+  if (prospect.latitude && prospect.longitude && prospect.googleCategory) {
+    const delta = 0.00045; // ~50m
+    const nearbyMatches = await prisma.prospect.findMany({
+      where: {
+        latitude: { gte: prospect.latitude - delta, lte: prospect.latitude + delta },
+        longitude: { gte: prospect.longitude - delta, lte: prospect.longitude + delta },
+        googleCategory: prospect.googleCategory,
+        listId: { not: excludeListId },
+        id: { not: prospect.id },
+        status: { notIn: ['MERGED', 'EXCLUDED'] },
+      },
+      select: { id: true },
+      take: 10,
+    });
+    for (const m of nearbyMatches) {
+      if (!seenIds.has(m.id)) {
+        seenIds.add(m.id);
+        matches.push({ prospectId: prospect.id, matchedId: m.id, matchType: 'name_fuzzy', confidence: 0.75 });
+      }
+    }
+  }
+
+  return matches.sort((a, b) => b.confidence - a.confidence);
+}
+
+// ---------------------------------------------------------------------------
+// Advanced phone normalization (international formats)
+// ---------------------------------------------------------------------------
+
+export function normalizePhoneInternational(phone: string): string {
+  let digits = stripPhone(phone);
+  // Strip common international prefixes
+  if (digits.startsWith('001')) digits = digits.substring(3); // 001-XXX
+  if (digits.startsWith('1') && digits.length === 11) digits = digits.substring(1); // +1-XXX
+  if (digits.startsWith('00')) digits = digits.substring(2); // 00-XXX
+  return digits;
 }
 
 // ---------------------------------------------------------------------------

@@ -50,7 +50,7 @@ const badgeVariants: Record<string, string> = {
   success: 'bg-emerald-50 text-emerald-700',
   warning: 'bg-amber-50 text-amber-700',
   error: 'bg-red-50 text-red-700',
-  info: 'bg-sky-50 text-sky-700',
+  info: 'bg-teal-50 text-teal-700',
   neutral: 'bg-slate-100 text-slate-600',
 };
 
@@ -133,12 +133,12 @@ function ListItem({
         w-full text-start flex items-start gap-3 px-4 py-3 border-b border-slate-100
         transition-colors duration-100 cursor-pointer outline-none
         ${selected
-          ? 'bg-sky-100 border-s-[3px] border-s-sky-700'
+          ? 'bg-teal-100 border-s-[3px] border-s-teal-700'
           : isUrgent
             ? 'border-s-[3px] border-s-red-500 hover:bg-slate-50'
             : 'border-s-[3px] border-s-transparent hover:bg-slate-50'
         }
-        focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-inset
+        focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset
       `}
     >
       {/* Avatar */}
@@ -154,7 +154,7 @@ function ListItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           {item.unread && (
-            <span className="w-2 h-2 bg-sky-600 rounded-full flex-shrink-0" />
+            <span className="w-2 h-2 bg-teal-600 rounded-full flex-shrink-0" />
           )}
           <span
             className={`text-sm truncate ${
@@ -166,7 +166,7 @@ function ListItem({
         </div>
 
         {item.subtitle && (
-          <p className="text-xs text-sky-700 truncate mt-0.5">{item.subtitle}</p>
+          <p className="text-xs text-teal-700 truncate mt-0.5">{item.subtitle}</p>
         )}
 
         {item.preview && (
@@ -282,7 +282,7 @@ export function ContentList({
                   className={`
                     px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors
                     ${activeFilter === tab.key
-                      ? 'border-sky-700 text-sky-700'
+                      ? 'border-teal-700 text-teal-700'
                       : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                     }
                   `}
@@ -292,7 +292,7 @@ export function ContentList({
                     <span
                       className={`ms-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
                         activeFilter === tab.key
-                          ? 'bg-sky-100 text-sky-700'
+                          ? 'bg-teal-100 text-teal-700'
                           : 'bg-slate-100 text-slate-500'
                       }`}
                     >
@@ -320,8 +320,8 @@ export function ContentList({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               className="w-full ps-8 pe-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md
-                         placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500
-                         focus:border-sky-500 transition-colors"
+                         placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500
+                         focus:border-teal-500 transition-colors"
             />
           </div>
         </div>

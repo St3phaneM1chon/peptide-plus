@@ -123,7 +123,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -134,7 +134,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-            <BarChart3 className="w-6 h-6 text-sky-600" />
+            <BarChart3 className="w-6 h-6 text-teal-600" />
             {platformInfo
               ? t(platformInfo.nameKey) || platformInfo.nameKey
               : platform}
@@ -157,7 +157,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
           >
             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {t('admin.media.ads.syncNow') || 'Sync Now'}
@@ -191,7 +191,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
           { label: t('admin.media.ads.ctr') || 'CTR', value: `${stats?.totals.ctr || 0}%`, icon: TrendingUp, color: 'text-amber-600 bg-amber-50' },
           { label: t('admin.media.ads.spend') || 'Spend', value: formatCurrency(stats?.totals.spend || 0), icon: DollarSign, color: 'text-red-600 bg-red-50' },
           { label: t('admin.media.ads.conversions') || 'Conversions', value: formatNumber(stats?.totals.conversions || 0), icon: Target, color: 'text-purple-600 bg-purple-50' },
-          { label: t('admin.media.ads.cpa') || 'CPA', value: formatCurrency(stats?.totals.cpa || 0), icon: DollarSign, color: 'text-sky-600 bg-sky-50' },
+          { label: t('admin.media.ads.cpa') || 'CPA', value: formatCurrency(stats?.totals.cpa || 0), icon: DollarSign, color: 'text-teal-600 bg-teal-50' },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -217,7 +217,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
               return (
                 <div
                   key={i}
-                  className="flex-1 bg-sky-500 rounded-t hover:bg-sky-600 transition-colors relative group cursor-default"
+                  className="flex-1 bg-teal-500 rounded-t hover:bg-teal-600 transition-colors relative group cursor-default"
                   style={{ height: `${height}%` }}
                   title={`${d.date}: ${formatCurrency(d.spend)}`}
                 >

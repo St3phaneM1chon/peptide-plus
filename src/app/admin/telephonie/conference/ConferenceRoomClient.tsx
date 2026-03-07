@@ -179,7 +179,7 @@ export default function ConferenceRoomClient({ roomName }: ConferenceRoomClientP
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-slate-500">{t('admin.telephonie.conference.connecting')}</p>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function ConferenceRoomClient({ roomName }: ConferenceRoomClientP
         <button
           onClick={() => setIsScreenSharing(!isScreenSharing)}
           className={`p-3 rounded-full transition-colors ${
-            isScreenSharing ? 'bg-sky-500 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'
+            isScreenSharing ? 'bg-teal-500 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'
           }`}
           title={t('voip.softphone.screenShare.start')}
         >

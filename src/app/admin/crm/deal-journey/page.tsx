@@ -125,7 +125,7 @@ const EVENT_ICONS: Record<string, typeof Phone> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  stage_change: 'bg-blue-100 text-blue-600 border-blue-200',
+  stage_change: 'bg-teal-100 text-teal-600 border-teal-200',
   call: 'bg-green-100 text-green-600 border-green-200',
   email: 'bg-purple-100 text-purple-600 border-purple-200',
   meeting: 'bg-orange-100 text-orange-600 border-orange-200',
@@ -327,7 +327,7 @@ export default function DealJourneyPage() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   deal.isWon ? 'bg-green-100 text-green-700' :
                   deal.isLost ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
+                  'bg-teal-100 text-teal-700'
                 }`}>
                   {deal.stageName}
                 </span>
@@ -388,7 +388,7 @@ export default function DealJourneyPage() {
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       journey.isWon ? 'bg-green-100 text-green-700' :
                       journey.isLost ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
+                      'bg-teal-100 text-teal-700'
                     }`}>
                       {journey.isWon ? 'Won' : journey.isLost ? 'Lost' : journey.currentStage}
                     </span>

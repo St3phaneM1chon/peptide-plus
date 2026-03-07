@@ -7,6 +7,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* WCAG 2.2 AA: Global focus-visible ring for keyboard navigation */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid #0D9488;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove default outline for mouse users */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Reduced motion: disable animations for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
 /* PWA Install Banner Animation */
 @keyframes slide-up {
   from {
@@ -23,6 +47,21 @@
   animation: slide-up 0.3s ease-out;
 }
 
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.25s ease-out;
+}
+
 /* =====================================================
    PALETTE DE COULEURS - 5 TONS DE GRIS
    ===================================================== */
@@ -31,24 +70,34 @@
   /* Gris principaux - Ton sur Ton */
   --gray-100: #FAFAFA;  /* Background clair */
   --gray-200: #F0F0F0;  /* Cards, sections */
-  --gray-300: #E0E0E0;  /* Bordures légères */
+  --gray-300: #E0E0E0;  /* Bordures legeres */
   --gray-400: #9E9E9E;  /* Texte secondaire */
   --gray-500: #424242;  /* Texte principal */
-  
+
+  /* Semantic Brand Tokens — Teal primary */
+  --color-primary: #0D9488;
+  --color-primary-hover: #0F766E;
+  --color-primary-light: #CCFBF1;
+  --color-primary-subtle: #F0FDFA;
+  --color-secondary: #4F46E5;
+  --color-secondary-hover: #4338CA;
+  --color-secondary-light: #E0E7FF;
+
   /* Accents subtils */
-  --accent: #2D2D2D;
-  --accent-hover: #1A1A1A;
-  
+  --accent: #0D9488;
+  --accent-hover: #0F766E;
+
   /* Feedback */
-  --success: #4CAF50;
-  --error: #F44336;
-  --warning: #FF9800;
-  
+  --success: #059669;
+  --error: #DC2626;
+  --warning: #D97706;
+  --info: #0284C7;
+
   /* Spacing */
   --container-max: 1280px;
   --section-padding: 80px;
   --card-radius: 8px;
-  
+
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -1066,7 +1115,7 @@ a:hover {
 
 /* Focus-visible outline for keyboard navigation (WCAG 2.4.7) */
 *:focus-visible {
-  outline: 2px solid #CC5500;
+  outline: 2px solid #0D9488;
   outline-offset: 2px;
 }
 
@@ -1075,7 +1124,7 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #CC5500;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0D9488;
 }
 
 /* Buttons and links: ensure focus-visible is never fully hidden */
@@ -1083,7 +1132,7 @@ button:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #CC5500 !important;
+  outline: 2px solid #0D9488 !important;
   outline-offset: 2px !important;
 }
 
@@ -1237,7 +1286,7 @@ a:focus-visible,
 /* Legal pages list/link styling */
 .legal-content ul { padding-left: 20px; margin: 8px 0; }
 .legal-content li { margin-bottom: 8px; }
-.legal-content a { color: #CC5500; }
+.legal-content a { color: #0D9488; }
 
 @media print {
   .no-print,
@@ -1342,6 +1391,62 @@ a:focus-visible,
 }
 
 /* =====================================================
+   DENSITY MODES (data-density on <html>)
+   ===================================================== */
+
+/* Compact: tighter spacing for power users / data-heavy views */
+[data-density="compact"] {
+  --density-py: 0.25rem;   /* vertical padding */
+  --density-px: 0.5rem;    /* horizontal padding */
+  --density-gap: 0.25rem;  /* gap between elements */
+  --density-text: 0.8125rem; /* 13px */
+  --density-row-h: 2rem;   /* 32px table rows */
+  --density-card-p: 0.75rem;
+}
+
+[data-density="standard"] {
+  --density-py: 0.5rem;
+  --density-px: 0.75rem;
+  --density-gap: 0.5rem;
+  --density-text: 0.875rem; /* 14px */
+  --density-row-h: 2.5rem;  /* 40px */
+  --density-card-p: 1rem;
+}
+
+[data-density="focus"] {
+  --density-py: 0.75rem;
+  --density-px: 1rem;
+  --density-gap: 0.75rem;
+  --density-text: 0.9375rem; /* 15px */
+  --density-row-h: 3rem;     /* 48px */
+  --density-card-p: 1.25rem;
+}
+
+/* Apply density to admin tables */
+.admin-outlook table td,
+.admin-outlook table th {
+  padding: var(--density-py, 0.5rem) var(--density-px, 0.75rem);
+  font-size: var(--density-text, 0.875rem);
+}
+
+.admin-outlook table tr {
+  height: var(--density-row-h, 2.5rem);
+}
+
+/* Apply density to admin cards */
+.admin-outlook .density-card {
+  padding: var(--density-card-p, 1rem);
+}
+
+/* Apply density to admin lists */
+.admin-outlook .density-list > * {
+  gap: var(--density-gap, 0.5rem);
+  padding-top: var(--density-py, 0.5rem);
+  padding-bottom: var(--density-py, 0.5rem);
+  font-size: var(--density-text, 0.875rem);
+}
+
+/* =====================================================
    OUTLOOK ADMIN LAYOUT
    ===================================================== */
 
@@ -1352,12 +1457,12 @@ a:focus-visible,
   --list-width: 380px;
   --list-min-width: 280px;
   --topbar-height: 48px;
-  --rail-bg: #0C4A6E;
-  --rail-active: #0369A1;
-  --rail-hover: #075985;
-  --selected-bg: #E0F2FE;
-  --selected-border: #7DD3FC;
-  --accent: #0369A1;
+  --rail-bg: #115E59;
+  --rail-active: #0D9488;
+  --rail-hover: #0F766E;
+  --selected-bg: #F0FDFA;
+  --selected-border: #5EEAD4;
+  --accent: #0D9488;
   --border-color: #E2E8F0;
 }
 
@@ -1388,29 +1493,42 @@ a:focus-visible,
    Adding 'dark' class to <html> inverts all color variables site-wide. */
 
 html.dark :root {
-  /* Gris principaux - inversés */
+  /* Gris principaux - inverses */
   --gray-100: #111113;  /* Background sombre */
   --gray-200: #1C1C1F;  /* Cards, sections */
   --gray-300: #2E2E32;  /* Bordures */
-  --gray-400: #9E9E9E;  /* Texte secondaire (unchanged) */
+  --gray-400: #9E9E9E;  /* Texte secondaire */
   --gray-500: #E8E8E8;  /* Texte principal */
 
-  /* Accents */
-  --accent: #E8E8E8;
-  --accent-hover: #FFFFFF;
+  /* Semantic Brand Tokens — desaturated teal for dark */
+  --color-primary: #2DD4BF;
+  --color-primary-hover: #5EEAD4;
+  --color-primary-light: #134E4A;
+  --color-primary-subtle: #042F2E;
+  --color-secondary: #818CF8;
+  --color-secondary-hover: #A5B4FC;
+  --color-secondary-light: #312E81;
 
-  /* Feedback (unchanged - already high-contrast) */
-  --success: #4CAF50;
-  --error: #F44336;
-  --warning: #FF9800;
+  /* Accents */
+  --accent: #2DD4BF;
+  --accent-hover: #5EEAD4;
+
+  /* Feedback (adjusted for dark bg) */
+  --success: #34D399;
+  --error: #F87171;
+  --warning: #FBBF24;
+  --info: #38BDF8;
 }
 
 /* Admin outlook dark overrides */
 html.dark .admin-outlook {
-  --selected-bg: #1E293B;
-  --selected-border: #334155;
-  --accent: #38BDF8;
-  --border-color: #334155;
+  --rail-bg: #042F2E;
+  --rail-active: #2DD4BF;
+  --rail-hover: #134E4A;
+  --selected-bg: #134E4A;
+  --selected-border: #2DD4BF;
+  --accent: #2DD4BF;
+  --border-color: #2E2E32;
 }
 
 /* Global dark mode overrides for Tailwind utility classes that reference
@@ -1466,7 +1584,7 @@ html.dark textarea::placeholder {
 html.dark input:focus,
 html.dark select:focus,
 html.dark textarea:focus {
-  border-color: #38BDF8;
+  border-color: #2DD4BF;
 }
 
 /* Dividers and rings */
@@ -1513,6 +1631,8 @@ html.dark .bg-blue-50 { background-color: #0C1929 !important; }
 html.dark .bg-blue-100 { background-color: #172554 !important; }
 html.dark .bg-sky-50 { background-color: #0C1929 !important; }
 html.dark .bg-sky-100 { background-color: #0C4A6E !important; }
+html.dark .bg-teal-50 { background-color: #042F2E !important; }
+html.dark .bg-teal-100 { background-color: #134E4A !important; }
 html.dark .bg-purple-50 { background-color: #1E0A38 !important; }
 html.dark .bg-purple-100 { background-color: #2E1065 !important; }
 html.dark .bg-orange-50 { background-color: #2D1A05 !important; }

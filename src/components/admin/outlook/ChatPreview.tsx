@@ -18,7 +18,7 @@ export default function ChatPreview() {
           {t('admin.chat.recentMessages')}
         </span>
         {chats.length > 0 && (
-          <span className="ml-auto text-xs bg-sky-100 text-sky-700 rounded-full px-1.5 py-0.5 font-medium">
+          <span className="ml-auto text-xs bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 font-medium">
             {chats.length}
           </span>
         )}
@@ -29,7 +29,7 @@ export default function ChatPreview() {
         {loading ? (
           <div className="p-3 text-center">
             <div
-              className="animate-spin w-4 h-4 border-2 border-slate-300 border-t-sky-600 rounded-full mx-auto"
+              className="animate-spin w-4 h-4 border-2 border-slate-300 border-t-teal-600 rounded-full mx-auto"
               role="status"
             >
               <span className="sr-only">{t('common.loading')}</span>
@@ -47,8 +47,8 @@ export default function ChatPreview() {
               className="flex items-start gap-2 px-3 py-2 hover:bg-slate-50 border-b border-slate-50 transition-colors group"
             >
               {/* Avatar circle */}
-              <div className="w-7 h-7 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-semibold text-sky-700">
+              <div className="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-xs font-semibold text-teal-700">
                   {chat.clientName.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -59,7 +59,7 @@ export default function ChatPreview() {
                     {chat.clientName}
                   </span>
                   {chat.unreadCount > 0 && (
-                    <span className="w-2 h-2 bg-sky-500 rounded-full flex-shrink-0" />
+                    <span className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0" />
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">

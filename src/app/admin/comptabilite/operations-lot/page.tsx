@@ -480,7 +480,7 @@ export default function BatchOperationsPage() {
             className="flex flex-col items-center gap-2 h-auto py-4"
             onClick={() => { setImportType('journal_entries'); setShowImportModal(true); resetImport(); }}
           >
-            <Upload className="w-5 h-5 text-blue-500" />
+            <Upload className="w-5 h-5 text-teal-500" />
             <span className="text-xs">Importer ecritures</span>
           </Button>
           <Button
@@ -575,15 +575,15 @@ export default function BatchOperationsPage() {
         <div className="space-y-4">
           {/* Step indicator */}
           <div className="flex items-center gap-2 text-xs">
-            <span className={`px-2 py-1 rounded ${importStep === 'upload' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+            <span className={`px-2 py-1 rounded ${importStep === 'upload' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}`}>
               1. Fichier
             </span>
             <span className="text-slate-300">&rarr;</span>
-            <span className={`px-2 py-1 rounded ${importStep === 'preview' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+            <span className={`px-2 py-1 rounded ${importStep === 'preview' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}`}>
               2. Apercu
             </span>
             <span className="text-slate-300">&rarr;</span>
-            <span className={`px-2 py-1 rounded ${importStep === 'result' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+            <span className={`px-2 py-1 rounded ${importStep === 'result' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}`}>
               3. Resultat
             </span>
           </div>
@@ -660,11 +660,11 @@ export default function BatchOperationsPage() {
           {/* Step 2: Preview */}
           {importStep === 'preview' && importPreview && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-sm text-blue-700">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm text-teal-700">
                   <FileSpreadsheet className="w-4 h-4" />
                   <span className="font-medium">{importPreview.recordCount} enregistrements detectes</span>
-                  <span className="text-blue-500">
+                  <span className="text-teal-500">
                     ({importPreview.itemCount} elements a traiter)
                   </span>
                 </div>

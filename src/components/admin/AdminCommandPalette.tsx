@@ -173,7 +173,7 @@ export default function AdminCommandPalette({
                 type="button"
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                  idx === activeIndex ? 'bg-sky-50 text-sky-700' : 'text-slate-700 hover:bg-slate-50'
+                  idx === activeIndex ? 'bg-teal-50 text-teal-700' : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
@@ -181,7 +181,7 @@ export default function AdminCommandPalette({
                   {item.section}
                 </span>
                 {idx === activeIndex && (
-                  <CornerDownLeft className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" />
+                  <CornerDownLeft className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
                 )}
               </button>
             ))

@@ -59,7 +59,7 @@ interface Pagination {
 // ---------------------------------------------------------------------------
 
 const TYPE_CONFIG: Record<CampaignType, { label: string; icon: React.ReactNode; color: string }> = {
-  CALL: { label: 'Call', icon: <Phone className="h-3.5 w-3.5" />, color: 'bg-blue-100 text-blue-700' },
+  CALL: { label: 'Call', icon: <Phone className="h-3.5 w-3.5" />, color: 'bg-teal-100 text-teal-700' },
   EMAIL: { label: 'Email', icon: <Mail className="h-3.5 w-3.5" />, color: 'bg-purple-100 text-purple-700' },
   SMS: { label: 'SMS', icon: <MessageSquare className="h-3.5 w-3.5" />, color: 'bg-green-100 text-green-700' },
   MULTI_CHANNEL: { label: 'Multi', icon: <Layers className="h-3.5 w-3.5" />, color: 'bg-orange-100 text-orange-700' },
@@ -67,7 +67,7 @@ const TYPE_CONFIG: Record<CampaignType, { label: string; icon: React.ReactNode; 
 
 const STATUS_CONFIG: Record<CampaignStatus, { label: string; color: string }> = {
   DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
-  SCHEDULED: { label: 'Scheduled', color: 'bg-blue-100 text-blue-700' },
+  SCHEDULED: { label: 'Scheduled', color: 'bg-teal-100 text-teal-700' },
   ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700' },
   PAUSED: { label: 'Paused', color: 'bg-yellow-100 text-yellow-700' },
   COMPLETED: { label: 'Completed', color: 'bg-indigo-100 text-indigo-700' },
@@ -153,7 +153,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
   const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
 
   return (
@@ -350,7 +350,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
               {saving
                 ? (t('common.saving') || 'Saving...')
@@ -532,9 +532,9 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
               <p className="text-xs text-gray-500">{t('admin.crm.campaigns.totalLeads') || 'Leads'}</p>
               <p className="text-sm font-semibold text-gray-800">{campaign.totalLeads.toLocaleString()}</p>
             </div>
-            <div className="bg-blue-50 rounded-lg px-3 py-1.5">
-              <p className="text-xs text-blue-500">{t('admin.crm.campaigns.contacted') || 'Contacted'}</p>
-              <p className="text-sm font-semibold text-blue-700">{campaign.contacted.toLocaleString()}</p>
+            <div className="bg-teal-50 rounded-lg px-3 py-1.5">
+              <p className="text-xs text-teal-500">{t('admin.crm.campaigns.contacted') || 'Contacted'}</p>
+              <p className="text-sm font-semibold text-teal-700">{campaign.contacted.toLocaleString()}</p>
             </div>
             <div className="bg-green-50 rounded-lg px-3 py-1.5">
               <p className="text-xs text-green-500">{t('admin.crm.campaigns.converted') || 'Converted'}</p>
@@ -553,7 +553,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
         <div className="border-t border-gray-100 bg-gray-50 p-5">
           {loadingStats ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
             </div>
           ) : !stats ? (
             <p className="text-sm text-gray-400 text-center py-4">
@@ -567,7 +567,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                   icon={<Phone className="h-4 w-4" />}
                   label={t('admin.crm.campaigns.contactRate') || 'Contact Rate'}
                   value={`${stats.rates.contactRate}%`}
-                  color="text-blue-600"
+                  color="text-teal-600"
                 />
                 <MetricCard
                   icon={<Users className="h-4 w-4" />}
@@ -641,7 +641,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                       return (
                         <div
                           key={day.date}
-                          className="flex-1 bg-blue-400 rounded-t hover:bg-blue-500 transition-colors"
+                          className="flex-1 bg-teal-400 rounded-t hover:bg-teal-500 transition-colors"
                           style={{ height: `${hPct}%` }}
                           title={`${day.date}: ${day.total} activities (${day.completed} completed, ${day.failed} failed)`}
                         />
@@ -752,7 +752,7 @@ export default function CampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-blue-600" />
+            <BarChart3 className="h-6 w-6 text-teal-600" />
             {t('admin.crm.campaigns.title') || 'Campaign Management'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -761,7 +761,7 @@ export default function CampaignsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           {t('admin.crm.campaigns.new') || 'New Campaign'}
@@ -777,14 +777,14 @@ export default function CampaignsPage() {
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.crm.campaigns.search') || 'Search campaigns...'}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <div className="relative">
           <select
             value={filterStatus}
             onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <option value="">{t('admin.crm.campaigns.allStatuses') || 'All Statuses'}</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => (
@@ -797,7 +797,7 @@ export default function CampaignsPage() {
           <select
             value={filterType}
             onChange={e => { setFilterType(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <option value="">{t('admin.crm.campaigns.allTypes') || 'All Types'}</option>
             {Object.entries(TYPE_CONFIG).map(([k, v]) => (
@@ -811,7 +811,7 @@ export default function CampaignsPage() {
       {/* Campaign list */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : campaigns.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
@@ -824,7 +824,7 @@ export default function CampaignsPage() {
           </p>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
           >
             <Plus className="h-4 w-4" />
             {t('admin.crm.campaigns.new') || 'New Campaign'}

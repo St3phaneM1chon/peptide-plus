@@ -667,7 +667,7 @@ export default function InventairePage() {
       render: (row) => (
         <button
           onClick={() => openAdjustModal(row)}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          className="text-teal-600 hover:text-teal-800 text-sm font-medium"
           title={t('admin.inventory.adv.adjustStock')}
         >
           <ClipboardCheck className="w-4 h-4" />
@@ -688,7 +688,7 @@ export default function InventairePage() {
         <div>
           <span className="font-medium">{row.name}</span>
           {row.isDefault && (
-            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{t('admin.inventory.adv.default')}</span>
+            <span className="ml-2 text-xs bg-teal-100 text-teal-800 px-2 py-0.5 rounded">{t('admin.inventory.adv.default')}</span>
           )}
         </div>
       ),
@@ -722,7 +722,7 @@ export default function InventairePage() {
       header: t('admin.inventory.adv.colActions'),
       render: (row) => (
         <div className="flex gap-2">
-          <button onClick={() => openEditWarehouse(row)} className="text-blue-600 hover:text-blue-800">
+          <button onClick={() => openEditWarehouse(row)} className="text-teal-600 hover:text-teal-800">
             <Pencil className="w-4 h-4" />
           </button>
           {!row.isDefault && (
@@ -880,7 +880,7 @@ export default function InventairePage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-teal-600 text-teal-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -1408,7 +1408,7 @@ export default function InventairePage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm">{t('admin.inventory.adv.transferItems')}</h4>
-                <button onClick={addTransferItem} className="text-blue-600 text-sm hover:underline flex items-center gap-1">
+                <button onClick={addTransferItem} className="text-teal-600 text-sm hover:underline flex items-center gap-1">
                   <Plus className="w-3 h-3" /> {t('admin.inventory.adv.addItem')}
                 </button>
               </div>

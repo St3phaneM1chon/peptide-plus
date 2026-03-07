@@ -142,7 +142,7 @@ export default function ForecastDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <TrendingUp className="h-5 w-5 text-teal-600" />
             {t('admin.crm.forecast.title') || 'Revenue Forecasting'}
           </h2>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -155,7 +155,7 @@ export default function ForecastDashboard() {
             <select
               value={dateRange}
               onChange={e => setDateRange(e.target.value as DateRange)}
-              className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="month">{t('admin.crm.forecast.thisMonth') || 'This Month'}</option>
               <option value="quarter">{t('admin.crm.forecast.thisQuarter') || 'This Quarter'}</option>
@@ -169,7 +169,7 @@ export default function ForecastDashboard() {
               <select
                 value={selectedPipeline}
                 onChange={e => setSelectedPipeline(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">{t('admin.crm.forecast.allPipelines') || 'All Pipelines'}</option>
                 {pipelines.map(p => (
@@ -184,7 +184,7 @@ export default function ForecastDashboard() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : !data ? null : (
         <>
@@ -195,8 +195,8 @@ export default function ForecastDashboard() {
               label={t('admin.crm.forecast.weighted') || 'Weighted Pipeline'}
               value={fmt(data.summary.weightedPipeline)}
               sub={`${data.summary.openDealCount} open deals`}
-              colorClass="text-blue-700"
-              bgClass="bg-blue-50"
+              colorClass="text-teal-700"
+              bgClass="bg-teal-50"
             />
             <SummaryCard
               icon={<BarChart3 className="h-4 w-4" />}
@@ -248,12 +248,12 @@ export default function ForecastDashboard() {
                         {/* Tooltip on hover */}
                         <div className="w-full relative flex items-end gap-px h-32">
                           <div
-                            className="flex-1 bg-blue-100 rounded-t transition-all"
+                            className="flex-1 bg-teal-100 rounded-t transition-all"
                             style={{ height: `${totalH}%` }}
                             title={`${t('admin.crm.forecast.total') || 'Total'}: ${fmtFull(f.totalValue)}`}
                           />
                           <div
-                            className="flex-1 bg-blue-500 rounded-t transition-all"
+                            className="flex-1 bg-teal-500 rounded-t transition-all"
                             style={{ height: `${weightedH}%` }}
                             title={`${t('admin.crm.forecast.weighted') || 'Weighted'}: ${fmtFull(f.weightedValue)}`}
                           />
@@ -272,11 +272,11 @@ export default function ForecastDashboard() {
                 {/* Legend */}
                 <div className="flex items-center gap-5 text-xs text-gray-500 mb-5">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-blue-100 rounded-sm inline-block" />
+                    <span className="w-3 h-3 bg-teal-100 rounded-sm inline-block" />
                     {t('admin.crm.forecast.total') || 'Total'}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-blue-500 rounded-sm inline-block" />
+                    <span className="w-3 h-3 bg-teal-500 rounded-sm inline-block" />
                     {t('admin.crm.forecast.weighted') || 'Weighted'}
                   </span>
                   <span className="flex items-center gap-1.5">
@@ -303,7 +303,7 @@ export default function ForecastDashboard() {
                           <td className="py-2 font-medium text-gray-800">{f.month}</td>
                           <td className="py-2 text-right text-gray-500">{f.dealCount}</td>
                           <td className="py-2 text-right text-gray-600">{fmt(f.totalValue)}</td>
-                          <td className="py-2 text-right text-blue-600 font-medium">{fmt(f.weightedValue)}</td>
+                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(f.weightedValue)}</td>
                           <td className="py-2 text-right text-green-600 font-medium">{fmt(f.wonValue)}</td>
                         </tr>
                       ))}
@@ -341,7 +341,7 @@ export default function ForecastDashboard() {
                           <td className="py-2 font-medium text-gray-800">{row.pipelineName}</td>
                           <td className="py-2 text-right text-gray-500">{row.dealCount}</td>
                           <td className="py-2 text-right text-gray-600">{fmt(row.total)}</td>
-                          <td className="py-2 text-right text-blue-600 font-medium">{fmt(row.weighted)}</td>
+                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(row.weighted)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -378,7 +378,7 @@ export default function ForecastDashboard() {
                             )}
                           </td>
                           <td className="py-2 text-right text-gray-500">{row.dealCount}</td>
-                          <td className="py-2 text-right text-blue-600 font-medium">{fmt(row.weighted)}</td>
+                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(row.weighted)}</td>
                         </tr>
                       ))}
                     </tbody>

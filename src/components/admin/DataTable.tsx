@@ -126,8 +126,8 @@ export function DataTable<T>({
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       {/* Chantier 3.4: Bulk actions bar */}
       {selectable && selectedIds && selectedIds.size > 0 && bulkActions && bulkActions.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-sky-50 border-b border-sky-100">
-          <span className="text-sm font-medium text-sky-800">
+        <div className="flex items-center gap-3 px-4 py-2 bg-teal-50 border-b border-teal-100">
+          <span className="text-sm font-medium text-teal-800">
             {selectedIds.size} {t('admin.dataTable.selected') || 'selected'}
           </span>
           <div className="flex items-center gap-2 ml-auto">
@@ -147,7 +147,7 @@ export function DataTable<T>({
             ))}
             <button
               onClick={() => onSelectChange?.(new Set())}
-              className="text-sm text-sky-600 hover:text-sky-800 ml-2"
+              className="text-sm text-teal-600 hover:text-teal-800 ml-2"
             >
               {t('common.clearSelection') || 'Clear'}
             </button>
@@ -157,26 +157,29 @@ export function DataTable<T>({
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {data.length} {data.length === 1 ? (t('admin.dataTable.row') || 'row') : (t('admin.dataTable.rows') || 'rows')}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto" role="region" aria-label={t('admin.dataTable.tableRegion') || 'Data table'} tabIndex={0}>
+        <table className="w-full" role="grid">
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200">
+            <tr className="bg-slate-50/80 border-b border-slate-200 dark:bg-slate-800/80 dark:border-slate-700">
               {selectable && (
-                <th className="w-10 px-3 py-3">
+                <th scope="col" className="w-12 px-3 py-3">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
-                    className="rounded border-slate-300 text-sky-700 focus:ring-sky-700"
+                    aria-label={t('admin.dataTable.selectAll') || 'Select all'}
+                    className="w-4.5 h-4.5 rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer"
                   />
                 </th>
               )}
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider
+                  scope="col"
+                  aria-sort={col.sortable && currentSort?.key === col.key ? (currentSort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+                  className={`px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider
                     ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-end' : 'text-start'}
-                    ${col.sortable ? 'cursor-pointer select-none hover:text-slate-700' : ''}
+                    ${col.sortable ? 'cursor-pointer select-none hover:text-slate-700 dark:hover:text-slate-200' : ''}
                   `}
                   style={col.width ? { width: col.width } : undefined}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
@@ -199,7 +202,7 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {data.map((row, index) => {
               const id = keyExtractor(row);
               return (
@@ -207,25 +210,26 @@ export function DataTable<T>({
                   key={id}
                   className={`
                     transition-colors duration-150
-                    ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70' : ''}
-                    ${selectedIds?.has(id) ? 'bg-sky-100' : ''}
+                    ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/70' : ''}
+                    ${selectedIds?.has(id) ? 'bg-teal-100 dark:bg-teal-900/30' : ''}
                   `}
                   onClick={() => onRowClick?.(row)}
                 >
                   {selectable && (
-                    <td className="w-10 px-3 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="w-12 px-3 py-3" onClick={e => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds?.has(id) || false}
                         onChange={() => toggleOne(id)}
-                        className="rounded border-slate-300 text-sky-700 focus:ring-sky-700"
+                        aria-label={t('admin.dataTable.selectRow') || 'Select row'}
+                        className="w-4.5 h-4.5 rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer"
                       />
                     </td>
                   )}
                   {columns.map(col => (
                     <td
                       key={col.key}
-                      className={`px-4 py-3 text-sm text-slate-700
+                      className={`px-4 py-3 text-sm text-slate-700 dark:text-slate-300
                         ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-end' : ''}
                       `}
                     >

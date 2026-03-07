@@ -552,7 +552,7 @@ export default function DevisPage() {
               </button>
               <button
                 onClick={() => handleSend(est)}
-                className="p-1.5 rounded hover:bg-blue-50 text-blue-500 hover:text-blue-700"
+                className="p-1.5 rounded hover:bg-teal-50 text-teal-500 hover:text-teal-700"
                 title="Envoyer au client"
                 disabled={saving}
               >

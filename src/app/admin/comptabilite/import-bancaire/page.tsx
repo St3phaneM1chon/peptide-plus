@@ -404,7 +404,7 @@ export default function BankImportPage() {
                   <select
                     value={csvFormat}
                     onChange={e => setCsvFormat(e.target.value as typeof csvFormat)}
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
                     <option value="desjardins">Desjardins</option>
                     <option value="td">TD Canada Trust</option>
@@ -416,7 +416,7 @@ export default function BankImportPage() {
                     <select
                       value={selectedBankAccountId}
                       onChange={e => setSelectedBankAccountId(e.target.value)}
-                      className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                      className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     >
                       {bankAccounts.map(acc => (
                         <option key={acc.id} value={acc.id}>
@@ -456,7 +456,7 @@ export default function BankImportPage() {
                   <select
                     value={selectedBankAccountId}
                     onChange={e => setSelectedBankAccountId(e.target.value)}
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
                     {bankAccounts.map(acc => (
                       <option key={acc.id} value={acc.id}>
@@ -475,7 +475,7 @@ export default function BankImportPage() {
                 </SectionCard>
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.selected')}</p>
-                  <p className="text-2xl font-bold text-sky-600">{importedTransactions.filter(t => t.selected).length}</p>
+                  <p className="text-2xl font-bold text-teal-600">{importedTransactions.filter(t => t.selected).length}</p>
                 </SectionCard>
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.avgConfidence')}</p>
@@ -499,7 +499,7 @@ export default function BankImportPage() {
                       type="checkbox"
                       checked={importedTransactions.every(t => t.selected)}
                       onChange={toggleAll}
-                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                     />
                     <span className="text-sm text-slate-600">{t('admin.bankImport.selectAll')}</span>
                   </label>
@@ -543,7 +543,7 @@ export default function BankImportPage() {
                             type="checkbox"
                             checked={tx.selected}
                             onChange={() => toggleTransaction(tx.id)}
-                            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                           />
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-900">
@@ -558,7 +558,7 @@ export default function BankImportPage() {
                         <td className="px-4 py-3">
                           <select
                             defaultValue={tx.suggestedAccount || ''}
-                            className="px-2 py-1 bg-white border border-slate-300 rounded text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                            className="px-2 py-1 bg-white border border-slate-300 rounded text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
                           >
                             <option value="">{t('admin.bankImport.unclassified')}</option>
                             <option value="1040">1040 - Stripe</option>

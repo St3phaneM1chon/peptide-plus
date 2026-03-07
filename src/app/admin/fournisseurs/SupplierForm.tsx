@@ -185,7 +185,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
   const tabClass = (tab: string) =>
     `px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
       activeTab === tab
-        ? 'border-sky-600 text-sky-700 bg-sky-50'
+        ? 'border-teal-600 text-teal-700 bg-teal-50'
         : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
     }`;
 
@@ -263,7 +263,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
               type="checkbox"
               checked={isActive}
               onChange={e => setIsActive(e.target.checked)}
-              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             />
             {t('admin.suppliers.active')}
           </label>
@@ -304,7 +304,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
                     id={`contact-dept-${idx}`}
                     value={contact.department}
                     onChange={e => updateContact(idx, 'department', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
                   >
                     {DEPARTMENT_OPTIONS.map(d => (
                       <option key={d} value={d}>{t(`admin.suppliers.departments.${d}`)}</option>
@@ -403,7 +403,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
                     id={`link-type-${idx}`}
                     value={link.type}
                     onChange={e => updateLink(idx, 'type', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
                   >
                     {LINK_TYPES.map(lt => (
                       <option key={lt} value={lt}>

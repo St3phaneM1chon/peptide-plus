@@ -118,7 +118,7 @@ export function IntegrationCard({
               onChange={(e) => onToggle(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
           </label>
         </div>
       </div>
@@ -142,7 +142,7 @@ export function IntegrationCard({
                 placeholder={field.placeholder}
                 readOnly={field.readOnly}
                 pattern={field.pattern}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${field.readOnly ? 'bg-slate-50 text-slate-500' : ''} ${patternError ? 'border-red-300' : 'border-slate-300'}`}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${field.readOnly ? 'bg-slate-50 text-slate-500' : ''} ${patternError ? 'border-red-300' : 'border-slate-300'}`}
               />
               {/* F94 FIX: Show pattern validation error inline */}
               {patternError && (
@@ -195,7 +195,7 @@ export function IntegrationCard({
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {saved ? t('admin.integrations.saved') : t('admin.integrations.saveConfig')}
@@ -214,7 +214,7 @@ export function IntegrationCard({
               href={docsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 text-slate-500 rounded-lg text-sm hover:text-sky-600 transition-colors flex items-center gap-1"
+              className="px-4 py-2 text-slate-500 rounded-lg text-sm hover:text-teal-600 transition-colors flex items-center gap-1"
             >
               <ExternalLink className="w-4 h-4" />
               {t('admin.integrations.docs')}

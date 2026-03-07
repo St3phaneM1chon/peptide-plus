@@ -147,7 +147,7 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
       <div className="relative flex-1">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-            <Loader2 className="w-6 h-6 text-sky-500 animate-spin" />
+            <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
           </div>
         )}
 
@@ -166,7 +166,7 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
             <button
               type="button"
               onClick={handleOpenExternal}
-              className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               {t('admin.webNavigator.openNewTab')}

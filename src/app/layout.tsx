@@ -5,7 +5,7 @@
  * but child pages can still be statically generated via generateStaticParams.
  */
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -66,6 +66,14 @@ async function loadMessages(locale: string): Promise<Record<string, unknown>> {
     return en;
   }
 }
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#0D9488',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://biocyclepeptides.com'),
@@ -184,7 +192,7 @@ export default async function RootLayout({
       <head>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="format-detection" content="telephone=no" />
-        <meta name="theme-color" content="#f97316" />
+        {/* theme-color set via viewport export */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BioCycle" />
@@ -207,9 +215,9 @@ export default async function RootLayout({
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <Providers locale={locale} messages={messages}>
-          <main className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-gray-50">
             {children}
-          </main>
+          </div>
           <TranslationNotice />
           <TranslationFeedback />
         </Providers>

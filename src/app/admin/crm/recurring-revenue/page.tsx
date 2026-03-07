@@ -83,7 +83,7 @@ export default function RecurringRevenuePage() {
         </div>
         <div className="bg-white rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="h-4 w-4 text-blue-600" />
+            <BarChart3 className="h-4 w-4 text-teal-600" />
             <span className="text-xs font-medium text-gray-500 uppercase">ARR</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(d.totalARR, locale)}</p>

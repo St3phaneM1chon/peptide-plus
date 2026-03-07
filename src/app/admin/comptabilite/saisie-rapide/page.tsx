@@ -116,7 +116,7 @@ interface RecentEntry {
 
 const categoryColors: Record<string, string> = {
   SALES: 'bg-emerald-50 text-emerald-700',
-  PURCHASES: 'bg-blue-50 text-blue-700',
+  PURCHASES: 'bg-teal-50 text-teal-700',
   PAYROLL: 'bg-purple-50 text-purple-700',
   TAXES: 'bg-amber-50 text-amber-700',
   ADJUSTMENTS: 'bg-red-50 text-red-700',

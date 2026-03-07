@@ -274,7 +274,7 @@ function CashFlowLineChart({
         {/* Data points and month labels */}
         {points.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r={4} className="fill-white stroke-blue-500" strokeWidth={2}>
+            <circle cx={p.x} cy={p.y} r={4} className="fill-white stroke-teal-500" strokeWidth={2}>
               <title>{`${p.month}: ${formatCurrency(p.value)}`}</title>
             </circle>
             <text x={p.x} y={chartH - 4} textAnchor="middle" className="text-[10px] fill-slate-500">
@@ -285,7 +285,7 @@ function CashFlowLineChart({
       </svg>
       {/* Legend */}
       <div className="flex items-center justify-center gap-2 mt-1">
-        <span className="w-6 h-0.5 bg-blue-500 rounded" />
+        <span className="w-6 h-0.5 bg-teal-500 rounded" />
         <span className="text-sm text-slate-600">{label}</span>
       </div>
     </div>
@@ -777,7 +777,7 @@ export default function ComptabiliteDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-blue-500" />
+            <Clock className="w-4 h-4 text-teal-500" />
             <span className="text-xs font-medium text-slate-500">DSO</span>
           </div>
           <p className="text-2xl font-bold text-slate-900">{kpis.dso}<span className="text-sm font-normal text-slate-500 ml-1">{t('admin.accounting.chartDays')}</span></p>
@@ -806,7 +806,7 @@ export default function ComptabiliteDashboard() {
             <DollarSign className="w-4 h-4 text-amber-500" />
             <span className="text-xs font-medium text-slate-500">AR / AP</span>
           </div>
-          <p className="text-lg font-bold text-blue-600">{formatCurrency(kpis.arOutstanding)}</p>
+          <p className="text-lg font-bold text-teal-600">{formatCurrency(kpis.arOutstanding)}</p>
           <p className="text-lg font-bold text-red-600">{formatCurrency(kpis.apOutstanding)}</p>
         </div>
       </div>
@@ -833,10 +833,10 @@ export default function ComptabiliteDashboard() {
               {stats.caMonth > 0 ? `${((cogs / stats.caMonth) * 100).toFixed(1)}% du CA` : '--'}
             </p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <p className="text-xs font-medium text-blue-600 uppercase">{t('admin.accounting.grossMargin')}</p>
-            <p className="text-xl font-bold text-blue-700 mt-1">{formatCurrency(grossProfit)}</p>
-            <p className="text-xs text-blue-500 mt-1">
+          <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
+            <p className="text-xs font-medium text-teal-600 uppercase">{t('admin.accounting.grossMargin')}</p>
+            <p className="text-xl font-bold text-teal-700 mt-1">{formatCurrency(grossProfit)}</p>
+            <p className="text-xs text-teal-500 mt-1">
               {stats.caMonth > 0 ? `${((grossProfit / stats.caMonth) * 100).toFixed(1)}%` : '--'}
             </p>
           </div>
@@ -882,8 +882,8 @@ export default function ComptabiliteDashboard() {
         {/* QuickBooks/Xero Export */}
         <SectionCard title={t('admin.accounting.exportSection')} theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-sky-100 rounded-lg">
-              <FileDown className="w-5 h-5 text-sky-600" />
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <FileDown className="w-5 h-5 text-teal-600" />
             </div>
             <p className="text-sm text-slate-600">{t('admin.accounting.period')}: {selectedPeriod}</p>
           </div>
@@ -900,9 +900,9 @@ export default function ComptabiliteDashboard() {
             </button>
             <button
               onClick={() => handleAccountingExport('xero_csv')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50/50 hover:bg-blue-50 transition-colors text-left"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-colors text-left"
             >
-              <span className="p-1.5 bg-blue-100 rounded text-blue-600"><Download className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-teal-100 rounded text-teal-600"><Download className="w-4 h-4" /></span>
               <div>
                 <span className="text-sm font-medium text-slate-800">{t('admin.accounting.exportXero')}</span>
                 <p className="text-xs text-slate-500">Xero CSV Import</p>
@@ -1017,12 +1017,12 @@ export default function ComptabiliteDashboard() {
             {/* Upcoming Remittance Dates */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-700">{t('admin.accounting.taxRemittanceDates')}</h4>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <CalendarDays className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800">{t('admin.accounting.taxRemittanceGst')}</span>
+                  <CalendarDays className="w-4 h-4 text-teal-600" />
+                  <span className="text-sm font-medium text-teal-800">{t('admin.accounting.taxRemittanceGst')}</span>
                 </div>
-                <p className="text-xs text-blue-600 ml-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
+                <p className="text-xs text-teal-600 ml-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
               </div>
               <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
@@ -1087,18 +1087,18 @@ export default function ComptabiliteDashboard() {
                   className={`flex items-start gap-3 p-3 rounded-lg border ${
                     alert.type === 'danger' ? 'bg-red-50 border-red-200' :
                     alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                    'bg-blue-50 border-blue-200'
+                    'bg-teal-50 border-teal-200'
                   }`}
                 >
                   <AlertIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
                     alert.type === 'danger' ? 'text-red-500' :
                     alert.type === 'warning' ? 'text-yellow-500' :
-                    'text-blue-500'
+                    'text-teal-500'
                   }`} />
                   <p className={`text-sm ${
                     alert.type === 'danger' ? 'text-red-800' :
                     alert.type === 'warning' ? 'text-yellow-800' :
-                    'text-blue-800'
+                    'text-teal-800'
                   }`}>
                     {alert.message}
                   </p>
@@ -1168,9 +1168,9 @@ export default function ComptabiliteDashboard() {
             </Link>
             <Link
               href="/admin/comptabilite/rapprochement"
-              className="flex items-center gap-3 p-4 rounded-lg border border-sky-100 bg-sky-50/50 hover:bg-sky-50 transition-colors group"
+              className="flex items-center gap-3 p-4 rounded-lg border border-teal-100 bg-teal-50/50 hover:bg-teal-50 transition-colors group"
             >
-              <span className="p-2 bg-sky-100 rounded-lg text-sky-600 group-hover:bg-sky-200 transition-colors">
+              <span className="p-2 bg-teal-100 rounded-lg text-teal-600 group-hover:bg-teal-200 transition-colors">
                 <CheckCircle className="w-5 h-5" />
               </span>
               <div>

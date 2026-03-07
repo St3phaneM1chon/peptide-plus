@@ -356,7 +356,7 @@ export default function QuestionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -467,7 +467,7 @@ export default function QuestionsPage() {
                   {/* Question */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <p className="font-medium text-slate-900 flex items-start gap-2">
-                      <span className="text-sky-500 flex-shrink-0">Q:</span>
+                      <span className="text-teal-500 flex-shrink-0">Q:</span>
                       <span>{selectedQuestion.question}</span>
                     </p>
                     <p className="text-xs text-slate-500 mt-2">

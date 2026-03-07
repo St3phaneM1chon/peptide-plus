@@ -71,7 +71,7 @@ export default function IconRail() {
               className={`
                 relative w-12 h-12 flex items-center justify-center transition-colors
                 ${isActive
-                  ? 'bg-indigo-600 border-s-[3px] border-s-indigo-400'
+                  ? 'bg-teal-600 border-s-[3px] border-s-teal-400'
                   : 'border-s-[3px] border-s-transparent hover:bg-slate-300'
                 }
               `}

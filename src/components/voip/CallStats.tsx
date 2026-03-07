@@ -30,8 +30,8 @@ export default function CallStats({ today, satisfaction, activeAgents, unreadVoi
       label: t('voip.dashboard.callsToday'),
       value: today.calls.toString(),
       icon: Phone,
-      color: 'text-sky-600',
-      bg: 'bg-sky-50',
+      color: 'text-teal-600',
+      bg: 'bg-teal-50',
     },
     {
       label: t('voip.dashboard.answered'),

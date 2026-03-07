@@ -376,29 +376,29 @@ export function ContactListPage({ config }: { config: ContactListPageConfig }) {
 
                   {/* Loyalty Info */}
                   {config.showLoyaltySection !== false && (
-                    <div className="bg-sky-50 rounded-lg p-4 border border-sky-200">
-                      <h3 className="font-semibold text-sky-900 mb-3 flex items-center gap-2">
+                    <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
+                      <h3 className="font-semibold text-teal-900 mb-3 flex items-center gap-2">
                         <Crown className="w-4 h-4" />
                         {t(`${prefix}.loyaltyProgram`)}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
-                          <p className="text-sm text-sky-700">{t(`${prefix}.tier`)}</p>
+                          <p className="text-sm text-teal-700">{t(`${prefix}.tier`)}</p>
                           <StatusBadge variant={tierVariants[displayItem.loyaltyTier] || 'neutral'}>
                             {displayItem.loyaltyTier}
                           </StatusBadge>
                         </div>
                         <div>
-                          <p className="text-sm text-sky-700">{t(`${prefix}.currentPoints`)}</p>
-                          <p className="text-2xl font-bold text-sky-900">{displayItem.loyaltyPoints.toLocaleString(locale)}</p>
+                          <p className="text-sm text-teal-700">{t(`${prefix}.currentPoints`)}</p>
+                          <p className="text-2xl font-bold text-teal-900">{displayItem.loyaltyPoints.toLocaleString(locale)}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-sky-700">{t(`${prefix}.lifetimePoints`)}</p>
-                          <p className="text-2xl font-bold text-sky-900">{displayItem.lifetimePoints.toLocaleString(locale)}</p>
+                          <p className="text-sm text-teal-700">{t(`${prefix}.lifetimePoints`)}</p>
+                          <p className="text-2xl font-bold text-teal-900">{displayItem.lifetimePoints.toLocaleString(locale)}</p>
                         </div>
                       </div>
                       {config.showReferralCode !== false && displayItem.referralCode && (
-                        <div className="mt-3 flex items-center gap-2 text-sm text-sky-700">
+                        <div className="mt-3 flex items-center gap-2 text-sm text-teal-700">
                           <Gift className="w-4 h-4" />
                           <span>{t(`${prefix}.referralCode`)}: <span className="font-mono font-bold">{displayItem.referralCode}</span></span>
                         </div>

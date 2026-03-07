@@ -136,8 +136,8 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
       label: t('voip.admin.wallboard.activeCalls'),
       value: data.activeCalls,
       icon: Phone,
-      color: 'text-sky-600',
-      bg: 'bg-sky-50 dark:bg-sky-900/30',
+      color: 'text-teal-600',
+      bg: 'bg-teal-50 dark:bg-teal-900/30',
     },
     {
       label: t('voip.admin.wallboard.agentsOnline'),
@@ -182,8 +182,8 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
       label: t('voip.admin.wallboard.callsToday'),
       value: data.callsToday,
       icon: PhoneForwarded,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50 dark:bg-blue-900/30',
+      color: 'text-teal-600',
+      bg: 'bg-teal-50 dark:bg-teal-900/30',
     },
     {
       label: t('voip.admin.wallboard.answeredToday'),
@@ -220,7 +220,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="p-2 text-gray-400 hover:text-sky-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 text-gray-400 hover:text-teal-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>

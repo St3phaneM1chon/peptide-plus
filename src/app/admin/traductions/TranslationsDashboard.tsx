@@ -210,7 +210,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 id="translations-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <Languages className="w-5 h-5 text-blue-600" />
+            <Languages className="w-5 h-5 text-teal-600" />
             {t('admin.translationsDashboard.wizardTitle')}
           </h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition">
@@ -223,7 +223,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
           {stepTitles.map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                step === s.num ? 'bg-blue-100 text-blue-700' :
+                step === s.num ? 'bg-teal-100 text-teal-700' :
                 step > s.num ? 'text-green-600' : 'text-gray-400'
               }`}>
                 {step > s.num ? (
@@ -283,14 +283,14 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
               </div>
 
               {/* Summary */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-blue-800">{t('admin.translationsDashboard.wizardTotalToTranslate')}</span>
-                  <span className="text-lg font-bold text-blue-700">
+                  <span className="text-sm font-medium text-teal-800">{t('admin.translationsDashboard.wizardTotalToTranslate')}</span>
+                  <span className="text-lg font-bold text-teal-700">
                     ~{analysisData.reduce((s, a) => s + a.estimate, 0).toLocaleString(locale)}
                   </span>
                 </div>
-                <p className="text-xs text-blue-600 mt-1">{t('admin.translationsDashboard.wizardLocales')}</p>
+                <p className="text-xs text-teal-600 mt-1">{t('admin.translationsDashboard.wizardLocales')}</p>
               </div>
             </div>
           )}
@@ -302,7 +302,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
 
               {/* Select/Deselect all */}
               <div className="flex gap-2">
-                <button onClick={selectAll} className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition">
+                <button onClick={selectAll} className="text-xs px-3 py-1.5 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition">
                   {t('admin.translationsDashboard.wizardSelectAll')}
                 </button>
                 <button onClick={deselectAll} className="text-xs px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition">
@@ -320,11 +320,11 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                       key={model}
                       onClick={() => toggleModel(model)}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border transition text-left ${
-                        selected ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+                        selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 bg-white hover:bg-gray-50'
                       }`}
                     >
                       {selected ? (
-                        <CheckSquare className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <CheckSquare className="w-5 h-5 text-teal-600 flex-shrink-0" />
                       ) : (
                         <Square className="w-5 h-5 text-gray-300 flex-shrink-0" />
                       )}
@@ -350,7 +350,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                   className="flex items-center gap-3 w-full p-3 rounded-lg border hover:bg-gray-50 transition"
                 >
                   {forceRetranslate ? (
-                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                    <CheckSquare className="w-5 h-5 text-teal-600" />
                   ) : (
                     <Square className="w-5 h-5 text-gray-300" />
                   )}
@@ -363,12 +363,12 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
 
               {/* Estimate */}
               {selectedModels.size > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-blue-800">
+                    <span className="text-sm font-medium text-teal-800">
                       {t('admin.translationsDashboard.wizardEstimate', { count: totalEstimate.toLocaleString(locale) })}
                     </span>
-                    <span className="text-xs text-blue-600">
+                    <span className="text-xs text-teal-600">
                       {selectedModels.size} {t('admin.translationsDashboard.colType').toLowerCase()}(s)
                     </span>
                   </div>
@@ -403,7 +403,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                         <span className="font-medium text-gray-900 text-sm">{getModelLabel(model)}</span>
                       </div>
                       {isPending && isTranslating && (
-                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                        <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
                       )}
                       {isQueued && (
                         <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
@@ -427,7 +427,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                 <div className="border rounded-lg overflow-hidden">
                   <div className="px-3 py-2 bg-gray-50 border-b flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                      <RefreshCw className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-blue-500' : 'text-green-500'}`} />
+                      <RefreshCw className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-teal-500' : 'text-green-500'}`} />
                       {t('admin.translationsDashboard.wizardLiveLog')}
                     </h4>
                     <span className="text-xs text-gray-400">{liveJobs.length} {t('admin.translationsDashboard.wizardJobs')}</span>
@@ -440,7 +440,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                         <span className="text-gray-400 font-mono truncate max-w-[100px]">#{job.entityId.slice(0, 8)}</span>
                         <span className="flex-1" />
                         {job.status === 'processing' && (
-                          <span className="flex items-center gap-1 text-blue-600">
+                          <span className="flex items-center gap-1 text-teal-600">
                             <Loader2 className="w-3 h-3 animate-spin" />
                             {t('admin.translationsDashboard.processing')}
                           </span>
@@ -476,9 +476,9 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                     <p className="text-lg font-bold text-yellow-700">{liveQueue.pending}</p>
                     <p className="text-xs text-yellow-600">{t('admin.translationsDashboard.pending')}</p>
                   </div>
-                  <div className="text-center p-2 bg-blue-50 rounded-lg">
-                    <p className="text-lg font-bold text-blue-700">{liveQueue.processing}</p>
-                    <p className="text-xs text-blue-600">{t('admin.translationsDashboard.processing')}</p>
+                  <div className="text-center p-2 bg-teal-50 rounded-lg">
+                    <p className="text-lg font-bold text-teal-700">{liveQueue.processing}</p>
+                    <p className="text-xs text-teal-600">{t('admin.translationsDashboard.processing')}</p>
                   </div>
                   <div className="text-center p-2 bg-green-50 rounded-lg">
                     <p className="text-lg font-bold text-green-700">{liveQueue.completed}</p>
@@ -494,10 +494,10 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
               {/* Global progress bar */}
               {isTranslating && (
                 <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-500 flex-shrink-0" />
+                  <Loader2 className="w-5 h-5 animate-spin text-teal-500 flex-shrink-0" />
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
-                      className="h-2 rounded-full bg-blue-500 transition-all duration-500"
+                      className="h-2 rounded-full bg-teal-500 transition-all duration-500"
                       style={{
                         width: liveQueue
                           ? `${Math.max(5, Math.round(((liveQueue.completed + liveQueue.failed) / Math.max(1, liveQueue.total)) * 100))}%`
@@ -550,7 +550,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
             {step === 1 && (
               <button
                 onClick={() => setStep(2)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
               >
                 {t('admin.translationsDashboard.wizardNext')}
                 <ArrowRight className="w-4 h-4" />
@@ -565,7 +565,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                   startTranslation();
                 }}
                 disabled={selectedModels.size === 0}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 <Zap className="w-4 h-4" />
                 {t('admin.translationsDashboard.wizardStartTranslation')}
@@ -887,7 +887,7 @@ export default function TranslationsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
         <span className="ms-3 text-gray-500">{t('admin.translationsDashboard.loadingStats')}</span>
         <span className="sr-only">Loading...</span>
       </div>
@@ -912,7 +912,7 @@ export default function TranslationsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Languages className="w-7 h-7 text-blue-600" />
+            <Languages className="w-7 h-7 text-teal-600" />
             {t('admin.translationsDashboard.title')}
           </h1>
           <p className="text-gray-500 mt-1">
@@ -929,7 +929,7 @@ export default function TranslationsDashboard() {
           </button>
           <button
             onClick={() => setShowWizard(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium"
           >
             <Zap className="w-4 h-4" />
             {t('admin.translationsDashboard.startSession')}
@@ -951,8 +951,8 @@ export default function TranslationsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Globe className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <Globe className="w-5 h-5 text-teal-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">{t('admin.translationsDashboard.globalCoverage')}</p>
@@ -1060,7 +1060,7 @@ export default function TranslationsDashboard() {
                     <button
                       onClick={() => triggerTranslation(model)}
                       disabled={translating[model] || coverage.totalEntities === 0}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
                       {translating[model] ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1087,7 +1087,7 @@ export default function TranslationsDashboard() {
             <Clock className="w-5 h-5 text-gray-400" />
             {t('admin.translationsDashboard.translationQueue')}
             {queue && (queue.pending + queue.processing > 0) && (
-              <span className="ms-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+              <span className="ms-2 px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">
                 {t('admin.translationsDashboard.inProgress', { count: queue.pending + queue.processing })}
               </span>
             )}
@@ -1103,9 +1103,9 @@ export default function TranslationsDashboard() {
                   <p className="text-lg font-bold text-yellow-700">{queue.pending}</p>
                   <p className="text-xs text-yellow-600">{t('admin.translationsDashboard.pending')}</p>
                 </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <p className="text-lg font-bold text-blue-700">{queue.processing}</p>
-                  <p className="text-xs text-blue-600">{t('admin.translationsDashboard.processing')}</p>
+                <div className="text-center p-3 bg-teal-50 rounded-lg">
+                  <p className="text-lg font-bold text-teal-700">{queue.processing}</p>
+                  <p className="text-xs text-teal-600">{t('admin.translationsDashboard.processing')}</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <p className="text-lg font-bold text-green-700">{queue.completed}</p>
@@ -1149,7 +1149,7 @@ export default function TranslationsDashboard() {
                         <td className="px-3 py-2 text-center">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
                             job.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            job.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                            job.status === 'processing' ? 'bg-teal-100 text-teal-700' :
                             job.status === 'failed' ? 'bg-red-100 text-red-700' :
                             'bg-yellow-100 text-yellow-700'
                           }`}>
@@ -1181,7 +1181,7 @@ export default function TranslationsDashboard() {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
         >
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Globe className="w-5 h-5 text-blue-500" />
+            <Globe className="w-5 h-5 text-teal-500" />
             Progression par langue ({Object.keys(LOCALE_NAMES).length} langues)
           </h2>
           {showLocaleProgress ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}

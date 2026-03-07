@@ -202,7 +202,7 @@ export default function HeatmapsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
         </div>
       ) : (
         <>
@@ -245,7 +245,7 @@ export default function HeatmapsPage() {
                     return (
                       <div
                         key={h}
-                        className={`flex-1 h-8 rounded-sm ${color} flex items-center justify-center cursor-pointer transition-all hover:ring-2 hover:ring-blue-400 hover:z-10`}
+                        className={`flex-1 h-8 rounded-sm ${color} flex items-center justify-center cursor-pointer transition-all hover:ring-2 hover:ring-teal-400 hover:z-10`}
                         style={{ minWidth: 20 }}
                         onMouseEnter={() => cell && setHoveredCell(cell)}
                         onMouseLeave={() => setHoveredCell(null)}

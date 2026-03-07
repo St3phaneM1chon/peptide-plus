@@ -202,7 +202,7 @@ export default function BanquesPage() {
   const getAccountIconColor = (type: BankAccount['type']) => {
     switch (type) {
       case 'PAYMENT_PROCESSOR': return 'text-purple-600';
-      case 'SAVINGS': return 'text-blue-600';
+      case 'SAVINGS': return 'text-teal-600';
       default: return 'text-emerald-600';
     }
   };
@@ -210,7 +210,7 @@ export default function BanquesPage() {
   const getAccountIconBg = (type: BankAccount['type']) => {
     switch (type) {
       case 'PAYMENT_PROCESSOR': return 'bg-purple-100';
-      case 'SAVINGS': return 'bg-blue-100';
+      case 'SAVINGS': return 'bg-teal-100';
       default: return 'bg-emerald-100';
     }
   };
@@ -325,7 +325,7 @@ export default function BanquesPage() {
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                   account.currency === 'USD' ? 'bg-green-100 text-green-800' :
-                  account.currency === 'EUR' ? 'bg-blue-100 text-blue-800' :
+                  account.currency === 'EUR' ? 'bg-teal-100 text-teal-800' :
                   'bg-slate-100 text-slate-800'
                 }`}>
                   {account.currency}
@@ -348,7 +348,7 @@ export default function BanquesPage() {
         theme={theme}
         noPadding
         headerAction={
-          <a href="/admin/comptabilite/rapprochement" className="text-sm text-sky-600 hover:text-sky-700 font-medium">
+          <a href="/admin/comptabilite/rapprochement" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
             {t('admin.bankAccounts.viewAll')} &rarr;
           </a>
         }
@@ -416,9 +416,9 @@ export default function BanquesPage() {
             <p className="text-xl font-bold text-red-700">-{formatCurrency(expectedOutflows)}</p>
             <p className="text-xs text-red-600 mt-1">{t('admin.bankAccounts.invoicesAndRecurring')}</p>
           </div>
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
-            <p className="text-xl font-bold text-blue-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
+          <div className="p-4 bg-teal-50 rounded-lg">
+            <p className="text-sm text-teal-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
+            <p className="text-xl font-bold text-teal-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
           </div>
         </div>
       </SectionCard>

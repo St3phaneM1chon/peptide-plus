@@ -93,7 +93,7 @@ export default function ProspectListsPage() {
         setTotal(json.pagination?.total || 0);
       }
     } catch {
-      toast.error('Failed to fetch lists');
+      toast.error(t('admin.crmLists.errorFetch'));
     } finally {
       setLoading(false);
     }
@@ -124,10 +124,10 @@ export default function ProspectListsPage() {
         // Navigate to the new list
         router.push(`/admin/crm/lists/${json.data.id}`);
       } else {
-        toast.error(json.error || 'Error');
+        toast.error(json.error || t('admin.crmLists.errorGeneric'));
       }
     } catch {
-      toast.error('Error creating list');
+      toast.error(t('admin.crmLists.errorCreate'));
     } finally {
       setCreating(false);
     }
@@ -144,7 +144,7 @@ export default function ProspectListsPage() {
       const text = await csvFile.text();
       const rows = parseCSV(text);
       if (rows.length === 0) {
-        toast.error('No valid rows in CSV');
+        toast.error(t('admin.crmLists.errorNoValidRows'));
         setImporting(false);
         return;
       }
@@ -160,10 +160,10 @@ export default function ProspectListsPage() {
         setCsvFile(null);
         fetchLists();
       } else {
-        toast.error(json.error || 'Import error');
+        toast.error(json.error || t('admin.crmLists.errorImport'));
       }
     } catch {
-      toast.error('Import error');
+      toast.error(t('admin.crmLists.errorImport'));
     } finally {
       setImporting(false);
     }
@@ -174,7 +174,7 @@ export default function ProspectListsPage() {
   // ---------------------------------------------------------------------------
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this list and all its prospects?')) return;
+    if (!confirm(t('admin.crmLists.deleteListConfirm'))) return;
     try {
       const res = await fetch(`/api/admin/crm/lists/${id}`, { method: 'DELETE' });
       const json = await res.json();
@@ -183,7 +183,7 @@ export default function ProspectListsPage() {
         fetchLists();
       }
     } catch {
-      toast.error('Delete error');
+      toast.error(t('admin.crmLists.errorDelete'));
     }
   }
 
@@ -204,7 +204,7 @@ export default function ProspectListsPage() {
         fetchLists();
       }
     } catch {
-      toast.error('Error');
+      toast.error(t('admin.crmLists.errorGeneric'));
     }
   }
 
@@ -229,7 +229,7 @@ export default function ProspectListsPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
           >
             <Plus className="h-4 w-4" />
             {t('admin.crmLists.newList')}
@@ -246,7 +246,7 @@ export default function ProspectListsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.crmLists.searchQuery')}
-            className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
           />
         </div>
         <select
@@ -288,7 +288,7 @@ export default function ProspectListsPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">{t('admin.crmLists.searching')}</td></tr>
             ) : lists.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center">
@@ -332,13 +332,13 @@ export default function ProspectListsPage() {
                     </td>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => router.push(`/admin/crm/lists/${list.id}`)} className="rounded p-1 hover:bg-gray-100" title="View">
+                        <button onClick={() => router.push(`/admin/crm/lists/${list.id}`)} className="rounded p-1 hover:bg-gray-100" title={t('admin.crmLists.view')}>
                           <Eye className="h-4 w-4 text-gray-500" />
                         </button>
-                        <button onClick={() => handleArchive(list.id)} className="rounded p-1 hover:bg-gray-100" title="Archive">
+                        <button onClick={() => handleArchive(list.id)} className="rounded p-1 hover:bg-gray-100" title={t('admin.crmLists.archive')}>
                           <Archive className="h-4 w-4 text-gray-500" />
                         </button>
-                        <button onClick={() => handleDelete(list.id)} className="rounded p-1 hover:bg-red-50" title="Delete">
+                        <button onClick={() => handleDelete(list.id)} className="rounded p-1 hover:bg-red-50" title={t('admin.crmLists.delete')}>
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </button>
                       </div>
@@ -378,7 +378,7 @@ export default function ProspectListsPage() {
                 <input
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
                   placeholder={t('admin.crmLists.name')}
                   autoFocus
                 />
@@ -388,7 +388,7 @@ export default function ProspectListsPage() {
                 <textarea
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
                   rows={3}
                 />
               </div>
@@ -407,12 +407,12 @@ export default function ProspectListsPage() {
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowCreateModal(false)} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">
-                Cancel
+                {t('admin.crmLists.cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={creating || !newName.trim()}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50"
               >
                 {creating ? '...' : t('admin.crmLists.newList')}
               </button>
@@ -428,20 +428,20 @@ export default function ProspectListsPage() {
             <h2 className="text-lg font-bold mb-4">{t('admin.crmLists.importCSV')}</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">List</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crmLists.name')}</label>
                 <select
                   value={csvListId}
                   onChange={(e) => setCsvListId(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 >
-                  <option value="">Select a list...</option>
+                  <option value="">{t('admin.crmLists.selectList')}</option>
                   {lists.map((l) => (
                     <option key={l.id} value={l.id}>{l.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CSV File</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crmLists.csvFile')}</label>
                 <input
                   type="file"
                   accept=".csv,.txt"
@@ -449,18 +449,18 @@ export default function ProspectListsPage() {
                   className="w-full text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Columns: contactName, companyName, email, phone, website, address, city, province, postalCode, country, industry
+                  {t('admin.crmLists.csvColumnsHelp')}
                 </p>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowImportModal(false)} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">
-                Cancel
+                {t('admin.crmLists.cancel')}
               </button>
               <button
                 onClick={handleCsvImport}
                 disabled={importing || !csvFile || !csvListId}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50"
               >
                 {importing ? '...' : t('admin.crmLists.importCSV')}
               </button>

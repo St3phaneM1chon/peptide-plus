@@ -232,12 +232,12 @@ export default function WorkflowAnalyticsPage() {
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Clock className="h-4 w-4 text-blue-500" />
+                <Clock className="h-4 w-4 text-teal-500" />
                 <span className="text-xs font-medium text-gray-500 uppercase">
                   {t('admin.crm.avgDuration') || 'Avg Duration'}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{formatDuration(s.avgDurationMs)}</p>
+              <p className="text-2xl font-bold text-teal-600">{formatDuration(s.avgDurationMs)}</p>
               <p className="text-xs text-gray-400 mt-0.5">{s.running} running</p>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function WorkflowAnalyticsPage() {
                         <td className="px-4 py-2.5 text-center text-gray-600">{w.total}</td>
                         <td className="px-4 py-2.5 text-center text-green-600 font-medium">{w.completed}</td>
                         <td className="px-4 py-2.5 text-center text-red-600 font-medium">{w.failed}</td>
-                        <td className="px-4 py-2.5 text-center text-blue-600">{w.running}</td>
+                        <td className="px-4 py-2.5 text-center text-teal-600">{w.running}</td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             w.total > 0 && (w.completed / w.total) >= 0.9

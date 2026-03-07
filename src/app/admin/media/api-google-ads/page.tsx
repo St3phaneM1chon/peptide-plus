@@ -125,7 +125,7 @@ export default function MediaGoogleAdsPage() {
   useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in Google Ads console.'); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -135,7 +135,7 @@ export default function MediaGoogleAdsPage() {
         // FIX: F35 - Use i18n for description instead of hardcoded English
         description={t('admin.media.googleDescription') || 'Connect Google Ads API + Merchant Center for Shopping campaigns, conversion tracking, and product feed sync.'}
         icon={<Search className="w-6 h-6" />}
-        color="from-blue-600 to-green-500"
+        color="from-teal-600 to-green-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

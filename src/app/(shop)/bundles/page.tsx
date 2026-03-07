@@ -50,7 +50,7 @@ export default function BundlesPage() {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ export default function BundlesPage() {
           </p>
           <a
             href="/products"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
           >
             Shop All Products
           </a>

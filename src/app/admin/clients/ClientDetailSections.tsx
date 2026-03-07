@@ -41,7 +41,7 @@ export function RoleManagementSection({ item, updateItem, t }: RoleManagementPro
         onChange={(e) => updateUserRole(e.target.value)}
         disabled={saving}
         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
-          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
         aria-label={t('admin.clients.role')}
       >
         <option value="PUBLIC">{t('admin.clients.rolePublic')}</option>

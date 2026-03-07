@@ -130,7 +130,7 @@ export default function ModulesPage() {
               className="flex items-center justify-between px-6 py-4 hover:bg-slate-50/50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-lg ${mod.enabled ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                <div className={`p-2 rounded-lg ${mod.enabled ? 'bg-teal-50 text-teal-600' : 'bg-slate-100 text-slate-400'}`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
@@ -149,7 +149,7 @@ export default function ModulesPage() {
                 aria-label={`Toggle ${t(mod.labelKey)}`}
               >
                 {mod.enabled ? (
-                  <ToggleRight className="w-8 h-8 text-blue-600" />
+                  <ToggleRight className="w-8 h-8 text-teal-600" />
                 ) : (
                   <ToggleLeft className="w-8 h-8 text-slate-300" />
                 )}

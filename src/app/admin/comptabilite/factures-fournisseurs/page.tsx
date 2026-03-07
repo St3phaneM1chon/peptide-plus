@@ -203,7 +203,7 @@ export default function FacturesFournisseursPage() {
       render: (invoice) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); }}
-          className="font-mono text-sm text-blue-600 hover:underline"
+          className="font-mono text-sm text-teal-600 hover:underline"
         >
           {invoice.invoiceNumber}
         </button>
@@ -260,7 +260,7 @@ export default function FacturesFournisseursPage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedInvoice(invoice)}
-            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
             title={t('admin.supplierInvoices.view')}
             aria-label={t('admin.supplierInvoices.view')}
           >

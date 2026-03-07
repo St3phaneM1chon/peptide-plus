@@ -35,7 +35,7 @@ interface KBResult {
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   NEW: { label: 'New', color: 'text-blue-600 bg-blue-50', icon: AlertTriangle },
-  OPEN: { label: 'Open', color: 'text-sky-600 bg-sky-50', icon: Clock },
+  OPEN: { label: 'Open', color: 'text-teal-600 bg-teal-50', icon: Clock },
   IN_PROGRESS: { label: 'In Progress', color: 'text-indigo-600 bg-indigo-50', icon: Clock },
   WAITING_CUSTOMER: { label: 'Awaiting Your Reply', color: 'text-yellow-600 bg-yellow-50', icon: AlertTriangle },
   WAITING_INTERNAL: { label: 'Under Review', color: 'text-amber-600 bg-amber-50', icon: Clock },
@@ -150,10 +150,10 @@ export default function CustomerPortalPage() {
         <button
           onClick={() => setActiveTab('tickets')}
           className={`p-4 rounded-xl border-2 text-left transition-all ${
-            activeTab === 'tickets' ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:border-slate-300 bg-white'
+            activeTab === 'tickets' ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-slate-300 bg-white'
           }`}
         >
-          <Ticket className="w-6 h-6 text-sky-600 mb-2" />
+          <Ticket className="w-6 h-6 text-teal-600 mb-2" />
           <h3 className="font-semibold text-slate-900">{t('portal.myTickets') || 'My Tickets'}</h3>
           <p className="text-sm text-slate-500 mt-1">{t('portal.myTicketsDesc') || 'View and track your requests'}</p>
         </button>
@@ -186,7 +186,7 @@ export default function CustomerPortalPage() {
               <h2 className="font-semibold text-slate-900">{t('portal.myTickets') || 'My Tickets'}</h2>
               <button
                 onClick={() => setActiveTab('create')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-sky-600 text-white text-sm rounded-lg hover:bg-sky-700"
+                className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700"
               >
                 <Plus className="w-4 h-4" />
                 {t('portal.newTicket') || 'New Ticket'}
@@ -201,7 +201,7 @@ export default function CustomerPortalPage() {
                 <p className="text-slate-500">{t('portal.noTickets') || 'No tickets yet'}</p>
                 <button
                   onClick={() => setActiveTab('create')}
-                  className="mt-3 text-sm text-sky-600 hover:text-sky-700"
+                  className="mt-3 text-sm text-teal-600 hover:text-teal-700"
                 >
                   {t('portal.createFirst') || 'Create your first ticket'}
                 </button>
@@ -314,7 +314,7 @@ export default function CustomerPortalPage() {
                   type="text"
                   value={formSubject}
                   onChange={(e) => setFormSubject(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
                   placeholder={t('portal.subjectPlaceholder') || 'Briefly describe your issue'}
                 />
               </div>
@@ -342,7 +342,7 @@ export default function CustomerPortalPage() {
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
                   placeholder={t('portal.descriptionPlaceholder') || 'Provide details about your request...'}
                 />
               </div>
@@ -351,7 +351,7 @@ export default function CustomerPortalPage() {
                 <button
                   onClick={handleSubmitTicket}
                   disabled={isSubmitting || !formSubject.trim()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
                 >
                   <Send className="w-4 h-4" />
                   {isSubmitting

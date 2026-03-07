@@ -678,7 +678,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.ccaClass}
                 onChange={(e) => handleCCAClassChange(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.selectClass')}</option>
                 {CCA_CLASSES.map((c) => (
@@ -696,7 +696,7 @@ export default function ImmobilisationsPage() {
                 <select
                   value={form.depreciationMethod}
                   onChange={(e) => setForm((f) => ({ ...f, depreciationMethod: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                 >
                   <option value="DECLINING_BALANCE">{t('admin.accounting.assets.methodDeclining')}</option>
                   <option value="STRAIGHT_LINE">{t('admin.accounting.assets.methodStraight')}</option>
@@ -744,7 +744,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.assetAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, assetAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -754,7 +754,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.depreciationAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, depreciationAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -764,7 +764,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.expenseAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, expenseAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}

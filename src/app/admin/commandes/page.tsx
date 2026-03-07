@@ -1420,10 +1420,10 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
       {/* Bulk Action Bar */}
       {showBulkBar && selectedOrderIds.size > 0 && (
         <div className="mx-4 lg:mx-6 mb-2 flex-shrink-0">
-          <div className="flex items-center gap-3 bg-sky-50 border border-sky-200 rounded-lg px-4 py-2.5">
+          <div className="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5">
             <div className="flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-sky-600" />
-              <span className="text-sm font-medium text-sky-800">
+              <CheckSquare className="w-4 h-4 text-teal-600" />
+              <span className="text-sm font-medium text-teal-800">
                 {t('admin.commandes.bulkSelected', { count: String(selectedOrderIds.size) })
                   || `${selectedOrderIds.size} order(s) selected`}
               </span>
@@ -1433,7 +1433,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               <select
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
-                className="h-8 px-2 rounded border border-sky-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="h-8 px-2 rounded border border-teal-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">{t('admin.commandes.bulkSelectStatus') || 'Change status to...'}</option>
                 {statusOptionValues.map(s => (
@@ -1467,7 +1467,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               <button
                 type="button"
                 onClick={() => selectAllFiltered()}
-                className="text-xs text-sky-700 hover:text-sky-900 hover:underline px-1"
+                className="text-xs text-teal-700 hover:text-teal-900 hover:underline px-1"
               >
                 {t('admin.commandes.bulkSelectAll') || 'Select all'}
               </button>
@@ -1475,7 +1475,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               <button
                 type="button"
                 onClick={clearSelection}
-                className="p-1 rounded hover:bg-sky-100 text-sky-600"
+                className="p-1 rounded hover:bg-teal-100 text-teal-600"
                 title={t('admin.commandes.cancel')}
               >
                 <X className="w-4 h-4" />
@@ -1517,7 +1517,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                   }}
                   className={`p-1.5 rounded transition-colors ${
                     selectedOrderIds.size > 0
-                      ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+                      ? 'text-teal-700 bg-teal-100 hover:bg-teal-200'
                       : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                   }`}
                   title={
@@ -1635,7 +1635,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                           updateOrderStatus(selectedOrder.id, newStatus);
                         }}
                         disabled={updating}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                       >
                         {statusOptionValues.map(s => (
                           <option key={s} value={s}>{s}</option>
@@ -1793,7 +1793,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                       <h3 className="font-semibold text-slate-900 mb-2">{t('admin.commandes.customerTitle')}</h3>
                       <p className="text-slate-700">{selectedOrder.userName}</p>
                       <p className="text-slate-500 text-sm">{selectedOrder.userEmail}</p>
-                      <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-sky-600 text-sm hover:underline">
+                      <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-teal-600 text-sm hover:underline">
                         {t('admin.commandes.viewProfile')} &rarr;
                       </Link>
                     </div>
@@ -1816,7 +1816,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                         <select
                           defaultValue={selectedOrder.carrier || ''}
                           onChange={(e) => updateTracking(selectedOrder.id, e.target.value, selectedOrder.trackingNumber || '')}
-                          className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                          className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                         >
                           <option value="">{t('admin.commandes.carrierSelect')}</option>
                           <option value="Postes Canada">{t('admin.commandes.carrierCanadaPost') || 'Canada Post'}</option>
@@ -2088,19 +2088,19 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
 
                   {/* Bridge #22: Commerce → Emails */}
                   {emailsBridge?.enabled && (emailsBridge.totalSent ?? 0) > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-teal-800 mb-3 flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         {t('admin.bridges.orderEmails')}
-                        <span className="text-xs font-normal text-blue-500 ms-auto">{emailsBridge.totalSent} {t('admin.bridges.totalEmails').toLowerCase()}</span>
+                        <span className="text-xs font-normal text-teal-500 ms-auto">{emailsBridge.totalSent} {t('admin.bridges.totalEmails').toLowerCase()}</span>
                       </h3>
                       <div className="space-y-1.5">
                         {emailsBridge.recentEmails?.map((email) => (
                           <div
                             key={email.id}
-                            className="flex items-center justify-between text-xs p-2 rounded-md bg-blue-100/50"
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-teal-100/50"
                           >
-                            <span className="text-blue-800 truncate">{email.subject}</span>
+                            <span className="text-teal-800 truncate">{email.subject}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                               email.status === 'delivered' || email.status === 'sent' ? 'bg-green-100 text-green-700' :
                               email.status === 'bounced' ? 'bg-red-100 text-red-700' :
@@ -2127,7 +2127,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                             className="flex items-center justify-between text-xs p-2 rounded-md bg-indigo-100/50"
                           >
                             <div className="flex items-center gap-2">
-                              <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-blue-600'}`}>
+                              <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-teal-600'}`}>
                                 {call.direction === 'inbound' ? '↓' : '↑'}
                               </span>
                               <span className="text-indigo-800">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
@@ -2326,8 +2326,8 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
         }
       >
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-sm text-blue-800">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+            <p className="text-sm text-teal-800">
               {t('admin.commandes.reshipInfo')}
             </p>
           </div>
@@ -2336,7 +2336,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
             <select
               value={reshipReason}
               onChange={(e) => setReshipReason(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               {reshipReasons.map((r) => (
                 <option key={r} value={r}>{r}</option>

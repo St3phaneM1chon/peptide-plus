@@ -116,7 +116,7 @@ export default function BundleDetailPage() {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ export default function BundleDetailPage() {
           </h2>
           <Link
             href="/bundles"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
           >
             Back to Bundles
           </Link>
@@ -217,7 +217,7 @@ export default function BundleDetailPage() {
             <div className="border-t pt-3 mt-3">
               <div className="flex items-baseline justify-between mb-2">
                 <span className="text-xl font-semibold text-gray-900">Bundle Price:</span>
-                <span className="text-3xl font-bold text-blue-600">
+                <span className="text-3xl font-bold text-teal-600">
                   ${bundle.bundlePrice.toFixed(2)}
                 </span>
               </div>
@@ -231,7 +231,7 @@ export default function BundleDetailPage() {
           <button
             onClick={handleAddBundleToCart}
             disabled={addingToCart}
-            className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-teal-600 text-white py-4 rounded-lg font-semibold text-lg hover:bg-teal-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {addingToCart ? (
               <>
@@ -273,7 +273,7 @@ export default function BundleDetailPage() {
                 return (
                   <div
                     key={item.id}
-                    className="flex gap-4 border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                    className="flex gap-4 border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors"
                   >
                     {/* Product Image */}
                     <div className="w-20 h-20 flex-shrink-0 relative bg-gray-100 rounded">
@@ -327,7 +327,7 @@ export default function BundleDetailPage() {
                           ${item.itemPrice.toFixed(2)}
                         </span>
                         <span className="text-sm text-gray-400">=</span>
-                        <span className="text-sm font-semibold text-blue-600">
+                        <span className="text-sm font-semibold text-teal-600">
                           ${item.itemTotal.toFixed(2)}
                         </span>
                       </div>
@@ -336,7 +336,7 @@ export default function BundleDetailPage() {
                     {/* View Product Link */}
                     <Link
                       href={`/products/${item.product.slug}`}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium self-start"
+                      className="text-teal-600 hover:text-teal-700 text-sm font-medium self-start"
                     >
                       View →
                     </Link>
@@ -352,7 +352,7 @@ export default function BundleDetailPage() {
       <div className="mt-12 text-center">
         <Link
           href="/bundles"
-          className="inline-block text-blue-600 hover:text-blue-700 font-medium"
+          className="inline-block text-teal-600 hover:text-teal-700 font-medium"
         >
           ← Back to All Bundles
         </Link>

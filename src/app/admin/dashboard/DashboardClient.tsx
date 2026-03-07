@@ -32,6 +32,8 @@ import {
   Megaphone,
   PhoneCall,
 } from 'lucide-react';
+import AIInsightsWidget from '@/components/admin/AIInsightsWidget';
+import MorningBriefingWidget from '@/components/admin/MorningBriefingWidget';
 
 // --------------------------------------------------
 // Types
@@ -158,8 +160,8 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
   // so raw enum values (PENDING, CONFIRMED, etc.) never appear in the UI
   const ORDER_STATUS_CONFIG: Record<string, { i18nKey: string; fallback: string; classes: string }> = {
     PENDING:    { i18nKey: 'admin.dashboard.orderStatus.pending',    fallback: 'Pending',    classes: 'bg-yellow-100 text-yellow-700' },
-    CONFIRMED:  { i18nKey: 'admin.dashboard.orderStatus.confirmed',  fallback: 'Confirmed',  classes: 'bg-sky-100 text-sky-700' },
-    PROCESSING: { i18nKey: 'admin.dashboard.orderStatus.processing', fallback: 'Processing', classes: 'bg-sky-100 text-sky-700' },
+    CONFIRMED:  { i18nKey: 'admin.dashboard.orderStatus.confirmed',  fallback: 'Confirmed',  classes: 'bg-teal-100 text-teal-700' },
+    PROCESSING: { i18nKey: 'admin.dashboard.orderStatus.processing', fallback: 'Processing', classes: 'bg-teal-100 text-teal-700' },
     SHIPPED:    { i18nKey: 'admin.dashboard.orderStatus.shipped',    fallback: 'Shipped',    classes: 'bg-indigo-100 text-indigo-700' },
     DELIVERED:  { i18nKey: 'admin.dashboard.orderStatus.delivered',  fallback: 'Delivered',  classes: 'bg-green-100 text-green-700' },
     CANCELLED:  { i18nKey: 'admin.dashboard.orderStatus.cancelled',  fallback: 'Cancelled',  classes: 'bg-red-100 text-red-700' },
@@ -214,7 +216,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
           </Link>
           <Link
             href="/admin/produits/nouveau"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg hover:bg-sky-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
           >
             <Package className="w-4 h-4" />
             {t('admin.dashboard.newProduct')}
@@ -228,7 +230,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
           label={t('admin.dashboard.totalOrders')}
           value={stats.totalOrders.toLocaleString(locale)}
           icon={<ShoppingCart className="w-5 h-5" />}
-          iconBg="bg-sky-100 text-sky-600"
+          iconBg="bg-teal-100 text-teal-600"
           href="/admin/commandes"
         />
         <StatCard
@@ -281,6 +283,12 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
         />
       </div>
 
+      {/* AI Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MorningBriefingWidget />
+        <AIInsightsWidget />
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <QuickAction
@@ -316,7 +324,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
             </div>
             <Link
               href="/admin/commandes"
-              className="inline-flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 font-medium"
+              className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium"
             >
               {t('admin.dashboard.viewAll')}
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -376,7 +384,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
             </div>
             <Link
               href="/admin/clients"
-              className="inline-flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 font-medium"
+              className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium"
             >
               {t('admin.dashboard.viewAll')}
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -412,14 +420,14 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                     user.role === 'CLIENT'
-                      ? 'bg-sky-100 text-sky-700'
+                      ? 'bg-teal-100 text-teal-700'
                       : 'bg-slate-100 text-slate-600'
                   }`}>
                     {user.role === 'CLIENT' ? t('admin.dashboard.clientB2B') : t('admin.dashboard.client')}
                   </span>
                   <Link
                     href={`/admin/clients`}
-                    className="p-1 text-slate-400 hover:text-sky-600 transition-colors"
+                    className="p-1 text-slate-400 hover:text-teal-600 transition-colors"
                     title={t('admin.dashboard.viewProfile')}
                   >
                     <Eye className="w-4 h-4" />
@@ -439,10 +447,10 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {crossModule.modules.crm && (
-              <Link href="/admin/crm/pipeline" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-200 hover:shadow-sm transition-all">
+              <Link href="/admin/crm/pipeline" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-teal-200 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
+                  <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-teal-600" />
                   </div>
                   <span className="font-medium text-slate-900">CRM</span>
                 </div>
@@ -517,10 +525,10 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
             )}
 
             {crossModule.modules.telephony && (
-              <Link href="/admin/telephonie/journal" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-sky-200 hover:shadow-sm transition-all">
+              <Link href="/admin/telephonie/journal" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-teal-200 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center">
-                    <PhoneCall className="w-5 h-5 text-sky-600" />
+                  <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+                    <PhoneCall className="w-5 h-5 text-teal-600" />
                   </div>
                   <span className="font-medium text-slate-900">{t('admin.dashboard.telephony') || 'Telephony'}</span>
                 </div>
@@ -567,7 +575,7 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="group relative bg-white rounded-xl p-5 border border-slate-200 hover:border-sky-200 hover:shadow-sm transition-all"
+      className="group relative bg-white rounded-xl p-5 border border-slate-200 hover:border-teal-200 hover:shadow-sm transition-all"
     >
       {alert && (
         <span className="absolute top-3 end-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
@@ -581,7 +589,7 @@ function StatCard({
           <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
         </div>
       </div>
-      <TrendingUp className="absolute bottom-3 end-3 w-4 h-4 text-slate-200 group-hover:text-sky-300 transition-colors" />
+      <TrendingUp className="absolute bottom-3 end-3 w-4 h-4 text-slate-200 group-hover:text-teal-300 transition-colors" />
     </Link>
   );
 }
@@ -602,9 +610,9 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="bg-white rounded-xl p-4 border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all flex items-center gap-3 group"
+      className="bg-white rounded-xl p-4 border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all flex items-center gap-3 group"
     >
-      <div className="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center text-sky-600 group-hover:bg-sky-100 transition-colors flex-shrink-0">
+      <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center text-teal-600 group-hover:bg-teal-100 transition-colors flex-shrink-0">
         {icon}
       </div>
       <span className="font-medium text-slate-900 text-sm">{title}</span>

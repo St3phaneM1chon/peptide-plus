@@ -86,7 +86,7 @@ export default function AgentPerformancePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="h-6 w-6 text-blue-600" />
+            <Users className="h-6 w-6 text-teal-600" />
             {t('admin.crm.agentPerformance') || 'Agent Performance'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">Track individual and team metrics</p>
@@ -94,7 +94,7 @@ export default function AgentPerformancePage() {
         <div className="flex gap-2">
           {(['today', 'week', 'month'] as const).map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-sm rounded-md ${period === p ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              className={`px-3 py-1.5 text-sm rounded-md ${period === p ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
               {p === 'today' ? 'Today' : p === 'week' ? 'This Week' : 'This Month'}
             </button>
           ))}
@@ -103,7 +103,7 @@ export default function AgentPerformancePage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-5 gap-4 mb-6">
-        <SummaryCard icon={<Phone className="h-5 w-5 text-blue-500" />} label="Total Calls" value={totals.calls.toString()} />
+        <SummaryCard icon={<Phone className="h-5 w-5 text-teal-500" />} label="Total Calls" value={totals.calls.toString()} />
         <SummaryCard icon={<TrendingUp className="h-5 w-5 text-green-500" />} label="Connected" value={totals.connected.toString()} sub={totals.calls > 0 ? `${Math.round((totals.connected / totals.calls) * 100)}% rate` : '0%'} />
         <SummaryCard icon={<BarChart3 className="h-5 w-5 text-purple-500" />} label="Conversions" value={totals.conversions.toString()} />
         <SummaryCard icon={<DollarSign className="h-5 w-5 text-emerald-500" />} label="Revenue" value={formatCurrency(totals.revenue)} />
@@ -120,7 +120,7 @@ export default function AgentPerformancePage() {
           { key: 'contactRate', label: 'Contact Rate' },
         ] as const).map(s => (
           <button key={s.key} onClick={() => setSortBy(s.key)}
-            className={`px-2 py-1 text-xs rounded ${sortBy === s.key ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+            className={`px-2 py-1 text-xs rounded ${sortBy === s.key ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-500'}`}>
             {s.label}
           </button>
         ))}
@@ -129,7 +129,7 @@ export default function AgentPerformancePage() {
       {/* Agent Table */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : agents.length === 0 ? (
         <div className="text-center text-gray-400 py-16">

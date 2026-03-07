@@ -117,7 +117,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-green-600">{uptime}%</div>
             <div className="text-xs text-slate-500">Uptime (30j)</div>
           </div>
-          <button onClick={refreshHealth} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">
+          <button onClick={refreshHealth} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium">
             Actualiser
           </button>
         </div>
@@ -173,7 +173,7 @@ export default function MonitoringPage() {
       {/* Route Performance */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-blue-500" />
+          <Activity className="w-5 h-5 text-teal-500" />
           Performance par route
         </h2>
         <div className="overflow-x-auto">

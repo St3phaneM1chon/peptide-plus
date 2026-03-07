@@ -6,9 +6,12 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import {
   ArrowLeft, Phone, Mail, Building2, Tag,
-  Flame, Thermometer, Snowflake, ShieldAlert, MessageSquare,
+  Flame, Thermometer, Snowflake, ShieldAlert,
   Target,
 } from 'lucide-react';
+import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
+import { ScoreBreakdown } from '@/components/admin/crm/ScoreBreakdown';
+import { InlineEdit } from '@/components/admin/crm/InlineEdit';
 
 interface LeadDetail {
   id: string;
@@ -38,13 +41,20 @@ interface LeadDetail {
   }>;
 }
 
-// NextAction type used inline from API response
-
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-700', CONTACTED: 'bg-yellow-100 text-yellow-700',
+  NEW: 'bg-teal-100 text-teal-700', CONTACTED: 'bg-yellow-100 text-yellow-700',
   QUALIFIED: 'bg-green-100 text-green-700', UNQUALIFIED: 'bg-gray-100 text-gray-600',
   CONVERTED: 'bg-purple-100 text-purple-700', LOST: 'bg-red-100 text-red-700',
 };
+
+const STATUS_OPTIONS = [
+  { value: 'NEW', label: 'New' },
+  { value: 'CONTACTED', label: 'Contacted' },
+  { value: 'QUALIFIED', label: 'Qualified' },
+  { value: 'UNQUALIFIED', label: 'Unqualified' },
+  { value: 'CONVERTED', label: 'Converted' },
+  { value: 'LOST', label: 'Lost' },
+];
 
 export default function LeadDetailPage() {
   const { t, locale } = useI18n();
@@ -79,18 +89,42 @@ export default function LeadDetailPage() {
       const res = await fetch(`/api/admin/crm/leads/${leadId}/score`, { method: 'POST' });
       const json = await res.json();
       if (json.success) {
-        toast.success(`Score updated: ${json.data.score}`);
+        toast.success(`Score: ${json.data.score}`);
         fetchLead();
       } else toast.error(json.error?.message || 'Scoring failed');
     } catch { toast.error('Network error'); }
     finally { setScoring(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" /></div>;
+  const updateField = useCallback(async (field: string, value: string) => {
+    try {
+      const res = await fetch(`/api/admin/crm/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value || null }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(t('common.saved') || 'Saved');
+        fetchLead();
+      } else {
+        toast.error(json.error?.message || 'Update failed');
+        throw new Error('Update failed');
+      }
+    } catch (e) {
+      if (!(e instanceof Error && e.message === 'Update failed')) toast.error('Network error');
+      throw e;
+    }
+  }, [leadId, fetchLead, t]);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   if (!lead) return <div className="p-8 text-center text-gray-500">Lead not found</div>;
 
   const TempIcon = lead.temperature === 'HOT' ? Flame : lead.temperature === 'WARM' ? Thermometer : Snowflake;
   const tempColor = lead.temperature === 'HOT' ? 'text-red-500' : lead.temperature === 'WARM' ? 'text-orange-500' : 'text-blue-400';
+
+  // Find last activity date for score breakdown
+  const lastActivityAt = lead.activities.length > 0 ? lead.activities[0].createdAt : null;
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -119,7 +153,7 @@ export default function LeadDetailPage() {
             </button>
           )}
           {lead.email && (
-            <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+            <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100">
               <Mail className="h-4 w-4" /> {t('admin.crm.sendEmail') || 'Email'}
             </button>
           )}
@@ -134,55 +168,12 @@ export default function LeadDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Score Card */}
-          <div className="bg-white rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.leadScore') || 'Lead Score'}</h3>
-              <button onClick={recalculateScore} disabled={scoring} className="text-xs text-blue-600 hover:underline disabled:opacity-50">
-                {scoring ? '...' : t('admin.crm.recalculate') || 'Recalculate'}
-              </button>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20">
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E5E7EB" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none" stroke={lead.score >= 70 ? '#10B981' : lead.score >= 40 ? '#F59E0B' : '#6B7280'}
-                    strokeWidth="3" strokeDasharray={`${lead.score}, 100`} />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold">{lead.score}</span>
-                </div>
-              </div>
-              <div className="flex-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <TempIcon className={`h-4 w-4 ${tempColor}`} />
-                  <span className="font-medium">{lead.temperature}</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-1">Source: {lead.source}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Activity Timeline */}
-          <div className="bg-white rounded-lg border p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.timeline') || 'Timeline'}</h3>
-            <div className="space-y-3">
-              {lead.activities.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No activities yet</p>}
-              {lead.activities.map(a => (
-                <div key={a.id} className="flex gap-3 text-sm">
-                  <div className="mt-0.5 p-1.5 rounded-full bg-gray-100">
-                    <MessageSquare className="h-3.5 w-3.5 text-gray-500" />
-                  </div>
-                  <div>
-                    <p className="text-gray-900">{a.title}</p>
-                    {a.description && <p className="text-xs text-gray-500">{a.description}</p>}
-                    <p className="text-xs text-gray-400 mt-0.5">{a.performedBy.name || a.performedBy.email} - {new Date(a.createdAt).toLocaleString(locale)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Activity Timeline (new component) */}
+          <ActivityTimeline
+            activities={lead.activities}
+            leadId={leadId}
+            onActivityAdded={fetchLead}
+          />
 
           {/* Tasks */}
           {lead.tasks.length > 0 && (
@@ -191,7 +182,7 @@ export default function LeadDetailPage() {
               <div className="space-y-2">
                 {lead.tasks.map(task => (
                   <div key={task.id} className="flex items-center gap-3 p-2 rounded bg-gray-50">
-                    <div className={`w-2 h-2 rounded-full ${task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                    <div className={`w-2 h-2 rounded-full ${task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : 'bg-teal-500'}`} />
                     <span className={`text-sm flex-1 ${task.status === 'COMPLETED' ? 'line-through text-gray-400' : ''}`}>{task.title}</span>
                     <span className="text-xs text-gray-400">{task.type}</span>
                     {task.dueAt && <span className="text-xs text-gray-400">{new Date(task.dueAt).toLocaleDateString(locale)}</span>}
@@ -204,16 +195,91 @@ export default function LeadDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Info */}
-          <div className="bg-white rounded-lg border p-4 space-y-2 text-sm">
-            <h3 className="font-semibold text-gray-700 mb-2">{t('admin.crm.details') || 'Details'}</h3>
-            <div className="flex justify-between"><span className="text-gray-500">Source</span><span>{lead.source}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Assigned</span><span>{lead.assignedTo?.name || lead.assignedTo?.email || '-'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Timezone</span><span>{lead.timezone || '-'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Language</span><span>{lead.preferredLang || '-'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Created</span><span>{new Date(lead.createdAt).toLocaleDateString(locale)}</span></div>
-            {lead.lastContactedAt && <div className="flex justify-between"><span className="text-gray-500">Last Contact</span><span>{new Date(lead.lastContactedAt).toLocaleDateString(locale)}</span></div>}
-            {lead.nextFollowUpAt && <div className="flex justify-between"><span className="text-gray-500">Next Follow-up</span><span>{new Date(lead.nextFollowUpAt).toLocaleDateString(locale)}</span></div>}
+          {/* Score Breakdown (new component) */}
+          <ScoreBreakdown
+            score={lead.score}
+            temperature={lead.temperature}
+            email={lead.email}
+            phone={lead.phone}
+            companyName={lead.companyName}
+            lastContactedAt={lead.lastContactedAt}
+            lastActivityAt={lastActivityAt}
+            source={lead.source}
+            onRecalculate={recalculateScore}
+            recalculating={scoring}
+          />
+
+          {/* Details with inline edit */}
+          <div className="bg-white rounded-lg border p-4 space-y-2.5">
+            <h3 className="font-semibold text-gray-700 text-sm mb-2">{t('admin.crm.details') || 'Details'}</h3>
+            <InlineEdit
+              label="Email"
+              value={lead.email || ''}
+              type="email"
+              onSave={v => updateField('email', v)}
+            />
+            <InlineEdit
+              label={t('admin.crm.phone') || 'Phone'}
+              value={lead.phone || ''}
+              type="tel"
+              onSave={v => updateField('phone', v)}
+            />
+            <InlineEdit
+              label={t('admin.crm.company') || 'Company'}
+              value={lead.companyName || ''}
+              onSave={v => updateField('companyName', v)}
+            />
+            <InlineEdit
+              label="Source"
+              value={lead.source}
+              type="select"
+              options={[
+                { value: 'WEB', label: 'Web' },
+                { value: 'REFERRAL', label: 'Referral' },
+                { value: 'IMPORT', label: 'Import' },
+                { value: 'CAMPAIGN', label: 'Campaign' },
+                { value: 'MANUAL', label: 'Manual' },
+                { value: 'PARTNER', label: 'Partner' },
+              ]}
+              onSave={v => updateField('source', v)}
+            />
+            <InlineEdit
+              label="Status"
+              value={lead.status}
+              type="select"
+              options={STATUS_OPTIONS}
+              onSave={v => updateField('status', v)}
+            />
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">{t('admin.crm.assignedTo') || 'Assigned'}</span>
+              <span>{lead.assignedTo?.name || lead.assignedTo?.email || '-'}</span>
+            </div>
+            <InlineEdit
+              label="Timezone"
+              value={lead.timezone || ''}
+              onSave={v => updateField('timezone', v)}
+            />
+            <InlineEdit
+              label={t('admin.crm.language') || 'Language'}
+              value={lead.preferredLang || ''}
+              onSave={v => updateField('preferredLang', v)}
+            />
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">{t('common.createdAt') || 'Created'}</span>
+              <span className="text-gray-900">{new Date(lead.createdAt).toLocaleDateString(locale)}</span>
+            </div>
+            {lead.lastContactedAt && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">{t('admin.crm.lastContact') || 'Last Contact'}</span>
+                <span>{new Date(lead.lastContactedAt).toLocaleDateString(locale)}</span>
+              </div>
+            )}
+            {lead.nextFollowUpAt && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">{t('admin.crm.nextFollowUp') || 'Next Follow-up'}</span>
+                <span>{new Date(lead.nextFollowUpAt).toLocaleDateString(locale)}</span>
+              </div>
+            )}
           </div>
 
           {/* Deals */}
@@ -224,7 +290,10 @@ export default function LeadDetailPage() {
                 {lead.deals.map(deal => (
                   <button key={deal.id} onClick={() => router.push(`/admin/crm/deals/${deal.id}`)}
                     className="w-full flex items-center justify-between p-2 rounded bg-gray-50 hover:bg-gray-100 text-sm">
-                    <span>{deal.title}</span>
+                    <div className="flex items-center gap-2">
+                      {deal.stage?.color && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: deal.stage.color }} />}
+                      <span>{deal.title}</span>
+                    </div>
                     <span className="text-green-700 font-medium">{fmt(deal.value)}</span>
                   </button>
                 ))}

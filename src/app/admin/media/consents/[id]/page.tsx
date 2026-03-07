@@ -161,7 +161,7 @@ export default function AdminConsentDetailPage() {
           )}
           <div>
             <span className="text-gray-500">{t('admin.consents.consentType')}:</span>{' '}
-            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
+            <span className="bg-teal-50 text-teal-700 px-2 py-0.5 rounded text-xs">
               {t(`consentType.${consent.type}`)}
             </span>
           </div>
@@ -228,7 +228,7 @@ export default function AdminConsentDetailPage() {
           </div>
           {consent.requestedAt && (
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-3.5 w-3.5 text-blue-400" />
+              <RefreshCw className="h-3.5 w-3.5 text-teal-400" />
               <span className="text-gray-500">{t('admin.consents.requested')}:</span>
               <span>{new Date(consent.requestedAt).toLocaleString(locale)}</span>
             </div>

@@ -32,7 +32,7 @@ const CATEGORIES = ['general', 'email', 'sms', 'chat'] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
   general: 'bg-gray-100 text-gray-700',
-  email: 'bg-blue-100 text-blue-700',
+  email: 'bg-teal-100 text-teal-700',
   sms: 'bg-green-100 text-green-700',
   chat: 'bg-purple-100 text-purple-700',
 };
@@ -209,7 +209,7 @@ export default function SnippetsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-blue-600" />
+            <FileText className="h-6 w-6 text-teal-600" />
             {t('admin.crm.snippets') || 'Snippets'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -218,7 +218,7 @@ export default function SnippetsPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           {t('admin.crm.snippets.new') || 'New Snippet'}
@@ -234,13 +234,13 @@ export default function SnippetsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('admin.crm.snippets.searchPlaceholder') || 'Search snippets...'}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">{t('admin.crm.snippets.allCategories') || 'All Categories'}</option>
           {CATEGORIES.map((cat) => (
@@ -254,7 +254,7 @@ export default function SnippetsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : snippets.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
@@ -321,7 +321,7 @@ export default function SnippetsPage() {
                   </button>
                   <button
                     onClick={() => openEdit(snippet)}
-                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-blue-600"
+                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-teal-600"
                     title={t('common.edit') || 'Edit'}
                   >
                     <Edit className="h-4 w-4" />
@@ -369,7 +369,7 @@ export default function SnippetsPage() {
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 placeholder={t('admin.crm.snippets.titlePlaceholder') || 'e.g. Greeting Template'}
                 autoFocus
               />
@@ -383,7 +383,7 @@ export default function SnippetsPage() {
               <textarea
                 value={form.content}
                 onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 rows={5}
                 placeholder={t('admin.crm.snippets.contentPlaceholder') || 'Write your snippet content here...'}
               />
@@ -401,7 +401,7 @@ export default function SnippetsPage() {
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -418,7 +418,7 @@ export default function SnippetsPage() {
                   type="text"
                   value={form.shortcut}
                   onChange={(e) => setForm((f) => ({ ...f, shortcut: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="/greet"
                 />
               </div>
@@ -431,7 +431,7 @@ export default function SnippetsPage() {
                 id="snippetActive"
                 checked={form.isActive}
                 onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
               />
               <label htmlFor="snippetActive" className="text-sm text-gray-700">
                 {t('admin.crm.snippets.activeLabel') || 'Active'}
@@ -449,7 +449,7 @@ export default function SnippetsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
               >
                 {saving
                   ? (t('common.saving') || 'Saving...')

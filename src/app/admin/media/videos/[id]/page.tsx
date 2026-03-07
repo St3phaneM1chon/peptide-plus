@@ -468,7 +468,7 @@ export default function VideoDetailPage() {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -477,13 +477,13 @@ export default function VideoDetailPage() {
     return (
       <div className="p-6 max-w-3xl space-y-4">
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1">
+          <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1">
             <House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}
           </Link>
           <ChevronRight className="w-3 h-3" />
-          <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+          <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
           <ChevronRight className="w-3 h-3" />
-          <Link href="/admin/media/videos" className="hover:text-sky-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
+          <Link href="/admin/media/videos" className="hover:text-teal-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
         </nav>
         <div className="text-center py-16">
           <VideoIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -491,7 +491,7 @@ export default function VideoDetailPage() {
           <p className="text-sm text-slate-500 mt-1">{t('admin.media.videoNotFoundDesc') || 'The video you are looking for does not exist or has been deleted.'}</p>
           <Link
             href="/admin/media/videos"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('admin.media.backToVideos') || 'Back to Videos'}
@@ -519,13 +519,13 @@ export default function VideoDetailPage() {
     <div className="p-6 max-w-6xl space-y-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1">
+        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1">
           <House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}
         </Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media/videos" className="hover:text-sky-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
+        <Link href="/admin/media/videos" className="hover:text-teal-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium truncate max-w-[200px]">{video.title}</span>
       </nav>
@@ -571,7 +571,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 value={getFormValue('title', video.title)}
                 onChange={e => setField('title', e.target.value)}
                 required
@@ -598,7 +598,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.descriptionLabel') || 'Description'}
               </label>
               <textarea
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 rows={4}
                 value={getFormValue('description', video.description || '')}
                 onChange={e => setField('description', e.target.value)}
@@ -612,7 +612,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 placeholder="https://youtube.com/watch?v=..."
                 value={getFormValue('videoUrl', video.videoUrl || '')}
                 onChange={e => setField('videoUrl', e.target.value)}
@@ -626,7 +626,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 placeholder="https://..."
                 value={getFormValue('thumbnailUrl', video.thumbnailUrl || '')}
                 onChange={e => setField('thumbnailUrl', e.target.value)}
@@ -651,7 +651,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 placeholder="https://..."
                 value={getFormValue('sourceUrl', video.sourceUrl || '')}
                 onChange={e => setField('sourceUrl', e.target.value)}
@@ -666,7 +666,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 placeholder="e.g. 12:30"
                 value={getFormValue('duration', video.duration || '')}
                 onChange={e => setField('duration', e.target.value)}
@@ -686,7 +686,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.contentTypeLabel') || 'Content Type'}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
                 value={getFormValue('contentType', video.contentType)}
                 onChange={e => setField('contentType', e.target.value)}
               >
@@ -702,7 +702,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.sourceLabel') || 'Source'}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
                 value={getFormValue('source', video.source)}
                 onChange={e => setField('source', e.target.value)}
               >
@@ -718,7 +718,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.videoCategoryLabel') || 'Video Category'}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
                 value={getFormValue('videoCategoryId', video.videoCategoryId || '')}
                 onChange={e => setField('videoCategoryId', e.target.value || null)}
               >
@@ -735,7 +735,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.statusLabel') || 'Status'}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
                 value={getFormValue('status', video.status)}
                 onChange={e => setField('status', e.target.value)}
               >
@@ -752,7 +752,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.visibilityLabel') || 'Visibility'}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
                 value={getFormValue('visibility', video.visibility)}
                 onChange={e => setField('visibility', e.target.value)}
               >
@@ -769,7 +769,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
                 value={getFormValue('instructor', video.instructor || '')}
                 onChange={e => setField('instructor', e.target.value)}
               />
@@ -780,7 +780,7 @@ export default function VideoDetailPage() {
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                   checked={getFormValue('isPublished', video.isPublished) as boolean}
                   onChange={e => setField('isPublished', e.target.checked)}
                 />
@@ -790,7 +790,7 @@ export default function VideoDetailPage() {
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                   checked={getFormValue('isFeatured', video.isFeatured) as boolean}
                   onChange={e => setField('isFeatured', e.target.checked)}
                 />
@@ -809,7 +809,7 @@ export default function VideoDetailPage() {
                   href={video.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 mt-1"
+                  className="inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 mt-1"
                 >
                   <ExternalLink className="w-3 h-3" />
                   {t('admin.media.openVideo') || 'Open video'}
@@ -829,7 +829,7 @@ export default function VideoDetailPage() {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t('common.save') || 'Save Changes'}
@@ -873,7 +873,7 @@ export default function VideoDetailPage() {
           <input
             ref={tagInputRef}
             type="text"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
             placeholder={t('admin.media.addTagPlaceholder') || 'Type a tag and press Enter'}
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
@@ -889,7 +889,7 @@ export default function VideoDetailPage() {
           <button
             onClick={saveTags}
             disabled={savingTags}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50"
           >
             {savingTags ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t('admin.media.saveTags') || 'Save Tags'}
@@ -918,16 +918,16 @@ export default function VideoDetailPage() {
                 key={placement}
                 className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
                   active
-                    ? 'bg-sky-50 border-sky-200 text-sky-800'
+                    ? 'bg-teal-50 border-teal-200 text-teal-800'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
                 {toggling ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-500 flex-shrink-0" />
+                  <Loader2 className="w-4 h-4 animate-spin text-teal-500 flex-shrink-0" />
                 ) : (
                   <input
                     type="checkbox"
-                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 flex-shrink-0"
+                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 flex-shrink-0"
                     checked={active}
                     onChange={() => togglePlacement(placement)}
                   />
@@ -1128,7 +1128,7 @@ export default function VideoDetailPage() {
                 <button
                   onClick={handleRequestConsent}
                   disabled={requestingConsent}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-sky-300 text-sky-700 rounded-lg text-sm hover:bg-sky-50 disabled:opacity-50 mt-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-teal-300 text-teal-700 rounded-lg text-sm hover:bg-teal-50 disabled:opacity-50 mt-2"
                 >
                   {requestingConsent ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                   {t('admin.media.requestConsent') || 'Request Consent'}
@@ -1215,11 +1215,11 @@ export default function VideoDetailPage() {
               <Youtube className="w-5 h-5 text-red-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-green-800">{t('admin.media.publishedYouTube') || 'Published to YouTube!'}</p>
-                <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-600 hover:underline truncate block">
+                <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline truncate block">
                   {ytResult.youtubeUrl}
                 </a>
               </div>
-              <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg">
+              <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg">
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
@@ -1262,7 +1262,7 @@ export default function VideoDetailPage() {
                   type="text"
                   value={ytForm.title}
                   onChange={e => setYtForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
                   maxLength={100}
                 />
               </div>
@@ -1276,7 +1276,7 @@ export default function VideoDetailPage() {
                   value={ytForm.description}
                   onChange={e => setYtForm(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400 resize-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400 resize-none"
                   maxLength={5000}
                 />
               </div>
@@ -1290,7 +1290,7 @@ export default function VideoDetailPage() {
                   type="text"
                   value={ytForm.tags}
                   onChange={e => setYtForm(prev => ({ ...prev, tags: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
                   placeholder="peptides, research, biocycle"
                 />
               </div>
@@ -1303,7 +1303,7 @@ export default function VideoDetailPage() {
                 <select
                   value={ytForm.privacyStatus}
                   onChange={e => setYtForm(prev => ({ ...prev, privacyStatus: e.target.value as 'public' | 'unlisted' | 'private' }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
                 >
                   <option value="unlisted">{t('admin.media.ytUnlisted') || 'Unlisted'}</option>
                   <option value="public">{t('admin.media.ytPublic') || 'Public'}</option>
@@ -1376,7 +1376,7 @@ export default function VideoDetailPage() {
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {t('common.save') || 'Save Changes'}

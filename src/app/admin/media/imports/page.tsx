@@ -41,7 +41,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, { icon: React.ReactNode; bg: string; text: string }> = {
   pending: { icon: <Clock className="h-3 w-3" />, bg: 'bg-gray-100', text: 'text-gray-700' },
-  downloading: { icon: <Download className="h-3 w-3 animate-pulse" />, bg: 'bg-blue-100', text: 'text-blue-700' },
+  downloading: { icon: <Download className="h-3 w-3 animate-pulse" />, bg: 'bg-teal-100', text: 'text-teal-700' },
   processing: { icon: <Loader2 className="h-3 w-3 animate-spin" />, bg: 'bg-yellow-100', text: 'text-yellow-700' },
   completed: { icon: <CheckCircle2 className="h-3 w-3" />, bg: 'bg-green-100', text: 'text-green-700' },
   failed: { icon: <XCircle className="h-3 w-3" />, bg: 'bg-red-100', text: 'text-red-700' },
@@ -223,7 +223,7 @@ export default function RecordingImportsPage() {
             <button
               onClick={handleBulkImport}
               disabled={actionLoading === 'bulk'}
-              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 disabled:opacity-50"
             >
               {actionLoading === 'bulk' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,7 +255,7 @@ export default function RecordingImportsPage() {
           <select
             value={filterPlatform}
             onChange={(e) => { setFilterPlatform(e.target.value); setPage(1); }}
-            className="rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="rounded-md border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500"
           >
             <option value="">{t('admin.recordingImports.filterAll')} - {t('admin.recordingImports.filterPlatform')}</option>
             {Object.entries(PLATFORM_LABELS).map(([k, v]) => (
@@ -265,7 +265,7 @@ export default function RecordingImportsPage() {
           <select
             value={filterStatus}
             onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-            className="rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="rounded-md border-gray-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500"
           >
             <option value="">{t('admin.recordingImports.filterAll')} - {t('admin.consents.statusColumn')}</option>
             {Object.keys(STATUS_STYLES).map((s) => (
@@ -290,7 +290,7 @@ export default function RecordingImportsPage() {
           </p>
           <Link
             href="/admin/media/connections"
-            className="mt-4 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
           >
             {t('admin.platformConnections.title')}
           </Link>
@@ -414,7 +414,7 @@ export default function RecordingImportsPage() {
                             <button
                               onClick={() => handleImport(imp.id)}
                               disabled={actionLoading === imp.id}
-                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                              className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 disabled:opacity-50"
                             >
                               {actionLoading === imp.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />

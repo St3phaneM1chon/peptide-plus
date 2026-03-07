@@ -213,7 +213,7 @@ export default function ExportsPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadHistory} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">{t('admin.exports.retry')}</button>
+        <button onClick={loadHistory} className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg">{t('admin.exports.retry')}</button>
       </div>
     );
   }
@@ -361,7 +361,7 @@ export default function ExportsPage() {
 
         <SectionCard theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
+            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
             <div>
               <h3 className="font-medium text-slate-900">Sage 50</h3>
               <p className="text-xs text-slate-500">{t('admin.exports.manualExport')}</p>

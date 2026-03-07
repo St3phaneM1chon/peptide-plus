@@ -148,8 +148,8 @@ export default function SmsTemplatesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-teal-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.smsTemplates') || 'SMS Templates'}</h1>
@@ -157,7 +157,7 @@ export default function SmsTemplatesPage() {
           </div>
         </div>
         <button onClick={() => { setShowCreate(true); setEditingId(null); setForm({ name: '', body: '', variables: '' }); }}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700">
           <Plus className="h-4 w-4" /> {t('admin.crm.newTemplate') || 'New Template'}
         </button>
       </div>
@@ -199,7 +199,7 @@ export default function SmsTemplatesPage() {
 
       {/* Template List */}
       {loading ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" /></div>
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>
       ) : filteredTemplates.length === 0 ? (
         <div className="text-center py-12 text-gray-400 bg-white rounded-lg border border-dashed">
           <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-40" />
@@ -228,7 +228,7 @@ export default function SmsTemplatesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-0.5">
-                      <button onClick={() => setPreviewId(isPreview ? null : tpl.id)} className="p-1.5 hover:bg-blue-50 rounded text-blue-500" title={t('admin.crm.preview') || 'Preview'}>
+                      <button onClick={() => setPreviewId(isPreview ? null : tpl.id)} className="p-1.5 hover:bg-teal-50 rounded text-teal-500" title={t('admin.crm.preview') || 'Preview'}>
                         <Eye className="h-4 w-4" />
                       </button>
                       <button onClick={() => copyToClipboard(tpl.body)} className="p-1.5 hover:bg-gray-100 rounded text-gray-400" title={t('admin.crm.copy') || 'Copy'}>
@@ -250,7 +250,7 @@ export default function SmsTemplatesPage() {
                   <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 whitespace-pre-wrap">
                     {isPreview ? (
                       <div>
-                        <div className="flex items-center gap-1 mb-1 text-xs text-blue-600 font-medium">
+                        <div className="flex items-center gap-1 mb-1 text-xs text-teal-600 font-medium">
                           <Eye className="h-3 w-3" /> {t('admin.crm.livePreview') || 'Live Preview'}
                         </div>
                         <p>{previewText}</p>
@@ -264,7 +264,7 @@ export default function SmsTemplatesPage() {
                   {tpl.variables.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {tpl.variables.map(v => (
-                        <span key={v} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full flex items-center gap-0.5">
+                        <span key={v} className="px-2 py-0.5 bg-teal-50 text-teal-700 text-xs rounded-full flex items-center gap-0.5">
                           <Variable className="h-3 w-3" /> {`{{${v}}}`}
                         </span>
                       ))}
@@ -293,7 +293,7 @@ export default function SmsTemplatesPage() {
               <div>
                 <label className="block text-sm font-medium mb-1">{t('common.name') || 'Name'} *</label>
                 <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none" autoFocus placeholder="e.g. Welcome message" />
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none" autoFocus placeholder="e.g. Welcome message" />
               </div>
 
               {/* Body + Preview side by side */}
@@ -301,7 +301,7 @@ export default function SmsTemplatesPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1">{t('admin.crm.messageBody') || 'Message Body'} *</label>
                   <textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-                    className="w-full border rounded-md px-3 py-2 text-sm font-mono resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none" rows={6}
+                    className="w-full border rounded-md px-3 py-2 text-sm font-mono resize-none focus:ring-2 focus:ring-teal-400 focus:outline-none" rows={6}
                     placeholder={'Hi {{firstName}}, your order {{orderNumber}} is ready!'} />
                   <div className="flex items-center justify-between mt-1">
                     <p className={`text-xs ${form.body.length > 160 ? 'text-orange-600' : 'text-gray-400'}`}>
@@ -311,7 +311,7 @@ export default function SmsTemplatesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                    <Eye className="h-3.5 w-3.5 text-blue-500" /> {t('admin.crm.livePreview') || 'Live Preview'}
+                    <Eye className="h-3.5 w-3.5 text-teal-500" /> {t('admin.crm.livePreview') || 'Live Preview'}
                   </label>
                   <div className="bg-gray-50 border rounded-md px-3 py-2 text-sm min-h-[150px] whitespace-pre-wrap">
                     {formPreview || <span className="text-gray-400 italic">{t('admin.crm.typeToPreview') || 'Type to see preview...'}</span>}
@@ -330,7 +330,7 @@ export default function SmsTemplatesPage() {
                   </label>
                   <div className="flex flex-wrap gap-1">
                     {autoDetectedVars.map(v => (
-                      <span key={v} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">{`{{${v}}}`}</span>
+                      <span key={v} className="px-2 py-0.5 bg-teal-50 text-teal-700 text-xs rounded-full">{`{{${v}}}`}</span>
                     ))}
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export default function SmsTemplatesPage() {
                 {t('common.cancel') || 'Cancel'}
               </button>
               <button onClick={saveTemplate} disabled={saving || !form.name.trim() || !form.body.trim()}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
+                className="px-4 py-2 text-sm text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50 flex items-center gap-1">
                 {saving ? '...' : <><Check className="h-4 w-4" /> {editingId ? (t('common.save') || 'Save') : (t('common.create') || 'Create')}</>}
               </button>
             </div>

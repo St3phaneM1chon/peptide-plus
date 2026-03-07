@@ -139,7 +139,7 @@ export default function ConferenceClient() {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
         </div>
       ) : rooms.length === 0 ? (
         <EmptyState
@@ -222,7 +222,7 @@ export default function ConferenceClient() {
                   type="text"
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   placeholder={t('admin.telephonie.conference.roomNamePlaceholder')}
                   autoFocus
                 />
@@ -238,7 +238,7 @@ export default function ConferenceClient() {
                   onChange={(e) => setNewRoomMax(Number(e.target.value))}
                   min={2}
                   max={50}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>

@@ -112,7 +112,7 @@ const PLATFORM_DESC_KEYS: Record<string, string> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  zoom: 'border-blue-500 bg-blue-50',
+  zoom: 'border-teal-500 bg-teal-50',
   teams: 'border-purple-500 bg-purple-50',
   'google-meet': 'border-green-500 bg-green-50',
   webex: 'border-cyan-500 bg-cyan-50',
@@ -372,7 +372,7 @@ export default function PlatformConnectionsPage() {
                 <button
                   onClick={() => handleConnect(p.platform)}
                   disabled={actionLoading === `connect-${p.platform}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md bg-teal-600 px-4 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-teal-700 disabled:opacity-50"
                 >
                   {actionLoading === `connect-${p.platform}` ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -397,7 +397,7 @@ export default function PlatformConnectionsPage() {
                     className="text-gray-600 hover:text-gray-900"
                   >
                     {p.autoImport ? (
-                      <ToggleRight className="h-6 w-6 text-blue-600" />
+                      <ToggleRight className="h-6 w-6 text-teal-600" />
                     ) : (
                       <ToggleLeft className="h-6 w-6 text-gray-400" />
                     )}
@@ -414,7 +414,7 @@ export default function PlatformConnectionsPage() {
                     onChange={(e) =>
                       handleSettingChange(p.platform, 'defaultCategoryId', e.target.value || null)
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   >
                     <option value="">{t('admin.platformConnections.noCategory')}</option>
                     {categories.map((cat) => (
@@ -435,7 +435,7 @@ export default function PlatformConnectionsPage() {
                     onChange={(e) =>
                       handleSettingChange(p.platform, 'defaultVisibility', e.target.value)
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   >
                     {VISIBILITY_OPTIONS.map((v) => (
                       <option key={v} value={v}>
@@ -455,7 +455,7 @@ export default function PlatformConnectionsPage() {
                     onChange={(e) =>
                       handleSettingChange(p.platform, 'defaultContentType', e.target.value)
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 text-xs shadow-sm focus:border-teal-500 focus:ring-teal-500"
                   >
                     {CONTENT_TYPE_OPTIONS.map((ct) => (
                       <option key={ct} value={ct}>

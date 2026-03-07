@@ -193,7 +193,7 @@ export default function NotesCreditPage() {
         <div>
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedNote(cn); }}
-            className="font-mono text-sm text-blue-600 hover:underline"
+            className="font-mono text-sm text-teal-600 hover:underline"
           >
             {cn.creditNoteNumber}
           </button>
@@ -256,7 +256,7 @@ export default function NotesCreditPage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedNote(cn)}
-            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
             title={t('admin.creditNotes.view')}
             aria-label={t('admin.creditNotes.view')}
           >
@@ -349,7 +349,7 @@ export default function NotesCreditPage() {
                   {t('admin.creditNotes.issuedOn')}: {cn.issuedAt ? new Date(cn.issuedAt).toLocaleDateString(locale) : 'N/A'}
                 </p>
                 {cn.invoice && (
-                  <p className="text-sm text-blue-600">
+                  <p className="text-sm text-teal-600">
                     {t('admin.creditNotes.invoice')}: {cn.invoice.invoiceNumber}
                   </p>
                 )}

@@ -155,7 +155,7 @@ export function MediaGalleryUploader({
 
               {/* Primary badge */}
               {img.isPrimary && (
-                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-medium rounded-md flex items-center gap-0.5">
+                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-medium rounded-md flex items-center gap-0.5">
                   <Star className="w-2.5 h-2.5" />
                   {t('admin.mediaGallery.primary')}
                 </div>
@@ -172,7 +172,7 @@ export function MediaGalleryUploader({
                   <button
                     type="button"
                     onClick={() => setPrimary(index)}
-                    className="p-1.5 bg-white/90 text-sky-600 rounded-full hover:bg-white"
+                    className="p-1.5 bg-white/90 text-teal-600 rounded-full hover:bg-white"
                     title={t('admin.mediaGallery.setPrimary')}
                   >
                     <Star className="w-3.5 h-3.5" />
@@ -200,7 +200,7 @@ export function MediaGalleryUploader({
                   onKeyDown={(e) => { if (e.key === 'Enter') setEditingAlt(null); }}
                   autoFocus
                   placeholder={t('admin.mediaGallery.altPlaceholder')}
-                  className="w-full px-1.5 py-0.5 text-xs border border-neutral-200 rounded focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  className="w-full px-1.5 py-0.5 text-xs border border-neutral-200 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               ) : (
                 <p
@@ -231,7 +231,7 @@ export function MediaGalleryUploader({
             <button
               type="button"
               onClick={() => setShowUploader(true)}
-              className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 hover:border-sky-400 hover:bg-sky-50 transition-colors flex flex-col items-center justify-center gap-1"
+              className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 hover:border-teal-400 hover:bg-teal-50 transition-colors flex flex-col items-center justify-center gap-1"
             >
               <Plus className="w-6 h-6 text-neutral-400" />
               <span className="text-xs text-neutral-500">{t('admin.mediaGallery.addPhoto')}</span>

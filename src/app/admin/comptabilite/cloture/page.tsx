@@ -490,26 +490,26 @@ export default function CloturePage() {
       )}
 
       {/* Tips */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div className="bg-teal-50 border border-teal-200 rounded-xl p-6">
         <div className="flex items-center gap-2 mb-2">
-          <Info className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-blue-900">{t('admin.closing.tipsTitle')}</h3>
+          <Info className="w-5 h-5 text-teal-600" />
+          <h3 className="font-semibold text-teal-900">{t('admin.closing.tipsTitle')}</h3>
         </div>
-        <ul className="space-y-2 text-sm text-blue-800">
+        <ul className="space-y-2 text-sm text-teal-800">
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">&#8226;</span>
+            <span className="text-teal-500">&#8226;</span>
             {t('admin.closing.tip1')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">&#8226;</span>
+            <span className="text-teal-500">&#8226;</span>
             {t('admin.closing.tip2')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">&#8226;</span>
+            <span className="text-teal-500">&#8226;</span>
             {t('admin.closing.tip3')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">&#8226;</span>
+            <span className="text-teal-500">&#8226;</span>
             {t('admin.closing.tip4')}
           </li>
         </ul>

@@ -66,13 +66,13 @@ function getHeatmapColor(value: number, metric: CohortMetric): string {
 
   // Percentage-based metrics (retention, conversion, activity)
   if (value <= 0) return 'bg-gray-50 text-gray-400';
-  if (value < 10) return 'bg-blue-50 text-blue-600';
-  if (value < 25) return 'bg-blue-100 text-blue-700';
-  if (value < 40) return 'bg-blue-200 text-blue-800';
+  if (value < 10) return 'bg-teal-50 text-teal-600';
+  if (value < 25) return 'bg-teal-100 text-teal-700';
+  if (value < 40) return 'bg-teal-200 text-blue-800';
   if (value < 55) return 'bg-blue-300 text-blue-900';
   if (value < 70) return 'bg-blue-400 text-white';
-  if (value < 85) return 'bg-blue-500 text-white';
-  return 'bg-blue-600 text-white';
+  if (value < 85) return 'bg-teal-500 text-white';
+  return 'bg-teal-600 text-white';
 }
 
 function formatCellValue(value: number, metric: CohortMetric): string {
@@ -202,7 +202,7 @@ export default function CohortAnalysisPage() {
                 onClick={() => setMetric(opt.value)}
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
                   metric === opt.value
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -231,7 +231,7 @@ export default function CohortAnalysisPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
         </div>
       ) : (
         <>
@@ -241,7 +241,7 @@ export default function CohortAnalysisPage() {
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Users className="h-4 w-4" /> Cohorts
               </div>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-teal-600">
                 {data?.summary.totalCohorts || 0}
               </p>
             </div>
@@ -369,7 +369,7 @@ export default function CohortAnalysisPage() {
             ) : (
               <>
                 <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 rounded bg-blue-100" />
+                  <div className="w-4 h-4 rounded bg-teal-100" />
                   <span>Low</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -377,7 +377,7 @@ export default function CohortAnalysisPage() {
                   <span>Medium</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 rounded bg-blue-600" />
+                  <div className="w-4 h-4 rounded bg-teal-600" />
                   <span>High</span>
                 </div>
               </>

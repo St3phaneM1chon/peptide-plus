@@ -516,7 +516,7 @@ export default function AdminChatPage() {
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
                   className={`w-full p-4 text-start border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                    selectedConversation?.id === conv.id ? 'bg-sky-50 border-s-4 border-s-sky-500' : ''
+                    selectedConversation?.id === conv.id ? 'bg-teal-50 border-s-4 border-s-teal-500' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -616,7 +616,7 @@ export default function AdminChatPage() {
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-3 ${
                         message.sender === 'ADMIN'
-                          ? 'bg-sky-500 text-white rounded-br-md'
+                          ? 'bg-teal-500 text-white rounded-br-md'
                           : message.sender === 'BOT'
                           ? 'bg-purple-100 text-purple-900 rounded-bl-md border border-purple-200'
                           : 'bg-white text-slate-800 rounded-bl-md shadow-sm'
@@ -670,7 +670,7 @@ export default function AdminChatPage() {
                         {message.sender === 'ADMIN' && (
                           <span className="inline-flex items-center">
                             {message.isRead ? (
-                              <CheckCheck className="w-3.5 h-3.5 text-sky-200" aria-label={t('admin.chat.read')} />
+                              <CheckCheck className="w-3.5 h-3.5 text-teal-200" aria-label={t('admin.chat.read')} />
                             ) : (
                               <Check className="w-3.5 h-3.5 opacity-50" aria-label={t('admin.chat.delivered')} />
                             )}

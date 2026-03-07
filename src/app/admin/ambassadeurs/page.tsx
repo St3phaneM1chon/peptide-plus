@@ -74,7 +74,7 @@ const tierConfig: Record<string, { color: string; commission: number; minSales: 
   BRONZE: { color: 'bg-amber-100 text-amber-800', commission: 5, minSales: 0 },
   SILVER: { color: 'bg-slate-200 text-slate-700', commission: 8, minSales: 1000 },
   GOLD: { color: 'bg-yellow-100 text-yellow-800', commission: 10, minSales: 5000 },
-  PLATINUM: { color: 'bg-blue-100 text-blue-800', commission: 15, minSales: 15000 },
+  PLATINUM: { color: 'bg-teal-100 text-teal-800', commission: 15, minSales: 15000 },
 };
 
 function tierBadgeVariant(tier: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
@@ -562,7 +562,7 @@ export default function AmbassadeursPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -607,7 +607,7 @@ export default function AmbassadeursPage() {
             label={t('admin.ambassadors.commissionsPaid')}
             value={formatCurrency(stats.totalCommissions)}
             icon={DollarSign}
-            className="bg-sky-50 border-sky-200"
+            className="bg-teal-50 border-teal-200"
           />
           <StatCard
             label={t('admin.ambassadors.pendingPayouts')}
@@ -665,7 +665,7 @@ export default function AmbassadeursPage() {
                         <tr key={amb.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="py-2 px-3 text-slate-900 font-medium">{amb.userName}</td>
                           <td className="py-2 px-3">
-                            <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sky-700">{amb.referralCode}</code>
+                            <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-teal-700">{amb.referralCode}</code>
                           </td>
                           <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(amb.totalSales)}</td>
                           <td className="py-2 px-3 text-right text-red-600">{formatCurrency(amb.totalEarnings)}</td>
@@ -697,7 +697,7 @@ export default function AmbassadeursPage() {
           {/* Calcul ROI par ambassadeur */}
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <ArrowUpRight className="h-5 w-5 text-sky-600" />
+              <ArrowUpRight className="h-5 w-5 text-teal-600" />
               <h3 className="font-semibold text-slate-900">ROI par ambassadeur</h3>
             </div>
             <div className="space-y-2">
@@ -725,7 +725,7 @@ export default function AmbassadeursPage() {
                         </p>
                       </div>
                       <div className="text-right ml-3">
-                        <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-sky-700' : 'text-red-600'}`}>
+                        <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-teal-700' : 'text-red-600'}`}>
                           {roi.toFixed(0)}%
                         </p>
                         <p className="text-[10px] text-slate-500">ROI</p>
@@ -761,11 +761,11 @@ export default function AmbassadeursPage() {
                   <p className="text-xl font-bold text-emerald-700">{stats.total}</p>
                   <p className="text-xs text-emerald-600 mt-0.5">Ambassadeurs actifs</p>
                 </div>
-                <div className="bg-sky-50 rounded-lg p-3 text-center">
-                  <p className="text-xl font-bold text-sky-700">
+                <div className="bg-teal-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-teal-700">
                     {ambassadors.reduce((sum, a) => sum + a.totalReferrals, 0)}
                   </p>
-                  <p className="text-xs text-sky-600 mt-0.5">Références totales</p>
+                  <p className="text-xs text-teal-600 mt-0.5">Références totales</p>
                 </div>
                 <div className="bg-violet-50 rounded-lg p-3 text-center">
                   <p className="text-xl font-bold text-violet-700">
@@ -917,7 +917,7 @@ export default function AmbassadeursPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.referralCode')}</p>
-                      <code className="font-mono font-bold text-lg text-sky-600">{selectedAmbassador.referralCode}</code>
+                      <code className="font-mono font-bold text-lg text-teal-600">{selectedAmbassador.referralCode}</code>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.commissionLabel')}</p>
@@ -979,7 +979,7 @@ export default function AmbassadeursPage() {
                     <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionHistory') || 'Commission History'}</h4>
                     {loadingHistory ? (
                       <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sky-500" />
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-500" />
                       </div>
                     ) : commissionHistory.length === 0 ? (
                       <p className="text-sm text-slate-400">{t('admin.ambassadors.noCommissions') || 'No commissions yet'}</p>
@@ -1046,7 +1046,7 @@ export default function AmbassadeursPage() {
                   {/* FIX: F-063 - Show placeholder when ambassador email is empty */}
                   <p className="text-sm text-slate-500">{amb.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided')}</p>
                   <p className="text-xs text-slate-400 mt-1">
-                    {t('admin.ambassadors.referralCode')}: <code className="font-mono text-sky-600">{amb.referralCode}</code>
+                    {t('admin.ambassadors.referralCode')}: <code className="font-mono text-teal-600">{amb.referralCode}</code>
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1143,7 +1143,7 @@ export default function AmbassadeursPage() {
             <span className="text-sm text-slate-700">{t('admin.ambassadors.autoApprove')}</span>
             <button
               onClick={() => setConfigAutoApprove(!configAutoApprove)}
-              className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-sky-500' : 'bg-slate-300'}`}
+              className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-teal-500' : 'bg-slate-300'}`}
             >
               <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configAutoApprove ? 'right-1' : 'left-1'}`} />
             </button>
@@ -1209,9 +1209,9 @@ export default function AmbassadeursPage() {
             )}
           </FormField>
           {/* Tier reference */}
-          <div className="bg-sky-50 rounded-lg p-3">
-            <p className="text-xs text-sky-700 font-medium mb-1">{t('admin.ambassadors.commissionLevels')}</p>
-            <div className="flex gap-3 text-xs text-sky-600">
+          <div className="bg-teal-50 rounded-lg p-3">
+            <p className="text-xs text-teal-700 font-medium mb-1">{t('admin.ambassadors.commissionLevels')}</p>
+            <div className="flex gap-3 text-xs text-teal-600">
               {Object.entries(tierConfig).map(([tier, config]) => (
                 <span key={tier}>{tier}: {config.commission}%</span>
               ))}

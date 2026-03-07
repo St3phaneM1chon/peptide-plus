@@ -180,7 +180,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
                 {/* Type icon */}
                 {item.type === 'audio' && (
                   item.metadata.direction === 'INBOUND' ? (
-                    <PhoneIncoming className="w-4 h-4 text-sky-600" />
+                    <PhoneIncoming className="w-4 h-4 text-teal-600" />
                   ) : item.metadata.direction === 'OUTBOUND' ? (
                     <PhoneOutgoing className="w-4 h-4 text-emerald-600" />
                   ) : (
@@ -188,13 +188,13 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
                   )
                 )}
                 {item.type === 'video' && <Video className="w-4 h-4 text-purple-600" />}
-                {item.type === 'chat' && <MessageCircle className="w-4 h-4 text-sky-600" />}
+                {item.type === 'chat' && <MessageCircle className="w-4 h-4 text-teal-600" />}
 
                 {/* Type badge */}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                   item.type === 'audio' ? 'bg-gray-100 text-gray-600' :
                   item.type === 'video' ? 'bg-purple-100 text-purple-600' :
-                  'bg-sky-100 text-sky-600'
+                  'bg-teal-100 text-teal-600'
                 }`}>
                   {item.type === 'audio' ? 'Audio' : item.type === 'video' ? 'Video' : 'Chat'}
                 </span>

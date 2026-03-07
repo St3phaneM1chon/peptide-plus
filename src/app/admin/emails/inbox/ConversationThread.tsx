@@ -153,7 +153,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -164,7 +164,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
       <div className="flex flex-col items-center justify-center h-64">
         <AlertTriangle className="h-8 w-8 text-slate-400 mb-2" />
         <p className="text-slate-500">{t('admin.emails.inbox.conversationNotFound')}</p>
-        <button onClick={onBack} className="text-sky-500 text-sm mt-2">{t('admin.emails.inbox.back')}</button>
+        <button onClick={onBack} className="text-teal-500 text-sm mt-2">{t('admin.emails.inbox.back')}</button>
       </div>
     );
   }
@@ -187,7 +187,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
                 value={conversation.status}
                 onChange={(e) => updateConversation({ status: e.target.value })}
                 className={`text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer ${
-                  conversation.status === 'NEW' ? 'bg-blue-100 text-blue-700' :
+                  conversation.status === 'NEW' ? 'bg-teal-100 text-teal-700' :
                   conversation.status === 'OPEN' ? 'bg-orange-100 text-orange-700' :
                   conversation.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                   conversation.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
@@ -259,15 +259,15 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
               )}
 
               {item.type === 'outbound' && (
-                <div className="bg-sky-50 rounded-lg shadow-sm border border-sky-200 p-4 ml-8">
+                <div className="bg-teal-50 rounded-lg shadow-sm border border-teal-200 p-4 ml-8">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-sky-200 flex items-center justify-center">
-                      <Send className="h-3 w-3 text-sky-600" />
+                    <div className="w-6 h-6 rounded-full bg-teal-200 flex items-center justify-center">
+                      <Send className="h-3 w-3 text-teal-600" />
                     </div>
-                    <span className="text-sm font-medium text-sky-900">
+                    <span className="text-sm font-medium text-teal-900">
                       {((item.data.sender as Record<string, unknown>)?.name as string) || t('admin.emails.inbox.agent')}
                     </span>
-                    <span className="text-xs text-sky-400">
+                    <span className="text-xs text-teal-400">
                       {new Date(item.timestamp).toLocaleString(locale)}
                     </span>
                     {item.data.status === 'failed' && (
@@ -319,7 +319,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                  replyMode === 'reply' ? 'bg-sky-100 text-sky-700' : 'bg-yellow-100 text-yellow-700'
+                  replyMode === 'reply' ? 'bg-teal-100 text-teal-700' : 'bg-yellow-100 text-yellow-700'
                 }`}>
                   {replyMode === 'reply' ? t('admin.emails.inbox.reply') : t('admin.emails.inbox.internalNote')}
                 </span>
@@ -332,7 +332,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder={replyMode === 'reply' ? t('admin.emails.inbox.replyPlaceholder') : t('admin.emails.inbox.notePlaceholder')}
                 className={`w-full p-3 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 ${
-                  replyMode === 'note' ? 'bg-yellow-50 border-yellow-200 focus:ring-yellow-400' : 'border-slate-200 focus:ring-sky-500'
+                  replyMode === 'note' ? 'bg-yellow-50 border-yellow-200 focus:ring-yellow-400' : 'border-slate-200 focus:ring-teal-500'
                 }`}
                 rows={4}
                 autoFocus
@@ -342,7 +342,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
                   onClick={handleReply}
                   disabled={sending || !replyContent.trim()}
                   className={`px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50 ${
-                    replyMode === 'note' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-sky-500 hover:bg-sky-600'
+                    replyMode === 'note' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-teal-500 hover:bg-teal-600'
                   }`}
                 >
                   {sending ? t('admin.emails.inbox.sending') : replyMode === 'reply' ? t('admin.emails.inbox.send') : t('admin.emails.inbox.addNote')}
@@ -353,7 +353,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
             <div className="flex gap-2">
               <button
                 onClick={() => setReplyMode('reply')}
-                className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg"
+                className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg"
               >
                 <Send className="h-4 w-4" /> {t('admin.emails.inbox.replyBtn')}
               </button>

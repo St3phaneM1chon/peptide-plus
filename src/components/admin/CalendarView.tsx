@@ -32,7 +32,7 @@ interface CalendarViewProps {
 const PLATFORM_COLORS: Record<string, string> = {
   instagram: 'bg-pink-500',
   facebook: 'bg-blue-600',
-  twitter: 'bg-sky-500',
+  twitter: 'bg-teal-500',
   tiktok: 'bg-gray-900 dark:bg-gray-200 dark:text-gray-900',
   linkedin: 'bg-blue-700',
 };
@@ -167,13 +167,13 @@ export function CalendarView({
           <div className="flex border rounded-lg overflow-hidden">
             <button
               onClick={() => setView('week')}
-              className={`px-3 py-1 text-sm ${view === 'week' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              className={`px-3 py-1 text-sm ${view === 'week' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             >
               {t('admin.media.weekView') || 'Week'}
             </button>
             <button
               onClick={() => setView('month')}
-              className={`px-3 py-1 text-sm ${view === 'month' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              className={`px-3 py-1 text-sm ${view === 'month' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             >
               {t('admin.media.monthView') || 'Month'}
             </button>
@@ -207,7 +207,7 @@ export function CalendarView({
               }`}
             >
               <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
-                isToday ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-400'
+                isToday ? 'bg-teal-600 text-white' : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {day.getDate()}
               </div>

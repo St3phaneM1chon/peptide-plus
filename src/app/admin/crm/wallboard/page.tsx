@@ -69,7 +69,7 @@ export default function WallboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
       </div>
     );
   }
@@ -104,12 +104,12 @@ export default function WallboardPage() {
 
         <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-blue-500/20">
-              <Phone className="h-6 w-6 text-blue-400" />
+            <div className="p-2 rounded-lg bg-teal-500/20">
+              <Phone className="h-6 w-6 text-teal-400" />
             </div>
             <span className="text-sm text-gray-400">Calls Today</span>
           </div>
-          <p className="text-4xl font-bold text-blue-400">{data?.todayStats?.totalCalls || 0}</p>
+          <p className="text-4xl font-bold text-teal-400">{data?.todayStats?.totalCalls || 0}</p>
           <p className="text-sm text-gray-500 mt-1">
             <span className="text-green-400">{data?.todayStats?.answered || 0}</span> answered ·{' '}
             <span className="text-red-400">{data?.todayStats?.missed || 0}</span> missed
@@ -181,7 +181,7 @@ export default function WallboardPage() {
               <div key={h} className="flex-1 flex flex-col items-center">
                 <div
                   className={`w-full rounded-t transition-all ${
-                    h === currentHour ? 'bg-blue-500' : isActive ? 'bg-blue-500/40' : 'bg-gray-800'
+                    h === currentHour ? 'bg-teal-500' : isActive ? 'bg-teal-500/40' : 'bg-gray-800'
                   }`}
                   style={{ height: `${heightPct}%` }}
                 />

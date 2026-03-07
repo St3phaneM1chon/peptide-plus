@@ -144,7 +144,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -197,7 +197,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
                     type="text"
                     value={criterion.name}
                     onChange={(e) => updateCriterion(idx, 'name', e.target.value)}
-                    className="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder={t('admin.crm.qa.criterionName') || 'Criterion name'}
                   />
                   <div className="flex items-center gap-1">
@@ -208,7 +208,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
                       max={100}
                       value={criterion.maxScore}
                       onChange={(e) => updateCriterion(idx, 'maxScore', parseInt(e.target.value, 10) || 10)}
-                      className="w-14 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-14 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                   <div className="flex items-center gap-1">
@@ -220,7 +220,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
                       step={0.5}
                       value={criterion.weight}
                       onChange={(e) => updateCriterion(idx, 'weight', parseFloat(e.target.value) || 1)}
-                      className="w-14 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-14 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                   {criteria.length > 1 && (
@@ -238,7 +238,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
             <button
               type="button"
               onClick={addCriterion}
-              className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+              className="mt-2 flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700"
             >
               <Plus className="h-3.5 w-3.5" />
               {t('admin.crm.qa.addCriterion') || 'Add Criterion'}
@@ -256,7 +256,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               {saving
@@ -341,7 +341,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -412,7 +412,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
                   <div key={criterion.name} className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-medium text-gray-700">{criterion.name}</span>
-                      <span className="text-sm font-bold text-blue-600">
+                      <span className="text-sm font-bold text-teal-600">
                         {scores[criterion.name] || 0}/{criterion.maxScore}
                       </span>
                     </div>
@@ -424,7 +424,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
                       onChange={(e) =>
                         setScores((prev) => ({ ...prev, [criterion.name]: parseInt(e.target.value, 10) }))
                       }
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
                     />
                     {criterion.weight !== 1 && (
                       <div className="text-[10px] text-gray-400 mt-0.5">
@@ -462,7 +462,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
               <ClipboardCheck className="h-4 w-4" />
               {saving
@@ -606,7 +606,7 @@ export default function QaPage() {
           {tab === 'forms' && (
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700"
             >
               <Plus className="h-4 w-4" />
               {t('admin.crm.qa.newForm') || 'New Form'}
@@ -672,7 +672,7 @@ export default function QaPage() {
         <div>
           {formsLoading ? (
             <div className="flex items-center justify-center h-48 text-gray-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
             </div>
           ) : forms.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
@@ -685,7 +685,7 @@ export default function QaPage() {
               </p>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700"
               >
                 <Plus className="h-4 w-4" />
                 {t('admin.crm.qa.createFirst') || 'Create First Form'}
@@ -753,7 +753,7 @@ export default function QaPage() {
                   <select
                     value={filterFormId}
                     onChange={(e) => setFilterFormId(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="">{t('admin.crm.qa.allForms') || 'All Forms'}</option>
                     {forms.map((f) => (
@@ -769,7 +769,7 @@ export default function QaPage() {
                     type="text"
                     value={filterAgentId}
                     onChange={(e) => setFilterAgentId(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="Agent ID..."
                   />
                 </div>

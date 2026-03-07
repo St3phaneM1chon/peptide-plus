@@ -3,7 +3,7 @@
 import Image from 'next/image';
 
 const AVATAR_COLORS = [
-  'bg-sky-600',
+  'bg-cyan-600',
   'bg-emerald-600',
   'bg-violet-600',
   'bg-amber-600',
@@ -12,7 +12,7 @@ const AVATAR_COLORS = [
   'bg-teal-600',
   'bg-orange-600',
   'bg-pink-600',
-  'bg-cyan-600',
+  'bg-sky-600',
   'bg-lime-600',
   'bg-fuchsia-600',
 ] as const;

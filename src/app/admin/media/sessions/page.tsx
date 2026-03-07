@@ -51,7 +51,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  zoom: 'bg-blue-100 text-blue-700',
+  zoom: 'bg-teal-100 text-teal-700',
   teams: 'bg-purple-100 text-purple-700',
   'google-meet': 'bg-green-100 text-green-700',
   webex: 'bg-cyan-100 text-cyan-700',
@@ -59,7 +59,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, { icon: React.ReactNode; classes: string }> = {
   SCHEDULED: { icon: <Clock className="h-3 w-3" />, classes: 'bg-amber-100 text-amber-700' },
-  IN_PROGRESS: { icon: <Play className="h-3 w-3" />, classes: 'bg-blue-100 text-blue-700' },
+  IN_PROGRESS: { icon: <Play className="h-3 w-3" />, classes: 'bg-teal-100 text-teal-700' },
   COMPLETED: { icon: <CheckCircle2 className="h-3 w-3" />, classes: 'bg-green-100 text-green-700' },
   CANCELLED: { icon: <XCircle className="h-3 w-3" />, classes: 'bg-gray-100 text-gray-500' },
 };

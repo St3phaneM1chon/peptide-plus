@@ -121,7 +121,7 @@ function StageEditor({
               type="text"
               value={stage.stageId}
               onChange={(e) => onChange({ ...stage, stageId: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
@@ -134,7 +134,7 @@ function StageEditor({
               value={stage.guidance}
               onChange={(e) => onChange({ ...stage, guidance: e.target.value })}
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
             />
           </div>
 
@@ -150,7 +150,7 @@ function StageEditor({
                   type="text"
                   value={item}
                   onChange={(e) => updateChecklist(i, e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder={t('admin.crm.playbooks.checklistItem') || 'Checklist item...'}
                 />
                 <button onClick={() => removeChecklistItem(i)} className="text-red-400 hover:text-red-600">
@@ -160,7 +160,7 @@ function StageEditor({
             ))}
             <button
               onClick={addChecklistItem}
-              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
             >
               <Plus className="h-3 w-3" />
               {t('admin.crm.playbooks.addItem') || 'Add item'}
@@ -183,7 +183,7 @@ function StageEditor({
                     updated[i] = { ...updated[i], title: e.target.value };
                     onChange({ ...stage, resources: updated });
                   }}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder={t('admin.crm.playbooks.resourceTitle') || 'Title'}
                 />
                 <input
@@ -194,7 +194,7 @@ function StageEditor({
                     updated[i] = { ...updated[i], url: e.target.value };
                     onChange({ ...stage, resources: updated });
                   }}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="URL"
                 />
                 <button
@@ -207,7 +207,7 @@ function StageEditor({
             ))}
             <button
               onClick={() => onChange({ ...stage, resources: [...stage.resources, { title: '', url: '' }] })}
-              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
             >
               <Plus className="h-3 w-3" />
               {t('admin.crm.playbooks.addResource') || 'Add resource'}
@@ -301,7 +301,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-blue-600" />
+            <BookOpen className="h-5 w-5 text-teal-600" />
             {playbook
               ? (t('admin.crm.playbooks.editPlaybook') || 'Edit Playbook')
               : (t('admin.crm.playbooks.createPlaybook') || 'Create Playbook')}
@@ -321,7 +321,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder={t('admin.crm.playbooks.namePlaceholder') || 'Sales Playbook...'}
             />
           </div>
@@ -334,7 +334,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
             />
           </div>
 
@@ -346,7 +346,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Playbook['status'])}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="ACTIVE">Active</option>
@@ -360,7 +360,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               <select
                 value={targetPipeline}
                 onChange={(e) => setTargetPipeline(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">{t('admin.crm.playbooks.allPipelines') || 'All Pipelines'}</option>
                 {pipelines.map((p) => (
@@ -378,7 +378,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               </label>
               <button
                 onClick={addStage}
-                className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
               >
                 <Plus className="h-3 w-3" />
                 {t('admin.crm.playbooks.addStage') || 'Add Stage'}
@@ -414,7 +414,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             {saving
@@ -476,7 +476,7 @@ export default function PlaybooksPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-blue-600" />
+            <BookOpen className="h-6 w-6 text-teal-600" />
             {t('admin.crm.playbooks.title') || 'Sales Playbooks'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -485,7 +485,7 @@ export default function PlaybooksPage() {
         </div>
         <button
           onClick={() => setModal({ playbook: null })}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           {t('admin.crm.playbooks.create') || 'Create Playbook'}
@@ -495,7 +495,7 @@ export default function PlaybooksPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
         </div>
       ) : playbooks.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">

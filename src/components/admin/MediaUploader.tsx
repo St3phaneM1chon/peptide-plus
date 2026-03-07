@@ -244,8 +244,8 @@ export function MediaUploader({
           className={`
             relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
             ${dragOver
-              ? 'border-sky-400 bg-sky-50'
-              : 'border-neutral-300 hover:border-sky-400 hover:bg-neutral-50'
+              ? 'border-teal-400 bg-teal-50'
+              : 'border-neutral-300 hover:border-teal-400 hover:bg-neutral-50'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${uploading ? 'pointer-events-none' : ''}
@@ -253,11 +253,11 @@ export function MediaUploader({
         >
           {uploading ? (
             <div className="space-y-2">
-              <div className="w-8 h-8 mx-auto animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+              <div className="w-8 h-8 mx-auto animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
               <p className="text-sm text-neutral-600">{t('admin.mediaUploader.uploading')}</p>
               <div className="w-full bg-neutral-200 rounded-full h-1.5 max-w-[200px] mx-auto">
                 <div
-                  className="bg-sky-500 h-1.5 rounded-full transition-all duration-200"
+                  className="bg-teal-500 h-1.5 rounded-full transition-all duration-200"
                   style={{ width: `${progress}%` }}
                 />
               </div>

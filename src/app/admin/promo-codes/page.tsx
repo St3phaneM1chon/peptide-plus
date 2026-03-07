@@ -518,7 +518,7 @@ export default function PromoCodesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -631,7 +631,7 @@ export default function PromoCodesPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colDiscount')}</h3>
-                      <p className="text-2xl font-bold text-sky-600">
+                      <p className="text-2xl font-bold text-teal-600">
                         {selectedPromo.type === 'PERCENTAGE'
                           ? `${selectedPromo.value}%`
                           : formatCurrency(selectedPromo.value)}
@@ -689,14 +689,14 @@ export default function PromoCodesPage() {
                       <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
                     </div>
                   ) : revenueData && revenueData.orderCount > 0 ? (
-                    <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="bg-teal-50 rounded-lg p-4">
                       <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
-                        <ShoppingCart className="w-4 h-4 text-blue-600" />
+                        <ShoppingCart className="w-4 h-4 text-teal-600" />
                         {t('admin.bridges.commerceImpact') || 'Commerce Impact'}
                       </h3>
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
-                          <p className="text-2xl font-bold text-blue-600">{formatCurrency(revenueData.totalRevenue)}</p>
+                          <p className="text-2xl font-bold text-teal-600">{formatCurrency(revenueData.totalRevenue)}</p>
                           <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue') || 'Revenue generated'}</p>
                         </div>
                         <div>
@@ -878,7 +878,7 @@ export default function PromoCodesPage() {
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT' })}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
                 <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
@@ -966,7 +966,7 @@ export default function PromoCodesPage() {
               type="checkbox"
               checked={formData.firstOrderOnly}
               onChange={(e) => setFormData({ ...formData, firstOrderOnly: e.target.checked })}
-              className="w-4 h-4 rounded border-slate-300 text-sky-500"
+              className="w-4 h-4 rounded border-slate-300 text-teal-500"
             />
             <span className="text-sm text-slate-700">{t('admin.promoCodes.firstOrderOnlyCheckbox')}</span>
           </label>

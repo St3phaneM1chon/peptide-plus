@@ -526,7 +526,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             <button
               onClick={handleSaveProduct}
               disabled={saving}
-              className="px-6 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50 font-medium"
+              className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 font-medium"
             >
               {saving ? t('admin.productForm.saving') : t('admin.productForm.save')}
             </button>
@@ -583,7 +583,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               {tab.icon}
               {tab.label}
               {tab.count !== null && tab.count > 0 && (
-                <span className="px-1.5 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{tab.count}</span>
+                <span className="px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">{tab.count}</span>
               )}
             </button>
           ))}
@@ -600,7 +600,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -612,7 +612,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <select
                     value={formData.productType}
                     onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     {PRODUCT_TYPES.map(type => (
                       <option key={type.value} value={type.value}>{type.label}</option>
@@ -625,7 +625,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -634,7 +634,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     type="text"
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono text-sm"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -643,7 +643,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     type="text"
                     value={formData.subtitle}
                     onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -653,7 +653,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     maxLength={300}
                     value={formData.shortDescription}
                     onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <p className="text-xs text-neutral-400 mt-1">{(formData.shortDescription || '').length}/300</p>
                 </div>
@@ -671,7 +671,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       type="number" step="0.01" min="0" max="100"
                       value={formData.purity}
                       onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <span className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
                   </div>
@@ -681,7 +681,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <input
                     type="text" value={formData.casNumber}
                     onChange={(e) => setFormData({ ...formData, casNumber: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -689,7 +689,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <input
                     type="number" step="0.01" value={formData.molecularWeight}
                     onChange={(e) => setFormData({ ...formData, molecularWeight: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -697,7 +697,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <input
                     type="text" value={formData.molecularFormula}
                     onChange={(e) => setFormData({ ...formData, molecularFormula: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono text-sm"
                   />
                 </div>
                 <div>
@@ -705,7 +705,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <input
                     type="text" value={formData.storageConditions}
                     onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -714,7 +714,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     type="number" step="0.01"
                     value={formData.price || ''}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -762,15 +762,15 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" aria-label="Produit en vedette" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Produit en vedette" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.featured')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" aria-label="Nouveau produit" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Nouveau produit" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.new')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" aria-label="Meilleure vente" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Meilleure vente" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.bestseller')}</span>
                   </label>
                 </div>
@@ -803,7 +803,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               </div>
               <button
                 onClick={addProductText}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {t('admin.productForm.addText')}
@@ -814,7 +814,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noProductTextsShort')}</p>
-                <button onClick={addProductText} className="text-sky-600 hover:text-sky-700 font-medium">
+                <button onClick={addProductText} className="text-teal-600 hover:text-teal-700 font-medium">
                   {t('admin.productForm.addFirstText')}
                 </button>
               </div>
@@ -834,7 +834,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     </div>
                     <div className="flex items-center gap-2">
                       {pt.pdfUrl && <FileText className="w-4 h-4 text-red-400" />}
-                      {pt.imageUrl && <ImageIcon className="w-4 h-4 text-blue-400" />}
+                      {pt.imageUrl && <ImageIcon className="w-4 h-4 text-teal-400" />}
                       {pt.videoUrl && <Video className="w-4 h-4 text-purple-400" />}
                       {pt.externalLink && <ExternalLink className="w-4 h-4 text-green-400" />}
                       <button
@@ -852,28 +852,28 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.textName')} *</label>
-                          <input type="text" value={pt.name} onChange={(e) => updateProductText(pt.id, 'name', e.target.value)} placeholder={t('admin.productForm.placeholderTextNameShort')} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                          <input type="text" value={pt.name} onChange={(e) => updateProductText(pt.id, 'name', e.target.value)} placeholder={t('admin.productForm.placeholderTextNameShort')} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.title')}</label>
-                          <input type="text" value={pt.title} onChange={(e) => updateProductText(pt.id, 'title', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                          <input type="text" value={pt.title} onChange={(e) => updateProductText(pt.id, 'title', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.subtitle')}</label>
-                          <input type="text" value={pt.subtitle} onChange={(e) => updateProductText(pt.id, 'subtitle', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                          <input type="text" value={pt.subtitle} onChange={(e) => updateProductText(pt.id, 'subtitle', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.summary')}</label>
-                          <input type="text" value={pt.summary} onChange={(e) => updateProductText(pt.id, 'summary', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                          <input type="text" value={pt.summary} onChange={(e) => updateProductText(pt.id, 'summary', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.introduction')}</label>
-                        <textarea rows={2} value={pt.intro} onChange={(e) => updateProductText(pt.id, 'intro', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                        <textarea rows={2} value={pt.intro} onChange={(e) => updateProductText(pt.id, 'intro', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.fullText')}</label>
-                        <textarea rows={6} value={pt.text} onChange={(e) => updateProductText(pt.id, 'text', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono" />
+                        <textarea rows={6} value={pt.text} onChange={(e) => updateProductText(pt.id, 'text', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono" />
                       </div>
                       <div className="border-t border-neutral-200 pt-4">
                         <p className="text-xs font-medium text-neutral-600 mb-3">{t('admin.productForm.mediaAndLinks')}</p>
@@ -907,15 +907,15 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                           </div>
                           <div>
                             <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><ExternalLink className="w-3 h-3" /> {t('admin.productForm.externalLink')}</label>
-                            <input type="url" value={pt.externalLink} onChange={(e) => updateProductText(pt.id, 'externalLink', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <input type="url" value={pt.externalLink} onChange={(e) => updateProductText(pt.id, 'externalLink', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                           </div>
                           <div>
                             <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><Link2 className="w-3 h-3" /> {t('admin.productForm.internalLink')}</label>
-                            <input type="text" value={pt.internalLink} onChange={(e) => updateProductText(pt.id, 'internalLink', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <input type="text" value={pt.internalLink} onChange={(e) => updateProductText(pt.id, 'internalLink', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                           </div>
                           <div>
                             <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><FileText className="w-3 h-3" /> {t('admin.productForm.references')}</label>
-                            <input type="text" value={pt.references} onChange={(e) => updateProductText(pt.id, 'references', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <input type="text" value={pt.references} onChange={(e) => updateProductText(pt.id, 'references', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
                           </div>
                         </div>
                       </div>
@@ -937,7 +937,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               </div>
               <button
                 onClick={handleAddFormat}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {t('admin.productForm.addFormat')}
@@ -947,7 +947,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             {formats.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormatsShort')}</p>
-                <button onClick={handleAddFormat} className="text-sky-600 hover:text-sky-700 font-medium">
+                <button onClick={handleAddFormat} className="text-teal-600 hover:text-teal-700 font-medium">
                   {t('admin.productForm.addFirstFormat')}
                 </button>
               </div>
@@ -962,7 +962,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     className={`bg-white rounded-xl border ${
                       format.stockQuantity === 0 ? 'border-red-200' :
                       format.stockQuantity <= format.lowStockThreshold ? 'border-amber-200' :
-                      format.isDefault ? 'border-sky-200' : 'border-neutral-200'
+                      format.isDefault ? 'border-teal-200' : 'border-neutral-200'
                     } overflow-hidden`}
                   >
                     {isEditing ? (
@@ -982,7 +982,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-neutral-900">{format.name}</p>
-                              {format.isDefault && <span className="px-2 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{t('admin.productForm.default')}</span>}
+                              {format.isDefault && <span className="px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">{t('admin.productForm.default')}</span>}
                               {!format.isActive && <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">{t('admin.productForm.inactive')}</span>}
                             </div>
                             <p className="text-sm text-neutral-500">
@@ -1004,7 +1004,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setEditingFormatId(format.id)}
-                              className="p-2 text-neutral-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+                              className="p-2 text-neutral-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                               aria-label="Modifier le format"
                             >
                               <Pencil className="w-4 h-4" />
@@ -1046,7 +1046,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     <p className="text-xs text-neutral-500">{t('admin.bridges.ordersWithProduct') || 'Orders'}</p>
                   </div>
                   <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
-                    <p className="text-2xl font-bold text-sky-600">{formatCurrency(salesData.totalRevenue)}</p>
+                    <p className="text-2xl font-bold text-teal-600">{formatCurrency(salesData.totalRevenue)}</p>
                     <p className="text-xs text-neutral-500">{t('admin.bridges.totalRevenue') || 'Revenue'}</p>
                   </div>
                 </div>
@@ -1215,7 +1215,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       <tr key={d.dealId} className="hover:bg-neutral-50">
                         <td className="px-3 py-2 font-medium">{d.dealTitle}</td>
                         <td className="px-3 py-2">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${d.isWon ? 'bg-green-100 text-green-700' : d.isLost ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${d.isWon ? 'bg-green-100 text-green-700' : d.isLost ? 'bg-red-100 text-red-700' : 'bg-teal-100 text-teal-700'}`}>
                             {d.stage}
                           </span>
                         </td>
@@ -1319,39 +1319,39 @@ function EditFormatForm({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.type')} *</label>
-          <select aria-label="Type de format" value={format.formatType} onChange={(e) => setFormat({ ...format, formatType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Type de format" value={format.formatType} onChange={(e) => setFormat({ ...format, formatType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
             {FORMAT_TYPES.map(type => (<option key={type.value} value={type.value}>{type.icon} {type.label}</option>))}
           </select>
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.name')} *</label>
-          <input type="text" value={format.name} onChange={(e) => setFormat({ ...format, name: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="text" value={format.name} onChange={(e) => setFormat({ ...format, name: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.volumeMl')}</label>
-          <select aria-label="Volume en ml" value={format.volumeMl || ''} onChange={(e) => setFormat({ ...format, volumeMl: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Volume en ml" value={format.volumeMl || ''} onChange={(e) => setFormat({ ...format, volumeMl: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
             <option value="">--</option>
             {VOLUME_OPTIONS.map(v => (<option key={v} value={v}>{v} ml</option>))}
           </select>
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.dosageMg')}</label>
-          <input type="number" step="0.01" value={format.dosageMg || ''} onChange={(e) => setFormat({ ...format, dosageMg: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="number" step="0.01" value={format.dosageMg || ''} onChange={(e) => setFormat({ ...format, dosageMg: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.costPrice')}</label>
-          <input type="number" step="0.01" min="0" value={format.costPrice || ''} onChange={(e) => setFormat({ ...format, costPrice: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="number" step="0.01" min="0" value={format.costPrice || ''} onChange={(e) => setFormat({ ...format, costPrice: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.sellingPrice')} *</label>
-          <input type="number" step="0.01" min="0" value={format.price} onChange={(e) => setFormat({ ...format, price: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="number" step="0.01" min="0" value={format.price} onChange={(e) => setFormat({ ...format, price: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.strikethroughPrice')}</label>
-          <input type="number" step="0.01" min="0" value={format.comparePrice || ''} onChange={(e) => setFormat({ ...format, comparePrice: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="number" step="0.01" min="0" value={format.comparePrice || ''} onChange={(e) => setFormat({ ...format, comparePrice: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         {margin && (
           <div className="flex items-end pb-2">
@@ -1368,19 +1368,19 @@ function EditFormatForm({
           <input type="number" min="0" value={format.stockQuantity} onChange={(e) => {
             const qty = parseInt(e.target.value) || 0;
             setFormat({ ...format, stockQuantity: qty, availability: qty === 0 ? 'OUT_OF_STOCK' : qty <= format.lowStockThreshold ? 'LIMITED' : 'IN_STOCK', inStock: qty > 0 });
-          }} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          }} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.stockAlertShort')}</label>
-          <input type="number" min="0" value={format.lowStockThreshold} onChange={(e) => setFormat({ ...format, lowStockThreshold: parseInt(e.target.value) || 5 })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="number" min="0" value={format.lowStockThreshold} onChange={(e) => setFormat({ ...format, lowStockThreshold: parseInt(e.target.value) || 5 })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.sku')}</label>
-          <input type="text" value={format.sku || ''} onChange={(e) => setFormat({ ...format, sku: e.target.value || null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          <input type="text" value={format.sku || ''} onChange={(e) => setFormat({ ...format, sku: e.target.value || null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.availability')}</label>
-          <select aria-label="Disponibilité" value={format.availability} onChange={(e) => setFormat({ ...format, availability: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Disponibilité" value={format.availability} onChange={(e) => setFormat({ ...format, availability: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
             {AVAILABILITY_OPTIONS.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
           </select>
         </div>
@@ -1398,11 +1398,11 @@ function EditFormatForm({
         </div>
         <div className="flex items-end gap-4 pb-2">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={format.isDefault} onChange={(e) => setFormat({ ...format, isDefault: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+            <input type="checkbox" checked={format.isDefault} onChange={(e) => setFormat({ ...format, isDefault: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded" />
             <span className="text-sm text-neutral-700">{t('admin.productForm.default')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={format.isActive} onChange={(e) => setFormat({ ...format, isActive: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+            <input type="checkbox" checked={format.isActive} onChange={(e) => setFormat({ ...format, isActive: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded" />
             <span className="text-sm text-neutral-700">{t('admin.productForm.active')}</span>
           </label>
         </div>
@@ -1413,7 +1413,7 @@ function EditFormatForm({
           {t('admin.productForm.cancel')}
         </button>
         {/* BUG-049 FIX: Pass both edited and initial format for concurrent edit detection */}
-        <button onClick={() => onSave(format, initialFormat)} className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600">
+        <button onClick={() => onSave(format, initialFormat)} className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600">
           {t('admin.productForm.save')}
         </button>
       </div>

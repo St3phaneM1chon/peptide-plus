@@ -37,7 +37,7 @@ export default function ErrorBoundary({
         )}
         <button
           onClick={reset}
-          className="px-5 py-2.5 bg-sky-600 text-white rounded-lg font-medium hover:bg-sky-700 transition-colors"
+          className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
           aria-label={t('admin.errors.tryAgain')}
         >
           {t('admin.errors.tryAgain')}

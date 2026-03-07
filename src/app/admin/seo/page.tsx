@@ -481,7 +481,7 @@ export default function SEOPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -627,7 +627,7 @@ export default function SEOPage() {
                     </Button>
                     <button
                       onClick={() => setShowOgPreview(showOgPreview === page.id ? null : page.id)}
-                      className={`p-1.5 rounded hover:bg-sky-50 transition-colors ${showOgPreview === page.id ? 'text-sky-600' : 'text-slate-400'}`}
+                      className={`p-1.5 rounded hover:bg-teal-50 transition-colors ${showOgPreview === page.id ? 'text-teal-600' : 'text-slate-400'}`}
                       title="Aperçu Open Graph"
                     >
                       <Eye className="w-4 h-4" />
@@ -731,7 +731,7 @@ export default function SEOPage() {
                         </Button>
                         <button
                           onClick={() => setShowOgPreview(showOgPreview === `prod-${product.id}` ? null : `prod-${product.id}`)}
-                          className={`p-1.5 rounded hover:bg-sky-50 ${showOgPreview === `prod-${product.id}` ? 'text-sky-600' : 'text-slate-400'}`}
+                          className={`p-1.5 rounded hover:bg-teal-50 ${showOgPreview === `prod-${product.id}` ? 'text-teal-600' : 'text-slate-400'}`}
                           title="Aperçu OG"
                         >
                           <Eye className="w-4 h-4" />

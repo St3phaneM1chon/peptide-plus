@@ -420,7 +420,7 @@ export default function UpsellAdminPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -539,7 +539,7 @@ export default function UpsellAdminPage() {
                   {/* Display rule */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.displayRule')}</h3>
-                    <p className="text-sm font-medium text-sky-700 bg-sky-50 inline-block px-3 py-1 rounded-full">
+                    <p className="text-sm font-medium text-teal-700 bg-teal-50 inline-block px-3 py-1 rounded-full">
                       {selectedConfig.displayRule}
                     </p>
                   </div>
@@ -646,7 +646,7 @@ export default function UpsellAdminPage() {
               <select
                 value={formProductId}
                 onChange={(e) => setFormProductId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="">{t('admin.upsell.globalLabel')}</option>
                 {products.map((p) => (
@@ -667,7 +667,7 @@ export default function UpsellAdminPage() {
                 onChange={(e) => setFormEnabled(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500" />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
             </label>
             <span className="text-sm font-medium text-slate-700">{t('admin.upsell.enabled')}</span>
           </div>
@@ -682,7 +682,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowQty(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showQuantityDiscount')}</span>
             </div>
@@ -694,7 +694,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowSub(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showSubscription')}</span>
             </div>
@@ -705,7 +705,7 @@ export default function UpsellAdminPage() {
             <select
               value={formDisplayRule}
               onChange={(e) => setFormDisplayRule(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               {DISPLAY_RULES.map((rule) => (
                 <option key={rule} value={rule}>
@@ -765,7 +765,7 @@ export default function UpsellAdminPage() {
               <select
                 value={formSuggestedFreq}
                 onChange={(e) => setFormSuggestedFreq(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="">---</option>
                 {FREQUENCIES.map((f) => (

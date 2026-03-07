@@ -41,7 +41,7 @@ export default function SegmentBuilder() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" /><span className="sr-only">Loading...</span></div>;
+    return <div className="flex items-center justify-center h-32" role="status" aria-label="Loading"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" /><span className="sr-only">Loading...</span></div>;
   }
 
   const rfmSegments = segments.filter(s => s.type === 'rfm');
@@ -59,14 +59,14 @@ export default function SegmentBuilder() {
       {/* RFM Segmentation */}
       <div>
         <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-sky-500" />
+          <TrendingUp className="h-4 w-4 text-teal-500" />
           {t('admin.emails.segments.rfmTitle')}
         </h4>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {rfmSegments.map((segment) => (
             <div
               key={segment.id}
-              className="bg-white rounded-xl border border-slate-200 p-4 hover:border-sky-300 transition-colors cursor-pointer"
+              className="bg-white rounded-xl border border-slate-200 p-4 hover:border-teal-300 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function SegmentBuilder() {
       {/* Built-in segments */}
       <div>
         <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <Users className="h-4 w-4 text-sky-500" />
+          <Users className="h-4 w-4 text-teal-500" />
           {t('admin.emails.segments.builtinTitle')}
         </h4>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -111,7 +111,7 @@ export default function SegmentBuilder() {
             return (
               <div
                 key={segment.id}
-                className="bg-white rounded-xl border border-slate-200 p-4 hover:border-sky-300 transition-colors cursor-pointer"
+                className="bg-white rounded-xl border border-slate-200 p-4 hover:border-teal-300 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -128,12 +128,12 @@ export default function SegmentBuilder() {
       </div>
 
       {/* Info box */}
-      <div className="bg-sky-50 rounded-xl border border-sky-200 p-4">
-        <h4 className="text-sm font-semibold text-sky-900 mb-1 flex items-center gap-2">
-          <Zap className="h-4 w-4 text-sky-500" />
+      <div className="bg-teal-50 rounded-xl border border-teal-200 p-4">
+        <h4 className="text-sm font-semibold text-teal-900 mb-1 flex items-center gap-2">
+          <Zap className="h-4 w-4 text-teal-500" />
           {t('admin.emails.segments.rfmInfoTitle')}
         </h4>
-        <p className="text-xs text-sky-700">
+        <p className="text-xs text-teal-700">
           {t('admin.emails.segments.rfmInfoDesc')}
         </p>
       </div>

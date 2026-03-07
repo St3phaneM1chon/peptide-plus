@@ -623,7 +623,7 @@ export default function RapportsPersonnalisesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium text-gray-900 truncate">{report.name}</h3>
-                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-teal-100 text-teal-700">
                         {report.type.replace(/_/g, ' ')}
                       </span>
                       {report.isTemplate && (
@@ -657,7 +657,7 @@ export default function RapportsPersonnalisesPage() {
                     </button>
                     <button
                       onClick={() => loadReportIntoBuilder(report)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      className="p-2 text-teal-600 hover:bg-teal-50 rounded-md transition-colors"
                       title={t('admin.customReports.edit')}
                     >
                       <Pencil className="w-4 h-4" />
@@ -699,7 +699,7 @@ export default function RapportsPersonnalisesPage() {
                 <select
                   value={builderType}
                   onChange={(e) => { setBuilderType(e.target.value); resetBuilder(); setBuilderType(e.target.value); }}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   {REPORT_TYPES.map((rt) => (
                     <option key={rt.value} value={rt.value}>{rt.label}</option>
@@ -715,7 +715,7 @@ export default function RapportsPersonnalisesPage() {
                   value={builderName}
                   onChange={(e) => setBuilderName(e.target.value)}
                   placeholder={t('admin.customReports.reportNamePlaceholder')}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -728,7 +728,7 @@ export default function RapportsPersonnalisesPage() {
                 onChange={(e) => setBuilderDescription(e.target.value)}
                 rows={2}
                 placeholder={t('admin.customReports.reportDescriptionPlaceholder')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
           </SectionCard>
@@ -745,7 +745,7 @@ export default function RapportsPersonnalisesPage() {
                   type="date"
                   value={builderDateFrom}
                   onChange={(e) => setBuilderDateFrom(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
               <div className="flex-1">
@@ -757,7 +757,7 @@ export default function RapportsPersonnalisesPage() {
                   type="date"
                   value={builderDateTo}
                   onChange={(e) => setBuilderDateTo(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -780,7 +780,7 @@ export default function RapportsPersonnalisesPage() {
                     onClick={() => toggleColumn(col.key)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors border ${
                       selectedColumns.includes(col.key)
-                        ? 'bg-blue-50 border-blue-200 text-blue-700'
+                        ? 'bg-teal-50 border-teal-200 text-teal-700'
                         : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
                     }`}
                   >
@@ -854,7 +854,7 @@ export default function RapportsPersonnalisesPage() {
                 })}
                 <button
                   onClick={addFilter}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                  className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"
                 >
                   <Plus className="w-3.5 h-3.5" /> {t('admin.customReports.addFilter')}
                 </button>
@@ -1039,18 +1039,18 @@ export default function RapportsPersonnalisesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {templates.map((tpl) => (
-                <div key={tpl.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                <div key={tpl.id} className="p-4 border border-gray-200 rounded-lg hover:border-teal-300 transition-colors">
                   <h3 className="font-medium text-gray-900">{tpl.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{tpl.description}</p>
                   <div className="flex items-center gap-2 mt-3">
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-teal-100 text-teal-700">
                       {tpl.type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs text-gray-400">{tpl.config.columns.length} columns</span>
                   </div>
                   <button
                     onClick={() => cloneTemplate(tpl)}
-                    className="mt-3 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="mt-3 flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium"
                   >
                     <Copy className="w-3.5 h-3.5" /> {t('admin.customReports.useTemplate')}
                   </button>
@@ -1254,7 +1254,7 @@ export default function RapportsPersonnalisesPage() {
                 value={builderName}
                 onChange={(e) => setBuilderName(e.target.value)}
                 placeholder={t('admin.customReports.reportNamePlaceholder')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
             <div>
@@ -1265,7 +1265,7 @@ export default function RapportsPersonnalisesPage() {
                 value={builderDescription}
                 onChange={(e) => setBuilderDescription(e.target.value)}
                 rows={3}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
             <div className="flex items-center gap-4">

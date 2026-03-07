@@ -14,6 +14,9 @@ import AdminCommandPalette from '@/components/admin/AdminCommandPalette';
 import NotificationCenter from '@/components/admin/NotificationCenter';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import ThemeToggle from '@/components/admin/ThemeToggle';
+import DensityToggle from '@/components/admin/DensityToggle';
+import AICopilotPanel from '@/components/admin/AICopilotPanel';
+import { Sparkles } from 'lucide-react';
 import { SoftphoneProvider } from '@/components/voip/SoftphoneProvider';
 import Softphone from '@/components/voip/Softphone';
 
@@ -36,6 +39,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const toggleCommandPalette = useCallback(() => setCommandPaletteOpen((v) => !v), []);
   const { helpOpen, setHelpOpen } = useAdminShortcuts({ onCommandPalette: toggleCommandPalette });
 
@@ -67,6 +71,11 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         e.preventDefault();
         setCommandPaletteOpen((v) => !v);
       }
+      // Ctrl+J or Cmd+J → toggle AI Copilot
+      if ((e.ctrlKey || e.metaKey) && e.key === 'j') {
+        e.preventDefault();
+        setCopilotOpen((v) => !v);
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -96,7 +105,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
     <div className="admin-outlook min-h-screen bg-slate-50">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-sky-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-sky-400"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-teal-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-teal-400"
       >
         {t('admin.skipToContent')}
       </a>
@@ -107,6 +116,15 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         onMobileMenuToggle={handleToggleMobileMenu}
         extraIcons={
           <>
+            <button
+              onClick={() => setCopilotOpen((v) => !v)}
+              className={`p-1.5 rounded-md transition-colors ${copilotOpen ? 'bg-teal-100 text-teal-700' : 'text-slate-500 hover:text-teal-600 hover:bg-teal-50'}`}
+              title={`${t('admin.copilot.title') || 'AI Copilot'} (⌘J)`}
+              aria-label={t('admin.copilot.title') || 'AI Copilot'}
+            >
+              <Sparkles className="w-4.5 h-4.5" />
+            </button>
+            <DensityToggle />
             <ThemeToggle />
             <NotificationCenter />
           </>
@@ -154,8 +172,8 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main content area */}
-        <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll">
-          <div className="p-4 lg:p-6">
+        <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll dark:bg-slate-900" tabIndex={-1}>
+          <div className="p-4 pb-16 lg:p-6 lg:pb-6">
             <Breadcrumbs />
             {children}
           </div>
@@ -166,6 +184,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         <Softphone />
       </SoftphoneErrorBoundary>
       <AdminCommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <AICopilotPanel open={copilotOpen} onClose={() => setCopilotOpen(false)} />
       <KeyboardShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
       <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors closeButton dir={dir} />
     </div>

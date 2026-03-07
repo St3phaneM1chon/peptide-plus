@@ -356,7 +356,7 @@ export default function EmployesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -429,7 +429,7 @@ export default function EmployesPage() {
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                         selectedEmployee.role === 'OWNER'
                           ? 'bg-amber-100 text-amber-800'
-                          : 'bg-sky-100 text-sky-800'
+                          : 'bg-teal-100 text-teal-800'
                       }`}>
                         {selectedEmployee.role === 'OWNER' ? <Crown className="w-4 h-4 mr-1.5" /> : <Shield className="w-4 h-4 mr-1.5" />}
                         {selectedEmployee.role}
@@ -554,7 +554,7 @@ export default function EmployesPage() {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'OWNER' | 'EMPLOYEE' })}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               <option value="EMPLOYEE">{t('admin.employees.roleEmployee')}</option>
               <option value="OWNER">{t('admin.employees.roleOwner')}</option>
@@ -570,7 +570,7 @@ export default function EmployesPage() {
                       type="checkbox"
                       checked={formData.permissions.includes(key)}
                       onChange={() => togglePermission(key)}
-                      className="w-4 h-4 rounded border-slate-300 text-sky-500"
+                      className="w-4 h-4 rounded border-slate-300 text-teal-500"
                     />
                     <span className="text-sm text-slate-700">{t(permissionI18nMap[key])}</span>
                   </label>

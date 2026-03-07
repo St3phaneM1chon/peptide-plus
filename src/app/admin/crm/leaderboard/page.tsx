@@ -161,7 +161,7 @@ export default function LeaderboardPage() {
                   <p className="text-xs text-gray-400">{t('admin.crm.revenue') || 'Revenue'}</p>
                 </div>
                 <div className="text-center">
-                  <p className="font-bold text-blue-600">{agent.contactRate}%</p>
+                  <p className="font-bold text-teal-600">{agent.contactRate}%</p>
                   <p className="text-xs text-gray-400">{t('admin.crm.contact') || 'Contact'}</p>
                 </div>
               </div>

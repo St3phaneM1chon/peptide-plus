@@ -51,8 +51,8 @@ export default function IncomingCallModal({ call, onAnswer, onReject }: Incoming
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-[340px] animate-bounce-gentle">
         {/* Caller Info */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-3">
-            <User className="w-8 h-8 text-sky-600" />
+          <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-3">
+            <User className="w-8 h-8 text-teal-600" />
           </div>
 
           <div className="text-lg font-semibold text-gray-900">

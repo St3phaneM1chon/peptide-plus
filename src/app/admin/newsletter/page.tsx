@@ -540,7 +540,7 @@ export default function NewsletterPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -707,7 +707,7 @@ export default function NewsletterPage() {
           {/* Résultats A/B Test */}
           <div className="bg-white rounded-lg p-4 border border-slate-200">
             <div className="flex items-center gap-2 mb-3">
-              <FlaskConical className="h-5 w-5 text-sky-600" />
+              <FlaskConical className="h-5 w-5 text-teal-600" />
               <h3 className="text-sm font-semibold text-slate-900">Résultats des tests A/B</h3>
             </div>
             {campaigns.filter(c => c.abTestResult).length > 0 ? (
@@ -794,7 +794,7 @@ export default function NewsletterPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`py-3 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab
-                    ? 'border-sky-500 text-sky-600'
+                    ? 'border-teal-500 text-teal-600'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -912,7 +912,7 @@ export default function NewsletterPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-600">{t('admin.newsletter.colSource')}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          selectedSubscriber.source === 'popup' ? 'bg-sky-50 text-sky-700'
+                          selectedSubscriber.source === 'popup' ? 'bg-teal-50 text-teal-700'
                           : selectedSubscriber.source === 'footer' ? 'bg-slate-100 text-slate-600'
                           : 'bg-amber-50 text-amber-700'
                         }`}>
@@ -1093,7 +1093,7 @@ export default function NewsletterPage() {
                           selectedCampaign.status === 'SENT'
                             ? 'bg-emerald-100 text-emerald-700'
                             : selectedCampaign.status === 'SCHEDULED'
-                              ? 'bg-sky-100 text-sky-700'
+                              ? 'bg-teal-100 text-teal-700'
                               : 'bg-slate-100 text-slate-600'
                         }`}>
                           {selectedCampaign.status}
@@ -1116,9 +1116,9 @@ export default function NewsletterPage() {
                           </div>
                         )}
                         {selectedCampaign.clickRate !== undefined && (
-                          <div className="bg-sky-50 rounded-lg p-4 text-center">
-                            <p className="text-2xl font-bold text-sky-700">{selectedCampaign.clickRate}%</p>
-                            <p className="text-xs text-sky-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
+                          <div className="bg-teal-50 rounded-lg p-4 text-center">
+                            <p className="text-2xl font-bold text-teal-700">{selectedCampaign.clickRate}%</p>
+                            <p className="text-xs text-teal-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
                           </div>
                         )}
                       </div>
@@ -1141,7 +1141,7 @@ export default function NewsletterPage() {
                             <p className="text-[10px] text-slate-500">Delivered</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-sky-700">{emailBridge.stats.openRate}%</p>
+                            <p className="text-lg font-bold text-teal-700">{emailBridge.stats.openRate}%</p>
                             <p className="text-[10px] text-slate-500">{t('admin.bridges.openRate')}</p>
                           </div>
                           <div className="text-center">
@@ -1241,9 +1241,9 @@ export default function NewsletterPage() {
                 type="checkbox"
                 checked={abTestEnabled}
                 onChange={(e) => setAbTestEnabled(e.target.checked)}
-                className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
               />
-              <FlaskConical className="h-4 w-4 text-sky-600" />
+              <FlaskConical className="h-4 w-4 text-teal-600" />
               <span className="text-sm font-medium text-slate-700">
                 {t('admin.newsletter.enableABTest') || 'Enable A/B Test'}
               </span>
@@ -1262,7 +1262,7 @@ export default function NewsletterPage() {
                       onClick={() => setAbTestType('subject')}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'subject'
-                          ? 'bg-sky-50 border-sky-300 text-sky-700 font-medium'
+                          ? 'bg-teal-50 border-teal-300 text-teal-700 font-medium'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                       }`}
                     >
@@ -1273,7 +1273,7 @@ export default function NewsletterPage() {
                       onClick={() => setAbTestType('content')}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'content'
-                          ? 'bg-sky-50 border-sky-300 text-sky-700 font-medium'
+                          ? 'bg-teal-50 border-teal-300 text-teal-700 font-medium'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                       }`}
                     >
@@ -1387,7 +1387,7 @@ export default function NewsletterPage() {
       >
         {statsLoading ? (
           <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
             <span className="sr-only">Loading...</span>
           </div>
         ) : statsData ? (
@@ -1404,9 +1404,9 @@ export default function NewsletterPage() {
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-sky-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-sky-700">{statsData.stats.sentCount}</p>
-                <p className="text-xs text-sky-600 mt-1">{t('admin.newsletter.statsSent') || 'Sent'}</p>
+              <div className="bg-teal-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-teal-700">{statsData.stats.sentCount}</p>
+                <p className="text-xs text-teal-600 mt-1">{t('admin.newsletter.statsSent') || 'Sent'}</p>
               </div>
               <div className="bg-emerald-50 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-emerald-700">{statsData.stats.openRate}%</p>
@@ -1489,7 +1489,7 @@ function SourceCard({
   // FLAW-016 FIX: amber color was using teal classes instead of amber
   const colors = {
     violet: 'bg-violet-50 border-violet-200 text-violet-700',
-    sky: 'bg-sky-50 border-sky-200 text-sky-700',
+    sky: 'bg-teal-50 border-teal-200 text-teal-700',
     amber: 'bg-amber-50 border-amber-200 text-amber-700',
   };
   return (

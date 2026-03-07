@@ -62,12 +62,12 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
     <th
-      className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:text-sky-600 select-none"
+      className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:text-teal-600 select-none"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center gap-1">
         <span className="text-xs">{label}</span>
-        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-sky-600' : 'text-gray-400'}`} />
+        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-teal-600' : 'text-gray-400'}`} />
       </div>
     </th>
   );
@@ -90,7 +90,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
       <div className="flex items-center gap-4">
         <Link
           href="/admin/telephonie/analytics"
-          className="p-2 text-gray-400 hover:text-sky-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-400 hover:text-teal-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>

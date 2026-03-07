@@ -4,7 +4,11 @@ export const dynamic = 'force-dynamic';
  * Integrate Prospect List into CRM
  * POST /api/admin/crm/lists/[id]/integrate
  *
- * Converts VALIDATED prospects into CrmLead, applies assignment method.
+ * Converts VALIDATED prospects into CrmLead with:
+ *   - Multi-factor scoring (not just rating * 20)
+ *   - Auto temperature assignment
+ *   - BANT pre-fill
+ *   - DNC pre-check
  */
 
 import { NextRequest } from 'next/server';
@@ -13,6 +17,9 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { updateListCounters } from '@/lib/crm/prospect-dedup';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { calculateScore, generateBANT } from '@/lib/crm/lead-scoring';
+import { phoneDncVariants } from '@/lib/crm/phone-utils';
 import {
   assignLeadsBulkRoundRobin,
   assignLeadsLoadBalanced,
@@ -24,9 +31,10 @@ const integrateSchema = z.object({
   assignmentMethod: z.enum(['MANUAL', 'ROUND_ROBIN', 'LOAD_BALANCED', 'SCORE_BASED']).optional(),
   agentIds: z.array(z.string().cuid()).optional(),
   statusFilter: z.enum(['NEW', 'VALIDATED']).optional(),
+  dncPreCheck: z.boolean().optional(),
 });
 
-export const POST = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const POST = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }>; session: { user: { id: string } } }) => {
   const { id: listId } = await context.params;
   const body = await request.json();
   const parsed = integrateSchema.safeParse(body);
@@ -40,7 +48,6 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
     return apiError('List not found', 'RESOURCE_NOT_FOUND', { status: 404, request });
   }
 
-  // Get prospects to integrate
   const statusFilter = parsed.data.statusFilter || 'VALIDATED';
   const prospects = await prisma.prospect.findMany({
     where: { listId, status: statusFilter },
@@ -52,18 +59,45 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
 
   let integrated = 0;
   let skipped = 0;
+  let dncFiltered = 0;
   const createdLeadIds: string[] = [];
   const errors: { prospectId: string; reason: string }[] = [];
 
   for (const prospect of prospects) {
     try {
-      // Check if already converted
       if (prospect.convertedLeadId) {
         skipped++;
         continue;
       }
 
-      // Create CrmLead from prospect
+      // DNC pre-check
+      if (parsed.data.dncPreCheck !== false && prospect.phone) {
+        const variants = phoneDncVariants(prospect.phone);
+
+        const dncEntry = variants.length > 0 ? await prisma.dnclEntry.findFirst({
+          where: {
+            phoneNumber: { in: variants },
+            OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          },
+        }) : null;
+        if (dncEntry) {
+          await prisma.prospect.update({
+            where: { id: prospect.id },
+            data: { dncChecked: true, dncStatus: 'NATIONAL_DNC' },
+          });
+          dncFiltered++;
+          continue;
+        }
+      }
+
+      // Calculate multi-factor score
+      const scoreBreakdown = calculateScore(
+        prospect as Parameters<typeof calculateScore>[0],
+      );
+
+      // Generate BANT data
+      const bant = generateBANT(prospect as Parameters<typeof generateBANT>[0]);
+
       const lead = await prisma.crmLead.create({
         data: {
           contactName: prospect.contactName,
@@ -72,16 +106,23 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
           phone: prospect.phone,
           source: 'IMPORT',
           status: 'NEW',
-          score: prospect.googleRating ? Math.round(prospect.googleRating * 20) : 0,
-          temperature: 'COLD',
-          customFields: prospect.customFields ? JSON.parse(JSON.stringify(prospect.customFields)) : undefined,
+          score: scoreBreakdown.total,
+          temperature: scoreBreakdown.temperature,
+          customFields: prospect.customFields || undefined,
+          qualificationFramework: 'BANT',
+          qualificationData: bant as Record<string, string>,
+          dncStatus: 'CALLABLE',
         },
       });
 
-      // Link prospect to lead
       await prisma.prospect.update({
         where: { id: prospect.id },
-        data: { convertedLeadId: lead.id, status: 'INTEGRATED' },
+        data: {
+          convertedLeadId: lead.id,
+          status: 'INTEGRATED',
+          dncChecked: true,
+          dncStatus: 'CALLABLE',
+        },
       });
 
       createdLeadIds.push(lead.id);
@@ -91,7 +132,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
     }
   }
 
-  // Apply assignment if agents provided
+  // Apply assignment
   let assigned = 0;
   const method = parsed.data.assignmentMethod || list.assignmentMethod;
   const agentIds = parsed.data.agentIds || [];
@@ -102,7 +143,6 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
       case 'ROUND_ROBIN': {
         const config = (list.assignmentConfig as { currentIndex?: number }) || {};
         result = await assignLeadsBulkRoundRobin(createdLeadIds, agentIds, config.currentIndex || 0);
-        // Save next index
         await prisma.prospectList.update({
           where: { id: listId },
           data: { assignmentConfig: { ...(list.assignmentConfig as object || {}), currentIndex: result.nextIndex } },
@@ -124,12 +164,20 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
     assigned = result?.assigned || 0;
   }
 
-  // Update list status
   await prisma.prospectList.update({
     where: { id: listId },
     data: { status: 'INTEGRATED' },
   });
   await updateListCounters(listId);
 
-  return apiSuccess({ integrated, skipped, assigned, errors }, { request });
+  logAdminAction({
+    adminUserId: context.session.user.id,
+    action: 'INTEGRATE_PROSPECTS',
+    targetType: 'ProspectList',
+    targetId: listId,
+    newValue: { integrated, skipped, dncFiltered, assigned, errorCount: errors.length },
+    ipAddress: getClientIpFromRequest(request),
+  });
+
+  return apiSuccess({ integrated, skipped, dncFiltered, assigned, errors }, { request });
 });

@@ -342,7 +342,7 @@ export default function GrandLivrePage() {
                     {formatDate(transaction.date)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm text-blue-600 hover:underline cursor-pointer">
+                    <span className="font-mono text-sm text-teal-600 hover:underline cursor-pointer">
                       {transaction.journalEntry}
                     </span>
                   </td>

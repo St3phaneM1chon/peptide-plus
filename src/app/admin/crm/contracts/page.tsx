@@ -50,7 +50,7 @@ function StatusBadge({ status }: { status: Contract['status'] }) {
     PENDING_SIGNATURE: { label: 'Pending Signature', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
     ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700', icon: CheckCircle },
     EXPIRED: { label: 'Expired', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
-    RENEWED: { label: 'Renewed', color: 'bg-blue-100 text-blue-700', icon: RefreshCw },
+    RENEWED: { label: 'Renewed', color: 'bg-teal-100 text-teal-700', icon: RefreshCw },
     CANCELLED: { label: 'Cancelled', color: 'bg-gray-100 text-gray-500', icon: XCircle },
     TERMINATED: { label: 'Terminated', color: 'bg-red-100 text-red-700', icon: XCircle },
   };
@@ -157,7 +157,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-600" />
+            <FileText className="h-5 w-5 text-teal-600" />
             {contract
               ? (t('admin.crm.contracts.editContract') || 'Edit Contract')
               : (t('admin.crm.contracts.createContract') || 'Create Contract')}
@@ -177,7 +177,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
@@ -189,7 +189,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
@@ -202,7 +202,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
             <div>
@@ -213,7 +213,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
           </div>
@@ -228,7 +228,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
                 step="0.01"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
             <div>
@@ -238,7 +238,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="CAD">CAD</option>
                 <option value="USD">USD</option>
@@ -256,7 +256,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Contract['status'])}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PENDING_SIGNATURE">Pending Signature</option>
@@ -274,7 +274,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               <select
                 value={renewalType}
                 onChange={(e) => setRenewalType(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="manual">Manual</option>
                 <option value="auto">Auto-Renew</option>
@@ -291,7 +291,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               type="number"
               value={renewalNoticeDays}
               onChange={(e) => setRenewalNoticeDays(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
@@ -303,7 +303,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
             />
           </div>
         </div>
@@ -319,7 +319,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             {saving ? (t('common.saving') || 'Saving...') : (t('common.save') || 'Save')}
@@ -376,7 +376,7 @@ export default function ContractsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-blue-600" />
+            <FileText className="h-6 w-6 text-teal-600" />
             {t('admin.crm.contracts.title') || 'Contracts'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -385,7 +385,7 @@ export default function ContractsPage() {
         </div>
         <button
           onClick={() => setModal({ contract: null })}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           {t('admin.crm.contracts.create') || 'Create Contract'}
@@ -426,7 +426,7 @@ export default function ContractsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
         </div>
       ) : contracts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">

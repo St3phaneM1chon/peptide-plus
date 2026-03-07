@@ -108,7 +108,7 @@ export default function CoachingClient({
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case 'SCHEDULED': return { color: 'bg-sky-50 text-sky-700', label: 'Scheduled' };
+      case 'SCHEDULED': return { color: 'bg-teal-50 text-teal-700', label: 'Scheduled' };
       case 'IN_PROGRESS': return { color: 'bg-emerald-50 text-emerald-700', label: 'In Progress' };
       case 'COMPLETED': return { color: 'bg-gray-100 text-gray-600', label: 'Completed' };
       case 'CANCELLED': return { color: 'bg-red-50 text-red-600', label: 'Cancelled' };
@@ -127,7 +127,7 @@ export default function CoachingClient({
 
   const modeColor = (mode: CoachingMode) => {
     switch (mode) {
-      case 'listen': return 'bg-sky-50 text-sky-700 border-sky-200';
+      case 'listen': return 'bg-teal-50 text-teal-700 border-teal-200';
       case 'whisper': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'barge': return 'bg-red-50 text-red-700 border-red-200';
     }
@@ -239,7 +239,7 @@ export default function CoachingClient({
         </div>
         <button
           onClick={() => setShowNewSession(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t('voip.admin.coaching.startSession')}
         </button>
@@ -288,7 +288,7 @@ export default function CoachingClient({
       {/* Active Sessions */}
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-sky-600" />
+          <GraduationCap className="w-5 h-5 text-teal-600" />
           {t('voip.admin.coaching.activeSessions')}
         </h2>
 
@@ -302,8 +302,8 @@ export default function CoachingClient({
                     <div className="flex items-center gap-4">
                       {/* Coach */}
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
-                          <User className="w-4 h-4 text-sky-600" />
+                        <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                          <User className="w-4 h-4 text-teal-600" />
                         </div>
                         <div>
                           <div className="text-xs text-gray-500">Coach</div>
@@ -450,7 +450,7 @@ export default function CoachingClient({
                 <select
                   value={form.studentId}
                   onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="">--</option>
                   {availableUsers
@@ -471,7 +471,7 @@ export default function CoachingClient({
                   value={form.topic}
                   onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
                   placeholder="Sales techniques, Complaint handling..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
 
@@ -483,7 +483,7 @@ export default function CoachingClient({
                   onChange={(e) => setForm((f) => ({ ...f, objectives: e.target.value }))}
                   placeholder="What should be practiced..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-y"
                 />
               </div>
 
@@ -494,7 +494,7 @@ export default function CoachingClient({
                   type="datetime-local"
                   value={form.scheduledAt}
                   onChange={(e) => setForm((f) => ({ ...f, scheduledAt: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function CoachingClient({
               <button
                 onClick={handleNewSession}
                 disabled={saving || !form.studentId}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {t('voip.admin.coaching.startSession')}
               </button>

@@ -48,7 +48,7 @@ function DropdownGroup({
           <a
             key={item.href}
             href={item.href}
-            className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 rounded transition-colors"
+            className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded transition-colors"
             onClick={onClose}
           >
             <item.icon className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
@@ -108,7 +108,7 @@ function NavDropdownTab({
           onClick={() => { setOpen(!open); onSelect(tab.key); }}
           className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
             isActive || open
-              ? 'text-sky-700 border-b-2 border-sky-700 -mb-px'
+              ? 'text-teal-700 border-b-2 border-teal-700 -mb-px'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -138,7 +138,7 @@ function NavDropdownTab({
         onClick={() => { setOpen(!open); onSelect(tab.key); }}
         className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
           isActive || open
-            ? 'text-sky-700 border-b-2 border-sky-700 -mb-px'
+            ? 'text-teal-700 border-b-2 border-teal-700 -mb-px'
             : 'text-slate-500 hover:text-slate-700'
         }`}
       >
@@ -158,7 +158,7 @@ function NavDropdownTab({
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 rounded transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded transition-colors"
                   onClick={close}
                 >
                   <item.icon className="w-3.5 h-3.5 text-slate-400" />
@@ -212,7 +212,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
               <a
                 key={item.key}
                 href={item.href}
-                className="block px-3 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors"
+                className="block px-3 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
                 onClick={() => setOpen(false)}
               >
                 {t(item.labelKey)}
@@ -221,7 +221,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
               <button
                 key={item.key}
                 type="button"
-                className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors"
+                className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
                 onClick={() => { dispatchRibbonAction(item.key); setOpen(false); }}
               >
                 {t(item.labelKey)}
@@ -284,7 +284,7 @@ export default function OutlookRibbon() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'text-sky-700 border-b-2 border-sky-700 -mb-px'
+                  ? 'text-teal-700 border-b-2 border-teal-700 -mb-px'
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -315,7 +315,7 @@ export default function OutlookRibbon() {
                   className={`
                     flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap
                     ${isP
-                      ? 'bg-sky-600 text-white hover:bg-sky-700'
+                      ? 'bg-teal-600 text-white hover:bg-teal-700'
                       : isD
                         ? 'text-red-600 hover:bg-red-50'
                         : 'text-slate-600 hover:bg-slate-100'

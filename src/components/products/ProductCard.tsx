@@ -76,7 +76,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
       <div className="p-5">
         {/* Titre */}
         <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-          <Link href={`/cours/${product.slug}`} className="hover:text-blue-600">
+          <Link href={`/cours/${product.slug}`} className="hover:text-teal-600">
             {product.name}
           </Link>
         </h3>
@@ -158,13 +158,13 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
           <div className="flex space-x-2">
             <Link
               href={`/cours/${product.slug}`}
-              className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors"
+              className="px-3 py-2 text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-medium transition-colors"
             >
               En savoir plus
             </Link>
             <Link
               href={`/checkout/${product.slug}`}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
             >
               Acheter
             </Link>

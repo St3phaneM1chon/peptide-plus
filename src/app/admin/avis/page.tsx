@@ -525,7 +525,7 @@ export default function AvisPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -579,14 +579,14 @@ export default function AvisPage() {
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
-        <div className="mx-4 lg:mx-6 mb-2 flex items-center gap-3 bg-sky-50 border border-sky-200 rounded-lg px-4 py-2.5 flex-shrink-0">
-          <span className="text-sm font-medium text-sky-800">
+        <div className="mx-4 lg:mx-6 mb-2 flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5 flex-shrink-0">
+          <span className="text-sm font-medium text-teal-800">
             {selectedIds.size} review(s) selected
           </span>
           <div className="flex items-center gap-2 ml-auto">
             <button
               onClick={selectAllVisible}
-              className="text-xs text-sky-600 hover:text-sky-700 font-medium"
+              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
             >
               Select all visible
             </button>
@@ -661,7 +661,7 @@ export default function AvisPage() {
                           type="checkbox"
                           checked={selectedIds.has(selectedReview.id)}
                           onChange={() => toggleSelectReview(selectedReview.id)}
-                          className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                          className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                         />
                         <span className="text-xs text-slate-500">Select</span>
                       </label>
@@ -715,7 +715,7 @@ export default function AvisPage() {
                           setAdminResponse(selectedReview.adminResponse || '');
                           setShowResponseModal(true);
                         }}
-                        className="text-sky-700 hover:bg-sky-100"
+                        className="text-teal-700 hover:bg-teal-100"
                       >
                         {selectedReview.adminResponse ? t('admin.reviews.editResponse') : t('admin.reviews.respond')}
                       </Button>
@@ -795,7 +795,7 @@ export default function AvisPage() {
                               setLightboxIndex(idx);
                               setLightboxOpen(true);
                             }}
-                            className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-sky-400 transition-colors cursor-pointer group"
+                            className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-teal-400 transition-colors cursor-pointer group"
                           >
                             <Image
                               src={img}
@@ -887,9 +887,9 @@ export default function AvisPage() {
 
                   {/* Existing admin response */}
                   {selectedReview.adminResponse && (
-                    <div className="bg-sky-50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-sky-800 mb-2">{t('admin.reviews.responseBioCycle')}</h4>
-                      <p className="text-sm text-sky-700">{selectedReview.adminResponse}</p>
+                    <div className="bg-teal-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-teal-800 mb-2">{t('admin.reviews.responseBioCycle')}</h4>
+                      <p className="text-sm text-teal-700">{selectedReview.adminResponse}</p>
                     </div>
                   )}
                 </div>
@@ -990,7 +990,7 @@ export default function AvisPage() {
                         setLightboxIndex(idx);
                         setLightboxOpen(true);
                       }}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 hover:border-sky-400 transition-colors cursor-pointer group"
+                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 hover:border-teal-400 transition-colors cursor-pointer group"
                     >
                       <Image
                         src={img}
@@ -1012,7 +1012,7 @@ export default function AvisPage() {
                   <button
                     key={template.id}
                     onClick={() => setAdminResponse(template.text)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors"
                   >
                     <Copy className="w-3 h-3" />
                     {template.label}

@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-07 (Backups API live + Video Sessions: Prisma model, API CRUD, admin page, nav, auto-link recording→session)
+# LAST UPDATED: 2026-03-07 (LeadEngine: Google Maps scraper, waterfall enrichment, AI scoring, DNC compliance, 1-click campaign, 12 API routes, 7 lib files, 29 i18n keys)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 286 | **API Routes**: 762 | **Prisma Models**: 267 | **Enums**: 61 | **Components**: 141 | **Hooks**: 24 | **Lib files**: 369
+- **Pages**: 286 | **API Routes**: 774 | **Prisma Models**: 267 | **Enums**: 61 | **Components**: 141 | **Hooks**: 24 | **Lib files**: 376
 - **Loading skeletons**: 198 loading.tsx files (coverage expanded beyond admin pages)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -397,6 +397,33 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | **Frontend** | 8 pages modified with bridge cards: commandes, deals/[id], promo-codes, avis, videos/[id], ecritures, CustomerSidebar, CallLogClient |
 | **i18n** | 18+ keys in `admin.bridges` namespace across 22 locales |
 | **Affects** | ALL 12 modules — Commerce, CRM, Comptabilite, Catalogue, Fidelite, Marketing, Telephonie, Emails, Media, Communaute, Dashboard, Systeme |
+
+---
+
+### 1.26 CRM LEADENGINE / PROSPECT LISTS (LeadEngine Pipeline)
+> **What**: Multi-source lead generation pipeline — Google Maps scraping, waterfall email enrichment, AI scoring, DNC compliance, 1-click campaign launch. Converts Prospects into CrmLeads into DialerCampaign entries.
+
+| Layer | Elements |
+|-------|----------|
+| **Pages** | `/admin/crm/lists` (list index), `/admin/crm/lists/[id]` (6 tabs: prospects, googleMaps, enrichment, duplicates, assignment, campaign) |
+| **API Routes** | `GET,POST /api/admin/crm/lists`, `GET,PUT,DELETE /api/admin/crm/lists/[id]`, `POST /api/admin/crm/lists/[id]/scrape`, `POST /api/admin/crm/lists/[id]/enrich`, `POST /api/admin/crm/lists/[id]/score`, `POST /api/admin/crm/lists/[id]/integrate`, `POST /api/admin/crm/lists/[id]/start-campaign`, `POST /api/admin/crm/lists/[id]/prospects`, `PUT,DELETE /api/admin/crm/lists/[id]/prospects/[prospectId]`, `POST /api/admin/crm/lists/[id]/import`, `POST /api/admin/crm/lists/[id]/validate`, `POST /api/admin/crm/lists/[id]/deduplicate` |
+| **Models** | `ProspectList`, `Prospect`, `CrmLead`, `DialerCampaign`, `DialerListEntry`, `DnclEntry`, `AuditLog` |
+| **Components** | Inline in page (tabs: Google Maps config, enrichment progress, score distribution, dedup results, assignment matrix, campaign launcher) |
+| **Lib** | `@/lib/crm/google-maps-scraper`, `@/lib/crm/enrichment-pipeline`, `@/lib/crm/lead-scoring`, `@/lib/crm/lead-assignment`, `@/lib/crm/prospect-dedup`, `@/lib/crm/campaign-bridge`, `@/lib/crm/phone-utils` |
+| **Audit** | All 5 action endpoints log via `logAdminAction()`: SCRAPE_PROSPECTS, ENRICH_PROSPECTS, SCORE_PROSPECTS, INTEGRATE_PROSPECTS, START_CAMPAIGN |
+| **i18n** | 29 keys in `admin.crmLists` namespace (campaign*, enrichment*, score*) across 22 locales |
+| **External** | Google Places API (Text Search + Details + Nearby), Hunter.io (email lookup), Apollo.io (contact enrichment) |
+| **Affects** | CrmLead (creates leads from prospects), DialerCampaign (1-click campaign creation), DnclEntry (DNC pre-check filtering), VoIP power-dialer (campaign entries) |
+
+**Pipeline flow:**
+```
+Google Maps Scrape → Waterfall Enrichment → AI Scoring (7-factor) → DNC Pre-Check → Integrate → 1-Click Campaign
+     (scrape)            (enrich)              (score)                              (integrate)   (start-campaign)
+```
+
+**Scoring factors (0-100):** Google Rating (25), Review Volume (15), Website Quality (15), Email Available (10), Phone Available (10), Industry Fit (15), Recency (10)
+
+**Assignment methods:** MANUAL, ROUND_ROBIN, LOAD_BALANCED, SCORE_BASED
 
 ---
 
@@ -990,6 +1017,22 @@ orders, users/[id], users/[id]/points, **users/[id]/email** (POST - admin transa
 |-------|---------|--------|------|-------|
 | /api/webhooks/zapier | POST | Various | webhook-secret | Zapier trigger/action endpoint |
 
+### CRM LeadEngine / Prospect Lists Routes (12 routes - 2026-03-07)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/crm/lists | GET,POST | ProspectList | admin-guard | List index + create |
+| /api/admin/crm/lists/[id] | GET,PUT,DELETE | ProspectList,Prospect | admin-guard | Single list CRUD |
+| /api/admin/crm/lists/[id]/prospects | POST | Prospect | admin-guard | Add prospect to list |
+| /api/admin/crm/lists/[id]/prospects/[prospectId] | PUT,DELETE | Prospect | admin-guard | Edit/delete single prospect |
+| /api/admin/crm/lists/[id]/import | POST | Prospect,ProspectList | admin-guard | CSV import with dedup |
+| /api/admin/crm/lists/[id]/scrape | POST | Prospect,ProspectList | admin-guard | Google Maps scrape (Text Search + Nearby fallback) |
+| /api/admin/crm/lists/[id]/enrich | POST | Prospect | admin-guard | Waterfall enrichment (website→Hunter→pattern→Apollo) |
+| /api/admin/crm/lists/[id]/score | POST | Prospect | admin-guard | 7-factor AI scoring + auto-qualify |
+| /api/admin/crm/lists/[id]/validate | POST | Prospect | admin-guard | Bulk validation by rules |
+| /api/admin/crm/lists/[id]/deduplicate | POST | Prospect | admin-guard | Cross-list dedup (phone+domain+GPS) |
+| /api/admin/crm/lists/[id]/integrate | POST | Prospect,CrmLead,DnclEntry | admin-guard | Convert prospects → CRM leads + DNC check + assignment |
+| /api/admin/crm/lists/[id]/start-campaign | POST | CrmLead,DialerCampaign,DialerListEntry,DnclEntry | admin-guard | 1-click campaign creation from list |
+
 ### Mega-Audit v2 Routes (32 new routes - 2026-03-04)
 
 **Cart Enhancements**
@@ -1545,6 +1588,17 @@ email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, ma
 | `tcpa-manual-touch.ts` | TCPA 1-to-1 manual touch mode for cell phones | Dialer compliance |
 | `clv-calculator.ts` | Customer Lifetime Value calculation (historical + predictive) | CLV dashboard |
 | `churn-analysis.ts` | Churn rate analysis + prediction with risk scoring | Churn dashboard |
+
+### `/src/lib/crm/` LeadEngine files (7 new) - 2026-03-07
+| File | Purpose | Used By |
+|------|---------|---------|
+| `google-maps-scraper.ts` | Google Places API scraper (Text Search + Details + Nearby fallback, pagination, rate limiter, website email crawl) | /api/admin/crm/lists/[id]/scrape |
+| `enrichment-pipeline.ts` | 4-level waterfall enrichment: website crawl → Hunter.io → pattern+MX → Apollo.io | /api/admin/crm/lists/[id]/enrich |
+| `lead-scoring.ts` | 7-factor scoring (0-100), temperature auto-assign (HOT/WARM/COLD), BANT generation, list scoring + auto-qualify | /api/admin/crm/lists/[id]/score, /integrate |
+| `lead-assignment.ts` | 5 assignment strategies: Manual, Round Robin, Load Balanced, Score Based, Territory | /api/admin/crm/lists/[id]/integrate |
+| `prospect-dedup.ts` | Cross-list dedup (phone+email+domain+GPS proximity), transitive merge, counter sync | /api/admin/crm/lists/[id]/deduplicate, /integrate |
+| `campaign-bridge.ts` | 1-click Prospect→CrmLead→DialerCampaign→DialerListEntry bridge, DNC filtering, call outcome recording | /api/admin/crm/lists/[id]/start-campaign |
+| `phone-utils.ts` | Phone normalization (E.164), DNC variant generation for lookup | /integrate, /start-campaign, /deduplicate |
 
 ### `/src/lib/crm/` modified files - Phase 4 2026-03-04
 | File | Changes | Impact |

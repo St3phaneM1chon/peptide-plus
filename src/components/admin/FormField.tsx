@@ -41,7 +41,7 @@ export function Input({ error, className = '', ...props }: InputProps) {
       className={`
         w-full h-9 px-3 rounded-lg border text-sm text-slate-900
         placeholder-slate-400 transition-shadow
-        focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700
+        focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700
         ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-slate-300'}
         ${className}
       `}
@@ -61,7 +61,7 @@ export function Textarea({ error, className = '', ...props }: TextareaProps) {
       className={`
         w-full px-3 py-2 rounded-lg border text-sm text-slate-900
         placeholder-slate-400 transition-shadow resize-y
-        focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700
+        focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700
         ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-slate-300'}
         ${className}
       `}

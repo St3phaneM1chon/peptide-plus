@@ -63,7 +63,7 @@ export function BridgeCard({
         {viewAllHref && !loading && (
           <Link
             href={viewAllHref}
-            className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
           >
             {viewAllLabel || 'Voir tout'}
             <ExternalLink className="w-3 h-3" />
@@ -118,7 +118,7 @@ export function BridgeCardStat({
     <div className="flex items-center justify-between py-1">
       <span className="text-sm text-slate-500">{label}</span>
       {href ? (
-        <Link href={href} className="text-blue-600 hover:text-blue-700">
+        <Link href={href} className="text-teal-600 hover:text-teal-700">
           {valueEl}
         </Link>
       ) : (

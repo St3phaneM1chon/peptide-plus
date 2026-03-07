@@ -108,7 +108,7 @@ export default function BrandKitPage() {
               <button
                 onClick={saveBrandKit}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('common.save') || 'Save'}
@@ -128,7 +128,7 @@ export default function BrandKitPage() {
 
       {/* Brand Name Editor (Chantier 4.3) */}
       {editing && brandKit && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4 space-y-4">
+        <div className="bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-800 p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.brandName') || 'Brand Name'}</label>
@@ -201,7 +201,7 @@ export default function BrandKitPage() {
               <div key={color.nameKey} className="group">
                 <button
                   onClick={() => copyToClipboard(color.hex, name)}
-                  className="w-full aspect-square rounded-xl shadow-sm border border-slate-200 hover:ring-2 hover:ring-sky-400 transition-all relative overflow-hidden"
+                  className="w-full aspect-square rounded-xl shadow-sm border border-slate-200 hover:ring-2 hover:ring-teal-400 transition-all relative overflow-hidden"
                   style={{ backgroundColor: color.hex }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity">

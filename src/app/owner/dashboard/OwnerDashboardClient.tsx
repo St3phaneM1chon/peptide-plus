@@ -117,8 +117,8 @@ export default function OwnerDashboardClient({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Financial Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white">
-            <p className="text-blue-100 text-sm mb-1">{t('ownerDashboard.totalRevenue')}</p>
+          <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-xl p-6 text-white">
+            <p className="text-teal-100 text-sm mb-1">{t('ownerDashboard.totalRevenue')}</p>
             <p className="text-3xl font-bold">{formatCurrency(stats.totalRevenue, locale)}</p>
           </div>
 
@@ -169,7 +169,7 @@ export default function OwnerDashboardClient({
                 return (
                   <div key={item.month} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-blue-600 rounded-t-md transition-all hover:bg-blue-700"
+                      className="w-full bg-teal-600 rounded-t-md transition-all hover:bg-teal-700"
                       style={{ height: `${height}%`, minHeight: '4px' }}
                     />
                     <p className="text-xs text-gray-500 mt-2">{item.month.slice(5)}</p>
@@ -213,7 +213,7 @@ export default function OwnerDashboardClient({
         <section className="mt-8 bg-white rounded-xl border border-gray-200">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">{t('ownerDashboard.recentTransactions')}</h2>
-            <Link href="/admin/comptabilite/factures-clients" className="inline-flex items-center gap-1 text-blue-600 hover:underline text-sm">
+            <Link href="/admin/comptabilite/factures-clients" className="inline-flex items-center gap-1 text-teal-600 hover:underline text-sm">
               {t('ownerDashboard.viewAll')}
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
@@ -282,9 +282,9 @@ function QuickAction({ href, title, icon }: { href: string; title: string; icon:
   return (
     <Link
       href={href}
-      className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all text-center group"
+      className="bg-white rounded-xl p-4 border border-gray-200 hover:border-teal-300 hover:shadow-sm transition-all text-center group"
     >
-      <div className="w-10 h-10 mx-auto mb-2 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+      <div className="w-10 h-10 mx-auto mb-2 bg-teal-50 rounded-lg flex items-center justify-center text-teal-600 group-hover:bg-teal-100 transition-colors">
         {icon}
       </div>
       <span className="text-sm font-medium text-gray-900">{title}</span>

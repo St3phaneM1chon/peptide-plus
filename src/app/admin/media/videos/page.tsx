@@ -432,9 +432,9 @@ export default function MediaVideosPage() {
     <div className="p-6 max-w-5xl space-y-4">
       {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium">{t('admin.media.videosTitle') || 'Videos'}</span>
       </nav>
@@ -442,7 +442,7 @@ export default function MediaVideosPage() {
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.videosTitle')}</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
           {t('common.add')}
@@ -505,7 +505,7 @@ export default function MediaVideosPage() {
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
-            <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save')}
             </button>
           </div>
@@ -514,8 +514,8 @@ export default function MediaVideosPage() {
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
-          <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+        <div className="flex items-center gap-3 p-2 bg-teal-50 border border-teal-200 rounded-lg text-sm">
+          <span className="text-teal-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
           <button onClick={handlePublishSelected} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs">
             <CheckCircle className="w-3 h-3" /> {t('admin.media.bulkPublish')}
           </button>
@@ -601,7 +601,7 @@ export default function MediaVideosPage() {
 
       {/* Video list */}
       {loading ? (
-        <div className="flex items-center justify-center h-32"><Loader2 className="w-6 h-6 animate-spin text-sky-500" /></div>
+        <div className="flex items-center justify-center h-32"><Loader2 className="w-6 h-6 animate-spin text-teal-500" /></div>
       ) : videos.length === 0 ? (
         <div className="text-center py-12 text-slate-500">{t('admin.media.videosDesc')}</div>
       ) : (
@@ -611,8 +611,8 @@ export default function MediaVideosPage() {
             const embedUrl = getEmbedUrl(v);
 
             return (
-              <div key={v.id} className="bg-white rounded-lg border transition-colors overflow-hidden ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200 hover:border-slate-300'}">
-                <div className={`flex items-center gap-3 p-3 ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : ''}`}>
+              <div key={v.id} className="bg-white rounded-lg border transition-colors overflow-hidden ${selectedIds.has(v.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200 hover:border-slate-300'}">
+                <div className={`flex items-center gap-3 p-3 ${selectedIds.has(v.id) ? 'border-teal-400 ring-2 ring-teal-200' : ''}`}>
                   <input
                     type="checkbox"
                     checked={selectedIds.has(v.id)}
@@ -664,7 +664,7 @@ export default function MediaVideosPage() {
                         </span>
                       )}
                       {v.source && v.source !== 'YOUTUBE' && (
-                        <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-medium">
+                        <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 text-[10px] font-medium">
                           {v.source}
                         </span>
                       )}
@@ -683,7 +683,7 @@ export default function MediaVideosPage() {
                   <div className="flex items-center gap-3">
                     {/* View tracking count display - F40 FIX: Use i18n for "views" */}
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg" title={`${v.views} ${t('admin.media.videoViews') || 'views'}`}>
-                      <BarChart3 className="w-3.5 h-3.5 text-sky-500" />
+                      <BarChart3 className="w-3.5 h-3.5 text-teal-500" />
                       <span className="text-xs font-semibold text-slate-700">{formatViews(v.views)}</span>
                       <span className="text-[10px] text-slate-400">{t('admin.media.videoViews') || 'views'}</span>
                     </div>
@@ -692,7 +692,7 @@ export default function MediaVideosPage() {
                     {/* View Detail link */}
                     <Link
                       href={`/admin/media/videos/${v.id}`}
-                      className="text-slate-400 hover:text-sky-600"
+                      className="text-slate-400 hover:text-teal-600"
                       aria-label={t('admin.media.viewDetail') || 'View detail'}
                       title={t('admin.media.viewDetail') || 'View detail'}
                     >
@@ -701,7 +701,7 @@ export default function MediaVideosPage() {
                     {/* F32 FIX: Edit button for inline video editing */}
                     <button
                       onClick={() => editingId === v.id ? setEditingId(null) : startEdit(v)}
-                      className={`text-slate-400 hover:text-sky-600 ${editingId === v.id ? 'text-sky-600' : ''}`}
+                      className={`text-slate-400 hover:text-teal-600 ${editingId === v.id ? 'text-teal-600' : ''}`}
                       aria-label={editingId === v.id ? (t('admin.media.cancelEdit') || 'Cancel edit') : (t('admin.media.editVideo') || 'Edit video')}
                       title={editingId === v.id ? (t('admin.media.cancelEdit') || 'Cancel edit') : (t('admin.media.editVideo') || 'Edit video')}
                     >
@@ -712,17 +712,17 @@ export default function MediaVideosPage() {
                         {embedUrl && (
                           <button
                             onClick={() => toggleEmbedPreview(v.id)}
-                            className={`text-slate-400 hover:text-sky-600 ${previewVideoId === v.id ? 'text-sky-600' : ''}`}
+                            className={`text-slate-400 hover:text-teal-600 ${previewVideoId === v.id ? 'text-teal-600' : ''}`}
                             aria-label={t('admin.media.videoEmbeddedPreview') || 'Embedded preview'}
                             title={t('admin.media.videoEmbeddedPreview') || 'Embedded preview'}
                           >
                             <ImageIcon className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label={t('admin.media.videoPlayVideo') || 'Play video'}>
+                        <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-teal-600" aria-label={t('admin.media.videoPlayVideo') || 'Play video'}>
                           <Play className="w-4 h-4" />
                         </button>
-                        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label={t('admin.media.videoOpenNewTab') || 'Open video in new tab'}>
+                        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-teal-600" aria-label={t('admin.media.videoOpenNewTab') || 'Open video in new tab'}>
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       </>
@@ -732,7 +732,7 @@ export default function MediaVideosPage() {
 
                 {/* F32 FIX: Inline edit form */}
                 {editingId === v.id && (
-                  <div className="border-t border-sky-200 p-4 bg-sky-50/50">
+                  <div className="border-t border-teal-200 p-4 bg-teal-50/50">
                     <form onSubmit={handleUpdate} className="space-y-3">
                       {formError && (
                         <div className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">{formError}</div>
@@ -789,7 +789,7 @@ export default function MediaVideosPage() {
                           <button type="button" onClick={() => setEditingId(null)} className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-slate-50">
                             {t('common.cancel') || 'Cancel'}
                           </button>
-                          <button type="submit" disabled={updating} className="px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
+                          <button type="submit" disabled={updating} className="px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50">
                             {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save') || 'Save'}
                           </button>
                         </div>

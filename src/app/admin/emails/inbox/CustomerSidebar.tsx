@@ -18,7 +18,7 @@ const tierColors: Record<string, string> = {
   SILVER: 'text-slate-600 bg-slate-100',
   GOLD: 'text-yellow-600 bg-yellow-50',
   PLATINUM: 'text-purple-600 bg-purple-50',
-  DIAMOND: 'text-blue-600 bg-blue-50',
+  DIAMOND: 'text-teal-600 bg-teal-50',
 };
 
 export default function CustomerSidebar({ customer, stats }: CustomerSidebarProps) {
@@ -147,7 +147,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
                   <span className="font-medium text-slate-900">#{order.orderNumber as string}</span>
                   <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded ${
                     order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                    order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-700' :
+                    order.status === 'SHIPPED' ? 'bg-teal-100 text-teal-700' :
                     order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                     'bg-slate-100 text-slate-600'
                   }`}>

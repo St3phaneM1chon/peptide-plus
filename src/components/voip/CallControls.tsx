@@ -141,14 +141,14 @@ export default function CallControls({
   // Common button style builder
   const btnClass = (
     active: boolean,
-    activeColors = 'bg-sky-100 text-sky-600',
+    activeColors = 'bg-teal-100 text-teal-600',
     inactiveColors = 'bg-gray-100 text-gray-700 hover:bg-gray-200',
   ) =>
     `p-3 rounded-full transition-colors ${active ? activeColors : inactiveColors}`;
 
   const btnClassSm = (
     active: boolean,
-    activeColors = 'bg-sky-100 text-sky-600',
+    activeColors = 'bg-teal-100 text-teal-600',
     inactiveColors = 'bg-gray-100 text-gray-700 hover:bg-gray-200',
   ) =>
     `p-2 rounded-full transition-colors ${active ? activeColors : inactiveColors}`;
@@ -381,7 +381,7 @@ export default function CallControls({
             value={transferNumber}
             onChange={(e) => setTransferNumber(e.target.value)}
             placeholder={t('voip.call.transferTo')}
-            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && transferNumber) {
                 onTransfer(transferNumber);
@@ -398,7 +398,7 @@ export default function CallControls({
                 setExpandedPanel('none');
               }
             }}
-            className="px-3 py-1.5 bg-sky-500 text-white rounded-lg text-sm hover:bg-sky-600"
+            className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600"
           >
             {t('voip.call.transferBtn')}
           </button>

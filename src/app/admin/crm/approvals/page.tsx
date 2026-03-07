@@ -57,7 +57,7 @@ function StatusBadge({ status }: { status: Approval['status'] }) {
 
 function EntityTypeBadge({ entityType }: { entityType: string }) {
   const colorMap: Record<string, string> = {
-    deal: 'bg-blue-100 text-blue-700',
+    deal: 'bg-teal-100 text-teal-700',
     quote: 'bg-purple-100 text-purple-700',
     discount: 'bg-orange-100 text-orange-700',
   };
@@ -169,7 +169,7 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               maxLength={2000}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
               placeholder={
                 isApprove
                   ? (t('admin.crm.approvals.approveNotePlaceholder') || 'Add an optional note...')
@@ -365,7 +365,7 @@ export default function ApprovalsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
+            <Shield className="h-6 w-6 text-teal-600" />
             {t('admin.crm.approvals.title') || 'Approvals'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -408,7 +408,7 @@ export default function ApprovalsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
         </div>
       ) : approvals.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">

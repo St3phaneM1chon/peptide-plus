@@ -36,9 +36,9 @@ const typeLabelsKeys: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  ENTRY: 'bg-sky-100 text-sky-700',
+  ENTRY: 'bg-teal-100 text-teal-700',
   INVOICE: 'bg-green-100 text-green-700',
-  SUPPLIER: 'bg-blue-100 text-blue-700',
+  SUPPLIER: 'bg-teal-100 text-teal-700',
   TRANSACTION: 'bg-purple-100 text-purple-700',
 };
 
@@ -217,14 +217,14 @@ export default function SearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.search.searchPlaceholder')}
               aria-label="Search accounting records"
-              className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-sky-500 focus:outline-none"
+              className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-teal-500 focus:outline-none"
               autoFocus
             />
             <span className="absolute start-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
             
             {loading && (
               <div className="absolute end-4 top-1/2 -translate-y-1/2" role="status" aria-label="Loading">
-                <div className="animate-spin h-5 w-5 border-2 border-sky-500 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-teal-500 border-t-transparent rounded-full"></div>
                 <span className="sr-only">Loading...</span>
               </div>
             )}
@@ -233,7 +233,7 @@ export default function SearchPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-xl border ${
-              showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-slate-200 text-slate-600'
+              showFilters ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-slate-200 text-slate-600'
             }`}
             aria-label={t('admin.search.filters')}
             aria-expanded={showFilters}
@@ -280,7 +280,7 @@ export default function SearchPage() {
                     onClick={() => toggleType(type)}
                     className={`px-3 py-1 rounded-full text-sm ${
                       filters.types.includes(type)
-                        ? 'bg-sky-600 text-white'
+                        ? 'bg-teal-600 text-white'
                         : 'bg-slate-100 text-slate-500'
                     }`}
                   >
@@ -427,7 +427,7 @@ export default function SearchPage() {
                     )}
                     {result.highlights && (
                       <p
-                        className="text-sm text-slate-600 mt-2 [&_mark]:bg-sky-100 [&_mark]:text-sky-700"
+                        className="text-sm text-slate-600 mt-2 [&_mark]:bg-teal-100 [&_mark]:text-teal-700"
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.highlights, { ALLOWED_TAGS: ['mark'] }) }}
                       />
                     )}

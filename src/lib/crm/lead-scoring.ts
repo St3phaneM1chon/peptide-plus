@@ -1,169 +1,303 @@
 /**
- * LEAD SCORING ENGINE
- * Composite score 0-100 based on Profile (30%), Engagement (40%),
- * Timing (20%), and Fit (10%) dimensions.
+ * AI Lead Scoring Engine — Multi-factor scoring (0-100)
+ *
+ * 7 scoring dimensions:
+ *   1. Google Rating (0-25)
+ *   2. Review Volume (0-15)
+ *   3. Website Quality (0-15)
+ *   4. Email Available (0-10)
+ *   5. Phone Available (0-10)
+ *   6. Industry Fit (0-15)
+ *   7. Recency (0-10)
+ *
+ * Auto-temperature: HOT (80-100), WARM (50-79), COLD (0-49)
  */
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
-// Score weights (percentage of total)
+// Types
 // ---------------------------------------------------------------------------
-const WEIGHT_PROFILE = 0.3;
-const WEIGHT_ENGAGEMENT = 0.4;
-const WEIGHT_TIMING = 0.2;
-const WEIGHT_FIT = 0.1;
+
+export interface ScoreBreakdown {
+  googleRating: number;
+  reviewVolume: number;
+  websiteQuality: number;
+  emailAvailable: number;
+  phoneAvailable: number;
+  industryFit: number;
+  recency: number;
+  total: number;
+  temperature: 'HOT' | 'WARM' | 'COLD';
+}
+
+export interface ScoringConfig {
+  targetIndustries?: string[];
+  targetCompanySizes?: string[];
+}
 
 // ---------------------------------------------------------------------------
-// Source bonus map
+// Scoring Functions
 // ---------------------------------------------------------------------------
-const SOURCE_BONUS: Record<string, number> = {
-  REFERRAL: 10,
-  WEB: 5,
-  CAMPAIGN: 5,
-  PARTNER: 8,
-};
 
-// ---------------------------------------------------------------------------
-// Temperature thresholds
-// ---------------------------------------------------------------------------
-type Temperature = 'HOT' | 'WARM' | 'COLD';
+function scoreGoogleRating(rating: number | null): number {
+  if (!rating) return 0;
+  return Math.round((rating / 5) * 25);
+}
 
-function temperatureFromScore(score: number): Temperature {
-  if (score > 70) return 'HOT';
-  if (score >= 40) return 'WARM';
+function scoreReviewVolume(reviewCount: number | null): number {
+  if (!reviewCount || reviewCount <= 0) return 0;
+  const score = (Math.log10(reviewCount) / Math.log10(1000)) * 15;
+  return Math.min(Math.round(score), 15);
+}
+
+function scoreWebsiteQuality(website: string | null, enrichmentData: {
+  hasSSL?: boolean;
+  hasContactPage?: boolean;
+  socialLinks?: Record<string, string>;
+  linkedinUrl?: string | null;
+}): number {
+  if (!website) return 0;
+  let score = 5;
+  if (enrichmentData.hasSSL || website.startsWith('https')) score += 3;
+  if (enrichmentData.hasContactPage) score += 3;
+  if (enrichmentData.linkedinUrl) score += 2;
+  if (enrichmentData.socialLinks && Object.keys(enrichmentData.socialLinks).length > 0) score += 2;
+  return Math.min(score, 15);
+}
+
+function scoreEmailAvailable(email: string | null): number {
+  return email ? 10 : 0;
+}
+
+function scorePhoneAvailable(phone: string | null): number {
+  return phone ? 10 : 0;
+}
+
+function scoreIndustryFit(
+  googleCategory: string | null,
+  naicsCode: string | null,
+  industry: string | null,
+  config: ScoringConfig,
+): number {
+  if (!config.targetIndustries || config.targetIndustries.length === 0) return 8;
+  const candidates = [googleCategory, naicsCode, industry].filter(Boolean).map((s) => s!.toLowerCase());
+  for (const target of config.targetIndustries) {
+    const lower = target.toLowerCase();
+    if (candidates.some((c) => c.includes(lower) || lower.includes(c))) return 15;
+  }
+  return 0;
+}
+
+function scoreRecency(
+  openingHours: unknown,
+  googleReviewCount: number | null,
+  updatedAt: Date,
+): number {
+  let score = 0;
+  if (openingHours) score += 5;
+  if (googleReviewCount && googleReviewCount > 5) score += 3;
+  const daysSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceUpdate < 30) score += 2;
+  return Math.min(score, 10);
+}
+
+function getTemperature(score: number): 'HOT' | 'WARM' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 50) return 'WARM';
   return 'COLD';
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Main Scoring
 // ---------------------------------------------------------------------------
 
-function daysSince(date: Date | null | undefined): number | null {
-  if (!date) return null;
-  return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
-}
+export function calculateScore(
+  prospect: {
+    googleRating: number | null;
+    googleReviewCount: number | null;
+    googleCategory: string | null;
+    website: string | null;
+    email: string | null;
+    phone: string | null;
+    naicsCode: string | null;
+    industry: string | null;
+    linkedinUrl: string | null;
+    openingHours: unknown;
+    customFields: unknown;
+    updatedAt: Date;
+  },
+  config: ScoringConfig = {},
+): ScoreBreakdown {
+  const customFields = (prospect.customFields as Record<string, unknown>) || {};
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-export interface LeadScoreResult {
-  score: number;
-  temperature: Temperature;
-  breakdown: Record<string, number>;
-}
-
-/**
- * Calculate a composite lead score (0-100), update the DB, and return the
- * breakdown by dimension.
- */
-export async function calculateLeadScore(leadId: string): Promise<LeadScoreResult> {
-  const lead = await prisma.crmLead.findUniqueOrThrow({
-    where: { id: leadId },
-    include: {
-      activities: { select: { id: true, createdAt: true } },
-      deals: { select: { id: true } },
-      tasks: { select: { id: true } },
-    },
+  const googleRating = scoreGoogleRating(prospect.googleRating);
+  const reviewVolume = scoreReviewVolume(prospect.googleReviewCount);
+  const websiteQuality = scoreWebsiteQuality(prospect.website, {
+    hasSSL: prospect.website?.startsWith('https') || false,
+    hasContactPage: !!customFields.hasContactPage,
+    socialLinks: customFields.socialLinks as Record<string, string> | undefined,
+    linkedinUrl: prospect.linkedinUrl,
   });
+  const emailAvailable = scoreEmailAvailable(prospect.email);
+  const phoneAvailable = scorePhoneAvailable(prospect.phone);
+  const industryFit = scoreIndustryFit(prospect.googleCategory, prospect.naicsCode, prospect.industry, config);
+  const recency = scoreRecency(prospect.openingHours, prospect.googleReviewCount, prospect.updatedAt);
 
-  // --- Profile (max raw = 30) ---
-  let profileRaw = 0;
-  if (lead.email) profileRaw += 5;
-  if (lead.phone) profileRaw += 5;
-  if (lead.companyName) profileRaw += 5;
-  if (lead.timezone) profileRaw += 3;
-  if (lead.preferredLang) profileRaw += 2;
-  profileRaw += SOURCE_BONUS[lead.source] ?? 0;
-  // Max possible raw = 5+5+5+3+2+10 = 30
-
-  // --- Engagement (max raw = 40) ---
-  let engagementRaw = 0;
-  if (lead.lastContactedAt) engagementRaw += 10;
-  if (lead.deals.length > 0) engagementRaw += 10;
-  const hasRecentActivity = lead.activities.some((a) => {
-    const days = daysSince(a.createdAt);
-    return days !== null && days <= 7;
-  });
-  if (hasRecentActivity) engagementRaw += 10;
-  if (lead.tasks.length > 0) engagementRaw += 5;
-  if (lead.activities.length > 3) engagementRaw += 5;
-  // Max possible raw = 10+10+10+5+5 = 40
-
-  // --- Timing (max raw = 20) ---
-  let timingRaw = 0;
-  const createdDaysAgo = daysSince(lead.createdAt);
-  if (createdDaysAgo !== null && createdDaysAgo <= 30) timingRaw += 10;
-  if (lead.nextFollowUpAt) timingRaw += 5;
-  const lastContactedDaysAgo = daysSince(lead.lastContactedAt);
-  if (lastContactedDaysAgo !== null && lastContactedDaysAgo <= 7) timingRaw += 5;
-  // Max possible raw = 10+5+5 = 20
-
-  // --- Fit (max raw = 10) ---
-  let fitRaw = 0;
-  if (lead.customFields) fitRaw += 5;
-  if (lead.tags.length > 0) fitRaw += 5;
-  // Max possible raw = 5+5 = 10
-
-  // --- Composite score ---
-  // Each dimension's raw max equals its weight denominator, so the weighted
-  // sum naturally falls in 0-100.
-  const compositeScore = Math.min(
+  const total = Math.min(
+    googleRating + reviewVolume + websiteQuality + emailAvailable + phoneAvailable + industryFit + recency,
     100,
-    Math.round(
-      profileRaw * WEIGHT_PROFILE +
-      engagementRaw * WEIGHT_ENGAGEMENT +
-      timingRaw * WEIGHT_TIMING +
-      fitRaw * WEIGHT_FIT,
-    ),
   );
 
-  const temperature = temperatureFromScore(compositeScore);
-
-  // Persist
-  await prisma.crmLead.update({
-    where: { id: leadId },
-    data: { score: compositeScore, temperature },
-  });
-
-  const breakdown: Record<string, number> = {
-    profile: Math.round(profileRaw * WEIGHT_PROFILE * 100) / 100,
-    engagement: Math.round(engagementRaw * WEIGHT_ENGAGEMENT * 100) / 100,
-    timing: Math.round(timingRaw * WEIGHT_TIMING * 100) / 100,
-    fit: Math.round(fitRaw * WEIGHT_FIT * 100) / 100,
+  return {
+    googleRating,
+    reviewVolume,
+    websiteQuality,
+    emailAvailable,
+    phoneAvailable,
+    industryFit,
+    recency,
+    total,
+    temperature: getTemperature(total),
   };
-
-  logger.debug('Lead score calculated', { leadId, compositeScore, temperature, breakdown });
-
-  return { score: compositeScore, temperature, breakdown };
 }
 
-/**
- * Recalculate scores for all active leads (status not in CONVERTED, LOST).
- */
-export async function recalculateAllLeadScores(): Promise<{ processed: number; updated: number }> {
-  const leads = await prisma.crmLead.findMany({
+// ---------------------------------------------------------------------------
+// Score & update a single prospect
+// ---------------------------------------------------------------------------
+
+export async function scoreProspect(
+  prospectId: string,
+  config: ScoringConfig = {},
+): Promise<ScoreBreakdown> {
+  const prospect = await prisma.prospect.findUnique({ where: { id: prospectId } });
+  if (!prospect) throw new Error(`Prospect ${prospectId} not found`);
+
+  const breakdown = calculateScore(prospect as Parameters<typeof calculateScore>[0], config);
+
+  await prisma.prospect.update({
+    where: { id: prospectId },
+    data: { enrichmentScore: breakdown.total },
+  });
+
+  return breakdown;
+}
+
+// ---------------------------------------------------------------------------
+// Batch score entire list
+// ---------------------------------------------------------------------------
+
+export async function scoreProspectList(
+  listId: string,
+  config: ScoringConfig = {},
+): Promise<{ scored: number; averageScore: number; distribution: { hot: number; warm: number; cold: number } }> {
+  const prospects = await prisma.prospect.findMany({
+    where: { listId, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+  });
+
+  let totalScore = 0;
+  const distribution = { hot: 0, warm: 0, cold: 0 };
+
+  for (const prospect of prospects) {
+    const breakdown = calculateScore(prospect as Parameters<typeof calculateScore>[0], config);
+    totalScore += breakdown.total;
+
+    if (breakdown.temperature === 'HOT') distribution.hot++;
+    else if (breakdown.temperature === 'WARM') distribution.warm++;
+    else distribution.cold++;
+
+    await prisma.prospect.update({
+      where: { id: prospect.id },
+      data: { enrichmentScore: breakdown.total },
+    });
+  }
+
+  const averageScore = prospects.length > 0 ? Math.round(totalScore / prospects.length) : 0;
+  logger.info('Scoring completed', { listId, scored: prospects.length, averageScore, distribution });
+
+  return { scored: prospects.length, averageScore, distribution };
+}
+
+// ---------------------------------------------------------------------------
+// Auto-qualify: validate prospects with score >= threshold AND (email OR phone)
+// ---------------------------------------------------------------------------
+
+export async function autoQualifyList(
+  listId: string,
+  threshold = 50,
+): Promise<{ qualified: number; skipped: number }> {
+  const prospects = await prisma.prospect.findMany({
     where: {
-      status: { notIn: ['CONVERTED', 'LOST'] },
+      listId,
+      status: 'NEW',
+      enrichmentScore: { gte: threshold },
+      OR: [
+        { email: { not: null } },
+        { phone: { not: null } },
+      ],
     },
     select: { id: true },
   });
 
-  let updated = 0;
-  for (const lead of leads) {
-    try {
-      await calculateLeadScore(lead.id);
-      updated++;
-    } catch (err) {
-      logger.error('Failed to recalculate lead score', {
-        leadId: lead.id,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
+  if (prospects.length === 0) return { qualified: 0, skipped: 0 };
+
+  await prisma.prospect.updateMany({
+    where: { id: { in: prospects.map((p) => p.id) } },
+    data: { status: 'VALIDATED' },
+  });
+
+  const total = await prisma.prospect.count({
+    where: { listId, status: 'NEW' },
+  });
+
+  logger.info('Auto-qualification completed', { listId, qualified: prospects.length, remaining: total });
+  return { qualified: prospects.length, skipped: total };
+}
+
+// ---------------------------------------------------------------------------
+// BANT Pre-fill
+// ---------------------------------------------------------------------------
+
+export function generateBANT(prospect: {
+  companySize: string | null;
+  jobTitle: string | null;
+  industry: string | null;
+  googleCategory: string | null;
+  enrichmentScore: number | null;
+}): Record<string, unknown> {
+  const bant: Record<string, unknown> = {};
+
+  if (prospect.companySize) {
+    const sizeMap: Record<string, string> = {
+      '1-10': 'LOW', '11-50': 'MEDIUM', '51-200': 'MEDIUM_HIGH',
+      '201-500': 'HIGH', '501-1000': 'HIGH', '1000+': 'ENTERPRISE',
+    };
+    bant.budget = sizeMap[prospect.companySize] || 'UNKNOWN';
+    bant.budgetIndicator = prospect.companySize;
   }
 
-  logger.info('Lead score recalculation complete', { processed: leads.length, updated });
-  return { processed: leads.length, updated };
+  if (prospect.jobTitle) {
+    const title = prospect.jobTitle.toLowerCase();
+    if (/ceo|president|owner|founder|director|vp|chief/i.test(title)) {
+      bant.authority = 'DECISION_MAKER';
+    } else if (/manager|head|lead|supervisor/i.test(title)) {
+      bant.authority = 'INFLUENCER';
+    } else {
+      bant.authority = 'USER';
+    }
+    bant.authorityTitle = prospect.jobTitle;
+  }
+
+  bant.need = prospect.industry || prospect.googleCategory || 'UNKNOWN';
+
+  if (prospect.enrichmentScore && prospect.enrichmentScore >= 80) {
+    bant.timeline = 'IMMEDIATE';
+  } else if (prospect.enrichmentScore && prospect.enrichmentScore >= 50) {
+    bant.timeline = 'SHORT_TERM';
+  } else {
+    bant.timeline = 'LONG_TERM';
+  }
+
+  return bant;
 }

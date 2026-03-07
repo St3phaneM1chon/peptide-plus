@@ -458,7 +458,7 @@ export default function PermissionsPage() {
                                   ? 'bg-emerald-100 text-emerald-600'
                                   : 'bg-slate-100 text-slate-300'
                                 }
-                                ${field === 'defaultOwner' ? 'cursor-not-allowed opacity-60' : 'hover:ring-2 hover:ring-sky-300'}
+                                ${field === 'defaultOwner' ? 'cursor-not-allowed opacity-60' : 'hover:ring-2 hover:ring-teal-300'}
                               `}
                             >
                               {(perm as unknown as Record<string, boolean>)[field] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
@@ -616,7 +616,7 @@ export default function PermissionsPage() {
                                   : f.permissionCodes.filter(c => c !== perm.code),
                               }));
                             }}
-                            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                           />
                           <div>
                             <p className="text-sm text-slate-700">{perm.name}</p>

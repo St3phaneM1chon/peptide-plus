@@ -136,7 +136,7 @@ export default function ReconciliationPage() {
               type="date"
               value={fromDate}
               onChange={e => setFromDate(e.target.value)}
-              className="h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
           <div className="flex items-center pb-1">
@@ -151,7 +151,7 @@ export default function ReconciliationPage() {
               type="date"
               value={toDate}
               onChange={e => setToDate(e.target.value)}
-              className="h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
           </div>
           <Button
@@ -180,7 +180,7 @@ export default function ReconciliationPage() {
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center h-48" role="status">
-          <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
           <span className="sr-only">Loading...</span>
         </div>
       )}
@@ -229,9 +229,9 @@ export default function ReconciliationPage() {
                 <p className="text-2xl font-bold text-red-700">-{formatCurrency(report.summary.totalRefunded)}</p>
                 <p className="text-sm text-red-600 mt-1">Refunded</p>
               </div>
-              <div className="text-center p-4 bg-sky-50 rounded-lg">
-                <p className="text-2xl font-bold text-sky-700">{formatCurrency(report.summary.netRevenue)}</p>
-                <p className="text-sm text-sky-600 mt-1">Net Revenue</p>
+              <div className="text-center p-4 bg-teal-50 rounded-lg">
+                <p className="text-2xl font-bold text-teal-700">{formatCurrency(report.summary.netRevenue)}</p>
+                <p className="text-sm text-teal-600 mt-1">Net Revenue</p>
               </div>
             </div>
           </div>

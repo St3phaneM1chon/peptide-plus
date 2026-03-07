@@ -6475,6 +6475,10 @@ model DialerListEntry {
   email        String?
   customFields Json?           // Flexible extra data
 
+  // CRM bridge
+  crmLeadId    String?
+  crmLead      CrmLead?        @relation("DialerListLead", fields: [crmLeadId], references: [id])
+
   // State
   isCalled     Boolean         @default(false)
   callAttempts Int             @default(0)
@@ -6494,6 +6498,7 @@ model DialerListEntry {
   @@index([isCalled])
   @@index([isDncl])
   @@index([scheduledAt])
+  @@index([crmLeadId])
   @@index([createdAt])
 }
 
@@ -6986,6 +6991,7 @@ model CrmLead {
   activities          CrmActivity[]        @relation("CrmActivityLead")
   inboxConversations  InboxConversation[]  @relation("InboxConversationLead")
   sourceProspect      Prospect?            @relation("ProspectToLead")
+  dialerEntries       DialerListEntry[]    @relation("DialerListLead")
 
   @@index([status, assignedToId])
   @@index([score(sort: Desc)])
@@ -8301,6 +8307,25 @@ model Prospect {
   notes            String?
   customFields     Json?
 
+  // Enrichment fields
+  firstName        String?
+  lastName         String?
+  jobTitle         String?
+  linkedinUrl      String?
+  companySize      String?          // "1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"
+  annualRevenue    String?
+  naicsCode        String?
+  sicCode          String?
+  enrichedAt       DateTime?
+  enrichmentSource String?          // "hunter", "website_crawl", "linkedin", "apollo", "manual"
+  enrichmentScore  Int?             @default(0) // 0-100 composite score
+
+  // Compliance & consent
+  consentDate      DateTime?
+  consentChannel   String?          // "web_form", "phone", "email", "import"
+  dncChecked       Boolean          @default(false)
+  dncStatus        DncStatus        @default(CALLABLE)
+
   // Status & dedup
   status           ProspectStatus  @default(NEW)
   duplicateOfId    String?
@@ -8324,4 +8349,7 @@ model Prospect {
   @@index([googlePlaceId])
   @@index([status])
   @@index([companyName])
+  @@index([website])
+  @@index([enrichmentScore])
+  @@index([dncStatus])
 }

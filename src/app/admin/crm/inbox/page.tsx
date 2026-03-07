@@ -56,12 +56,12 @@ const CHANNEL_ICONS: Record<string, typeof Mail> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  OPEN: 'bg-blue-100 text-blue-700', PENDING: 'bg-yellow-100 text-yellow-700',
+  OPEN: 'bg-teal-100 text-teal-700', PENDING: 'bg-yellow-100 text-yellow-700',
   RESOLVED: 'bg-green-100 text-green-700', CLOSED: 'bg-gray-100 text-gray-600',
 };
 
 const TEMP_COLORS: Record<string, string> = {
-  HOT: 'text-red-600 bg-red-50', WARM: 'text-orange-600 bg-orange-50', COLD: 'text-blue-600 bg-blue-50',
+  HOT: 'text-red-600 bg-red-50', WARM: 'text-orange-600 bg-orange-50', COLD: 'text-teal-600 bg-teal-50',
 };
 
 export default function InboxPage() {
@@ -154,7 +154,7 @@ export default function InboxPage() {
         </div>
         <div className="flex-1 overflow-y-auto divide-y">
           {loading ? (
-            <div className="p-4 text-center text-gray-400"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto" /></div>
+            <div className="p-4 text-center text-gray-400"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mx-auto" /></div>
           ) : conversations.length === 0 ? (
             <div className="p-4 text-center text-gray-400 text-sm">{t('admin.crm.noConversations') || 'No conversations'}</div>
           ) : conversations.map(conv => {
@@ -162,7 +162,7 @@ export default function InboxPage() {
             const isSelected = selected?.id === conv.id;
             return (
               <button key={conv.id} onClick={() => selectConversation(conv)}
-                className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}>
+                className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-teal-50 border-l-2 border-teal-500' : ''}`}>
                 <div className="flex items-start gap-2">
                   <ChannelIcon className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export default function InboxPage() {
                   </button>
                 )}
                 {selected.status === 'CLOSED' && (
-                  <button onClick={() => updateStatus('OPEN')} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+                  <button onClick={() => updateStatus('OPEN')} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100">
                     {t('admin.crm.reopen') || 'Reopen'}
                   </button>
                 )}
@@ -232,7 +232,7 @@ export default function InboxPage() {
               {selected.messages?.map(msg => (
                 <div key={msg.id} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[70%] rounded-lg p-3 ${
-                    msg.direction === 'OUTBOUND' ? 'bg-blue-600 text-white' : 'bg-white border'
+                    msg.direction === 'OUTBOUND' ? 'bg-teal-600 text-white' : 'bg-white border'
                   }`}>
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     <div className={`text-xs mt-1 ${msg.direction === 'OUTBOUND' ? 'text-blue-200' : 'text-gray-400'}`}>
@@ -252,11 +252,11 @@ export default function InboxPage() {
                   onChange={e => setReplyText(e.target.value)}
                   placeholder={t('admin.crm.typeReply') || 'Type your reply...'}
                   rows={2}
-                  className="flex-1 text-sm border rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="flex-1 text-sm border rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
                 />
                 <button onClick={sendReply} disabled={sending || !replyText.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 self-end">
+                  className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 self-end">
                   <Send className="h-4 w-4" />
                 </button>
               </div>
@@ -269,10 +269,10 @@ export default function InboxPage() {
       {selected && (
         <div className="w-72 border-l bg-white overflow-y-auto">
           {/* Contact Header */}
-          <div className="p-4 border-b bg-gradient-to-b from-blue-50 to-white">
+          <div className="p-4 border-b bg-gradient-to-b from-teal-50 to-white">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="h-5 w-5 text-blue-600" />
+              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                <User className="h-5 w-5 text-teal-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{selected.contact?.name || selected.lead?.contactName || '-'}</p>
@@ -336,7 +336,7 @@ export default function InboxPage() {
                   ))}
                 </div>
               )}
-              <a href={`/admin/crm/leads/${selected.lead.id}`} className="mt-2 text-xs text-blue-600 hover:underline flex items-center gap-1">
+              <a href={`/admin/crm/leads/${selected.lead.id}`} className="mt-2 text-xs text-teal-600 hover:underline flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" /> {t('admin.crm.viewLeadProfile') || 'View full profile'}
               </a>
             </div>

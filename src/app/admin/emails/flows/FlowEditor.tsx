@@ -51,7 +51,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
 
   const NODE_TEMPLATES = [
     { type: 'trigger', label: t('admin.emails.flows.nodeTrigger'), icon: Zap, color: 'bg-purple-100 text-purple-700' },
-    { type: 'email', label: t('admin.emails.flows.nodeEmail'), icon: Mail, color: 'bg-sky-100 text-sky-700' },
+    { type: 'email', label: t('admin.emails.flows.nodeEmail'), icon: Mail, color: 'bg-teal-100 text-teal-700' },
     { type: 'delay', label: t('admin.emails.flows.nodeDelay'), icon: Clock, color: 'bg-amber-100 text-amber-700' },
     { type: 'condition', label: t('admin.emails.flows.nodeCondition'), icon: GitMerge, color: 'bg-orange-100 text-orange-700' },
     { type: 'sms', label: t('admin.emails.flows.nodeSms'), icon: MessageSquare, color: 'bg-green-100 text-green-700' },
@@ -200,7 +200,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
         <button
           onClick={saveFlow}
           disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg disabled:opacity-50"
+          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg disabled:opacity-50"
         >
           <Save className="h-3 w-3" />
           {saving ? t('admin.emails.flows.saving') : t('admin.emails.flows.save')}

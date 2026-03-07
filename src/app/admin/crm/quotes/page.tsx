@@ -80,7 +80,7 @@ interface NewLineItem {
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   DRAFT: { label: 'Draft', bg: 'bg-gray-100', text: 'text-gray-700' },
-  SENT: { label: 'Sent', bg: 'bg-blue-100', text: 'text-blue-700' },
+  SENT: { label: 'Sent', bg: 'bg-teal-100', text: 'text-teal-700' },
   VIEWED: { label: 'Viewed', bg: 'bg-purple-100', text: 'text-purple-700' },
   ACCEPTED: { label: 'Accepted', bg: 'bg-green-100', text: 'text-green-700' },
   REJECTED: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-700' },
@@ -335,7 +335,7 @@ export default function QuotesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-blue-600" />
+            <FileText className="h-6 w-6 text-teal-600" />
             {t('admin.crm.quotes.title') || 'Quotes'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -344,7 +344,7 @@ export default function QuotesPage() {
         </div>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           {t('admin.crm.quotes.new') || 'New Quote'}
@@ -360,14 +360,14 @@ export default function QuotesPage() {
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder={t('admin.crm.quotes.search') || 'Search quotes...'}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
           >
             <option value="">{t('admin.crm.quotes.allStatuses') || 'All Statuses'}</option>
             {STATUS_OPTIONS.filter(Boolean).map((s) => (
@@ -381,7 +381,7 @@ export default function QuotesPage() {
       {/* Quotes Table */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         </div>
       ) : quotes.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
@@ -430,7 +430,7 @@ export default function QuotesPage() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => setSelectedQuote(quote)}
-                          className="font-medium text-blue-600 hover:text-blue-800"
+                          className="font-medium text-teal-600 hover:text-teal-800"
                         >
                           {quote.number}
                         </button>
@@ -456,7 +456,7 @@ export default function QuotesPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setSelectedQuote(quote)}
-                            className="p-1 text-gray-400 hover:text-blue-600"
+                            className="p-1 text-gray-400 hover:text-teal-600"
                             title={t('admin.crm.quotes.view') || 'View'}
                           >
                             <Eye className="h-4 w-4" />
@@ -465,7 +465,7 @@ export default function QuotesPage() {
                             <>
                               <button
                                 onClick={() => handleSend(quote.id)}
-                                className="p-1 text-gray-400 hover:text-blue-600"
+                                className="p-1 text-gray-400 hover:text-teal-600"
                                 title={t('admin.crm.quotes.send') || 'Send'}
                               >
                                 <Send className="h-4 w-4" />
@@ -640,7 +640,7 @@ export default function QuotesPage() {
                   <>
                     <button
                       onClick={() => { handleSend(selectedQuote.id); setSelectedQuote(null); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
                     >
                       <Send className="h-4 w-4" />
                       {t('admin.crm.quotes.send') || 'Send Quote'}
@@ -667,7 +667,7 @@ export default function QuotesPage() {
           <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+                <DollarSign className="h-5 w-5 text-teal-600" />
                 {t('admin.crm.quotes.createTitle') || 'Create Quote'}
               </h2>
               <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -684,7 +684,7 @@ export default function QuotesPage() {
                 <select
                   value={formDealId}
                   onChange={(e) => setFormDealId(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   required
                 >
                   <option value="">{loadingDeals ? (t('common.loading') || 'Loading...') : (t('admin.crm.quotes.selectDeal') || 'Select a deal...')}</option>
@@ -709,7 +709,7 @@ export default function QuotesPage() {
                     max="100"
                     value={formTaxRate}
                     onChange={(e) => setFormTaxRate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -720,7 +720,7 @@ export default function QuotesPage() {
                     type="date"
                     value={formValidUntil}
                     onChange={(e) => setFormValidUntil(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -734,7 +734,7 @@ export default function QuotesPage() {
                   <button
                     type="button"
                     onClick={addLineItem}
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 font-medium"
                   >
                     <Plus className="h-3 w-3" />
                     {t('admin.crm.quotes.addItem') || 'Add Item'}
@@ -752,7 +752,7 @@ export default function QuotesPage() {
                             type="text"
                             value={item.description}
                             onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                             placeholder={t('admin.crm.quotes.itemDesc') || 'Item description...'}
                             required
                           />
@@ -766,7 +766,7 @@ export default function QuotesPage() {
                             min={1}
                             value={item.quantity}
                             onChange={(e) => updateLineItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                           />
                         </div>
                         <div className="col-span-4 sm:col-span-2">
@@ -779,7 +779,7 @@ export default function QuotesPage() {
                             step="0.01"
                             value={item.unitPrice}
                             onChange={(e) => updateLineItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                           />
                         </div>
                         <div className="col-span-3 sm:col-span-2">
@@ -793,7 +793,7 @@ export default function QuotesPage() {
                             step="0.01"
                             value={item.discount}
                             onChange={(e) => updateLineItem(index, 'discount', parseFloat(e.target.value) || 0)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                           />
                         </div>
                         <div className="col-span-2 sm:col-span-1 flex items-end justify-end">
@@ -842,7 +842,7 @@ export default function QuotesPage() {
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                     placeholder={t('admin.crm.quotes.notesPlaceholder') || 'Internal notes...'}
                   />
                 </div>
@@ -854,7 +854,7 @@ export default function QuotesPage() {
                     value={formTerms}
                     onChange={(e) => setFormTerms(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                     placeholder={t('admin.crm.quotes.termsPlaceholder') || 'Payment terms, conditions...'}
                   />
                 </div>
@@ -872,7 +872,7 @@ export default function QuotesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
                 >
                   {saving ? (t('common.saving') || 'Saving...') : (t('admin.crm.quotes.create') || 'Create Quote')}
                 </button>

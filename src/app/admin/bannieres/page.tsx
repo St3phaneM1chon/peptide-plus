@@ -425,7 +425,7 @@ export default function BannieresPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -435,7 +435,7 @@ export default function BannieresPage() {
   const tabCls = (key: string, hasContent?: boolean) =>
     `px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
       activeTab === key
-        ? 'border-sky-500 text-sky-700'
+        ? 'border-teal-500 text-teal-700'
         : hasContent
           ? 'border-transparent text-green-600 hover:text-green-700'
           : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -489,7 +489,7 @@ export default function BannieresPage() {
           label={t('admin.banners.translations')}
           value={slides.reduce((acc, s) => acc + s.translations.length, 0)}
           icon={Languages}
-          className="bg-sky-50 border-sky-200"
+          className="bg-teal-50 border-teal-200"
         />
       </div>
 
@@ -727,7 +727,7 @@ export default function BannieresPage() {
                 type="checkbox"
                 checked={form.isActive}
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                className="rounded border-slate-300 text-sky-500 focus:ring-sky-500"
+                className="rounded border-slate-300 text-teal-500 focus:ring-teal-500"
               />
               <label className="text-sm text-slate-700">{t('admin.banners.isActive')}</label>
             </div>
@@ -741,7 +741,7 @@ export default function BannieresPage() {
               <select
                 value={form.mediaType}
                 onChange={(e) => setForm({ ...form, mediaType: e.target.value })}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="IMAGE">{t('admin.banners.imageOption')}</option>
                 <option value="VIDEO">{t('admin.banners.videoOption')}</option>
@@ -812,7 +812,7 @@ export default function BannieresPage() {
                   <select
                     value={form.ctaStyle}
                     onChange={(e) => setForm({ ...form, ctaStyle: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>
@@ -840,7 +840,7 @@ export default function BannieresPage() {
                   <select
                     value={form.cta2Style}
                     onChange={(e) => setForm({ ...form, cta2Style: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>

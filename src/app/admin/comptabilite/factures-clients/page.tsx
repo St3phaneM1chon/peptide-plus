@@ -632,7 +632,7 @@ export default function FacturesClientsPage() {
           {invoice.status === 'DRAFT' && (
             <button
               onClick={() => handleSendInvoice(invoice)}
-              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+              className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
               title={t('admin.customerInvoices.sendInvoice')}
               aria-label={t('admin.customerInvoices.sendInvoice')}
             >

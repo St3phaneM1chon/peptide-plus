@@ -64,7 +64,7 @@ export default function TransfertsClient({
 
   const conditionColor = (cond: string) => {
     switch (cond) {
-      case 'always': return 'bg-sky-50 text-sky-700';
+      case 'always': return 'bg-teal-50 text-teal-700';
       case 'busy': return 'bg-red-50 text-red-700';
       case 'noAnswer': return 'bg-amber-50 text-amber-700';
       case 'unavailable': return 'bg-gray-100 text-gray-600';
@@ -156,7 +156,7 @@ export default function TransfertsClient({
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> {t('voip.admin.forwarding.addRule')}
         </button>
@@ -204,7 +204,7 @@ export default function TransfertsClient({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => openEdit(rule)} className="p-1.5 text-gray-400 hover:text-sky-600 rounded">
+                      <button onClick={() => openEdit(rule)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDelete(rule.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded">
@@ -249,7 +249,7 @@ export default function TransfertsClient({
                 <select
                   value={form.extension}
                   onChange={(e) => setForm((f) => ({ ...f, extension: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="">--</option>
                   {extensions.map((ext) => (
@@ -268,7 +268,7 @@ export default function TransfertsClient({
                 <select
                   value={form.condition}
                   onChange={(e) => setForm((f) => ({ ...f, condition: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   {CONDITIONS.map((c) => (
                     <option key={c} value={c}>{conditionLabel(c)}</option>
@@ -286,7 +286,7 @@ export default function TransfertsClient({
                   value={form.destination}
                   onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
                   placeholder="+15145551234 / 1002 / voicemail"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
 
@@ -302,7 +302,7 @@ export default function TransfertsClient({
                   step={5}
                   value={form.ringDuration}
                   onChange={(e) => setForm((f) => ({ ...f, ringDuration: parseInt(e.target.value) }))}
-                  className="w-full accent-sky-600"
+                  className="w-full accent-teal-600"
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>5s</span>
@@ -317,7 +317,7 @@ export default function TransfertsClient({
                   type="checkbox"
                   checked={form.enabled}
                   onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
-                  className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                  className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
                 {t('voip.admin.forwarding.enabled')}
               </label>
@@ -334,7 +334,7 @@ export default function TransfertsClient({
               <button
                 onClick={handleSave}
                 disabled={saving || !form.extension || !form.destination}
-                className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
               >
                 <Check className="w-4 h-4" /> {t('common.save')}
               </button>

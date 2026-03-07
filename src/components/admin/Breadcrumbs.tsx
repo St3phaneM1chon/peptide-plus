@@ -85,7 +85,7 @@ export default function Breadcrumbs() {
 
   return (
     <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-slate-500 mb-4">
-      <Link href="/admin" className="hover:text-sky-600 transition-colors">
+      <Link href="/admin" className="hover:text-teal-600 transition-colors">
         <Home className="w-4 h-4" />
       </Link>
       {crumbs.map((crumb) => (
@@ -94,7 +94,7 @@ export default function Breadcrumbs() {
           {crumb.isLast ? (
             <span className="font-medium text-slate-700">{crumb.label}</span>
           ) : (
-            <Link href={crumb.path} className="hover:text-sky-600 transition-colors">
+            <Link href={crumb.path} className="hover:text-teal-600 transition-colors">
               {crumb.label}
             </Link>
           )}

@@ -323,13 +323,13 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
             relative flex flex-col items-center justify-center gap-2 p-6
             border-2 border-dashed rounded-lg transition-colors cursor-pointer
             ${dragOver
-              ? 'border-sky-400 bg-sky-50'
+              ? 'border-teal-400 bg-teal-50'
               : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100'
             }
           `}
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload className={`w-8 h-8 ${dragOver ? 'text-sky-500' : 'text-slate-400'}`} />
+          <Upload className={`w-8 h-8 ${dragOver ? 'text-teal-500' : 'text-slate-400'}`} />
           <p className="text-sm text-slate-600">
             {t('admin.attachments.dropzone') || 'Drag & drop a file here, or click to browse'}
           </p>
@@ -346,8 +346,8 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
           />
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-sky-600 font-medium">
-                <div className="w-4 h-4 border-2 border-sky-600 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-2 text-sm text-teal-600 font-medium">
+                <div className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
                 {t('admin.attachments.uploading') || 'Uploading...'}
               </div>
             </div>
@@ -378,7 +378,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
                 {isImageFile(attachment.fileType) ? (
                   <button
                     onClick={() => setPreviewUrl(attachment.fileUrl)}
-                    className="block w-10 h-10 rounded border border-slate-200 overflow-hidden hover:ring-2 hover:ring-sky-300 transition"
+                    className="block w-10 h-10 rounded border border-slate-200 overflow-hidden hover:ring-2 hover:ring-teal-300 transition"
                     title={t('admin.attachments.preview') || 'Preview'}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}

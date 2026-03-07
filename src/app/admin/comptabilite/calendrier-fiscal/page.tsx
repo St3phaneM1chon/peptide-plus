@@ -54,14 +54,14 @@ interface Stats {
 // ---------------------------------------------------------------------------
 
 const authorityColors: Record<string, string> = {
-  CRA: 'bg-blue-100 text-blue-800 border-blue-200',
+  CRA: 'bg-teal-100 text-teal-800 border-teal-200',
   RQ: 'bg-purple-100 text-purple-800 border-purple-200',
   BOTH: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   SERVICE_CANADA: 'bg-green-100 text-green-800 border-green-200',
 };
 
 const authorityBorderColors: Record<string, string> = {
-  CRA: 'border-l-blue-500',
+  CRA: 'border-l-teal-500',
   RQ: 'border-l-purple-500',
   BOTH: 'border-l-indigo-500',
   SERVICE_CANADA: 'border-l-green-500',

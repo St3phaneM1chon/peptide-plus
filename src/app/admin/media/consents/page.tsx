@@ -254,7 +254,7 @@ export default function AdminConsentsPage() {
                       <div className="text-xs text-gray-500">{consent.client.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded">
                         {t(`consentType.${consent.type}`)}
                       </span>
                     </td>

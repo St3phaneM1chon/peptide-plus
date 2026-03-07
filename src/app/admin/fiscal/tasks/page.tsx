@@ -319,11 +319,11 @@ export default function FiscalTasksPage() {
         {groupedTasks.thisQuarter.length > 0 && (
           <TaskGroup
             title={t('admin.fiscalTasks.groups.thisQuarter')}
-            icon={<Clock className="w-5 h-5 text-sky-600" />}
+            icon={<Clock className="w-5 h-5 text-teal-600" />}
             tasks={groupedTasks.thisQuarter}
             onToggle={toggleTaskStatus}
-            bgColor="bg-sky-50"
-            borderColor="border-sky-200"
+            bgColor="bg-teal-50"
+            borderColor="border-teal-200"
             frequencyLabel={frequencyLabel}
           />
         )}
@@ -412,7 +412,7 @@ function TaskGroup({
                     </StatusBadge>
                     <Link
                       href={`/admin/fiscal/country/${task.countryCode}`}
-                      className="text-sky-600 hover:text-sky-800 text-sm"
+                      className="text-teal-600 hover:text-teal-800 text-sm"
                     >
                       {task.countryName} &rarr;
                     </Link>

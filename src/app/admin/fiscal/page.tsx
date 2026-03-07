@@ -740,7 +740,7 @@ export default function FiscalPage() {
           label={t('admin.fiscal.stats.reportsGenerated')}
           value={reports.length}
           icon={FileText}
-          className="bg-blue-50 border-blue-200"
+          className="bg-teal-50 border-teal-200"
         />
         <StatCard
           label={t('admin.fiscal.stats.toDeclare')}
@@ -759,7 +759,7 @@ export default function FiscalPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`py-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.key
-                  ? 'border-sky-500 text-sky-600'
+                  ? 'border-teal-500 text-teal-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -801,9 +801,9 @@ export default function FiscalPage() {
 
           {/* Annual Reports */}
           <div>
-            <div className="px-4 py-3 bg-sky-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
-              <FileBarChart className="w-5 h-5 text-sky-700" />
-              <h3 className="font-semibold text-sky-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
+            <div className="px-4 py-3 bg-teal-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+              <FileBarChart className="w-5 h-5 text-teal-700" />
+              <h3 className="font-semibold text-teal-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <DataTable
               columns={annualColumns}
@@ -813,20 +813,20 @@ export default function FiscalPage() {
               emptyDescription={t('admin.fiscal.annualReports.emptyDescription')}
             />
             {annualReports.length > 0 && (
-              <div className="bg-sky-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
+              <div className="bg-teal-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
                 <div className="flex items-center text-sm">
-                  <span className="font-bold text-sky-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
-                  <span className="font-bold text-sky-900 flex-1 text-end">
+                  <span className="font-bold text-teal-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
+                  <span className="font-bold text-teal-900 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.totalSales, 0))}
                   </span>
-                  <span className="font-bold text-sky-900 flex-1 text-end">
+                  <span className="font-bold text-teal-900 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.taxableAmount, 0))}
                   </span>
                   <span className="flex-1" />
                   <span className="font-bold text-green-700 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.taxCollected, 0))}
                   </span>
-                  <span className="font-bold text-sky-900 flex-1 text-center">
+                  <span className="font-bold text-teal-900 flex-1 text-center">
                     {annualReports.reduce((s, r) => s + r.orderCount, 0)}
                   </span>
                   <span className="flex-1" />
@@ -838,9 +838,9 @@ export default function FiscalPage() {
 
           {/* Monthly Reports */}
           <div>
-            <div className="px-4 py-3 bg-blue-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-700" />
-              <h3 className="font-semibold text-blue-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
+            <div className="px-4 py-3 bg-teal-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-teal-700" />
+              <h3 className="font-semibold text-teal-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <div className="max-h-[600px] overflow-y-auto">
               <DataTable
@@ -1081,9 +1081,9 @@ export default function FiscalPage() {
                 <p className="text-sm text-green-600">{t('admin.fiscal.modal.taxCollected')}</p>
                 <p className="text-xl font-bold text-green-700">{formatCurrency(selectedReport.taxCollected)}</p>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg text-center">
-                <p className="text-sm text-blue-600">{t('admin.fiscal.modal.orders')}</p>
-                <p className="text-xl font-bold text-blue-700">{selectedReport.orderCount}</p>
+              <div className="p-4 bg-teal-50 rounded-lg text-center">
+                <p className="text-sm text-teal-600">{t('admin.fiscal.modal.orders')}</p>
+                <p className="text-xl font-bold text-teal-700">{selectedReport.orderCount}</p>
               </div>
             </div>
 

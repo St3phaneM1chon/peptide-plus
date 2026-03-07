@@ -417,7 +417,7 @@ export default function AbonnementsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -460,7 +460,7 @@ export default function AbonnementsPage() {
             label={t('admin.subscriptions.estimatedMonthlyRevenue')}
             value={formatCurrency(stats.monthlyRevenue)}
             icon={DollarSign}
-            className="bg-sky-50 border-sky-200"
+            className="bg-teal-50 border-teal-200"
           />
         </div>
 
@@ -717,7 +717,7 @@ export default function AbonnementsPage() {
             <select
               value={modFrequency}
               onChange={(e) => setModFrequency(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
               <option value="EVERY_2_MONTHS">{frequencyLabels.EVERY_2_MONTHS}</option>
               <option value="EVERY_4_MONTHS">{frequencyLabels.EVERY_4_MONTHS}</option>

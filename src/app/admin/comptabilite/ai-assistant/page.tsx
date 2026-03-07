@@ -270,7 +270,7 @@ export default function AIAssistantPage() {
             const width = Math.abs(value) / maxVal * 100;
             const isNegative = value < 0;
             const color = isNegative ? 'bg-red-400' : chartData.type === 'pie'
-              ? ['bg-violet-500', 'bg-indigo-500', 'bg-sky-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-teal-500', 'bg-orange-500', 'bg-purple-500', 'bg-cyan-500'][i % 10]
+              ? ['bg-violet-500', 'bg-indigo-500', 'bg-teal-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-teal-500', 'bg-orange-500', 'bg-purple-500', 'bg-cyan-500'][i % 10]
               : i === 0 ? 'bg-emerald-500' : i === 1 ? 'bg-amber-500' : 'bg-violet-500';
 
             return (

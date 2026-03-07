@@ -352,7 +352,7 @@ export default function LogsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
       </div>
     );
   }
@@ -372,7 +372,7 @@ export default function LogsPage() {
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
+                className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500"
               />
               {t('admin.logs.autoRefresh')}
             </label>
@@ -436,7 +436,7 @@ export default function LogsPage() {
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       selectedLog.level === 'ERROR' ? 'bg-red-100 text-red-800' :
                       selectedLog.level === 'WARNING' ? 'bg-amber-100 text-amber-800' :
-                      selectedLog.level === 'INFO' ? 'bg-sky-100 text-sky-800' :
+                      selectedLog.level === 'INFO' ? 'bg-teal-100 text-teal-800' :
                       'bg-slate-100 text-slate-700'
                     }`}>
                       {selectedLog.level}

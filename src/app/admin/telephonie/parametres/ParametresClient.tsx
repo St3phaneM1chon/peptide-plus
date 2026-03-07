@@ -186,7 +186,7 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
         <button
           onClick={onSave}
           disabled={saving !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded-lg text-xs font-medium hover:bg-sky-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
         >
           <Save className="w-3.5 h-3.5" />
           {saving ? t('common.loading') : t('common.save')}
@@ -201,7 +201,7 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Settings className="w-6 h-6 text-sky-600" />
+          <Settings className="w-6 h-6 text-teal-600" />
           {t('voip.admin.settings.title')}
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -222,7 +222,7 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
                   type="checkbox"
                   checked={codecs.includes(codec)}
                   onChange={() => toggleCodec(codec)}
-                  className="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                  className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300 font-mono">{codec}</span>
               </label>
@@ -250,7 +250,7 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
                     name="recording_policy"
                     checked={recordingPolicy === policy}
                     onChange={() => updateSetting('voip:recording_policy', policy)}
-                    className="w-4 h-4 border-gray-300 text-sky-600 focus:ring-sky-500"
+                    className="w-4 h-4 border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{labels[policy]}</span>
                 </label>
@@ -328,7 +328,7 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
                 type="checkbox"
                 checked={e911Enabled}
                 onChange={() => updateSetting('voip:e911_enabled', String(!e911Enabled))}
-                className="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 {t('voip.admin.settings.e911Enabled')}
@@ -400,13 +400,13 @@ export default function ParametresClient({ settings: initial }: { settings: Reco
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Clock className="w-4 h-4 text-sky-600" />
+            <Clock className="w-4 h-4 text-teal-600" />
             {t('voip.admin.settings.businessHours')}
           </h3>
           <button
             onClick={() => saveSetting('voip:business_hours', JSON.stringify(businessHours))}
             disabled={saving !== null}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded-lg text-xs font-medium hover:bg-sky-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
           >
             <Save className="w-3.5 h-3.5" />
             {saving ? t('common.loading') : t('common.save')}

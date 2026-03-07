@@ -44,15 +44,15 @@ const PLATFORM_LAUNCHERS = [
 
 // F60 FIX: Move platformDefs outside component to avoid recreating on every render
 const PLATFORM_DEFS = [
-  { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-blue-500', IconComp: Video },
+  { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-teal-500', IconComp: Video },
   { key: 'whatsapp', label: 'WhatsApp', href: '/admin/media/api-whatsapp', color: 'bg-green-500', IconComp: MessageCircle },
   { key: 'teams', label: 'Teams', href: '/admin/media/api-teams', color: 'bg-purple-500', IconComp: Users },
   { key: 'youtube', label: 'YouTube', href: '/admin/media/ads-youtube', color: 'bg-red-500', IconComp: Video },
-  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/ads-meta', color: 'bg-blue-600', IconComp: Globe },
+  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/ads-meta', color: 'bg-teal-600', IconComp: Globe },
   { key: 'x', label: 'X (Twitter)', href: '/admin/media/ads-x', color: 'bg-slate-800', IconComp: MessageCircle },
   { key: 'tiktok', label: 'TikTok', href: '/admin/media/ads-tiktok', color: 'bg-pink-500', IconComp: Activity },
   { key: 'google', label: 'Google Ads', href: '/admin/media/ads-google', color: 'bg-yellow-500', IconComp: Search },
-  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/ads-linkedin', color: 'bg-blue-700', IconComp: Briefcase },
+  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/ads-linkedin', color: 'bg-teal-700', IconComp: Briefcase },
 ];
 
 export default function MediaDashboardPage() {
@@ -147,7 +147,7 @@ export default function MediaDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -164,7 +164,7 @@ export default function MediaDashboardPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {t('admin.media.upload') || 'Upload'}
@@ -174,7 +174,7 @@ export default function MediaDashboardPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<FolderOpen className="w-5 h-5" />} label={t('admin.media.libraryTitle')} value={stats?.totalMedia || 0} color="text-sky-600" />
+        <StatCard icon={<FolderOpen className="w-5 h-5" />} label={t('admin.media.libraryTitle')} value={stats?.totalMedia || 0} color="text-teal-600" />
         <StatCard icon={<Video className="w-5 h-5" />} label={t('admin.media.videosTitle')} value={stats?.totalVideos || 0} color="text-red-600" />
         <StatCard icon={<ImageIcon className="w-5 h-5" />} label={t('admin.media.imagesTitle')} value={stats?.imageCount || 0} color="text-emerald-600" />
         <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label={t('admin.integrations.connected')} value={`${enabledCount}/${configuredCount}`} color="text-green-600" />
@@ -207,7 +207,7 @@ export default function MediaDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {platforms.map((p) => (
             <Link key={p.key} href={p.href} className="group">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
                 <div className={`w-10 h-10 rounded-lg ${p.color} flex items-center justify-center text-white`}>
                   {p.icon}
                 </div>
@@ -256,8 +256,8 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
 function QuickLink({ href, icon, label, desc }: { href: string; icon: React.ReactNode; label: string; desc: string }) {
   return (
     <Link href={href}>
-      <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all">
-        <div className="text-sky-600 mt-0.5">{icon}</div>
+      <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
+        <div className="text-teal-600 mt-0.5">{icon}</div>
         <div>
           <p className="font-medium text-slate-900">{label}</p>
           <p className="text-xs text-slate-500">{desc}</p>

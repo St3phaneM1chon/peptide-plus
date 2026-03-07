@@ -12,12 +12,7 @@ import {
   Phone,
   Mail,
   ClipboardList,
-  MessageSquare,
-  Plus,
-  CheckCircle2,
-  XCircle,
   ArrowRightLeft,
-  FileText,
   Tag,
   ShoppingCart,
   ExternalLink,
@@ -27,6 +22,7 @@ import {
   Calculator,
   Video,
 } from 'lucide-react';
+import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
 
 interface DealDetail {
   id: string;
@@ -102,15 +98,7 @@ interface DealDetail {
   } | null;
 }
 
-const ACTIVITY_ICONS: Record<string, typeof Phone> = {
-  CALL: Phone,
-  EMAIL: Mail,
-  NOTE: MessageSquare,
-  STATUS_CHANGE: ArrowRightLeft,
-  DEAL_CREATED: Plus,
-  DEAL_WON: CheckCircle2,
-  DEAL_LOST: XCircle,
-};
+// Activity icons handled by ActivityTimeline component
 
 export default function DealDetailPage() {
   const { t, locale } = useI18n();
@@ -121,6 +109,12 @@ export default function DealDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'timeline' | 'tasks' | 'notes'>('timeline');
   const [mediaBridge, setMediaBridge] = useState<{ enabled: boolean; videos?: Array<{ id: string; title: string; thumbnailUrl: string | null; duration: number | null; views: number; isPublished: boolean }> } | null>(null);
+
+  const reloadDeal = useCallback(async () => {
+    const res = await fetch(`/api/admin/crm/deals/${dealId}`);
+    const json = await res.json();
+    if (json.success) setDeal(json.data);
+  }, [dealId]);
 
   const fmt = useCallback(
     (amount: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount),
@@ -176,7 +170,7 @@ export default function DealDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
       </div>
     );
   }
@@ -185,7 +179,7 @@ export default function DealDetailPage() {
     return (
       <div className="p-8 text-center text-gray-500">
         <p>Deal not found</p>
-        <button onClick={() => router.push('/admin/crm/pipeline')} className="mt-4 text-blue-600 hover:underline">
+        <button onClick={() => router.push('/admin/crm/pipeline')} className="mt-4 text-teal-600 hover:underline">
           Back to Pipeline
         </button>
       </div>
@@ -226,7 +220,7 @@ export default function DealDetailPage() {
               <Phone className="h-4 w-4" /> {t('admin.crm.call') || 'Call'}
             </button>
           )}
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+          <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100">
             <Mail className="h-4 w-4" /> {t('admin.crm.sendEmail') || 'Email'}
           </button>
           <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
@@ -277,7 +271,7 @@ export default function DealDetailPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-teal-500 text-teal-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -288,29 +282,12 @@ export default function DealDetailPage() {
 
             <div className="p-4">
               {activeTab === 'timeline' && (
-                <div className="space-y-4">
-                  {deal.activities.length === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-4">No activities yet</p>
-                  )}
-                  {deal.activities.map((activity) => {
-                    const Icon = ACTIVITY_ICONS[activity.type] || FileText;
-                    return (
-                      <div key={activity.id} className="flex gap-3">
-                        <div className="mt-0.5 p-1.5 rounded-full bg-gray-100">
-                          <Icon className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">{activity.title}</p>
-                          {activity.description && <p className="text-xs text-gray-500 mt-0.5">{activity.description}</p>}
-                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                            <span>{activity.performedBy.name || activity.performedBy.email}</span>
-                            <span>{new Date(activity.createdAt).toLocaleString(locale)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ActivityTimeline
+                  activities={deal.activities}
+                  dealId={dealId}
+                  onActivityAdded={reloadDeal}
+                  bare
+                />
               )}
 
               {activeTab === 'tasks' && (
@@ -321,7 +298,7 @@ export default function DealDetailPage() {
                   {deal.tasks.map((task) => (
                     <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                       <div className={`w-2 h-2 rounded-full ${
-                        task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-blue-500'
+                        task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-teal-500'
                       }`} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${task.status === 'COMPLETED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>{task.title}</p>
@@ -332,7 +309,7 @@ export default function DealDetailPage() {
                         </div>
                       </div>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : task.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : task.status === 'IN_PROGRESS' ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {task.status}
                       </span>
@@ -492,7 +469,7 @@ export default function DealDetailPage() {
               {deal.contact && (
                 <Link
                   href={`/admin/customers/${deal.contact.id}`}
-                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 pt-1"
+                  className="flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-800 pt-1"
                 >
                   <ExternalLink className="h-3 w-3" />
                   {t('admin.crm.viewFullProfile') || 'View full customer profile'}
@@ -530,7 +507,7 @@ export default function DealDetailPage() {
                         className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50"
                       >
                         <span className={`px-1.5 py-0.5 rounded ${
-                          call.direction === 'INBOUND' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          call.direction === 'INBOUND' ? 'bg-teal-100 text-teal-700' : 'bg-green-100 text-green-700'
                         }`}>{call.direction}</span>
                         <span className="text-gray-500">{Math.floor(call.duration / 60)}m {call.duration % 60}s</span>
                         <span className="text-gray-400">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
@@ -566,7 +543,7 @@ export default function DealDetailPage() {
                         <div className="flex items-center gap-2 mt-0.5 text-gray-400">
                           <span className={`px-1 py-0.5 rounded ${
                             email.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                            email.status === 'opened' ? 'bg-blue-100 text-blue-700' :
+                            email.status === 'opened' ? 'bg-teal-100 text-teal-700' :
                             'bg-gray-100 text-gray-600'
                           }`}>{email.status}</span>
                           {email.sentAt && <span>{new Date(email.sentAt).toLocaleDateString(locale)}</span>}

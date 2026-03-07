@@ -82,7 +82,7 @@ export default function MediaAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -96,7 +96,7 @@ export default function MediaAnalyticsPage() {
   }
 
   const stats = [
-    { label: t('admin.media.totalViews') || 'Total Views', value: analytics.totalViews.toLocaleString(), icon: Eye, color: 'text-blue-600 bg-blue-50', delta: null },
+    { label: t('admin.media.totalViews') || 'Total Views', value: analytics.totalViews.toLocaleString(), icon: Eye, color: 'text-teal-600 bg-teal-50', delta: null },
     { label: t('admin.media.totalClicks') || 'Total Clicks', value: analytics.totalClicks.toLocaleString(), icon: MousePointer, color: 'text-green-600 bg-green-50', delta: null },
     { label: t('admin.media.totalShares') || 'Total Shares', value: analytics.totalShares.toLocaleString(), icon: Share2, color: 'text-purple-600 bg-purple-50', delta: null },
     { label: t('admin.media.conversions') || 'Conversions', value: analytics.totalConversions.toLocaleString(), icon: TrendingUp, color: 'text-orange-600 bg-orange-50', delta: null },
@@ -242,7 +242,7 @@ export default function MediaAnalyticsPage() {
                   <span className="text-sm font-bold text-gray-400 w-6">{idx + 1}</span>
                   <Link
                     href={`/admin/media/videos/${item.contentId}`}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-teal-600 hover:underline"
                   >
                     {item.contentId.slice(0, 8)}...
                   </Link>

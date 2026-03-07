@@ -566,7 +566,7 @@ export default function ContenuPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
           <span className="sr-only">Loading...</span>
         </div>
       ) : activeTab === 'pages' ? (
@@ -636,7 +636,7 @@ export default function ContenuPage() {
                                   idx <= currentIdx ? (
                                     step.key === 'published' ? 'bg-emerald-500' :
                                     step.key === 'scheduled' ? 'bg-amber-500' :
-                                    step.key === 'review' ? 'bg-sky-500' : 'bg-slate-400'
+                                    step.key === 'review' ? 'bg-teal-500' : 'bg-slate-400'
                                   ) : 'bg-slate-200'
                                 }`} title={step.label} />
                                 {idx < steps.length - 1 && (
@@ -670,7 +670,7 @@ export default function ContenuPage() {
                         </button>
                         <button
                           onClick={() => setPreviewPageId(previewPageId === page.id ? null : page.id)}
-                          className={`p-1.5 rounded hover:bg-sky-50 transition-colors ${previewPageId === page.id ? 'text-sky-600' : 'text-slate-400 hover:text-sky-600'}`}
+                          className={`p-1.5 rounded hover:bg-teal-50 transition-colors ${previewPageId === page.id ? 'text-teal-600' : 'text-slate-400 hover:text-teal-600'}`}
                           title="Aperçu enrichi"
                         >
                           <FileSearch className="w-4 h-4" />
@@ -800,7 +800,7 @@ export default function ContenuPage() {
               <select
                 value={pageForm.template}
                 onChange={e => setPageForm(f => ({ ...f, template: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="default">{t('admin.content.templateDefault')}</option>
                 <option value="full-width">{t('admin.content.templateFullWidth')}</option>
@@ -820,7 +820,7 @@ export default function ContenuPage() {
               type="checkbox"
               checked={pageForm.isPublished}
               onChange={e => setPageForm(f => ({ ...f, isPublished: e.target.checked }))}
-              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             />
             <span className="text-sm text-slate-700">{t('admin.content.publishImmediately')}</span>
           </label>
@@ -846,7 +846,7 @@ export default function ContenuPage() {
               <select
                 value={faqForm.category}
                 onChange={e => setFaqForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 {getFaqCategories(t).map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -881,7 +881,7 @@ export default function ContenuPage() {
               type="checkbox"
               checked={faqForm.isPublished}
               onChange={e => setFaqForm(f => ({ ...f, isPublished: e.target.checked }))}
-              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             />
             <span className="text-sm text-slate-700">{t('admin.content.publishedCheckbox')}</span>
           </label>
@@ -898,7 +898,7 @@ export default function ContenuPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                <FileSearch className="w-4 h-4 text-sky-500" />
+                <FileSearch className="w-4 h-4 text-teal-500" />
                 Aperçu enrichi: {p.title}
               </h3>
               <button onClick={() => setPreviewPageId(null)} className="text-slate-400 hover:text-slate-600 text-xs">
@@ -915,10 +915,10 @@ export default function ContenuPage() {
                 return (
                   <div key={step} className="flex items-center gap-2">
                     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                      isActive ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-200' :
+                      isActive ? 'bg-teal-100 text-teal-700 ring-1 ring-teal-200' :
                       isPast ? 'bg-emerald-50 text-emerald-600' : 'bg-white text-slate-400'
                     }`}>
-                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-sky-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-teal-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                       {labels[step]}
                     </div>
                     {idx < 3 && <ArrowRight className={`w-3 h-3 ${isPast ? 'text-slate-400' : 'text-slate-200'}`} />}
@@ -983,7 +983,7 @@ export default function ContenuPage() {
             <select
               value={scheduleForm.action}
               onChange={e => setScheduleForm(f => ({ ...f, action: e.target.value as 'publish' | 'unpublish' }))}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="publish">Publier</option>
               <option value="unpublish">Dépublier</option>
@@ -998,8 +998,8 @@ export default function ContenuPage() {
             />
           </FormField>
           {scheduleForm.scheduledAt && (
-            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
-              <p className="text-sm text-sky-800">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+              <p className="text-sm text-teal-800">
                 <Calendar className="w-4 h-4 inline mr-1" />
                 &laquo;{scheduleTarget?.title}&raquo; sera {scheduleForm.action === 'publish' ? 'publié' : 'dépublié'} le{' '}
                 <strong>{new Date(scheduleForm.scheduledAt).toLocaleDateString(locale)}</strong> à{' '}

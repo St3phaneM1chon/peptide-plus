@@ -277,7 +277,7 @@ export default function RapportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -351,7 +351,7 @@ export default function RapportsPage() {
               {salesData.slice(-30).map((day) => (
                 <div
                   key={day.date}
-                  className="flex-1 bg-sky-500 rounded-t hover:bg-sky-600 cursor-pointer transition-colors relative group"
+                  className="flex-1 bg-teal-500 rounded-t hover:bg-teal-600 cursor-pointer transition-colors relative group"
                   style={{ height: `${maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0}%`, minHeight: day.revenue > 0 ? '4px' : '0px' }}
                 >
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
@@ -380,14 +380,14 @@ export default function RapportsPage() {
             <div className="space-y-4">
               {topProducts.map((product, i) => (
                 <div key={product.name} className="flex items-center gap-4">
-                  <span className="w-6 h-6 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-900 truncate">{product.name}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
-                        className="bg-sky-500 h-2 rounded-full"
+                        className="bg-teal-500 h-2 rounded-full"
                         style={{ width: `${topProducts[0]?.sales ? (product.sales / topProducts[0].sales) * 100 : 0}%` }}
                       />
                     </div>
@@ -415,7 +415,7 @@ export default function RapportsPage() {
                     <p className="font-medium text-slate-900">{region.region}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
-                        className="bg-blue-500 h-2 rounded-full"
+                        className="bg-teal-500 h-2 rounded-full"
                         style={{ width: `${regionData[0]?.revenue ? (region.revenue / regionData[0].revenue) * 100 : 0}%` }}
                       />
                     </div>
@@ -444,7 +444,7 @@ export default function RapportsPage() {
                 <div key={region.region} className="flex items-center gap-4">
                   <span className="text-slate-600 w-32 truncate">{region.region}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-2">
-                    <div className="bg-sky-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                    <div className="bg-teal-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <span className="font-medium w-16 text-end">{pct.toFixed(1)}%</span>
                 </div>

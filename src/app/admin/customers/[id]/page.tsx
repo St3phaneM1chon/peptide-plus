@@ -246,7 +246,7 @@ const tierColors: Record<string, string> = {
   BRONZE: 'bg-amber-600',
   SILVER: 'bg-slate-400',
   GOLD: 'bg-yellow-500',
-  PLATINUM: 'bg-sky-500',
+  PLATINUM: 'bg-teal-500',
   DIAMOND: 'bg-violet-600',
 };
 
@@ -563,7 +563,7 @@ export default function ClientDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-sky-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -573,7 +573,7 @@ export default function ClientDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-slate-500">{t('admin.customerDetail.notFound')}</p>
-        <Link href="/admin/customers" className="text-sky-600 hover:underline mt-2 inline-block">
+        <Link href="/admin/customers" className="text-teal-600 hover:underline mt-2 inline-block">
           {t('admin.customerDetail.backToList')}
         </Link>
       </div>
@@ -677,7 +677,7 @@ export default function ClientDetailPage() {
                   value={mergeTargetId}
                   onChange={(e) => setMergeTargetId(e.target.value)}
                   placeholder="e.g. cm123abc..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label="Secondary Customer ID to merge"
                 />
               </div>
@@ -733,7 +733,7 @@ export default function ClientDetailPage() {
                   value={pointsAmount}
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
                 <p className="text-xs text-slate-400 mt-1">
@@ -749,7 +749,7 @@ export default function ClientDetailPage() {
                   value={pointsReason}
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
@@ -804,7 +804,7 @@ export default function ClientDetailPage() {
               {user.phone ? (
                 <button
                   onClick={() => softphone.makeCall(user.phone!)}
-                  className="text-sm text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1"
+                  className="text-sm text-teal-600 hover:text-teal-700 hover:underline flex items-center gap-1"
                   title={t('voip.softphone.title')}
                 >
                   <Phone className="w-3 h-3" /> {user.phone}
@@ -855,14 +855,14 @@ export default function ClientDetailPage() {
           <div className="mt-4 pt-4 border-t border-slate-100 flex gap-6 text-sm">
             {user.referralCode && (
               <span className="text-slate-600">
-                {t('admin.customerDetail.profile.referralCode')}: <code className="font-mono font-bold text-sky-600">{user.referralCode}</code>
+                {t('admin.customerDetail.profile.referralCode')}: <code className="font-mono font-bold text-teal-600">{user.referralCode}</code>
                 {referrals.length > 0 && ` (${referrals.length} ${t('admin.customerDetail.profile.referrals')})`}
               </span>
             )}
             {referredBy && (
               <span className="text-slate-600">
                 {t('admin.customerDetail.profile.referredBy')}:{' '}
-                <Link href={`/admin/customers/${referredBy.id}`} className="text-sky-600 hover:underline">
+                <Link href={`/admin/customers/${referredBy.id}`} className="text-teal-600 hover:underline">
                   {referredBy.name || referredBy.email}
                 </Link>
               </span>
@@ -901,7 +901,7 @@ export default function ClientDetailPage() {
             label={t('admin.customerDetail.stats.avgOrder')}
             value={formatCurrency(orderStats.averageOrderValue)}
             icon={Star}
-            className="bg-sky-50 border-sky-200"
+            className="bg-teal-50 border-teal-200"
           />
           <StatCard
             label={t('admin.customerDetail.stats.inProgress')}
@@ -921,7 +921,7 @@ export default function ClientDetailPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.key
-                  ? 'border-sky-500 text-sky-600'
+                  ? 'border-teal-500 text-teal-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
@@ -1050,7 +1050,7 @@ export default function ClientDetailPage() {
                         <td className="px-4 py-3 text-center">
                           <Link
                             href={`/admin/commandes?order=${order.id}`}
-                            className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 text-sm"
+                            className="inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 text-sm"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                             {t('admin.customerDetail.invoices.view')}
@@ -1146,13 +1146,13 @@ export default function ClientDetailPage() {
                               : t('admin.customerDetail.communications.roleAgent');
                         const roleBg =
                           msg.role === 'user'
-                            ? 'bg-sky-50'
+                            ? 'bg-teal-50'
                             : msg.role === 'assistant'
                               ? 'bg-slate-50'
                               : 'bg-emerald-50';
                         const roleColor =
                           msg.role === 'user'
-                            ? 'text-sky-700'
+                            ? 'text-teal-700'
                             : msg.role === 'assistant'
                               ? 'text-slate-600'
                               : 'text-emerald-700';
@@ -1263,7 +1263,7 @@ export default function ClientDetailPage() {
                   value={pointsAmount}
                   onChange={(e) => setPointsAmount(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.amountPlaceholder')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.customerDetail.pointsModal.amount')}
                 />
               </div>
@@ -1276,7 +1276,7 @@ export default function ClientDetailPage() {
                   value={pointsReason}
                   onChange={(e) => setPointsReason(e.target.value)}
                   placeholder={t('admin.customerDetail.pointsModal.reasonPlaceholder')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   aria-label={t('admin.customerDetail.pointsModal.reason')}
                 />
               </div>
@@ -1475,8 +1475,8 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-slate-600">{review.comment}</p>
                 )}
                 {review.reply && (
-                  <div className="mt-3 ps-4 border-s-2 border-sky-200">
-                    <p className="text-xs font-semibold text-sky-600 mb-1">
+                  <div className="mt-3 ps-4 border-s-2 border-teal-200">
+                    <p className="text-xs font-semibold text-teal-600 mb-1">
                       {t('admin.customerDetail.reviews.adminReply')}
                     </p>
                     <p className="text-sm text-slate-600">{review.reply}</p>
@@ -1560,7 +1560,7 @@ export default function ClientDetailPage() {
         <div className="space-y-4">
           {!callsLoaded ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin h-6 w-6 border-2 border-sky-600 border-t-transparent rounded-full" />
+              <div className="animate-spin h-6 w-6 border-2 border-teal-600 border-t-transparent rounded-full" />
             </div>
           ) : calls.length === 0 ? (
             <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
@@ -1574,7 +1574,7 @@ export default function ClientDetailPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        call.direction === 'INBOUND' ? 'bg-sky-50 text-sky-600' : 'bg-emerald-50 text-emerald-600'
+                        call.direction === 'INBOUND' ? 'bg-teal-50 text-teal-600' : 'bg-emerald-50 text-emerald-600'
                       }`}>
                         <Phone className="w-4 h-4" />
                       </div>
@@ -1584,7 +1584,7 @@ export default function ClientDetailPage() {
                           {call.callerName && <span className="text-slate-500 ml-1">({call.callerName})</span>}
                         </div>
                         <div className="text-xs text-slate-500 flex items-center gap-2">
-                          <span className={call.direction === 'INBOUND' ? 'text-sky-600' : 'text-emerald-600'}>
+                          <span className={call.direction === 'INBOUND' ? 'text-teal-600' : 'text-emerald-600'}>
                             {t(`voip.callLog.${call.direction.toLowerCase()}`)}
                           </span>
                           {call.duration != null && (
@@ -1637,7 +1637,7 @@ export default function ClientDetailPage() {
         <div className="space-y-6">
           {!crmLoaded ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin h-6 w-6 border-2 border-sky-600 border-t-transparent rounded-full" />
+              <div className="animate-spin h-6 w-6 border-2 border-teal-600 border-t-transparent rounded-full" />
             </div>
           ) : !crmData?.summary ? (
             <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
@@ -1727,7 +1727,7 @@ export default function ClientDetailPage() {
                             <span>{activity.performedBy?.name || activity.performedBy?.email || '-'}</span>
                             <span>{formatDateTime(activity.createdAt)}</span>
                             {activity.deal && (
-                              <span className="text-sky-600">→ {activity.deal.title}</span>
+                              <span className="text-teal-600">→ {activity.deal.title}</span>
                             )}
                           </div>
                         </div>
@@ -1747,7 +1747,7 @@ export default function ClientDetailPage() {
                     {crmData.tasks.filter(tk => tk.status !== 'COMPLETED').map((task) => (
                       <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
                         <div className={`w-2 h-2 rounded-full ${
-                          task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-blue-500'
+                          task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-teal-500'
                         }`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-slate-900">{task.title}</p>
@@ -1844,7 +1844,7 @@ function OrderSection({
           <Link
             key={order.id}
             href={`/admin/commandes?order=${order.id}`}
-            className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-sky-300 hover:shadow-sm transition-all"
+            className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-teal-300 hover:shadow-sm transition-all"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">

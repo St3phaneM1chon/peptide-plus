@@ -122,7 +122,7 @@ export default function MediaLinkedInPage() {
   useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in LinkedIn Analytics dashboard.'); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
   }
 
   return (
@@ -132,7 +132,7 @@ export default function MediaLinkedInPage() {
         title={t('admin.media.linkedinTitle') || 'LinkedIn Marketing'}
         description={t('admin.media.linkedinDescription') || 'Connect LinkedIn Marketing API for B2B campaigns targeting researchers, lab directors, and biotech professionals.'}
         icon={<Briefcase className="w-6 h-6" />}
-        color="from-blue-700 to-blue-800"
+        color="from-teal-700 to-teal-800"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

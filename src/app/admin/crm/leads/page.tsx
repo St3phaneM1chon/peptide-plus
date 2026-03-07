@@ -13,6 +13,8 @@ import {
   Thermometer,
   Snowflake,
   ShieldAlert,
+  Trash2,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Lead {
@@ -34,7 +36,7 @@ interface Lead {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-700',
+  NEW: 'bg-teal-100 text-teal-700',
   CONTACTED: 'bg-yellow-100 text-yellow-700',
   QUALIFIED: 'bg-green-100 text-green-700',
   UNQUALIFIED: 'bg-gray-100 text-gray-600',
@@ -155,6 +157,56 @@ export default function LeadsPage() {
     else setSelected(new Set(leads.map(l => l.id)));
   };
 
+  const bulkUpdateStatus = async (status: string) => {
+    if (selected.size === 0) return;
+    try {
+      const promises = Array.from(selected).map(id =>
+        fetch(`/api/admin/crm/leads/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        })
+      );
+      await Promise.all(promises);
+      toast.success(`${selected.size} leads updated to ${status}`);
+      setSelected(new Set());
+      fetchLeads();
+    } catch {
+      toast.error('Bulk update failed');
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} leads? This cannot be undone.`)) return;
+    try {
+      const promises = Array.from(selected).map(id =>
+        fetch(`/api/admin/crm/leads/${id}`, { method: 'DELETE' })
+      );
+      await Promise.all(promises);
+      toast.success(`${selected.size} leads deleted`);
+      setSelected(new Set());
+      fetchLeads();
+    } catch {
+      toast.error('Bulk delete failed');
+    }
+  };
+
+  const bulkRecalculateScores = async () => {
+    if (selected.size === 0) return;
+    try {
+      const promises = Array.from(selected).map(id =>
+        fetch(`/api/admin/crm/leads/${id}/score`, { method: 'POST' })
+      );
+      await Promise.all(promises);
+      toast.success(`${selected.size} scores recalculated`);
+      setSelected(new Set());
+      fetchLeads();
+    } catch {
+      toast.error('Bulk scoring failed');
+    }
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -172,7 +224,7 @@ export default function LeadsPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700"
           >
             <Plus className="h-4 w-4" /> {t('admin.crm.newLead') || 'New Lead'}
           </button>
@@ -223,6 +275,45 @@ export default function LeadsPage() {
         </select>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-teal-50 border border-teal-200 rounded-lg">
+          <span className="text-sm font-medium text-teal-800">
+            {selected.size} {t('common.selected') || 'selected'}
+          </span>
+          <div className="w-px h-5 bg-teal-200" />
+          <select
+            defaultValue=""
+            onChange={(e) => { if (e.target.value) bulkUpdateStatus(e.target.value); e.target.value = ''; }}
+            className="text-xs border border-teal-300 rounded-md px-2 py-1 bg-white text-teal-700"
+          >
+            <option value="">{t('admin.crm.changeStatus') || 'Change Status...'}</option>
+            {['NEW', 'CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'LOST'].map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <button
+            onClick={bulkRecalculateScores}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs text-teal-700 bg-white border border-teal-300 rounded-md hover:bg-teal-100"
+          >
+            <RefreshCw className="h-3 w-3" /> {t('admin.crm.recalculate') || 'Recalculate'}
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={bulkDelete}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50"
+          >
+            <Trash2 className="h-3 w-3" /> {t('common.delete') || 'Delete'}
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="p-1 text-teal-500 hover:bg-teal-100 rounded"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
@@ -246,7 +337,7 @@ export default function LeadsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mx-auto" />
                 </td></tr>
               ) : leads.length === 0 ? (
                 <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">
@@ -269,10 +360,19 @@ export default function LeadsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{lead.companyName || '-'}</td>
                     <td className="px-4 py-3 text-center">
-                      <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100">
-                        <span className={`text-sm font-bold ${lead.score >= 70 ? 'text-green-600' : lead.score >= 40 ? 'text-yellow-600' : 'text-gray-400'}`}>
+                      <div className="inline-flex flex-col items-center gap-0.5 w-12">
+                        <span className={`text-sm font-bold ${lead.score >= 70 ? 'text-green-600' : lead.score >= 40 ? 'text-amber-600' : 'text-gray-400'}`}>
                           {lead.score}
                         </span>
+                        <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${lead.score}%`,
+                              backgroundColor: lead.score >= 70 ? '#10B981' : lead.score >= 40 ? '#F59E0B' : '#9CA3AF',
+                            }}
+                          />
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -348,7 +448,7 @@ export default function LeadsPage() {
                   const file = e.target.files?.[0];
                   if (file) handleImportCSV(file);
                 }}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
               />
             </div>
             <div className="flex justify-end p-4 border-t">
@@ -439,7 +539,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
             {t('common.cancel') || 'Cancel'}
           </button>
-          <button onClick={submit} disabled={creating} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
+          <button onClick={submit} disabled={creating} className="px-4 py-2 text-sm text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50">
             {creating ? '...' : t('common.create') || 'Create'}
           </button>
         </div>

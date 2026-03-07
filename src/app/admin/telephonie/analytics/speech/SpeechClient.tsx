@@ -43,7 +43,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
       <div className="flex items-center gap-4">
         <Link
           href="/admin/telephonie/analytics"
-          className="p-2 text-gray-400 hover:text-sky-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-400 hover:text-teal-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -61,7 +61,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-4 h-4 text-sky-600" />
+            <MessageSquare className="w-4 h-4 text-teal-600" />
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {t('voip.callLog.transcription')}
             </span>
@@ -229,7 +229,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
                     </div>
                     <div className="h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-sky-500 rounded-full"
+                        className="h-full bg-teal-500 rounded-full"
                         style={{ width: `${(kw.count / maxKeywordCount) * 100}%` }}
                       />
                     </div>
@@ -257,7 +257,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
               const ratio = kw.count / maxKeywordCount;
               const size = ratio > 0.7 ? 'text-lg font-bold' : ratio > 0.4 ? 'text-base font-medium' : 'text-sm';
               const color = ratio > 0.7
-                ? 'text-sky-600 dark:text-sky-400'
+                ? 'text-teal-600 dark:text-teal-400'
                 : ratio > 0.4
                 ? 'text-gray-700 dark:text-gray-300'
                 : 'text-gray-500 dark:text-gray-400';

@@ -317,11 +317,11 @@ export default function PlanComptablePage() {
   const getChildren = (parentId: string) => filteredAccounts.filter(a => a.parentId === parentId);
 
   const typeColors: Record<string, string> = {
-    ASSET: 'bg-blue-100 text-blue-800',
+    ASSET: 'bg-teal-100 text-teal-800',
     LIABILITY: 'bg-red-100 text-red-800',
     EQUITY: 'bg-purple-100 text-purple-800',
     REVENUE: 'bg-green-100 text-green-800',
-    EXPENSE: 'bg-sky-100 text-sky-800',
+    EXPENSE: 'bg-teal-100 text-teal-800',
   };
 
   const totals = {
@@ -350,11 +350,11 @@ export default function PlanComptablePage() {
   ];
 
   const summaryCardColors: Record<string, { bg: string; border: string; text: string; value: string }> = {
-    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', value: 'text-blue-900' },
+    blue: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', value: 'text-teal-900' },
     red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', value: 'text-red-900' },
     purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', value: 'text-purple-900' },
     green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600', value: 'text-green-900' },
-    sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', value: 'text-sky-900' },
+    sky: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', value: 'text-teal-900' },
   };
 
   const theme = sectionThemes.accounts;
@@ -609,7 +609,7 @@ export default function PlanComptablePage() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
                           title={t('admin.chartOfAccounts.viewTransactions')}
                           aria-label={t('admin.chartOfAccounts.viewTransactions')}
                         >
@@ -702,7 +702,7 @@ export default function PlanComptablePage() {
                 value={modalType}
                 onChange={(e) => setModalType(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                  focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                  focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
               >
                 <option value="ASSET">{t('admin.chartOfAccounts.typeAsset')}</option>
                 <option value="LIABILITY">{t('admin.chartOfAccounts.typeLiability')}</option>
@@ -736,7 +736,7 @@ export default function PlanComptablePage() {
               value={modalParent}
               onChange={(e) => setModalParent(e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
             >
               <option value="">{t('admin.chartOfAccounts.noParent')}</option>
               {parentAccounts.map(a => (
@@ -831,7 +831,7 @@ export default function PlanComptablePage() {
                         value={modalCcaClass}
                         onChange={(e) => handleCcaClassChange(e.target.value)}
                         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                       >
                         <option value="">--</option>
                         {CCA_CLASSES.map((c) => (
@@ -858,7 +858,7 @@ export default function PlanComptablePage() {
                         value={modalDeductiblePercent}
                         onChange={(e) => setModalDeductiblePercent(e.target.value)}
                         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                       >
                         <option value="">--</option>
                         <option value="100">100%</option>

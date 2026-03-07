@@ -75,7 +75,7 @@ interface Supplier {
 // ── Helpers ───────────────────────────────────────────────────
 
 const LINK_TYPE_COLORS: Record<string, string> = {
-  order_form: 'bg-blue-100 text-blue-700',
+  order_form: 'bg-teal-100 text-teal-700',
   chat: 'bg-green-100 text-green-700',
   portal: 'bg-purple-100 text-purple-700',
   catalog: 'bg-orange-100 text-orange-700',
@@ -345,7 +345,7 @@ export default function FournisseursPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -434,7 +434,7 @@ export default function FournisseursPage() {
                           <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
                           <div>
                             <p className="text-xs text-slate-500 mb-0.5">{t('admin.suppliers.email')}</p>
-                            <a href={`mailto:${selectedSupplier.email}`} className="text-sky-600 hover:underline">
+                            <a href={`mailto:${selectedSupplier.email}`} className="text-teal-600 hover:underline">
                               {selectedSupplier.email}
                             </a>
                           </div>
@@ -445,7 +445,7 @@ export default function FournisseursPage() {
                           <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
                           <div>
                             <p className="text-xs text-slate-500 mb-0.5">{t('admin.suppliers.phone')}</p>
-                            <a href={`tel:${selectedSupplier.phone}`} className="text-sky-600 hover:underline">
+                            <a href={`tel:${selectedSupplier.phone}`} className="text-teal-600 hover:underline">
                               {selectedSupplier.phone}
                             </a>
                           </div>
@@ -456,7 +456,7 @@ export default function FournisseursPage() {
                           <Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />
                           <div>
                             <p className="text-xs text-slate-500 mb-0.5">{t('admin.suppliers.website')}</p>
-                            <a href={selectedSupplier.website} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">
+                            <a href={selectedSupplier.website} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
                               {selectedSupplier.website}
                             </a>
                           </div>
@@ -521,7 +521,7 @@ export default function FournisseursPage() {
                                 <td className="py-2 pr-3 font-medium text-slate-900">{c.name}</td>
                                 <td className="py-2 pr-3">
                                   {c.email ? (
-                                    <a href={`mailto:${c.email}`} className="text-sky-600 hover:underline">{c.email}</a>
+                                    <a href={`mailto:${c.email}`} className="text-teal-600 hover:underline">{c.email}</a>
                                   ) : '-'}
                                 </td>
                                 <td className="py-2 pr-3">{c.phone || '-'}</td>
@@ -555,7 +555,7 @@ export default function FournisseursPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm font-medium text-sky-600 hover:underline truncate block"
+                                className="text-sm font-medium text-teal-600 hover:underline truncate block"
                               >
                                 {link.label}
                               </a>

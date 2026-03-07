@@ -86,7 +86,7 @@ export default function AnalyticsPage() {
   };
 
   const funnelSteps = [
-    { key: 'visitors', label: t('admin.analytics.funnelVisitors'), value: funnel.visitors, icon: Eye, color: 'bg-blue-500' },
+    { key: 'visitors', label: t('admin.analytics.funnelVisitors'), value: funnel.visitors, icon: Eye, color: 'bg-teal-500' },
     { key: 'productViews', label: t('admin.analytics.funnelProductViews'), value: funnel.productViews, icon: ShoppingBag, color: 'bg-indigo-500' },
     { key: 'addToCart', label: t('admin.analytics.funnelAddToCart'), value: funnel.addToCart, icon: ShoppingCart, color: 'bg-purple-500' },
     { key: 'checkout', label: t('admin.analytics.funnelCheckout'), value: funnel.checkout, icon: CreditCard, color: 'bg-amber-500' },
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
             label={t('admin.analytics.revenueThisWeek')}
             value={fmt(revenue.thisWeek)}
             icon={TrendingUp}
-            className="bg-sky-50 border-sky-200"
+            className="bg-teal-50 border-teal-200"
           />
           <StatCard
             label={t('admin.analytics.revenueThisMonth')}
@@ -170,7 +170,7 @@ export default function AnalyticsPage() {
       {/* Active Users — Note: real active users requires analytics integration */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-blue-600" />
+          <Users className="w-5 h-5 text-teal-600" />
           <h3 className="font-semibold text-slate-900">{t('admin.analytics.activeUsers')}</h3>
           <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
             {t('admin.analytics.requiresAnalytics') || 'Requires GA4/Plausible'}
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
       {/* RFM Distribution */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-1">
-          <BarChart3 className="w-5 h-5 text-sky-600" />
+          <BarChart3 className="w-5 h-5 text-teal-600" />
           <h3 className="font-semibold text-slate-900">{t('admin.analytics.rfmDistribution')}</h3>
         </div>
         <p className="text-sm text-slate-500 mb-6">{t('admin.analytics.rfmDistributionSubtitle')}</p>

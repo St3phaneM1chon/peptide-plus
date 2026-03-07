@@ -66,8 +66,8 @@ const STATUS_COLORS: Record<string, string> = {
   MISSED: 'bg-red-500',
   VOICEMAIL: 'bg-amber-500',
   FAILED: 'bg-gray-500',
-  TRANSFERRED: 'bg-sky-500',
-  IN_PROGRESS: 'bg-blue-500',
+  TRANSFERRED: 'bg-teal-500',
+  IN_PROGRESS: 'bg-teal-500',
   RINGING: 'bg-purple-500',
 };
 
@@ -93,7 +93,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
         <div className="flex items-center gap-4">
           <Link
             href="/admin/telephonie/analytics"
-            className="p-2 text-gray-400 hover:text-sky-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 text-gray-400 hover:text-teal-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -136,8 +136,8 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg">
-              <Phone className="w-5 h-5 text-sky-600" />
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+              <Phone className="w-5 h-5 text-teal-600" />
             </div>
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">{t('voip.admin.callAnalytics.volume')}</div>
@@ -158,12 +158,12 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
         </div>
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-              <PhoneOutgoing className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+              <PhoneOutgoing className="w-5 h-5 text-teal-600" />
             </div>
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">{t('voip.admin.callAnalytics.outbound')}</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.outbound}</div>
+              <div className="text-2xl font-bold text-teal-600">{stats.outbound}</div>
             </div>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
               )}
               {stats.outbound > 0 && (
                 <div
-                  className="bg-blue-500 transition-all"
+                  className="bg-teal-500 transition-all"
                   style={{ width: `${(stats.outbound / totalDirection) * 100}%` }}
                 />
               )}
@@ -293,7 +293,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <div className="w-3 h-3 rounded-full bg-teal-500" />
                 <span className="text-xs text-gray-600 dark:text-gray-400">
                   {t('voip.admin.callAnalytics.outbound')} ({Math.round((stats.outbound / totalDirection) * 100)}%)
                 </span>

@@ -75,7 +75,7 @@ interface SessionStateResponse {
 
 const DISPOSITIONS = [
   { label: 'Sale', value: 'INTERESTED', color: 'bg-green-600', icon: '🎉' },
-  { label: 'Callback', value: 'CALLBACK', color: 'bg-blue-600', icon: '📞' },
+  { label: 'Callback', value: 'CALLBACK', color: 'bg-teal-600', icon: '📞' },
   { label: 'Not Interested', value: 'NOT_INTERESTED', color: 'bg-gray-500', icon: '👎' },
   { label: 'Voicemail', value: 'VOICEMAIL', color: 'bg-yellow-600', icon: '📧' },
   { label: 'DNC', value: 'DO_NOT_CALL', color: 'bg-red-600', icon: '🚫' },
@@ -418,7 +418,7 @@ export default function PowerDialerPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
           </div>
         ) : !currentLead ? (
           <div className="text-center text-gray-400 py-16">
@@ -430,8 +430,8 @@ export default function PowerDialerPage() {
           <div>
             {/* Session banner */}
             {sessionActive && campaignId && (
-              <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-4">
-                <span className="text-sm text-blue-700 font-medium">
+              <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-lg px-4 py-2 mb-4">
+                <span className="text-sm text-teal-700 font-medium">
                   {t('admin.crm.dialer.sessionActive') || 'Session active'}
                 </span>
                 <button
@@ -445,7 +445,7 @@ export default function PowerDialerPage() {
             )}
 
             {/* Current Lead Card */}
-            <div className="bg-white rounded-xl border-2 border-blue-200 p-6 mb-6">
+            <div className="bg-white rounded-xl border-2 border-teal-200 p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -613,7 +613,7 @@ export default function PowerDialerPage() {
               <p className="text-xs text-gray-500">{t('admin.crm.conversions') || 'Conversions'}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{formatDuration(sessionStats.totalTalkTime)}</p>
+              <p className="text-2xl font-bold text-teal-600">{formatDuration(sessionStats.totalTalkTime)}</p>
               <p className="text-xs text-gray-500">{t('admin.crm.dialer.talkTime') || 'Talk Time'}</p>
             </div>
           </div>

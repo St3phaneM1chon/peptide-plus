@@ -70,7 +70,7 @@ const COMPANY_EMAIL = 'info@biocyclepeptides.com';
 const COMPANY_WEBSITE = 'biocyclepeptides.com';
 
 // Colors (RGB tuples)
-const COLOR_PRIMARY: [number, number, number] = [37, 99, 235]; // blue-600
+const COLOR_PRIMARY: [number, number, number] = [13, 148, 136]; // teal-600
 const COLOR_DARK: [number, number, number] = [15, 23, 42]; // slate-900
 const COLOR_GRAY: [number, number, number] = [100, 116, 139]; // slate-500
 const COLOR_LIGHT_GRAY: [number, number, number] = [148, 163, 184]; // slate-400

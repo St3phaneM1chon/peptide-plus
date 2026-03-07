@@ -493,7 +493,7 @@ export default function PromotionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -604,7 +604,7 @@ export default function PromotionsPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.discount')}</h3>
-                      <p className="text-2xl font-bold text-sky-600">
+                      <p className="text-2xl font-bold text-teal-600">
                         {selectedPromo.discountType === 'PERCENTAGE'
                           ? `${selectedPromo.discountValue}%`
                           : formatCurrency(selectedPromo.discountValue)}
@@ -766,7 +766,7 @@ export default function PromotionsPage() {
             <select
               value={formPromoKind}
               onChange={(e) => setFormPromoKind(e.target.value as Promotion['type'])}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
             >
               <option value="PRODUCT_DISCOUNT">{typeLabels.PRODUCT_DISCOUNT}</option>
               <option value="CATEGORY_DISCOUNT">{typeLabels.CATEGORY_DISCOUNT}</option>
@@ -781,7 +781,7 @@ export default function PromotionsPage() {
               <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT')}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
               >
                 <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
                 <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
@@ -864,7 +864,7 @@ export default function PromotionsPage() {
               checked={formAppliesToAll || formPromoKind === 'FLASH_SALE'}
               onChange={(e) => setFormAppliesToAll(e.target.checked)}
               disabled={formPromoKind === 'FLASH_SALE'}
-              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
             />
             <span className="text-sm text-slate-700">{t('admin.promotions.formAppliesToAll')}</span>
           </label>

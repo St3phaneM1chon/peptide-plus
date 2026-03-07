@@ -179,7 +179,7 @@ export function MediaPicker({
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
             </div>
           ) : media.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-500">
@@ -195,7 +195,7 @@ export function MediaPicker({
                   onDoubleClick={() => setPreview(item)}
                   className={`relative group rounded-lg border-2 overflow-hidden aspect-square transition-all ${
                     selected.has(item.id)
-                      ? 'border-blue-500 ring-2 ring-blue-200'
+                      ? 'border-teal-500 ring-2 ring-teal-200'
                       : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
@@ -219,7 +219,7 @@ export function MediaPicker({
 
                   {/* Selection indicator */}
                   {selected.has(item.id) && (
-                    <div className="absolute top-1 right-1 bg-blue-500 rounded-full p-0.5">
+                    <div className="absolute top-1 right-1 bg-teal-500 rounded-full p-0.5">
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
@@ -281,7 +281,7 @@ export function MediaPicker({
             {multiple && selected.size > 0 && (
               <button
                 onClick={confirmMultiple}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700"
               >
                 {t('common.select') || 'Select'} ({selected.size})
               </button>

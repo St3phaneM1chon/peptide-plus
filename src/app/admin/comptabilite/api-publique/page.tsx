@@ -270,10 +270,10 @@ export default function ApiPubliquePage() {
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
-            <Activity className="w-4 h-4 text-blue-500" />
+            <Activity className="w-4 h-4 text-teal-500" />
             {t('admin.apiPublique.requestsToday')}
           </div>
-          <div className="text-2xl font-bold text-blue-600">{apiKeys.reduce((sum, k) => sum + (k.usageToday || 0), 0).toLocaleString()}</div>
+          <div className="text-2xl font-bold text-teal-600">{apiKeys.reduce((sum, k) => sum + (k.usageToday || 0), 0).toLocaleString()}</div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
@@ -458,7 +458,7 @@ export default function ApiPubliquePage() {
                       <tr key={i} className="hover:bg-slate-50">
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                            row.method === 'GET' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                            row.method === 'GET' ? 'bg-green-100 text-green-700' : 'bg-teal-100 text-teal-700'
                           }`}>
                             {row.method}
                           </span>

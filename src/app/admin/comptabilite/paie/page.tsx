@@ -414,8 +414,8 @@ export default function PayrollPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-sky-50 rounded-lg">
-              <Users className="w-5 h-5 text-sky-600" />
+            <div className="p-2 bg-teal-50 rounded-lg">
+              <Users className="w-5 h-5 text-teal-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{employees.filter(e => e.status === 'ACTIVE').length}</p>
@@ -533,7 +533,7 @@ export default function PayrollPage() {
                             <>
                               <button
                                 title="Calculer"
-                                className="p-1.5 rounded hover:bg-sky-50 text-sky-600"
+                                className="p-1.5 rounded hover:bg-teal-50 text-teal-600"
                                 onClick={() => calculateRun(run.id)}
                                 disabled={runActionLoading === run.id}
                               >
@@ -552,7 +552,7 @@ export default function PayrollPage() {
                             <>
                               <button
                                 title="Recalculer"
-                                className="p-1.5 rounded hover:bg-sky-50 text-sky-600"
+                                className="p-1.5 rounded hover:bg-teal-50 text-teal-600"
                                 onClick={() => calculateRun(run.id)}
                                 disabled={runActionLoading === run.id}
                               >
@@ -883,7 +883,7 @@ export default function PayrollPage() {
                   type="date"
                   value={newRunForm.periodStart}
                   onChange={(e) => setNewRunForm({ ...newRunForm, periodStart: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
               <div>
@@ -892,7 +892,7 @@ export default function PayrollPage() {
                   type="date"
                   value={newRunForm.periodEnd}
                   onChange={(e) => setNewRunForm({ ...newRunForm, periodEnd: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -902,7 +902,7 @@ export default function PayrollPage() {
                 type="date"
                 value={newRunForm.payDate}
                 onChange={(e) => setNewRunForm({ ...newRunForm, payDate: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
             <div>
@@ -911,7 +911,7 @@ export default function PayrollPage() {
                 value={newRunForm.notes}
                 onChange={(e) => setNewRunForm({ ...newRunForm, notes: e.target.value })}
                 rows={2}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 placeholder="Notes optionnelles..."
               />
             </div>
@@ -940,7 +940,7 @@ export default function PayrollPage() {
                   type="text"
                   value={employeeForm.firstName}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
               <div>
@@ -949,7 +949,7 @@ export default function PayrollPage() {
                   type="text"
                   value={employeeForm.lastName}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, lastName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -960,7 +960,7 @@ export default function PayrollPage() {
                 type="email"
                 value={employeeForm.email}
                 onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
 
@@ -971,7 +971,7 @@ export default function PayrollPage() {
                   type="date"
                   value={employeeForm.hireDate}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, hireDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
               <div>
@@ -979,7 +979,7 @@ export default function PayrollPage() {
                 <select
                   value={employeeForm.employmentType}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, employmentType: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="FULL_TIME">Temps plein</option>
                   <option value="PART_TIME">Temps partiel</option>
@@ -995,7 +995,7 @@ export default function PayrollPage() {
                 <select
                   value={employeeForm.province}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, province: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="QC">Quebec</option>
                   <option value="ON">Ontario</option>
@@ -1008,7 +1008,7 @@ export default function PayrollPage() {
                 <select
                   value={employeeForm.country}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, country: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="CA">Canada</option>
                   <option value="US">Etats-Unis</option>
@@ -1019,7 +1019,7 @@ export default function PayrollPage() {
                 <select
                   value={employeeForm.payFrequency}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, payFrequency: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <option value="WEEKLY">Hebdomadaire</option>
                   <option value="BIWEEKLY">Aux 2 semaines</option>
@@ -1036,7 +1036,7 @@ export default function PayrollPage() {
                   type="number"
                   value={employeeForm.annualSalary}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, annualSalary: e.target.value, hourlyRate: '' })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   placeholder="Ex: 65000"
                   min={0}
                   step={1000}
@@ -1048,7 +1048,7 @@ export default function PayrollPage() {
                   type="number"
                   value={employeeForm.hourlyRate}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, hourlyRate: e.target.value, annualSalary: '' })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   placeholder="Ex: 25.00"
                   min={0}
                   step={0.25}
@@ -1062,7 +1062,7 @@ export default function PayrollPage() {
                 type="number"
                 value={employeeForm.vacationPayRate}
                 onChange={(e) => setEmployeeForm({ ...employeeForm, vacationPayRate: e.target.value })}
-                className="w-32 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-32 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 min={4}
                 max={100}
                 step={0.5}
@@ -1076,7 +1076,7 @@ export default function PayrollPage() {
                 value={employeeForm.notes}
                 onChange={(e) => setEmployeeForm({ ...employeeForm, notes: e.target.value })}
                 rows={2}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 placeholder="Notes optionnelles..."
               />
             </div>
