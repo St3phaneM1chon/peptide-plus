@@ -40,5 +40,7 @@ jobs:
 
       - name: Notify on failure
         if: failure()
+        env:
+          BACKUP_REASON: ${{ github.event.inputs.reason || 'Scheduled run' }}
         run: |
-          echo "::error::Database backup failed at $(date -u). Reason: ${{ github.event.inputs.reason || 'Scheduled run' }}"
+          echo "::error::Database backup failed at $(date -u). Reason: ${BACKUP_REASON}"

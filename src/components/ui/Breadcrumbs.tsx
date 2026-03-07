@@ -32,8 +32,8 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
       {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
-        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // eslint-disable-next-line react/no-danger -- JSON-LD requires dangerouslySetInnerHTML, data is internal
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
       />
 
       {/* Breadcrumb navigation */}

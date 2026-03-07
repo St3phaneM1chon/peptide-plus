@@ -8,8 +8,8 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
     <script
       type="application/ld+json"
-      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
-      dangerouslySetInnerHTML={{ __html: safeJson }}
+      // eslint-disable-next-line react/no-danger -- JSON-LD requires dangerouslySetInnerHTML, input is sanitized above
+      dangerouslySetInnerHTML={{ __html: safeJson }} // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
     />
   );
 }
