@@ -3136,7 +3136,20 @@
       "draftEntries": "Brouillons",
       "activePromos": "Promos actives",
       "callsToday": "Appels aujourd'hui",
-      "loyaltyMembers": "Membres fidélité"
+      "loyaltyMembers": "Membres fidélité",
+      "metric": "Indicateur",
+      "value": "Valeur",
+      "amount": "Montant",
+      "orderNumber": "Commande #",
+      "pipelineValue": "Pipeline",
+      "accounting": "Comptabilité",
+      "entriesThisMonth": "Ce mois",
+      "loyalty": "Fidélité",
+      "newMembers": "Nouveaux membres",
+      "pointsDistributed": "Points",
+      "marketing": "Marketing",
+      "telephony": "Téléphonie",
+      "avgDuration": "Durée moy."
     },
     "dataTable": {
       "row": "ligne",

@@ -3136,7 +3136,20 @@
       "draftEntries": "Draft",
       "activePromos": "Active Promos",
       "callsToday": "Calls Today",
-      "loyaltyMembers": "Loyalty Members"
+      "loyaltyMembers": "Loyalty Members",
+      "metric": "Metric",
+      "value": "Value",
+      "amount": "Amount",
+      "orderNumber": "Order #",
+      "pipelineValue": "Pipeline",
+      "accounting": "Accounting",
+      "entriesThisMonth": "This Month",
+      "loyalty": "Loyalty",
+      "newMembers": "New Members",
+      "pointsDistributed": "Points",
+      "marketing": "Marketing",
+      "telephony": "Telephony",
+      "avgDuration": "Avg Duration"
     },
     "dataTable": {
       "row": "row",

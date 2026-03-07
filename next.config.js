@@ -22,7 +22,8 @@ const nextConfig = {
     return [
       // FIX: F22 - Security headers for uploaded files to prevent inline execution
       {
-        source: '/uploads/:path*',
+        // Allow images to be displayed inline; force attachment only for non-image uploads
+        source: '/uploads/:path((?!.*\\.(?:jpg|jpeg|png|gif|webp|svg|ico|avif)).*)',
         headers: [
           {
             key: 'Content-Disposition',
@@ -35,6 +36,28 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: "default-src 'none'; style-src 'none'; script-src 'none'",
+          },
+        ],
+      },
+      {
+        // Images: allow inline display but restrict script execution
+        source: '/uploads/:path*\\.{jpg,jpeg,png,gif,webp,svg,ico,avif}',
+        headers: [
+          {
+            key: 'Content-Disposition',
+            value: 'inline',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'none'; script-src 'none'",
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
