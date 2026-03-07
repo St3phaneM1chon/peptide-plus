@@ -29,10 +29,11 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
 
   return (
     <>
-      {/* JSON-LD structured data — nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml */}
+      {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) } as const}
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') } as const}
       />
 
       {/* Breadcrumb navigation */}

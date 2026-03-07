@@ -5,11 +5,11 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   // escape '\u003c' is safe in JSON and prevents the browser from seeing
   // a closing </script> tag inside the payload.
   const safeJson = JSON.stringify(data).replace(/</g, '\\u003c');
-  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
   const htmlContent = { __html: safeJson } as const;
   return (
     <script
       type="application/ld+json"
+      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
       dangerouslySetInnerHTML={htmlContent}
     />
   );
