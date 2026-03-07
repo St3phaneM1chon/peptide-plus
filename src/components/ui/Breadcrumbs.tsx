@@ -27,13 +27,17 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
     })),
   };
 
+  // SECURITY: Escape '<' to prevent script tag injection (XSS) in JSON-LD
+  const safeJsonLd = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+  const htmlContent = { __html: safeJsonLd } as const;
+
   return (
     <>
       {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
         // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') } as const}
+        dangerouslySetInnerHTML={htmlContent}
       />
 
       {/* Breadcrumb navigation */}
