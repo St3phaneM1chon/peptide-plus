@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Invoices (list)
  * GET /api/v1/invoices - List customer invoices (paginated, filterable)

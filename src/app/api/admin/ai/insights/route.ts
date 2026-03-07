@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/ai/insights
  * Dashboard AI insights - anomaly detection and trend analysis.

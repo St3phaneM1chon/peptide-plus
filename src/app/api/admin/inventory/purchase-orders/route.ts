@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * I-INVENTORY-9: Purchase Order Tracking API
  * Track incoming purchase orders for inventory restocking

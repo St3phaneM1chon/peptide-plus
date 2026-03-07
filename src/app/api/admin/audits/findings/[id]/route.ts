@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * PUT /api/admin/audits/findings/[id] - Update a finding (mark as fixed, false positive, etc.)
  */

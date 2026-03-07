@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin API - API Key Management (single key)
  * DELETE /api/admin/api-keys/:id - Revoke (soft-delete) an API key

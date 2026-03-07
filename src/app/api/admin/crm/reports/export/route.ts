@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * CRM Report Export API
  * GET: Export CRM data as CSV

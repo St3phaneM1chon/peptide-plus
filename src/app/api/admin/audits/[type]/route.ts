@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/audits/[type] - Get audit type details with findings
  * Query params: ?runId=xxx (optional, defaults to latest run)

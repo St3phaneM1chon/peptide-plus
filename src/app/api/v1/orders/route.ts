@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Orders
  * GET  /api/v1/orders - List orders (paginated, filterable)

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Inventory (stock levels)
  * GET /api/v1/inventory - Get stock levels for all products (or filtered)

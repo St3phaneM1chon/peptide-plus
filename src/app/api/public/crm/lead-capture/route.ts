@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public Web-to-Lead Capture API
  * POST: Accept form submission and create CRM lead

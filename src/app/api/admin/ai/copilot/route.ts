@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/admin/ai/copilot
  * AI Copilot endpoint - context-aware assistant for admin users.

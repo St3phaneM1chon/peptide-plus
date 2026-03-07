@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * I-INVENTORY-8: Supplier Management API
  * Manages supplier information for inventory procurement

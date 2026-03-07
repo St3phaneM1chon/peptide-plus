@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Orders (single)
  * GET /api/v1/orders/:id - Get a single order by ID or order number

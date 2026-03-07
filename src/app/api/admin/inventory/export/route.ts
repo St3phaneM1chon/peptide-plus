@@ -98,7 +98,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       );
     }
 
-    const csv = lines.join('\n');
+    // UTF-8 BOM for Excel compatibility with French accents
+    const csv = '\uFEFF' + lines.join('\n');
     const timestamp = new Date().toISOString().slice(0, 10);
 
     return new NextResponse(csv, {

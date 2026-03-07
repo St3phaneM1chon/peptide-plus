@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/admin/audits/run-batch - Launch multiple audits sequentially
  * Body: { auditIds?: string[], severity?: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "ALL" }

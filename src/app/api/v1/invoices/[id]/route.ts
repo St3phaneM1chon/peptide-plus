@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Invoices (single)
  * GET /api/v1/invoices/:id - Get a single invoice by ID or invoice number

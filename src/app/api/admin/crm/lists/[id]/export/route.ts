@@ -55,7 +55,8 @@ export const GET = withAdminGuard(async (request: NextRequest, context: { params
     csvRows.push(row.join(','));
   }
 
-  const csvContent = csvRows.join('\n');
+  // UTF-8 BOM for Excel compatibility with French accents
+  const csvContent = '\uFEFF' + csvRows.join('\n');
   const fileName = `prospects-${list.name.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
 
   return new NextResponse(csvContent, {

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/audits/catalog - Browse function catalog
  * Query params: ?type=api_handler&search=xxx&page=1&limit=50

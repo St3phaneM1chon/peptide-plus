@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/admin/audits/run - Launch an audit run
  * Body: { auditTypeCode: string }

@@ -64,6 +64,8 @@ export const POST = withAdminGuard(
       callLogs: 0,
       consentRecords: 0,
       campaignActivities: 0,
+      prospects: 0,
+      dialerEntries: 0,
     };
 
     // Find leads matching the contact info
@@ -172,6 +174,26 @@ export const POST = withAdminGuard(
         },
       });
       deleted.callLogs = callResult.count;
+    }
+
+    // Delete Prospect records (GDPR Art. 17 — personal data in scraper results)
+    if (contactEmail || contactPhone) {
+      const prospectWhere = [];
+      if (contactEmail) prospectWhere.push({ email: contactEmail });
+      if (contactPhone) prospectWhere.push({ phone: contactPhone });
+
+      const prospectResult = await prisma.prospect.deleteMany({
+        where: { OR: prospectWhere },
+      });
+      deleted.prospects = prospectResult.count;
+    }
+
+    // Delete DialerListEntry records linked to deleted leads
+    if (leadIds.length > 0) {
+      const dialerResult = await prisma.dialerListEntry.deleteMany({
+        where: { leadId: { in: leadIds } },
+      });
+      deleted.dialerEntries = dialerResult.count;
     }
 
     const totalDeleted = Object.values(deleted).reduce((sum, n) => sum + n, 0);

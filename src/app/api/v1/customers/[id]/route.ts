@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Public API v1 - Customers (single)
  * GET /api/v1/customers/:id - Get a single customer by ID or email

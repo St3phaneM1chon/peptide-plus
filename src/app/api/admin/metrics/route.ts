@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/metrics
  * Returns business metrics summary for admin dashboard.
