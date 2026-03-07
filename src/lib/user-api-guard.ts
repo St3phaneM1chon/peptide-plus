@@ -63,11 +63,12 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 // ---------------------------------------------------------------------------
 
 function getClientIp(request: NextRequest): string {
-  return (
+  const raw =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
-    '127.0.0.1'
-  );
+    '127.0.0.1';
+  // Validate IP format to prevent log injection / rate-limit bypass (aligned with admin-api-guard)
+  return /^[\d.:a-fA-F]{3,45}$/.test(raw) ? raw : '0.0.0.0';
 }
 
 function jsonError(message: string, status: number, headers?: Record<string, string>): NextResponse {
@@ -169,12 +170,7 @@ export function withUserGuard(
       const url = request.url;
       logger.error('[UserGuard] Request handler error', { method, url, error: error instanceof Error ? error.message : String(error) });
 
-      const message =
-        process.env.NODE_ENV === 'development' && error instanceof Error
-          ? error.message
-          : 'Internal server error';
-
-      return jsonError(message, 500);
+      return jsonError('Internal server error', 500);
     }
   };
 }

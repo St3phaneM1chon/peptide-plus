@@ -17,7 +17,10 @@ import { logger } from '@/lib/logger';
 // Configuration
 // ---------------------------------------------------------------------------
 
-const TRACKING_SECRET = process.env.EMAIL_TRACKING_SECRET || process.env.NEXTAUTH_SECRET || 'default-tracking-secret';
+const TRACKING_SECRET = process.env.EMAIL_TRACKING_SECRET || process.env.NEXTAUTH_SECRET;
+if (!TRACKING_SECRET) {
+  throw new Error('EMAIL_TRACKING_SECRET or NEXTAUTH_SECRET must be configured');
+}
 
 function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';

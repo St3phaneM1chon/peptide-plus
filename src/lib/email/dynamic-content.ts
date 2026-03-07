@@ -17,6 +17,10 @@ export interface ProductRecommendation {
   reason: string; // 'frequently_bought_together', 'based_on_purchase', 'trending', 'new_arrival'
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export function generateProductGridHTML(products: ProductRecommendation[], maxItems: number = 4): string {
   const items = products.slice(0, maxItems);
   const fmt = (n: number) => `$${n.toFixed(2)}`;
@@ -26,9 +30,9 @@ export function generateProductGridHTML(products: ProductRecommendation[], maxIt
   <tr>
     ${items.map(p => `
     <td style="width:${100/items.length}%;padding:8px;text-align:center;vertical-align:top">
-      <a href="https://biocyclepeptides.com/products/${p.productId}" style="text-decoration:none;color:#1e293b">
-        <img src="${p.imageUrl}" alt="${p.name}" style="width:100%;max-width:150px;border-radius:8px;margin-bottom:8px" />
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">${p.name}</div>
+      <a href="https://biocyclepeptides.com/products/${encodeURIComponent(p.productId)}" style="text-decoration:none;color:#1e293b">
+        <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" style="width:100%;max-width:150px;border-radius:8px;margin-bottom:8px" />
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">${escapeHtml(p.name)}</div>
         <div style="font-size:16px;color:#059669;font-weight:700">${fmt(p.price)}</div>
       </a>
     </td>
@@ -40,7 +44,7 @@ export function generateProductGridHTML(products: ProductRecommendation[], maxIt
 export function generateCountdownHTML(endDate: Date, label: string): string {
   return `
 <div style="text-align:center;padding:20px;background:#fef3c7;border-radius:12px;margin:20px 0">
-  <div style="font-size:14px;color:#92400e;margin-bottom:8px">${label}</div>
+  <div style="font-size:14px;color:#92400e;margin-bottom:8px">${escapeHtml(label)}</div>
   <div style="font-size:24px;font-weight:700;color:#92400e">
     Offre expire le ${new Intl.DateTimeFormat('fr-CA', { dateStyle: 'long' }).format(endDate)}
   </div>
@@ -50,7 +54,7 @@ export function generateCountdownHTML(endDate: Date, label: string): string {
 export function generateSocialProofHTML(count: number, productName: string): string {
   return `
 <div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:8px;margin:16px 0">
-  <span style="font-size:13px;color:#166534">🔥 ${count} personnes ont acheté <strong>${productName}</strong> cette semaine</span>
+  <span style="font-size:13px;color:#166534">🔥 ${count} personnes ont acheté <strong>${escapeHtml(productName)}</strong> cette semaine</span>
 </div>`;
 }
 
