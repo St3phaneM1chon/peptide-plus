@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -55,7 +55,7 @@ interface ProductCardProps {
 
 // Format icons imported from shared utility: @/lib/format-icons
 
-export default function ProductCard({
+export default memo(function ProductCard({
   id,
   name,
   nameKey,
@@ -108,46 +108,45 @@ export default function ProductCard({
   const categoryName = categoryKey ? t(`categories.${categoryKey}`) : category;
 
   // Get translated format name
-  const getFormatName = (format: ProductFormat) => {
+  const getFormatName = useCallback((format: ProductFormat) => {
     if (format.nameKey) {
       return t(`formats.${format.nameKey}`);
     }
     return format.name;
-  };
+  }, [t]);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      setIsDropdownOpen(false);
+    }
   }, []);
 
-  const handleFormatSelect = (format: ProductFormat) => {
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClickOutside]);
+
+  const handleFormatSelect = useCallback((format: ProductFormat) => {
     setSelectedFormat(format);
     setIsDropdownOpen(false);
     // BUG-053 FIX: Reset quantity if it exceeds new format's stock
     const maxQty = format.stockQuantity || 99;
-    if (quantity > maxQty) {
-      setQuantity(Math.max(1, maxQty));
-    }
-  };
+    setQuantity(prev => prev > maxQty ? Math.max(1, maxQty) : prev);
+  }, []);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!inStock || !selectedFormat) return;
 
     setIsAdding(true);
-    
+
     // Full product name with format
     const formatName = getFormatName(selectedFormat);
     const fullProductName = `${productName} ${formatName}`;
-    
+
     addItemWithUpsell({
       productId: id,
       formatId: selectedFormat.id,
@@ -161,7 +160,7 @@ export default function ProductCard({
     });
 
     setTimeout(() => setIsAdding(false), 1000);
-  };
+  }, [inStock, selectedFormat, productName, id, displayPrice, displayComparePrice, imageUrl, quantity, addItemWithUpsell, getFormatName]);
 
   return (
     <>
@@ -427,4 +426,4 @@ export default function ProductCard({
       )}
     </>
   );
-}
+});

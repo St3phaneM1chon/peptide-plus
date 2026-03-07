@@ -18,6 +18,7 @@ import { TranslationNotice } from '@/components/ui/TranslationNotice';
 import { TranslationFeedback } from '@/components/ui/TranslationFeedback';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
+import { WebVitals } from '@/components/analytics/WebVitals';
 import { logger } from '@/lib/logger';
 
 // Only import en/fr statically (most common); others loaded dynamically
@@ -81,6 +82,10 @@ export const metadata: Metadata = {
   keywords: ['peptides', 'research peptides', 'Canada', 'BPC-157', 'TB-500', 'Semaglutide', 'lab tested'],
   alternates: {
     canonical: 'https://biocyclepeptides.com',
+    languages: Object.fromEntries([
+      ...locales.map((loc) => [loc, `https://biocyclepeptides.com?lang=${loc}`]),
+      ['x-default', 'https://biocyclepeptides.com'],
+    ]),
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -198,6 +203,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <GoogleAnalytics />
         <MetaPixel />
+        <WebVitals />
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <Providers locale={locale} messages={messages}>

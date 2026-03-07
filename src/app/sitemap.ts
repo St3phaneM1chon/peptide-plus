@@ -5,6 +5,17 @@
 
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
+import { locales } from '@/i18n/config';
+
+// Generate hreflang alternates for a given URL
+function buildAlternates(url: string) {
+  return {
+    languages: Object.fromEntries([
+      ...locales.map((loc) => [loc, `${url}${url.includes('?') ? '&' : '?'}lang=${loc}`]),
+      ['x-default', url],
+    ]),
+  };
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
@@ -97,12 +108,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...legalPages,
   ];
 
-  const staticPages = allStaticEntries.map((entry) => ({
-    url: `${baseUrl}${entry.path}`,
-    lastModified: new Date(),
-    changeFrequency: entry.changeFrequency,
-    priority: entry.priority,
-  }));
+  const staticPages = allStaticEntries.map((entry) => {
+    const url = `${baseUrl}${entry.path}`;
+    return {
+      url,
+      lastModified: new Date(),
+      changeFrequency: entry.changeFrequency,
+      priority: entry.priority,
+      alternates: buildAlternates(url),
+    };
+  });
 
   // Product pages (dynamic from DB)
   let productPages: MetadataRoute.Sitemap = [];
@@ -111,12 +126,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
     });
-    productPages = products.map((p) => ({
-      url: `${baseUrl}/product/${p.slug}`,
-      lastModified: p.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
+    productPages = products.map((p) => {
+      const url = `${baseUrl}/product/${p.slug}`;
+      return {
+        url,
+        lastModified: p.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+        alternates: buildAlternates(url),
+      };
+    });
   } catch {
     // Database may not be available during build
   }
@@ -128,12 +147,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isActive: true },
       select: { slug: true, updatedAt: true, parentId: true },
     });
-    categoryPages = categories.map((c) => ({
-      url: `${baseUrl}/shop?category=${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: c.parentId ? 0.6 : 0.7,
-    }));
+    categoryPages = categories.map((c) => {
+      const url = `${baseUrl}/shop?category=${c.slug}`;
+      return {
+        url,
+        lastModified: c.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: c.parentId ? 0.6 : 0.7,
+        alternates: buildAlternates(url),
+      };
+    });
   } catch {
     // Database may not be available during build
   }
@@ -145,12 +168,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isPublished: true },
       select: { slug: true, updatedAt: true },
     });
-    blogPages = blogPosts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: post.updatedAt,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }));
+    blogPages = blogPosts.map((post) => {
+      const url = `${baseUrl}/blog/${post.slug}`;
+      return {
+        url,
+        lastModified: post.updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+        alternates: buildAlternates(url),
+      };
+    });
   } catch {
     // Database may not be available during build
   }
@@ -162,12 +189,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isPublished: true },
       select: { slug: true, updatedAt: true },
     });
-    articlePages = articles.map((a) => ({
-      url: `${baseUrl}/learn/${a.slug}`,
-      lastModified: a.updatedAt,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }));
+    articlePages = articles.map((a) => {
+      const url = `${baseUrl}/learn/${a.slug}`;
+      return {
+        url,
+        lastModified: a.updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+        alternates: buildAlternates(url),
+      };
+    });
   } catch {
     // Database may not be available during build
   }

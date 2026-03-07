@@ -3,6 +3,7 @@
  * Carte de catégorie pour l'accueil
  */
 
+import { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Category } from '@/types';
@@ -11,7 +12,7 @@ interface CategoryCardProps {
   category: Category & { productCount?: number };
 }
 
-export function CategoryCard({ category }: CategoryCardProps) {
+export const CategoryCard = memo(function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       href={`/catalogue/${category.slug}`}
@@ -83,4 +84,4 @@ export function CategoryCard({ category }: CategoryCardProps) {
       </div>
     </Link>
   );
-}
+});
