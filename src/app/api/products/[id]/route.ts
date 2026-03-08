@@ -232,7 +232,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         await tx.productImage.deleteMany({
           where: { productId: id },
         });
-        
+
         // Créer les nouvelles images
         if (images && images.length > 0) {
           await tx.productImage.createMany({
@@ -245,6 +245,31 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
               isPrimary: img.isPrimary || false,
             })),
           });
+        }
+      } else if (productData.imageUrl && typeof productData.imageUrl === 'string') {
+        // Auto-sync: if imageUrl is provided but images array is not,
+        // ensure a primary ProductImage exists matching imageUrl
+        const existingPrimary = await tx.productImage.findFirst({
+          where: { productId: id, isPrimary: true },
+        });
+        if (!existingPrimary || existingPrimary.url !== productData.imageUrl) {
+          // Update or create the primary image
+          if (existingPrimary) {
+            await tx.productImage.update({
+              where: { id: existingPrimary.id },
+              data: { url: productData.imageUrl },
+            });
+          } else {
+            await tx.productImage.create({
+              data: {
+                productId: id,
+                url: productData.imageUrl,
+                alt: (productData.name as string) || '',
+                sortOrder: 0,
+                isPrimary: true,
+              },
+            });
+          }
         }
       }
 
