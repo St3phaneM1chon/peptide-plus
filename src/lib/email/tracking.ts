@@ -17,9 +17,12 @@ import { logger } from '@/lib/logger';
 // Configuration
 // ---------------------------------------------------------------------------
 
-const TRACKING_SECRET = process.env.EMAIL_TRACKING_SECRET || process.env.NEXTAUTH_SECRET;
-if (!TRACKING_SECRET) {
-  throw new Error('EMAIL_TRACKING_SECRET or NEXTAUTH_SECRET must be configured');
+function getTrackingSecret(): string {
+  const secret = process.env.EMAIL_TRACKING_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('EMAIL_TRACKING_SECRET or NEXTAUTH_SECRET must be configured');
+  }
+  return secret;
 }
 
 function getBaseUrl(): string {
@@ -36,7 +39,7 @@ function getBaseUrl(): string {
  * This prevents attackers from guessing valid email log IDs.
  */
 export function encodeTrackingId(emailLogId: string): string {
-  const signature = createHmac('sha256', TRACKING_SECRET)
+  const signature = createHmac('sha256', getTrackingSecret())
     .update(emailLogId)
     .digest('hex')
     .slice(0, 16); // 16 hex chars = 64 bits, sufficient for anti-enumeration
@@ -57,7 +60,7 @@ export function decodeTrackingId(encoded: string): string | null {
     const id = payload.slice(0, dotIndex);
     const signature = payload.slice(dotIndex + 1);
 
-    const expectedSignature = createHmac('sha256', TRACKING_SECRET)
+    const expectedSignature = createHmac('sha256', getTrackingSecret())
       .update(id)
       .digest('hex')
       .slice(0, 16);
