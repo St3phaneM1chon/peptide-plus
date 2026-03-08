@@ -22,6 +22,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'conversationId required' }, { status: 400 });
     }
 
+    // Verify the user is a participant in this conversation
+    const conversation = await db.chatConversation.findUnique({
+      where: { id: conversationId },
+      select: { userId: true, visitorId: true },
+    });
+    if (!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+    // Allow if user is the assigned agent (userId) or an OWNER/EMPLOYEE
+    if (conversation.userId !== session.user.id) {
+      const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      });
+      if (user?.role !== 'OWNER' && user?.role !== 'EMPLOYEE') {
+        return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 });
+      }
+    }
+
     // Build the where clause for marking messages as read
     const whereClause: {
       conversationId: string;

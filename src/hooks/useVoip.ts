@@ -65,6 +65,11 @@ export interface VoipCall {
   isRecording: boolean;
 }
 
+export interface RegisteredExtension {
+  extension: string;
+  sipDomain: string;
+}
+
 export interface UseVoipReturn {
   // --- State ---
   status: VoipStatus;
@@ -75,6 +80,8 @@ export interface UseVoipReturn {
   /** Backward-compatible: returns the focused call or null */
   currentCall: VoipCall | null;
   error: string | null;
+  /** Info about the registered SIP extension (set after successful register) */
+  registeredExtension: RegisteredExtension | null;
   /** Whether noise cancellation is enabled */
   noiseCancelEnabled: boolean;
   /** Whether screen sharing is active */
@@ -202,6 +209,7 @@ export function useVoip(): UseVoipReturn {
   const [remoteVideoStream, setRemoteVideoStream] = useState<MediaStream | null>(null);
   const [callQualityMetrics, setCallQualityMetrics] = useState<CallQualityMetrics | null>(null);
   const [presenceStatus, setPresenceStatusState] = useState<PresenceStatus>('available');
+  const [registeredExtension, setRegisteredExtension] = useState<RegisteredExtension | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const uaRef = useRef<any>(null);
@@ -658,6 +666,11 @@ export function useVoip(): UseVoipReturn {
         throw new Error('SIP credentials are missing or could not be decrypted');
       }
 
+      setRegisteredExtension({
+        extension: creds.extension || '',
+        sipDomain: creds.sipDomain || 'sip.telnyx.com',
+      });
+
       // Dynamic import JsSIP (only loaded when needed)
       const JsSIP = await import('jssip');
 
@@ -816,6 +829,16 @@ export function useVoip(): UseVoipReturn {
     (number: string) => {
       if (!uaRef.current || status !== 'registered') return;
 
+      // Normalize to E.164: strip spaces/dashes/parens, ensure + prefix for 10-11 digit numbers
+      let normalized = number.replace(/[\s\-().]/g, '');
+      if (/^\d{10}$/.test(normalized)) {
+        normalized = `+1${normalized}`; // North American 10-digit → +1XXXXXXXXXX
+      } else if (/^1\d{10}$/.test(normalized)) {
+        normalized = `+${normalized}`; // 1XXXXXXXXXX → +1XXXXXXXXXX
+      } else if (!normalized.startsWith('+') && /^\d{7,15}$/.test(normalized)) {
+        normalized = `+${normalized}`;
+      }
+
       const options = {
         mediaConstraints: { audio: true, video: isVideoEnabled },
         pcConfig: {
@@ -827,7 +850,7 @@ export function useVoip(): UseVoipReturn {
       };
 
       uaRef.current.call(
-        `sip:${number}@${uaRef.current.configuration.uri.host}`,
+        `sip:${normalized}@${uaRef.current.configuration.uri.host}`,
         options,
       );
     },
@@ -1489,6 +1512,7 @@ export function useVoip(): UseVoipReturn {
     focusedCallId,
     currentCall,
     error,
+    registeredExtension,
     noiseCancelEnabled,
     isScreenSharing,
     isVideoEnabled,

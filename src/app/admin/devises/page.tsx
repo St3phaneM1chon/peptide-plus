@@ -211,7 +211,7 @@ export default function DevisesPage() {
   const updateExchangeRates = async () => {
     setRefreshing(true);
     try {
-      const res = await fetch('/api/admin/currencies/refresh', { method: 'POST' });
+      const res = await fetch('/api/admin/currencies/refresh', { method: 'POST', headers: addCSRFHeader() });
       const data = await res.json();
 
       if (!res.ok) {

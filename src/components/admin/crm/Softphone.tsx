@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import { useTelnyxWebRTC } from '@/hooks/useTelnyxWebRTC';
+import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
 import {
   Phone,
@@ -213,7 +214,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
     try {
       const res = await fetch('/api/admin/voip/webrtc-token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       });
       const json = await res.json();
 
@@ -610,7 +611,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
       if (contactInfo?.entityId) {
         fetch('/api/admin/crm/activities', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             type: 'NOTE',
             title: 'Call note',

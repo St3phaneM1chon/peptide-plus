@@ -46,10 +46,11 @@ export const GET = withApiAuth(async (request: NextRequest) => {
       skip,
       take: limit,
       orderBy: { [orderByField]: sortOrder },
+      // PII minimization: list endpoint omits shippingName and full address.
+      // Use GET /api/v1/orders/[id] for full details when needed.
       select: {
         id: true,
         orderNumber: true,
-        userId: true,
         subtotal: true,
         shippingCost: true,
         discount: true,
@@ -59,7 +60,6 @@ export const GET = withApiAuth(async (request: NextRequest) => {
         paymentMethod: true,
         paymentStatus: true,
         status: true,
-        shippingName: true,
         shippingCity: true,
         shippingState: true,
         shippingCountry: true,

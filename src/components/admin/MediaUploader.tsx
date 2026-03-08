@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import NextImage from 'next/image';
 import { Upload, X, FileText, PlayCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 
 type MediaContext =
   | 'product-image'
@@ -110,6 +111,7 @@ export function MediaUploader({
 
       const res = await fetch('/api/admin/medias', {
         method: 'POST',
+        headers: addCSRFHeader(),
         body: formData,
       });
 

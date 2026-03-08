@@ -6,6 +6,7 @@ import {
   CheckCircle2, XCircle, Send, Filter, ChevronDown,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
 
 // --- Types ---
@@ -87,7 +88,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
 
       const res = await fetch('/api/admin/crm/activities', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
       const json = await res.json();

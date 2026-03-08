@@ -12,11 +12,19 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback, useState, type ReactNode } from 'react';
 import { useVoip, type UseVoipReturn } from '@/hooks/useVoip';
 
+export interface HealthInfo {
+  database: string;
+  sipExtension: { configured: boolean; extensionNumber?: string; domain?: string; registered?: boolean } | null;
+  pbx: { provider?: string; host?: string } | null;
+}
+
 interface SoftphoneContextValue extends UseVoipReturn {
   /** Whether auto-registration has been attempted */
   autoRegisterAttempted: boolean;
   /** Error from the auto-register health check */
   healthError: string | null;
+  /** Health check data from the server */
+  healthInfo: HealthInfo | null;
   /** Force a manual re-registration attempt */
   retryRegister: () => void;
 }
@@ -32,6 +40,7 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
   const voip = useVoip();
   const [autoRegisterAttempted, setAutoRegisterAttempted] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
+  const [healthInfo, setHealthInfo] = useState<HealthInfo | null>(null);
   const attemptCountRef = useRef(0);
   const alertSentRef = useRef(false);
   const mountedRef = useRef(true);
@@ -66,6 +75,12 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
       }
 
       const health = await healthRes.json();
+
+      setHealthInfo({
+        database: health.database || 'unknown',
+        sipExtension: health.sipExtension || null,
+        pbx: health.pbx || null,
+      });
 
       if (!health.canAutoRegister) {
         // Identify specific failure reasons
@@ -152,6 +167,7 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
     ...voip,
     autoRegisterAttempted,
     healthError,
+    healthInfo,
     retryRegister,
   };
 

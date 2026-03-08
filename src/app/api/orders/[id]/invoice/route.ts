@@ -26,11 +26,10 @@ export async function GET(
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    // Authentication: check session or token
+    // Authentication: session required (token-based access removed — was a bypass vulnerability)
     const session = await auth();
-    const tokenParam = request.nextUrl.searchParams.get('token');
 
-    if (!session?.user?.id && !tokenParam) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
@@ -51,7 +50,7 @@ export async function GET(
     }
 
     // Authorization: user must own the order (or be owner/employee)
-    if (session?.user?.id && order.userId !== session.user.id) {
+    if (order.userId !== session.user.id) {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { role: true },

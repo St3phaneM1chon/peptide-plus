@@ -282,7 +282,7 @@ jobs:
           # The standalone node_modules lacks the full CLI, so we install it fresh.
           npm install --no-save prisma@5.22.0
           echo "Pushing Prisma schema to production database..."
-          npx prisma db push --accept-data-loss 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
+          npx prisma db push 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -371,7 +371,7 @@ export default function SEOPage() {
   // Generate sitemap via dedicated API endpoint
   const generateSitemap = async () => {
     try {
-      const res = await fetch('/api/admin/seo/sitemap', { method: 'POST' });
+      const res = await fetch('/api/admin/seo/sitemap', { method: 'POST', headers: addCSRFHeader() });
       if (res.ok) {
         const data = await res.json();
         toast.success(

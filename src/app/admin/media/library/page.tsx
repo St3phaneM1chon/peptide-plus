@@ -23,7 +23,7 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { fetchWithCSRF } from '@/lib/csrf';
+import { fetchWithCSRF, addCSRFHeader } from '@/lib/csrf';
 
 interface MediaItem {
   id: string;
@@ -182,7 +182,7 @@ export default function MediaLibraryPage() {
         formData.append('files', files[i]);
       }
       formData.append('folder', folderFilter || 'general');
-      const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/medias', { headers: addCSRFHeader(), method: 'POST', body: formData });
       if (res.ok) {
         loadItems();
         toast.success(t('admin.media.uploadSuccess') || 'Upload successful');

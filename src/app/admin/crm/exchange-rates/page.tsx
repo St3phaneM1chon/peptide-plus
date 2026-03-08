@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   RefreshCcw, Plus, X, ArrowRightLeft, Globe,
 } from 'lucide-react';
@@ -45,7 +46,7 @@ export default function ExchangeRatesPage() {
   const syncRates = async () => {
     setSyncing(true);
     try {
-      const res = await fetch('/api/admin/crm/exchange-rates/sync', { method: 'POST' });
+      const res = await fetch('/api/admin/crm/exchange-rates/sync', { method: 'POST', headers: addCSRFHeader() });
       const json = await res.json();
       if (json.success) { toast.success(t('admin.crm.ratesSynced') || 'Rates synced from API'); fetchRates(); }
       else toast.error(json.error?.message || 'Sync failed');

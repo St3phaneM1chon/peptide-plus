@@ -265,6 +265,13 @@ export default async function ProductPage({ params }: PageProps) {
     : Number(product.price);
   const hasStock = product.formats.some(f => f.inStock);
 
+  // Fetch aggregate review stats for JSON-LD aggregateRating
+  const reviewStats = await prisma.review.aggregate({
+    where: { productId: product.id, isApproved: true, isPublished: true },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+
   const productJsonLd = productSchema({
     name: translatedProduct.name,
     description: translatedProduct.shortDescription || translatedProduct.description?.substring(0, 300) || '',
@@ -276,6 +283,8 @@ export default async function ProductPage({ params }: PageProps) {
     sku: product.formats[0]?.sku || product.id,
     inStock: hasStock,
     categoryName: product.category?.name || undefined,
+    reviewCount: reviewStats._count.rating || undefined,
+    ratingValue: reviewStats._avg.rating ?? undefined,
   });
 
   // FIX: BUG-061 - JSON-LD uses translated product/category names from `translatedProduct`.

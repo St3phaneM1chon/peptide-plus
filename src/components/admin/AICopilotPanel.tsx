@@ -9,6 +9,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   X,
   Sparkles,
@@ -300,7 +301,7 @@ export default function AICopilotPanel({ open, onClose }: AICopilotPanelProps) {
     try {
       const response = await fetch('/api/admin/ai/copilot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action,
           context: {

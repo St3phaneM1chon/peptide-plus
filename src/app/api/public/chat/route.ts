@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 const chatPostSchema = z.object({
   action: z.enum(['start', 'message', 'end']),
@@ -61,13 +62,18 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'start': {
-        const { name, email } = body;
+        const rawName = body.name;
+        const rawEmail = body.email;
+        // Sanitize user input to prevent stored XSS
+        const safeName = rawName ? stripControlChars(stripHtml(rawName)).trim() : '';
+        const safeEmail = rawEmail ? stripControlChars(stripHtml(rawEmail)).trim() : '';
+        const displayName = safeName || 'Visitor';
 
         // Try to find existing lead by email
         let leadId: string | null = null;
-        if (email) {
+        if (safeEmail) {
           const lead = await prisma.crmLead.findFirst({
-            where: { email },
+            where: { email: safeEmail },
             select: { id: true },
           });
           leadId = lead?.id || null;
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
           data: {
             channel: 'CHAT',
             status: 'OPEN',
-            subject: `Chat from ${name || 'Visitor'}`,
+            subject: `Chat from ${displayName}`,
             leadId,
             lastMessageAt: new Date(),
           },
@@ -89,9 +95,9 @@ export async function POST(request: NextRequest) {
           data: {
             conversationId: conversation.id,
             direction: 'INBOUND',
-            content: `Chat started by ${name || 'Visitor'}${email ? ` (${email})` : ''}`,
-            senderName: name || 'Visitor',
-            senderEmail: email || null,
+            content: `Chat started by ${displayName}${safeEmail ? ` (${safeEmail})` : ''}`,
+            senderName: displayName,
+            senderEmail: safeEmail || null,
           },
         });
 
@@ -102,10 +108,18 @@ export async function POST(request: NextRequest) {
       }
 
       case 'message': {
-        const { conversationId, message, senderName } = body;
+        const { conversationId, message, senderName: rawSenderName } = body;
 
         if (!conversationId || !message?.trim()) {
           return NextResponse.json({ success: false, error: 'conversationId and message required' }, { status: 400 });
+        }
+
+        // Sanitize user input to prevent stored XSS
+        const safeMessage = stripControlChars(stripHtml(message)).trim();
+        const safeSenderName = rawSenderName ? stripControlChars(stripHtml(rawSenderName)).trim() : 'Visitor';
+
+        if (!safeMessage) {
+          return NextResponse.json({ success: false, error: 'Message cannot be empty after sanitization' }, { status: 400 });
         }
 
         // Verify conversation exists and is open
@@ -127,8 +141,8 @@ export async function POST(request: NextRequest) {
           data: {
             conversationId,
             direction: 'INBOUND',
-            content: message.trim(),
-            senderName: senderName || 'Visitor',
+            content: safeMessage,
+            senderName: safeSenderName,
           },
         });
 

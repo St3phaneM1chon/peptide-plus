@@ -285,16 +285,84 @@ export async function stopTranscription(callControlId: string) {
 // ── WebRTC Token Generation ─────────────────────────
 
 /**
- * Generate a WebRTC credential token for client SDK (iOS/macOS).
- * The client uses this to authenticate with TelnyxRTC SDK.
+ * Generate a WebRTC credential token for client SDK (browser/iOS/macOS).
+ * The client uses this JWT to authenticate with TelnyxRTC SDK.
+ *
+ * Flow:
+ * 1. Find or create a telephony credential for the connection.
+ * 2. POST /telephony_credentials/{id}/token to get a JWT login token.
+ * 3. Return the credential data along with the JWT token.
  */
 export async function generateWebRtcToken(connectionId: string) {
-  return telnyxFetch('/telephony_credentials', {
+  // Step 1: Try to find an existing credential for this connection
+  let credentialId: string | null = null;
+  let sipUsername: string | null = null;
+  let sipPassword: string | null = null;
+
+  try {
+    const existing = await telnyxFetch<{ data: Array<{ id: string; connection_id: string; sip_username: string; sip_password: string; expired: boolean }> }>(
+      '/telephony_credentials',
+      { params: { 'filter[connection_id]': connectionId, 'page[size]': '10' } }
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const creds = (existing as any)?.data?.data || (existing as any)?.data || [];
+    const validCred = Array.isArray(creds)
+      ? creds.find((c: { expired?: boolean }) => !c.expired)
+      : null;
+    if (validCred) {
+      credentialId = validCred.id;
+      sipUsername = validCred.sip_username;
+      sipPassword = validCred.sip_password;
+    }
+  } catch (err) {
+    logger.warn('[Telnyx] Failed to list existing credentials, will create new one', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  // Step 2: If no existing credential, create one
+  if (!credentialId) {
+    const created = await telnyxFetch<{ id: string; sip_username: string; sip_password: string }>('/telephony_credentials', {
+      method: 'POST',
+      body: { connection_id: connectionId },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const credData = (created as any)?.data || created;
+    credentialId = credData.id;
+    sipUsername = credData.sip_username;
+    sipPassword = credData.sip_password;
+  }
+
+  // Step 3: Generate a JWT token from the credential
+  const tokenResponse = await fetch(`${TELNYX_API_BASE}/telephony_credentials/${credentialId}/token`, {
     method: 'POST',
-    body: {
-      connection_id: connectionId,
+    headers: {
+      'Authorization': `Bearer ${getApiKey()}`,
+      'Content-Type': 'application/json',
     },
   });
+
+  if (!tokenResponse.ok) {
+    const errBody = await tokenResponse.text();
+    logger.error('[Telnyx] Failed to generate JWT token', {
+      credentialId,
+      status: tokenResponse.status,
+      body: errBody.slice(0, 300),
+    });
+    throw new Error(`Telnyx token generation failed (${tokenResponse.status}): ${errBody.slice(0, 200)}`);
+  }
+
+  // The token endpoint returns the JWT as plain text
+  const token = await tokenResponse.text();
+
+  return {
+    data: {
+      id: credentialId,
+      token: token.replace(/^"|"$/g, ''), // Strip surrounding quotes if present
+      sip_username: sipUsername,
+      sip_password: sipPassword,
+    },
+  };
 }
 
 // ── Number Management ─────────────────────────

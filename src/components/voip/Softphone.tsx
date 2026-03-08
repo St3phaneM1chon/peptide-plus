@@ -186,6 +186,8 @@ export default function Softphone() {
     remoteVideoStream,
     autoRegisterAttempted: _autoRegisterAttempted,
     healthError,
+    healthInfo,
+    registeredExtension,
     retryRegister,
   } = useSoftphone();
 
@@ -1449,9 +1451,42 @@ export default function Softphone() {
                   {/* ---- TAB: Lines ---- */}
                   {activeTab === 'lines' && (
                     <div>
+                      {/* Registered extension info */}
+                      {registeredExtension && (
+                        <div className="mb-3 p-2.5 rounded-lg border border-teal-200 bg-teal-50/50 dark:bg-teal-900/20 dark:border-teal-800">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${status === 'registered' ? 'bg-green-500' : status === 'connecting' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-400'}`} />
+                              <div>
+                                <div className="text-sm font-medium">Ext. {registeredExtension.extension}</div>
+                                <div className="text-xs text-gray-500">{registeredExtension.sipDomain}</div>
+                              </div>
+                            </div>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              status === 'registered' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                              status === 'connecting' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                              'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            }`}>
+                              {status === 'registered' ? 'En ligne' : status === 'connecting' ? 'Connexion...' : 'Hors ligne'}
+                            </span>
+                          </div>
+                          {healthInfo && (
+                            <div className="mt-2 flex gap-3 text-[10px] text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <span className={`w-1.5 h-1.5 rounded-full ${healthInfo.database === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
+                                DB
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <span className={`w-1.5 h-1.5 rounded-full ${healthInfo.pbx?.provider ? 'bg-green-500' : 'bg-red-500'}`} />
+                                {healthInfo.pbx?.provider || 'PBX'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {callLines.length === 0 ? (
-                        <div className="text-center text-sm text-gray-400 py-6">
-                          {t('voip.softphone.lines.noLines')}
+                        <div className="text-center text-sm text-gray-400 py-4">
+                          Aucun appel actif
                         </div>
                       ) : (
                         <div className="space-y-2">

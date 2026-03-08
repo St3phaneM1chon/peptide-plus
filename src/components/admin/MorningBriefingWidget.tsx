@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   Sunrise,
   RefreshCw,
@@ -43,7 +44,7 @@ export default function MorningBriefingWidget() {
     try {
       const response = await fetch('/api/admin/ai/copilot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'morning_briefing',
           context: {},

@@ -530,7 +530,7 @@ export default function EmailsPage() {
 
   const sendTestEmail = async () => {
     try {
-      const res = await fetch('/api/admin/emails/test', { method: 'POST' });
+      const res = await fetch('/api/admin/emails/test', { method: 'POST', headers: addCSRFHeader() });
       if (res.ok) {
         toast.success(t('admin.emailConfig.testSent') || 'Test email sent');
       } else {
@@ -1742,7 +1742,7 @@ export default function EmailsPage() {
             </Button>
             <Button variant="secondary" icon={SendHorizontal} onClick={async () => {
               try {
-                const res = await fetch('/api/admin/emails/test', { method: 'POST' });
+                const res = await fetch('/api/admin/emails/test', { method: 'POST', headers: addCSRFHeader() });
                 if (res.ok) toast.success(t('admin.emailConfig.testEmailSent') || 'Test email sent!');
                 else toast.error(t('admin.emailConfig.testEmailFailed') || 'Test email failed');
               } catch {

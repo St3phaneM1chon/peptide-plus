@@ -22,7 +22,7 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { fetchWithCSRF } from '@/lib/csrf';
+import { fetchWithCSRF, addCSRFHeader } from '@/lib/csrf';
 import { generateTags, generateAltText } from '@/lib/media/ai-tagger';
 import { type ImageUsage, formatUsageSummary } from '@/lib/media/usage-tracker';
 import { CROP_PRESETS, type CropPreset } from '@/lib/media/smart-crop';
@@ -207,7 +207,7 @@ export default function MediaImagesPage() {
 
         setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, progress: 50 } : f));
 
-        const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+        const res = await fetch('/api/admin/medias', { headers: addCSRFHeader(), method: 'POST', body: formData });
         if (res.ok) {
           setBulkFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'done', progress: 100 } : f));
         } else {
@@ -249,7 +249,7 @@ export default function MediaImagesPage() {
         formData.append('files', files[i]);
       }
       formData.append('folder', 'images');
-      const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/medias', { headers: addCSRFHeader(), method: 'POST', body: formData });
       if (res.ok) {
         loadImages();
         toast.success(t('admin.media.uploadSuccess') || 'Upload successful');
