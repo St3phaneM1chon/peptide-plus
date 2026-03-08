@@ -328,7 +328,23 @@ async function runAllChecks(): Promise<DependencyCheckResult> {
 // GET - Return last check or run a fresh one
 // ---------------------------------------------------------------------------
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // SECURITY: Require CRON_SECRET — exposes infra health (Stripe, DB, Redis status + response times)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || !authHeader) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  try {
+    const provided = Buffer.from(authHeader.replace('Bearer ', ''));
+    const expected = Buffer.from(cronSecret);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // Try to return cached result first
     const cached = await loadLastResult();

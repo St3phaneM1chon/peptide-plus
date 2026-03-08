@@ -676,7 +676,7 @@ export function validateEntry(entry: JournalEntry): { valid: boolean; difference
 
   const totalDebits = (entry.lines || []).reduce((sum, line) => sum + line.debit, 0);
   const totalCredits = (entry.lines || []).reduce((sum, line) => sum + line.credit, 0);
-  const difference = Math.round((totalDebits - totalCredits) * 100) / 100;
+  const difference = roundCurrency(totalDebits - totalCredits);
 
   if (Math.abs(difference) >= 0.01) {
     errors.push(`Écriture déséquilibrée: différence de ${difference.toFixed(2)}`);

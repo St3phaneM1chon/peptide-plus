@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { auth } from '@/lib/auth-config';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -127,26 +128,33 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/stock-alerts?email=...&productId=...&formatId=... - Check subscription status
+ * GET /api/stock-alerts?productId=...&formatId=... - Check subscription status
+ * SECURITY: Requires auth — uses session email to prevent email enumeration
  */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication — prevents email enumeration
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
     const productId = searchParams.get('productId');
     const formatId = searchParams.get('formatId');
 
-    if (!email || !productId) {
+    if (!productId) {
       return NextResponse.json(
-        { error: 'Email and productId are required' },
+        { error: 'productId is required' },
         { status: 400 }
       );
     }
 
+    // Use session email instead of query param to prevent checking other users' subscriptions
     const alert = await prisma.stockAlert.findUnique({
       where: {
         email_productId_formatId: {
-          email,
+          email: session.user.email,
           productId,
           formatId: formatId ?? '',
         },

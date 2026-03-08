@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import * as telnyx from '@/lib/telnyx';
 
 const TELNYX_CONNECTION_ID = process.env.TELNYX_CONNECTION_ID || '';
@@ -21,12 +21,7 @@ const WEBHOOK_BASE_URL = process.env.NEXTAUTH_URL || 'https://biocyclepeptides.c
 /**
  * POST - Initiate an outbound call via Telnyx Call Control.
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const raw = await request.json();
     const parsed = z.object({
@@ -80,17 +75,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * GET - List recent calls with optional filters.
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const direction = searchParams.get('direction');
@@ -128,7 +118,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to list calls' }, { status: 500 });
   }
-}
+});
 
 /**
  * Normalize a phone number to E.164 format.

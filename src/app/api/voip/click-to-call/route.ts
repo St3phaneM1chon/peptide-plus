@@ -16,17 +16,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 /**
  * POST - Initiate a click-to-call outbound call.
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const raw = await request.json();
     const parsed = z.object({
@@ -119,4 +114,4 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to initiate call' }, { status: 500 });
   }
-}
+});

@@ -19,6 +19,7 @@ import { consumeReservation } from '@/lib/inventory';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
+import { multiply, applyRate } from '@/lib/decimal-calculator';
 
 /**
  * Verify PayPal webhook signature
@@ -316,11 +317,11 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
 
   // Create refund accounting entries
   try {
-    // Calculate proportional tax refund
+    // Calculate proportional tax refund using Decimal arithmetic
     const refundRatio = refundAmount / orderTotal;
-    const refundTps = Math.round(Number(order.taxTps) * refundRatio * 100) / 100;
-    const refundTvq = Math.round(Number(order.taxTvq) * refundRatio * 100) / 100;
-    const refundTvh = Math.round(Number(order.taxTvh) * refundRatio * 100) / 100;
+    const refundTps = applyRate(Number(order.taxTps), refundRatio);
+    const refundTvq = applyRate(Number(order.taxTvq), refundRatio);
+    const refundTvh = applyRate(Number(order.taxTvh), refundRatio);
 
     await createRefundAccountingEntries(
       order.id,
@@ -472,7 +473,7 @@ async function createAmbassadorCommission(
   const rate = Number(ambassador.commissionRate);
   // F-010 FIX: commissionRate is stored as an integer percentage (e.g. 10 = 10%).
   // Divide by 100 first to get the decimal multiplier, then round to 2 decimal places.
-  const commissionAmount = Math.round(orderTotal * (rate / 100) * 100) / 100;
+  const commissionAmount = applyRate(orderTotal, rate / 100);
 
   // Use upsert to avoid duplicates (idempotent for webhook retries)
   await prisma.ambassadorCommission.upsert({

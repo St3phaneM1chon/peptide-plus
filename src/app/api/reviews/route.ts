@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           updatedAt: true,
           user: {
-            select: { id: true, name: true, email: true, image: true },
+            select: { id: true, name: true, image: true },
           },
           images: {
             orderBy: { order: 'asc' },
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     const reviews = dbReviews.map((r) => ({
       id: r.id,
       userId: r.userId,
-      userName: r.user.name || r.user.email.split('@')[0],
+      userName: r.user.name || 'Anonymous',
       userAvatar: r.user.image || undefined,
       rating: r.rating,
       title: r.title || '',

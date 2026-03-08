@@ -16,6 +16,8 @@ import { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { stripHtml } from '@/lib/sanitize';
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -170,6 +172,15 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    // Rate limit comment submissions
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/blog/comments');
+    if (!rl.success) {
+      return NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -184,6 +195,12 @@ export async function POST(
         { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
+    }
+
+    // XSS sanitization — strip all HTML from comment content
+    const sanitizedContent = stripHtml(parsed.data.content).trim();
+    if (sanitizedContent.length < 1) {
+      return NextResponse.json({ error: 'Comment content cannot be empty after sanitization' }, { status: 400 });
     }
 
     // Find the blog post
@@ -204,7 +221,7 @@ export async function POST(
       blogPostId: post.id,
       userId: session.user.id,
       userName: session.user.name || 'Anonymous',
-      content: parsed.data.content,
+      content: sanitizedContent,
       parentId: parsed.data.parentId,
     });
 

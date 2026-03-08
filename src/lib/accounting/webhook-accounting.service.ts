@@ -175,6 +175,28 @@ export async function createAccountingEntriesForOrder(orderId: string): Promise<
     throw new Error(`Order not found: ${orderId}`);
   }
 
+  // Idempotency check: verify no journal entries already exist for this order
+  const existingEntry = await prisma.journalEntry.findFirst({
+    where: { reference: { contains: order.orderNumber } },
+    select: { id: true },
+  });
+  if (existingEntry) {
+    // Entries already created for this order — return existing IDs to prevent duplicates
+    const existingFee = await prisma.journalEntry.findFirst({
+      where: { reference: { contains: order.orderNumber }, description: { contains: 'fee' } },
+      select: { id: true },
+    });
+    const existingInvoice = await prisma.customerInvoice.findFirst({
+      where: { orderId },
+      select: { id: true },
+    });
+    return {
+      saleEntryId: existingEntry.id,
+      feeEntryId: existingFee?.id || null,
+      invoiceId: existingInvoice?.id || '',
+    };
+  }
+
   // Ensure the accounting period for the order date is open
   await assertPeriodOpen(order.createdAt);
 
@@ -684,7 +706,8 @@ export async function createInventoryLossEntry(
   // Ensure the current accounting period is open for the loss entry
   await assertPeriodOpen(new Date());
 
-  const lossRounded = Math.round(lossAmount * 100) / 100;
+  const { add: addDec } = await import('@/lib/decimal-calculator');
+  const lossRounded = addDec(lossAmount); // rounds to 2 decimal places via decimal-calculator
 
   // #89 Batch: fetch both account IDs in one query
   const lossAccountMap = await batchGetAccountIds([

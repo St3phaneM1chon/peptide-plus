@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { MessagingChannel, type Message } from '@/lib/voip/messaging-channel';
 
 /**
@@ -35,12 +35,7 @@ function getMessaging(): MessagingChannel {
  * - phoneNumber: if provided, returns messages for that conversation
  * - (no param): returns all conversation summaries
  */
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const phoneNumber = searchParams.get('phoneNumber');
@@ -81,7 +76,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ error: 'Failed to list messages' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST - Send a message (SMS, WhatsApp, or MMS).
@@ -93,12 +88,7 @@ export async function GET(request: NextRequest) {
  * - from?: string (override sender number)
  * - mediaUrls?: string[] (for MMS only)
  */
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const raw = await request.json();
     const parsed = z.object({
@@ -154,4 +144,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

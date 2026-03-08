@@ -244,7 +244,23 @@ export async function POST(request: NextRequest) {
 // GET - Health check / stats
 // ---------------------------------------------------------------------------
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // SECURITY: Require CRON_SECRET for stats endpoint to prevent information disclosure
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || !authHeader) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  try {
+    const provided = Buffer.from(authHeader.replace('Bearer ', ''));
+    const expected = Buffer.from(cronSecret);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const now = new Date();
 

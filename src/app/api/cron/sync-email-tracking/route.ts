@@ -6,13 +6,24 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { syncEmailEngagementsToCrm } from '@/lib/crm/email-tracking';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
+  // SECURITY: Timing-safe CRON_SECRET verification (prevents timing attacks)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !authHeader) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  try {
+    const provided = Buffer.from(authHeader.replace('Bearer ', ''));
+    const expected = Buffer.from(cronSecret);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

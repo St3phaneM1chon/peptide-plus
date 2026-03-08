@@ -5,14 +5,24 @@ export const dynamic = 'force-dynamic';
  * Finds reports due to be sent and generates/emails them.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
+  // SECURITY: Timing-safe CRON_SECRET verification (prevents timing attacks)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !authHeader) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  try {
+    const provided = Buffer.from(authHeader.replace('Bearer ', ''));
+    const expected = Buffer.from(cronSecret);
+    if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

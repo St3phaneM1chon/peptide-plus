@@ -3,11 +3,26 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
+  // Rate limit to prevent session ID brute-force
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/orders/by-session');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
+  }
+
   const sessionId = request.nextUrl.searchParams.get('session_id');
   if (!sessionId) {
     return NextResponse.json({ error: 'session_id required' }, { status: 400 });
+  }
+
+  // Validate session_id format (Stripe checkout sessions start with cs_)
+  if (!/^cs_(test_|live_)[a-zA-Z0-9]+$/.test(sessionId)) {
+    return NextResponse.json({ error: 'Invalid session_id format' }, { status: 400 });
   }
 
   // Look up order by Stripe payment intent from the session

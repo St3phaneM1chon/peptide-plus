@@ -110,7 +110,7 @@ function calculateServerShipping(subtotal: number, country: string, productTypes
     const wr = SERVER_WEIGHT_RATES[weightRegion];
     // CA domestic: free over $100 CAD
     if (weightRegion === 'CA' && subtotal >= 100) return 0;
-    return Math.round((wr.baseRate + weightKg * wr.perKgRate) * 100) / 100;
+    return add(wr.baseRate, multiply(weightKg, wr.perKgRate));
   }
 
   // Flat-rate fallback (original logic)

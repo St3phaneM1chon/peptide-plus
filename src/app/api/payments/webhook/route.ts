@@ -20,6 +20,7 @@ import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { calculatePurchasePoints, calculateTierFromPoints } from '@/lib/constants';
+import { subtract, applyRate } from '@/lib/decimal-calculator';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
@@ -682,7 +683,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
 
       if (giftCard && giftCard.is_active && giftCard.balance > 0) {
         const amountToDeduct = Math.min(giftCardDiscount, giftCard.balance);
-        const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
+        const newBalance = subtract(giftCard.balance, amountToDeduct);
 
         await tx.giftCard.update({
           where: { id: giftCard.id },
@@ -815,7 +816,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         // commissionRate is stored as an integer percentage in the DB (e.g. 10 = 10%).
         // Divide by 100 to get the decimal multiplier before applying to order total.
         const rate = Number(ambassador.commissionRate);
-        const commissionAmount = Math.round(Number(order.total) * (rate / 100) * 100) / 100;
+        const commissionAmount = applyRate(Number(order.total), rate / 100);
 
         await prisma.ambassadorCommission.upsert({
           where: {
@@ -1076,11 +1077,11 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     await createRefundAccountingEntries(
       order.id,
       refundAmount,
-      Math.round(tps * refundRatio * 100) / 100,
-      Math.round(tvq * refundRatio * 100) / 100,
-      Math.round(tvh * refundRatio * 100) / 100,
+      applyRate(tps, refundRatio),
+      applyRate(tvq, refundRatio),
+      applyRate(tvh, refundRatio),
       'Remboursement Stripe',
-      Math.round(pst * refundRatio * 100) / 100
+      applyRate(pst, refundRatio)
     );
   } catch (acctError) {
     logger.error('Failed to create refund accounting entries', {

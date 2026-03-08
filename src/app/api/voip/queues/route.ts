@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getQueueStats } from '@/lib/voip/queue-engine';
 
 const queueCreateSchema = z.object({
@@ -30,12 +30,7 @@ const queueCreateSchema = z.object({
   })).default([]),
 });
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const { searchParams } = request.nextUrl;
     const companyId = searchParams.get('companyId');
@@ -75,14 +70,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const raw = await request.json();
     const parsed = queueCreateSchema.safeParse(raw);
@@ -141,4 +131,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

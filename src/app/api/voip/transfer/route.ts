@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   blindTransfer,
   startAttendedTransfer,
@@ -36,12 +36,7 @@ const transferSchema = z.object({
   conferenceName: z.string().optional(),
 });
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const raw = await request.json();
     const parsed = transferSchema.safeParse(raw);
@@ -152,4 +147,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
