@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { randomBytes } from 'crypto';
+import { z } from 'zod';
 import { withApiAuth, jsonSuccess, jsonError } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
 
@@ -79,50 +80,41 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   });
 }, 'webhooks:read');
 
+const createWebhookSchema = z.object({
+  url: z.string().url().max(2048).refine(
+    (u) => { try { return ['http:', 'https:'].includes(new URL(u).protocol); } catch { return false; } },
+    'url must use HTTP or HTTPS protocol'
+  ),
+  name: z.string().max(255).optional(),
+  events: z.array(z.enum(VALID_EVENTS as [string, ...string[]])).min(1, 'At least one event required'),
+});
+
 export const POST = withApiAuth(async (request: NextRequest) => {
-  let body: Record<string, unknown>;
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError('Invalid JSON body', 400);
   }
 
-  // Validate required fields
-  if (!body.url || typeof body.url !== 'string') {
-    return jsonError('url is required and must be a string', 400);
-  }
-
-  if (!body.events || !Array.isArray(body.events) || body.events.length === 0) {
-    return jsonError('events is required and must be a non-empty array', 400);
-  }
-
-  // Validate URL format
-  try {
-    const parsed = new URL(body.url);
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return jsonError('url must use HTTP or HTTPS protocol', 400);
-    }
-  } catch {
-    return jsonError('url must be a valid URL', 400);
-  }
-
-  // Validate events
-  const invalidEvents = body.events.filter((e: string) => !VALID_EVENTS.includes(e));
-  if (invalidEvents.length > 0) {
+  const parsed = createWebhookSchema.safeParse(rawBody);
+  if (!parsed.success) {
     return jsonError(
-      `Invalid events: ${invalidEvents.join(', ')}. Valid events: ${VALID_EVENTS.join(', ')}`,
+      parsed.error.errors[0]?.message || 'Invalid webhook data',
       400
     );
   }
+
+  const { url, name, events } = parsed.data;
 
   // Generate signing secret
   const secret = `whsec_${randomBytes(24).toString('hex')}`;
 
   const webhook = await prisma.webhookEndpoint.create({
     data: {
-      url: body.url,
-      name: typeof body.name === 'string' ? body.name : null,
-      events: body.events as string[],
+      url,
+      name: name || null,
+      events,
       secret,
       active: true,
     },

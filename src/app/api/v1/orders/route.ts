@@ -7,8 +7,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { withApiAuth, jsonSuccess, jsonError } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
+import { add, multiply } from '@/lib/decimal-calculator';
+import { stripHtml } from '@/lib/sanitize';
 
 export const GET = withApiAuth(async (request: NextRequest) => {
   const url = new URL(request.url);
@@ -102,33 +105,48 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   });
 }, 'orders:read');
 
+const createOrderSchema = z.object({
+  shippingName: z.string().min(1).max(200),
+  shippingAddress1: z.string().min(1).max(500),
+  shippingAddress2: z.string().max(500).optional(),
+  shippingCity: z.string().min(1).max(200),
+  shippingState: z.string().min(1).max(100),
+  shippingPostal: z.string().min(1).max(20),
+  shippingCountry: z.string().min(2).max(3).default('CA'),
+  shippingPhone: z.string().max(30).optional(),
+  shippingCost: z.number().min(0).max(999999.99).default(0),
+  tax: z.number().min(0).max(999999.99).default(0),
+  taxTps: z.number().min(0).max(999999.99).default(0),
+  taxTvq: z.number().min(0).max(999999.99).default(0),
+  taxTvh: z.number().min(0).max(999999.99).default(0),
+  taxPst: z.number().min(0).max(999999.99).default(0),
+  userId: z.string().optional(),
+  customerNotes: z.string().max(2000).optional(),
+  items: z.array(z.object({
+    productId: z.string().min(1),
+    formatId: z.string().optional(),
+    quantity: z.number().int().positive(),
+  })).min(1, 'Order must contain at least one item'),
+});
+
 export const POST = withApiAuth(async (request: NextRequest) => {
-  let body: Record<string, unknown>;
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError('Invalid JSON body', 400);
   }
 
-  // Validate required fields
-  const requiredFields = ['shippingName', 'shippingAddress1', 'shippingCity', 'shippingState', 'shippingPostal', 'shippingCountry', 'items'];
-  for (const field of requiredFields) {
-    if (!body[field]) {
-      return jsonError(`Missing required field: ${field}`, 400);
-    }
+  const parsed = createOrderSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return jsonError(
+      parsed.error.errors[0]?.message || 'Invalid order data',
+      400
+    );
   }
 
-  const items = body.items as Array<{ productId: string; formatId?: string; quantity: number }>;
-  if (!Array.isArray(items) || items.length === 0) {
-    return jsonError('Order must contain at least one item', 400);
-  }
-
-  // Validate items early
-  for (const item of items) {
-    if (!item.productId || !item.quantity || item.quantity < 1) {
-      return jsonError('Each item must have productId and quantity >= 1', 400);
-    }
-  }
+  const body = parsed.data;
+  const items = body.items;
 
   // Batch fetch all products at once instead of one query per item
   const productIds = [...new Set(items.map((i) => i.productId))];
@@ -191,8 +209,8 @@ export const POST = withApiAuth(async (request: NextRequest) => {
       sku = format.sku || sku;
     }
 
-    const itemTotal = unitPrice * item.quantity;
-    subtotal += itemTotal;
+    const itemTotal = multiply(unitPrice, item.quantity);
+    subtotal = add(subtotal, itemTotal);
 
     orderItems.push({
       productId: item.productId,
@@ -225,37 +243,37 @@ export const POST = withApiAuth(async (request: NextRequest) => {
     : 10001;
   const orderNumber = `BP-${String(nextNum).padStart(6, '0')}`;
 
-  const shippingCost = typeof body.shippingCost === 'number' ? body.shippingCost : 0;
-  const tax = typeof body.tax === 'number' ? body.tax : 0;
-  const total = subtotal + shippingCost + tax;
+  const shippingCost = body.shippingCost;
+  const tax = body.tax;
+  const total = add(subtotal, shippingCost, tax);
 
   // Use a transaction to ensure order + items creation is atomic
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
         orderNumber,
-        userId: typeof body.userId === 'string' ? body.userId : null,
+        userId: body.userId || null,
         subtotal,
         shippingCost,
         discount: 0,
         tax,
-        taxTps: typeof body.taxTps === 'number' ? body.taxTps : 0,
-        taxTvq: typeof body.taxTvq === 'number' ? body.taxTvq : 0,
-        taxTvh: typeof body.taxTvh === 'number' ? body.taxTvh : 0,
-        taxPst: typeof body.taxPst === 'number' ? body.taxPst : 0,
+        taxTps: body.taxTps,
+        taxTvq: body.taxTvq,
+        taxTvh: body.taxTvh,
+        taxPst: body.taxPst,
         total,
         currencyId: defaultCurrency.id,
         status: 'PENDING',
         paymentStatus: 'PENDING',
-        shippingName: body.shippingName as string,
-        shippingAddress1: body.shippingAddress1 as string,
-        shippingAddress2: (body.shippingAddress2 as string) || null,
-        shippingCity: body.shippingCity as string,
-        shippingState: body.shippingState as string,
-        shippingPostal: body.shippingPostal as string,
-        shippingCountry: (body.shippingCountry as string) || 'CA',
-        shippingPhone: (body.shippingPhone as string) || null,
-        customerNotes: (body.customerNotes as string) || null,
+        shippingName: stripHtml(body.shippingName),
+        shippingAddress1: stripHtml(body.shippingAddress1),
+        shippingAddress2: body.shippingAddress2 ? stripHtml(body.shippingAddress2) : null,
+        shippingCity: stripHtml(body.shippingCity),
+        shippingState: stripHtml(body.shippingState),
+        shippingPostal: stripHtml(body.shippingPostal),
+        shippingCountry: body.shippingCountry,
+        shippingPhone: body.shippingPhone || null,
+        customerNotes: body.customerNotes ? stripHtml(body.customerNotes) : null,
         items: {
           create: orderItems,
         },
