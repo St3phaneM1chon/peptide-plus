@@ -160,6 +160,17 @@ const providers = [
         const { checkLoginAttempt, recordFailedAttempt, clearFailedAttempts } = await import('./brute-force-protection');
         const lockCheck = await checkLoginAttempt(email, 'unknown', 'unknown');
         if (!lockCheck.allowed) {
+          // AUTH-003 FIX: Log brute-force lockout events for security monitoring
+          logger.warn('[Auth] Brute-force lockout triggered', { email });
+          prisma.auditLog.create({
+            data: {
+              userId: 'system',
+              action: 'BRUTE_FORCE_LOCKOUT',
+              entityType: 'User',
+              entityId: email,
+              details: JSON.stringify({ email, timestamp: new Date().toISOString() }),
+            },
+          }).catch(() => {}); // Fire-and-forget, don't block auth
           return null;
         }
 

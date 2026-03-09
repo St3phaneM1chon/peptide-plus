@@ -80,7 +80,9 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       // SECURITY FIX H17: Don't reveal whether email exists (account enumeration)
-      // Return same success response to prevent attackers from discovering valid emails
+      // AUTH-001 FIX: Perform a dummy hash to normalize response timing
+      // Without this, the ~250ms bcrypt hash reveals whether the email exists
+      await hash('timing-normalization-dummy', 12);
       return NextResponse.json(
         {
           success: true,

@@ -99,20 +99,41 @@ export async function POST(request: NextRequest) {
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Mettre à jour le mot de passe et effacer le token
+    // AUTH-002 FIX: Use transaction to atomically consume token + update password
+    // This prevents race conditions where two simultaneous requests use the same token
     try {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          password: hashedPassword,
-          resetToken: null,
-          resetTokenExpiry: null,
-        },
+      const updated = await prisma.$transaction(async (tx) => {
+        // Atomically clear the token first — if another request already consumed it,
+        // updateMany returns count=0 and we abort
+        const consumed = await tx.user.updateMany({
+          where: {
+            id: user.id,
+            resetToken: tokenHash, // Only succeeds if token still matches
+          },
+          data: {
+            resetToken: null,
+            resetTokenExpiry: null,
+          },
+        });
+        if (consumed.count === 0) {
+          throw new Error('TOKEN_ALREADY_CONSUMED');
+        }
+        // Now safely update the password
+        return tx.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        });
       });
+      if (!updated) throw new Error('Update failed');
     } catch (dbError) {
-      logger.error('Database update error', { error: dbError instanceof Error ? dbError.message : String(dbError) });
-      // SECURITY FIX: If we can't clear the reset token, don't update the password
-      // This prevents token reuse attacks
+      const msg = dbError instanceof Error ? dbError.message : String(dbError);
+      if (msg === 'TOKEN_ALREADY_CONSUMED') {
+        return NextResponse.json(
+          { error: 'Ce lien a déjà été utilisé' },
+          { status: 400 }
+        );
+      }
+      logger.error('Database update error', { error: msg });
       return NextResponse.json(
         { error: 'Erreur lors de la réinitialisation' },
         { status: 500 }
