@@ -26,12 +26,13 @@ const activateGiftCardSchema = z.object({
   { message: 'giftCardId or giftCardCode is required' }
 );
 
-// SEC-21: Only use INTERNAL_WEBHOOK_SECRET - do not fall back to STRIPE_WEBHOOK_SECRET
-const INTERNAL_SECRET = process.env.INTERNAL_WEBHOOK_SECRET;
+// COMMERCE-012 FIX: Moved INTERNAL_WEBHOOK_SECRET read inside the handler.
+// Reading at module top-level in Next.js serverless resolves to undefined at build time.
 
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Require INTERNAL_WEBHOOK_SECRET to be configured
+    const INTERNAL_SECRET = process.env.INTERNAL_WEBHOOK_SECRET;
     if (!INTERNAL_SECRET) {
       logger.error('INTERNAL_WEBHOOK_SECRET is not configured');
       return NextResponse.json(

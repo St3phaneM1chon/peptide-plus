@@ -24,15 +24,24 @@ import { stripHtml } from '@/lib/sanitize';
 
 const SHARE_TOKEN_EXPIRY = '7d'; // 7 days
 
-// Lazy-initialized to avoid crashing during Next.js build/SSG when env vars
-// are not available (see KB-PP-BUILD-002).
+// COMMERCE-010 FIX: Use a dedicated CART_SHARE_SECRET instead of NEXTAUTH_SECRET.
+// Reusing the session signing secret for cart JWTs means a leaked cart token
+// exposes the auth secret, enabling session forgery for any user.
+// Falls back to a derived key from NEXTAUTH_SECRET if CART_SHARE_SECRET is not set.
 let _shareSecret: Uint8Array | null = null;
 function getShareSecret(): Uint8Array {
   if (!_shareSecret) {
-    if (!process.env.NEXTAUTH_SECRET) {
-      throw new Error('NEXTAUTH_SECRET environment variable is required for cart sharing');
+    const dedicatedSecret = process.env.CART_SHARE_SECRET;
+    if (dedicatedSecret) {
+      _shareSecret = new TextEncoder().encode(dedicatedSecret);
+    } else {
+      // Fallback: derive a separate key from NEXTAUTH_SECRET so the raw secret differs
+      if (!process.env.NEXTAUTH_SECRET) {
+        throw new Error('CART_SHARE_SECRET or NEXTAUTH_SECRET environment variable is required for cart sharing');
+      }
+      // Prefix ensures the derived key differs from the raw NEXTAUTH_SECRET
+      _shareSecret = new TextEncoder().encode(`cart-share:${process.env.NEXTAUTH_SECRET}`);
     }
-    _shareSecret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
   }
   return _shareSecret;
 }

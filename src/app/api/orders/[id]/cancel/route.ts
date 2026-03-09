@@ -54,7 +54,7 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Find the order - must belong to this user
+    // COMMERCE-009 FIX: Include items, promoCode, giftCardCode for reversal operations
     const order = await prisma.order.findFirst({
       where: {
         OR: [{ id }, { orderNumber: id }],
@@ -65,6 +65,17 @@ export async function POST(
         orderNumber: true,
         status: true,
         userId: true,
+        promoCode: true,
+        giftCardCode: true,
+        giftCardDiscount: true,
+        items: {
+          select: {
+            productId: true,
+            formatId: true,
+            quantity: true,
+            productName: true,
+          },
+        },
       },
     });
 
@@ -94,21 +105,73 @@ export async function POST(
       // No body or invalid JSON is fine, use default reason
     }
 
-    // Update the order status
-    const updatedOrder = await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: 'CANCELLED',
-        adminNotes: order.status === 'PENDING'
-          ? `[CANCELLED] ${new Date().toISOString()} - ${reason}`
-          : `[CANCELLED] ${new Date().toISOString()} - ${reason} (was ${order.status})`,
-      },
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        createdAt: true,
-      },
+    // COMMERCE-009 FIX: Use a transaction to atomically cancel, restore inventory,
+    // reverse promo usage, and restore gift card balance.
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // 1. Update the order status
+      const cancelled = await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: 'CANCELLED',
+          adminNotes: order.status === 'PENDING'
+            ? `[CANCELLED] ${new Date().toISOString()} - ${reason}`
+            : `[CANCELLED] ${new Date().toISOString()} - ${reason} (was ${order.status})`,
+        },
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      // 2. Restore inventory for each order item
+      for (const item of order.items) {
+        if (item.formatId) {
+          await tx.productFormat.updateMany({
+            where: { id: item.formatId },
+            data: { stockQuantity: { increment: item.quantity } },
+          });
+        }
+        logger.info(`[cancelOrder] COMMERCE-009: Restored ${item.quantity}x stock for ${item.productName}`, {
+          orderId: order.id,
+          productId: item.productId,
+          formatId: item.formatId,
+        });
+      }
+
+      // 3. Reverse promo code usage
+      if (order.promoCode) {
+        await tx.promoCode.updateMany({
+          where: { code: order.promoCode, usageCount: { gt: 0 } },
+          data: { usageCount: { decrement: 1 } },
+        });
+        await tx.promoCodeUsage.deleteMany({
+          where: { orderId: order.id },
+        });
+        logger.info('[cancelOrder] COMMERCE-009: Reversed promo code usage', {
+          promoCode: order.promoCode,
+          orderId: order.id,
+        });
+      }
+
+      // 4. Restore gift card balance
+      if (order.giftCardCode && order.giftCardDiscount && Number(order.giftCardDiscount) > 0) {
+        await tx.giftCard.updateMany({
+          where: { code: order.giftCardCode },
+          data: {
+            balance: { increment: Number(order.giftCardDiscount) },
+            isActive: true, // Re-activate if it was deactivated when balance hit 0
+          },
+        });
+        logger.info('[cancelOrder] COMMERCE-009: Restored gift card balance', {
+          giftCardCode: order.giftCardCode,
+          amount: Number(order.giftCardDiscount),
+          orderId: order.id,
+        });
+      }
+
+      return cancelled;
     });
 
     // Send cancellation email (fire-and-forget)

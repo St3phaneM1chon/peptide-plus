@@ -22,6 +22,8 @@ import { logger } from '@/lib/logger';
 
 const expressCheckoutSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
+  formatId: z.string().optional(), // COMMERCE-006: Accept formatId for stock validation
+  quantity: z.number().int().min(1).max(100).optional().default(1),
   type: z.enum(['apple-pay', 'google-pay'], {
     required_error: 'Payment type must be apple-pay or google-pay',
   }),
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { productId, type, province: reqProvince, companyId } = result.data;
+    const { productId, formatId, quantity, type, province: reqProvince, companyId } = result.data;
 
     // Idempotency key to prevent duplicate payments
     const idempotencyKey = request.headers.get('x-idempotency-key');
@@ -97,14 +99,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // NOTE: stockQuantity is on ProductFormat, not Product.
-    // Full stock validation should check formats. Basic check: product must be active.
     if (!product.isActive) {
       return NextResponse.json({ error: 'Product is not available' }, { status: 400 });
     }
 
+    // COMMERCE-006 FIX: Validate stock at format level before creating express checkout
+    let unitPrice = Number(product.price);
+    if (formatId) {
+      const format = await prisma.productFormat.findUnique({
+        where: { id: formatId },
+        select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
+      });
+      if (!format) {
+        return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+      }
+      if (format.productId !== productId) {
+        return NextResponse.json({ error: 'Format does not belong to product' }, { status: 400 });
+      }
+      if (format.trackInventory && format.stockQuantity < quantity) {
+        return NextResponse.json({
+          error: `Insufficient stock. Available: ${format.stockQuantity}`,
+        }, { status: 400 });
+      }
+      unitPrice = Number(format.price);
+    }
+
     // Calculate taxes
-    const subtotal = Number(product.price);
+    const subtotal = unitPrice * quantity;
     const province = (reqProvince || 'QC').toUpperCase();
     const taxAmount = calculateTaxAmount(subtotal, province);
     const total = toCents(add(subtotal, taxAmount));

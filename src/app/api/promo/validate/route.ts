@@ -100,28 +100,18 @@ export async function POST(request: NextRequest) {
       }, { status: 410 }); // FIX: F-033 - 410 Gone for expired promo codes
     }
 
-    // FLAW-031 FIX: Atomic check-and-increment to prevent race condition on usage count.
-    // Two concurrent requests could both pass a non-atomic check before either increments.
+    // COMMERCE-003 FIX: Do NOT increment usageCount during validation.
+    // Validation is speculative — the user may never proceed to checkout.
+    // Incrementing here permanently consumes promo slots without a purchase.
+    // The actual increment happens atomically during checkout/capture.
     if (promoCode.usageLimit) {
-      // Attempt atomic increment only if usageCount < usageLimit
-      const atomicResult = await prisma.promoCode.updateMany({
-        where: {
-          id: promoCode.id,
-          usageCount: { lt: promoCode.usageLimit },
-        },
-        data: {
-          usageCount: { increment: 1 },
-        },
-      });
-      if (atomicResult.count === 0) {
+      if (promoCode.usageCount >= promoCode.usageLimit) {
         return NextResponse.json({
           valid: false,
           errorCode: 'PROMO_USAGE_LIMIT_REACHED',
           error: 'Ce code promo a atteint sa limite d\'utilisation',
         });
       }
-      // Note: usageCount has been incremented atomically. If the order fails later,
-      // the checkout flow should decrement it. This prevents double-redemption.
     }
 
     // F-092 FIX: Call auth() once for all user-specific checks

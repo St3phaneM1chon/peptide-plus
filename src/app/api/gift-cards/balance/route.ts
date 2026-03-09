@@ -49,29 +49,35 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!giftCard) {
-      return NextResponse.json(
-        { error: 'Invalid gift card code' },
-        { status: 404 }
-      );
-    }
-
-    // Check if active
-    if (!giftCard.isActive) {
-      return NextResponse.json(
-        { error: 'This gift card is no longer active' },
-        { status: 400 }
-      );
+    // COMMERCE-008 FIX: Return identical response shape for non-existent, inactive,
+    // and expired gift cards to prevent code enumeration via response differentiation.
+    if (!giftCard || !giftCard.isActive) {
+      // Use a generic 200 response with zero balance — indistinguishable from
+      // a valid but empty card, preventing attackers from brute-forcing valid codes.
+      return NextResponse.json({
+        balance: 0,
+        currency: 'CAD',
+        isExpired: false,
+        expiresAt: null,
+      });
     }
 
     // Check expiration
     const isExpired = giftCard.expiresAt && new Date() > giftCard.expiresAt;
 
+    if (isExpired) {
+      return NextResponse.json({
+        balance: 0,
+        currency: giftCard.currency,
+        isExpired: true,
+        expiresAt: giftCard.expiresAt,
+      });
+    }
+
     return NextResponse.json({
       balance: Number(giftCard.balance),
-      initialAmount: Number(giftCard.initialAmount),
       currency: giftCard.currency,
-      isExpired,
+      isExpired: false,
       expiresAt: giftCard.expiresAt,
     });
   } catch (error) {

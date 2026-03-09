@@ -17,6 +17,8 @@ import { logger } from '@/lib/logger';
 
 const createIntentSchema = z.object({
   productId: z.string().min(1, 'Product ID requis'),
+  formatId: z.string().optional(), // COMMERCE-005: Accept formatId for stock validation
+  quantity: z.number().int().min(1).max(100).optional().default(1),
   saveCard: z.boolean().optional(),
   companyId: z.string().optional(),
   province: z.string().max(2).optional(),
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-    const { productId, saveCard, companyId, province: reqProvince, country: reqCountry } = parsed.data;
+    const { productId, formatId, quantity, saveCard, companyId, province: reqProvince, country: reqCountry } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({
@@ -79,16 +81,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
     }
 
-    // NOTE: stockQuantity is on ProductFormat, not Product.
-    // Full stock validation should check formats. Basic check: product must be active.
     if (!product.isActive) {
       return NextResponse.json({ error: 'Product is not available' }, { status: 400 });
+    }
+
+    // COMMERCE-005 FIX: Validate stock at format level before creating payment intent
+    let unitPrice = Number(product.price);
+    if (formatId) {
+      const format = await prisma.productFormat.findUnique({
+        where: { id: formatId },
+        select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
+      });
+      if (!format) {
+        return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+      }
+      if (format.productId !== productId) {
+        return NextResponse.json({ error: 'Format does not belong to product' }, { status: 400 });
+      }
+      if (format.trackInventory && format.stockQuantity < quantity) {
+        return NextResponse.json({
+          error: `Insufficient stock. Available: ${format.stockQuantity}`,
+        }, { status: 400 });
+      }
+      unitPrice = Number(format.price);
     }
 
     // BE-PAY-11: Calculate taxes based on province and country
     // International orders (country !== CA) → 0% tax (handled by customs)
     // Canadian orders → province-specific rates (default QC if not specified)
-    const subtotal = Number(product.price);
+    const subtotal = unitPrice * quantity;
     const province = (reqProvince || 'QC').toUpperCase();
     const country = (reqCountry || 'CA').toUpperCase();
     const taxAmount = calculateTaxAmount(subtotal, province, country);

@@ -178,6 +178,20 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // COMMERCE-011 FIX: Reject capture if cartItems is empty or missing.
+      // Without cart items, order records cannot be created and inventory/accounting
+      // will be incomplete, resulting in captured revenue with no fulfillment record.
+      if (!cartItems || cartItems.length === 0) {
+        logger.error('[PayPal capture] cartItems is empty or missing — cannot create order record', {
+          paypalOrderId,
+          userId,
+        });
+        return NextResponse.json(
+          { error: 'Cart items are required to complete the order' },
+          { status: 400 }
+        );
+      }
+
       // SECURITY: Verify cart item prices from database and recalculate subtotal
       let serverSubtotal = 0;
       if (cartItems && cartItems.length > 0) {
