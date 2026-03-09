@@ -83,7 +83,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(priceBooks, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a price book with entries
@@ -145,4 +145,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(priceBook, { status: 201, request });
-});
+}, { requiredPermission: 'crm.deals.edit' });

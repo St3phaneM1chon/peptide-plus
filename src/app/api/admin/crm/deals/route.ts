@@ -99,7 +99,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch deals', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new deal
@@ -208,4 +208,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to create deal', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.create' });

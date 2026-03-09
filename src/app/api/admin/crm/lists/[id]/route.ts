@@ -51,7 +51,7 @@ export const GET = withAdminGuard(async (request: NextRequest, context: { params
   }
 
   return apiSuccess({ ...list, statusBreakdown }, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // PUT: Update list
 export const PUT = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
@@ -84,7 +84,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, context: { params
   });
 
   return apiSuccess(updated, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });
 
 // DELETE: Delete list (cascade)
 export const DELETE = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
@@ -97,4 +97,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, context: { par
 
   await prisma.prospectList.delete({ where: { id } });
   return apiSuccess({ deleted: true }, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

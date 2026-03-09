@@ -58,4 +58,4 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch marketing data', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });

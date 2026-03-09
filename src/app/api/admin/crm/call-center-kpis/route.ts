@@ -148,4 +148,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     logger.error('[crm/call-center-kpis] GET error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch KPIs', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { skipCsrf: true });
+}, { requiredPermission: 'crm.reports.view', skipCsrf: true });

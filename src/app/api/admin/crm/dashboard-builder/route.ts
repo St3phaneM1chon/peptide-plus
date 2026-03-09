@@ -64,7 +64,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     logger.error('[crm/dashboard-builder] GET error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch dashboards', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { skipCsrf: true });
+}, { requiredPermission: 'crm.settings', skipCsrf: true });
 
 // ---------------------------------------------------------------------------
 // POST: Save/update a dashboard configuration
@@ -107,4 +107,4 @@ export const POST = withAdminGuard(async (
     logger.error('[crm/dashboard-builder] POST error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to save dashboard', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });

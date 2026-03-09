@@ -128,4 +128,4 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   await updateListCounters(listId);
 
   return apiSuccess({ imported, duplicates, errors }, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

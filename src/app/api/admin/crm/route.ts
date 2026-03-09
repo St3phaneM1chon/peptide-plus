@@ -48,4 +48,4 @@ export const GET = withAdminGuard(async () => {
     logger.error('Admin CRM dashboard GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'crm.leads.view' });

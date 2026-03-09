@@ -57,7 +57,7 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch approval', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // PUT: Approve or reject an approval request
@@ -150,4 +150,4 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to process approval action', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

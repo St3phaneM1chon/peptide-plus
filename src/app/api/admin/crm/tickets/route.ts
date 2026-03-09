@@ -114,7 +114,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   logger.info('[Tickets] Listed', { page, limit, total, status, priority, category });
 
   return apiPaginated(tickets, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new ticket
@@ -192,4 +192,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(ticket, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

@@ -75,7 +75,7 @@ export const GET = withAdminGuard(async (
   }
 
   return apiSuccess(lead, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // PUT: Update lead
@@ -157,7 +157,7 @@ export const PUT = withAdminGuard(async (
   });
 
   return apiSuccess(lead, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete a lead
@@ -180,4 +180,4 @@ export const DELETE = withAdminGuard(async (
   await prisma.crmLead.delete({ where: { id } });
 
   return apiSuccess({ deleted: true }, { request });
-});
+}, { requiredPermission: 'crm.leads.delete' });

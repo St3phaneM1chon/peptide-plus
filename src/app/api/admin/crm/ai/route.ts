@@ -124,4 +124,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         { status: 400, request }
       );
   }
-});
+}, { requiredPermission: 'crm.ai.use' });

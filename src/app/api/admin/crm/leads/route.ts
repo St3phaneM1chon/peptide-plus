@@ -98,7 +98,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(leads, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a lead
@@ -167,4 +167,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(lead, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.create' });

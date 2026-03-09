@@ -25,7 +25,7 @@ export const GET = withAdminGuard(async (
   const duplicates = await findDuplicatesForLead(id);
 
   return apiSuccess(duplicates, { request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });
 
 // ---------------------------------------------------------------------------
 // POST: Merge two leads (keep survivor, absorb merged)
@@ -72,4 +72,4 @@ export const POST = withAdminGuard(async (
   const result = await mergeLeads(survivorId, mergedId);
 
   return apiSuccess(result, { request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });

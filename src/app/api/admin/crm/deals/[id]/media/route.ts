@@ -71,4 +71,4 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch deal media', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });

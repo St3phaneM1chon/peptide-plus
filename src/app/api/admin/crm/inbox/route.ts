@@ -81,7 +81,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(conversations, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a conversation
@@ -181,4 +181,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to create conversation', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

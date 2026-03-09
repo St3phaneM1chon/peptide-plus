@@ -82,4 +82,4 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to update status', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

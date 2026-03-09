@@ -69,4 +69,4 @@ export const GET = withAdminGuard(async (
     },
     dailyStats,
   }, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });

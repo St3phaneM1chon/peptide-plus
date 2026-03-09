@@ -247,7 +247,7 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch deal', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // PUT: Update deal fields
@@ -323,7 +323,7 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to update deal', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.edit' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete a deal
@@ -356,4 +356,4 @@ export const DELETE = withAdminGuard(async (
     });
     return apiError('Failed to delete deal', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.delete' });

@@ -118,4 +118,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to calculate recurring revenue', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.reports.view' });

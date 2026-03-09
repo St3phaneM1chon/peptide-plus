@@ -82,7 +82,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(snippets, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a snippet
@@ -141,4 +141,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(snippet, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

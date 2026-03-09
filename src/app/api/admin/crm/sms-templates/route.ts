@@ -34,7 +34,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(templates, { request });
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a template
@@ -63,4 +63,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(template, { status: 201, request });
-});
+}, { requiredPermission: 'crm.settings' });

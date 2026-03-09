@@ -125,7 +125,7 @@ export const GET = withAdminGuard(
       currentEntry,
     });
   },
-  { skipCsrf: true }
+  { requiredPermission: 'crm.leads.view', skipCsrf: true }
 );
 
 // ---------------------------------------------------------------------------
@@ -283,5 +283,4 @@ export const POST = withAdminGuard(
       },
       { status: 201 }
     );
-  }
-);
+  }, { requiredPermission: 'crm.leads.edit' });

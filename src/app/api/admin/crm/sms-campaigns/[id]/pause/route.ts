@@ -51,4 +51,4 @@ export const PUT = withAdminGuard(async (
   });
 
   return apiSuccess(updated, { request });
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

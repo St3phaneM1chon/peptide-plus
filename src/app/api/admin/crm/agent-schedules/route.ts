@@ -89,7 +89,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to list agent schedules', ErrorCode.INTERNAL_ERROR, { status: 500, request });
   }
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create or upsert schedule (agentId + date unique)
@@ -174,4 +174,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     });
     return apiError('Failed to create/update schedule', ErrorCode.INTERNAL_ERROR, { status: 500, request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

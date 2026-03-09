@@ -46,7 +46,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch exchange rates', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create or update an exchange rate (upsert on unique constraint)
@@ -109,4 +109,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to upsert exchange rate', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });

@@ -17,7 +17,7 @@ export const GET = withAdminGuard(async (request) => {
     orderBy: { createdAt: 'desc' },
   });
   return apiSuccess(forms, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 const createFormSchema = z.object({
   name: z.string().min(1, 'Name required').max(255),
@@ -70,4 +70,4 @@ export const POST = withAdminGuard(async (request, { session }) => {
   });
 
   return apiSuccess(form, { request, status: 201 });
-});
+}, { requiredPermission: 'crm.leads.edit' });

@@ -62,7 +62,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   }));
 
   return apiSuccess(enriched, { request });
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Add a team member
@@ -133,7 +133,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(member, { status: 201, request });
-});
+}, { requiredPermission: 'crm.deals.edit' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Remove a team member
@@ -169,4 +169,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
   });
 
   return apiSuccess({ deleted: true }, { request });
-});
+}, { requiredPermission: 'crm.deals.delete' });

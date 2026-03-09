@@ -192,4 +192,4 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch campaign stats', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.view' });

@@ -65,4 +65,4 @@ export const GET = withAdminGuard(async (request: NextRequest, context: { params
       'Content-Disposition': `attachment; filename="${fileName}"`,
     },
   });
-});
+}, { requiredPermission: 'crm.leads.view' });

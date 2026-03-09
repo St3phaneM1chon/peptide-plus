@@ -327,4 +327,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to compute forecast', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.reports.view' });

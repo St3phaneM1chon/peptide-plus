@@ -46,4 +46,4 @@ export const GET = withAdminGuard(async (request) => {
     logger.error('Admin CRM contacts GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'crm.contacts.view' });

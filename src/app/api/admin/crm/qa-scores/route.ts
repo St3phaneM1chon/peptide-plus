@@ -85,7 +85,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(scores, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a QA score
@@ -189,4 +189,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(qaScore, { status: 201, request });
-});
+}, { requiredPermission: 'crm.settings' });

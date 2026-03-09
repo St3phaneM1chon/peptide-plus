@@ -157,4 +157,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch workflow analytics', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });

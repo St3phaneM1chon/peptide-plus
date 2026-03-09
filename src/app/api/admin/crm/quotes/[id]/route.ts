@@ -123,7 +123,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { params }: { par
   }
 
   return apiSuccess(quote, { request });
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // PUT: Update quote
@@ -279,7 +279,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }: { par
   });
 
   return apiSuccess(updatedQuote, { request });
-});
+}, { requiredPermission: 'crm.deals.edit' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete quote (only DRAFT status)
@@ -318,4 +318,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { params }: { 
   });
 
   return apiNoContent({ request });
-});
+}, { requiredPermission: 'crm.deals.delete' });

@@ -22,4 +22,4 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   const result = await autoDeduplicateList(listId);
 
   return apiSuccess(result, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

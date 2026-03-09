@@ -52,7 +52,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { params }: { p
   });
 
   return apiSuccess(updated, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete quota
@@ -69,4 +69,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { params }: { 
   await prisma.crmQuota.delete({ where: { id } });
 
   return apiNoContent({ request });
-});
+}, { requiredPermission: 'crm.reports.view' });

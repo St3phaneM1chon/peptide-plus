@@ -195,4 +195,4 @@ export const GET = withAdminGuard(async (request) => {
     default:
       return apiError('Invalid report type. Use: leads, deals, calls, agents', 'VALIDATION_ERROR', { status: 400 });
   }
-});
+}, { requiredPermission: 'crm.reports.view' });

@@ -100,7 +100,7 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch campaign', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.view' });
 
 // ---------------------------------------------------------------------------
 // PATCH: Update campaign fields
@@ -171,7 +171,7 @@ export const PATCH = withAdminGuard(async (
     });
     return apiError('Failed to update campaign', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete a campaign (only DRAFT or CANCELLED)
@@ -216,4 +216,4 @@ export const DELETE = withAdminGuard(async (
     });
     return apiError('Failed to delete campaign', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

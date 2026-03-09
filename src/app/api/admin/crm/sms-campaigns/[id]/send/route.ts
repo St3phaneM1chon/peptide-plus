@@ -60,4 +60,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to start campaign send', ErrorCode.INTERNAL_ERROR, { status: 500, request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

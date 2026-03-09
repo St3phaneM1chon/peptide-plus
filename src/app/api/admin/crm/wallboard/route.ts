@@ -116,4 +116,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     },
     queueStats: Array.from(queueMap.values()),
   }, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });

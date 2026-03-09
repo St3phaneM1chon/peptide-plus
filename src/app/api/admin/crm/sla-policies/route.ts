@@ -58,7 +58,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch SLA policies', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new SLA policy
@@ -116,7 +116,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to create SLA policy', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // PUT: Update an existing SLA policy
@@ -182,4 +182,4 @@ export const PUT = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to update SLA policy', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });

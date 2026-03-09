@@ -38,7 +38,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(quotas, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a quota
@@ -135,4 +135,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(quota, { status: 201, request });
-});
+}, { requiredPermission: 'crm.reports.view' });

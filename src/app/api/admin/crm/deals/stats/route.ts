@@ -463,7 +463,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch deal statistics', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Actions (snapshots)
@@ -501,4 +501,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to process action', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.create' });

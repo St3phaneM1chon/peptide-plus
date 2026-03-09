@@ -94,4 +94,4 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to assign conversation', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

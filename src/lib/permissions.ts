@@ -102,6 +102,28 @@ export const PERMISSIONS = {
   // SEO
   'seo.edit': 'Edit SEO settings',
 
+  // CRM
+  'crm.leads.view': 'View CRM leads',
+  'crm.leads.create': 'Create CRM leads',
+  'crm.leads.edit': 'Edit CRM leads',
+  'crm.leads.delete': 'Delete CRM leads',
+  'crm.leads.import': 'Import CRM leads',
+  'crm.leads.export': 'Export CRM leads',
+  'crm.deals.view': 'View CRM deals',
+  'crm.deals.create': 'Create CRM deals',
+  'crm.deals.edit': 'Edit CRM deals',
+  'crm.deals.delete': 'Delete CRM deals',
+  'crm.contacts.view': 'View CRM contacts',
+  'crm.contacts.edit': 'Edit CRM contacts',
+  'crm.pipelines.manage': 'Manage CRM pipelines',
+  'crm.campaigns.view': 'View CRM campaigns',
+  'crm.campaigns.manage': 'Manage CRM campaigns',
+  'crm.workflows.manage': 'Manage CRM workflows',
+  'crm.reports.view': 'View CRM reports',
+  'crm.compliance.manage': 'Manage CRM compliance (DNC, consent)',
+  'crm.ai.use': 'Use CRM AI features',
+  'crm.settings': 'Manage CRM settings',
+
   // Admin Settings
   'admin.settings': 'Manage admin settings',
   'admin.audit_log': 'View audit log',
@@ -155,6 +177,16 @@ export const PERMISSION_MODULES: Record<string, { label: string; permissions: Pe
   analytics: {
     label: 'Analytics',
     permissions: ['analytics.view', 'analytics.export'],
+  },
+  crm: {
+    label: 'CRM',
+    permissions: [
+      'crm.leads.view', 'crm.leads.create', 'crm.leads.edit', 'crm.leads.delete', 'crm.leads.import', 'crm.leads.export',
+      'crm.deals.view', 'crm.deals.create', 'crm.deals.edit', 'crm.deals.delete',
+      'crm.contacts.view', 'crm.contacts.edit',
+      'crm.pipelines.manage', 'crm.campaigns.view', 'crm.campaigns.manage',
+      'crm.workflows.manage', 'crm.reports.view', 'crm.compliance.manage', 'crm.ai.use', 'crm.settings',
+    ],
   },
   admin: {
     label: 'Administration',

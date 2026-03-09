@@ -93,7 +93,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch callbacks', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { skipCsrf: true });
+}, { requiredPermission: 'crm.leads.view', skipCsrf: true });
 
 // ---------------------------------------------------------------------------
 // POST: Create a scheduled callback
@@ -209,4 +209,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to create callback', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

@@ -75,7 +75,7 @@ export const GET = withAdminGuard(async (request: NextRequest, context: { params
   ]);
 
   return apiPaginated(prospects, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // POST: Add prospects (with dedup)
 export const POST = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
@@ -139,7 +139,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
 
   await updateListCounters(listId);
   return apiSuccess({ added, duplicates, errors }, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });
 
 // DELETE: Bulk delete
 export const DELETE = withAdminGuard(async (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
@@ -157,4 +157,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, context: { par
 
   await updateListCounters(listId);
   return apiSuccess({ deleted: result.count }, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

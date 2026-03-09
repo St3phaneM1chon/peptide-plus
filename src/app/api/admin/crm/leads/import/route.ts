@@ -153,4 +153,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   }
 
   return apiSuccess(results, { request });
-});
+}, { requiredPermission: 'crm.leads.import' });

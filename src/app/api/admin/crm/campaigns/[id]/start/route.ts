@@ -199,4 +199,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to start campaign', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

@@ -104,4 +104,4 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }) => {
     });
     return apiError('Failed to reorder stages', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.pipelines.manage' });

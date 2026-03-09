@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { encryptToken, decryptToken } from '@/lib/platform/crypto';
 
 const updateAccountSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -36,12 +37,13 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    // Mask credentials
+    // Decrypt then mask credentials for display
     const creds = account.credentials as Record<string, string>;
     const maskedCreds: Record<string, string> = {};
     for (const [key, value] of Object.entries(creds)) {
-      if (typeof value === 'string' && value.length > 4) {
-        maskedCreds[key] = value.slice(0, 4) + '•'.repeat(Math.min(value.length - 4, 20));
+      const plaintext = decryptToken(value) || value;
+      if (typeof plaintext === 'string' && plaintext.length > 4) {
+        maskedCreds[key] = plaintext.slice(0, 4) + '•'.repeat(Math.min(plaintext.length - 4, 20));
       } else {
         maskedCreds[key] = '••••';
       }
@@ -83,13 +85,14 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
     }
 
     // Merge credentials: only update fields that are provided (don't overwrite masked fields)
+    // Encrypt new values before storage
     let finalCredentials = existing.credentials as Record<string, string>;
     if (data.credentials) {
       finalCredentials = { ...finalCredentials };
       for (const [key, value] of Object.entries(data.credentials)) {
         // Skip if value contains mask characters (client sent back masked value)
         if (!value.includes('•')) {
-          finalCredentials[key] = value;
+          finalCredentials[key] = encryptToken(value) || value;
         }
       }
     }

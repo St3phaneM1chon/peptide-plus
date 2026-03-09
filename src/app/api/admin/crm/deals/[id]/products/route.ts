@@ -23,7 +23,7 @@ export const GET = withAdminGuard(async (request, { params: paramsPromise }) => 
   const totalValue = products.reduce((sum, p) => sum + Number(p.total), 0);
 
   return apiSuccess({ products, totalValue }, { request });
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 export const POST = withAdminGuard(async (request, { params: paramsPromise }) => {
   const { id: dealId } = await paramsPromise as unknown as { id: string };
@@ -80,7 +80,7 @@ export const POST = withAdminGuard(async (request, { params: paramsPromise }) =>
   });
 
   return apiSuccess(dealProduct, { request, status: 201 });
-});
+}, { requiredPermission: 'crm.deals.edit' });
 
 export const DELETE = withAdminGuard(async (request) => {
   const { searchParams } = new URL(request.url);
@@ -107,4 +107,4 @@ export const DELETE = withAdminGuard(async (request) => {
   });
 
   return apiSuccess({ deleted: true }, { request });
-});
+}, { requiredPermission: 'crm.deals.delete' });

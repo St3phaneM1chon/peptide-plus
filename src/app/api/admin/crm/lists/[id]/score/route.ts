@@ -57,4 +57,4 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
     ...scoreResult,
     qualification: qualifyResult,
   }, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

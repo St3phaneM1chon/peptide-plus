@@ -180,4 +180,4 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   });
 
   return apiSuccess({ integrated, skipped, dncFiltered, assigned, errors }, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

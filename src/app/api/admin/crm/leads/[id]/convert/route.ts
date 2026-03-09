@@ -152,4 +152,4 @@ export const POST = withAdminGuard(async (
   });
 
   return apiSuccess(result, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

@@ -58,7 +58,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch playbooks', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a playbook
@@ -103,4 +103,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     });
     return apiError('Failed to create playbook', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });

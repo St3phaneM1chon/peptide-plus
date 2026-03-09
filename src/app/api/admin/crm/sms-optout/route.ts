@@ -51,7 +51,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(optOuts, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });
 
 // ---------------------------------------------------------------------------
 // POST: Add an opt-out
@@ -90,4 +90,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   });
 
   return apiSuccess(optOut, { status: 201, request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });

@@ -80,7 +80,7 @@ export const GET = withAdminGuard(async (request) => {
   // Default: return stats
   const stats = await getComplianceStats();
   return apiSuccess(stats, { request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });
 
 const importDnclSchema = z.object({
   action: z.literal('import-dncl'),
@@ -194,4 +194,4 @@ export const POST = withAdminGuard(async (request) => {
     default:
       return apiError('Unknown action', 'VALIDATION_ERROR', { status: 400 });
   }
-});
+}, { requiredPermission: 'crm.compliance.manage' });

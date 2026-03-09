@@ -55,7 +55,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch pipelines', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.pipelines.manage' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new pipeline with stages
@@ -134,4 +134,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to create pipeline', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.pipelines.manage' });

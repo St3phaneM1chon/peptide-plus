@@ -109,6 +109,40 @@ export const ACCOUNT_CODES = {
   INTEREST_EXPENSE: '7200',
 } as const;
 
+/**
+ * Payment processor fee configuration.
+ * Loads from SiteSetting (module=payments) with hardcoded defaults.
+ * Cache: 5 minutes to avoid DB hit per transaction.
+ */
+const DEFAULT_FEES = { stripe: { rate: 0.029, fixed: 0.30 }, paypal: { rate: 0.029, fixed: 0.30 } };
+let _feeCache: { data: typeof DEFAULT_FEES; expiresAt: number } | null = null;
+
+export async function getPaymentProcessorFees(): Promise<typeof DEFAULT_FEES> {
+  if (_feeCache && Date.now() < _feeCache.expiresAt) return _feeCache.data;
+  try {
+    const { prisma } = await import('@/lib/db');
+    const settings = await prisma.siteSetting.findMany({
+      where: { module: 'payments', key: { startsWith: 'fee_' } },
+      select: { key: true, value: true },
+    });
+    const map = new Map(settings.map(s => [s.key, s.value]));
+    const fees = {
+      stripe: {
+        rate: parseFloat(map.get('fee_stripe_rate') || '') || DEFAULT_FEES.stripe.rate,
+        fixed: parseFloat(map.get('fee_stripe_fixed') || '') || DEFAULT_FEES.stripe.fixed,
+      },
+      paypal: {
+        rate: parseFloat(map.get('fee_paypal_rate') || '') || DEFAULT_FEES.paypal.rate,
+        fixed: parseFloat(map.get('fee_paypal_fixed') || '') || DEFAULT_FEES.paypal.fixed,
+      },
+    };
+    _feeCache = { data: fees, expiresAt: Date.now() + 5 * 60 * 1000 };
+    return fees;
+  } catch {
+    return DEFAULT_FEES;
+  }
+}
+
 // Tax rates by province/region
 // WARNING: These are CURRENT rates only. For transactions that may span rate changes
 // (e.g., NS HST 15% -> 14% on 2025-04-01), use getTaxRateForProvince(code, asOfDate)

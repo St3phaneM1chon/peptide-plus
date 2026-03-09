@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
-import { ACCOUNT_CODES } from './types';
+import { ACCOUNT_CODES, getPaymentProcessorFees } from './types';
 import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 // F093 FIX: Use decimal.js directly instead of Prisma internal runtime import
 // (Prisma's internal path may change between versions and break builds)
@@ -376,10 +376,10 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
   // FIX (F041): Estimate fee (will be reconciled when Stripe/PayPal reports actual fee)
   // Added isEstimated flag in description to facilitate later reconciliation
   const isPaypal = order.paymentMethod === 'PAYPAL' || order.paypalOrderId;
-  const feeRate = 0.029;
-  const fixedFee = 0.30;
+  const fees = await getPaymentProcessorFees();
+  const processorFee = isPaypal ? fees.paypal : fees.stripe;
   const { add: addDec, applyRate: applyRateDec } = await import('@/lib/decimal-calculator');
-  const estimatedFee = addDec(applyRateDec(total, feeRate), fixedFee);
+  const estimatedFee = addDec(applyRateDec(total, processorFee.rate), processorFee.fixed);
 
   if (estimatedFee <= 0) return null;
 

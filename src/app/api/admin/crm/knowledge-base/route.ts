@@ -113,7 +113,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     request,
     headers: { 'X-KB-Categories': JSON.stringify(categories) },
   });
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new KB article
@@ -184,4 +184,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(article, { status: 201, request });
-});
+}, { requiredPermission: 'crm.settings' });

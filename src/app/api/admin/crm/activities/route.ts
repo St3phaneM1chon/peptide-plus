@@ -100,7 +100,7 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to create activity', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });
 
 // ---------------------------------------------------------------------------
 // GET: List CRM activities (filtered by leadId or dealId)
@@ -142,4 +142,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch activities', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { skipCsrf: true });
+}, { requiredPermission: 'crm.leads.view', skipCsrf: true });

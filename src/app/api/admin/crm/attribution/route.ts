@@ -122,4 +122,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       { status: 500, request }
     );
   }
-});
+}, { requiredPermission: 'crm.reports.view' });

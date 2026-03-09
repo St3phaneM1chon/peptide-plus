@@ -186,4 +186,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to move deal', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.edit' });

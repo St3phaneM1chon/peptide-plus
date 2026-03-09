@@ -114,4 +114,4 @@ export const POST = withAdminGuard(async (
   });
 
   return apiSuccess(lead, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

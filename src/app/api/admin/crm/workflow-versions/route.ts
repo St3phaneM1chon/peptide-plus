@@ -65,7 +65,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch workflow versions', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a version snapshot
@@ -142,4 +142,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     });
     return apiError('Failed to create workflow version', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });

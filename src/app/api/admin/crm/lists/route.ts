@@ -57,7 +57,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(lists, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // POST: Create a new list
 export const POST = withAdminGuard(async (request: NextRequest, { session }: { session: { user: { id: string } } }) => {
@@ -89,4 +89,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
   });
 
   return apiSuccess(list, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

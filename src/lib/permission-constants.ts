@@ -19,6 +19,13 @@ export const EMPLOYEE_DEFAULT_PERMISSIONS: ReadonlySet<string> = new Set([
   'media.view', 'media.upload',
   'analytics.view',
   'seo.edit',
+  // CRM: employees get view + create + edit by default (not delete, import/export, compliance, settings)
+  'crm.leads.view', 'crm.leads.create', 'crm.leads.edit',
+  'crm.deals.view', 'crm.deals.create', 'crm.deals.edit',
+  'crm.contacts.view', 'crm.contacts.edit',
+  'crm.campaigns.view',
+  'crm.reports.view',
+  'crm.ai.use',
 ]);
 
 /**

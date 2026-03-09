@@ -96,4 +96,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to add message', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.edit' });

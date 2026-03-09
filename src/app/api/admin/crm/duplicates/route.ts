@@ -21,4 +21,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   const duplicates = await scanAllDuplicates(limit);
 
   return apiSuccess(duplicates, { request });
-});
+}, { requiredPermission: 'crm.compliance.manage' });

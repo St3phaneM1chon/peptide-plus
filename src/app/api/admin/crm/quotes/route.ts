@@ -144,7 +144,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(quotes, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.deals.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a quote
@@ -267,4 +267,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       request,
     });
   }
-});
+}, { requiredPermission: 'crm.deals.create' });

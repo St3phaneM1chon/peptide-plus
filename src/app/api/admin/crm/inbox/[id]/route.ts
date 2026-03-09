@@ -52,4 +52,4 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch conversation', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.leads.view' });

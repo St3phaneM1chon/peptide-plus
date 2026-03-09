@@ -57,7 +57,7 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch playbook', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });
 
 // ---------------------------------------------------------------------------
 // PUT: Update a playbook
@@ -111,7 +111,7 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to update playbook', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Delete a playbook
@@ -144,4 +144,4 @@ export const DELETE = withAdminGuard(async (
     });
     return apiError('Failed to delete playbook', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.workflows.manage' });

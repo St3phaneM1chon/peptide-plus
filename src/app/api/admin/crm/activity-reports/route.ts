@@ -113,4 +113,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     logger.error('[crm/activity-reports] GET error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch activity reports', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { skipCsrf: true });
+}, { requiredPermission: 'crm.reports.view', skipCsrf: true });

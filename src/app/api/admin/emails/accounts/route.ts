@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { encryptToken, decryptToken } from '@/lib/platform/crypto';
 
 const createAccountSchema = z.object({
   name: z.string().min(1).max(100),
@@ -68,6 +69,12 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       });
     }
 
+    // Encrypt credentials before storage
+    const encryptedCreds: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data.credentials || {})) {
+      encryptedCreds[key] = encryptToken(value) || value;
+    }
+
     const account = await prisma.emailAccount.create({
       data: {
         name: data.name,
@@ -75,7 +82,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         displayName: data.displayName || null,
         replyTo: data.replyTo || null,
         provider: data.provider,
-        credentials: data.credentials || {},
+        credentials: encryptedCreds,
         isDefault: data.isDefault,
         isActive: data.isActive,
         color: data.color || null,
@@ -103,8 +110,10 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 function maskCredentials(creds: Record<string, string>): Record<string, string> {
   const masked: Record<string, string> = {};
   for (const [key, value] of Object.entries(creds)) {
-    if (typeof value === 'string' && value.length > 4) {
-      masked[key] = value.slice(0, 4) + '•'.repeat(Math.min(value.length - 4, 20));
+    // Decrypt if encrypted, then mask for display
+    const plaintext = decryptToken(value) || value;
+    if (typeof plaintext === 'string' && plaintext.length > 4) {
+      masked[key] = plaintext.slice(0, 4) + '•'.repeat(Math.min(plaintext.length - 4, 20));
     } else {
       masked[key] = '••••';
     }

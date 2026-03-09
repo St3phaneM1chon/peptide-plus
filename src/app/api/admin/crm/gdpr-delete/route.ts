@@ -207,5 +207,4 @@ export const POST = withAdminGuard(
     });
 
     return apiSuccess({ deleted, totalDeleted }, { request });
-  }
-);
+  }, { requiredPermission: 'crm.compliance.manage' });

@@ -7,7 +7,7 @@
  * credentials should be stored in Azure Key Vault or equivalent secret manager.
  */
 
-import { JournalEntry } from './types';
+import { JournalEntry, getPaymentProcessorFees } from './types';
 
 // ============================================
 // QUICKBOOKS ONLINE INTEGRATION
@@ -446,9 +446,10 @@ export function processPayPalWebhook(
   };
 } {
   const amount = parseFloat(resource.amount.value);
-  const fee = resource.transaction_info?.fee_amount 
-    ? parseFloat(resource.transaction_info.fee_amount.value) 
-    : amount * 0.029 + 0.30; // Default PayPal fee structure
+  // Default PayPal fee: 2.9% + $0.30 — configurable via SiteSetting (module=payments)
+  const fee = resource.transaction_info?.fee_amount
+    ? parseFloat(resource.transaction_info.fee_amount.value)
+    : Math.round((amount * 0.029 + 0.30) * 100) / 100;
 
   switch (eventType) {
     case 'PAYMENT.CAPTURE.COMPLETED':
@@ -544,10 +545,12 @@ export async function syncPayPalTransactions(
   const settings = await prisma.accountingSettings.findFirst();
   const payeeEmail = settings?.companyEmail || 'business@biocycle.ca';
 
+  // Load configurable fee rates (cached 5min, DB-backed with hardcoded fallback)
+  const feeConfig = await getPaymentProcessorFees();
+
   const transactions: PayPalTransaction[] = paypalOrders.map((order) => {
     const amount = Number(order.total);
-    // PayPal standard fee: 2.9% + $0.30 CAD
-    const estimatedFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
+    const estimatedFee = Math.round((amount * feeConfig.paypal.rate + feeConfig.paypal.fixed) * 100) / 100;
 
     return {
       id: order.paypalOrderId || order.id,

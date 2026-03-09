@@ -16,4 +16,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     logger.error('[crm/exchange-rates/sync] Sync error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to sync exchange rates', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.settings' });

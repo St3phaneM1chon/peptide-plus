@@ -211,4 +211,4 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     hourlyDistribution,
     dailyTrend,
   }, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });

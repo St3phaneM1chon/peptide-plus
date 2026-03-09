@@ -57,4 +57,4 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch deal timeline', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.deals.view' });

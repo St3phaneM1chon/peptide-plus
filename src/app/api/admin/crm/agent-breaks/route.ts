@@ -97,7 +97,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(breaks, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.leads.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Start a break (only one active break per agent at a time)
@@ -170,7 +170,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(agentBreak, { status: 201, request });
-});
+}, { requiredPermission: 'crm.leads.edit' });
 
 // ---------------------------------------------------------------------------
 // PUT: End active break, compute duration
@@ -232,4 +232,4 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   });
 
   return apiSuccess(updatedBreak, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });

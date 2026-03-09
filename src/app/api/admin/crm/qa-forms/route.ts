@@ -64,7 +64,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   ]);
 
   return apiPaginated(forms, page, limit, total, { request });
-});
+}, { requiredPermission: 'crm.settings' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a QA form
@@ -119,4 +119,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(form, { status: 201, request });
-});
+}, { requiredPermission: 'crm.settings' });

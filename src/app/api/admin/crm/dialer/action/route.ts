@@ -155,5 +155,4 @@ export const POST = withAdminGuard(
         return apiSuccess({ action: 'skip', state: 'IDLE' });
       }
     }
-  }
-);
+  }, { requiredPermission: 'crm.leads.edit' });

@@ -92,4 +92,4 @@ export const GET = withAdminGuard(async (request) => {
     .map((a, i) => ({ ...a, rank: i + 1 }));
 
   return apiSuccess(result, { request });
-});
+}, { requiredPermission: 'crm.reports.view' });

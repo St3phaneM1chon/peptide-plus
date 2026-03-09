@@ -90,7 +90,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to fetch campaigns', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a new campaign
@@ -151,4 +151,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to create campaign', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

@@ -64,7 +64,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
     return apiError('Failed to list campaigns', ErrorCode.INTERNAL_ERROR, { status: 500, request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.view' });
 
 // ---------------------------------------------------------------------------
 // POST: Create a campaign
@@ -131,4 +131,4 @@ export const POST = withAdminGuard(async (
     });
     return apiError('Failed to create campaign', ErrorCode.INTERNAL_ERROR, { status: 500, request });
   }
-});
+}, { requiredPermission: 'crm.campaigns.manage' });

@@ -77,4 +77,4 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   });
 
   return apiSuccess(result, { request });
-});
+}, { requiredPermission: 'crm.leads.edit' });
