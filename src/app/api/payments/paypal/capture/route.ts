@@ -13,7 +13,8 @@ import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
-import { add, multiply, subtract, applyRate, percentage } from '@/lib/decimal-calculator';
+import { add, multiply, subtract, percentage } from '@/lib/decimal-calculator';
+import { calculateTaxBreakdown } from '@/lib/tax-rates';
 
 const cartItemSchema = z.object({
   productId: z.string().optional(),
@@ -265,34 +266,14 @@ export async function POST(request: NextRequest) {
 
       const subtotalAfterAllDiscounts = Math.max(0, subtract(discountedSubtotal, serverGiftCardDiscount));
 
-      // SECURITY: Calculate taxes server-side (never trust client values)
-      // BE-PAY-11, BE-PAY-20: Fixed to handle PST for BC/MB/SK, not just QC+HST
+      // COMMERCE-015 FIX: Use shared tax calculation instead of inline duplicated rates
       // E-03 FIX: Taxes computed on subtotalAfterAllDiscounts (promo + gift card) to match Stripe/PayPal create-order
       const province = shippingInfo?.province || 'QC';
-      const CANADIAN_TAX_RATES: Record<string, { gst: number; pst?: number; hst?: number; qst?: number; rst?: number }> = {
-        'AB': { gst: 0.05 }, 'BC': { gst: 0.05, pst: 0.07 }, 'MB': { gst: 0.05, rst: 0.07 },
-        'NB': { gst: 0, hst: 0.15 }, 'NL': { gst: 0, hst: 0.15 }, 'NS': { gst: 0, hst: 0.14 },
-        'NT': { gst: 0.05 }, 'NU': { gst: 0.05 }, 'ON': { gst: 0, hst: 0.13 },
-        'PE': { gst: 0, hst: 0.15 }, 'QC': { gst: 0.05, qst: 0.09975 },
-        'SK': { gst: 0.05, pst: 0.06 }, 'YT': { gst: 0.05 },
-      };
-      const rates = CANADIAN_TAX_RATES[province.toUpperCase()] || CANADIAN_TAX_RATES['QC'];
-      let taxTps = 0, taxTvq = 0, taxTvh = 0, taxPst = 0;
-      if (rates.hst) {
-        taxTvh = applyRate(subtotalAfterAllDiscounts, rates.hst);
-      } else if (rates.qst) {
-        taxTps = applyRate(subtotalAfterAllDiscounts, rates.gst);
-        taxTvq = applyRate(subtotalAfterAllDiscounts, rates.qst);
-      } else if (rates.pst || rates.rst) {
-        taxTps = applyRate(subtotalAfterAllDiscounts, rates.gst);
-        taxPst = applyRate(subtotalAfterAllDiscounts, rates.pst || rates.rst || 0);
-      } else {
-        taxTps = applyRate(subtotalAfterAllDiscounts, rates.gst);
-      }
-      const totalTax = add(taxTps, taxTvq, taxTvh, taxPst);
+      const country = shippingInfo?.country || 'CA';
+      const taxBreakdown = calculateTaxBreakdown(subtotalAfterAllDiscounts, province.toUpperCase(), country);
+      const { taxTps, taxTvq, taxTvh, taxPst, total: totalTax } = taxBreakdown;
 
       // SECURITY: Calculate shipping server-side
-      const country = shippingInfo?.country || 'CA';
       let serverShipping = 0;
       if (country === 'CA') {
         // BUG 7: Use 300 threshold for LAB_SUPPLY products to match create-checkout

@@ -15,6 +15,7 @@ import { prisma } from '@/lib/db';
 import { canCancel } from '@/lib/order-status';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
 const cancelOrderSchema = z.object({
@@ -26,6 +27,17 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // COMMERCE-029 FIX: Rate limiting on order cancellation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/orders/cancel');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for state-changing customer endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -126,14 +138,21 @@ export async function POST(
       });
 
       // 2. Restore inventory for each order item
+      // COMMERCE-020 FIX: Restore stock for BOTH format-level and base product-level items
       for (const item of order.items) {
         if (item.formatId) {
           await tx.productFormat.updateMany({
             where: { id: item.formatId },
             data: { stockQuantity: { increment: item.quantity } },
           });
+        } else {
+          // Base product without format — restore product-level stock
+          await tx.product.updateMany({
+            where: { id: item.productId, trackInventory: true },
+            data: { stockQuantity: { increment: item.quantity } },
+          });
         }
-        logger.info(`[cancelOrder] COMMERCE-009: Restored ${item.quantity}x stock for ${item.productName}`, {
+        logger.info(`[cancelOrder] Restored ${item.quantity}x stock for ${item.productName}`, {
           orderId: order.id,
           productId: item.productId,
           formatId: item.formatId,

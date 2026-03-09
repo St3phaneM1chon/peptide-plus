@@ -58,3 +58,38 @@ export function calculateTaxAmount(subtotal: number, province: string, country?:
   const provincial = applyRate(subtotal, rates.qst || rates.pst || rates.rst || 0);
   return add(gst, provincial);
 }
+
+/**
+ * Tax breakdown with individual components for Order record storage.
+ * Returns { taxTps (GST), taxTvq (QST), taxTvh (HST), taxPst (PST/RST), total }.
+ */
+export interface TaxBreakdown {
+  taxTps: number;
+  taxTvq: number;
+  taxTvh: number;
+  taxPst: number;
+  total: number;
+}
+
+export function calculateTaxBreakdown(subtotal: number, province: string, country?: string): TaxBreakdown {
+  if (country && country.toUpperCase() !== 'CA') {
+    return { taxTps: 0, taxTvq: 0, taxTvh: 0, taxPst: 0, total: 0 };
+  }
+
+  const rates = getProvinceTaxRates(province);
+  let taxTps = 0, taxTvq = 0, taxTvh = 0, taxPst = 0;
+
+  if (rates.hst) {
+    taxTvh = applyRate(subtotal, rates.hst);
+  } else if (rates.qst) {
+    taxTps = applyRate(subtotal, rates.gst);
+    taxTvq = applyRate(subtotal, rates.qst);
+  } else if (rates.pst || rates.rst) {
+    taxTps = applyRate(subtotal, rates.gst);
+    taxPst = applyRate(subtotal, rates.pst || rates.rst || 0);
+  } else {
+    taxTps = applyRate(subtotal, rates.gst);
+  }
+
+  return { taxTps, taxTvq, taxTvh, taxPst, total: add(taxTps, taxTvq, taxTvh, taxPst) };
+}

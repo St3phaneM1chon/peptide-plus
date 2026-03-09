@@ -13,6 +13,8 @@ import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { calculateTaxBreakdown } from '@/lib/tax-rates';
+import { add, subtract } from '@/lib/decimal-calculator';
 
 const updateAddressSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -61,6 +63,11 @@ export const PUT = withUserGuard(async (request: NextRequest, { session, params 
         id: true,
         orderNumber: true,
         status: true,
+        subtotal: true,
+        discount: true,
+        shippingCost: true,
+        tax: true,
+        total: true,
         shippingName: true,
         shippingAddress1: true,
         shippingAddress2: true,
@@ -107,7 +114,28 @@ export const PUT = withUserGuard(async (request: NextRequest, { session, params 
       phone: parsed.data.phone || '',
     };
 
-    // Update the order's shipping address
+    // COMMERCE-013 FIX: Recalculate taxes when province changes
+    const oldProvince = (order.shippingState || '').toUpperCase();
+    const newProvince = province.toUpperCase();
+    const oldCountry = (order.shippingCountry || 'CA').toUpperCase();
+    const newCountry = country.toUpperCase();
+
+    let taxUpdateData: Record<string, number> = {};
+    if (oldProvince !== newProvince || oldCountry !== newCountry) {
+      const taxableAmount = Math.max(0, subtract(Number(order.subtotal), Number(order.discount)));
+      const newTax = calculateTaxBreakdown(taxableAmount, newProvince, newCountry);
+      const newTotal = add(taxableAmount, newTax.total, Number(order.shippingCost));
+      taxUpdateData = {
+        taxTps: newTax.taxTps,
+        taxTvq: newTax.taxTvq,
+        taxTvh: newTax.taxTvh,
+        taxPst: newTax.taxPst,
+        tax: newTax.total,
+        total: newTotal,
+      };
+    }
+
+    // Update the order's shipping address (+ recalculated taxes if province changed)
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -119,6 +147,7 @@ export const PUT = withUserGuard(async (request: NextRequest, { session, params 
         shippingPostal: postalCode,
         shippingCountry: country,
         shippingPhone: parsed.data.phone || null,
+        ...taxUpdateData,
       },
       include: {
         items: true,
