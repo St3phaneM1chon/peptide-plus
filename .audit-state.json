@@ -1,7 +1,7 @@
 {
   "audit_name": "mega-audit-securite-2026-03",
   "started": "2026-03-09",
-  "last_session": "2026-03-09T21:00",
+  "last_session": "2026-03-09T21:30",
   "domains_completed": [
     {
       "name": "commerce",
@@ -19,64 +19,46 @@
       "name": "auth",
       "status": "DONE",
       "findings_fixed": 3,
-      "findings_verified_clean": [
-        "Auth.js v5 proper JWT session strategy (1h TTL)",
-        "bcryptjs cost 12 (NYDFS compliant)",
-        "Password history 12-password reuse prevention",
-        "Email verification enforced for OAuth",
-        "MFA TOTP with backup codes + audit log",
-        "Session invalidation on password change/reset",
-        "Encrypted OAuth tokens (AES-256-GCM)",
-        "HSTS 2-year preload",
-        "X-Frame-Options DENY",
-        "Double-submit CSRF with HMAC-SHA256 (httpOnly=false is by design for this pattern)",
-        "Rate limiting Redis-backed with in-memory fallback",
-        "IP extraction hardened (Azure, XFF rightmost, RFC validation)",
-        "Admin API guard with role + permission checks",
-        "SSRF protection via isPrivateOrReservedIP",
-        "user-api-guard rate limit uses correct @/lib/security.checkRateLimit (not broken)",
-        "MFA verify has 5/min rate limit per IP (sufficient for 6-digit TOTP)"
-      ],
-      "false_positives_from_agent": [
-        "CSRF httpOnly=false — intentional double-submit cookie pattern",
-        "user-api-guard rate limit broken — imports from @/lib/security with correct signature",
-        "MFA brute-force per-session — IP rate limit 5/min sufficient for TOTP"
-      ],
       "commits": ["161b4b4"]
     },
     {
       "name": "marketing",
       "status": "DONE",
       "findings_fixed": 1,
+      "commits": ["3f4f412"]
+    },
+    {
+      "name": "system",
+      "status": "DONE",
+      "findings_fixed": 2,
       "findings_verified_clean": [
-        "Campaign send has atomic status guard (updateMany WHERE status IN sendable)",
-        "Campaign send has idempotency check (rejects SENT/SENDING status)",
-        "Unsubscribe uses signed JWT (jose.jwtVerify) with proper masking",
-        "Unsubscribe POST follows RFC 8058 (one-click via form-urlencoded)",
-        "Newsletter subscribe has IP rate limiting + CSRF + Zod validation + sanitization",
-        "Newsletter double opt-in (CASL/LCAP compliant)",
-        "Referral validate requires auth (F-007) + rate limit + CSRF",
-        "Referral apply has transaction with re-check (FLAW-042 race condition fix)",
-        "Referral self-referral prevention (by ID + by email)",
-        "Referral max usage limit (env-configurable)",
-        "Admin email send has withAdminGuard + CSRF + rate limit + Zod + audit log",
-        "Campaign recipients filtered by bounce suppression + consent + frequency cap",
-        "Email HTML content uses escapeHtml() for user data (XSS prevention)",
-        "All cron routes auth with CRON_SECRET + timingSafeEqual (re-verified)"
+        "CORS restricted to specific origin (NEXT_PUBLIC_APP_URL), not wildcard",
+        "Middleware applies security headers (HSTS, X-Frame, X-Content-Type, Referrer-Policy)",
+        "CSP properly configured with unsafe-eval only in dev",
+        "Admin routes have granular permission checks in middleware",
+        "MFA enforcement for OWNER/EMPLOYEE roles",
+        "Request ID correlation via crypto.randomUUID()",
+        "IP extraction hardened (Azure header, rightmost XFF, RFC validation)",
+        "Webhook signatures verified (previously confirmed)",
+        "File uploads: force Content-Disposition:attachment for non-images",
+        "x-powered-by disabled",
+        "Next.js body size limit applies by default",
+        "Rate limit Redis fallback is intentional graceful degradation"
       ],
       "false_positives_from_agent": [
-        "CRIT-001: Cron auth weakness — already verified timingSafeEqual, agent suggested enhancements not vulns",
-        "HIGH-001: Unsubscribe JWT leaks email — email already in TO field, JWT is signed not public",
-        "HIGH-003: Referral code enumeration — auth required + 10/hr rate limit = 68yr to enumerate 10%",
-        "HIGH-004: Campaign send race condition — atomic guard already on L198-215 (updateMany)",
-        "HIGH-005: Bounce cache eviction DoS — admin-only business logic, not security",
-        "HIGH-006: Campaign send no idempotency — idempotency check already on L176-195"
+        "CORS wildcard bypass — origin is specific domain, not *",
+        "x-csrf-token in CORS headers — correct for SPA CSRF pattern",
+        "TypeScript ignoreBuildErrors — pre-existing, not runtime security issue",
+        "Missing webhook signatures — already verified clean",
+        "Session cookie no __Secure prefix — secure:true flag works on Azure",
+        "Rate limit Redis fallback — intentional fail-open for availability",
+        "No request size limits — Next.js default 1MB limit applies",
+        "CSRF secret fallback — generates strong 256-bit random at startup"
       ],
-      "commits": []
+      "commits": ["8147a1e"]
     }
   ],
   "domains_remaining": [
-    "system",
     "media",
     "community",
     "loyalty",
@@ -100,11 +82,15 @@
     "Marketing: campaign send atomic + idempotent",
     "Marketing: referral apply transactional + anti-fraud",
     "Marketing: newsletter CASL/LCAP double opt-in compliant",
-    "Marketing: unsubscribe RFC 8058 compliant with signed JWT"
+    "Marketing: unsubscribe RFC 8058 compliant with signed JWT",
+    "System: CORS restricted to specific origin",
+    "System: CSP properly configured (no unsafe-eval in prod)",
+    "System: Middleware security headers (HSTS, X-Frame, etc.)",
+    "System: Admin granular permission checks"
   ],
-  "total_findings_fixed": 46,
-  "total_commits": 17,
+  "total_findings_fixed": 48,
+  "total_commits": 19,
   "ts_errors_preexisting": 63,
   "ts_errors_from_audit": 0,
-  "next_action": "Continue with system domain. 7 domains remaining."
+  "next_action": "Continue with media domain. 6 domains remaining."
 }

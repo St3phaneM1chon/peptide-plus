@@ -228,11 +228,16 @@ export class StorageService {
   ): Promise<UploadResult> {
     const blockBlobClient = container!.getBlockBlobClient(blobPath);
 
+    // MEDIA-001 FIX: Set Content-Disposition for non-image types to prevent
+    // inline rendering of uploaded files (e.g., PDF, video) when accessed directly.
+    const isImage = contentType.startsWith('image/');
     await blockBlobClient.uploadData(file, {
       blobHTTPHeaders: {
         blobContentType: contentType,
         // #70: CDN headers for immutable caching
         blobCacheControl: 'public, max-age=31536000, immutable',
+        // Force download for non-image files (prevents inline rendering of PDFs/documents)
+        ...(isImage ? {} : { blobContentDisposition: 'attachment' }),
       },
     });
 
