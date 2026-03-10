@@ -92,7 +92,8 @@ const nextConfig = {
           // Politique de permissions
           {
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(self), geolocation=(), interest-cohort=()'
+            // SYS-002 FIX: Deny camera/microphone (aligned with middleware; not needed for e-commerce)
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
           },
           // Content Security Policy
           // SECURITY FIX (BE-SEC-20b): Tightened CSP directives

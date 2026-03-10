@@ -70,14 +70,15 @@ export async function GET(request: NextRequest) {
   // --- Readiness checks below ---
 
   // Check 2: Environment variables (full validation via env-check)
+  // SYS-001 FIX: Don't expose missing env var names (information disclosure)
   const envCheck = checkEnvironment();
   checks.push({
     name: 'environment',
     status: envCheck.status,
     message: envCheck.message,
     details: {
-      missingRequired: envCheck.details.missingRequired,
-      missingImportant: envCheck.details.missingImportant,
+      missingRequiredCount: envCheck.details.missingRequired.length,
+      missingImportantCount: envCheck.details.missingImportant.length,
       presentCount: envCheck.details.present.length,
       totalDeclared: envCheck.details.totalDeclared,
     },
@@ -144,13 +145,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Check 5: Stripe configuration
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  // SYS-001 FIX: Never expose key prefixes or provider names in health check
   checks.push({
-    name: 'stripe',
-    status: stripeKey ? 'pass' : 'warn',
-    message: stripeKey
-      ? `Stripe configured (key: ${stripeKey.substring(0, 7)}...)`
-      : 'Stripe not configured (STRIPE_SECRET_KEY missing)',
+    name: 'payments',
+    status: process.env.STRIPE_SECRET_KEY ? 'pass' : 'warn',
+    message: process.env.STRIPE_SECRET_KEY ? 'Payment provider configured' : 'Payment provider not configured',
   });
 
   // Check 6: Email provider configuration
@@ -160,28 +159,24 @@ export async function GET(request: NextRequest) {
   const hasSendGridKey = !!process.env.SENDGRID_API_KEY;
   const hasSmtpHost = !!process.env.SMTP_HOST;
 
+  // SYS-001 FIX: Don't expose provider names or sender addresses
   let emailStatus: 'pass' | 'warn' | 'fail' = 'warn';
-  let emailMessage = 'Email provider not configured';
+  let emailMessage = 'Email delivery not configured';
 
-  if (emailProvider === 'resend' && hasResendKey) {
+  if ((emailProvider === 'resend' && hasResendKey) ||
+      (emailProvider === 'sendgrid' && hasSendGridKey) ||
+      (emailProvider === 'smtp' && hasSmtpHost)) {
     emailStatus = 'pass';
-    emailMessage = 'Email configured via Resend';
-  } else if (emailProvider === 'sendgrid' && hasSendGridKey) {
-    emailStatus = 'pass';
-    emailMessage = 'Email configured via SendGrid';
-  } else if (emailProvider === 'smtp' && hasSmtpHost) {
-    emailStatus = 'pass';
-    emailMessage = 'Email configured via SMTP';
+    emailMessage = 'Email delivery configured';
   } else if (emailProvider === 'log') {
     emailStatus = 'warn';
-    emailMessage = 'Email in log-only mode (no delivery)';
+    emailMessage = 'Email in log-only mode';
   }
 
   checks.push({
     name: 'email',
     status: emailStatus,
     message: emailMessage,
-    details: { provider: emailProvider || 'none', from: smtpFrom || 'not set' },
   });
 
   // Check 7: Memory usage
@@ -215,12 +210,7 @@ export async function GET(request: NextRequest) {
     message: hasNextAuthSecret
       ? `Auth configured${hasNextAuthUrl ? '' : ' (NEXTAUTH_URL not set, using default)'}`
       : 'NEXTAUTH_SECRET not set - auth will not work',
-    details: {
-      hasSecret: hasNextAuthSecret,
-      hasUrl: hasNextAuthUrl,
-      googleOAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-      appleOAuth: !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET),
-    },
+    // SYS-001 FIX: Don't reveal which OAuth providers are configured
   });
 
   // Check 10: CSRF protection configuration
