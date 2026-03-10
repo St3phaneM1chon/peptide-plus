@@ -778,7 +778,7 @@ export default function ClientDetailPage() {
           {/* Avatar */}
           <div className="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
             {user.image ? (
-              <Image src={user.image} alt="" width={80} height={80} className="w-20 h-20 rounded-full" unoptimized />
+              <Image src={user.image} alt="" width={80} height={80} className="w-20 h-20 rounded-full" />
             ) : (
               <User className="w-10 h-10 text-slate-400" />
             )}
@@ -1357,7 +1357,6 @@ export default function ClientDetailPage() {
                           width={64}
                           height={64}
                           className="w-16 h-16 object-cover rounded-lg"
-                          unoptimized
                         />
                       ) : (
                         <Package className="w-6 h-6 text-slate-300" />
@@ -1873,7 +1872,6 @@ function OrderSection({
                       width={32}
                       height={32}
                       className="w-8 h-8 rounded object-cover"
-                      unoptimized
                     />
                   )}
                   <div>

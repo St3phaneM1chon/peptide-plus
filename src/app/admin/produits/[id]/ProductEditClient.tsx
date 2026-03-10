@@ -975,7 +975,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       <div className="flex items-center justify-between p-4">
                         <div className="flex items-center gap-3">
                           {format.imageUrl ? (
-                            <Image src={format.imageUrl} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-lg border" unoptimized />
+                            <Image src={format.imageUrl} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-lg border" />
                           ) : (
                             <span className="text-2xl">{FORMAT_TYPES.find(ft => ft.value === format.formatType)?.icon || '📦'}</span>
                           )}
@@ -1117,7 +1117,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   <div key={v.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
                     {v.thumbnailUrl && (
                       <div className="relative aspect-video bg-neutral-100">
-                        <Image src={v.thumbnailUrl} alt={v.title} width={200} height={200} className="w-full h-full object-cover" unoptimized />
+                        <Image src={v.thumbnailUrl} alt={v.title} width={200} height={200} className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="p-3">

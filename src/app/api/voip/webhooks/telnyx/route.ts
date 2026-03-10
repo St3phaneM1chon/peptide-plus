@@ -83,14 +83,21 @@ export async function POST(request: NextRequest) {
         || request.headers.get('x-telnyx-signature');
       const timestamp = request.headers.get('telnyx-timestamp');
 
-      if (!signature) {
-        logger.warn('[Telnyx Webhook] Missing signature header');
-        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      if (!signature || !timestamp) {
+        logger.warn('[Telnyx Webhook] Missing signature or timestamp header');
+        return NextResponse.json({ error: 'Missing signature' }, { status: 403 });
+      }
+
+      // Verify that the timestamp is not too old (5 minutes) to prevent replay attacks
+      const timestampAge = Math.abs(Date.now() / 1000 - parseInt(timestamp));
+      if (isNaN(timestampAge) || timestampAge > 300) {
+        logger.warn('[Telnyx Webhook] Timestamp too old or invalid', { timestamp, ageSeconds: timestampAge });
+        return NextResponse.json({ error: 'Timestamp too old' }, { status: 403 });
       }
 
       // HMAC verification: sha256(timestamp + rawBody)
       const expectedSignature = createHmac('sha256', signingSecret)
-        .update((timestamp || '') + rawBody)
+        .update(timestamp + rawBody)
         .digest('hex');
 
       try {

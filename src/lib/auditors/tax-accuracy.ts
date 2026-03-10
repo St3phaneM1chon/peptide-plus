@@ -282,10 +282,10 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
           'tax-03',
           'HIGH',
           'No HST per-province rate configuration found',
-          'Could not find HST rate definitions organized by province (ON=13%, NB/NS/NL/PE=15%).',
+          'Could not find HST rate definitions organized by province (ON=13%, NS=14%, NB/NL/PE=15%).',
           {
             recommendation:
-              'Create a tax rate configuration mapping province codes to their HST rates. ON=0.13, NB/NS/NL/PE=0.15. For non-HST provinces, apply GST + PST/QST as applicable.',
+              'Create a tax rate configuration mapping province codes to their HST rates. ON=0.13, NS=0.14, NB/NL/PE=0.15. For non-HST provinces, apply GST + PST/QST as applicable.',
           }
         )
       );

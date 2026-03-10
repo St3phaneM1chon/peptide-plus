@@ -803,7 +803,7 @@ export default function AvisPage() {
                               fill
                               sizes="112px"
                               className="object-cover group-hover:scale-105 transition-transform"
-                              /* FIX F-035: Removed unoptimized to use Next.js image optimization */
+                              /* FIX F-035: Removed to use Next.js image optimization */
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                               <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">

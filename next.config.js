@@ -1,3 +1,7 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Production: Standalone build for Azure/Docker deployment
@@ -230,6 +234,22 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'pbs.twimg.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform-lookaside.fbsbx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.microsoftonline.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'graph.microsoft.com',
+      },
     ],
     // Formats modernes pour performance
     formats: ['image/avif', 'image/webp'],
@@ -261,4 +281,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

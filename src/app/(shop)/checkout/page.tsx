@@ -821,7 +821,7 @@ export default function CheckoutPage() {
                     <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center gap-3">
                         {session.user.image ? (
-                          <Image src={session.user.image} alt={session.user.name || 'Profile'} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+                          <Image src={session.user.image} alt={session.user.name || 'Profile'} width={40} height={40} className="w-10 h-10 rounded-full" />
                         ) : (
                           <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
                             <span className="text-green-700 font-semibold">
@@ -1555,7 +1555,7 @@ export default function CheckoutPage() {
                   <div key={`${item.productId}-${item.formatId || 'default'}`} className="flex gap-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 relative">
                       {item.image && (
-                        <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover rounded-lg" unoptimized />
+                        <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover rounded-lg" />
                       )}
                       <span className="absolute -top-2 -end-2 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
                         {item.quantity}

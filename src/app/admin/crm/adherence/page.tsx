@@ -298,7 +298,7 @@ export default function AdherencePage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {agent.agentImage ? (
-                            <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
+                            <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" />
                           ) : (
                             <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                               {agent.agentName.charAt(0).toUpperCase()}
@@ -429,7 +429,7 @@ export default function AdherencePage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {agent.agentImage ? (
-                              <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" unoptimized />
+                              <Image src={agent.agentImage} alt="" width={40} height={40} className="h-7 w-7 rounded-full" />
                             ) : (
                               <div className="h-7 w-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                                 {agent.agentName.charAt(0).toUpperCase()}

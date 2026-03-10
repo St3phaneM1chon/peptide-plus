@@ -146,7 +146,6 @@ export default async function PurchasesPage() {
                               width={40}
                               height={40}
                               className="w-full h-full object-cover"
-                              unoptimized
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700" />

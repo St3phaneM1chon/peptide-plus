@@ -181,7 +181,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
                   {/* Avatar */}
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
                     {conv.customer?.image ? (
-                      <Image src={conv.customer.image} alt="" className="w-8 h-8 rounded-full" width={32} height={32} unoptimized />
+                      <Image src={conv.customer.image} alt="" className="w-8 h-8 rounded-full" width={32} height={32} />
                     ) : (
                       <User className="h-4 w-4 text-slate-400" />
                     )}

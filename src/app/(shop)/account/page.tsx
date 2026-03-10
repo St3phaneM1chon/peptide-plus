@@ -88,7 +88,6 @@ export default function AccountPage() {
                 width={64}
                 height={64}
                 className="w-16 h-16 rounded-full border-4 border-orange-500"
-                unoptimized
               />
             ) : (
               <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">

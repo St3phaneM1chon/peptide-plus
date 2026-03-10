@@ -496,7 +496,7 @@ export default function MediaLibraryPage() {
                   {/* FIX: F2 - Use NextImage instead of native <img> */}
                   {/* F99 FIX: NextImage provides lazy loading by default (loading="lazy" is the default) */}
                   {item.mimeType.startsWith('image/') ? (
-                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" loading="lazy" unoptimized />
+                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" loading="lazy" />
                   ) : (
                     <div className="text-center">
                       {getFileIcon(item.mimeType)}
@@ -540,7 +540,7 @@ export default function MediaLibraryPage() {
                 {/* FIX: F2 - Use NextImage instead of native <img> */}
                 {/* F99 FIX: Explicit lazy loading for list view thumbnails */}
                 {item.mimeType.startsWith('image/') ? (
-                  <NextImage src={item.url} alt="" width={40} height={40} className="w-10 h-10 rounded object-cover" loading="lazy" unoptimized />
+                  <NextImage src={item.url} alt="" width={40} height={40} className="w-10 h-10 rounded object-cover" loading="lazy" />
                 ) : (
                   getFileIcon(item.mimeType)
                 )}
@@ -603,7 +603,7 @@ export default function MediaLibraryPage() {
             </button>
             {/* FIX: F2 - Use NextImage instead of native <img> */}
             {preview.mimeType.startsWith('image/') ? (
-              <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} unoptimized />
+              <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} />
             ) : preview.mimeType.startsWith('video/') ? (
               <video src={preview.url} controls className="max-w-full max-h-[70vh]" />
             ) : preview.mimeType === 'application/pdf' ? (

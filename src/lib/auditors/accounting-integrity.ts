@@ -369,9 +369,10 @@ export default class AccountingIntegrityAuditor extends BaseAuditor {
         //   * 0.09975 (QST/TVQ 9.975%)
         //   * 0.14975 (combined QC rate)
         //   * 0.13 (HST ON 13%)
-        //   * 0.15 (HST NS/NB/NL 15%)
+        //   * 0.14 (HST NS 14%, effective 2025-04-01)
+        //   * 0.15 (HST NB/NL/PE 15%)
         // Skip lines where * 0.05 is clearly a non-tax usage (tolerance, threshold, etc.)
-        if (/\*\s*0\.(05|09975|14975|13|15)\b/.test(line) && !/tolerance|threshold|percent|margin|confidence|amountDiff|matchScore|ratio/i.test(line)) {
+        if (/\*\s*0\.(05|09975|14975|13|14|15)\b/.test(line) && !/tolerance|threshold|percent|margin|confidence|amountDiff|matchScore|ratio/i.test(line)) {
           // Verify this file does NOT already import centralized tax constants
           const importsTaxConstants =
             /import\s+.*(?:GST_RATE|QST_RATE|TAX_RATES|calculateTax|getTaxRate)/i.test(content) ||

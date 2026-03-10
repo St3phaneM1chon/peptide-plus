@@ -1237,6 +1237,9 @@ model InventoryReservation {
   createdAt  DateTime                   @default(now())
   consumedAt DateTime?
   releasedAt DateTime?
+  product    Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  format     ProductFormat?             @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  order      Order?                     @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([cartId])
   @@index([expiresAt])
@@ -1260,6 +1263,9 @@ model InventoryTransaction {
   reason            String?
   createdBy         String?
   createdAt         DateTime                 @default(now())
+  product           Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  format            ProductFormat?           @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  order             Order?                   @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([orderId])
@@ -1560,10 +1566,12 @@ model Order {
   // Bridge: FK to CrmDeal that generated this order
   dealId                String?
   deal                  CrmDeal?        @relation("DealOrders", fields: [dealId], references: [id], onDelete: SetNull)
-  items                 OrderItem[]
-  paymentErrors         PaymentError[]
-  returnRequests        ReturnRequest[]
-  events                OrderEvent[]
+  items                    OrderItem[]
+  paymentErrors            PaymentError[]
+  returnRequests           ReturnRequest[]
+  events                   OrderEvent[]
+  inventoryReservations    InventoryReservation[]
+  inventoryTransactions    InventoryTransaction[]
 
   @@index([createdAt])
   @@index([dealId])
@@ -1837,6 +1845,11 @@ model Product {
   purity              Decimal?             @db.Decimal(5, 2)
   storageConditions   String?
   tags                String?
+  // DUAL-STOCK NOTE: Product.stockQuantity is a DENORMALIZED aggregate.
+  // The source of truth for inventory is ProductFormat.stockQuantity.
+  // This field should equal SUM(formats.stockQuantity) and is used only for
+  // quick product-level filtering (e.g., "show in-stock products").
+  // Checkout and inventory operations MUST use ProductFormat.stockQuantity.
   stockQuantity       Int                  @default(0)
   trackInventory      Boolean              @default(true)
   // DB-011: Reorder management
@@ -1866,8 +1879,10 @@ model Product {
   stockAlerts         StockAlert[]
   upsellConfig        UpsellConfig?
   videoLinks          VideoProductLink[]
-  crmDealProducts     CrmDealProduct[]
-  crmQuoteItems       CrmQuoteItem[]
+  crmDealProducts          CrmDealProduct[]
+  crmQuoteItems            CrmQuoteItem[]
+  inventoryReservations    InventoryReservation[]
+  inventoryTransactions    InventoryTransaction[]
 
   @@index([categoryId])
   @@index([isBestseller])
@@ -1931,8 +1946,10 @@ model ProductFormat {
   volumeMl          Decimal?                   @db.Decimal(10, 2)
   weightGrams       Int?
   costPrice         Decimal?                   @db.Decimal(10, 2)
-  product           Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  translations      ProductFormatTranslation[]
+  product                  Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  translations             ProductFormatTranslation[]
+  inventoryReservations    InventoryReservation[]
+  inventoryTransactions    InventoryTransaction[]
 
   @@index([availability])
   @@index([formatType])

@@ -380,7 +380,6 @@ export default function OCRPage() {
                   height={256}
                   className="max-h-64 mx-auto rounded-lg"
                   style={{ width: 'auto', height: 'auto', maxHeight: '16rem' }}
-                  unoptimized
                 />
                 <p className="text-sm text-slate-500 mt-4">{t('admin.ocrScan.clickToChange')}</p>
               </div>

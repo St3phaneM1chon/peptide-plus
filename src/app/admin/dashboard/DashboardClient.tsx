@@ -401,7 +401,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {user.image ? (
-                      <Image src={user.image} alt={user.name ? `${user.name} avatar` : 'User avatar'} width={36} height={36} className="w-9 h-9 rounded-full object-cover" unoptimized />
+                      <Image src={user.image} alt={user.name ? `${user.name} avatar` : 'User avatar'} width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
                     ) : (
                       <span className="text-slate-600 font-semibold text-sm">
                         {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}

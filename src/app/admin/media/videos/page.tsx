@@ -623,7 +623,7 @@ export default function MediaVideosPage() {
                   {/* Auto-thumbnail display */}
                   {autoThumb ? (
                     <div className="relative w-24 h-16 rounded overflow-hidden bg-slate-100 flex-shrink-0 cursor-pointer group/thumb" onClick={() => embedUrl && toggleEmbedPreview(v.id)}>
-                      <Image src={autoThumb} alt={v.title} className="w-full h-full object-cover" width={96} height={64} unoptimized />
+                      <Image src={autoThumb} alt={v.title} className="w-full h-full object-cover" width={96} height={64} />
                       {embedUrl && (
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
                           <Play className="w-5 h-5 text-white" />

@@ -20,6 +20,7 @@ import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { withJobLock } from '@/lib/cron-lock';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -100,85 +101,91 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const startTime = Date.now();
+  return withJobLock('media-cleanup', async (signal) => {
+    try {
+      const startTime = Date.now();
 
-    // 1. Clean up stale reviews-pending uploads (older than 24 hours)
-    const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const stalePending = await prisma.media.findMany({
-      where: {
-        folder: 'reviews-pending',
-        createdAt: { lt: staleCutoff },
-      },
-      select: { id: true, url: true, size: true },
-      take: 50,
-    });
-
-    let stalePendingBytesFreed = 0;
-
-    // Delete from storage first, collect IDs of successfully deleted files
-    const successfullyDeletedIds: string[] = [];
-    const storageDeleteResults = await Promise.allSettled(
-      stalePending.map(async (media) => {
-        await storage.delete(media.url);
-        return media;
-      })
-    );
-    for (const result of storageDeleteResults) {
-      if (result.status === 'fulfilled') {
-        successfullyDeletedIds.push(result.value.id);
-        stalePendingBytesFreed += result.value.size;
-      } else {
-        logger.warn('Failed to delete stale pending media from storage', {
-          error: result.reason instanceof Error ? result.reason.message : String(result.reason),
-        });
-      }
-    }
-
-    // Batch delete all successfully removed media records in one query
-    let stalePendingDeleted = 0;
-    if (successfullyDeletedIds.length > 0) {
-      const { count } = await prisma.media.deleteMany({
-        where: { id: { in: successfullyDeletedIds } },
+      // 1. Clean up stale reviews-pending uploads (older than 24 hours)
+      const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const stalePending = await prisma.media.findMany({
+        where: {
+          folder: 'reviews-pending',
+          createdAt: { lt: staleCutoff },
+        },
+        select: { id: true, url: true, size: true },
+        take: 50,
       });
-      stalePendingDeleted = count;
+
+      let stalePendingBytesFreed = 0;
+
+      // Delete from storage first, collect IDs of successfully deleted files
+      const successfullyDeletedIds: string[] = [];
+      const storageDeleteResults = await Promise.allSettled(
+        stalePending.map(async (media) => {
+          await storage.delete(media.url);
+          return media;
+        })
+      );
+      for (const result of storageDeleteResults) {
+        if (result.status === 'fulfilled') {
+          successfullyDeletedIds.push(result.value.id);
+          stalePendingBytesFreed += result.value.size;
+        } else {
+          logger.warn('Failed to delete stale pending media from storage', {
+            error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+          });
+        }
+      }
+
+      // Batch delete all successfully removed media records in one query
+      let stalePendingDeleted = 0;
+      if (successfullyDeletedIds.length > 0) {
+        const { count } = await prisma.media.deleteMany({
+          where: { id: { in: successfullyDeletedIds } },
+        });
+        stalePendingDeleted = count;
+      }
+
+      if (signal.aborted) {
+        return NextResponse.json({ error: 'Job timed out' }, { status: 504 });
+      }
+
+      // 2. Find and clean up orphan media (older than 30 days)
+      const orphans = await storage.findOrphanMedia(30, 50);
+      const orphanIds = orphans.map(o => o.id);
+      const orphanBytesFreed = orphans.reduce((sum, o) => sum + o.size, 0);
+      const orphansDeleted = await storage.cleanupOrphanMedia(orphanIds);
+
+      const duration = Date.now() - startTime;
+
+      const result = {
+        success: true,
+        duration: `${duration}ms`,
+        stalePendingReviews: {
+          found: stalePending.length,
+          deleted: stalePendingDeleted,
+          bytesFreed: stalePendingBytesFreed,
+        },
+        orphanMedia: {
+          found: orphans.length,
+          deleted: orphansDeleted,
+          bytesFreed: orphanBytesFreed,
+        },
+        totalBytesFreed: stalePendingBytesFreed + orphanBytesFreed,
+        totalMBFreed: ((stalePendingBytesFreed + orphanBytesFreed) / (1024 * 1024)).toFixed(2),
+      };
+
+      logger.info('Media cleanup completed', result);
+
+      // Return 204 if nothing was cleaned up, 200 with details otherwise
+      if (stalePendingDeleted === 0 && orphansDeleted === 0) {
+        return new NextResponse(null, { status: 204 });
+      }
+
+      return NextResponse.json(result);
+    } catch (error) {
+      logger.error('Media cleanup POST error', { error: error instanceof Error ? error.message : String(error) });
+      return NextResponse.json({ error: 'Failed to cleanup media' }, { status: 500 });
     }
-
-    // 2. Find and clean up orphan media (older than 30 days)
-    const orphans = await storage.findOrphanMedia(30, 50);
-    const orphanIds = orphans.map(o => o.id);
-    const orphanBytesFreed = orphans.reduce((sum, o) => sum + o.size, 0);
-    const orphansDeleted = await storage.cleanupOrphanMedia(orphanIds);
-
-    const duration = Date.now() - startTime;
-
-    const result = {
-      success: true,
-      duration: `${duration}ms`,
-      stalePendingReviews: {
-        found: stalePending.length,
-        deleted: stalePendingDeleted,
-        bytesFreed: stalePendingBytesFreed,
-      },
-      orphanMedia: {
-        found: orphans.length,
-        deleted: orphansDeleted,
-        bytesFreed: orphanBytesFreed,
-      },
-      totalBytesFreed: stalePendingBytesFreed + orphanBytesFreed,
-      totalMBFreed: ((stalePendingBytesFreed + orphanBytesFreed) / (1024 * 1024)).toFixed(2),
-    };
-
-    logger.info('Media cleanup completed', result);
-
-    // Return 204 if nothing was cleaned up, 200 with details otherwise
-    if (stalePendingDeleted === 0 && orphansDeleted === 0) {
-      return new NextResponse(null, { status: 204 });
-    }
-
-    return NextResponse.json(result);
-  } catch (error) {
-    logger.error('Media cleanup POST error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to cleanup media' }, { status: 500 });
-  }
+  });
 }

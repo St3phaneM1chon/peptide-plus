@@ -11,7 +11,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { cookies, headers } from 'next/headers';
 import { locales, defaultLocale, isValidLocale, type Locale, localeDirections } from '@/i18n/config';
-import Script from 'next/script';
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 import { TranslationNotice } from '@/components/ui/TranslationNotice';
@@ -202,9 +202,7 @@ export default async function RootLayout({
           <link key={loc} rel="alternate" hrefLang={loc} href={`https://biocyclepeptides.com?lang=${loc}`} />
         ))}
         <link rel="alternate" hrefLang="x-default" href="https://biocyclepeptides.com" />
-        <Script id="sw-register" strategy="afterInteractive">
-          {`if ('serviceWorker' in navigator && location.hostname !== 'localhost') { navigator.serviceWorker.register('/sw.js'); }`}
-        </Script>
+        {/* Service worker registered via ServiceWorkerRegistration client component in body */}
         {/* Anti-FOUC: apply dark class before first paint to avoid white flash */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('admin-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
@@ -221,6 +219,7 @@ export default async function RootLayout({
           <TranslationNotice />
           <TranslationFeedback />
         </Providers>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

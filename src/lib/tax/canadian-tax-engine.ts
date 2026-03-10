@@ -29,7 +29,7 @@ const PROVINCE_TAX: Record<string, { gst: number; pst: number; hst: number; qst:
   MB: { gst: 5, pst: 7, hst: 0, qst: 0, name: 'Manitoba' },
   NB: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Nouveau-Brunswick' },
   NL: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Terre-Neuve' },
-  NS: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Nouvelle-Écosse' },
+  NS: { gst: 0, pst: 0, hst: 14, qst: 0, name: 'Nouvelle-Écosse' },
   NT: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Territoires du N.-O.' },
   NU: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Nunavut' },
   ON: { gst: 0, pst: 0, hst: 13, qst: 0, name: 'Ontario' },

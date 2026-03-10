@@ -653,7 +653,7 @@ export default function SEOPage() {
                       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                         <div className="h-32 bg-slate-100 flex items-center justify-center">
                           {page.ogImage ? (
-                            <Image src={page.ogImage} alt="OG" width={200} height={200} className="w-full h-full object-cover" unoptimized />
+                            <Image src={page.ogImage} alt="OG" width={200} height={200} className="w-full h-full object-cover" />
                           ) : (
                             <span className="text-slate-400 text-xs">Image: {globalSettings.defaultOgImage}</span>
                           )}
@@ -758,7 +758,7 @@ export default function SEOPage() {
                             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                               <div className="h-32 bg-slate-100 flex items-center justify-center">
                                 {product.imageUrl ? (
-                                  <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full h-full object-cover" unoptimized />
+                                  <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full h-full object-cover" />
                                 ) : (
                                   <span className="text-slate-400 text-xs">{globalSettings.defaultOgImage}</span>
                                 )}
@@ -966,7 +966,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
               <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm max-w-sm">
                 <div className="h-24 bg-slate-100 flex items-center justify-center">
                   {editingProduct.imageUrl ? (
-                    <Image src={editingProduct.imageUrl} alt={editingProduct.name} width={200} height={200} className="w-full h-full object-cover" unoptimized />
+                    <Image src={editingProduct.imageUrl} alt={editingProduct.name} width={200} height={200} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-slate-400 text-[10px]">{globalSettings.defaultOgImage}</span>
                   )}

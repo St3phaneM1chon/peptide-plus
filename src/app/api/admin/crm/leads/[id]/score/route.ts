@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Scoring Engine
@@ -110,8 +111,27 @@ export const POST = withAdminGuard(async (
       assignedTo: {
         select: { id: true, name: true, email: true },
       },
+      sourceProspect: {
+        select: { id: true },
+      },
     },
   });
+
+  // Sync score back to the source Prospect if one exists (via ProspectToLead relation)
+  if (lead.sourceProspect) {
+    try {
+      await prisma.prospect.update({
+        where: { id: lead.sourceProspect.id },
+        data: { enrichmentScore: score },
+      });
+    } catch (syncError) {
+      logger.warn('[CRM Lead Score] Failed to sync score to Prospect', {
+        leadId: id,
+        prospectId: lead.sourceProspect.id,
+        error: syncError instanceof Error ? syncError.message : String(syncError),
+      });
+    }
+  }
 
   return apiSuccess(lead, { request });
 }, { requiredPermission: 'crm.leads.edit' });

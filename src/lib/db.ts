@@ -94,6 +94,69 @@ export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promis
   throw new Error('withRetry: exhausted retries');
 }
 
+// ---------------------------------------------------------------------------
+// Pool-aware retry helper for transient DB errors
+// ---------------------------------------------------------------------------
+// Handles pool exhaustion (P2024), connection pool timeouts, refused connections,
+// and other transient errors that can occur under load.
+
+/**
+ * Retry wrapper for Prisma operations that may fail due to pool exhaustion
+ * or transient DB errors. Retries up to 3 times with exponential backoff.
+ *
+ * Unlike `withRetry` which handles only Prisma error codes (P1001/P1002/P1017),
+ * this function also handles pool-level errors (P2024) and generic connection
+ * errors that appear in the error message.
+ *
+ * Usage:
+ *   const order = await withPrismaRetry(() => prisma.order.findUnique({ where: { id } }));
+ *   const result = await withPrismaRetry(() => prisma.$transaction([...]), { maxRetries: 5 });
+ */
+export async function withPrismaRetry<T>(
+  fn: () => Promise<T>,
+  options?: { maxRetries?: number; backoffMs?: number }
+): Promise<T> {
+  const maxRetries = options?.maxRetries ?? 3;
+  const backoffMs = options?.backoffMs ?? 500;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      // Check Prisma error code first
+      const code = (error as { code?: string })?.code;
+      const isRetryableCode = code && (
+        RETRYABLE_CODES.has(code) || code === 'P2024' // P2024 = pool timeout
+      );
+
+      // Check error message for other transient connection issues
+      const isRetryableMessage = error instanceof Error && (
+        error.message.includes('Connection pool') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('Connection terminated') ||
+        error.message.includes('Too many connections') ||
+        error.message.includes('connection reset') ||
+        error.message.includes('ETIMEDOUT')
+      );
+
+      const isRetryable = isRetryableCode || isRetryableMessage;
+
+      if (!isRetryable || attempt === maxRetries) {
+        throw error;
+      }
+
+      const delay = backoffMs * Math.pow(2, attempt);
+      console.warn(
+        `[Prisma] Retryable error, attempt ${attempt + 1}/${maxRetries}, waiting ${delay}ms`,
+        error instanceof Error ? error.message : String(error)
+      );
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  // Unreachable, but satisfies TypeScript's control flow analysis
+  throw new Error('withPrismaRetry: exhausted retries');
+}
+
 /** @deprecated Use 'prisma' instead. This alias is kept for backward compatibility. */
 export const db = prisma;
 

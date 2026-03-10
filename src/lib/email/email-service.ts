@@ -311,7 +311,87 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 
   logger.info('Sending email', { requestId, provider, to: recipients.map(r => r.email), subject: emailData.subject.slice(0, 80) });
 
-  // Retry logic with exponential backoff: 3 attempts (1s, 4s, 16s)
+  // Try the configured provider first with retries, then fallback to others
+  const primaryResult = await sendWithRetries(provider, emailData, requestId);
+
+  if (primaryResult.success) {
+    return primaryResult;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fallback chain: try other providers if the primary one failed
+  // ---------------------------------------------------------------------------
+  const fallbackOrder: Array<'resend' | 'sendgrid' | 'smtp'> = ['resend', 'sendgrid', 'smtp'];
+
+  for (const fallbackProvider of fallbackOrder) {
+    if (fallbackProvider === provider) continue; // Already tried
+
+    // Verify the fallback provider has credentials before attempting
+    if (!hasProviderCredentials(fallbackProvider)) continue;
+
+    logger.warn(`[EmailService] Fallback to ${fallbackProvider} after ${provider} failed`, {
+      requestId,
+      primaryError: primaryResult.error,
+    });
+
+    const fallbackResult = await sendWithRetries(fallbackProvider, emailData, requestId);
+
+    if (fallbackResult.success) {
+      logger.info(`[EmailService] Email sent via fallback provider ${fallbackProvider}`, {
+        requestId,
+        originalProvider: provider,
+      });
+      return fallbackResult;
+    }
+
+    logger.warn(`[EmailService] Fallback provider ${fallbackProvider} also failed`, {
+      requestId,
+      error: fallbackResult.error,
+    });
+  }
+
+  // All providers failed
+  logger.error('[EmailService] All providers failed (primary + fallbacks)', {
+    requestId,
+    primaryProvider: provider,
+  });
+  return { success: false, error: 'Failed to send email: all providers exhausted' };
+}
+
+// ---------------------------------------------------------------------------
+// Provider credential check for fallback chain
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if a provider has the necessary credentials configured.
+ * Used by the fallback chain to skip providers that can't possibly work.
+ */
+function hasProviderCredentials(provider: string): boolean {
+  switch (provider) {
+    case 'resend':
+      return !!process.env.RESEND_API_KEY;
+    case 'sendgrid':
+      return !!process.env.SENDGRID_API_KEY;
+    case 'smtp':
+      return !!(process.env.SMTP_HOST && process.env.SMTP_USER && (process.env.SMTP_PASSWORD || process.env.SMTP_PASS));
+    default:
+      return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Retry logic extracted for reuse by primary + fallback providers
+// ---------------------------------------------------------------------------
+
+/**
+ * Send an email via a specific provider with exponential backoff retries.
+ * Returns the result after all retry attempts are exhausted.
+ */
+async function sendWithRetries(
+  provider: string,
+  emailData: SendEmailOptions,
+  requestId: string
+): Promise<EmailResult> {
   const MAX_RETRIES = 3;
   const BACKOFF_BASE_MS = 1000; // 1s, 4s, 16s (base^(2*attempt))
 

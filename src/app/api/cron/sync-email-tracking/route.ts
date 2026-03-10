@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { syncEmailEngagementsToCrm } from '@/lib/crm/email-tracking';
 import { logger } from '@/lib/logger';
+import { withJobLock } from '@/lib/cron-lock';
 
 export async function GET(request: NextRequest) {
   // SECURITY: Timing-safe CRON_SECRET verification (prevents timing attacks)
@@ -27,11 +28,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const synced = await syncEmailEngagementsToCrm(15);
-    return NextResponse.json({ success: true, synced });
-  } catch (error) {
-    logger.error('Cron sync-email-tracking error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
-  }
+  return withJobLock('sync-email-tracking', async () => {
+    try {
+      const synced = await syncEmailEngagementsToCrm(15);
+      return NextResponse.json({ success: true, synced });
+    } catch (error) {
+      logger.error('Cron sync-email-tracking error', { error: error instanceof Error ? error.message : String(error) });
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    }
+  });
 }

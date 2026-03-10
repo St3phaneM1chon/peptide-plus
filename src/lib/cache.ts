@@ -1,7 +1,13 @@
 /**
- * In-memory cache utilities for API routes
- * Used for frequently accessed singleton data (e.g., SiteSettings)
+ * Two-layer cache: L1 in-memory (per-instance) + L2 Redis (shared/distributed)
+ * Falls back gracefully to L1-only when Redis is unavailable.
  */
+
+import { getRedisClient, isRedisAvailable } from '@/lib/redis';
+import { logger } from '@/lib/logger';
+
+const CACHE_PREFIX = 'cache:';
+const TAG_PREFIX = 'cache:tag:';
 
 export interface CacheEntry<T> {
   data: T;
@@ -122,39 +128,113 @@ interface CacheItem {
 const globalCacheStore = new Map<string, CacheItem>();
 const tagIndex = new Map<string, Set<string>>();
 
+// ---------------------------------------------------------------------------
+// L2 Redis helpers (fire-and-forget, never throw)
+// ---------------------------------------------------------------------------
+
+async function redisGet(key: string): Promise<string | null> {
+  try {
+    if (!isRedisAvailable()) return null;
+    const client = await getRedisClient();
+    if (!client) return null;
+    return await client.get(`${CACHE_PREFIX}${key}`);
+  } catch {
+    return null;
+  }
+}
+
+async function redisSet(key: string, value: string, ttlSeconds: number, tags: string[]): Promise<void> {
+  try {
+    if (!isRedisAvailable()) return;
+    const client = await getRedisClient();
+    if (!client) return;
+    await client.set(`${CACHE_PREFIX}${key}`, value, 'EX', ttlSeconds);
+    for (const tag of tags) {
+      await client.lpush(`${TAG_PREFIX}${tag}`, key);
+      await client.expire(`${TAG_PREFIX}${tag}`, ttlSeconds + 60);
+    }
+  } catch (err) {
+    logger.debug('[cache-l2] Redis write failed', { key, error: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+async function redisDel(key: string): Promise<void> {
+  try {
+    if (!isRedisAvailable()) return;
+    const client = await getRedisClient();
+    if (!client) return;
+    await client.del(`${CACHE_PREFIX}${key}`);
+  } catch { /* graceful */ }
+}
+
+async function redisInvalidateTag(tag: string): Promise<void> {
+  try {
+    if (!isRedisAvailable()) return;
+    const client = await getRedisClient();
+    if (!client) return;
+    const tagKey = `${TAG_PREFIX}${tag}`;
+    const keys: string[] = [];
+    let item: string | null;
+    // Drain the list
+    while ((item = await client.rpop(tagKey)) !== null) {
+      keys.push(item);
+    }
+    if (keys.length > 0) {
+      await client.del(...keys.map(k => `${CACHE_PREFIX}${k}`));
+    }
+    await client.del(tagKey);
+  } catch { /* graceful */ }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 /**
- * Get or set cache value with TTL and tags
+ * Get or set cache value with TTL and tags.
+ * L1 (in-memory) → L2 (Redis) → fn() fallback chain.
  */
 export async function cacheGetOrSet<T>(
   key: string,
   fn: () => Promise<T>,
   options?: { ttl?: number; tags?: string[] }
 ): Promise<T> {
-  // Check if value exists and is not expired
+  // L1: Check in-memory
   const item = globalCacheStore.get(key);
   if (item && Date.now() < item.expiry) {
     return item.value as T;
   }
 
-  // Value not found or expired - fetch fresh value
-  const value = await fn();
   const ttl = options?.ttl ?? CacheTTL.CONFIG;
   const tags = options?.tags ?? [];
 
-  // Store in cache
-  globalCacheStore.set(key, {
-    value,
-    expiry: Date.now() + ttl * 1000,
-    tags,
-  });
+  // L2: Check Redis
+  const redisValue = await redisGet(key);
+  if (redisValue !== null) {
+    try {
+      const parsed = JSON.parse(redisValue) as T;
+      // Populate L1
+      globalCacheStore.set(key, { value: parsed, expiry: Date.now() + ttl * 1000, tags });
+      for (const tag of tags) {
+        if (!tagIndex.has(tag)) tagIndex.set(tag, new Set());
+        tagIndex.get(tag)!.add(key);
+      }
+      return parsed;
+    } catch { /* parse failed, fetch fresh */ }
+  }
 
-  // Index by tags for efficient invalidation
+  // Miss: fetch fresh value
+  const value = await fn();
+
+  // Store in L1
+  globalCacheStore.set(key, { value, expiry: Date.now() + ttl * 1000, tags });
   for (const tag of tags) {
-    if (!tagIndex.has(tag)) {
-      tagIndex.set(tag, new Set());
-    }
+    if (!tagIndex.has(tag)) tagIndex.set(tag, new Set());
     tagIndex.get(tag)!.add(key);
   }
+
+  // Store in L2 (fire-and-forget)
+  redisSet(key, JSON.stringify(value), ttl, tags).catch(() => {});
 
   return value;
 }
@@ -172,7 +252,7 @@ export function cacheGet<T>(key: string): T | null {
 }
 
 /**
- * Set cache value directly
+ * Set cache value directly (L1 + L2)
  */
 export function cacheSet<T>(key: string, value: T, options?: { ttl?: number; tags?: string[] }): void {
   const ttl = options?.ttl ?? CacheTTL.CONFIG;
@@ -184,17 +264,19 @@ export function cacheSet<T>(key: string, value: T, options?: { ttl?: number; tag
     tags,
   });
 
-  // Index by tags
   for (const tag of tags) {
     if (!tagIndex.has(tag)) {
       tagIndex.set(tag, new Set());
     }
     tagIndex.get(tag)!.add(key);
   }
+
+  // L2: fire-and-forget
+  redisSet(key, JSON.stringify(value), ttl, tags).catch(() => {});
 }
 
 /**
- * Invalidate cache by tag
+ * Invalidate cache by tag (L1 + L2)
  */
 export function cacheInvalidateTag(tag: string): void {
   const keys = tagIndex.get(tag);
@@ -204,10 +286,12 @@ export function cacheInvalidateTag(tag: string): void {
     }
     tagIndex.delete(tag);
   }
+  // L2: fire-and-forget
+  redisInvalidateTag(tag).catch(() => {});
 }
 
 /**
- * Invalidate specific cache key
+ * Invalidate specific cache key (L1 + L2)
  */
 export function cacheDelete(key: string): void {
   const item = globalCacheStore.get(key);
@@ -217,6 +301,8 @@ export function cacheDelete(key: string): void {
     }
   }
   globalCacheStore.delete(key);
+  // L2: fire-and-forget
+  redisDel(key).catch(() => {});
 }
 
 /**
@@ -235,8 +321,8 @@ export function cacheStats() {
 }
 
 /**
- * Check if Redis is connected (placeholder - always false for in-memory cache)
+ * Check if Redis L2 cache is connected
  */
 export function isCacheRedisConnected(): boolean {
-  return false;
+  return isRedisAvailable();
 }

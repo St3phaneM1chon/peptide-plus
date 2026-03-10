@@ -1,0 +1,127 @@
+{
+  "audit_name": "mega-audit-fonctionnel-10-angles-2026-03",
+  "started": "2026-03-10",
+  "last_session": "2026-03-10T18:30",
+  "status": "P0_P1_P2_P3_COMPLETE",
+  "total_findings": {
+    "critical": 32,
+    "high": 56,
+    "medium": 92,
+    "low": 55,
+    "total": 235
+  },
+  "batches": {
+    "batch1": {
+      "name": "Core Commerce + Comptabilité + Livraison",
+      "status": "DONE",
+      "findings": { "critical": 7, "high": 14, "medium": 25, "low": 20, "total": 66 }
+    },
+    "batch2": {
+      "name": "CRM + VoIP + Email",
+      "status": "DONE",
+      "findings": { "critical": 13, "high": 10, "medium": 12, "low": 5, "total": 40 }
+    },
+    "batch3": {
+      "name": "Marketing + Loyauté + Communauté",
+      "status": "DONE",
+      "findings": { "critical": 0, "high": 3, "medium": 8, "low": 5, "total": 16 }
+    },
+    "batch4": {
+      "name": "Inventaire + Media + Système",
+      "status": "DONE",
+      "findings": { "critical": 6, "high": 13, "medium": 22, "low": 13, "total": 54 }
+    },
+    "batch5": {
+      "name": "Cross-Cutting (i18n, Performance, Résilience, Interactions)",
+      "status": "DONE",
+      "findings": { "critical": 6, "high": 16, "medium": 25, "low": 12, "total": 59 }
+    }
+  },
+  "phase1_cartographie": "DONE",
+  "phase4_evolution_plan": "DONE",
+  "phase5_verification": "PENDING",
+  "scores_fonctionnels": {
+    "loyaute": "76%",
+    "crm": "73%",
+    "email": "60%",
+    "media": "60%",
+    "communaute": "50%",
+    "marketing": "47%",
+    "inventaire": "45%"
+  },
+  "memory_files": [
+    "memory/peptide-plus-architecture.md",
+    "learning-mega-audit-fonctionnel-2026-03-10",
+    "learning-peptide-architecture-2026-03-10"
+  ],
+  "top_10_critical": [
+    "FK orphelins InventoryReservation/InventoryTransaction",
+    "Lead scoring désynchronisé Prospect vs CrmLead",
+    "Email fallback chain non implémenté",
+    "9 cron jobs sans withJobLock",
+    "Service Worker registration manquante",
+    "Prisma pool épuisé sans retry",
+    "NS HST tax rate mismatch (15% vs 14%)",
+    "Webhook Telnyx sans validation signature",
+    "Dual stock tracking Product vs ProductFormat",
+    "Workflows CRM zéro gestion erreurs"
+  ],
+  "p0_fixes_applied": {
+    "date": "2026-03-10",
+    "total": 10,
+    "fixes": [
+      {"id": "p0-crons-withJobLock", "files": 9, "status": "DONE"},
+      {"id": "p0-ns-hst-tax", "files": 3, "status": "DONE"},
+      {"id": "p0-email-fallback", "files": 1, "status": "DONE"},
+      {"id": "p0-telnyx-webhook", "files": 1, "status": "DONE"},
+      {"id": "p0-sw-registration", "files": 2, "status": "DONE"},
+      {"id": "p0-prisma-pool", "files": 2, "status": "DONE"},
+      {"id": "p0-crm-workflows", "files": 1, "status": "DONE"},
+      {"id": "p0-lead-scoring", "files": 2, "status": "DONE"},
+      {"id": "p0-fk-orphelins", "files": 1, "status": "DONE", "note": "Schema FK added, prisma db push needed for production"},
+      {"id": "p0-dual-stock", "files": 1, "status": "DONE", "note": "Documentation only, ProductFormat is source of truth"}
+    ],
+    "build_status": "SUCCESS",
+    "files_modified": 22,
+    "note": "Schema FK changes need prisma db push on production DB before deploy"
+  },
+  "p1_fixes_applied": {
+    "date": "2026-03-10",
+    "total": 4,
+    "fixes": [
+      {"id": "p1-crm-permissions", "status": "ALREADY_DONE", "note": "120+ CRM routes already use requiredPermission"},
+      {"id": "p1-prisma-transactions", "status": "ALREADY_DONE", "note": "All critical ops (cancel, redeem, earn, reserve, convert) already wrapped in $transaction"},
+      {"id": "p1-error-boundaries", "status": "DONE", "files": 1, "note": "Auth error.tsx added; 5 others already existed"},
+      {"id": "p1-redis-l2-cache", "status": "DONE", "files": 1, "note": "cache.ts upgraded: L1 in-memory + L2 Redis with graceful fallback"}
+    ],
+    "build_status": "SUCCESS"
+  },
+  "p2_fixes_applied": {
+    "date": "2026-03-10",
+    "total": 3,
+    "fixes": [
+      {"id": "p2-image-optimization", "status": "DONE", "files": 36, "note": "Removed unoptimized from all Image components + added 4 OAuth provider domains to remotePatterns"},
+      {"id": "p2-rtl-direction", "status": "PARTIAL", "note": "dir=rtl on <html> works; full RTL needs Tailwind logical properties conversion (300+ files)"},
+      {"id": "p2-lazy-load-libs", "status": "ALREADY_DONE", "note": "Recharts/ReactFlow isolated by route-level code splitting; jsPDF uses dynamic import in client"}
+    ],
+    "build_status": "SUCCESS"
+  },
+  "p3_fixes_applied": {
+    "date": "2026-03-10",
+    "total": 2,
+    "fixes": [
+      {"id": "p3-bundle-analyzer", "status": "DONE", "files": 2, "note": "@next/bundle-analyzer installed + wired in next.config.js. Run ANALYZE=true npm run build"},
+      {"id": "p3-isr-ssg", "status": "ALREADY_DONE", "note": "40 files already use generateStaticParams/revalidate. API routes correctly force-dynamic (use request params). Redis L2 cache provides distributed caching."}
+    ],
+    "remaining_p3": [
+      "Bull/BullMQ job queue (infrastructure change)",
+      "CDN Azure Blob Storage (infrastructure)",
+      "RTL Tailwind logical properties (300+ files)",
+      "Prisma schema multi-file split",
+      "QuickBooks/Xero export (new feature)",
+      "AI product recommendations (new feature)",
+      "Dynamic pricing per loyalty tier (new feature)"
+    ],
+    "build_status": "SUCCESS"
+  }
+}

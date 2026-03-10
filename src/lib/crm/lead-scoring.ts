@@ -171,15 +171,38 @@ export async function scoreProspect(
   prospectId: string,
   config: ScoringConfig = {},
 ): Promise<ScoreBreakdown> {
-  const prospect = await prisma.prospect.findUnique({ where: { id: prospectId } });
+  const prospect = await prisma.prospect.findUnique({
+    where: { id: prospectId },
+    include: { convertedLead: { select: { id: true } } },
+  });
   if (!prospect) throw new Error(`Prospect ${prospectId} not found`);
 
   const breakdown = calculateScore(prospect as Parameters<typeof calculateScore>[0], config);
 
+  // Update Prospect.enrichmentScore
   await prisma.prospect.update({
     where: { id: prospectId },
     data: { enrichmentScore: breakdown.total },
   });
+
+  // Sync score to CrmLead if this prospect was converted to a lead
+  if (prospect.convertedLead) {
+    try {
+      await prisma.crmLead.update({
+        where: { id: prospect.convertedLead.id },
+        data: {
+          score: breakdown.total,
+          temperature: breakdown.temperature,
+        },
+      });
+    } catch (syncError) {
+      logger.warn('[LeadScoring] Failed to sync score to CrmLead', {
+        prospectId,
+        leadId: prospect.convertedLead.id,
+        error: syncError instanceof Error ? syncError.message : String(syncError),
+      });
+    }
+  }
 
   return breakdown;
 }
@@ -194,10 +217,12 @@ export async function scoreProspectList(
 ): Promise<{ scored: number; averageScore: number; distribution: { hot: number; warm: number; cold: number } }> {
   const prospects = await prisma.prospect.findMany({
     where: { listId, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+    include: { convertedLead: { select: { id: true } } },
   });
 
   let totalScore = 0;
   const distribution = { hot: 0, warm: 0, cold: 0 };
+  const leadSyncUpdates: Array<{ leadId: string; score: number; temperature: 'HOT' | 'WARM' | 'COLD' }> = [];
 
   for (const prospect of prospects) {
     const breakdown = calculateScore(prospect as Parameters<typeof calculateScore>[0], config);
@@ -211,6 +236,35 @@ export async function scoreProspectList(
       where: { id: prospect.id },
       data: { enrichmentScore: breakdown.total },
     });
+
+    // Collect CrmLead updates for batch sync
+    if (prospect.convertedLead) {
+      leadSyncUpdates.push({
+        leadId: prospect.convertedLead.id,
+        score: breakdown.total,
+        temperature: breakdown.temperature,
+      });
+    }
+  }
+
+  // Batch sync scores to CrmLead for converted prospects
+  if (leadSyncUpdates.length > 0) {
+    try {
+      await prisma.$transaction(
+        leadSyncUpdates.map(({ leadId, score, temperature }) =>
+          prisma.crmLead.update({
+            where: { id: leadId },
+            data: { score, temperature },
+          })
+        )
+      );
+    } catch (syncError) {
+      logger.warn('[LeadScoring] Failed to batch sync scores to CrmLead', {
+        listId,
+        leadsToSync: leadSyncUpdates.length,
+        error: syncError instanceof Error ? syncError.message : String(syncError),
+      });
+    }
   }
 
   const averageScore = prospects.length > 0 ? Math.round(totalScore / prospects.length) : 0;

@@ -217,7 +217,7 @@ export default function ProfilePage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {profile?.image ? (
-                      <Image src={profile.image} alt={profile.name || ''} className="w-full h-full object-cover" width={128} height={128} unoptimized />
+                      <Image src={profile.image} alt={profile.name || ''} className="w-full h-full object-cover" width={128} height={128} />
                     ) : (
                       <div className="w-full h-full bg-orange-100 flex items-center justify-center">
                         <span className="text-2xl font-bold text-orange-600">

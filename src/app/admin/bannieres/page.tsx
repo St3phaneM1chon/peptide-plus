@@ -532,7 +532,6 @@ export default function BannieresPage() {
                     fill
                     sizes="128px"
                     className="object-cover"
-                    unoptimized
                   />
                   <span className="absolute bottom-1 end-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                     {slide.mediaType}

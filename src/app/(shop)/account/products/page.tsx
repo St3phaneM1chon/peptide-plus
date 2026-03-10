@@ -209,7 +209,6 @@ export default function ProductHistoryPage() {
                                   width={56}
                                   height={56}
                                   className="w-full h-full object-cover"
-                                  unoptimized
                                 />
                               ) : (
                                 <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

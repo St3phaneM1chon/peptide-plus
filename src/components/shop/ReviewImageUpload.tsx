@@ -161,7 +161,6 @@ export default function ReviewImageUpload({ onImagesChange, maxImages = 3 }: Rev
                 alt={`Preview ${index + 1}`}
                 fill
                 className="object-cover rounded-lg border border-neutral-200"
-                unoptimized
               />
               <button
                 type="button"

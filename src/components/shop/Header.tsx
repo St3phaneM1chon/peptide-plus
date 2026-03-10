@@ -271,7 +271,7 @@ export default function Header() {
                       }`}
                     >
                       {session.user.image ? (
-                        <Image src={session.user.image} alt={session.user.name || 'User profile'} width={28} height={28} className="w-7 h-7 rounded-full border-2 border-orange-500" unoptimized />
+                        <Image src={session.user.image} alt={session.user.name || 'User profile'} width={28} height={28} className="w-7 h-7 rounded-full border-2 border-orange-500" />
                       ) : (
                         <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-bold">

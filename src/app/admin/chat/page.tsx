@@ -646,7 +646,6 @@ export default function AdminChatPage() {
                             width={240}
                             height={240}
                             className="max-w-[240px] max-h-[240px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            unoptimized
                           />
                         </a>
                       ) : (

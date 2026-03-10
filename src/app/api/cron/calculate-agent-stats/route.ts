@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
+import { withJobLock } from '@/lib/cron-lock';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -43,120 +44,122 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    // Calculate for yesterday by default (or a specific date via query param)
-    const url = new URL(request.url);
-    const dateParam = url.searchParams.get('date');
-    const targetDate = dateParam ? new Date(dateParam) : new Date();
-    if (!dateParam) {
-      targetDate.setDate(targetDate.getDate() - 1); // Yesterday
-    }
-    // Normalize to start/end of day (UTC)
-    const dayStart = new Date(targetDate);
-    dayStart.setUTCHours(0, 0, 0, 0);
-    const dayEnd = new Date(targetDate);
-    dayEnd.setUTCHours(23, 59, 59, 999);
+  return withJobLock('calculate-agent-stats', async () => {
+    try {
+      // Calculate for yesterday by default (or a specific date via query param)
+      const url = new URL(request.url);
+      const dateParam = url.searchParams.get('date');
+      const targetDate = dateParam ? new Date(dateParam) : new Date();
+      if (!dateParam) {
+        targetDate.setDate(targetDate.getDate() - 1); // Yesterday
+      }
+      // Normalize to start/end of day (UTC)
+      const dayStart = new Date(targetDate);
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const dayEnd = new Date(targetDate);
+      dayEnd.setUTCHours(23, 59, 59, 999);
 
-    // Fetch all call logs for the target day
-    const callLogs = await prisma.callLog.findMany({
-      where: {
-        startedAt: { gte: dayStart, lte: dayEnd },
-      },
-      select: {
-        id: true,
-        agentId: true,
-        direction: true,
-        status: true,
-        startedAt: true,
-        endedAt: true,
-        duration: true,
-        waitTime: true,
-      },
-    });
+      // Fetch all call logs for the target day
+      const callLogs = await prisma.callLog.findMany({
+        where: {
+          startedAt: { gte: dayStart, lte: dayEnd },
+        },
+        select: {
+          id: true,
+          agentId: true,
+          direction: true,
+          status: true,
+          startedAt: true,
+          endedAt: true,
+          duration: true,
+          waitTime: true,
+        },
+      });
 
-    // Group by agent (agentId is SipExtension id, we need to map)
-    const agentMap = new Map<string, typeof callLogs>();
-    for (const log of callLogs) {
-      if (!log.agentId) continue;
-      const existing = agentMap.get(log.agentId) || [];
-      existing.push(log);
-      agentMap.set(log.agentId, existing);
-    }
-
-    const processed = agentMap.size;
-
-    // Compute stats for all agents, then batch upsert in a single transaction
-    const upsertOperations: Array<ReturnType<typeof prisma.agentDailyStats.upsert>> = [];
-
-    for (const [agentId, logs] of agentMap) {
-      const callsMade = logs.filter((l) => l.direction === 'OUTBOUND').length;
-      const callsReceived = logs.filter((l) => l.direction === 'INBOUND').length;
-      const callsAnswered = logs.filter(
-        (l) => l.status === 'COMPLETED'
-      ).length;
-
-      let totalTalkTime = 0;
-      let totalWrapTime = 0;
-      for (const log of logs) {
-        totalTalkTime += log.duration ?? 0;
-        totalWrapTime += log.waitTime ?? 0;
+      // Group by agent (agentId is SipExtension id, we need to map)
+      const agentMap = new Map<string, typeof callLogs>();
+      for (const log of callLogs) {
+        if (!log.agentId) continue;
+        const existing = agentMap.get(log.agentId) || [];
+        existing.push(log);
+        agentMap.set(log.agentId, existing);
       }
 
-      const totalCalls = logs.length;
-      const avgHandleTime = totalCalls > 0
-        ? (totalTalkTime + totalWrapTime) / totalCalls
-        : 0;
-      const avgTalkTime = totalCalls > 0 ? totalTalkTime / totalCalls : 0;
+      const processed = agentMap.size;
 
-      // Find earliest and latest call times as login/logout proxies
-      const times = logs.map((l) => l.startedAt.getTime()).sort((a, b) => a - b);
-      const loginTime = times.length > 0 ? new Date(times[0]) : dayStart;
-      const logoutTime = times.length > 0 ? new Date(times[times.length - 1]) : null;
+      // Compute stats for all agents, then batch upsert in a single transaction
+      const upsertOperations: Array<ReturnType<typeof prisma.agentDailyStats.upsert>> = [];
 
-      const statsData = {
-        callsMade,
-        callsReceived,
-        callsAnswered,
-        totalTalkTime: Math.round(totalTalkTime),
-        totalWrapTime: Math.round(totalWrapTime),
-        avgHandleTime: Math.round(avgHandleTime * 100) / 100,
-        avgTalkTime: Math.round(avgTalkTime * 100) / 100,
-        conversions: 0,
-        revenue: 0,
-        loginTime,
-        logoutTime,
-        breakTime: 0,
-      };
+      for (const [agentId, logs] of agentMap) {
+        const callsMade = logs.filter((l) => l.direction === 'OUTBOUND').length;
+        const callsReceived = logs.filter((l) => l.direction === 'INBOUND').length;
+        const callsAnswered = logs.filter(
+          (l) => l.status === 'COMPLETED'
+        ).length;
 
-      upsertOperations.push(
-        prisma.agentDailyStats.upsert({
-          where: {
-            agentId_date: { agentId, date: dayStart },
-          },
-          update: statsData,
-          create: { agentId, date: dayStart, ...statsData },
-        })
+        let totalTalkTime = 0;
+        let totalWrapTime = 0;
+        for (const log of logs) {
+          totalTalkTime += log.duration ?? 0;
+          totalWrapTime += log.waitTime ?? 0;
+        }
+
+        const totalCalls = logs.length;
+        const avgHandleTime = totalCalls > 0
+          ? (totalTalkTime + totalWrapTime) / totalCalls
+          : 0;
+        const avgTalkTime = totalCalls > 0 ? totalTalkTime / totalCalls : 0;
+
+        // Find earliest and latest call times as login/logout proxies
+        const times = logs.map((l) => l.startedAt.getTime()).sort((a, b) => a - b);
+        const loginTime = times.length > 0 ? new Date(times[0]) : dayStart;
+        const logoutTime = times.length > 0 ? new Date(times[times.length - 1]) : null;
+
+        const statsData = {
+          callsMade,
+          callsReceived,
+          callsAnswered,
+          totalTalkTime: Math.round(totalTalkTime),
+          totalWrapTime: Math.round(totalWrapTime),
+          avgHandleTime: Math.round(avgHandleTime * 100) / 100,
+          avgTalkTime: Math.round(avgTalkTime * 100) / 100,
+          conversions: 0,
+          revenue: 0,
+          loginTime,
+          logoutTime,
+          breakTime: 0,
+        };
+
+        upsertOperations.push(
+          prisma.agentDailyStats.upsert({
+            where: {
+              agentId_date: { agentId, date: dayStart },
+            },
+            update: statsData,
+            create: { agentId, date: dayStart, ...statsData },
+          })
+        );
+      }
+
+      // Execute all upserts in a single transaction instead of N sequential queries
+      const upserted = upsertOperations.length;
+      if (upsertOperations.length > 0) {
+        await prisma.$transaction(upsertOperations);
+      }
+
+      return NextResponse.json({
+        success: true,
+        date: dayStart.toISOString().split('T')[0],
+        agents: processed,
+        upserted,
+        callsProcessed: callLogs.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+        { status: 500 }
       );
     }
-
-    // Execute all upserts in a single transaction instead of N sequential queries
-    const upserted = upsertOperations.length;
-    if (upsertOperations.length > 0) {
-      await prisma.$transaction(upsertOperations);
-    }
-
-    return NextResponse.json({
-      success: true,
-      date: dayStart.toISOString().split('T')[0],
-      agents: processed,
-      upserted,
-      callsProcessed: callLogs.length,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
+  });
 }

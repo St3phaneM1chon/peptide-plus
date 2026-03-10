@@ -331,7 +331,6 @@ function UserMenu({ session, userRole, t }: { session: { user?: { name?: string 
             width={28}
             height={28}
             style={{ borderRadius: '50%' }}
-            unoptimized
           />
         ) : (
           <div

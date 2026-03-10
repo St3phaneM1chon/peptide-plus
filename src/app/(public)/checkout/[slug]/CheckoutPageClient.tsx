@@ -296,7 +296,6 @@ export function CheckoutPageClient({
                     fill
                     sizes="80px"
                     style={{ objectFit: 'cover' }}
-                    unoptimized
                   />
                 ) : (
                   <div

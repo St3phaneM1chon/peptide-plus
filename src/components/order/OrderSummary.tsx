@@ -98,7 +98,6 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               fill
               sizes="80px"
               style={{ objectFit: 'cover' }}
-              unoptimized
             />
           ) : (
             <div

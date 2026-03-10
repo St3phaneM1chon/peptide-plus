@@ -638,7 +638,6 @@ export default function VideoDetailPage() {
                     alt={t('admin.media.thumbnailPreview') || 'Thumbnail preview'}
                     className="object-cover"
                     fill
-                    unoptimized
                   />
                 </div>
               )}
@@ -966,7 +965,6 @@ export default function VideoDetailPage() {
                       alt={pl.product.name}
                       className="object-cover"
                       fill
-                      unoptimized
                     />
                   </div>
                 ) : (

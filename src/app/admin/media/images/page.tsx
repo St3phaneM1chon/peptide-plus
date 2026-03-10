@@ -600,7 +600,7 @@ export default function MediaImagesPage() {
               {/* FIX: F3 - Use NextImage instead of native <img> */}
               {/* A79 FIX: Slight zoom on hover for image preview */}
               <div className="aspect-square cursor-pointer relative overflow-hidden" onClick={() => setPreview(img)}>
-                <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
+                <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" />
               </div>
               <div className="p-2 space-y-1">
                 <p className="text-xs text-slate-700 truncate" title={img.originalName}>{img.originalName}</p>
@@ -720,7 +720,7 @@ export default function MediaImagesPage() {
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F3 - Use NextImage instead of native <img> */}
-            <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} unoptimized />
+            <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} />
             <div className="p-4 border-t">
               <p className="font-medium text-slate-900">{preview.originalName}</p>
               <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">

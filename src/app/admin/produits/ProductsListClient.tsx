@@ -830,7 +830,6 @@ export default function ProductsListClient({
                           width={400}
                           height={300}
                           className="w-full h-48 object-cover"
-                          unoptimized
                         />
                       </div>
                     )}
@@ -1054,7 +1053,6 @@ export default function ProductsListClient({
                           alt={product.name}
                           fill
                           className="object-cover"
-                          unoptimized
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full">

@@ -975,7 +975,21 @@ export async function processWorkflowTrigger(event: WorkflowTriggerEvent): Promi
         // For now, log and continue
       }
 
-      const result = await executeAction(step, event.entityType, event.entityId, event.userId);
+      let result: { success: boolean; message?: string };
+      try {
+        result = await executeAction(step, event.entityType, event.entityId, event.userId);
+      } catch (stepError) {
+        const errorMsg = stepError instanceof Error ? stepError.message : String(stepError);
+        logger.error('[WorkflowEngine] Step execution threw', {
+          workflowId: workflow.id,
+          executionId: execution.id,
+          stepId: step.id,
+          stepType: step.actionType,
+          stepPosition: step.position,
+          error: errorMsg,
+        });
+        result = { success: false, message: `Unhandled error: ${errorMsg}` };
+      }
 
       // I8: Error handling — if step failed, apply error strategy
       if (!result.success && stepConfig.errorStrategy) {
@@ -1010,8 +1024,16 @@ export async function processWorkflowTrigger(event: WorkflowTriggerEvent): Promi
       });
 
       if (!result.success) {
+        logger.error('[WorkflowEngine] Step failed (no error strategy)', {
+          workflowId: workflow.id,
+          executionId: execution.id,
+          stepId: step.id,
+          stepType: step.actionType,
+          stepPosition: step.position,
+          error: result.message,
+        });
         failed = true;
-        break; // Stop workflow on first failure
+        break; // Stop workflow on first failure (no error strategy configured)
       }
 
       // Update current step
@@ -1075,18 +1097,49 @@ export async function triggerWorkflowManually(
   let failed = false;
 
   for (const step of workflow.steps) {
-    const result = await executeAction(step, entityType, entityId, userId);
-    executionLog.push({
-      stepPosition: step.position,
-      actionType: step.actionType,
-      status: result.success ? 'success' : 'failed',
-      message: result.message,
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      const result = await executeAction(step, entityType, entityId, userId);
+      executionLog.push({
+        stepPosition: step.position,
+        actionType: step.actionType,
+        status: result.success ? 'success' : 'failed',
+        message: result.message,
+        timestamp: new Date().toISOString(),
+      });
 
-    if (!result.success) {
+      if (!result.success) {
+        logger.error('[WorkflowEngine] Manual trigger step failed', {
+          workflowId,
+          executionId: execution.id,
+          stepId: step.id,
+          stepType: step.actionType,
+          stepPosition: step.position,
+          error: result.message,
+        });
+        failed = true;
+        // Continue executing remaining steps instead of stopping the whole workflow
+        continue;
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error('[WorkflowEngine] Manual trigger step execution threw', {
+        workflowId,
+        executionId: execution.id,
+        stepId: step.id,
+        stepType: step.actionType,
+        stepPosition: step.position,
+        error: errorMsg,
+      });
+      executionLog.push({
+        stepPosition: step.position,
+        actionType: step.actionType,
+        status: 'failed',
+        message: `Unhandled error: ${errorMsg}`,
+        timestamp: new Date().toISOString(),
+      });
       failed = true;
-      break;
+      // Continue executing remaining steps instead of stopping the whole workflow
+      continue;
     }
   }
 

@@ -23,6 +23,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
+import { withJobLock } from '@/lib/cron-lock';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -88,63 +89,65 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    // Fetch all active leads (exclude CONVERTED and LOST)
-    const leads = await prisma.crmLead.findMany({
-      where: {
-        status: { notIn: ['CONVERTED', 'LOST'] },
-      },
-      select: {
-        id: true,
-        email: true,
-        phone: true,
-        companyName: true,
-        lastContactedAt: true,
-        updatedAt: true,
-        source: true,
-        score: true,
-        temperature: true,
-      },
-    });
+  return withJobLock('lead-scoring', async () => {
+    try {
+      // Fetch all active leads (exclude CONVERTED and LOST)
+      const leads = await prisma.crmLead.findMany({
+        where: {
+          status: { notIn: ['CONVERTED', 'LOST'] },
+        },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          companyName: true,
+          lastContactedAt: true,
+          updatedAt: true,
+          source: true,
+          score: true,
+          temperature: true,
+        },
+      });
 
-    const processed = leads.length;
+      const processed = leads.length;
 
-    // Compute new scores and collect only leads that need updating
-    const leadsToUpdate: Array<{ id: string; score: number; temperature: 'HOT' | 'WARM' | 'COLD' }> = [];
-    for (const lead of leads) {
-      const newScore = computeScore(lead);
-      const newTemp = scoreToTemperature(newScore);
+      // Compute new scores and collect only leads that need updating
+      const leadsToUpdate: Array<{ id: string; score: number; temperature: 'HOT' | 'WARM' | 'COLD' }> = [];
+      for (const lead of leads) {
+        const newScore = computeScore(lead);
+        const newTemp = scoreToTemperature(newScore);
 
-      if (newScore !== lead.score || newTemp !== lead.temperature) {
-        leadsToUpdate.push({ id: lead.id, score: newScore, temperature: newTemp });
+        if (newScore !== lead.score || newTemp !== lead.temperature) {
+          leadsToUpdate.push({ id: lead.id, score: newScore, temperature: newTemp });
+        }
       }
-    }
 
-    // Batch updates using $transaction instead of N sequential updates
-    if (leadsToUpdate.length > 0) {
-      await prisma.$transaction(
-        leadsToUpdate.map((lead) =>
-          prisma.crmLead.update({
-            where: { id: lead.id },
-            data: {
-              score: lead.score,
-              temperature: lead.temperature,
-            },
-          })
-        )
+      // Batch updates using $transaction instead of N sequential updates
+      if (leadsToUpdate.length > 0) {
+        await prisma.$transaction(
+          leadsToUpdate.map((lead) =>
+            prisma.crmLead.update({
+              where: { id: lead.id },
+              data: {
+                score: lead.score,
+                temperature: lead.temperature,
+              },
+            })
+          )
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        processed,
+        updated: leadsToUpdate.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+        { status: 500 }
       );
     }
-
-    return NextResponse.json({
-      success: true,
-      processed,
-      updated: leadsToUpdate.length,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
+  });
 }

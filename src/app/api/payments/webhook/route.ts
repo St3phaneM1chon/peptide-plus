@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { prisma } from '@/lib/db';
+import { prisma, withPrismaRetry } from '@/lib/db';
 import { sendEmail, orderConfirmationEmail, generateUnsubscribeUrl, type OrderData } from '@/lib/email';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
@@ -523,7 +523,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   let orderNumber = '';
 
   // Create the order with items in a transaction
-  const order = await prisma.$transaction(async (tx) => {
+  // Wrap the critical order-creation transaction with pool retry to handle
+  // transient DB pool exhaustion under high webhook traffic.
+  const order = await withPrismaRetry(() => prisma.$transaction(async (tx) => {
     // Atomic order number generation with advisory lock (prevents duplicates even on empty table)
     // E-01 FIX: pg_advisory_xact_lock serializes order number generation across all transactions.
     // Unlike FOR UPDATE, this works even when no rows exist yet (e.g., first order of a new year).
@@ -771,7 +773,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     }
 
     return newOrder;
-  });
+  }));
 
   logger.info('Order created', { orderId: order.id, orderNumber });
 
@@ -1016,7 +1018,8 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     }
   }
 
-  await prisma.$transaction(async (tx) => {
+  // Wrap refund transaction with pool retry for resilience under load.
+  await withPrismaRetry(() => prisma.$transaction(async (tx) => {
     // Update order status
     await tx.order.update({
       where: { id: order.id },
@@ -1064,7 +1067,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         });
       }
     }
-  });
+  }));
 
   // Create refund accounting entries (non-blocking - uses its own internal transaction)
   try {

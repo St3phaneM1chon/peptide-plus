@@ -22,6 +22,7 @@ import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
+import { withJobLock } from '@/lib/cron-lock';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -399,41 +400,44 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const result = await runAllChecks();
-    await storeResult(result);
+  return withJobLock('dependency-check', async (signal) => {
+    try {
+      const result = await runAllChecks();
+      await storeResult(result);
 
-    // Log status changes
-    const downDeps = result.dependencies.filter((d) => d.status === 'down');
-    if (downDeps.length > 0) {
-      logger.warn('[dependency-check] Dependencies down', {
-        down: downDeps.map((d) => d.name),
-      });
+      // Log status changes
+      const downDeps = result.dependencies.filter((d) => d.status === 'down');
+      if (downDeps.length > 0) {
+        logger.warn('[dependency-check] Dependencies down', {
+          down: downDeps.map((d) => d.name),
+        });
 
-      // Trigger alert for down dependencies
-      try {
-        const { sendAlert } = await import('@/lib/alerting');
-        for (const dep of downDeps) {
-          await sendAlert('warning', `External dependency down: ${dep.name}`, {
-            context: { dependency: dep.name, message: dep.message },
-          });
+        // Trigger alert for down dependencies
+        try {
+          const { sendAlert } = await import('@/lib/alerting');
+          for (const dep of downDeps) {
+            if (signal.aborted) break;
+            await sendAlert('warning', `External dependency down: ${dep.name}`, {
+              context: { dependency: dep.name, message: dep.message },
+            });
+          }
+        } catch (error) {
+          logger.error('[DependencyCheck] Alerting for down dependencies failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
         }
-      } catch (error) {
-        logger.error('[DependencyCheck] Alerting for down dependencies failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
       }
-    }
 
-    return NextResponse.json({
-      success: true,
-      ...result,
-    });
-  } catch (error) {
-    logger.error('[dependency-check] Check failed', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return NextResponse.json(
-      { error: 'Dependency check failed' },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        success: true,
+        ...result,
+      });
+    } catch (error) {
+      logger.error('[dependency-check] Check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return NextResponse.json(
+        { error: 'Dependency check failed' },
+        { status: 500 }
+      );
+    }
+  });
 }
