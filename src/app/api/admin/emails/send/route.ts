@@ -68,8 +68,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
           const placeholder = `{{${key}}}`;
           const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
           const strVal = String(value);
-          // HTML-escape for HTML context, raw for subject (plain text)
-          emailSubject = emailSubject.replace(regex, strVal);
+          // MKT-001 FIX: Strip CRLF from subject to prevent email header injection
+          emailSubject = emailSubject.replace(regex, strVal.replace(/[\r\n]/g, ''));
+          // HTML-escape for HTML body context
           html = html.replace(regex, escapeHtml(strVal));
         }
       }

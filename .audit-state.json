@@ -1,0 +1,110 @@
+{
+  "audit_name": "mega-audit-securite-2026-03",
+  "started": "2026-03-09",
+  "last_session": "2026-03-09T21:00",
+  "domains_completed": [
+    {
+      "name": "commerce",
+      "status": "DONE",
+      "findings_fixed": 30,
+      "commits": ["8577802", "f9cb2f9", "cf03b69", "c338c0e", "32b003b", "b8e5db5", "4c1b706", "6b20bff", "cb2a8bc", "8119804", "e5d969b", "7d86565", "b32628f", "809a9c0"]
+    },
+    {
+      "name": "catalogue",
+      "status": "DONE",
+      "findings_fixed": 2,
+      "commits": ["dfa0516"]
+    },
+    {
+      "name": "auth",
+      "status": "DONE",
+      "findings_fixed": 3,
+      "findings_verified_clean": [
+        "Auth.js v5 proper JWT session strategy (1h TTL)",
+        "bcryptjs cost 12 (NYDFS compliant)",
+        "Password history 12-password reuse prevention",
+        "Email verification enforced for OAuth",
+        "MFA TOTP with backup codes + audit log",
+        "Session invalidation on password change/reset",
+        "Encrypted OAuth tokens (AES-256-GCM)",
+        "HSTS 2-year preload",
+        "X-Frame-Options DENY",
+        "Double-submit CSRF with HMAC-SHA256 (httpOnly=false is by design for this pattern)",
+        "Rate limiting Redis-backed with in-memory fallback",
+        "IP extraction hardened (Azure, XFF rightmost, RFC validation)",
+        "Admin API guard with role + permission checks",
+        "SSRF protection via isPrivateOrReservedIP",
+        "user-api-guard rate limit uses correct @/lib/security.checkRateLimit (not broken)",
+        "MFA verify has 5/min rate limit per IP (sufficient for 6-digit TOTP)"
+      ],
+      "false_positives_from_agent": [
+        "CSRF httpOnly=false — intentional double-submit cookie pattern",
+        "user-api-guard rate limit broken — imports from @/lib/security with correct signature",
+        "MFA brute-force per-session — IP rate limit 5/min sufficient for TOTP"
+      ],
+      "commits": ["161b4b4"]
+    },
+    {
+      "name": "marketing",
+      "status": "DONE",
+      "findings_fixed": 1,
+      "findings_verified_clean": [
+        "Campaign send has atomic status guard (updateMany WHERE status IN sendable)",
+        "Campaign send has idempotency check (rejects SENT/SENDING status)",
+        "Unsubscribe uses signed JWT (jose.jwtVerify) with proper masking",
+        "Unsubscribe POST follows RFC 8058 (one-click via form-urlencoded)",
+        "Newsletter subscribe has IP rate limiting + CSRF + Zod validation + sanitization",
+        "Newsletter double opt-in (CASL/LCAP compliant)",
+        "Referral validate requires auth (F-007) + rate limit + CSRF",
+        "Referral apply has transaction with re-check (FLAW-042 race condition fix)",
+        "Referral self-referral prevention (by ID + by email)",
+        "Referral max usage limit (env-configurable)",
+        "Admin email send has withAdminGuard + CSRF + rate limit + Zod + audit log",
+        "Campaign recipients filtered by bounce suppression + consent + frequency cap",
+        "Email HTML content uses escapeHtml() for user data (XSS prevention)",
+        "All cron routes auth with CRON_SECRET + timingSafeEqual (re-verified)"
+      ],
+      "false_positives_from_agent": [
+        "CRIT-001: Cron auth weakness — already verified timingSafeEqual, agent suggested enhancements not vulns",
+        "HIGH-001: Unsubscribe JWT leaks email — email already in TO field, JWT is signed not public",
+        "HIGH-003: Referral code enumeration — auth required + 10/hr rate limit = 68yr to enumerate 10%",
+        "HIGH-004: Campaign send race condition — atomic guard already on L198-215 (updateMany)",
+        "HIGH-005: Bounce cache eviction DoS — admin-only business logic, not security",
+        "HIGH-006: Campaign send no idempotency — idempotency check already on L176-195"
+      ],
+      "commits": []
+    }
+  ],
+  "domains_remaining": [
+    "system",
+    "media",
+    "community",
+    "loyalty",
+    "accounting",
+    "i18n",
+    "performance"
+  ],
+  "areas_verified_clean": [
+    "dangerouslySetInnerHTML (all use DOMPurify)",
+    "No open redirect vulnerabilities",
+    "Password change invalidates all sessions",
+    "All 33 cron routes auth with CRON_SECRET + timingSafeEqual",
+    "All webhook routes verify signatures",
+    "No SQL injection via $queryRawUnsafe (parameterized)",
+    "All admin export routes use withAdminGuard",
+    "Idempotency keys on all payment creation routes",
+    "VoIP webhook routes properly authenticated",
+    "Catalogue: explicit select prevents costPrice leak",
+    "Catalogue: InventoryTransaction logging already in place",
+    "Auth: proper JWT + bcrypt + password history + MFA",
+    "Marketing: campaign send atomic + idempotent",
+    "Marketing: referral apply transactional + anti-fraud",
+    "Marketing: newsletter CASL/LCAP double opt-in compliant",
+    "Marketing: unsubscribe RFC 8058 compliant with signed JWT"
+  ],
+  "total_findings_fixed": 46,
+  "total_commits": 17,
+  "ts_errors_preexisting": 63,
+  "ts_errors_from_audit": 0,
+  "next_action": "Continue with system domain. 7 domains remaining."
+}
