@@ -51,11 +51,14 @@ jobs:
         run: npm ci
 
       # ---- GUARD 1: Validate Prisma schema BEFORE anything else ----
+      # Uses a dummy DATABASE_URL — validate only checks syntax, not connectivity
       - name: Validate Prisma schema
         run: |
           echo "Validating Prisma schema..."
           npx prisma validate
           echo "Schema validation passed."
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       - name: Generate Prisma Client
         run: npx prisma generate
