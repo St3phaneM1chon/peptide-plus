@@ -1,6 +1,8 @@
 # =====================================================
 # AZURE DEPLOYMENT PIPELINE - BioCycle Peptides
 # Déploiement standalone Next.js sur Azure App Service
+#
+# KEDB: .claude/rules/deployment-azure.md (KB-PP-BUILD-001 à 011)
 # =====================================================
 
 name: Deploy to Azure
@@ -18,6 +20,11 @@ on:
         options:
           - production
           - staging
+      skip_schema_sync:
+        description: 'Skip Prisma schema sync'
+        required: false
+        default: false
+        type: boolean
 
 env:
   AZURE_WEBAPP_NAME: 'biocyclepeptides'
@@ -26,7 +33,7 @@ env:
 
 jobs:
   # =====================================================
-  # BUILD
+  # BUILD — Validates everything BEFORE deploying
   # =====================================================
   build:
     name: Build Application
@@ -43,6 +50,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ---- GUARD 1: Validate Prisma schema BEFORE anything else ----
+      - name: Validate Prisma schema
+        run: |
+          echo "Validating Prisma schema..."
+          npx prisma validate
+          echo "Schema validation passed."
+
       - name: Generate Prisma Client
         run: npx prisma generate
 
@@ -55,27 +69,89 @@ jobs:
           # DATABASE_URL intentionally omitted: generateStaticParams returns []
           # when DB is unavailable, and pages render on-demand via ISR.
 
+      # ---- GUARD 2: Resilient standalone assembly ----
+      # Detects schema format (single file vs directory) automatically
       - name: Assemble standalone package
         run: |
+          set -e
           # Copy static assets into standalone
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
-          # Copy Prisma schema for DB sync (split schema directory)
+
+          # Copy Prisma schema for DB sync — auto-detect format
           mkdir -p .next/standalone/prisma
-          cp -r prisma/schema .next/standalone/prisma/schema
-          # Copy package.json for prisma CLI
+          if [ -d "prisma/schema" ]; then
+            echo "Detected: split schema directory (prisma/schema/)"
+            cp -r prisma/schema .next/standalone/prisma/schema
+            echo "  Files copied: $(ls prisma/schema/*.prisma | wc -l) .prisma files"
+          elif [ -f "prisma/schema.prisma" ]; then
+            echo "Detected: single schema file (prisma/schema.prisma)"
+            cp prisma/schema.prisma .next/standalone/prisma/
+          else
+            echo "ERROR: No Prisma schema found! Expected prisma/schema/ or prisma/schema.prisma"
+            exit 1
+          fi
+
+          # Copy package.json (contains prisma config with schema path)
           cp package.json .next/standalone/
+
           # Cleanup: remove unnecessary files from standalone to reduce package size
           find .next/standalone -name "*.map" -type f -delete 2>/dev/null || true
           find .next/standalone -name "*.d.ts" -type f -delete 2>/dev/null || true
           find .next/standalone/node_modules -name "*.md" -type f -delete 2>/dev/null || true
           find .next/standalone -name "libquery_engine-darwin*" -delete 2>/dev/null || true
           find .next/standalone -name "libquery_engine-windows*" -delete 2>/dev/null || true
+
           echo "Standalone package assembled:"
           du -sh .next/standalone/
           du -sh .next/standalone/node_modules/ || true
           du -sh .next/standalone/.next/static/
           du -sh .next/standalone/public/
+
+      # ---- GUARD 3: Verify standalone package integrity ----
+      - name: Verify standalone package
+        run: |
+          set -e
+          ERRORS=0
+
+          # Check critical files exist
+          for f in server.js .next/BUILD_ID package.json; do
+            if [ ! -f ".next/standalone/$f" ]; then
+              echo "ERROR: $f not found in standalone package!"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          # Check Prisma schema was copied
+          if [ -d ".next/standalone/prisma/schema" ]; then
+            COUNT=$(ls .next/standalone/prisma/schema/*.prisma 2>/dev/null | wc -l)
+            echo "Prisma schema directory: $COUNT files"
+            if [ "$COUNT" -eq 0 ]; then
+              echo "ERROR: Prisma schema directory is empty!"
+              ERRORS=$((ERRORS + 1))
+            fi
+          elif [ -f ".next/standalone/prisma/schema.prisma" ]; then
+            echo "Prisma schema file: OK"
+          else
+            echo "ERROR: No Prisma schema in standalone package!"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          # Check Prisma Client was generated
+          if [ -d ".next/standalone/node_modules/.prisma/client" ]; then
+            echo "Prisma Client: OK"
+          else
+            echo "ERROR: .prisma/client not found in standalone!"
+            ERRORS=$((ERRORS + 1))
+          fi
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "FAILED: $ERRORS integrity checks failed!"
+            exit 1
+          fi
+
+          echo "BUILD_ID: $(cat .next/standalone/.next/BUILD_ID)"
+          echo "All integrity checks passed."
 
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v4
@@ -86,7 +162,7 @@ jobs:
           retention-days: 1
 
   # =====================================================
-  # DEPLOY
+  # DEPLOY — Only runs if build passed all guards
   # =====================================================
   deploy:
     name: Deploy to Azure
@@ -112,15 +188,16 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: Configure infra settings (may restart SCM - run first)
+      # ---- GUARD 4: Group ALL infra settings in ONE call, only if changed ----
+      # Prevents KB-PP-BUILD-007 (SCM restart) and KB-PP-BUILD-010 (restart loop)
+      - name: Configure infra settings (grouped, idempotent)
         run: |
-          # These settings can cause SCM container restart. Only set if changed.
           CURRENT=$(az webapp config appsettings list \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --query "[?name=='WEBSITE_RUN_FROM_PACKAGE'].value" -o tsv)
           if [ "$CURRENT" != "1" ]; then
-            echo "Setting WEBSITE_RUN_FROM_PACKAGE (will restart SCM)..."
+            echo "Setting infra settings (will restart SCM once)..."
             az webapp config appsettings set \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
               --name ${{ env.AZURE_WEBAPP_NAME }} \
@@ -132,7 +209,7 @@ jobs:
             echo "Waiting 30s for SCM container to stabilize..."
             sleep 30
           else
-            echo "WEBSITE_RUN_FROM_PACKAGE already set, skipping (no SCM restart)."
+            echo "Infra settings already configured, skipping (no SCM restart)."
           fi
 
       - name: Configure App Settings (static)
@@ -218,35 +295,9 @@ jobs:
           WA_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
           WA_PHONE: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
 
-      - name: Verify standalone package
-        run: |
-          echo "Checking standalone package..."
-          ls -la server.js .next/BUILD_ID 2>&1 || true
-          if [ ! -f "server.js" ]; then
-            echo "ERROR: server.js not found in standalone package!"
-            exit 1
-          fi
-          if [ ! -f ".next/BUILD_ID" ]; then
-            echo "ERROR: .next/BUILD_ID not found!"
-            exit 1
-          fi
-          echo "BUILD_ID: $(cat .next/BUILD_ID)"
-          echo "Package size:"
-          du -sh .
-          echo "Standalone package verified."
-
-      - name: Verify Prisma Client includes new models
-        run: |
-          echo "Checking .prisma/client exists..."
-          ls -la node_modules/.prisma/client/ || echo "WARNING: .prisma/client not found!"
-          echo "Checking ForumCategory in Prisma Client..."
-          grep -c "ForumCategory" node_modules/.prisma/client/index.js || echo "WARNING: ForumCategory not in Prisma Client!"
-
       - name: Clean stale Prisma Client on Azure
         continue-on-error: true
         run: |
-          # Azure keeps old .prisma/client files across deploys.
-          # Delete them before deploying new ones to avoid stale client.
           az rest --method POST \
             --url "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/command" \
             --resource "https://management.azure.com" \
@@ -269,37 +320,60 @@ jobs:
           package: .
           clean: true
 
+      # ---- GUARD 5: Schema sync with orphan pre-check ----
+      # Prevents KB-PP-BUILD-011 (FK orphan data blocks prisma db push)
       - name: Setup Node.js for Prisma
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Sync Database Schema
-        if: env.DB_URL != ''
+        if: ${{ env.DB_URL != '' && github.event.inputs.skip_schema_sync != 'true' }}
         continue-on-error: true
         run: |
-          # Install prisma CLI in a temp location to avoid polluting the deploy artifact.
-          # The standalone node_modules lacks the full CLI, so we install it fresh.
           npm install --no-save prisma@5.22.0
           echo "Pushing Prisma schema to production database..."
-          npx prisma db push 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
+          if npx prisma db push 2>&1; then
+            echo "Schema sync: SUCCESS"
+          else
+            echo ""
+            echo "============================================"
+            echo "WARNING: prisma db push FAILED"
+            echo "Likely cause: FK orphan data (see KB-PP-BUILD-011)"
+            echo "Fix: Clean orphan records, then run manually:"
+            echo "  DATABASE_URL='...' npx prisma db push"
+            echo "============================================"
+          fi
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      # ---- GUARD 6: Extended health check with retries ----
+      # Azure container warmup takes ~583s (cert update + Node.js startup)
+      # 12 attempts x 30s = 6 min coverage (container should be up by then
+      # since deploy triggers restart, and WEBSITES_CONTAINER_START_TIME_LIMIT=600)
       - name: Verify deployment
         run: |
-          echo "Waiting for app to start..."
-          for i in 1 2 3 4 5 6; do
+          echo "Waiting for Azure container to warm up (cert update + Node.js startup)..."
+          echo "This typically takes 5-10 minutes. Checking every 30s..."
+          for i in $(seq 1 12); do
             sleep 30
-            response=$(curl -s -o /dev/null -w "%{http_code}" https://biocyclepeptides.com/api/health)
-            echo "Attempt $i: HTTP $response"
+            response=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 15 https://biocyclepeptides.com/api/health 2>/dev/null)
+            echo "Attempt $i/12: HTTP $response"
             if [ "$response" = "200" ]; then
-              echo "Deployment verified successfully!"
+              echo ""
+              echo "=== DEPLOYMENT VERIFIED ==="
+              cat /tmp/health.json | python3 -m json.tool 2>/dev/null || cat /tmp/health.json
+              echo ""
+              echo "Site: https://biocyclepeptides.com"
+              echo "Health: https://biocyclepeptides.com/api/health"
               exit 0
             fi
           done
-          echo "Health check failed after 6 attempts"
+          echo ""
+          echo "WARNING: Health check did not return 200 after 6 minutes."
+          echo "The container may still be warming up (Azure cert update takes ~3min)."
+          echo "Check manually: curl https://biocyclepeptides.com/api/health"
           exit 1
 
   # =====================================================
@@ -320,5 +394,6 @@ jobs:
       - name: Notify on failure
         if: needs.deploy.result == 'failure'
         run: |
-          echo "Deployment failed!"
+          echo "Deployment FAILED!"
+          echo "Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           exit 1
