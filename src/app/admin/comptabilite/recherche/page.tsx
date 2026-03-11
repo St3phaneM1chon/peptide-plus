@@ -202,7 +202,7 @@ export default function SearchPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={`border-l-4 ${theme.accentBar} pl-4 mb-6`}>
+      <div className={`border-s-4 ${theme.accentBar} ps-4 mb-6`}>
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.search.title')}</h1>
         <p className="text-slate-500 mt-1">{t('admin.search.subtitle')}</p>
       </div>
@@ -253,7 +253,7 @@ export default function SearchPage() {
 
         {/* Suggestions */}
         {suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden z-10">
+          <div className="absolute top-full start-0 end-0 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden z-10">
             {suggestions.map((suggestion, i) => (
               <button
                 key={i}

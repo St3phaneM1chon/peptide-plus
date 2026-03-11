@@ -671,7 +671,7 @@ export default function FidelitePage() {
                         style={{ width: `${loyaltyStats.totalMembers > 0 ? Math.max(2, (count / loyaltyStats.totalMembers) * 100) : 0}%` }}
                       />
                     </div>
-                    <span className="text-sm font-bold text-slate-700 w-12 text-right">{count}</span>
+                    <span className="text-sm font-bold text-slate-700 w-12 text-end">{count}</span>
                   </div>
                 ))}
               </div>
@@ -702,11 +702,11 @@ export default function FidelitePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.user') || 'User'}</th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.type') || 'Type'}</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsLabel') || 'Points'}</th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.description') || 'Description'}</th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.date') || 'Date'}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.user') || 'User'}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.type') || 'Type'}</th>
+                  <th className="text-end py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsLabel') || 'Points'}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.description') || 'Description'}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.date') || 'Date'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -725,7 +725,7 @@ export default function FidelitePage() {
                         {txn.type.replace('EARN_', '').replace('REDEEM_', '')}
                       </span>
                     </td>
-                    <td className={`py-2 px-3 text-right font-bold ${txn.points > 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                    <td className={`py-2 px-3 text-end font-bold ${txn.points > 0 ? 'text-green-600' : 'text-orange-600'}`}>
                       {txn.points > 0 ? '+' : ''}{txn.points}
                     </td>
                     <td className="py-2 px-3 text-slate-500 truncate max-w-[200px]">{txn.description}</td>
@@ -824,9 +824,9 @@ export default function FidelitePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.action')}</th>
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsAwarded')}</th>
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.dailyLimit')}</th>
+                <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.action')}</th>
+                <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsAwarded')}</th>
+                <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.dailyLimit')}</th>
               </tr>
             </thead>
             <tbody>
@@ -917,7 +917,7 @@ export default function FidelitePage() {
             <p className="text-xs text-slate-500">{t('admin.loyalty.reminderSchedule')}</p>
             <div className="text-xs text-slate-700 mt-1">
               {DEFAULT_EXPIRATION.reminderDaysBefore.map((days) => (
-                <span key={days} className="inline-block bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 text-[10px] font-medium mr-1 mb-0.5">
+                <span key={days} className="inline-block bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 text-[10px] font-medium me-1 mb-0.5">
                   {t('admin.loyalty.reminderDays').replace('{days}', String(days))}
                 </span>
               ))}

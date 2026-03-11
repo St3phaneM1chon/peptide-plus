@@ -106,7 +106,7 @@ function Dropdown({ trigger, children, align = 'left' }: {
     <div ref={ref} className="relative">
       <div onClick={() => setOpen(o => !o)}>{trigger}</div>
       {open && (
-        <div className={`absolute top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 ${align === 'right' ? 'right-0' : 'left-0'}`}>
+        <div className={`absolute top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 ${align === 'right' ? 'end-0' : 'start-0'}`}>
           <div onClick={() => setOpen(false)}>{children}</div>
         </div>
       )}
@@ -244,7 +244,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
             <button
               key={f.value}
               onClick={() => handleFontFamily(f.value)}
-              className="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100"
+              className="block w-full text-start px-3 py-1.5 text-sm hover:bg-slate-100"
               style={{ fontFamily: f.value }}
             >
               {f.label}
@@ -265,7 +265,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
             <button
               key={s.value}
               onClick={() => handleFontSize(s.value)}
-              className={`block w-full text-left px-3 py-1 text-sm hover:bg-slate-100 ${currentSize === s.value ? 'bg-slate-100 font-semibold' : ''}`}
+              className={`block w-full text-start px-3 py-1 text-sm hover:bg-slate-100 ${currentSize === s.value ? 'bg-slate-100 font-semibold' : ''}`}
             >
               {s.label}
             </button>
@@ -389,7 +389,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
             <button
               key={lh.value}
               onClick={() => handleLineHeight(lh.value)}
-              className="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100"
+              className="block w-full text-start px-3 py-1.5 text-sm hover:bg-slate-100"
             >
               {lh.label}
             </button>

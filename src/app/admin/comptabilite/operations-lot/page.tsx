@@ -506,15 +506,15 @@ export default function BatchOperationsPage() {
       <SectionCard title="Templates CSV">
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" size="sm" onClick={() => downloadTemplate('expenses')}>
-            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            <FileText className="w-3.5 h-3.5 me-1.5" />
             Template depenses
           </Button>
           <Button variant="outline" size="sm" onClick={() => downloadTemplate('journal_entries')}>
-            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            <FileText className="w-3.5 h-3.5 me-1.5" />
             Template ecritures
           </Button>
           <Button variant="outline" size="sm" onClick={() => downloadTemplate('invoices')}>
-            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            <FileText className="w-3.5 h-3.5 me-1.5" />
             Template statut factures
           </Button>
         </div>
@@ -639,7 +639,7 @@ export default function BatchOperationsPage() {
 
               <div className="flex justify-between">
                 <Button variant="outline" size="sm" onClick={() => downloadTemplate(importType)}>
-                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                  <Download className="w-3.5 h-3.5 me-1.5" />
                   Telecharger template
                 </Button>
                 <Button
@@ -647,9 +647,9 @@ export default function BatchOperationsPage() {
                   disabled={!importFile || importing}
                 >
                   {importing ? (
-                    <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    <RefreshCw className="w-3.5 h-3.5 me-1.5 animate-spin" />
                   ) : (
-                    <Eye className="w-3.5 h-3.5 mr-1.5" />
+                    <Eye className="w-3.5 h-3.5 me-1.5" />
                   )}
                   Apercu
                 </Button>
@@ -675,9 +675,9 @@ export default function BatchOperationsPage() {
                 <table className="min-w-full text-xs">
                   <thead className="bg-slate-50 sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium text-slate-500">#</th>
+                      <th className="px-3 py-2 text-start font-medium text-slate-500">#</th>
                       {importPreview.headers.slice(0, 6).map((h) => (
-                        <th key={h} className="px-3 py-2 text-left font-medium text-slate-500 truncate max-w-[120px]">
+                        <th key={h} className="px-3 py-2 text-start font-medium text-slate-500 truncate max-w-[120px]">
                           {h}
                         </th>
                       ))}
@@ -704,9 +704,9 @@ export default function BatchOperationsPage() {
                 </Button>
                 <Button onClick={handleImportExecute} disabled={importing}>
                   {importing ? (
-                    <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    <RefreshCw className="w-3.5 h-3.5 me-1.5 animate-spin" />
                   ) : (
-                    <Play className="w-3.5 h-3.5 mr-1.5" />
+                    <Play className="w-3.5 h-3.5 me-1.5" />
                   )}
                   Lancer l&apos;import ({importPreview.itemCount} elements)
                 </Button>
@@ -760,7 +760,7 @@ export default function BatchOperationsPage() {
                 <p className="text-sm font-medium">
                   {selectedJob.processedItems}/{selectedJob.totalItems}
                   {selectedJob.totalItems > 0 && (
-                    <span className="text-xs text-slate-400 ml-1">
+                    <span className="text-xs text-slate-400 ms-1">
                       ({Math.round((selectedJob.processedItems / selectedJob.totalItems) * 100)}%)
                     </span>
                   )}
@@ -796,11 +796,11 @@ export default function BatchOperationsPage() {
 
             <div className="flex gap-4 text-xs">
               <span className="text-green-600">
-                <CheckCircle className="w-3 h-3 inline mr-1" />
+                <CheckCircle className="w-3 h-3 inline me-1" />
                 {selectedJob.successItems} reussis
               </span>
               <span className="text-red-600">
-                <XCircle className="w-3 h-3 inline mr-1" />
+                <XCircle className="w-3 h-3 inline me-1" />
                 {selectedJob.failedItems} echoues
               </span>
             </div>
@@ -815,7 +815,7 @@ export default function BatchOperationsPage() {
                 <div className="max-h-[200px] overflow-auto border border-red-200 rounded-lg divide-y divide-red-100">
                   {selectedJob.errorLog.map((err, idx) => (
                     <div key={`err-${err.index}-${idx}`} className="px-3 py-2 text-xs">
-                      <span className="text-red-500 font-mono mr-2">#{err.index + 1}</span>
+                      <span className="text-red-500 font-mono me-2">#{err.index + 1}</span>
                       <span className="text-slate-700">{err.error}</span>
                     </div>
                   ))}

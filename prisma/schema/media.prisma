@@ -1,0 +1,519 @@
+model Media {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  alt          String?
+  folder       String   @default("general")
+  // TODO (F14): Add FK relation to User model for uploadedBy field
+  // Requires coordinated migration: uploadedBy String? @db.VarChar(255)
+  // uploader User? @relation("MediaUploader", fields: [uploadedBy], references: [id])
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  width        Int?     // F-50: Image width for display/optimization
+  height       Int?     // F-50: Image height for display/optimization
+
+  @@index([folder])
+  @@index([mimeType])
+  @@index([uploadedBy])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([originalName]) // F-56: Search by filename
+}
+
+model Video {
+  id           String             @id @default(cuid())
+  title        String
+  slug         String             @unique
+  description  String?
+  thumbnailUrl String?
+  videoUrl     String?
+  duration     String?
+  category     String?            // Legacy string category (kept for backward compat)
+  tags         String?            // Legacy CSV tags (kept for backward compat)
+  instructor   String?
+  views        Int                @default(0)
+  isFeatured   Boolean            @default(false)
+  isPublished  Boolean            @default(false)
+  locale       String             @default("en")
+  sortOrder    Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  // Content Hub fields
+  contentType      VideoContentType  @default(OTHER)
+  source           VideoSource       @default(YOUTUBE)
+  sourceUrl        String?           // Original URL from source platform
+  visibility       ContentVisibility @default(PUBLIC)
+  status           ContentStatus     @default(DRAFT)
+  videoCategoryId  String?           // FK -> VideoCategory
+  createdById      String?           // FK -> User (who created this)
+  featuredClientId String?           // FK -> User (client who appears in video)
+
+  // Platform import fields
+  platformMeetingId String?           // Source meeting ID for reference
+
+  // Relations
+  translations     VideoTranslation[]
+  videoCategory    VideoCategory?    @relation(fields: [videoCategoryId], references: [id], onDelete: SetNull)
+  createdBy        User?             @relation("VideoCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  featuredClient   User?             @relation("VideoFeaturedClient", fields: [featuredClientId], references: [id], onDelete: SetNull)
+  placements       VideoPlacement[]
+  productLinks     VideoProductLink[]
+  videoTags        VideoTag[]
+  consents         SiteConsent[]
+  recordingImport  RecordingImport?
+  videoSession     VideoSession?
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([title])    // F-57: Text search on video title
+  @@index([contentType])
+  @@index([source])
+  @@index([visibility])
+  @@index([status])
+  @@index([videoCategoryId])
+  @@index([createdById])
+  @@index([featuredClientId])
+  @@index([platformMeetingId])
+}
+
+model VideoTranslation {
+  id           String             @id @default(cuid())
+  videoId      String
+  locale       String
+  title        String?
+  description  String?
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  qualityLevel TranslationQuality @default(draft)
+  video        Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, locale])
+  @@index([locale])
+  @@index([videoId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// DOCUMENT ATTACHMENTS (for all transactions)
+// =============================================
+model DocumentAttachment {
+  id           String   @id @default(cuid())
+  // Entity reference (polymorphic)
+  entityType   String // journal_entry, customer_invoice, supplier_invoice, expense, fixed_asset, etc.
+  entityId     String
+  // File details
+  fileName     String
+  fileType     String // pdf, jpg, png, etc.
+  fileSize     Int // bytes
+  fileUrl      String // Storage URL (e.g. Cloudinary, S3)
+  thumbnailUrl String? // Preview thumbnail
+  // Metadata
+  description  String?
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// Video categories managed by OWNER (CRUD)
+model VideoCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent                VideoCategory?              @relation("VideoCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children              VideoCategory[]             @relation("VideoCategoryHierarchy")
+  translations          VideoCategoryTranslation[]
+  videos                Video[]
+  platformConnections   PlatformConnection[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model VideoCategoryTranslation {
+  id              String             @id @default(cuid())
+  videoCategoryId String
+  locale          String
+  name            String?
+  description     String?
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  qualityLevel    TranslationQuality @default(draft)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  videoCategory VideoCategory @relation(fields: [videoCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([videoCategoryId, locale])
+  @@index([locale])
+  @@index([videoCategoryId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Where a video is displayed on the site
+model VideoPlacement {
+  id          String           @id @default(cuid())
+  videoId     String
+  placement   ContentPlacement
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  contextId   String?          // e.g. productId for PRODUCT_PAGE
+  contextType String?          // e.g. "Product", "BlogPost"
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, placement, contextId])
+  @@index([placement])
+  @@index([videoId])
+  @@index([contextId])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// M:N relation between Video and Product
+model VideoProductLink {
+  id        String   @id @default(cuid())
+  videoId   String
+  productId String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video   Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, productId])
+  @@index([videoId])
+  @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Normalized video tags
+model VideoTag {
+  id      String @id @default(cuid())
+  videoId String
+  tag     String
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, tag])
+  @@index([videoId])
+  @@index([tag])
+}
+
+// Tracks ALL content consents for the site (only required when publishing video publicly)
+model SiteConsent {
+  id       String               @id @default(cuid())
+  clientId String
+  type     ContentConsentType   @default(VIDEO_APPEARANCE)
+  status   ContentConsentStatus @default(PENDING)
+
+  // Optional link to content
+  videoId String?
+
+  // Form
+  formTemplateId String?
+  responses      Json?    // { questionId: answer }
+
+  // Electronic proof
+  grantedAt   DateTime?
+  revokedAt   DateTime?
+  expiresAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  signatureHash String?  // SHA-256 tamper detection
+
+  // PDF
+  pdfUrl         String?
+  pdfGeneratedAt DateTime?
+
+  // Admin
+  requestedById    String?
+  requestedAt      DateTime  @default(now())
+  revocationReason String?
+  token            String?   @unique // Unique token for public consent form
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client       User                 @relation("ConsentClient", fields: [clientId], references: [id], onDelete: Cascade)
+  video        Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  formTemplate ConsentFormTemplate?  @relation(fields: [formTemplateId], references: [id], onDelete: SetNull)
+  requestedBy  User?                @relation("ConsentRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([videoId])
+  @@index([status])
+  @@index([type])
+  @@index([formTemplateId])
+  @@index([requestedById])
+  @@index([grantedAt])
+  @@index([revokedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// Configurable consent form templates
+model ConsentFormTemplate {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique
+  description String?
+  version     Int                 @default(1)
+  isActive    Boolean             @default(true)
+  type        ContentConsentType  @default(VIDEO_APPEARANCE)
+  questions   Json                // [{id, question, type: "checkbox"|"text"|"signature", required}]
+  legalText   String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  translations ConsentFormTranslation[]
+  consents     SiteConsent[]
+
+  @@index([isActive])
+  @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ConsentFormTranslation {
+  id               String             @id @default(cuid())
+  formTemplateId   String
+  locale           String
+  name             String?
+  description      String?
+  questions        Json?              // Translated questions
+  legalText        String?
+  contentHash      String?
+  translatedBy     String?            @default("gpt-4o-mini")
+  isApproved       Boolean            @default(false)
+  qualityLevel     TranslationQuality @default(draft)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  formTemplate ConsentFormTemplate @relation(fields: [formTemplateId], references: [id], onDelete: Cascade)
+
+  @@unique([formTemplateId, locale])
+  @@index([locale])
+  @@index([formTemplateId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// ==========================================
+// Platform Integration Models (Content Hub Phase 6)
+// ==========================================
+model PlatformConnection {
+  id             String   @id @default(cuid())
+  platform       String   @unique // "zoom", "teams", "google-meet", "webex", "youtube"
+
+  // OAuth tokens (encrypted at rest via lib/platform/crypto.ts)
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+
+  // Platform-specific IDs
+  accountId      String?  // Zoom Account ID, Azure Tenant ID, etc.
+  externalUserId String?  // Platform user/org ID
+
+  // Config
+  isEnabled          Boolean           @default(false)
+  autoImport         Boolean           @default(false)
+  defaultCategoryId  String?
+  defaultVisibility  ContentVisibility @default(PRIVATE)
+  defaultContentType VideoContentType  @default(OTHER)
+
+  // Webhook
+  webhookSecret String?
+  webhookId     String?  // Subscription ID on the platform side
+
+  // Sync state
+  lastSyncAt DateTime?
+  syncStatus String?    // "idle", "syncing", "error"
+  syncError  String?
+
+  // Who connected this
+  connectedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  defaultCategory VideoCategory? @relation(fields: [defaultCategoryId], references: [id], onDelete: SetNull)
+  connectedBy     User?          @relation("PlatformConnections", fields: [connectedById], references: [id], onDelete: SetNull)
+  imports         RecordingImport[]
+
+  @@index([platform, isEnabled])
+  @@index([connectedById])
+  @@index([defaultCategoryId])
+  @@index([accountId])
+  @@index([externalUserId])
+  @@index([webhookId])
+  @@index([syncStatus])
+}
+
+model RecordingImport {
+  id           String @id @default(cuid())
+  connectionId String
+
+  // Source info
+  externalId   String    // Recording ID on the platform
+  meetingId    String?   // Meeting ID
+  meetingTitle String?
+  meetingDate  DateTime?
+  hostEmail    String?
+  duration     Int?      // seconds
+  participants Json?     // [{name, email}]
+
+  // Import status
+  status String @default("pending") // pending, downloading, processing, completed, failed, skipped
+  error  String?
+
+  // Result
+  videoId       String? @unique
+  blobUrl       String? // Azure Blob URL of downloaded file
+  fileSize      Int?    // bytes
+  transcriptUrl String?
+
+  // Auto-consent
+  consentAutoCreated Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  connection   PlatformConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  video        Video?             @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  videoSession VideoSession?
+
+  @@unique([connectionId, externalId])
+  @@index([status])
+  @@index([connectionId])
+  @@index([connectionId, createdAt])
+  @@index([externalId])
+  @@index([meetingId])
+  @@index([videoId])
+}
+
+// ---------------------------------------------------------------------------
+// Video Session (admin-initiated video calls with clients)
+// ---------------------------------------------------------------------------
+model VideoSession {
+  id          String              @id @default(cuid())
+  platform    String              // zoom, teams, google-meet, webex
+  topic       String
+  contentType VideoContentType    @default(OTHER)
+  status      VideoSessionStatus  @default(SCHEDULED)
+
+  // Scheduling
+  scheduledAt DateTime
+  duration    Int                 @default(30) // minutes
+  startedAt   DateTime?
+  endedAt     DateTime?
+
+  // Platform meeting info
+  meetingId    String?            // External meeting ID on the platform
+  hostJoinUrl  String?
+  clientJoinUrl String?
+  password     String?
+
+  // Relations
+  clientId          String?
+  createdById       String
+  recordingImportId String?       @unique
+  videoId           String?       @unique
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client          User?             @relation("VideoSessionClient", fields: [clientId], references: [id], onDelete: SetNull)
+  createdBy       User              @relation("VideoSessionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  recordingImport RecordingImport?  @relation(fields: [recordingImportId], references: [id], onDelete: SetNull)
+  video           Video?            @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([platform])
+  @@index([status])
+  @@index([clientId])
+  @@index([createdById])
+  @@index([scheduledAt])
+  @@index([meetingId])
+}
+
+// ---------------------------------------------------------------------------
+// Content Interaction (C-07: Real analytics tracking)
+// ---------------------------------------------------------------------------
+model ContentInteraction {
+  id          String   @id @default(cuid())
+  contentId   String   // FK to Video.id, Media.id, or SocialPost.id
+  contentType String   // "video", "social_post", "media"
+  action      String   // "view", "click", "share", "conversion"
+  sessionId   String?  // Anonymous session tracking
+  userId      String?  // Authenticated user (optional)
+  referrer    String?  // Referring URL
+  userAgent   String?
+  ipHash      String?  // Hashed IP for dedup (not raw IP)
+  metadata    Json?    // Extra data (e.g., share platform, conversion value)
+  createdAt   DateTime @default(now())
+
+  @@index([contentId, contentType])
+  @@index([action])
+  @@index([createdAt])
+  @@index([contentId, action, createdAt])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+// --- VideoRoom: Multi-participant video conference rooms (LiveKit) ---
+model VideoRoom {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  displayName     String
+  createdById     String
+  createdBy       User            @relation("videoRoomsCreated", fields: [createdById], references: [id])
+  maxParticipants Int             @default(10)
+  isRecording     Boolean         @default(false)
+  egressId        String?
+  status          VideoRoomStatus @default(ACTIVE)
+  startedAt       DateTime        @default(now())
+  endedAt         DateTime?
+  recordingId     String?         @unique
+  recording       CallRecording?  @relation(fields: [recordingId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdById])
+}
+

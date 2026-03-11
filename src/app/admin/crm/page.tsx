@@ -183,7 +183,7 @@ export default function CRMDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <button
           onClick={() => router.push('/admin/crm/leads')}
-          className="bg-white rounded-lg border px-4 py-4 text-left hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <Users className="h-5 w-5 text-teal-600" />
@@ -202,7 +202,7 @@ export default function CRMDashboardPage() {
 
         <button
           onClick={() => router.push('/admin/crm/deals')}
-          className="bg-white rounded-lg border px-4 py-4 text-left hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <Handshake className="h-5 w-5 text-indigo-600" />
@@ -215,7 +215,7 @@ export default function CRMDashboardPage() {
 
         <button
           onClick={() => router.push('/admin/crm/pipeline')}
-          className="bg-white rounded-lg border px-4 py-4 text-left hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
@@ -230,7 +230,7 @@ export default function CRMDashboardPage() {
 
         <button
           onClick={() => router.push('/admin/crm/forecast')}
-          className="bg-white rounded-lg border px-4 py-4 text-left hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <Target className="h-5 w-5 text-amber-600" />
@@ -265,7 +265,7 @@ export default function CRMDashboardPage() {
                   const pct = (stage.count / maxCount) * 100;
                   return (
                     <div key={stage.stageId} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-24 truncate text-right">{stage.stageName}</span>
+                      <span className="text-xs text-gray-500 w-24 truncate text-end">{stage.stageName}</span>
                       <div className="flex-1 h-7 bg-gray-100 rounded-md overflow-hidden relative">
                         <div
                           className="h-full rounded-md transition-all"
@@ -353,7 +353,7 @@ export default function CRMDashboardPage() {
             <button
               key={href}
               onClick={() => router.push(href)}
-              className="bg-white rounded-lg border px-4 py-3 text-left hover:border-teal-300 hover:shadow-sm transition-all group"
+              className="bg-white rounded-lg border px-4 py-3 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
             >
               <Icon className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition-colors mb-2" />
               <p className="text-sm font-medium text-gray-900">{t(labelKey) || fallback}</p>

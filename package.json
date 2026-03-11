@@ -48,6 +48,7 @@
     "@types/dompurify": "^3.0.5",
     "@types/nodemailer": "^7.0.11",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.70.4",
     "decimal.js": "^10.6.0",
     "dompurify": "^3.3.1",
     "esl-lite": "^3.1.1",
@@ -122,6 +123,7 @@
     "node": ">=20.0.0"
   },
   "prisma": {
+    "schema": "prisma/schema",
     "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

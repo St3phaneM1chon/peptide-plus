@@ -18,7 +18,7 @@ interface SectionCardProps {
 }
 
 export function SectionCard({ children, title, headerAction, theme, className = '', noPadding }: SectionCardProps) {
-  const accentBorder = theme ? `border-t-2 ${theme.accentBar.replace('border-l-', 'border-t-')}` : '';
+  const accentBorder = theme ? `border-t-2 ${theme.accentBar.replace('border-s-', 'border-t-')}` : '';
 
   return (
     <div className={`bg-white rounded-xl border border-slate-200 overflow-hidden ${accentBorder} ${className}`}>

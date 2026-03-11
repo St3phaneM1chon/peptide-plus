@@ -294,7 +294,7 @@ export default function WorkflowAnalyticsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase border-b border-gray-100">
+                  <tr className="text-start text-xs font-medium text-gray-500 uppercase border-b border-gray-100">
                     <th className="px-4 py-2">Workflow</th>
                     <th className="px-4 py-2 text-center">Total</th>
                     <th className="px-4 py-2 text-center">Completed</th>

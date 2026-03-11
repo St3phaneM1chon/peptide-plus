@@ -1,0 +1,318 @@
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  updatedAt         DateTime @default(now()) @updatedAt
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([updatedAt])
+}
+
+model NotificationPreference {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  orderUpdates   Boolean  @default(true)
+  promotions     Boolean  @default(true)
+  newsletter     Boolean  @default(true)
+  weeklyDigest   Boolean  @default(false)
+  priceDrops     Boolean  @default(false)
+  stockAlerts    Boolean  @default(true)
+  productReviews Boolean  @default(false)
+  birthdayOffers Boolean  @default(true)
+  loyaltyUpdates Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model PasswordHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  password  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model SavedCard {
+  id                    String   @id @default(cuid())
+  userId                String
+  stripePaymentMethodId String   @unique
+  brand                 String
+  last4                 String
+  expMonth              Int
+  expYear               Int
+  isDefault             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
+  emailVerified          DateTime?
+  name                   String?
+  image                  String?
+  password               String?
+  role                   UserRole                @default(CUSTOMER)
+  mfaEnabled             Boolean                 @default(false)
+  mfaSecret              String?
+  mfaBackupCodes         String?
+  locale                 String                  @default("fr")
+  timezone               String                  @default("America/Toronto")
+  stripeCustomerId       String?                 @unique
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  birthDate              DateTime?
+  lastBirthdayEmail      DateTime?
+  lifetimePoints         Int                     @default(0)
+  loyaltyPoints          Int                     @default(0)
+  loyaltyTier            String                  @default("BRONZE")
+  phone                  String?
+  referralCode           String?                 @unique
+  referredById           String?
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  accounts               Account[]
+  ambassadors            Ambassador[]
+  company                Company?
+  companyCustomers       CompanyCustomer[]
+  assignedConversations  Conversation[]          @relation("Conversation_assignedToIdToUser")
+  conversations          Conversation[]          @relation("Conversation_userIdToUser")
+  courseAccesses         CourseAccess[]
+  purchasedGiftCards     GiftCard[]              @relation("GiftCard_purchaserIdToUser")
+  redeemedGiftCards      GiftCard[]              @relation("GiftCard_redeemedByToUser")
+  grades                 Grade[]
+  loyaltyTransactions    LoyaltyTransaction[]
+  messages               Message[]
+  notificationPreference NotificationPreference?
+  passwordHistory        PasswordHistory[]
+  priceWatches           PriceWatch[]
+  productQuestions       ProductQuestion[]
+  purchases              Purchase[]
+  referralsReceived      Referral[]              @relation("Referral_referredIdToUser")
+  referralsMade          Referral[]              @relation("Referral_referrerIdToUser")
+  returnRequests         ReturnRequest[]
+  reviews                Review[]
+  savedCards             SavedCard[]
+  sessions               Session[]
+  addresses              UserAddress[]
+  wishlistCollections    WishlistCollection[]
+  authenticators         Authenticator[]
+  orders                 Order[]
+
+  // Communication Hub relations
+  customerConversations EmailConversation[] @relation("customerConversations")
+  assignedEmailConvos   EmailConversation[] @relation("assignedConversations")
+  outboundReplies       OutboundReply[]
+  conversationNotes     ConversationNote[]
+  consentRecords        ConsentRecord[]
+  mailingListSubscriber MailingListSubscriber[] @relation("mailingListSubscriber")
+
+  // Forum & Community relations
+  forumPosts      ForumPost[]      @relation("ForumPostAuthor")
+  forumReplies    ForumReply[]     @relation("ForumReplyAuthor")
+  forumVotes      ForumVote[]
+  contactMessages ContactMessage[] @relation("ContactMessageUser")
+
+  // RGPD: Terms of Service & Privacy Policy acceptance proof
+  termsAcceptedAt   DateTime?
+  termsVersion      String?
+  privacyAcceptedAt DateTime?
+
+  // H4: Customer tags/labels for CRM segmentation
+  tags              String[]          @default([])
+  // H6/I-CRM-12: Customer ban/suspend flag
+  isBanned          Boolean           @default(false)
+  bannedAt          DateTime?
+  bannedReason      String?
+
+  // H5: Customer notes relation
+  customerNotes     CustomerNote[]    @relation("customerNotes")
+  authoredNotes     CustomerNote[]    @relation("authoredNotes")
+  // H6: SMS logs relation
+  smsLogs           SmsLog[]
+
+  // Content Hub relations
+  createdVideos          Video[]               @relation("VideoCreatedBy")
+  featuredInVideos       Video[]               @relation("VideoFeaturedClient")
+  consentsGiven          SiteConsent[]         @relation("ConsentClient")
+  consentsRequested      SiteConsent[]         @relation("ConsentRequester")
+  platformConnections    PlatformConnection[]  @relation("PlatformConnections")
+  videoSessionsAsClient  VideoSession[]        @relation("VideoSessionClient")
+  videoSessionsCreated   VideoSession[]        @relation("VideoSessionCreatedBy")
+
+  // Social & Ads relations
+  socialPosts            SocialPost[]          @relation("SocialPosts")
+
+  // VoIP / Telephony relations
+  voipConnections        VoipConnection[]      @relation("VoipConfiguredBy")
+  sipExtensions          SipExtension[]        @relation("UserExtension")
+  clientCalls            CallLog[]             @relation("ClientCalls")
+  clientVoicemails       Voicemail[]           @relation("ClientVoicemails")
+  queueMemberships       CallQueueMember[]     @relation("QueueAgent")
+  presenceStatuses       PresenceStatus[]      @relation("UserPresence")
+  coachingSessions       CoachingSession[]     @relation("CoachingCoach")
+  studentSessions        CoachingSession[]     @relation("CoachingStudent")
+  supervisedSessions     CoachingSession[]     @relation("CoachingSupervisor")
+
+  // CRM relations
+  assignedLeads          CrmLead[]             @relation("CrmLeadAssignee")
+  assignedDeals          CrmDeal[]             @relation("CrmDealAssignee")
+  contactDeals           CrmDeal[]             @relation("CrmDealContact")
+  dealStageChanges       CrmDealStageHistory[] @relation("CrmDealStageChanger")
+  assignedCrmTasks       CrmTask[]             @relation("CrmTaskAssignee")
+  crmTaskContacts        CrmTask[]             @relation("CrmTaskContact")
+  crmActivities          CrmActivity[]         @relation("CrmActivityPerformer")
+  crmActivityContacts    CrmActivity[]         @relation("CrmActivityContact")
+  inboxContacts          InboxConversation[]   @relation("InboxContact")
+  inboxAssigned          InboxConversation[]   @relation("InboxAssignee")
+  smsCampaigns           SmsCampaign[]         @relation("SmsCampaignCreator")
+  smsCampaignMessages    SmsCampaignMessage[]  @relation("SmsCampaignRecipient")
+  agentDailyStats        AgentDailyStats[]     @relation("AgentDailyStatsAgent")
+
+  // CRM Phase 1 relations
+  crmWorkflows           CrmWorkflow[]         @relation("CrmWorkflowCreator")
+  crmCampaigns           CrmCampaign[]         @relation("CrmCampaignCreator")
+  crmQuotas              CrmQuota[]            @relation("CrmQuotaAgent")
+  crmScheduledReports    CrmScheduledReport[]  @relation("CrmScheduledReportCreator")
+  crmLeadForms           CrmLeadForm[]         @relation("CrmLeadFormCreator")
+
+  // CRM Phase 3 relations
+  crmSnippets            CrmSnippet[]          @relation("CrmSnippetCreator")
+  crmQuotes              CrmQuote[]            @relation("CrmQuoteCreator")
+  crmApprovals           CrmApproval[]         @relation("CrmApprovalApprover")
+  crmApprovalRequests    CrmApproval[]         @relation("CrmApprovalRequester")
+  agentSchedules         AgentSchedule[]       @relation("AgentScheduleAgent")
+  agentBreaks            AgentBreak[]          @relation("AgentBreakAgent")
+  qaScoresGiven          CrmQaScore[]          @relation("CrmQaScoredBy")
+  qaScoresReceived       CrmQaScore[]          @relation("CrmQaScoreAgent")
+
+  // Bridge: email logs linked to this user
+  emailLogs              EmailLog[]            @relation("UserEmailLogs")
+
+  // Video conference rooms
+  videoRoomsCreated      VideoRoom[]           @relation("videoRoomsCreated")
+
+  // Prospect Lists
+  prospectListsCreated   ProspectList[]        @relation("ProspectListCreator")
+
+  @@index([role])
+  @@index([createdAt])
+  @@index([loyaltyTier])
+  @@index([referredById])
+  @@index([updatedAt])
+}
+
+model Authenticator {
+  credentialID         String    @unique
+  userId               String
+  providerAccountId    String    @default("")
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+  deviceName           String?
+  createdAt            DateTime  @default(now())
+  lastUsedAt           DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+  @@index([userId])
+  @@index([providerAccountId])
+  @@index([createdAt])
+}
+
+model UserAddress {
+  id            String   @id @default(cuid())
+  userId        String
+  label         String?
+  recipientName String
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String
+  postalCode    String
+  country       String   @default("CA")
+  phone         String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model UserPermissionGroup {
+  id         String          @id @default(cuid())
+  userId     String
+  groupId    String
+  assignedBy String?
+  assignedAt DateTime        @default(now())
+  group      PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model UserPermissionOverride {
+  id             String    @id @default(cuid())
+  userId         String
+  permissionCode String
+  granted        Boolean
+  reason         String?
+  grantedBy      String
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, permissionCode])
+  @@index([permissionCode])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+

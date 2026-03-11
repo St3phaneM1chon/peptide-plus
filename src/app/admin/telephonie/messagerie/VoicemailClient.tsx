@@ -329,12 +329,12 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                           {vm.client.name || vm.client.email}
                         </span>
                         {vm.client.email && vm.client.name && (
-                          <span className="text-xs text-emerald-600 ml-2">{vm.client.email}</span>
+                          <span className="text-xs text-emerald-600 ms-2">{vm.client.email}</span>
                         )}
                       </div>
                       <a
                         href={`/admin/crm/contacts/${vm.client.id}`}
-                        className="ml-auto text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                        className="ms-auto text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                       >
                         {t('voip.voicemail.viewContact') || 'View Contact'}
                       </a>

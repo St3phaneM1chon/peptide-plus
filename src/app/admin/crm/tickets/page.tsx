@@ -188,13 +188,13 @@ export default function TicketsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.tickets.searchPlaceholder') || 'Search tickets...'}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
         <select
@@ -250,13 +250,13 @@ export default function TicketsPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">#</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">{t('admin.tickets.subject') || 'Subject'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">#</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.subject') || 'Subject'}</th>
                 <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.status') || 'Status'}</th>
                 <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.priority') || 'Priority'}</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">{t('admin.tickets.category') || 'Category'}</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">{t('admin.tickets.contact') || 'Contact'}</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">{t('admin.tickets.created') || 'Created'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.category') || 'Category'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.contact') || 'Contact'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.created') || 'Created'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

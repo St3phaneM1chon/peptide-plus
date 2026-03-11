@@ -1334,11 +1334,11 @@ export default function ClientDetailPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-slate-50 border-b">
                         <tr>
-                          <th className="text-left px-4 py-2 font-medium text-slate-600">{t('admin.consents.consentType')}</th>
-                          <th className="text-left px-4 py-2 font-medium text-slate-600">Status</th>
-                          <th className="text-left px-4 py-2 font-medium text-slate-600">{t('admin.consents.relatedVideo')}</th>
-                          <th className="text-left px-4 py-2 font-medium text-slate-600">Date</th>
-                          <th className="text-right px-4 py-2 font-medium text-slate-600"></th>
+                          <th className="text-start px-4 py-2 font-medium text-slate-600">{t('admin.consents.consentType')}</th>
+                          <th className="text-start px-4 py-2 font-medium text-slate-600">Status</th>
+                          <th className="text-start px-4 py-2 font-medium text-slate-600">{t('admin.consents.relatedVideo')}</th>
+                          <th className="text-start px-4 py-2 font-medium text-slate-600">Date</th>
+                          <th className="text-end px-4 py-2 font-medium text-slate-600"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
@@ -1369,7 +1369,7 @@ export default function ClientDetailPage() {
                             <td className="px-4 py-2 text-xs text-slate-500">
                               {new Date(consent.createdAt).toLocaleDateString(locale)}
                             </td>
-                            <td className="px-4 py-2 text-right">
+                            <td className="px-4 py-2 text-end">
                               <Link href={`/admin/media/consents/${consent.id}`} className="text-xs text-orange-600 hover:underline">
                                 {t('common.view')}
                               </Link>
@@ -1453,7 +1453,7 @@ export default function ClientDetailPage() {
                       <div>
                         <div className="text-sm font-medium text-slate-900">
                           {call.direction === 'INBOUND' ? call.callerNumber : call.calledNumber}
-                          {call.callerName && <span className="text-slate-500 ml-1">({call.callerName})</span>}
+                          {call.callerName && <span className="text-slate-500 ms-1">({call.callerName})</span>}
                         </div>
                         <div className="text-xs text-slate-500 flex items-center gap-2">
                           <span className={call.direction === 'INBOUND' ? 'text-teal-600' : 'text-emerald-600'}>

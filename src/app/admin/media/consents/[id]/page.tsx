@@ -132,7 +132,7 @@ export default function AdminConsentDetailPage() {
           <h1 className="text-xl font-bold text-gray-900">{t('admin.consents.detailTitle')}</h1>
           <p className="text-xs text-gray-400 font-mono">{consent.id}</p>
         </div>
-        <span className={`ml-auto px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}>
+        <span className={`ms-auto px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}>
           {consent.status}
         </span>
       </div>
@@ -198,9 +198,9 @@ export default function AdminConsentDetailPage() {
                 <div key={i} className="border-b last:border-0 pb-3 last:pb-0">
                   <p className="text-sm font-medium text-gray-700">
                     Q{i + 1}. {q.question}
-                    {q.required && <span className="text-red-500 ml-1">*</span>}
+                    {q.required && <span className="text-red-500 ms-1">*</span>}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1 pl-4">
+                  <p className="text-sm text-gray-600 mt-1 ps-4">
                     {q.type === 'checkbox'
                       ? (answer === true || answer === 'true' ? '✅ Yes' : '❌ No')
                       : q.type === 'signature'
@@ -329,7 +329,7 @@ export default function AdminConsentDetailPage() {
             </button>
           )}
           {consent.requestedBy && (
-            <div className="text-xs text-gray-400 flex items-center gap-1 self-center ml-auto">
+            <div className="text-xs text-gray-400 flex items-center gap-1 self-center ms-auto">
               {t('admin.consents.requestedByLabel')}: {consent.requestedBy.name || consent.requestedBy.email}
             </div>
           )}

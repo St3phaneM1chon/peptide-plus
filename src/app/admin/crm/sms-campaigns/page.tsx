@@ -102,13 +102,13 @@ export default function SmsCampaignsPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Campaign</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Recipients</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sent</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Delivered</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Failed</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Opt-Out</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">Recipients</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">Sent</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">Delivered</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">Failed</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">Opt-Out</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
@@ -128,11 +128,11 @@ export default function SmsCampaignsPage() {
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS[c.status] || ''}`}>{c.status}</span>
                 </td>
-                <td className="px-4 py-3 text-right text-sm">{c.totalRecipients}</td>
-                <td className="px-4 py-3 text-right text-sm text-teal-600">{c.sent}</td>
-                <td className="px-4 py-3 text-right text-sm text-green-600">{c.delivered}</td>
-                <td className="px-4 py-3 text-right text-sm text-red-600">{c.failed}</td>
-                <td className="px-4 py-3 text-right text-sm text-orange-600">{c.optedOut}</td>
+                <td className="px-4 py-3 text-end text-sm">{c.totalRecipients}</td>
+                <td className="px-4 py-3 text-end text-sm text-teal-600">{c.sent}</td>
+                <td className="px-4 py-3 text-end text-sm text-green-600">{c.delivered}</td>
+                <td className="px-4 py-3 text-end text-sm text-red-600">{c.failed}</td>
+                <td className="px-4 py-3 text-end text-sm text-orange-600">{c.optedOut}</td>
                 <td className="px-4 py-3 text-center">
                   <div className="flex items-center justify-center gap-1">
                     {(c.status === 'DRAFT' || c.status === 'SCHEDULED') && (

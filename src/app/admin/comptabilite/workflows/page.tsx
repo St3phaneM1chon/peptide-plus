@@ -752,7 +752,7 @@ export default function WorkflowsPage() {
             <tab.icon className="w-4 h-4" />
             {tab.label}
             {tab.badge != null && tab.badge > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-amber-500 rounded-full min-w-[20px]">
+              <span className="ms-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-amber-500 rounded-full min-w-[20px]">
                 {tab.badge}
               </span>
             )}
@@ -811,11 +811,11 @@ export default function WorkflowsPage() {
               <div />
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={seedDefaults}>
-                  <Zap className="w-4 h-4 mr-1" />
+                  <Zap className="w-4 h-4 me-1" />
                   {t('admin.workflows.seedDefaults')}
                 </Button>
                 <Button onClick={openCreateRule}>
-                  <Plus className="w-4 h-4 mr-1" />
+                  <Plus className="w-4 h-4 me-1" />
                   {t('admin.workflows.createRule')}
                 </Button>
               </div>
@@ -940,12 +940,12 @@ export default function WorkflowsPage() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
               ) : approvalAction === 'approve' ? (
                 <>
-                  <CheckCircle className="w-4 h-4 mr-1" />
+                  <CheckCircle className="w-4 h-4 me-1" />
                   {t('admin.workflows.approve')}
                 </>
               ) : (
                 <>
-                  <XCircle className="w-4 h-4 mr-1" />
+                  <XCircle className="w-4 h-4 me-1" />
                   {t('admin.workflows.reject')}
                 </>
               )}
@@ -960,7 +960,7 @@ export default function WorkflowsPage() {
         onClose={() => setShowRuleModal(false)}
         title={editingRule ? t('admin.workflows.editRule') : t('admin.workflows.createRule')}
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pe-1">
           <FormField label={t('admin.workflows.ruleName')}>
             <Input
               value={ruleForm.name}

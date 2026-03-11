@@ -72,7 +72,7 @@ export default function MobileTimeTracker() {
         <p className="text-5xl font-mono font-bold text-gray-900 tracking-wider">{elapsed}</p>
         {data?.running?.projectName && <p className="text-sm text-purple-600 mt-2 font-medium">{data.running.projectName}</p>}
         <button onClick={toggleTimer} disabled={loading} className={`mt-6 w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg transition-all ${data?.running ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
-          {data?.running ? <Square className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
+          {data?.running ? <Square className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ms-1" />}
         </button>
         <p className="text-xs text-gray-400 mt-3">{data?.running ? 'Appuyez pour arrêter' : 'Appuyez pour démarrer'}</p>
       </div>

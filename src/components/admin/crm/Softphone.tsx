@@ -836,7 +836,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
 
   if (minimized) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 end-4 z-50">
         <button
           onClick={() => setMinimized(false)}
           className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-white ${
@@ -1011,7 +1011,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                     <button
                       key={call.id}
                       onClick={() => { setPhoneNumber(call.phone); setIdleTab('dialpad'); dial(call.phone); }}
-                      className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-50 rounded-lg text-left"
+                      className="w-full flex items-center gap-3 px-2 py-2 hover:bg-gray-50 rounded-lg text-start"
                     >
                       <div className={`p-1.5 rounded-full ${call.direction === 'inbound' ? 'bg-blue-50' : 'bg-green-50'}`}>
                         {call.direction === 'inbound'
@@ -1039,7 +1039,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                     <div key={sd.id} className="flex items-center gap-2 px-2 py-2 hover:bg-gray-50 rounded-lg">
                       <button
                         onClick={() => { setPhoneNumber(sd.phone); dial(sd.phone); }}
-                        className="flex-1 flex items-center gap-2 text-left"
+                        className="flex-1 flex items-center gap-2 text-start"
                       >
                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                         <div>
@@ -1070,13 +1070,13 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
             {idleTab === 'search' && (
               <div>
                 <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search contacts..."
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
+                    className="w-full ps-9 pe-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto">
@@ -1090,7 +1090,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                           setIdleTab('dialpad');
                         }
                       }}
-                      className="w-full flex items-center gap-2 px-2 py-2 hover:bg-gray-50 rounded-lg text-left"
+                      className="w-full flex items-center gap-2 px-2 py-2 hover:bg-gray-50 rounded-lg text-start"
                     >
                       <User className="h-4 w-4 text-gray-400" />
                       <div className="flex-1 min-w-0">

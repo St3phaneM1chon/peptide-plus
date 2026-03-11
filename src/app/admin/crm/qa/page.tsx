@@ -494,7 +494,7 @@ function PercentageBar({ percentage }: { percentage: number }) {
           style={{ width: `${Math.min(100, percentage)}%` }}
         />
       </div>
-      <span className="text-sm font-semibold text-gray-700 w-12 text-right">
+      <span className="text-sm font-semibold text-gray-700 w-12 text-end">
         {percentage.toFixed(0)}%
       </span>
     </div>
@@ -935,7 +935,7 @@ export default function QaPage() {
                           {session.status.replace('_', ' ')}
                         </span>
                         {session.reliability !== null && (
-                          <div className="text-right">
+                          <div className="text-end">
                             <div className="text-xs text-gray-500">Inter-rater reliability</div>
                             <div className={`text-sm font-bold ${
                               session.reliability >= 0.8 ? 'text-green-600' :
@@ -953,7 +953,7 @@ export default function QaPage() {
                       <table className="w-full">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200">
-                            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Evaluator</th>
+                            <th className="text-start px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Evaluator</th>
                             <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Status</th>
                             <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Total Score</th>
                             <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Percentage</th>

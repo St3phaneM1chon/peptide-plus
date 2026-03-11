@@ -81,7 +81,7 @@ export default function MobileDashboard() {
                 <p className="text-sm text-gray-800 truncate">{t.description}</p>
                 <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString('fr-CA')}</p>
               </div>
-              <span className={`text-sm font-semibold ml-3 ${t.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'}`}>
+              <span className={`text-sm font-semibold ms-3 ${t.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'}`}>
                 {t.type === 'EXPENSE' ? '-' : '+'}{fmt(t.amount)}
               </span>
             </div>

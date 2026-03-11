@@ -231,7 +231,7 @@ export default function AIAssistantPage() {
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               {table.headers.map((h, i) => (
-                <th key={i} className="px-3 py-2 text-left font-medium text-slate-600 whitespace-nowrap">
+                <th key={i} className="px-3 py-2 text-start font-medium text-slate-600 whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -284,7 +284,7 @@ export default function AIAssistantPage() {
                     style={{ width: `${Math.max(width, 2)}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-slate-700 w-24 text-right flex-shrink-0">
+                <span className="text-xs font-medium text-slate-700 w-24 text-end flex-shrink-0">
                   {typeof value === 'number'
                     ? new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value)
                     : value}
@@ -346,7 +346,7 @@ export default function AIAssistantPage() {
                         key={i}
                         onClick={() => sendMessage(sq.query)}
                         disabled={isLoading}
-                        className="flex items-center gap-2 p-2.5 text-left text-sm bg-white rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
+                        className="flex items-center gap-2 p-2.5 text-start text-sm bg-white rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
                       >
                         <sq.icon className="w-4 h-4 text-slate-400 group-hover:text-violet-500 flex-shrink-0" />
                         <span className="text-slate-600 group-hover:text-slate-800 truncate">
@@ -437,7 +437,7 @@ export default function AIAssistantPage() {
               <div className="mx-4 mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 {error}
-                <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">&times;</button>
+                <button onClick={() => setError(null)} className="ms-auto text-red-400 hover:text-red-600">&times;</button>
               </div>
             )}
 
@@ -473,7 +473,7 @@ export default function AIAssistantPage() {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none text-sm text-slate-700 placeholder-slate-400 transition-all disabled:opacity-50 disabled:bg-slate-50"
                   />
                   {input.length > 0 && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300">
+                    <span className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300">
                       {input.length}/1000
                     </span>
                   )}
@@ -504,7 +504,7 @@ export default function AIAssistantPage() {
                   key={i}
                   onClick={() => sendMessage(sq.query)}
                   disabled={isLoading}
-                  className="w-full flex items-center gap-2.5 p-2 text-left text-sm rounded-lg hover:bg-violet-50 transition-all group disabled:opacity-50"
+                  className="w-full flex items-center gap-2.5 p-2 text-start text-sm rounded-lg hover:bg-violet-50 transition-all group disabled:opacity-50"
                 >
                   <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center flex-shrink-0 transition-colors">
                     <sq.icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-violet-600" />

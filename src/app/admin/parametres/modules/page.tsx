@@ -160,7 +160,7 @@ export default function ModulesPage() {
       </div>
 
       <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
-        <AlertTriangle className="w-4 h-4 inline mr-1" />
+        <AlertTriangle className="w-4 h-4 inline me-1" />
         {t('admin.modules.warning')}
       </div>
 
@@ -168,9 +168,9 @@ export default function ModulesPage() {
         <div className="mt-6 flex justify-end">
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <Loader2 className="w-4 h-4 animate-spin me-2" />
             ) : (
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 me-2" />
             )}
             {t('admin.modules.save')}
           </Button>

@@ -367,7 +367,7 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button onClick={handleCopy} className="absolute top-3 right-3 p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300">
+    <button onClick={handleCopy} className="absolute top-3 end-3 p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300">
       {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   );
@@ -386,7 +386,7 @@ function EndpointCard({ endpoint, t }: { endpoint: EndpointDef; t: (key: string)
     <div className="border border-slate-200 rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors text-start"
       >
         <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${methodColors[endpoint.method]}`}>
           {endpoint.method}
@@ -407,10 +407,10 @@ function EndpointCard({ endpoint, t }: { endpoint: EndpointDef; t: (key: string)
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramName')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramType')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramRequired')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramDescription')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramName')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramType')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramRequired')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramDescription')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -440,10 +440,10 @@ function EndpointCard({ endpoint, t }: { endpoint: EndpointDef; t: (key: string)
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramName')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramType')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramRequired')}</th>
-                    <th className="text-left py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramDescription')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramName')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramType')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramRequired')}</th>
+                    <th className="text-start py-1.5 px-2 text-slate-500 font-medium">{t('apiDocs.paramDescription')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -703,9 +703,9 @@ print(order.json())`;
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left py-3 px-5 font-semibold text-slate-700">{t('apiDocs.statusCode')}</th>
-                  <th className="text-left py-3 px-5 font-semibold text-slate-700">{t('apiDocs.meaning')}</th>
-                  <th className="text-left py-3 px-5 font-semibold text-slate-700">{t('apiDocs.description')}</th>
+                  <th className="text-start py-3 px-5 font-semibold text-slate-700">{t('apiDocs.statusCode')}</th>
+                  <th className="text-start py-3 px-5 font-semibold text-slate-700">{t('apiDocs.meaning')}</th>
+                  <th className="text-start py-3 px-5 font-semibold text-slate-700">{t('apiDocs.description')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

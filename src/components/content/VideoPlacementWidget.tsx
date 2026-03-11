@@ -111,11 +111,11 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity w-14 h-14 bg-white/90 rounded-full flex items-center justify-center">
-                <Play className="h-6 w-6 text-orange-600 ml-0.5" />
+                <Play className="h-6 w-6 text-orange-600 ms-0.5" />
               </div>
             </div>
             {videos[0].duration && (
-              <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+              <div className="absolute bottom-2 end-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                 <Clock className="h-3 w-3" />{videos[0].duration}
               </div>
             )}
@@ -149,11 +149,11 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
-                      <Play className="h-4 w-4 text-orange-600 ml-0.5" />
+                      <Play className="h-4 w-4 text-orange-600 ms-0.5" />
                     </div>
                   </div>
                   {video.duration && (
-                    <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded flex items-center gap-0.5">
+                    <div className="absolute bottom-1.5 end-1.5 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" />{video.duration}
                     </div>
                   )}

@@ -226,11 +226,11 @@ function SuppliersTab() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Contact</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Phone</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Website</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Name</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Contact</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Email</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Phone</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Website</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -410,7 +410,7 @@ function PurchaseOrdersTab() {
             }`}
           >
             {s === 'all' ? 'All' : s}
-            {s !== 'all' && <span className="ml-1 text-slate-400">({orders.filter(o => o.status === s).length})</span>}
+            {s !== 'all' && <span className="ms-1 text-slate-400">({orders.filter(o => o.status === s).length})</span>}
           </button>
         ))}
       </div>
@@ -503,13 +503,13 @@ function PurchaseOrdersTab() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">PO ID</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Supplier</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Items</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Total</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Expected</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Created</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">PO ID</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Supplier</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden md:table-cell">Items</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Total</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Status</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Expected</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600 hidden lg:table-cell">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -675,11 +675,11 @@ function ReconciliationTab() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Product</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Format</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Recorded</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Calculated</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Discrepancy</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Product</th>
+                <th className="text-start px-4 py-3 font-medium text-slate-600">Format</th>
+                <th className="text-end px-4 py-3 font-medium text-slate-600">Recorded</th>
+                <th className="text-end px-4 py-3 font-medium text-slate-600">Calculated</th>
+                <th className="text-end px-4 py-3 font-medium text-slate-600">Discrepancy</th>
                 <th className="text-center px-4 py-3 font-medium text-slate-600">Status</th>
                 <th className="text-center px-4 py-3 font-medium text-slate-600">Actions</th>
               </tr>
@@ -700,9 +700,9 @@ function ReconciliationTab() {
                     <tr key={itemKey} className={item.status === 'DISCREPANCY' ? 'bg-orange-50/50' : ''}>
                       <td className="px-4 py-3 font-medium text-slate-900">{item.productName}</td>
                       <td className="px-4 py-3 text-slate-600">{item.formatName}</td>
-                      <td className="px-4 py-3 text-right font-mono">{item.recordedStock}</td>
-                      <td className="px-4 py-3 text-right font-mono">{item.calculatedStock}</td>
-                      <td className={`px-4 py-3 text-right font-mono font-medium ${
+                      <td className="px-4 py-3 text-end font-mono">{item.recordedStock}</td>
+                      <td className="px-4 py-3 text-end font-mono">{item.calculatedStock}</td>
+                      <td className={`px-4 py-3 text-end font-mono font-medium ${
                         item.discrepancy !== 0 ? 'text-orange-600' : 'text-green-600'
                       }`}>
                         {item.discrepancy > 0 ? '+' : ''}{item.discrepancy}
@@ -1255,7 +1255,7 @@ export default function InventairePage() {
             >
               Reapprovisionnement
               {reorderItems.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
+                <span className="ms-1 px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded-full">
                   {reorderItems.length}
                 </span>
               )}
@@ -1285,7 +1285,7 @@ export default function InventairePage() {
             >
               {t('admin.inventory.alertsBtn') || 'Alerts'}
               {(stats.outOfStock + stats.lowStock > 0) && (
-                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                <span className="ms-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
                   {stats.outOfStock + stats.lowStock}
                 </span>
               )}

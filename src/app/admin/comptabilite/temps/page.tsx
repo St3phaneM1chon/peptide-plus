@@ -641,7 +641,7 @@ export default function TimeTrackingPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-        <span className="ml-3 text-slate-500">Chargement du suivi de temps...</span>
+        <span className="ms-3 text-slate-500">Chargement du suivi de temps...</span>
       </div>
     );
   }
@@ -794,7 +794,7 @@ export default function TimeTrackingPage() {
               <Icon className="w-4 h-4" />
               {tab.label}
               {tab.id === 'approvals' && pendingEntries.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
+                <span className="ms-1 px-1.5 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">
                   {pendingEntries.length}
                 </span>
               )}
@@ -856,14 +856,14 @@ export default function TimeTrackingPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Date</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Employe</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Description</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Projet</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Categorie</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Heures</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Date</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Description</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Projet</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Categorie</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Heures</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Facturable</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Statut</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Statut</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
@@ -877,7 +877,7 @@ export default function TimeTrackingPage() {
                       </td>
                       <td className="py-3 px-3">{entry.projectName || '-'}</td>
                       <td className="py-3 px-3">{categoryLabel(entry.taskCategory)}</td>
-                      <td className="py-3 px-3 text-right font-mono font-medium">{formatHours(entry.hoursWorked)}</td>
+                      <td className="py-3 px-3 text-end font-mono font-medium">{formatHours(entry.hoursWorked)}</td>
                       <td className="py-3 px-3 text-center">
                         {entry.isBillable ? (
                           <span className="text-emerald-600 text-xs font-medium">Oui</span>
@@ -959,14 +959,14 @@ export default function TimeTrackingPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Code</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Nom</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Client</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Budget (h)</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Utilise (h)</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Progression</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Taux</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Statut</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Code</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Nom</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Client</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Budget (h)</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Utilise (h)</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Progression</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Taux</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Statut</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
@@ -978,9 +978,9 @@ export default function TimeTrackingPage() {
                         <td className="py-3 px-3 font-mono text-sm font-medium">{project.code}</td>
                         <td className="py-3 px-3 font-medium">{project.name}</td>
                         <td className="py-3 px-3">{project.clientName || '-'}</td>
-                        <td className="py-3 px-3 text-right font-mono">{project.budget ? formatHours(project.budget) : '-'}</td>
-                        <td className="py-3 px-3 text-right font-mono">{formatHours(project.hoursUsed)}</td>
-                        <td className="py-3 px-3 text-right">
+                        <td className="py-3 px-3 text-end font-mono">{project.budget ? formatHours(project.budget) : '-'}</td>
+                        <td className="py-3 px-3 text-end font-mono">{formatHours(project.hoursUsed)}</td>
+                        <td className="py-3 px-3 text-end">
                           {budgetPct !== null ? (
                             <div className="flex items-center gap-2 justify-end">
                               <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -995,7 +995,7 @@ export default function TimeTrackingPage() {
                             </div>
                           ) : '-'}
                         </td>
-                        <td className="py-3 px-3 text-right font-mono">
+                        <td className="py-3 px-3 text-end font-mono">
                           {project.defaultRate ? formatMoney(project.defaultRate) : '-'}
                         </td>
                         <td className="py-3 px-3">
@@ -1063,7 +1063,7 @@ export default function TimeTrackingPage() {
 
           {reportLoading && (
             <div className="flex items-center justify-center py-12">
-              <RefreshCw className="w-5 h-5 animate-spin text-slate-400 mr-2" />
+              <RefreshCw className="w-5 h-5 animate-spin text-slate-400 me-2" />
               <span className="text-slate-500">Chargement du rapport...</span>
             </div>
           )}
@@ -1099,23 +1099,23 @@ export default function TimeTrackingPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-3 font-medium text-slate-600">
+                      <th className="text-start py-3 px-3 font-medium text-slate-600">
                         {reportGroupBy === 'employee' ? 'Employe' : reportGroupBy === 'project' ? 'Projet' : 'Categorie'}
                       </th>
-                      <th className="text-right py-3 px-3 font-medium text-slate-600">Entrees</th>
-                      <th className="text-right py-3 px-3 font-medium text-slate-600">Heures totales</th>
-                      <th className="text-right py-3 px-3 font-medium text-slate-600">Heures facturables</th>
-                      <th className="text-right py-3 px-3 font-medium text-slate-600">Montant facturable</th>
+                      <th className="text-end py-3 px-3 font-medium text-slate-600">Entrees</th>
+                      <th className="text-end py-3 px-3 font-medium text-slate-600">Heures totales</th>
+                      <th className="text-end py-3 px-3 font-medium text-slate-600">Heures facturables</th>
+                      <th className="text-end py-3 px-3 font-medium text-slate-600">Montant facturable</th>
                     </tr>
                   </thead>
                   <tbody>
                     {summaryData.groups.map((g) => (
                       <tr key={g.key} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="py-3 px-3 font-medium">{g.key}</td>
-                        <td className="py-3 px-3 text-right">{g.entryCount}</td>
-                        <td className="py-3 px-3 text-right font-mono">{formatHours(g.totalHours)}</td>
-                        <td className="py-3 px-3 text-right font-mono">{formatHours(g.billableHours)}</td>
-                        <td className="py-3 px-3 text-right font-mono font-medium">{formatMoney(g.billableAmount)}</td>
+                        <td className="py-3 px-3 text-end">{g.entryCount}</td>
+                        <td className="py-3 px-3 text-end font-mono">{formatHours(g.totalHours)}</td>
+                        <td className="py-3 px-3 text-end font-mono">{formatHours(g.billableHours)}</td>
+                        <td className="py-3 px-3 text-end font-mono font-medium">{formatMoney(g.billableAmount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1148,11 +1148,11 @@ export default function TimeTrackingPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Date</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Employe</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Description</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Projet</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Heures</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Date</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Description</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Projet</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Heures</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Facturable</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
@@ -1166,7 +1166,7 @@ export default function TimeTrackingPage() {
                         {entry.description || '-'}
                       </td>
                       <td className="py-3 px-3">{entry.projectName || '-'}</td>
-                      <td className="py-3 px-3 text-right font-mono font-medium">{formatHours(entry.hoursWorked)}</td>
+                      <td className="py-3 px-3 text-end font-mono font-medium">{formatHours(entry.hoursWorked)}</td>
                       <td className="py-3 px-3 text-center">
                         {entry.isBillable ? (
                           <span className="text-emerald-600 text-xs font-medium">Oui</span>

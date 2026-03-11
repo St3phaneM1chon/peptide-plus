@@ -221,13 +221,13 @@ export default function DealsPage() {
       {/* Search & Filters */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder={t('admin.crm.searchDeals') || 'Search deals...'}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md"
+            className="w-full ps-9 pe-3 py-2 text-sm border border-gray-300 rounded-md"
           />
         </div>
         <select
@@ -282,15 +282,15 @@ export default function DealsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left">
+                <th className="px-4 py-3 text-start">
                   <input type="checkbox" onChange={selectAll} checked={selected.size === deals.length && deals.length > 0} className="rounded" />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealTitle') || 'Title'}</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealValue') || 'Value'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Stage'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.contact') || 'Contact'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.expectedCloseDate') || 'Expected Close'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealTitle') || 'Title'}</th>
+                <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealValue') || 'Value'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Stage'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.contact') || 'Contact'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.expectedCloseDate') || 'Expected Close'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -321,12 +321,12 @@ export default function DealsPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1">
                       <DollarSign className="h-3.5 w-3.5 text-green-600" />
                       <span className="text-sm font-semibold text-gray-900">{formatCurrency(deal.value, deal.currency)}</span>
                     </div>
-                    <div className="text-[10px] text-gray-400 text-right mt-0.5">
+                    <div className="text-[10px] text-gray-400 text-end mt-0.5">
                       {deal.stage.probability}% &rarr; {formatCurrency(
                         (typeof deal.value === 'string' ? parseFloat(deal.value) : deal.value) * deal.stage.probability / 100,
                         deal.currency

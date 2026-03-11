@@ -167,12 +167,12 @@ export default function TransfertsClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.extension')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.condition')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.destination')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.ringDuration')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.extension')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.condition')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.destination')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.ringDuration')}</th>
               <th className="text-center px-4 py-3 font-medium text-gray-600">{t('voip.admin.forwarding.enabled')}</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600"></th>
+              <th className="text-end px-4 py-3 font-medium text-gray-600"></th>
             </tr>
           </thead>
           <tbody>
@@ -202,7 +202,7 @@ export default function TransfertsClient({
                       )}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => openEdit(rule)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded">
                         <Pencil className="w-4 h-4" />

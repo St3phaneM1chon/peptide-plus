@@ -251,7 +251,7 @@ export default function DealDetailPage() {
               >
                 {stage.name}
                 {i < stages.filter(s => !s.isLost).length - 1 && !isCurrent && !isPast && (
-                  <span className="ml-1 text-gray-400">{Math.round(stage.probability * 100)}%</span>
+                  <span className="ms-1 text-gray-400">{Math.round(stage.probability * 100)}%</span>
                 )}
               </button>
             );
@@ -361,10 +361,10 @@ export default function DealDetailPage() {
                       <span className="text-green-600">Created in {entry.toStage.name}</span>
                     )}
                     {entry.duration > 0 && (
-                      <span className="text-gray-400 ml-2">({Math.round(entry.duration / 86400)}d in previous stage)</span>
+                      <span className="text-gray-400 ms-2">({Math.round(entry.duration / 86400)}d in previous stage)</span>
                     )}
                   </div>
-                  <div className="ml-auto text-xs text-gray-400">
+                  <div className="ms-auto text-xs text-gray-400">
                     {entry.changedBy.name || entry.changedBy.email} - {new Date(entry.createdAt).toLocaleString(locale)}
                   </div>
                 </div>

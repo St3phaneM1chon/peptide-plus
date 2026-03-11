@@ -268,7 +268,7 @@ export default function AdminClientPortalPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Mail className="inline w-4 h-4 mr-1" />
+                <Mail className="inline w-4 h-4 me-1" />
                 {t('admin.clientPortal.email')} *
               </label>
               <input
@@ -281,7 +281,7 @@ export default function AdminClientPortalPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Users className="inline w-4 h-4 mr-1" />
+                <Users className="inline w-4 h-4 me-1" />
                 {t('admin.clientPortal.clientName')} *
               </label>
               <input
@@ -294,7 +294,7 @@ export default function AdminClientPortalPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Building2 className="inline w-4 h-4 mr-1" />
+                <Building2 className="inline w-4 h-4 me-1" />
                 {t('admin.clientPortal.companyName')}
               </label>
               <input
@@ -307,7 +307,7 @@ export default function AdminClientPortalPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <CalendarDays className="inline w-4 h-4 mr-1" />
+                <CalendarDays className="inline w-4 h-4 me-1" />
                 {t('admin.clientPortal.expiresInDays')}
               </label>
               <select
@@ -364,13 +364,13 @@ export default function AdminClientPortalPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="py-3 px-4 text-left font-semibold text-gray-700">{t('admin.clientPortal.client')}</th>
-                  <th className="py-3 px-4 text-left font-semibold text-gray-700">{t('admin.clientPortal.emailCol')}</th>
+                  <th className="py-3 px-4 text-start font-semibold text-gray-700">{t('admin.clientPortal.client')}</th>
+                  <th className="py-3 px-4 text-start font-semibold text-gray-700">{t('admin.clientPortal.emailCol')}</th>
                   <th className="py-3 px-4 text-center font-semibold text-gray-700">{t('admin.clientPortal.statusCol')}</th>
-                  <th className="py-3 px-4 text-left font-semibold text-gray-700">{t('admin.clientPortal.expiresCol')}</th>
-                  <th className="py-3 px-4 text-left font-semibold text-gray-700">{t('admin.clientPortal.lastAccessCol')}</th>
-                  <th className="py-3 px-4 text-left font-semibold text-gray-700">{t('admin.clientPortal.createdCol')}</th>
-                  <th className="py-3 px-4 text-right font-semibold text-gray-700">{t('admin.clientPortal.actions')}</th>
+                  <th className="py-3 px-4 text-start font-semibold text-gray-700">{t('admin.clientPortal.expiresCol')}</th>
+                  <th className="py-3 px-4 text-start font-semibold text-gray-700">{t('admin.clientPortal.lastAccessCol')}</th>
+                  <th className="py-3 px-4 text-start font-semibold text-gray-700">{t('admin.clientPortal.createdCol')}</th>
+                  <th className="py-3 px-4 text-end font-semibold text-gray-700">{t('admin.clientPortal.actions')}</th>
                 </tr>
               </thead>
               <tbody>

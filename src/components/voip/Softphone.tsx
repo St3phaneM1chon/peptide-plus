@@ -1053,12 +1053,12 @@ export default function Softphone() {
                         autoPlay
                         playsInline
                         muted
-                        className="absolute bottom-2 right-2 w-24 h-18 rounded-lg border-2 border-white shadow-lg object-cover"
+                        className="absolute bottom-2 end-2 w-24 h-18 rounded-lg border-2 border-white shadow-lg object-cover"
                       />
                       {/* Video off button overlay */}
                       <button
                         onClick={toggleVideo}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                        className="absolute top-2 end-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                         title={t('voip.softphone.video.disable')}
                       >
                         <VideoOff className="w-4 h-4" />

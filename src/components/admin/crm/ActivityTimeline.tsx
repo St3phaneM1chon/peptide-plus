@@ -129,7 +129,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
       <div className={`flex items-center justify-between px-4 py-3 ${bare ? 'pb-2' : 'border-b'}`}>
         <h3 className="text-sm font-semibold text-gray-700">
           {t('admin.crm.timeline') || 'Timeline'}
-          <span className="ml-1.5 text-xs font-normal text-gray-400">({filtered.length})</span>
+          <span className="ms-1.5 text-xs font-normal text-gray-400">({filtered.length})</span>
         </h3>
         <div className="flex items-center gap-1.5">
           {/* Filter */}
@@ -147,7 +147,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
               <ChevronDown className="h-3 w-3" />
             </button>
             {showFilter && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-white rounded-lg shadow-lg border py-1 min-w-[140px]">
+              <div className="absolute end-0 top-full mt-1 z-20 bg-white rounded-lg shadow-lg border py-1 min-w-[140px]">
                 {ACTIVITY_TYPES.map(type => {
                   const cfg = type === 'ALL' ? null : ACTIVITY_CONFIG[type];
                   const Icon = cfg?.icon;
@@ -169,7 +169,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
           </div>
 
           {/* Quick Add buttons */}
-          <div className="flex items-center gap-0.5 ml-1">
+          <div className="flex items-center gap-0.5 ms-1">
             {QUICK_ADD_TYPES.map(({ type, labelKey, icon: Icon }) => (
               <button
                 key={type}

@@ -176,7 +176,7 @@ export default function DashboardBuilderPage() {
                 const Icon = WIDGET_ICONS[type];
                 return (
                   <button key={type} onClick={() => addWidget(type)}
-                    className="w-full flex items-center gap-2 text-left text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                    className="w-full flex items-center gap-2 text-start text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
                     <Icon className="h-4 w-4 text-gray-400" /> {WIDGET_LABELS[type]}
                   </button>
                 );
@@ -193,7 +193,7 @@ export default function DashboardBuilderPage() {
               <div className="space-y-1">
                 {savedDashboards.map(d => (
                   <button key={d.id} onClick={() => loadDashboard(d.key)}
-                    className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                    className="w-full text-start text-sm px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
                     {d.name} <span className="text-xs text-gray-400">({d.widgetCount})</span>
                   </button>
                 ))}

@@ -172,7 +172,7 @@ export default function AdminCommandPalette({
                 key={item.path}
                 type="button"
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors ${
                   idx === activeIndex ? 'bg-teal-50 text-teal-700' : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >

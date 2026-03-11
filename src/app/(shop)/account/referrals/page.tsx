@@ -292,8 +292,8 @@ export default function ReferralsPage() {
         {!hasCode && (
           <div className="bg-gradient-to-br from-[#CC5500] to-[#a34400] rounded-2xl p-8 md:p-12 text-white text-center mb-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full" />
-              <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white rounded-full" />
+              <div className="absolute -top-10 -end-10 w-40 h-40 bg-white rounded-full" />
+              <div className="absolute -bottom-10 -start-10 w-60 h-60 bg-white rounded-full" />
             </div>
             <div className="relative">
               <Sparkles className="w-12 h-12 mx-auto mb-4 text-white/90" />
@@ -330,8 +330,8 @@ export default function ReferralsPage() {
             {/* Big referral code display */}
             <div className="bg-gradient-to-br from-[#CC5500] to-[#a34400] rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
               <div className="absolute inset-0 opacity-10">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full" />
-                <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white rounded-full" />
+                <div className="absolute -top-10 -end-10 w-40 h-40 bg-white rounded-full" />
+                <div className="absolute -bottom-10 -start-10 w-60 h-60 bg-white rounded-full" />
               </div>
               <div className="relative">
                 <p className="text-white/80 text-sm font-medium uppercase tracking-wider mb-2">
@@ -575,7 +575,7 @@ export default function ReferralsPage() {
               <div className="w-16 h-16 bg-[#CC5500]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Share2 className="w-8 h-8 text-[#CC5500]" />
               </div>
-              <div className="absolute top-8 -right-4 hidden md:block text-gray-300">
+              <div className="absolute top-8 -end-4 hidden md:block text-gray-300">
                 <ArrowRight className="w-8 h-8" />
               </div>
               <div className="bg-[#CC5500] text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-3">
@@ -594,7 +594,7 @@ export default function ReferralsPage() {
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-blue-600" />
               </div>
-              <div className="absolute top-8 -right-4 hidden md:block text-gray-300">
+              <div className="absolute top-8 -end-4 hidden md:block text-gray-300">
                 <ArrowRight className="w-8 h-8" />
               </div>
               <div className="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-3">

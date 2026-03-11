@@ -39,7 +39,14 @@
   },
   "phase1_cartographie": "DONE",
   "phase4_evolution_plan": "DONE",
-  "phase5_verification": "PENDING",
+  "phase5_verification": "DONE",
+  "production_deploy": {
+    "date": "2026-03-10",
+    "status": "SUCCESS",
+    "health_check": "degraded (app/db/auth/payments/email: pass; redis/sentry: warn - not configured)",
+    "schema_sync": "SUCCESS (orphan data cleaned: 91 deleted + 1931 nullified)",
+    "kedb_entries_added": ["KB-PP-BUILD-010", "KB-PP-BUILD-011"]
+  },
   "scores_fonctionnels": {
     "loyaute": "76%",
     "crm": "73%",
@@ -78,12 +85,12 @@
       {"id": "p0-prisma-pool", "files": 2, "status": "DONE"},
       {"id": "p0-crm-workflows", "files": 1, "status": "DONE"},
       {"id": "p0-lead-scoring", "files": 2, "status": "DONE"},
-      {"id": "p0-fk-orphelins", "files": 1, "status": "DONE", "note": "Schema FK added, prisma db push needed for production"},
+      {"id": "p0-fk-orphelins", "files": 1, "status": "DONE", "note": "Schema FK applied in prod. Cleaned 91 orphan productId (deleted), 1930 orphan formatId (set null), 1 orphan orderId (set null)"},
       {"id": "p0-dual-stock", "files": 1, "status": "DONE", "note": "Documentation only, ProductFormat is source of truth"}
     ],
     "build_status": "SUCCESS",
     "files_modified": 22,
-    "note": "Schema FK changes need prisma db push on production DB before deploy"
+    "note": "All P0 fixes applied and verified in production"
   },
   "p1_fixes_applied": {
     "date": "2026-03-10",
@@ -101,7 +108,7 @@
     "total": 3,
     "fixes": [
       {"id": "p2-image-optimization", "status": "DONE", "files": 36, "note": "Removed unoptimized from all Image components + added 4 OAuth provider domains to remotePatterns"},
-      {"id": "p2-rtl-direction", "status": "PARTIAL", "note": "dir=rtl on <html> works; full RTL needs Tailwind logical properties conversion (300+ files)"},
+      {"id": "p2-rtl-direction", "status": "DONE", "files": 310, "note": "dir=rtl on <html> + 310 files converted: ml→ms, mr→me, pl→ps, pr→pe, left→start, right→end, text-left→text-start, rounded-l→rounded-s, border-l→border-s (1318 class replacements)"},
       {"id": "p2-lazy-load-libs", "status": "ALREADY_DONE", "note": "Recharts/ReactFlow isolated by route-level code splitting; jsPDF uses dynamic import in client"}
     ],
     "build_status": "SUCCESS"
@@ -113,14 +120,19 @@
       {"id": "p3-bundle-analyzer", "status": "DONE", "files": 2, "note": "@next/bundle-analyzer installed + wired in next.config.js. Run ANALYZE=true npm run build"},
       {"id": "p3-isr-ssg", "status": "ALREADY_DONE", "note": "40 files already use generateStaticParams/revalidate. API routes correctly force-dynamic (use request params). Redis L2 cache provides distributed caching."}
     ],
-    "remaining_p3": [
-      "Bull/BullMQ job queue (infrastructure change)",
-      "CDN Azure Blob Storage (infrastructure)",
-      "RTL Tailwind logical properties (300+ files)",
-      "Prisma schema multi-file split",
-      "QuickBooks/Xero export (new feature)",
-      "AI product recommendations (new feature)",
-      "Dynamic pricing per loyalty tier (new feature)"
+    "build_status": "SUCCESS"
+  },
+  "p3_chantiers_completed": {
+    "date": "2026-03-10",
+    "total": 7,
+    "chantiers": [
+      {"id": "p3-prisma-schema-split", "status": "DONE", "files": 12, "note": "302 models + 87 enums split into 12 domain files (prisma/schema/). prismaSchemaFolder preview feature enabled."},
+      {"id": "p3-dynamic-pricing", "status": "DONE", "files": 7, "note": "LoyaltyTierConfig + ProductTierPrice models. Pricing service with 3-tier resolution. 5 admin API routes."},
+      {"id": "p3-quickbooks-xero-export", "status": "DONE", "files": 2, "note": "3 export formats: QuickBooks IIF, Xero CSV, Generic CSV. Admin endpoint /api/admin/comptabilite/export."},
+      {"id": "p3-bullmq-queue", "status": "DONE", "files": 5, "note": "BullMQ v5.70 installed. Queue factory, registry, media-cleanup job processor, 2 admin queue endpoints."},
+      {"id": "p3-cdn-azure-blob", "status": "DONE", "files": 3, "note": "Presigned URL endpoint, storage stats endpoint, CDN headers utility. Storage.ts was already 80% complete."},
+      {"id": "p3-ai-recommendations", "status": "ALREADY_DONE", "note": "282-line production-ready recommendation engine with 3-tier fallback (co-purchase, category, bestseller)."},
+      {"id": "p3-rtl-tailwind", "status": "DONE", "files": 310, "note": "1318 Tailwind classes converted to logical properties across 310 files for full RTL support."}
     ],
     "build_status": "SUCCESS"
   }

@@ -36,7 +36,7 @@ export const CategoryCard = memo(function CategoryCard({ category }: CategoryCar
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
         {/* Contenu */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+        <div className="absolute bottom-0 start-0 end-0 p-4 text-white">
           <h3 className="font-semibold text-lg mb-1">{category.name}</h3>
           
           {category.description && (

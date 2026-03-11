@@ -62,7 +62,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
     <th
-      className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:text-teal-600 select-none"
+      className="px-4 py-3 text-start font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:text-teal-600 select-none"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center gap-1">

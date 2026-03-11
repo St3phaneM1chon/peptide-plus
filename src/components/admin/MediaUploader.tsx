@@ -189,7 +189,7 @@ export function MediaUploader({
       {label && (
         <label className="block text-sm font-medium text-neutral-700">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-red-500 ms-0.5">*</span>}
         </label>
       )}
 
@@ -225,7 +225,7 @@ export function MediaUploader({
             <button
               type="button"
               onClick={handleDelete}
-              className="absolute top-1.5 right-1.5 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+              className="absolute top-1.5 end-1.5 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
               title={t('admin.mediaUploader.remove')}
             >
               <X className="w-3.5 h-3.5" />

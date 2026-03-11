@@ -198,13 +198,13 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('admin.customerVideos.searchPlaceholder') || 'Search videos...'}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full ps-9 pe-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
           />
         </div>
 
@@ -224,10 +224,10 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
           </button>
 
           {filterOpen && (
-            <div className="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
+            <div className="absolute end-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
               <button
                 onClick={() => { setSelectedContentType(''); setFilterOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${!selectedContentType ? 'font-medium text-teal-600' : 'text-slate-600'}`}
+                className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${!selectedContentType ? 'font-medium text-teal-600' : 'text-slate-600'}`}
               >
                 {t('admin.customerVideos.allCategories')}
               </button>
@@ -235,7 +235,7 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
                 <button
                   key={ct}
                   onClick={() => { setSelectedContentType(ct); setFilterOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${selectedContentType === ct ? 'font-medium text-teal-600' : 'text-slate-600'}`}
+                  className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${selectedContentType === ct ? 'font-medium text-teal-600' : 'text-slate-600'}`}
                 >
                   {t(`admin.customerVideos.${ct}`)}
                 </button>
@@ -339,21 +339,21 @@ function VideoCard({
 
         {/* Duration badge */}
         {durationStr && (
-          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+          <span className="absolute bottom-2 end-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
             {durationStr}
           </span>
         )}
 
         {/* Platform badge */}
         {item.platform && PLATFORM_BADGES[item.platform] && (
-          <span className={`absolute top-2 left-2 text-xs px-1.5 py-0.5 rounded font-medium ${PLATFORM_BADGES[item.platform].color}`}>
+          <span className={`absolute top-2 start-2 text-xs px-1.5 py-0.5 rounded font-medium ${PLATFORM_BADGES[item.platform].color}`}>
             {PLATFORM_BADGES[item.platform].label}
           </span>
         )}
 
         {/* Video source badge (for featured videos) */}
         {item.type === 'featured' && item.videoSource && (
-          <span className="absolute top-2 left-2 bg-white/80 text-slate-600 text-xs px-1.5 py-0.5 rounded font-medium">
+          <span className="absolute top-2 start-2 bg-white/80 text-slate-600 text-xs px-1.5 py-0.5 rounded font-medium">
             {item.videoSource}
           </span>
         )}

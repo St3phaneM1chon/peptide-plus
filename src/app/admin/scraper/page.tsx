@@ -144,7 +144,7 @@ export default function ScraperPage() {
             }`}
           />
         ))}
-        <span className="ml-1 text-xs text-zinc-400">{rating.toFixed(1)}</span>
+        <span className="ms-1 text-xs text-zinc-400">{rating.toFixed(1)}</span>
       </span>
     );
   };
@@ -170,14 +170,14 @@ export default function ScraperPage() {
               {t('admin.scraper.queryLabel')}
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder={t('admin.scraper.queryPlaceholder')}
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
               />
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function ScraperPage() {
               {t('admin.scraper.locationLabel')}
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
                 value={mapSelection ? mapSelection.label : location}
@@ -199,7 +199,7 @@ export default function ScraperPage() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder={t('admin.scraper.locationPlaceholder')}
                 disabled={!!mapSelection}
-                className={`w-full rounded-lg border border-zinc-600 bg-zinc-900 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors ${
+                className={`w-full rounded-lg border border-zinc-600 bg-zinc-900 ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors ${
                   mapSelection ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -336,7 +336,7 @@ export default function ScraperPage() {
             </span>
             <span className="text-zinc-600">|</span>
             <span>
-              <Mail className="inline h-3.5 w-3.5 mr-1" />
+              <Mail className="inline h-3.5 w-3.5 me-1" />
               <span className="font-semibold text-white">{emailCount}</span>{' '}
               {t('admin.scraper.emailsFound')}
             </span>
@@ -347,25 +347,25 @@ export default function ScraperPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-700/50 bg-zinc-800/80">
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colName')}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colAddress')}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colPhone')}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colEmail')}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colWebsite')}
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
                     {t('admin.scraper.colRating')}
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-zinc-300">
+                  <th className="px-4 py-3 text-end font-medium text-zinc-300">
                     {t('admin.scraper.colReviews')}
                   </th>
                 </tr>
@@ -439,7 +439,7 @@ export default function ScraperPage() {
                     <td className="px-4 py-3">{renderStars(place.googleRating)}</td>
 
                     {/* Reviews */}
-                    <td className="px-4 py-3 text-right text-zinc-400">
+                    <td className="px-4 py-3 text-end text-zinc-400">
                       {place.googleReviewCount !== null
                         ? place.googleReviewCount.toLocaleString()
                         : '—'}

@@ -158,7 +158,7 @@ export default function AdminConsentsPage() {
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="text-xs text-gray-500 mb-1 block">
-              <Search className="h-3 w-3 inline mr-1" />
+              <Search className="h-3 w-3 inline me-1" />
               {t('common.search')}
             </label>
             <div className="flex gap-2">
@@ -177,7 +177,7 @@ export default function AdminConsentsPage() {
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">
-              <Filter className="h-3 w-3 inline mr-1" />
+              <Filter className="h-3 w-3 inline me-1" />
               {t('admin.consents.statusColumn')}
             </label>
             <select
@@ -231,19 +231,19 @@ export default function AdminConsentsPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">
-                    <User className="h-3 w-3 inline mr-1" />
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">
+                    <User className="h-3 w-3 inline me-1" />
                     {t('admin.consents.clientColumn')}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.typeColumn')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.subjectColumn')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.statusColumn')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">
-                    <Calendar className="h-3 w-3 inline mr-1" />
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">{t('admin.consents.typeColumn')}</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">{t('admin.consents.subjectColumn')}</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">{t('admin.consents.statusColumn')}</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">
+                    <Calendar className="h-3 w-3 inline me-1" />
                     {t('admin.consents.dateColumn')}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">{t('admin.consents.requestedByColumn')}</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-700">{t('common.actions')}</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-700">{t('admin.consents.requestedByColumn')}</th>
+                  <th className="text-end px-4 py-3 font-medium text-gray-700">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -288,7 +288,7 @@ export default function AdminConsentsPage() {
                     <td className="px-4 py-3 text-xs text-gray-600">
                       {consent.requestedBy?.name || '—'}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           href={`/admin/media/consents/${consent.id}`}

@@ -186,21 +186,21 @@ export default function CallCenterKPIsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-6 py-3 text-gray-500 font-medium">Agent</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Total Calls</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Answered</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Avg Handle Time</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">FCR %</th>
+                    <th className="text-start px-6 py-3 text-gray-500 font-medium">Agent</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Total Calls</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Answered</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Avg Handle Time</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">FCR %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {(data?.agents || []).map(agent => (
                     <tr key={agent.agentId} className="hover:bg-gray-50">
                       <td className="px-6 py-3 font-medium text-gray-900">{agent.name}</td>
-                      <td className="px-6 py-3 text-right text-gray-700">{agent.totalCalls}</td>
-                      <td className="px-6 py-3 text-right text-gray-700">{agent.answered}</td>
-                      <td className="px-6 py-3 text-right text-gray-700">{formatSeconds(agent.avgHandleTime)}</td>
-                      <td className="px-6 py-3 text-right">
+                      <td className="px-6 py-3 text-end text-gray-700">{agent.totalCalls}</td>
+                      <td className="px-6 py-3 text-end text-gray-700">{agent.answered}</td>
+                      <td className="px-6 py-3 text-end text-gray-700">{formatSeconds(agent.avgHandleTime)}</td>
+                      <td className="px-6 py-3 text-end">
                         <span className={`font-medium ${agent.fcrRate >= 80 ? 'text-green-600' : agent.fcrRate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
                           {agent.fcrRate}%
                         </span>

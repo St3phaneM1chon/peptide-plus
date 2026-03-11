@@ -394,7 +394,7 @@ export default function MediaLibraryPage() {
           <button onClick={handleOrganizeFiles} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
             {t('admin.media.moveToFolder') || 'Move to folder'}
           </button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-slate-500 hover:text-slate-700 text-xs">
+          <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
             {t('common.clearSelection') || 'Clear'}
           </button>
         </div>
@@ -403,9 +403,9 @@ export default function MediaLibraryPage() {
       {/* Filters row */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
+            className="w-full ps-9 pe-3 py-2 border border-slate-300 rounded-lg text-sm"
             placeholder={t('common.search')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
@@ -476,7 +476,7 @@ export default function MediaLibraryPage() {
             {items.map(item => (
               <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(item.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
                 {/* Selection checkbox */}
-                <div className="absolute top-2 left-2 z-10">
+                <div className="absolute top-2 start-2 z-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(item.id)}
@@ -487,7 +487,7 @@ export default function MediaLibraryPage() {
                 </div>
                 {/* A86 FIX: "New" badge for media uploaded less than 24 hours ago */}
                 {(Date.now() - new Date(item.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
-                  <span className="absolute top-2 left-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
+                  <span className="absolute top-2 start-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
                     {t('common.new') || 'New'}
                   </span>
                 )}
@@ -511,7 +511,7 @@ export default function MediaLibraryPage() {
                 </div>
                 <button
                   onClick={() => copyUrl(item)}
-                  className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                  className="absolute top-2 end-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
                   aria-label="Copier l'URL du fichier"
                 >
                   {copiedId === item.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-600" />}
@@ -524,7 +524,7 @@ export default function MediaLibraryPage() {
         // A100 FIX: Animate-in on view switch with fade transition
         <div className="bg-white rounded-lg border border-slate-200 divide-y animate-in fade-in duration-200">
           <div className="flex items-center gap-3 p-2 bg-slate-50 text-xs text-slate-600 font-medium border-b">
-            <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 ml-1" aria-label="Select all files" />
+            <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 ms-1" aria-label="Select all files" />
             <span>{t('common.selectAll') || 'Select all'}</span>
           </div>
           {items.map(item => (
@@ -598,7 +598,7 @@ export default function MediaLibraryPage() {
           }}
         >
           <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
+            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F2 - Use NextImage instead of native <img> */}

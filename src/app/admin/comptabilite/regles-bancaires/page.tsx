@@ -528,14 +528,14 @@ export default function ReglesBancairesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left">
+                <tr className="border-b border-slate-100 text-start">
                   <th className="px-4 py-3 font-medium text-slate-500 w-16">{t('admin.bankRules.priority') || 'Priority'}</th>
                   <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.ruleName') || 'Name'}</th>
                   <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.conditions') || 'Conditions'}</th>
                   <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.actionCol') || 'Actions'}</th>
                   <th className="px-4 py-3 font-medium text-slate-500 text-center w-24">{t('admin.bankRules.applied') || 'Applied'}</th>
                   <th className="px-4 py-3 font-medium text-slate-500 text-center w-20">{t('admin.bankRules.status') || 'Status'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500 text-right w-32"></th>
+                  <th className="px-4 py-3 font-medium text-slate-500 text-end w-32"></th>
                 </tr>
               </thead>
               <tbody>
@@ -624,7 +624,7 @@ export default function ReglesBancairesPage() {
                     </td>
 
                     {/* Edit / Delete */}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEditModal(rule)}

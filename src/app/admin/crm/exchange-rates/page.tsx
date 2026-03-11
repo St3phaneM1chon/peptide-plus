@@ -152,11 +152,11 @@ export default function ExchangeRatesPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">{t('common.from') || 'From'}</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">{t('common.to') || 'To'}</th>
-                <th className="text-right text-xs font-medium text-gray-500 px-4 py-3">{t('admin.crm.rate') || 'Rate'}</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">{t('common.source') || 'Source'}</th>
-                <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">{t('admin.crm.lastUpdated') || 'Last Updated'}</th>
+                <th className="text-start text-xs font-medium text-gray-500 px-4 py-3">{t('common.from') || 'From'}</th>
+                <th className="text-start text-xs font-medium text-gray-500 px-4 py-3">{t('common.to') || 'To'}</th>
+                <th className="text-end text-xs font-medium text-gray-500 px-4 py-3">{t('admin.crm.rate') || 'Rate'}</th>
+                <th className="text-start text-xs font-medium text-gray-500 px-4 py-3">{t('common.source') || 'Source'}</th>
+                <th className="text-start text-xs font-medium text-gray-500 px-4 py-3">{t('admin.crm.lastUpdated') || 'Last Updated'}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -164,7 +164,7 @@ export default function ExchangeRatesPage() {
                 <tr key={rate.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{rate.fromCurrency}</td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{rate.toCurrency}</td>
-                  <td className="px-4 py-3 text-sm text-right font-mono text-gray-700">{Number(rate.rate).toFixed(4)}</td>
+                  <td className="px-4 py-3 text-sm text-end font-mono text-gray-700">{Number(rate.rate).toFixed(4)}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${rate.source === 'api' ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'}`}>{rate.source}</span>
                   </td>

@@ -221,7 +221,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
 
                         {/* Child categories - always visible */}
                         {parent.children.length > 0 && (
-                          <ul className="ml-3 mt-1 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                          <ul className="ms-3 mt-1 space-y-0.5 border-s-2 border-gray-100 ps-2">
                             {parent.children.map((child) => (
                               <li key={child.id}>
                                 <Link

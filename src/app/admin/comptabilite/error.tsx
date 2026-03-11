@@ -62,7 +62,7 @@ export default function ComptabiliteError({
           {t('admin.errors.tryAgain')}
         </button>
 
-        <details className="mt-6 text-left">
+        <details className="mt-6 text-start">
           <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600">
             {t('admin.errors.technicalDetails')}
           </summary>

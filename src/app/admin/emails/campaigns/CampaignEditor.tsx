@@ -253,7 +253,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               className={`px-2 py-1 text-[10px] font-medium rounded ${mode === 'code' ? 'bg-slate-200 text-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
               aria-label="Basculer entre mode visuel et HTML"
             >
-              <Code className="h-3 w-3 inline mr-1" />{mode === 'code' ? 'HTML' : 'Visual'}
+              <Code className="h-3 w-3 inline me-1" />{mode === 'code' ? 'HTML' : 'Visual'}
             </button>
           </div>
 
@@ -266,12 +266,12 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
                   <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-teal-600 hover:bg-teal-50 rounded" aria-label="Inserer une variable">
                     <Variable className="h-3 w-3" /> Variables
                   </button>
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
+                  <div className="absolute end-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
                     {['prenom', 'email', 'nom', 'company'].map(v => (
                       <button
                         key={v}
                         onClick={() => insertVariable(v)}
-                        className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                        className="block w-full text-start px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
                       >
                         {`{{${v}}}`}
                       </button>
@@ -344,7 +344,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
         <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 flex-shrink-0">
           <details className="text-xs">
             <summary className="cursor-pointer text-slate-500 font-medium">
-              <Type className="h-3 w-3 inline mr-1" />
+              <Type className="h-3 w-3 inline me-1" />
               {t('admin.emails.campaigns.textVersion')}
             </summary>
             <textarea

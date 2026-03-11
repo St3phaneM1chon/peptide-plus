@@ -641,7 +641,7 @@ export default function WorkflowsPage() {
             <button
               key={s}
               onClick={() => setStatusFilter(prev => (prev === s ? '' : s))}
-              className={`rounded-lg border p-3 text-left transition-colors ${
+              className={`rounded-lg border p-3 text-start transition-colors ${
                 statusFilter === s ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50'
               }`}
             >
@@ -756,7 +756,7 @@ export default function WorkflowsPage() {
                 </select>
 
                 {triggerConfigFields.length > 0 && (
-                  <div className="mt-3 space-y-2 pl-3 border-l-2 border-purple-100">
+                  <div className="mt-3 space-y-2 ps-3 border-s-2 border-purple-100">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       {t('admin.crm.triggerConfig') || 'Trigger Configuration'}
                     </p>

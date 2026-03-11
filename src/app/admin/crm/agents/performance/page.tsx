@@ -141,14 +141,14 @@ export default function AgentPerformancePage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">#</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Agent</th>
+                <th className="text-start px-4 py-3 text-xs font-medium text-gray-500">#</th>
+                <th className="text-start px-4 py-3 text-xs font-medium text-gray-500">Agent</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Calls</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Connected</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Contact Rate</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">AHT</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Conversions</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Revenue</th>
+                <th className="text-end px-4 py-3 text-xs font-medium text-gray-500">Revenue</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Talk Time</th>
               </tr>
             </thead>
@@ -180,7 +180,7 @@ export default function AgentPerformancePage() {
                     </td>
                     <td className="text-center px-4 py-3 text-sm text-gray-500">{formatDuration(Math.round(agent.stats.avgHandleTime))}</td>
                     <td className="text-center px-4 py-3 text-sm font-bold text-purple-600">{agent.stats.conversions}</td>
-                    <td className="text-right px-4 py-3 text-sm font-medium text-emerald-600">{formatCurrency(agent.stats.revenue)}</td>
+                    <td className="text-end px-4 py-3 text-sm font-medium text-emerald-600">{formatCurrency(agent.stats.revenue)}</td>
                     <td className="text-center px-4 py-3 text-sm text-gray-500">{formatDuration(agent.stats.totalTalkTime)}</td>
                   </tr>
                 );

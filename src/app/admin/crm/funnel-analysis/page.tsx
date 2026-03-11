@@ -180,7 +180,7 @@ export default function FunnelAnalysisPage() {
                 const widthPct = totalInitial > 0 ? Math.max(8, (stage.count / totalInitial) * 100) : 100;
                 return (
                   <div key={stage.stageId} className="flex items-center gap-4">
-                    <div className="w-32 text-right text-sm text-gray-600 shrink-0 truncate">
+                    <div className="w-32 text-end text-sm text-gray-600 shrink-0 truncate">
                       {stage.stageName}
                     </div>
                     <div className="flex-1">
@@ -197,7 +197,7 @@ export default function FunnelAnalysisPage() {
                         {stage.count} deals
                       </div>
                     </div>
-                    <div className="w-20 text-sm text-right shrink-0">
+                    <div className="w-20 text-sm text-end shrink-0">
                       <span className={i === 0 ? 'text-teal-600 font-medium' : 'text-gray-600'}>
                         {stage.conversionRate}%
                       </span>
@@ -227,11 +227,11 @@ export default function FunnelAnalysisPage() {
                       />
                     </div>
                   </div>
-                  <div className="w-24 text-right text-sm shrink-0">
+                  <div className="w-24 text-end text-sm shrink-0">
                     <span className="text-red-500 font-medium">{stage.dropOff}</span>
-                    <span className="text-gray-400 ml-1">({stage.dropOffRate}%)</span>
+                    <span className="text-gray-400 ms-1">({stage.dropOffRate}%)</span>
                   </div>
-                  <div className="w-20 text-right text-sm text-gray-400 shrink-0">
+                  <div className="w-20 text-end text-sm text-gray-400 shrink-0">
                     {fmt(stage.totalValue)}
                   </div>
                 </div>

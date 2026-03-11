@@ -184,7 +184,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 ml-3">
+                  <div className="flex items-center gap-1 ms-3">
                     {campaign.status === 'DRAFT' && (
                       <>
                         <button

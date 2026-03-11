@@ -177,14 +177,14 @@ export default function CampagnesClient({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.name')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.status')}</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.contacts')}</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.called')}</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.connected')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.callerId')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.schedule')}</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600"></th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.name')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.status')}</th>
+              <th className="text-end px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.contacts')}</th>
+              <th className="text-end px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.called')}</th>
+              <th className="text-end px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.connected')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.callerId')}</th>
+              <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.campaigns.schedule')}</th>
+              <th className="text-end px-4 py-3 font-medium text-gray-600"></th>
             </tr>
           </thead>
           <tbody>
@@ -206,24 +206,24 @@ export default function CampagnesClient({
                       {badge.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1 text-gray-700">
                       <Users className="w-3.5 h-3.5 text-gray-400" />
                       {campaign.totalContacts}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1 text-gray-700">
                       <Phone className="w-3.5 h-3.5 text-gray-400" />
                       {campaign.totalCalled}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1 text-gray-700">
                       <BarChart3 className="w-3.5 h-3.5 text-gray-400" />
                       {campaign.totalConnected}
                       {campaign.totalCalled > 0 && (
-                        <span className="text-xs text-gray-400 ml-1">({connectRate}%)</span>
+                        <span className="text-xs text-gray-400 ms-1">({connectRate}%)</span>
                       )}
                     </div>
                   </td>
@@ -233,7 +233,7 @@ export default function CampagnesClient({
                       ? `${campaign.startTime}-${campaign.endTime}`
                       : '-'}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1">
                       <button onClick={() => openEdit(campaign)} className="p-1.5 text-gray-400 hover:text-teal-600 rounded">
                         <Pencil className="w-4 h-4" />

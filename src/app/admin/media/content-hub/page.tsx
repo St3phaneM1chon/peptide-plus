@@ -211,19 +211,19 @@ export default function ContentHubPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="text-left py-2 pr-4 font-medium text-slate-500">
+                  <th className="text-start py-2 pe-4 font-medium text-slate-500">
                     {t('admin.contentHub.videoTitle') || 'Title'}
                   </th>
-                  <th className="text-left py-2 pr-4 font-medium text-slate-500">
+                  <th className="text-start py-2 pe-4 font-medium text-slate-500">
                     {t('admin.contentHub.status') || 'Status'}
                   </th>
-                  <th className="text-left py-2 pr-4 font-medium text-slate-500">
+                  <th className="text-start py-2 pe-4 font-medium text-slate-500">
                     {t('admin.contentHub.type') || 'Type'}
                   </th>
-                  <th className="text-right py-2 pr-4 font-medium text-slate-500">
+                  <th className="text-end py-2 pe-4 font-medium text-slate-500">
                     {t('admin.contentHub.views') || 'Views'}
                   </th>
-                  <th className="text-right py-2 font-medium text-slate-500">
+                  <th className="text-end py-2 font-medium text-slate-500">
                     {t('admin.contentHub.date') || 'Date'}
                   </th>
                 </tr>
@@ -233,25 +233,25 @@ export default function ContentHubPage() {
                   const statusBadge = STATUS_BADGES[video.status] || STATUS_BADGES.DRAFT;
                   return (
                     <tr key={video.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="py-2.5 pr-4">
+                      <td className="py-2.5 pe-4">
                         <span className="font-medium text-slate-900 truncate block max-w-[280px]">
                           {video.title}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4">
+                      <td className="py-2.5 pe-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.text}`}>
                           {t(statusBadge.key)}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4">
+                      <td className="py-2.5 pe-4">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 capitalize">
                           {video.contentType}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4 text-right text-slate-600">
+                      <td className="py-2.5 pe-4 text-end text-slate-600">
                         {formatNumber(video.views)}
                       </td>
-                      <td className="py-2.5 text-right text-slate-500">
+                      <td className="py-2.5 text-end text-slate-500">
                         {formatDate(video.createdAt)}
                       </td>
                     </tr>

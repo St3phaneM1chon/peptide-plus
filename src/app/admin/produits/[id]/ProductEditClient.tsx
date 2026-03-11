@@ -1203,11 +1203,11 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-neutral-600">Deal</th>
-                      <th className="px-3 py-2 text-left text-neutral-600">Stage</th>
-                      <th className="px-3 py-2 text-right text-neutral-600">Qty</th>
-                      <th className="px-3 py-2 text-right text-neutral-600">Total</th>
-                      <th className="px-3 py-2 text-right text-neutral-600">Date</th>
+                      <th className="px-3 py-2 text-start text-neutral-600">Deal</th>
+                      <th className="px-3 py-2 text-start text-neutral-600">Stage</th>
+                      <th className="px-3 py-2 text-end text-neutral-600">Qty</th>
+                      <th className="px-3 py-2 text-end text-neutral-600">Total</th>
+                      <th className="px-3 py-2 text-end text-neutral-600">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -1219,9 +1219,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                             {d.stage}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-right">{d.quantity}</td>
-                        <td className="px-3 py-2 text-right">{formatCurrency(d.total)}</td>
-                        <td className="px-3 py-2 text-right text-neutral-500">{new Date(d.date).toLocaleDateString(locale)}</td>
+                        <td className="px-3 py-2 text-end">{d.quantity}</td>
+                        <td className="px-3 py-2 text-end">{formatCurrency(d.total)}</td>
+                        <td className="px-3 py-2 text-end text-neutral-500">{new Date(d.date).toLocaleDateString(locale)}</td>
                       </tr>
                     ))}
                   </tbody>

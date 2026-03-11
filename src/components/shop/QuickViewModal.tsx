@@ -221,7 +221,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
         role="dialog"
         aria-modal="true"
         aria-label={t('shop.aria.quickViewDetails')}
-        className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-4xl bg-white rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-up motion-safe:animate-[slideUp_0.3s_ease-out]"
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:start-1/2 md:-translate-x-1/2 md:w-full md:max-w-4xl bg-white rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-up motion-safe:animate-[slideUp_0.3s_ease-out]"
       >
         {/* Close Button */}
         <button

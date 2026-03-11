@@ -1,0 +1,1282 @@
+model AccountingAlert {
+  id         String    @id @default(cuid())
+  type       String
+  severity   String    @default("MEDIUM")
+  title      String
+  message    String
+  entityType String?
+  entityId   String?
+  link       String?
+  readAt     DateTime?
+  readBy     String?
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([createdAt])
+  @@index([readAt])
+  @@index([severity])
+  @@index([type])
+  @@index([updatedAt])
+}
+
+// TODO #51: Create AuditTrail model to store structured audit entries instead of console.info logs.
+//   Fields: id, action (CREATE/UPDATE/DELETE/VOID/POST), entityType, entityId,
+//   userId, previousValues (Json?), newValues (Json?), ipAddress, createdAt
+//   This replaces scattered console.info audit logs with queryable DB records.
+// TODO #52: Create RecurringEntryTemplate model to persist recurring templates in DB.
+//   Fields: id, name, description, frequency (DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY),
+//   dayOfMonth, dayOfWeek, monthOfYear, lines (Json), startDate, endDate,
+//   nextRunDate, isActive, autoPost, notifyOnCreate, createdBy, createdAt, updatedAt
+model AccountingPeriod {
+  id               String    @id @default(cuid())
+  name             String
+  code             String    @unique
+  startDate        DateTime
+  endDate          DateTime
+  status           String    @default("OPEN")
+  closedAt         DateTime?
+  closedBy         String?
+  closingChecklist String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([startDate])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FiscalYear {
+  id        String    @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isClosed  Boolean   @default(false)
+  closedAt  DateTime?
+  closedBy  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([startDate])
+  @@index([isClosed])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model AccountingSettings {
+  id                    String  @id @default("default")
+  companyName           String  @default("BioCycle Peptides Inc.")
+  companyAddress        String?
+  companyCity           String  @default("Montréal")
+  companyProvince       String  @default("QC")
+  companyPostalCode     String?
+  companyPhone          String?
+  companyEmail          String?
+  tpsNumber             String?
+  tvqNumber             String?
+  neq                   String?
+  fiscalYearStart       Int     @default(1)
+  accountingMethod      String  @default("ACCRUAL")
+  defaultCurrency       String  @default("CAD")
+  taxFilingFrequency    String  @default("MONTHLY")
+  autoCreateSaleEntries Boolean @default(true)
+  autoReconcileStripe   Boolean @default(true)
+
+  // Quick Method GST/HST (méthode rapide)
+  quickMethodEnabled  Boolean @default(false)
+  quickMethodProvince String  @default("QC")
+
+  // Document Retention Policy
+  blockDeletionDuringRetention Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+  @@index([updatedAt])
+}
+
+model BankAccount {
+  id             String            @id @default(cuid())
+  name           String
+  accountNumber  String?
+  institution    String
+  type           String            @default("CHECKING")
+  currency       String            @default("CAD")
+  chartAccountId String?
+  currentBalance Decimal           @default(0) @db.Decimal(12, 2)
+  lastSyncAt     DateTime?
+  apiCredentials String?
+  isActive       Boolean           @default(true)
+  isDefault      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  transactions   BankTransaction[]
+
+  @@index([chartAccountId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BankTransaction {
+  id                   String               @id @default(cuid())
+  bankAccountId        String
+  date                 DateTime
+  description          String
+  amount               Decimal              @db.Decimal(12, 2)
+  type                 String
+  category             String?
+  reference            String?
+  reconciliationStatus ReconciliationStatus @default(PENDING)
+  matchedEntryId       String?
+  matchedEntry         JournalEntry?        @relation("BankTransactionMatchedEntry", fields: [matchedEntryId], references: [id], onDelete: SetNull)
+  matchedAt            DateTime?
+  matchedBy            String?
+  importBatch          String?
+  importedAt           DateTime             @default(now())
+  rawData              Json?
+  createdAt            DateTime             @default(now())
+  deletedAt            DateTime?
+  bankAccount          BankAccount          @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@index([bankAccountId])
+  @@index([date])
+  @@index([reconciliationStatus])
+  @@index([deletedAt])
+  @@index([reconciliationStatus, date]) // Phase 9: Composite for unreconciled transaction queries
+  @@index([bankAccountId, date]) // Phase 9: Composite for bank statement queries
+  @@index([matchedEntryId])
+  @@index([createdAt])
+}
+
+model Budget {
+  id        String       @id @default(cuid())
+  name      String
+  year      Int
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  lines     BudgetLine[]
+
+  @@index([year])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BudgetLine {
+  id          String   @id @default(cuid())
+  budgetId    String
+  accountCode String
+  accountName String
+  type        String   @default("EXPENSE")
+  january     Decimal  @default(0) @db.Decimal(12, 2)
+  february    Decimal  @default(0) @db.Decimal(12, 2)
+  march       Decimal  @default(0) @db.Decimal(12, 2)
+  april       Decimal  @default(0) @db.Decimal(12, 2)
+  may         Decimal  @default(0) @db.Decimal(12, 2)
+  june        Decimal  @default(0) @db.Decimal(12, 2)
+  july        Decimal  @default(0) @db.Decimal(12, 2)
+  august      Decimal  @default(0) @db.Decimal(12, 2)
+  september   Decimal  @default(0) @db.Decimal(12, 2)
+  october     Decimal  @default(0) @db.Decimal(12, 2)
+  november    Decimal  @default(0) @db.Decimal(12, 2)
+  december    Decimal  @default(0) @db.Decimal(12, 2)
+  total       Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@index([accountCode])
+  @@index([budgetId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ChartOfAccount {
+  id                 String           @id @default(cuid())
+  code               String           @unique
+  name               String
+  description        String?
+  type               AccountType
+  parentId           String?
+  normalBalance      String           @default("DEBIT")
+  isActive           Boolean          @default(true)
+  isSystem           Boolean          @default(false)
+  allowDirectEntry   Boolean          @default(true)
+  // GIFI mapping for CRA T2 corporate tax return
+  gifiCode           String? // GIFI code (e.g. "1001", "8000")
+  gifiName           String? // GIFI name for reference
+  // CCA (Capital Cost Allowance) for depreciable assets
+  ccaClass           Int? // CCA class number (e.g. 8, 10, 50)
+  ccaRate            Decimal? @db.Decimal(5, 4) // F-008: CCA rate (was Float, now Decimal for tax precision)
+  // Deductibility
+  deductiblePercent  Int? // 100 = fully, 50 = meals, 0 = non-deductible
+  isContra           Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  parent             ChartOfAccount?  @relation("ChartOfAccountToChartOfAccount", fields: [parentId], references: [id])
+  children           ChartOfAccount[] @relation("ChartOfAccountToChartOfAccount")
+  journalLines       JournalLine[]
+  fixedAssets        FixedAsset[]     @relation("AssetAccount")
+  depreciationAssets FixedAsset[]     @relation("DepreciationAccount")
+  expenseAssets      FixedAsset[]     @relation("ExpenseAccount")
+  bankRules          BankRule[]       @relation("bankRuleAccount")
+  expenses           Expense[]        @relation("expenseAccount")
+
+  @@index([parentId])
+  @@index([type])
+  @@index([gifiCode])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CreditNote {
+  id               String           @id @default(cuid())
+  creditNoteNumber String           @unique
+  invoiceId        String?
+  orderId          String?
+  customerName     String
+  customerEmail    String?
+  subtotal         Decimal          @db.Decimal(12, 2)
+  taxTps           Decimal          @default(0) @db.Decimal(12, 2)
+  taxTvq           Decimal          @default(0) @db.Decimal(12, 2)
+  taxTvh           Decimal          @default(0) @db.Decimal(12, 2)
+  total            Decimal          @db.Decimal(12, 2)
+  currency         String           @default("CAD")
+  reason           String
+  status           CreditNoteStatus @default(DRAFT)
+  issuedAt         DateTime?
+  issuedBy         String?
+  voidedAt         DateTime?
+  voidedBy         String?
+  journalEntryId   String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+  taxPst           Decimal          @default(0) @db.Decimal(12, 2)
+  invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id])
+
+  @@index([createdAt])
+  @@index([invoiceId])
+  @@index([journalEntryId])
+  @@index([orderId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([updatedAt])
+}
+
+model CustomerInvoice {
+  id              String                @id @default(cuid())
+  invoiceNumber   String                @unique
+  customerId      String?
+  customerName    String
+  customerEmail   String?
+  customerAddress String?
+  orderId         String?
+  subtotal        Decimal               @db.Decimal(12, 2)
+  shippingCost    Decimal               @default(0) @db.Decimal(12, 2)
+  discount        Decimal               @default(0) @db.Decimal(12, 2)
+  taxTps          Decimal               @default(0) @db.Decimal(12, 2)
+  taxTvq          Decimal               @default(0) @db.Decimal(12, 2)
+  taxTvh          Decimal               @default(0) @db.Decimal(12, 2)
+  total           Decimal               @db.Decimal(12, 2)
+  amountPaid      Decimal               @default(0) @db.Decimal(12, 2)
+  balance         Decimal               @db.Decimal(12, 2)
+  currency        String                @default("CAD")
+  invoiceDate     DateTime
+  dueDate         DateTime
+  paidAt          DateTime?
+  status          InvoiceStatus         @default(SENT)
+  pdfUrl          String?
+  notes           String?
+  remindersSent   Int                   @default(0)
+  lastReminderAt  DateTime?
+  journalEntryId  String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  deletedAt       DateTime?
+  taxPst          Decimal               @default(0) @db.Decimal(12, 2)
+  creditNotes     CreditNote[]
+  items           CustomerInvoiceItem[]
+
+  @@index([customerId])
+  @@index([dueDate])
+  @@index([journalEntryId])
+  @@index([orderId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([invoiceDate]) // S10: Index for date range filtering (gst-qst-declaration, tax reports)
+  @@index([paidAt]) // S10: Index for payment reconciliation queries
+  @@index([status, dueDate]) // Phase 9: Composite for overdue invoice queries
+  @@index([status, deletedAt]) // S10: Composite for active invoice queries (aging, alerts)
+  @@index([customerId, status]) // Phase 9: Composite for customer invoice listing
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CustomerInvoiceItem {
+  id          String          @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int             @default(1)
+  unitPrice   Decimal         @db.Decimal(12, 2)
+  discount    Decimal         @default(0) @db.Decimal(12, 2)
+  total       Decimal         @db.Decimal(12, 2)
+  productId   String?
+  productSku  String?
+  createdAt   DateTime        @default(now())
+  invoice     CustomerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  expenseNumber String   @unique
+  date          DateTime
+  description   String
+
+  // Amounts
+  subtotal Decimal @db.Decimal(12, 2)
+  taxGst   Decimal @default(0) @db.Decimal(12, 2)
+  taxQst   Decimal @default(0) @db.Decimal(12, 2)
+  taxOther Decimal @default(0) @db.Decimal(12, 2)
+  total    Decimal @db.Decimal(12, 2)
+
+  // Categorization
+  category          String // meals, travel, office, professional, advertising, etc.
+  accountId         String?
+  account           ChartOfAccount? @relation("expenseAccount", fields: [accountId], references: [id])
+  deductiblePercent Int             @default(100) // 100, 50, or 0
+
+  // Vendor
+  vendorName      String?
+  vendorTaxNumber String? // GST/QST registration number
+
+  // Receipt
+  receiptUrl String?
+  ocrData    Json?
+
+  // Approval
+  status          ExpenseStatus @default(DRAFT)
+  submittedBy     String?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?
+
+  // Mileage (if applicable)
+  mileageKm   Float?
+  mileageRate Float? // CRA rate per km
+
+  // Payment
+  paymentMethod String? // cash, credit_card, debit, company_card, reimbursement
+  reimbursed    Boolean   @default(false)
+  reimbursedAt  DateTime?
+
+  // Relations
+  journalEntryId String?
+
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([accountId])
+  @@index([journalEntryId])
+  @@index([status])
+  @@index([category])
+  @@index([date])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// TODO #55: Add @default(cuid()) to id fields in accounting models:
+//   JournalEntry, JournalLine, TaxReport, BankTransaction, AccountingPeriod, AccountingAlert
+//   Currently these models require manual ID generation which is error-prone.
+model JournalEntry {
+  id           String             @id @default(cuid())
+  entryNumber  String             @unique
+  date         DateTime
+  description  String
+  type         JournalEntryType   @default(MANUAL)
+  status       JournalEntryStatus @default(DRAFT)
+  reference    String?
+  orderId      String?
+  createdBy    String
+  postedBy     String?
+  postedAt     DateTime?
+  voidedBy     String?
+  voidedAt     DateTime?
+  voidReason   String?
+  attachments  String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+  currency     String             @default("CAD")
+  exchangeRate Decimal            @default(1.000000) @db.Decimal(10, 6)
+  lines            JournalLine[]
+  bankTransactions BankTransaction[] @relation("BankTransactionMatchedEntry")
+
+  @@index([date])
+  @@index([orderId])
+  @@index([status])
+  @@index([type])
+  @@index([status, date])
+  @@index([deletedAt])
+  @@index([reference]) // #56 - Index for reference lookups (reconciliation, Stripe sync)
+  @@index([createdBy]) // S10: Index for audit trail lookups by creator
+  @@index([type, deletedAt]) // S10: Composite for stripe-sync queries (find by type, exclude deleted)
+  @@index([status, deletedAt]) // S10: Composite for active entry queries by status
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model JournalLine {
+  id          String         @id @default(cuid())
+  entryId     String
+  accountId   String
+  description String?
+  debit       Decimal        @default(0) @db.Decimal(12, 2)
+  credit      Decimal        @default(0) @db.Decimal(12, 2)
+  costCenter  String?
+  projectCode String?
+  createdAt   DateTime       @default(now())
+  account     ChartOfAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  entry       JournalEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([entryId])
+  @@index([accountId, entryId])
+  @@index([createdAt])
+}
+
+model SupplierInvoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String
+  supplierId      String?
+  supplierName    String
+  supplierEmail   String?
+  subtotal        Decimal       @db.Decimal(12, 2)
+  taxTps          Decimal       @default(0) @db.Decimal(12, 2)
+  taxTvq          Decimal       @default(0) @db.Decimal(12, 2)
+  taxOther        Decimal       @default(0) @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  amountPaid      Decimal       @default(0) @db.Decimal(12, 2)
+  balance         Decimal       @db.Decimal(12, 2)
+  currency        String        @default("CAD")
+  invoiceDate     DateTime
+  dueDate         DateTime
+  paidAt          DateTime?
+  status          InvoiceStatus @default(DRAFT)
+  expenseCategory String?
+  documentUrl     String?
+  notes           String?
+  journalEntryId  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  @@index([dueDate])
+  @@index([invoiceDate])
+  @@index([journalEntryId])
+  @@index([status])
+  @@index([supplierId])
+  @@index([deletedAt])
+  @@index([status, invoiceDate]) // S10: Composite for tax-summary & gst-qst-declaration queries
+  @@index([status, deletedAt]) // S10: Composite for active invoice queries (aging, filtering)
+  @@index([supplierId, status]) // S10: Composite for supplier invoice listing with status filter
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@unique([invoiceNumber, supplierId]) // F012 FIX: Different suppliers can reuse the same invoice number
+}
+
+model TaxReport {
+  id                String          @id @default(cuid())
+  period            String
+  periodType        String          @default("MONTHLY")
+  year              Int
+  month             Int?
+  quarter           Int?
+  region            String
+  regionCode        String
+  tpsCollected      Decimal         @default(0) @db.Decimal(12, 2)
+  tvqCollected      Decimal         @default(0) @db.Decimal(12, 2)
+  tvhCollected      Decimal         @default(0) @db.Decimal(12, 2)
+  otherTaxCollected Decimal         @default(0) @db.Decimal(12, 2)
+  tpsPaid           Decimal         @default(0) @db.Decimal(12, 2)
+  tvqPaid           Decimal         @default(0) @db.Decimal(12, 2)
+  tvhPaid           Decimal         @default(0) @db.Decimal(12, 2)
+  otherTaxPaid      Decimal         @default(0) @db.Decimal(12, 2)
+  netTps            Decimal         @default(0) @db.Decimal(12, 2)
+  netTvq            Decimal         @default(0) @db.Decimal(12, 2)
+  netTvh            Decimal         @default(0) @db.Decimal(12, 2)
+  netTotal          Decimal         @default(0) @db.Decimal(12, 2)
+  salesCount        Int             @default(0)
+  totalSales        Decimal         @default(0) @db.Decimal(12, 2)
+  status            TaxReportStatus @default(DRAFT)
+  generatedAt       DateTime        @default(now())
+  filedAt           DateTime?
+  paidAt            DateTime?
+  dueDate           DateTime
+  filingNumber      String?
+  pdfUrl            String?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  //   Currently TaxReport has no updatedAt, making it impossible to track when reports are modified.
+
+  @@unique([regionCode, year, month])
+  @@index([status])
+  @@index([year])
+  @@index([year, regionCode]) // #58 - Composite index for tax report queries filtered by year+region
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model RecurringEntryTemplate {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  frequency    String // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  dayOfMonth   Int? // for MONTHLY
+  dayOfWeek    Int? // for WEEKLY (0=Sun, 6=Sat)
+  nextRunDate  DateTime
+  lastRunDate  DateTime?
+  isActive     Boolean   @default(true)
+  templateData Json // { lines: [{accountId, debit, credit}], description, type }
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive, nextRunDate])
+  @@index([frequency])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// FIXED ASSETS / IMMOBILISATIONS (CCA)
+// =============================================
+model FixedAsset {
+  id                      String                   @id @default(cuid())
+  name                    String
+  description             String?
+  // Asset details
+  assetNumber             String                   @unique // Internal tracking number (e.g. FA-001)
+  serialNumber            String?
+  location                String?
+  // Financial
+  acquisitionDate         DateTime
+  acquisitionCost         Decimal                  @db.Decimal(12, 2)
+  residualValue           Decimal                  @default(0) @db.Decimal(12, 2)
+  currentBookValue        Decimal                  @db.Decimal(12, 2) // Updated after each depreciation
+  accumulatedDepreciation Decimal                  @default(0) @db.Decimal(12, 2)
+  // CCA (Capital Cost Allowance)
+  ccaClass                Int // CCA class number (8, 10, 12, 13, 14.1, 50, etc.)
+  ccaRate                 Decimal @db.Decimal(5, 4) // F-008: CCA rate (was Float, now Decimal for tax precision)
+  depreciationMethod      String                   @default("DECLINING_BALANCE") // DECLINING_BALANCE, STRAIGHT_LINE, LEASE_TERM
+  halfYearRuleApplied     Boolean                  @default(true) // Half-year rule for first year
+  aiiApplied              Boolean                  @default(false) // Accelerated Investment Incentive (1.5x first year)
+  superDeduction          Boolean                  @default(false) // 100% immediate expensing (Budget 2025)
+  // GIFI
+  gifiCode                String? // GIFI code for this asset category
+  // Status
+  status                  String                   @default("ACTIVE") // ACTIVE, DISPOSED, FULLY_DEPRECIATED, WRITTEN_OFF
+  disposalDate            DateTime?
+  disposalProceeds        Decimal?                 @db.Decimal(12, 2)
+  disposalGainLoss        Decimal?                 @db.Decimal(12, 2)
+  // Linked accounts
+  assetAccountId          String // Balance sheet asset account
+  depreciationAccountId   String // Accumulated depreciation contra account
+  expenseAccountId        String // Depreciation expense account
+  assetAccount            ChartOfAccount           @relation("AssetAccount", fields: [assetAccountId], references: [id], onDelete: Restrict)
+  depreciationAccount     ChartOfAccount           @relation("DepreciationAccount", fields: [depreciationAccountId], references: [id], onDelete: Restrict)
+  expenseAccount          ChartOfAccount           @relation("ExpenseAccount", fields: [expenseAccountId], references: [id], onDelete: Restrict)
+  // Metadata
+  notes                   String?
+  attachments             Json? // Array of file references
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  depreciationEntries     FixedAssetDepreciation[]
+
+  @@index([ccaClass])
+  @@index([depreciationAccountId])
+  @@index([expenseAccountId])
+  @@index([status])
+  @@index([assetAccountId])
+  @@index([acquisitionDate])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FixedAssetDepreciation {
+  id             String     @id @default(cuid())
+  fixedAssetId   String
+  fixedAsset     FixedAsset @relation(fields: [fixedAssetId], references: [id], onDelete: Cascade)
+  // Period
+  fiscalYear     Int // e.g. 2026
+  periodStart    DateTime
+  periodEnd      DateTime
+  // Amounts
+  openingUCC     Decimal    @db.Decimal(12, 2) // Undepreciated Capital Cost at start
+  ccaClaimed     Decimal    @db.Decimal(12, 2) // CCA claimed this period
+  closingUCC     Decimal    @db.Decimal(12, 2) // UCC at end of period
+  // Journal entry reference
+  journalEntryId String?
+  // Metadata
+  notes          String?
+  createdAt      DateTime   @default(now())
+
+  @@unique([fixedAssetId, fiscalYear])
+  @@index([fiscalYear])
+  @@index([journalEntryId])
+  @@index([createdAt])
+}
+
+// =============================================
+// FISCAL CALENDAR / CALENDRIER FISCAL
+// =============================================
+model FiscalCalendarEvent {
+  id            String    @id @default(cuid())
+  // Event details
+  title         String
+  titleFr       String?
+  description   String?
+  descriptionFr String?
+  // Scheduling
+  dueDate       DateTime
+  reminderDate  DateTime? // When to send reminder
+  // Classification
+  category      String // payroll, corporate_tax, sales_tax, information_return, installment
+  authority     String // CRA, RQ, BOTH, SERVICE_CANADA
+  frequency     String // once, monthly, quarterly, annual
+  // Status
+  status        String    @default("PENDING") // PENDING, COMPLETED, OVERDUE, SKIPPED
+  completedAt   DateTime?
+  completedBy   String?
+  // Amount (for installments/remittances)
+  amount        Decimal?  @db.Decimal(12, 2)
+  // Recurrence (for auto-generated events)
+  isRecurring   Boolean   @default(false)
+  templateId    String? // Reference to the deadline template
+  // Metadata
+  notes         String?
+  attachments   Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([dueDate])
+  @@index([status])
+  @@index([category])
+  @@index([authority])
+  @@index([templateId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// BANK RULES (auto-categorization)
+// =============================================
+model BankRule {
+  id       String  @id @default(cuid())
+  name     String
+  priority Int     @default(0)
+  isActive Boolean @default(true)
+
+  // Conditions (all optional - multiple conditions = AND logic)
+  descriptionContains   String?
+  descriptionStartsWith String?
+  descriptionExact      String?
+  amountMin             Decimal? @db.Decimal(12, 2)
+  amountMax             Decimal? @db.Decimal(12, 2)
+  amountExact           Decimal? @db.Decimal(12, 2)
+  transactionType       String? // DEBIT, CREDIT
+
+  // Actions
+  accountId   String?
+  account     ChartOfAccount? @relation("bankRuleAccount", fields: [accountId], references: [id])
+  categoryTag String?
+  taxCode     String? // GST, QST, HST, EXEMPT, ZERO_RATED
+  description String? // Override description
+
+  // Stats
+  timesApplied  Int       @default(0)
+  lastAppliedAt DateTime?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, priority])
+  @@index([accountId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// ACCOUNTING EXPORT
+// =============================================
+model AccountingExport {
+  id          String   @id @default(cuid())
+  name        String
+  format      String   @default("CSV") // CSV, PDF, QBO, SAGE
+  periodStart DateTime
+  periodEnd   DateTime
+  filters     String?  // JSON: { accountIds, types, statuses }
+  fileUrl     String?
+  fileSize    Int?
+  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMsg    String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+// =============================================
+// OCR SCAN / DOCUMENT SCANNING
+// =============================================
+model OcrScan {
+  id             String   @id @default(cuid())
+  originalUrl    String
+  originalName   String
+  mimeType       String
+  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  extractedText  String?
+  extractedData  String?  // JSON: { vendor, date, total, taxAmount, currency, lineItems }
+  confidence     Float?
+  journalEntryId String?
+  errorMsg       String?
+  createdBy      String
+  createdAt      DateTime @default(now())
+  processedAt    DateTime?
+
+  @@index([status])
+  @@index([createdBy])
+  @@index([journalEntryId])
+  @@index([createdAt])
+}
+
+// DB-007: Custom Reports Builder
+model CustomReport {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  type        String    // INCOME_STATEMENT, BALANCE_SHEET, CASH_FLOW, AR_AGING, AP_AGING, TAX_SUMMARY, JOURNAL_DETAIL, TRIAL_BALANCE, CUSTOM
+  config      String    @db.Text // JSON report configuration (columns, filters, grouping, sorting)
+  isTemplate  Boolean   @default(false)
+  isPublic    Boolean   @default(false) // Visible to all admins
+  createdBy   String?
+  schedule    String?   // Cron expression for automated delivery (null = manual only)
+  recipients  String?   // JSON array of email addresses for scheduled delivery
+  lastRunAt   DateTime?
+  lastRunData String?   @db.Text // Cached last run results (JSON)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([type])
+  @@index([createdBy])
+  @@index([isTemplate])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// DB-010: Cash flow tracking
+model CashFlowEntry {
+  id          String   @id @default(cuid())
+  type        String   // INFLOW, OUTFLOW
+  category    String   // SALES, REFUND, SUBSCRIPTION, PAYROLL, SUPPLIER, TAX, etc.
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("CAD")
+  description String?
+  reference   String?  // Order ID, invoice number, etc.
+  date        DateTime
+  isProjected Boolean  @default(false) // true = forecast, false = actual
+  recurring   Boolean  @default(false)
+  recurFreq   String?  // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@index([date])
+  @@index([isProjected])
+  @@index([type, date])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================
+// Payroll Module - Canadian Payroll (Quebec-based)
+// =============================================
+model Employee {
+  id                 String    @id @default(cuid())
+  userId             String?   // Optional link to User table (not all employees are system users)
+  firstName          String
+  lastName           String
+  email              String
+  sin                String?   // Social Insurance Number (encrypted at rest)
+  dateOfBirth        DateTime?
+  hireDate           DateTime
+  terminationDate    DateTime?
+  employmentType     String    @default("FULL_TIME") // FULL_TIME, PART_TIME, CONTRACT, SEASONAL
+  province           String    @default("QC") // Province code for tax
+  country            String    @default("CA") // CA or US
+  annualSalary       Decimal?  @db.Decimal(12, 2)
+  hourlyRate         Decimal?  @db.Decimal(8, 2)
+  payFrequency       String    @default("BIWEEKLY") // WEEKLY, BIWEEKLY, SEMI_MONTHLY, MONTHLY
+  bankTransitNumber  String?
+  bankInstitution    String?
+  bankAccountNumber  String?
+  federalTdCredit    Decimal   @default(0) @db.Decimal(12, 2) // TD1 federal claim
+  provincialTdCredit Decimal   @default(0) @db.Decimal(12, 2) // TP-1015.3-V QC
+  vacationPayRate    Decimal   @default(4) @db.Decimal(5, 2) // % (4% minimum QC/CA)
+  status             String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  payrollEntries PayrollEntry[]
+  payStubs       PayStub[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model PayrollRun {
+  id                String    @id @default(cuid())
+  runDate           DateTime
+  periodStart       DateTime
+  periodEnd         DateTime
+  payDate           DateTime
+  status            String    @default("DRAFT") // DRAFT, CALCULATED, APPROVED, PAID, VOID
+  totalGross        Decimal   @default(0) @db.Decimal(12, 2)
+  totalDeductions   Decimal   @default(0) @db.Decimal(12, 2)
+  totalNet          Decimal   @default(0) @db.Decimal(12, 2)
+  totalEmployerCost Decimal   @default(0) @db.Decimal(12, 2)
+  journalEntryId    String?   // Link to posted journal entry
+  approvedBy        String?
+  approvedAt        DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  entries PayrollEntry[]
+
+  @@index([status])
+  @@index([periodStart, periodEnd])
+  @@index([deletedAt])
+  @@index([journalEntryId])
+}
+
+model PayrollEntry {
+  id             String  @id @default(cuid())
+  payrollRunId   String
+  employeeId     String
+  hoursWorked    Decimal @default(0) @db.Decimal(8, 2)
+  overtimeHours  Decimal @default(0) @db.Decimal(8, 2)
+  grossPay       Decimal @default(0) @db.Decimal(12, 2)
+
+  // Canadian deductions
+  cppContribution Decimal @default(0) @db.Decimal(10, 2) // CPP/QPP
+  eiPremium       Decimal @default(0) @db.Decimal(10, 2) // EI premium
+  federalTax      Decimal @default(0) @db.Decimal(10, 2)
+  provincialTax   Decimal @default(0) @db.Decimal(10, 2)
+  qpipPremium     Decimal @default(0) @db.Decimal(10, 2) // QPIP (Quebec Parental Insurance)
+
+  // Employer contributions
+  employerCpp  Decimal @default(0) @db.Decimal(10, 2)
+  employerEi   Decimal @default(0) @db.Decimal(10, 2)
+  employerQpip Decimal @default(0) @db.Decimal(10, 2)
+  employerHst  Decimal @default(0) @db.Decimal(10, 2) // Health Services Fund (QC)
+  employerWcb  Decimal @default(0) @db.Decimal(10, 2) // CNESST (QC WCB)
+
+  // Other deductions/benefits
+  vacationPay        Decimal @default(0) @db.Decimal(10, 2)
+  otherDeductions    Decimal @default(0) @db.Decimal(10, 2)
+  otherBenefits      Decimal @default(0) @db.Decimal(10, 2)
+  otherDeductionsDesc String?
+  otherBenefitsDesc   String?
+
+  totalDeductions   Decimal @default(0) @db.Decimal(12, 2)
+  netPay            Decimal @default(0) @db.Decimal(12, 2)
+  totalEmployerCost Decimal @default(0) @db.Decimal(12, 2)
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
+  employee   Employee   @relation(fields: [employeeId], references: [id])
+
+  @@index([payrollRunId])
+  @@index([employeeId])
+}
+
+model PayStub {
+  id               String   @id @default(cuid())
+  employeeId       String
+  periodStart      DateTime
+  periodEnd        DateTime
+  payDate          DateTime
+  grossPay         Decimal  @db.Decimal(12, 2)
+  totalDeductions  Decimal  @db.Decimal(12, 2)
+  netPay           Decimal  @db.Decimal(12, 2)
+  ytdGross         Decimal  @default(0) @db.Decimal(12, 2)
+  ytdDeductions    Decimal  @default(0) @db.Decimal(12, 2)
+  ytdNet           Decimal  @default(0) @db.Decimal(12, 2)
+  deductionDetails Json     // Detailed breakdown JSON
+  pdfUrl           String?  // Generated PDF URL
+  createdAt        DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([employeeId])
+  @@index([periodStart, periodEnd])
+}
+
+// =============================================================================
+// Time Tracking (Roadmap 3-3)
+// =============================================================================
+model TimeEntry {
+  id             String    @id @default(cuid())
+  employeeId     String?
+  userId         String?
+  userName       String
+  date           DateTime  @default(now())
+  startTime      DateTime?
+  endTime        DateTime?
+  hoursWorked    Decimal   @db.Decimal(6, 2)
+  description    String?
+  projectId      String?
+  projectName    String?
+  taskCategory   String?
+  isBillable     Boolean   @default(false)
+  billableRate   Decimal?  @db.Decimal(8, 2)
+  status         String    @default("DRAFT")
+  approvedBy     String?
+  approvedAt     DateTime?
+  rejectedReason String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@index([employeeId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@index([projectId])
+  @@index([projectName])
+  @@index([deletedAt])
+}
+
+model TimeProject {
+  id           String    @id @default(cuid())
+  name         String
+  code         String    @unique
+  description  String?
+  clientName   String?
+  budget       Decimal?  @db.Decimal(12, 2)
+  budgetAmount Decimal?  @db.Decimal(12, 2)
+  defaultRate  Decimal?  @db.Decimal(8, 2)
+  status       String    @default("ACTIVE")
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([code])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model BatchJob {
+  id             String    @id @default(cuid())
+  type           String // BATCH_JOURNAL_ENTRIES, BATCH_INVOICES, BATCH_PAYMENTS, BATCH_EXPENSES, BATCH_STATUS_UPDATE, BATCH_EXPORT, BATCH_DELETE
+  status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+  totalItems     Int       @default(0)
+  processedItems Int       @default(0)
+  successItems   Int       @default(0)
+  failedItems    Int       @default(0)
+  inputData      String?   @db.Text // JSON input payload
+  resultData     String?   @db.Text // JSON results
+  errorLog       String?   @db.Text // JSON error details
+  createdBy      String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// Project / Job Costing (Roadmap 3-4)
+// =============================================================================
+model CostProject {
+  id             String    @id @default(cuid())
+  name           String
+  code           String    @unique
+  description    String?
+  clientName     String?
+  clientEmail    String?
+  projectManager String? // User ID
+  status         String    @default("ACTIVE") // ACTIVE, COMPLETED, ON_HOLD, CANCELLED
+  startDate      DateTime?
+  endDate        DateTime?
+  budgetHours    Decimal?  @db.Decimal(10, 2)
+  budgetAmount   Decimal?  @db.Decimal(12, 2)
+  billingMethod  String    @default("FIXED") // FIXED, TIME_AND_MATERIALS, RETAINER
+  fixedPrice     Decimal?  @db.Decimal(12, 2)
+  retainerAmount Decimal?  @db.Decimal(12, 2)
+  retainerPeriod String? // MONTHLY, QUARTERLY
+  defaultRate    Decimal?  @db.Decimal(8, 2)
+  notes          String?
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  costEntries ProjectCostEntry[]
+  milestones  ProjectMilestone[]
+
+  @@index([code])
+  @@index([status])
+  @@index([clientName])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ProjectCostEntry {
+  id             String   @id @default(cuid())
+  projectId      String
+  type           String // LABOR, EXPENSE, MATERIAL, SUBCONTRACTOR, OVERHEAD
+  description    String
+  date           DateTime @default(now())
+  quantity       Decimal  @default(1) @db.Decimal(10, 2)
+  unitCost       Decimal  @db.Decimal(12, 2)
+  totalCost      Decimal  @db.Decimal(12, 2)
+  billableAmount Decimal  @default(0) @db.Decimal(12, 2)
+  isBillable     Boolean  @default(true)
+  employeeId     String?
+  employeeName   String?
+  timeEntryId    String? // Link to TimeEntry
+  expenseId      String? // Link to Expense
+  invoiceId      String? // Link to CustomerInvoice when billed
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project CostProject @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@index([type])
+  @@index([date])
+  @@index([employeeId])
+  @@index([timeEntryId])
+  @@index([expenseId])
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ProjectMilestone {
+  id          String    @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  amount      Decimal?  @db.Decimal(12, 2) // Billing amount for this milestone
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project CostProject @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// =============================================================================
+// Client Portal Access (token-based public access to accounting data)
+// =============================================================================
+model ClientPortalAccess {
+  id          String    @id @default(cuid())
+  token       String    @unique @default(cuid())
+  email       String
+  clientName  String
+  companyName String?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  lastAccess  DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([token])
+  @@index([email])
+  @@index([isActive])
+}
+
+// =============================================================================
+// Multi-Entity / Multi-Company (Roadmap 4-6)
+// =============================================================================
+model LegalEntity {
+  id              String    @id @default(cuid())
+  name            String
+  code            String    @unique
+  legalName       String?
+  taxNumber       String?
+  gstNumber       String?
+  qstNumber       String?
+  address         String?
+  city            String?
+  province        String?
+  postalCode      String?
+  country         String    @default("CA")
+  currency        String    @default("CAD")
+  fiscalYearStart Int       @default(1)
+  parentEntityId  String?
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  parentEntity        LegalEntity?              @relation("EntityHierarchy", fields: [parentEntityId], references: [id])
+  childEntities       LegalEntity[]             @relation("EntityHierarchy")
+  intercoTransactions IntercompanyTransaction[] @relation("IntercoFrom")
+  intercoReceived     IntercompanyTransaction[] @relation("IntercoTo")
+
+  @@index([code])
+  @@index([parentEntityId])
+  @@index([isActive])
+}
+
+model IntercompanyTransaction {
+  id                String    @id @default(cuid())
+  transactionNumber String    @unique
+  fromEntityId      String
+  toEntityId        String
+  type              String
+  description       String
+  amount            Decimal   @db.Decimal(14, 2)
+  currency          String    @default("CAD")
+  status            String    @default("PENDING")
+  journalEntryRef   String?
+  matchingRef       String?
+  eliminatedAt      DateTime?
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  fromEntity LegalEntity @relation("IntercoFrom", fields: [fromEntityId], references: [id])
+  toEntity   LegalEntity @relation("IntercoTo", fields: [toEntityId], references: [id])
+
+  @@index([fromEntityId])
+  @@index([toEntityId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model RSDeProject {
+  id                         String            @id @default(cuid())
+  name                       String
+  description                String?           @db.Text
+  fiscalYear                 Int
+  startDate                  DateTime?
+  endDate                    DateTime?
+  status                     RSDeProjectStatus @default(DRAFT)
+  technologicalUncertainty   String?           @db.Text
+  technologicalAdvancement   String?           @db.Text
+  systematicInvestigation    String?           @db.Text
+  isSpcc                     Boolean           @default(true)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
+  expenses     RSDeExpense[]
+  calculations RSDeCalculation[]
+
+  @@index([fiscalYear])
+  @@index([status])
+}
+
+model RSDeExpense {
+  id               String              @id @default(cuid())
+  projectId        String
+  category         RSDeExpenseCategory
+  description      String
+  amount           Decimal             @db.Decimal(12, 2)
+  date             DateTime
+  employeeName     String?
+  hoursWorked      Decimal?            @db.Decimal(8, 2)
+  hourlyRate       Decimal?            @db.Decimal(8, 2)
+  isEligible       Boolean             @default(true)
+  eligibilityNotes String?
+  createdAt        DateTime            @default(now())
+
+  project RSDeProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([category])
+  @@index([date])
+}
+
+model RSDeCalculation {
+  id              String   @id @default(cuid())
+  projectId       String
+  fiscalYear      Int
+  totalEligible   Decimal  @db.Decimal(14, 2)
+  federalRate     Decimal  @db.Decimal(5, 4)
+  federalCredit   Decimal  @db.Decimal(14, 2)
+  provincialRate  Decimal  @db.Decimal(5, 4)
+  provincialCredit Decimal @db.Decimal(14, 2)
+  totalCredit     Decimal  @db.Decimal(14, 2)
+  spccLimit       Decimal  @db.Decimal(14, 2)
+  isRefundable    Boolean  @default(true)
+  calculatedAt    DateTime @default(now())
+
+  project RSDeProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([fiscalYear])
+}
+
+// --- 3B.5: Multi-Currency Exchange Rates ---
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Decimal  @db.Decimal(12, 6)
+  source       String   @default("manual") // manual, api
+  fetchedAt    DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@unique([fromCurrency, toCurrency])
+  @@index([fromCurrency])
+  @@index([toCurrency])
+}
+

@@ -1012,13 +1012,13 @@ export default function ClientDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.number')}</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.date')}</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.items')}</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.subtotal')}</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.tax')}</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.shipping')}</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.total')}</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.number')}</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.date')}</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.items')}</th>
+                    <th className="text-end px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.subtotal')}</th>
+                    <th className="text-end px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.tax')}</th>
+                    <th className="text-end px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.shipping')}</th>
+                    <th className="text-end px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.total')}</th>
                     <th className="text-center px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.status')}</th>
                     <th className="text-center px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.actions')}</th>
                   </tr>
@@ -1038,10 +1038,10 @@ export default function ClientDetailPage() {
                             {order.items.map(i => i.product?.name || i.productName).join(', ')}
                           </p>
                         </td>
-                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.subtotal)}</td>
-                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.tax)}</td>
-                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.shippingCost)}</td>
-                        <td className="px-4 py-3 text-right font-bold text-slate-900">{formatCurrency(order.total)}</td>
+                        <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(order.subtotal)}</td>
+                        <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(order.tax)}</td>
+                        <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(order.shippingCost)}</td>
+                        <td className="px-4 py-3 text-end font-bold text-slate-900">{formatCurrency(order.total)}</td>
                         <td className="px-4 py-3 text-center">
                           <StatusBadge variant={statusConfig[order.status]?.variant || 'neutral'}>
                             {order.status}
@@ -1580,7 +1580,7 @@ export default function ClientDetailPage() {
                       <div>
                         <div className="text-sm font-medium text-slate-900">
                           {call.direction === 'INBOUND' ? call.callerNumber : call.calledNumber}
-                          {call.callerName && <span className="text-slate-500 ml-1">({call.callerName})</span>}
+                          {call.callerName && <span className="text-slate-500 ms-1">({call.callerName})</span>}
                         </div>
                         <div className="text-xs text-slate-500 flex items-center gap-2">
                           <span className={call.direction === 'INBOUND' ? 'text-teal-600' : 'text-emerald-600'}>
@@ -1692,7 +1692,7 @@ export default function ClientDetailPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <p className="text-sm font-semibold text-slate-900">{formatCurrency(deal.value)}</p>
                           <StatusBadge variant={deal.stage.isWon ? 'success' : deal.stage.isLost ? 'error' : 'info'}>
                             {deal.stage.isWon ? t('admin.customerDetail.crm.wonDeals') : deal.stage.isLost ? t('admin.customerDetail.crm.lostDeals') : t('admin.customerDetail.crm.openDeals')}

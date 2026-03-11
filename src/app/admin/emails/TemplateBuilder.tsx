@@ -264,7 +264,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
     return (
       <div className="flex items-center justify-center min-h-[300px]">
         <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
-        <span className="ml-2 text-sm text-slate-500">Chargement du template...</span>
+        <span className="ms-2 text-sm text-slate-500">Chargement du template...</span>
       </div>
     );
   }

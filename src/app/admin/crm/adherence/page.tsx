@@ -102,7 +102,7 @@ function PercentageBar({ value }: { value: number }) {
       <div className="flex-1 bg-gray-200 rounded-full h-2">
         <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${Math.min(100, value)}%` }} />
       </div>
-      <span className="text-xs font-semibold text-gray-700 w-10 text-right">{value}%</span>
+      <span className="text-xs font-semibold text-gray-700 w-10 text-end">{value}%</span>
     </div>
   );
 }
@@ -275,19 +275,19 @@ export default function AdherencePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                       {t('admin.crm.adherence.agent') || 'Agent'}
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                       {t('admin.crm.adherence.scheduled') || 'Scheduled'}
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                       {t('admin.crm.adherence.status') || 'Status'}
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                       {t('admin.crm.adherence.adherence') || 'Adherence'}
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                       {t('admin.crm.adherence.reason') || 'Reason'}
                     </th>
                   </tr>
@@ -412,13 +412,13 @@ export default function AdherencePage() {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                      <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                         {t('admin.crm.adherence.agent') || 'Agent'}
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                      <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
                         {t('admin.crm.adherence.shift') || 'Shift'}
                       </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-48">
+                      <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase w-48">
                         {t('admin.crm.adherence.adherenceRate') || 'Adherence Rate'}
                       </th>
                     </tr>

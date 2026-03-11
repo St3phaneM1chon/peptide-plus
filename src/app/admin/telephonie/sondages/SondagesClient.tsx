@@ -214,19 +214,19 @@ export default function SondagesClient({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
+              <th className="px-4 py-3 text-start font-medium text-gray-700 dark:text-gray-300">
                 {t('voip.admin.surveys.name')}
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
+              <th className="px-4 py-3 text-start font-medium text-gray-700 dark:text-gray-300">
                 {t('voip.admin.surveys.questions')}
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
+              <th className="px-4 py-3 text-start font-medium text-gray-700 dark:text-gray-300">
                 {t('voip.admin.surveys.method')}
               </th>
               <th className="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-300">
                 {t('voip.admin.surveys.active')}
               </th>
-              <th className="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300">
+              <th className="px-4 py-3 text-end font-medium text-gray-700 dark:text-gray-300">
                 {t('common.actions')}
               </th>
             </tr>
@@ -254,7 +254,7 @@ export default function SondagesClient({
                     )}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-end">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => openEdit(survey)}

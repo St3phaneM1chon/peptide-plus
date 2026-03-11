@@ -570,7 +570,7 @@ export default function BannieresPage() {
                   >
                     <span
                       className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                        slide.isActive ? 'right-0.5' : 'left-0.5'
+                        slide.isActive ? 'end-0.5' : 'start-0.5'
                       }`}
                     />
                   </button>
@@ -655,7 +655,7 @@ export default function BannieresPage() {
                 ))}
               </div>
               {/* F90 FIX: Right fade gradient to indicate more tabs are scrollable */}
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+              <div className="absolute end-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
             </div>
           </div>
         </div>
@@ -675,7 +675,7 @@ export default function BannieresPage() {
                   />
                   {/* F82 FIX: Show spinner while checking slug uniqueness */}
                   {slugChecking && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">{t('common.checking') || 'Checking...'}</span>
+                    <span className="absolute end-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">{t('common.checking') || 'Checking...'}</span>
                   )}
                 </div>
                 {formErrors.slug && (
@@ -774,7 +774,7 @@ export default function BannieresPage() {
                   onChange={(e) => setForm({ ...form, overlayOpacity: parseInt(e.target.value) })}
                   className="flex-1"
                 />
-                <output className="text-sm font-medium text-slate-700 w-10 text-right">{form.overlayOpacity}%</output>
+                <output className="text-sm font-medium text-slate-700 w-10 text-end">{form.overlayOpacity}%</output>
               </div>
             </FormField>
             <FormField label={t('admin.banners.gradient')}>

@@ -293,19 +293,19 @@ export default function QuotasPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotas.agentColumn') || 'Agent'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotas.periodColumn') || 'Period'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotas.typeColumn') || 'Type'}
                   </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  <th className="text-end px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotas.targetColumn') || 'Target'}
                   </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  <th className="text-end px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotas.actualColumn') || 'Actual'}
                   </th>
                   <th className="px-4 py-3 font-medium text-gray-600 min-w-[160px]">
@@ -333,10 +333,10 @@ export default function QuotasPage() {
                       <td className="px-4 py-3 text-gray-600">
                         {formatType(quota.targetType)}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-4 py-3 text-end font-medium text-gray-900">
                         {targetNum.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-4 py-3 text-end font-medium text-gray-900">
                         {actualNum.toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
@@ -347,7 +347,7 @@ export default function QuotasPage() {
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className={`text-xs font-semibold min-w-[36px] text-right ${
+                          <span className={`text-xs font-semibold min-w-[36px] text-end ${
                             pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-yellow-600' : 'text-red-600'
                           }`}>
                             {pct}%

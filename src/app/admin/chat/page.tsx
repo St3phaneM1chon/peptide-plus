@@ -685,7 +685,7 @@ export default function AdminChatPage() {
                   <div className="flex justify-start">
                     <div className="bg-white text-slate-500 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm text-sm italic">
                       {t('admin.chat.typing', { name: typingUsers.map(u => u.userName).join(', ') })}
-                      <span className="inline-flex ml-1 gap-0.5">
+                      <span className="inline-flex ms-1 gap-0.5">
                         <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -724,7 +724,7 @@ export default function AdminChatPage() {
                       <Smile className="w-5 h-5 text-slate-500" />
                     </button>
                     {showEmojiPicker && (
-                      <div className="absolute bottom-10 left-0 bg-white border border-slate-200 rounded-lg shadow-xl p-2 w-64 z-50">
+                      <div className="absolute bottom-10 start-0 bg-white border border-slate-200 rounded-lg shadow-xl p-2 w-64 z-50">
                         <div className="grid grid-cols-8 gap-1">
                           {commonEmojis.map((emoji) => (
                             <button

@@ -130,7 +130,7 @@ export function DataTable<T>({
           <span className="text-sm font-medium text-teal-800">
             {selectedIds.size} {t('admin.dataTable.selected') || 'selected'}
           </span>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ms-auto">
             {bulkActions.map((action, idx) => (
               <button
                 key={idx}
@@ -147,7 +147,7 @@ export function DataTable<T>({
             ))}
             <button
               onClick={() => onSelectChange?.(new Set())}
-              className="text-sm text-teal-600 hover:text-teal-800 ml-2"
+              className="text-sm text-teal-600 hover:text-teal-800 ms-2"
             >
               {t('common.clearSelection') || 'Clear'}
             </button>

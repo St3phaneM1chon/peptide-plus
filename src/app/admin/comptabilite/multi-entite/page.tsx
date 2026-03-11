@@ -521,7 +521,7 @@ export default function MultiEntityPage() {
       header: t('admin.multiEntity.code'),
       render: (e) => (
         <div className="flex items-center gap-2">
-          {e.parentEntityId && <ChevronRight className="h-3 w-3 text-gray-400 ml-2" />}
+          {e.parentEntityId && <ChevronRight className="h-3 w-3 text-gray-400 ms-2" />}
           <span className="font-mono font-semibold text-sm">{e.code}</span>
           {e.isDefault && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />}
         </div>
@@ -806,13 +806,13 @@ export default function MultiEntityPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-500 border-b">
+                    <tr className="text-start text-gray-500 border-b">
                       <th className="pb-2">{t('admin.multiEntity.entityPair')}</th>
-                      <th className="pb-2 text-right">{t('admin.multiEntity.pending')}</th>
-                      <th className="pb-2 text-right">{t('admin.multiEntity.posted')}</th>
-                      <th className="pb-2 text-right">{t('admin.multiEntity.eliminated')}</th>
-                      <th className="pb-2 text-right font-semibold">{t('admin.multiEntity.netBalance')}</th>
-                      <th className="pb-2 text-right">{t('admin.multiEntity.txnCount')}</th>
+                      <th className="pb-2 text-end">{t('admin.multiEntity.pending')}</th>
+                      <th className="pb-2 text-end">{t('admin.multiEntity.posted')}</th>
+                      <th className="pb-2 text-end">{t('admin.multiEntity.eliminated')}</th>
+                      <th className="pb-2 text-end font-semibold">{t('admin.multiEntity.netBalance')}</th>
+                      <th className="pb-2 text-end">{t('admin.multiEntity.txnCount')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -823,19 +823,19 @@ export default function MultiEntityPage() {
                             {b.fromEntityCode} &harr; {b.toEntityCode}
                           </span>
                         </td>
-                        <td className="py-2 text-right text-amber-600">
+                        <td className="py-2 text-end text-amber-600">
                           {formatCurrency(b.pendingAmount)}
                         </td>
-                        <td className="py-2 text-right text-teal-600">
+                        <td className="py-2 text-end text-teal-600">
                           {formatCurrency(b.postedAmount)}
                         </td>
-                        <td className="py-2 text-right text-green-600">
+                        <td className="py-2 text-end text-green-600">
                           {formatCurrency(b.eliminatedAmount)}
                         </td>
-                        <td className="py-2 text-right font-semibold">
+                        <td className="py-2 text-end font-semibold">
                           {formatCurrency(b.netBalance)}
                         </td>
-                        <td className="py-2 text-right text-gray-500">{b.transactionCount}</td>
+                        <td className="py-2 text-end text-gray-500">{b.transactionCount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1048,12 +1048,12 @@ export default function MultiEntityPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-gray-500 border-b">
+                        <tr className="text-start text-gray-500 border-b">
                           <th className="pb-2">{t('admin.multiEntity.from')}</th>
                           <th className="pb-2">{t('admin.multiEntity.to')}</th>
                           <th className="pb-2">{t('admin.multiEntity.type')}</th>
                           <th className="pb-2">{t('admin.multiEntity.description')}</th>
-                          <th className="pb-2 text-right">{t('admin.multiEntity.amount')}</th>
+                          <th className="pb-2 text-end">{t('admin.multiEntity.amount')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1065,7 +1065,7 @@ export default function MultiEntityPage() {
                             <td className="py-1.5 text-gray-600 max-w-[200px] truncate">
                               {d.description}
                             </td>
-                            <td className="py-1.5 text-right text-red-600 font-medium">
+                            <td className="py-1.5 text-end text-red-600 font-medium">
                               ({formatCurrency(d.amount)})
                             </td>
                           </tr>
@@ -1074,7 +1074,7 @@ export default function MultiEntityPage() {
                           <td colSpan={4} className="py-2">
                             {t('admin.multiEntity.totalEliminated')}
                           </td>
-                          <td className="py-2 text-right text-red-700">
+                          <td className="py-2 text-end text-red-700">
                             ({formatCurrency(consolidatedReport.eliminations.totalEliminated)})
                           </td>
                         </tr>
@@ -1155,10 +1155,10 @@ export default function MultiEntityPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg border p-5 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left border-b">
+                  <tr className="text-start border-b">
                     <th className="pb-3 font-semibold">{t('admin.multiEntity.metric')}</th>
                     {comparison.entities.map((e) => (
-                      <th key={e.entityId} className="pb-3 text-right font-semibold">
+                      <th key={e.entityId} className="pb-3 text-end font-semibold">
                         {e.entityCode}
                         <span className="block text-xs font-normal text-gray-500">
                           {e.entityName}
@@ -1171,7 +1171,7 @@ export default function MultiEntityPage() {
                   <tr className="border-b">
                     <td className="py-2">{t('admin.multiEntity.revenue')}</td>
                     {comparison.entities.map((e) => (
-                      <td key={e.entityId} className="py-2 text-right text-green-600 font-medium">
+                      <td key={e.entityId} className="py-2 text-end text-green-600 font-medium">
                         {formatCurrency(e.revenue)}
                       </td>
                     ))}
@@ -1179,7 +1179,7 @@ export default function MultiEntityPage() {
                   <tr className="border-b">
                     <td className="py-2">{t('admin.multiEntity.expenses')}</td>
                     {comparison.entities.map((e) => (
-                      <td key={e.entityId} className="py-2 text-right text-red-600">
+                      <td key={e.entityId} className="py-2 text-end text-red-600">
                         {formatCurrency(e.expenses)}
                       </td>
                     ))}
@@ -1189,7 +1189,7 @@ export default function MultiEntityPage() {
                     {comparison.entities.map((e) => (
                       <td
                         key={e.entityId}
-                        className={`py-2 text-right ${e.netIncome >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                        className={`py-2 text-end ${e.netIncome >= 0 ? 'text-green-700' : 'text-red-700'}`}
                       >
                         {formatCurrency(e.netIncome)}
                       </td>
@@ -1198,7 +1198,7 @@ export default function MultiEntityPage() {
                   <tr className="border-b">
                     <td className="py-2">{t('admin.multiEntity.totalAssets')}</td>
                     {comparison.entities.map((e) => (
-                      <td key={e.entityId} className="py-2 text-right">
+                      <td key={e.entityId} className="py-2 text-end">
                         {formatCurrency(e.totalAssets)}
                       </td>
                     ))}
@@ -1206,7 +1206,7 @@ export default function MultiEntityPage() {
                   <tr className="border-b">
                     <td className="py-2">{t('admin.multiEntity.totalLiabilities')}</td>
                     {comparison.entities.map((e) => (
-                      <td key={e.entityId} className="py-2 text-right">
+                      <td key={e.entityId} className="py-2 text-end">
                         {formatCurrency(e.totalLiabilities)}
                       </td>
                     ))}
@@ -1214,7 +1214,7 @@ export default function MultiEntityPage() {
                   <tr className="border-b">
                     <td className="py-2">{t('admin.multiEntity.grossMargin')}</td>
                     {comparison.entities.map((e) => (
-                      <td key={e.entityId} className="py-2 text-right">
+                      <td key={e.entityId} className="py-2 text-end">
                         {e.grossMargin.toFixed(1)}%
                       </td>
                     ))}
@@ -1224,7 +1224,7 @@ export default function MultiEntityPage() {
                     {comparison.entities.map((e) => (
                       <td
                         key={e.entityId}
-                        className={`py-2 text-right font-medium ${e.netMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                        className={`py-2 text-end font-medium ${e.netMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}
                       >
                         {e.netMargin.toFixed(1)}%
                       </td>

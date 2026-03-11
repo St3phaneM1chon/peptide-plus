@@ -150,7 +150,7 @@ function NavDropdownTab({
         <div
           ref={panelRef}
           className={`absolute top-full mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg p-2 max-h-[70vh] overflow-y-auto ${gridClass} ${
-            alignRight ? 'right-0' : 'left-0'
+            alignRight ? 'end-0' : 'start-0'
           }`}
         >
           {isSimple
@@ -206,7 +206,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
       </button>
 
       {open && action.dropdownItems && (
-        <div className="absolute top-full left-0 mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[160px]">
+        <div className="absolute top-full start-0 mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[160px]">
           {action.dropdownItems.map((item) => (
             item.href ? (
               <a
@@ -221,7 +221,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
               <button
                 key={item.key}
                 type="button"
-                className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
+                className="block w-full text-start px-3 py-1.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
                 onClick={() => { dispatchRibbonAction(item.key); setOpen(false); }}
               >
                 {t(item.labelKey)}

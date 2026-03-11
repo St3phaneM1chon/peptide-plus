@@ -215,7 +215,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
             <div className="space-y-2.5">
               {stats.topKeywords.map((kw, idx) => (
                 <div key={kw.keyword} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 font-mono w-5 text-right">
+                  <span className="text-xs text-gray-400 font-mono w-5 text-end">
                     {idx + 1}
                   </span>
                   <div className="flex-1">

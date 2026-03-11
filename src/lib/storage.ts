@@ -314,6 +314,112 @@ export class StorageService {
   }
 
   // -------------------------------------------------------------------------
+  // Storage Stats (CDN setup #66)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get aggregated storage statistics: total bytes, file count, and breakdown
+   * by MIME type category (images, videos, documents, other).
+   *
+   * @param userId - If provided, scope stats to this user only (non-OWNER).
+   */
+  async getStorageStats(userId?: string): Promise<{
+    totalBytes: number;
+    totalFiles: number;
+    breakdown: { category: string; count: number; bytes: number }[];
+    quotaBytes: number;
+    usedPercent: number;
+  }> {
+    try {
+      const { prisma } = await import('@/lib/db');
+
+      const where: Record<string, unknown> = {};
+      if (userId) where.uploadedBy = userId;
+
+      // Total count + total size
+      const [totalFiles, agg] = await Promise.all([
+        prisma.media.count({ where }),
+        prisma.media.aggregate({
+          where,
+          _sum: { size: true },
+        }),
+      ]);
+      const totalBytes = agg._sum.size || 0;
+
+      // Breakdown by category
+      const categories = [
+        { category: 'images', filter: 'image' },
+        { category: 'videos', filter: 'video' },
+        { category: 'documents', filter: 'application/pdf' },
+      ];
+
+      const breakdownPromises = categories.map(async ({ category, filter }) => {
+        const catWhere = { ...where, mimeType: { startsWith: filter } };
+        const [count, catAgg] = await Promise.all([
+          prisma.media.count({ where: catWhere }),
+          prisma.media.aggregate({ where: catWhere, _sum: { size: true } }),
+        ]);
+        return { category, count, bytes: catAgg._sum.size || 0 };
+      });
+
+      const breakdown = await Promise.all(breakdownPromises);
+
+      // "other" = total minus known categories
+      const knownBytes = breakdown.reduce((s, b) => s + b.bytes, 0);
+      const knownCount = breakdown.reduce((s, b) => s + b.count, 0);
+      breakdown.push({
+        category: 'other',
+        count: totalFiles - knownCount,
+        bytes: totalBytes - knownBytes,
+      });
+
+      const quotaBytes = userId
+        ? StorageService.DEFAULT_QUOTA_BYTES
+        : StorageService.DEFAULT_QUOTA_BYTES * 100; // Global quota estimate
+      const usedPercent = quotaBytes > 0 ? Math.round((totalBytes / quotaBytes) * 10000) / 100 : 0;
+
+      return { totalBytes, totalFiles, breakdown, quotaBytes, usedPercent };
+    } catch (error) {
+      logger.error('[Storage] Failed to get storage stats', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        totalBytes: 0,
+        totalFiles: 0,
+        breakdown: [],
+        quotaBytes: StorageService.DEFAULT_QUOTA_BYTES,
+        usedPercent: 0,
+      };
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // CDN-Ready Headers (#66)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns recommended CDN/security headers for serving uploaded media.
+   * Use in middleware or API routes that proxy blob content.
+   */
+  static getCdnHeaders(contentType: string): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+    };
+
+    // Content-Security-Policy: restrict what uploaded files can do when viewed directly
+    if (contentType.startsWith('image/')) {
+      headers['Content-Security-Policy'] = "default-src 'none'; img-src 'self'; style-src 'none'; script-src 'none'";
+    } else if (contentType === 'application/pdf') {
+      headers['Content-Security-Policy'] = "default-src 'none'; object-src 'self'; style-src 'none'; script-src 'none'";
+    } else {
+      headers['Content-Security-Policy'] = "default-src 'none'; script-src 'none'";
+    }
+
+    return headers;
+  }
+
+  // -------------------------------------------------------------------------
   // Deduplication (#71)
   // -------------------------------------------------------------------------
 

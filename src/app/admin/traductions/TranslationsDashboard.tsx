@@ -269,7 +269,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                               style={{ width: `${cov.coveragePercent}%` }}
                             />
                           </div>
-                          <span className="text-xs font-medium text-gray-600 w-10 text-right">{cov.coveragePercent}%</span>
+                          <span className="text-xs font-medium text-gray-600 w-10 text-end">{cov.coveragePercent}%</span>
                         </div>
                         {missing > 0 && (
                           <p className="text-xs text-orange-600 mt-1">
@@ -319,7 +319,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                     <button
                       key={model}
                       onClick={() => toggleModel(model)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition text-left ${
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition text-start ${
                         selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 bg-white hover:bg-gray-50'
                       }`}
                     >
@@ -354,7 +354,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                   ) : (
                     <Square className="w-5 h-5 text-gray-300" />
                   )}
-                  <div className="text-left">
+                  <div className="text-start">
                     <p className="text-sm font-medium text-gray-900">{t('admin.translationsDashboard.wizardForceRetranslate')}</p>
                     <p className="text-xs text-gray-500">{t('admin.translationsDashboard.wizardForceRetranslateDesc')}</p>
                   </div>
@@ -1250,7 +1250,7 @@ export default function TranslationsDashboard() {
             <AlertTriangle className="w-5 h-5 text-orange-500" />
             Traductions manquantes
             {localeProgress.filter(lp => lp.percent < 100).length > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">
+              <span className="ms-2 px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">
                 {localeProgress.filter(lp => lp.percent < 100).length} langues incomplètes
               </span>
             )}
@@ -1333,9 +1333,9 @@ export default function TranslationsDashboard() {
             {/* Search + Add button */}
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-lg text-sm"
                   placeholder="Rechercher un terme..."
                   value={glossarySearch}
                   onChange={e => setGlossarySearch(e.target.value)}

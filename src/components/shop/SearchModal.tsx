@@ -175,7 +175,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={t('shop.aria.searchProducts')}
-        className="fixed inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
+        className="fixed inset-x-4 top-20 md:inset-x-auto md:start-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
       >
         {/* Search Input */}
         <div className="flex items-center gap-4 px-6 py-4 border-b border-neutral-200">

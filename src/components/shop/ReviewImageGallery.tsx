@@ -154,7 +154,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
           )}
 
           {/* Keyboard hint */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
+          <div className="absolute bottom-4 start-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
             Press ESC to close {images.length > 1 && '• Arrow keys to navigate'}
           </div>
         </div>

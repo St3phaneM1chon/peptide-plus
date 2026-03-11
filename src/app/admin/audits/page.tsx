@@ -461,7 +461,7 @@ export default function AuditDashboardPage() {
             : (isFr ? 'Hauts seulement' : 'Run High')}
         </button>
         {isAnyRunning && (
-          <span className="text-sm text-slate-500 animate-pulse ml-2">
+          <span className="text-sm text-slate-500 animate-pulse ms-2">
             {batchProgress
               ? `${batchProgress.completed}/${batchProgress.total}...`
               : (isFr ? `Exécution de ${runningAudit}...` : `Running ${runningAudit}...`)}

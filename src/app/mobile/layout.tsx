@@ -46,7 +46,7 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <nav className="fixed bottom-0 start-0 end-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
           {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
             const active = pathname === href;

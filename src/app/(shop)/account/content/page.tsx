@@ -86,14 +86,14 @@ export default function AccountContentPage() {
       {/* Search */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder={t('common.search') !== 'common.search' ? t('common.search') : 'Search videos...'}
-            className="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm"
+            className="w-full ps-10 pe-4 py-2.5 border rounded-lg text-sm"
           />
         </div>
         <button onClick={handleSearch} className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm">
@@ -154,18 +154,18 @@ export default function AccountContentPage() {
                 {/* Play overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <Play className="h-5 w-5 text-orange-600 ml-0.5" />
+                    <Play className="h-5 w-5 text-orange-600 ms-0.5" />
                   </div>
                 </div>
                 {/* Duration */}
                 {video.duration && (
-                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                  <div className="absolute bottom-2 end-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {video.duration}
                   </div>
                 )}
                 {/* Type badge */}
-                <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                <div className="absolute top-2 start-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                   {t(`contentType.${video.contentType}`)}
                 </div>
               </div>

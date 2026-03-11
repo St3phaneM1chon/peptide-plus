@@ -297,7 +297,7 @@ export default function MapSelector({ onSelect, apiKey }: MapSelectorProps) {
         <button
           type="button"
           onClick={handleClear}
-          className="ml-2 p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-zinc-700/50 transition-colors"
+          className="ms-2 p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-zinc-700/50 transition-colors"
           title="Effacer la zone"
         >
           <X className="h-4 w-4" />

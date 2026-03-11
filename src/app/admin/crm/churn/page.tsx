@@ -197,13 +197,13 @@ export default function ChurnPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-6 py-3 text-gray-500 font-medium">Customer</th>
+                    <th className="text-start px-6 py-3 text-gray-500 font-medium">Customer</th>
                     <th className="text-center px-4 py-3 text-gray-500 font-medium">Risk Level</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-medium">Risk Score</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-medium">Days Inactive</th>
-                    <th className="text-right px-4 py-3 text-gray-500 font-medium">Orders</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Revenue</th>
-                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Signals</th>
+                    <th className="text-end px-4 py-3 text-gray-500 font-medium">Risk Score</th>
+                    <th className="text-end px-4 py-3 text-gray-500 font-medium">Days Inactive</th>
+                    <th className="text-end px-4 py-3 text-gray-500 font-medium">Orders</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Revenue</th>
+                    <th className="text-start px-4 py-3 text-gray-500 font-medium">Signals</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -220,13 +220,13 @@ export default function ChurnPage() {
                             {config.label}
                           </span>
                         </td>
-                        <td className="text-right px-4 py-3 font-mono text-gray-700">{c.riskScore}</td>
-                        <td className="text-right px-4 py-3 text-gray-700 flex items-center justify-end gap-1">
+                        <td className="text-end px-4 py-3 font-mono text-gray-700">{c.riskScore}</td>
+                        <td className="text-end px-4 py-3 text-gray-700 flex items-center justify-end gap-1">
                           <Clock className="h-3 w-3 text-gray-400" />
                           {c.daysSinceLastOrder}d
                         </td>
-                        <td className="text-right px-4 py-3 text-gray-700">{c.orderCount}</td>
-                        <td className="text-right px-6 py-3 text-gray-700">{fmt(c.totalRevenue)}</td>
+                        <td className="text-end px-4 py-3 text-gray-700">{c.orderCount}</td>
+                        <td className="text-end px-6 py-3 text-gray-700">{fmt(c.totalRevenue)}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
                             {c.signals.map((s, i) => (

@@ -230,7 +230,7 @@ export default function ConsentFormPage() {
                       ) : null}
                       <span>
                         {q.question}
-                        {q.required && <span className="text-red-500 ml-0.5">*</span>}
+                        {q.required && <span className="text-red-500 ms-0.5">*</span>}
                       </span>
                     </label>
                     {q.type === 'text' && (

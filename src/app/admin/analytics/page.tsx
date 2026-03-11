@@ -255,12 +255,12 @@ export default function AnalyticsPage() {
                       className="h-full rounded transition-all duration-700"
                       style={{ width: `${Math.max(widthPercent, 3)}%`, backgroundColor: info.color }}
                     />
-                    <span className="absolute inset-y-0 left-2 flex items-center text-[11px] font-bold text-white drop-shadow-sm">
+                    <span className="absolute inset-y-0 start-2 flex items-center text-[11px] font-bold text-white drop-shadow-sm">
                       {count}
                     </span>
                   </div>
                 </div>
-                <div className="w-20 flex-shrink-0 text-right">
+                <div className="w-20 flex-shrink-0 text-end">
                   <span className="text-xs text-slate-500">{count} {t('admin.analytics.customers')}</span>
                 </div>
               </div>

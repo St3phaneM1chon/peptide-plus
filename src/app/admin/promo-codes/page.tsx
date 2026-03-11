@@ -621,7 +621,7 @@ export default function PromoCodesPage() {
                     >
                       <span
                         className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                          selectedPromo.isActive ? 'right-1' : 'left-1'
+                          selectedPromo.isActive ? 'end-1' : 'start-1'
                         }`}
                       />
                     </button>

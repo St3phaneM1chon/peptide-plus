@@ -187,14 +187,14 @@ export default function CLVPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-6 py-3 text-gray-500 font-medium">#</th>
-                    <th className="text-left px-6 py-3 text-gray-500 font-medium">Customer</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Orders</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Total Revenue</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Avg Order</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Monthly Revenue</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Estimated CLV</th>
-                    <th className="text-right px-6 py-3 text-gray-500 font-medium">Churn Risk</th>
+                    <th className="text-start px-6 py-3 text-gray-500 font-medium">#</th>
+                    <th className="text-start px-6 py-3 text-gray-500 font-medium">Customer</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Orders</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Total Revenue</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Avg Order</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Monthly Revenue</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Estimated CLV</th>
+                    <th className="text-end px-6 py-3 text-gray-500 font-medium">Churn Risk</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -205,12 +205,12 @@ export default function CLVPage() {
                         <p className="font-medium text-gray-900">{c.name || 'Unknown'}</p>
                         <p className="text-xs text-gray-400">{c.email}</p>
                       </td>
-                      <td className="text-right px-6 py-3 text-gray-700">{c.orderCount}</td>
-                      <td className="text-right px-6 py-3 text-gray-700">{fmt(c.totalRevenue)}</td>
-                      <td className="text-right px-6 py-3 text-gray-700">{fmt(c.avgOrderValue)}</td>
-                      <td className="text-right px-6 py-3 text-gray-700">{fmt(c.monthlyRevenue)}</td>
-                      <td className="text-right px-6 py-3 font-semibold text-green-700">{fmt(c.estimatedCLV)}</td>
-                      <td className="text-right px-6 py-3">
+                      <td className="text-end px-6 py-3 text-gray-700">{c.orderCount}</td>
+                      <td className="text-end px-6 py-3 text-gray-700">{fmt(c.totalRevenue)}</td>
+                      <td className="text-end px-6 py-3 text-gray-700">{fmt(c.avgOrderValue)}</td>
+                      <td className="text-end px-6 py-3 text-gray-700">{fmt(c.monthlyRevenue)}</td>
+                      <td className="text-end px-6 py-3 font-semibold text-green-700">{fmt(c.estimatedCLV)}</td>
+                      <td className="text-end px-6 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           c.churnProbability >= 0.7 ? 'bg-red-100 text-red-700'
                             : c.churnProbability >= 0.4 ? 'bg-amber-100 text-amber-700'

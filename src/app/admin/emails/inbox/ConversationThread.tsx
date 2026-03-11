@@ -259,7 +259,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
               )}
 
               {item.type === 'outbound' && (
-                <div className="bg-teal-50 rounded-lg shadow-sm border border-teal-200 p-4 ml-8">
+                <div className="bg-teal-50 rounded-lg shadow-sm border border-teal-200 p-4 ms-8">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-teal-200 flex items-center justify-center">
                       <Send className="h-3 w-3 text-teal-600" />

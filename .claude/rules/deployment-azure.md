@@ -202,3 +202,18 @@ L'ordre des operations est **critique**. Toujours respecter:
 - **Fix**: Verifier les scopes coches sur https://developer.webex.com/my-apps/[app-name]. Adapter le code pour ne demander QUE les scopes configures.
 - **Prevention**: Avant de modifier les scopes OAuth, toujours verifier la config du portail developpeur. Les scopes `spark:recordings_read` ne sont PAS des scopes OAuth valides (utiliser `meeting:recordings_read`).
 - **Detecte**: 2026-03-01
+
+### KB-PP-BUILD-010: Config-change restart loop (container never warms up)
+- **Symptome**: Site unreachable (HTTP timeout), Azure shows "Running/Normal", SCM returns 503, container logs show repeated Azure banners
+- **Cause racine**: Chaque changement de config Azure (`az webapp config appsettings set`) redemarre le container. Le warmup prend ~583s (cert update 3min + Node startup + warmup probe). Changer plusieurs settings pendant le troubleshooting cree une boucle de restart ou le container n'atteint JAMAIS la fin du warmup (600s max).
+- **Fix**: (1) STOP toute modification de settings. (2) Lancer un deploy frais via `gh workflow run "Deploy to Azure"`. (3) Attendre 10 minutes COMPLETES sans toucher a rien. (4) Verifier avec `curl https://biocyclepeptides.azurewebsites.net/api/health`.
+- **Prevention**: JAMAIS modifier plus d'un setting a la fois pendant le troubleshooting. Grouper les changements dans le pipeline CI/CD. Ne JAMAIS utiliser `az webapp config appsettings set` en boucle rapide.
+- **Lie a**: KB-PP-BUILD-007 (SCM restart) et KB-PP-BUILD-008 (cert update timeout)
+- **Detecte**: 2026-03-10
+
+### KB-PP-BUILD-011: FK orphan data blocks prisma db push
+- **Symptome**: `Error: insert or update on table "X" violates foreign key constraint "X_fieldId_fkey"`
+- **Cause racine**: Ajout de FK constraints dans le schema Prisma alors que la DB contient des enregistrements avec des references vers des lignes supprimees (orphelins).
+- **Fix**: Nettoyer les orphelins AVANT prisma db push: `DELETE FROM "X" WHERE "fieldId" NOT IN (SELECT id FROM "Y")` pour les FK required, ou `UPDATE "X" SET "fieldId" = NULL WHERE ...` pour les FK optional (onDelete: SetNull).
+- **Prevention**: Toujours verifier les orphelins avant d'ajouter des FK: `SELECT COUNT(*) FROM "X" x LEFT JOIN "Y" y ON x."fieldId" = y.id WHERE y.id IS NULL`
+- **Detecte**: 2026-03-10

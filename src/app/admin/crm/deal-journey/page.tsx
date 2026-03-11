@@ -296,16 +296,16 @@ export default function DealJourneyPage() {
       {/* Deal Search */}
       <div className="relative mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder={t('admin.crm.searchDeal') || 'Search deals by name...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full ps-10 pe-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           {searching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div className="absolute end-3 top-1/2 -translate-y-1/2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500" />
             </div>
           )}
@@ -318,11 +318,11 @@ export default function DealJourneyPage() {
               <button
                 key={deal.id}
                 onClick={() => loadJourney(deal.id)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between border-b last:border-0"
+                className="w-full px-4 py-3 text-start hover:bg-gray-50 flex items-center justify-between border-b last:border-0"
               >
                 <div>
                   <span className="font-medium text-gray-900">{deal.title}</span>
-                  <span className="ml-2 text-sm text-gray-500">{formatCurrency(deal.value)}</span>
+                  <span className="ms-2 text-sm text-gray-500">{formatCurrency(deal.value)}</span>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   deal.isWon ? 'bg-green-100 text-green-700' :
@@ -349,9 +349,9 @@ export default function DealJourneyPage() {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {tab === 'journey' && <GitBranch className="inline h-4 w-4 mr-1.5" />}
-            {tab === 'analytics' && <BarChart3 className="inline h-4 w-4 mr-1.5" />}
-            {tab === 'patterns' && <Target className="inline h-4 w-4 mr-1.5" />}
+            {tab === 'journey' && <GitBranch className="inline h-4 w-4 me-1.5" />}
+            {tab === 'analytics' && <BarChart3 className="inline h-4 w-4 me-1.5" />}
+            {tab === 'patterns' && <Target className="inline h-4 w-4 me-1.5" />}
             {tab === 'journey' ? (t('admin.crm.timeline') || 'Timeline') :
              tab === 'analytics' ? (t('admin.crm.analytics') || 'Analytics') :
              (t('admin.crm.patterns') || 'Patterns')}
@@ -383,7 +383,7 @@ export default function DealJourneyPage() {
                       {journey.closedAt && <> | {t('common.closedAt') || 'Closed'}: {formatDate(journey.closedAt)}</>}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-2xl font-bold text-gray-900">{formatCurrency(journey.dealValue)}</p>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       journey.isWon ? 'bg-green-100 text-green-700' :
@@ -460,12 +460,12 @@ export default function DealJourneyPage() {
 
               {/* Events Timeline */}
               <div className="relative">
-                <div className="absolute left-6 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="absolute start-6 top-0 bottom-0 w-px bg-gray-200" />
                 {filteredEvents.map((event) => {
                   const IconComp = EVENT_ICONS[event.type] || Activity;
                   const colorClass = EVENT_COLORS[event.type] || EVENT_COLORS.activity;
                   return (
-                    <div key={event.id} className="relative flex items-start gap-4 mb-4 ml-1">
+                    <div key={event.id} className="relative flex items-start gap-4 mb-4 ms-1">
                       <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border ${colorClass}`}>
                         <IconComp className="h-4 w-4" />
                       </div>
@@ -567,23 +567,23 @@ export default function DealJourneyPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left font-medium text-gray-500">Stage</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-500">Avg Duration</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-500">Median Duration</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-500">Conversion %</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-500">Drop-off %</th>
+                        <th className="px-4 py-3 text-start font-medium text-gray-500">Stage</th>
+                        <th className="px-4 py-3 text-end font-medium text-gray-500">Avg Duration</th>
+                        <th className="px-4 py-3 text-end font-medium text-gray-500">Median Duration</th>
+                        <th className="px-4 py-3 text-end font-medium text-gray-500">Conversion %</th>
+                        <th className="px-4 py-3 text-end font-medium text-gray-500">Drop-off %</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {analytics.stageMetrics.map((sm) => (
                         <tr key={sm.stageName} className="hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium text-gray-900">{sm.stageName}</td>
-                          <td className="px-4 py-3 text-right text-gray-600">{formatDuration(sm.avgDurationHours)}</td>
-                          <td className="px-4 py-3 text-right text-gray-600">{formatDuration(sm.medianDurationHours)}</td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-4 py-3 text-end text-gray-600">{formatDuration(sm.avgDurationHours)}</td>
+                          <td className="px-4 py-3 text-end text-gray-600">{formatDuration(sm.medianDurationHours)}</td>
+                          <td className="px-4 py-3 text-end">
                             <span className="text-green-600 font-medium">{sm.conversionRate}%</span>
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-4 py-3 text-end">
                             <span className={`font-medium ${sm.dropOffRate > 20 ? 'text-red-600' : 'text-gray-600'}`}>
                               {sm.dropOffRate}%
                             </span>
@@ -612,9 +612,9 @@ export default function DealJourneyPage() {
                             </span>
                           ))}
                         </div>
-                        <div className="text-right whitespace-nowrap ml-4">
+                        <div className="text-end whitespace-nowrap ms-4">
                           <span className="text-sm font-medium text-gray-900">{cp.count} deals</span>
-                          <span className="text-xs text-gray-400 ml-2">({cp.percentage}%)</span>
+                          <span className="text-xs text-gray-400 ms-2">({cp.percentage}%)</span>
                         </div>
                       </div>
                     ))}

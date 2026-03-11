@@ -631,7 +631,7 @@ export default function DepensesPage() {
         theme={theme}
         actions={
           <Button onClick={openCreateForm} className={`${theme.btnPrimary} text-white`}>
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4 me-1.5" />
             {t('admin.expenses.newExpense')}
           </Button>
         }
@@ -734,7 +734,7 @@ export default function DepensesPage() {
         title={editingExpense ? t('admin.expenses.editExpense') : t('admin.expenses.newExpense')}
         size="lg"
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pe-1">
           {/* Row 1: Date + Category */}
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.expenses.date')}>
@@ -937,7 +937,7 @@ export default function DepensesPage() {
         size="lg"
       >
         {selectedExpense && (
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pe-1">
             {/* Header info */}
             <div className="flex items-center justify-between">
               <div>
@@ -1072,7 +1072,7 @@ export default function DepensesPage() {
               {selectedExpense.status === 'DRAFT' && (
                 <>
                   <Button variant="secondary" onClick={() => { openEditForm(selectedExpense); setShowDetailModal(false); }}>
-                    <Pencil className="w-4 h-4 mr-1.5" /> {t('admin.expenses.editExpense')}
+                    <Pencil className="w-4 h-4 me-1.5" /> {t('admin.expenses.editExpense')}
                   </Button>
                   <Button onClick={() => handleStatusChange(selectedExpense.id, 'SUBMITTED')} className="bg-amber-500 hover:bg-amber-600 text-white">
                     {t('admin.expenses.submit')}
@@ -1086,16 +1086,16 @@ export default function DepensesPage() {
                     onClick={() => { setRejectionReason(''); setShowRejectModal(true); }}
                     className="text-red-600 border-red-200 hover:bg-red-50"
                   >
-                    <XCircle className="w-4 h-4 mr-1.5" /> {t('admin.expenses.reject')}
+                    <XCircle className="w-4 h-4 me-1.5" /> {t('admin.expenses.reject')}
                   </Button>
                   <Button onClick={() => handleStatusChange(selectedExpense.id, 'APPROVED')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                    <CheckCircle className="w-4 h-4 mr-1.5" /> {t('admin.expenses.approve')}
+                    <CheckCircle className="w-4 h-4 me-1.5" /> {t('admin.expenses.approve')}
                   </Button>
                 </>
               )}
               {selectedExpense.status === 'APPROVED' && (
                 <Button onClick={() => handleStatusChange(selectedExpense.id, 'REIMBURSED')} className="bg-teal-600 hover:bg-teal-700 text-white">
-                  <DollarSign className="w-4 h-4 mr-1.5" /> {t('admin.expenses.markReimbursed')}
+                  <DollarSign className="w-4 h-4 me-1.5" /> {t('admin.expenses.markReimbursed')}
                 </Button>
               )}
               {selectedExpense.status === 'REJECTED' && (
@@ -1135,7 +1135,7 @@ export default function DepensesPage() {
               disabled={!rejectionReason.trim()}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              <XCircle className="w-4 h-4 mr-1.5" /> {t('admin.expenses.reject')}
+              <XCircle className="w-4 h-4 me-1.5" /> {t('admin.expenses.reject')}
             </Button>
           </div>
         </div>

@@ -109,7 +109,7 @@ export default function EmbedScript({
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <Globe className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+          <Globe className="w-4 h-4 inline-block me-1.5 -mt-0.5" />
           {t('chat.embed.methodScript') || 'JavaScript'}
         </button>
         <button
@@ -120,7 +120,7 @@ export default function EmbedScript({
               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <ExternalLink className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+          <ExternalLink className="w-4 h-4 inline-block me-1.5 -mt-0.5" />
           {t('chat.embed.methodIframe') || 'iFrame'}
         </button>
       </div>
@@ -145,7 +145,7 @@ export default function EmbedScript({
           {/* Copy button overlay */}
           <button
             onClick={() => handleCopy(activeMethod)}
-            className="absolute top-2 right-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors opacity-80 group-hover:opacity-100"
+            className="absolute top-2 end-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors opacity-80 group-hover:opacity-100"
           >
             {copiedMethod === activeMethod ? (
               <>

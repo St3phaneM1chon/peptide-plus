@@ -240,13 +240,13 @@ export default function ProspectListsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.crmLists.searchQuery')}
-            className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
           />
         </div>
         <select
@@ -274,7 +274,7 @@ export default function ProspectListsPage() {
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table className="w-full text-sm">
-          <thead className="border-b bg-gray-50 text-left text-gray-600">
+          <thead className="border-b bg-gray-50 text-start text-gray-600">
             <tr>
               <th className="px-4 py-3 font-medium">{t('admin.crmLists.name')}</th>
               <th className="px-4 py-3 font-medium">{t('admin.crmLists.source')}</th>

@@ -1429,7 +1429,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               </span>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 ms-auto">
               <select
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
@@ -1645,7 +1645,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                     <div className="pt-6">
                       <PaymentStatusBadge status={selectedOrder.paymentStatus} />
                     </div>
-                    <div className="flex gap-2 ml-auto pt-6">
+                    <div className="flex gap-2 ms-auto pt-6">
                       {canReship && (
                         <Button variant="secondary" size="sm" icon={Package} onClick={openReshipModal}>
                           {t('admin.commandes.reshipLostPackage')}
@@ -1718,7 +1718,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                       {loadingNotes ? (
                         <div className="flex items-center justify-center py-6">
                           <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-                          <span className="ml-2 text-sm text-slate-500">{t('admin.commandes.processing')}</span>
+                          <span className="ms-2 text-sm text-slate-500">{t('admin.commandes.processing')}</span>
                         </div>
                       ) : orderNotes ? (
                         <div className="space-y-4">

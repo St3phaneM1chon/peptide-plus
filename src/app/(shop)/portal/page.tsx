@@ -149,7 +149,7 @@ export default function CustomerPortalPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <button
           onClick={() => setActiveTab('tickets')}
-          className={`p-4 rounded-xl border-2 text-left transition-all ${
+          className={`p-4 rounded-xl border-2 text-start transition-all ${
             activeTab === 'tickets' ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-slate-300 bg-white'
           }`}
         >
@@ -159,7 +159,7 @@ export default function CustomerPortalPage() {
         </button>
         <button
           onClick={() => setActiveTab('kb')}
-          className={`p-4 rounded-xl border-2 text-left transition-all ${
+          className={`p-4 rounded-xl border-2 text-start transition-all ${
             activeTab === 'kb' ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-slate-300 bg-white'
           }`}
         >
@@ -169,7 +169,7 @@ export default function CustomerPortalPage() {
         </button>
         <a
           href="/dashboard"
-          className="p-4 rounded-xl border-2 border-slate-200 hover:border-slate-300 bg-white text-left transition-all"
+          className="p-4 rounded-xl border-2 border-slate-200 hover:border-slate-300 bg-white text-start transition-all"
         >
           <ShoppingBag className="w-6 h-6 text-emerald-600 mb-2" />
           <h3 className="font-semibold text-slate-900">{t('portal.recentOrders') || 'Recent Orders'}</h3>
@@ -243,13 +243,13 @@ export default function CustomerPortalPage() {
           <div>
             <div className="p-4 border-b border-slate-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
                   value={kbSearch}
                   onChange={(e) => setKbSearch(e.target.value)}
                   placeholder={t('portal.searchKB') || 'Search help articles...'}
-                  className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full ps-11 pe-4 py-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   autoFocus
                 />
               </div>

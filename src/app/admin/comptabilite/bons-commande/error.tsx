@@ -31,7 +31,7 @@ export default function ErrorBoundary({
           {t('admin.errors.adminPanelErrorDesc')}
         </p>
         {error.message && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-left">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-start">
             <p className="text-xs text-red-700 font-mono break-all">{error.message}</p>
           </div>
         )}

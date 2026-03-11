@@ -237,7 +237,7 @@ export default function MotsMagiquesPage() {
                 <Icon className="w-5 h-5 text-gray-500" />
                 <span className="font-medium text-sm">{t(labelKey)}</span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 ml-11">
+              <p className="text-xs text-gray-500 dark:text-gray-400 ms-11">
                 {t(detail)}
               </p>
             </div>

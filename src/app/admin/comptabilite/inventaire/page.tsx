@@ -688,7 +688,7 @@ export default function InventairePage() {
         <div>
           <span className="font-medium">{row.name}</span>
           {row.isDefault && (
-            <span className="ml-2 text-xs bg-teal-100 text-teal-800 px-2 py-0.5 rounded">{t('admin.inventory.adv.default')}</span>
+            <span className="ms-2 text-xs bg-teal-100 text-teal-800 px-2 py-0.5 rounded">{t('admin.inventory.adv.default')}</span>
           )}
         </div>
       ),
@@ -887,7 +887,7 @@ export default function InventairePage() {
             {tab.icon}
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="ml-1 bg-red-100 text-red-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
+              <span className="ms-1 bg-red-100 text-red-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
                 {tab.count}
               </span>
             )}
@@ -925,7 +925,7 @@ export default function InventairePage() {
                 />
               </div>
               <Button variant="secondary" size="sm" onClick={fetchStockLevels}>
-                <RefreshCcw className="w-4 h-4 mr-1" /> {t('admin.inventory.adv.refresh')}
+                <RefreshCcw className="w-4 h-4 me-1" /> {t('admin.inventory.adv.refresh')}
               </Button>
             </FilterBar>
 
@@ -970,7 +970,7 @@ export default function InventairePage() {
           <div className="space-y-4">
             <div className="flex justify-end">
               <Button variant="primary" onClick={openCreateWarehouse}>
-                <Plus className="w-4 h-4 mr-1" /> {t('admin.inventory.adv.createWarehouse')}
+                <Plus className="w-4 h-4 me-1" /> {t('admin.inventory.adv.createWarehouse')}
               </Button>
             </div>
 
@@ -1005,7 +1005,7 @@ export default function InventairePage() {
                 />
               </FilterBar>
               <Button variant="primary" onClick={openTransferModal}>
-                <ArrowLeftRight className="w-4 h-4 mr-1" /> {t('admin.inventory.adv.newTransfer')}
+                <ArrowLeftRight className="w-4 h-4 me-1" /> {t('admin.inventory.adv.newTransfer')}
               </Button>
             </div>
 
@@ -1142,7 +1142,7 @@ export default function InventairePage() {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="text-sm font-semibold text-red-600">
                           {t('admin.inventory.adv.alertDeficit')}: {alert.deficit.toFixed(2)}
                         </p>
@@ -1186,7 +1186,7 @@ export default function InventairePage() {
                 ]}
               />
               <Button variant="secondary" size="sm" onClick={fetchValuation}>
-                <RefreshCcw className="w-4 h-4 mr-1" /> {t('admin.inventory.adv.recalculate')}
+                <RefreshCcw className="w-4 h-4 me-1" /> {t('admin.inventory.adv.recalculate')}
               </Button>
             </FilterBar>
 
@@ -1219,9 +1219,9 @@ export default function InventairePage() {
                       {valuation.byWarehouse.map((wh) => (
                         <div key={wh.warehouseId} className="flex justify-between items-center py-2 border-b last:border-0">
                           <span className="text-sm font-medium">{wh.warehouseName}</span>
-                          <div className="text-right">
+                          <div className="text-end">
                             <span className="text-sm font-semibold">{formatCurrency(wh.value)}</span>
-                            <span className="text-xs text-gray-400 ml-2">({wh.items} {t('admin.inventory.adv.items')})</span>
+                            <span className="text-xs text-gray-400 ms-2">({wh.items} {t('admin.inventory.adv.items')})</span>
                           </div>
                         </div>
                       ))}
@@ -1235,29 +1235,29 @@ export default function InventairePage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b text-left text-gray-500">
-                          <th className="py-2 pr-4">{t('admin.inventory.adv.colProductId')}</th>
-                          <th className="py-2 pr-4">{t('admin.inventory.adv.colWarehouse')}</th>
-                          <th className="py-2 pr-4 text-right">{t('admin.inventory.adv.colQuantity')}</th>
-                          <th className="py-2 pr-4 text-right">{t('admin.inventory.adv.colUnitCost')}</th>
-                          <th className="py-2 text-right">{t('admin.inventory.adv.colTotalValue')}</th>
+                        <tr className="border-b text-start text-gray-500">
+                          <th className="py-2 pe-4">{t('admin.inventory.adv.colProductId')}</th>
+                          <th className="py-2 pe-4">{t('admin.inventory.adv.colWarehouse')}</th>
+                          <th className="py-2 pe-4 text-end">{t('admin.inventory.adv.colQuantity')}</th>
+                          <th className="py-2 pe-4 text-end">{t('admin.inventory.adv.colUnitCost')}</th>
+                          <th className="py-2 text-end">{t('admin.inventory.adv.colTotalValue')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {valuation.lines.map((line, idx) => (
                           <tr key={`val-${line.productId}-${line.warehouseCode}-${idx}`} className="border-b last:border-0 hover:bg-gray-50">
-                            <td className="py-2 pr-4 font-mono">{line.productId}</td>
-                            <td className="py-2 pr-4">{line.warehouseName} <span className="text-gray-400">({line.warehouseCode})</span></td>
-                            <td className="py-2 pr-4 text-right">{line.quantity.toFixed(2)}</td>
-                            <td className="py-2 pr-4 text-right">{formatCurrency(line.unitCost)}</td>
-                            <td className="py-2 text-right font-semibold">{formatCurrency(line.totalValue)}</td>
+                            <td className="py-2 pe-4 font-mono">{line.productId}</td>
+                            <td className="py-2 pe-4">{line.warehouseName} <span className="text-gray-400">({line.warehouseCode})</span></td>
+                            <td className="py-2 pe-4 text-end">{line.quantity.toFixed(2)}</td>
+                            <td className="py-2 pe-4 text-end">{formatCurrency(line.unitCost)}</td>
+                            <td className="py-2 text-end font-semibold">{formatCurrency(line.totalValue)}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
                         <tr className="border-t-2 font-semibold">
-                          <td colSpan={4} className="py-2 text-right pr-4">{t('admin.inventory.adv.grandTotal')}</td>
-                          <td className="py-2 text-right">{formatCurrency(valuation.totalValue)}</td>
+                          <td colSpan={4} className="py-2 text-end pe-4">{t('admin.inventory.adv.grandTotal')}</td>
+                          <td className="py-2 text-end">{formatCurrency(valuation.totalValue)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1471,7 +1471,7 @@ export default function InventairePage() {
                 {t('admin.inventory.adv.cancel')}
               </Button>
               <Button variant="primary" onClick={handleCreateTransfer}>
-                <Truck className="w-4 h-4 mr-1" /> {t('admin.inventory.adv.createTransferBtn')}
+                <Truck className="w-4 h-4 me-1" /> {t('admin.inventory.adv.createTransferBtn')}
               </Button>
             </div>
           </div>

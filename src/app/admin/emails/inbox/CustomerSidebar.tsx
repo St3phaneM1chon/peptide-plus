@@ -54,7 +54,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
           <div>
             <h3 className="font-semibold text-slate-900">{(customer.name as string) || t('admin.emails.inbox.customer')}</h3>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${tierColors[tier] || tierColors.BRONZE}`}>
-              <Crown className="h-2.5 w-2.5 inline mr-0.5" />
+              <Crown className="h-2.5 w-2.5 inline me-0.5" />
               {tier}
             </span>
           </div>
@@ -145,7 +145,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
               <div key={order.id as string} className="flex items-center justify-between text-sm">
                 <div>
                   <span className="font-medium text-slate-900">#{order.orderNumber as string}</span>
-                  <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded ${
+                  <span className={`ms-2 text-[10px] px-1.5 py-0.5 rounded ${
                     order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
                     order.status === 'SHIPPED' ? 'bg-teal-100 text-teal-700' :
                     order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :

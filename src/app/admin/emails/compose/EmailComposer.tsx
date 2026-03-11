@@ -298,7 +298,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
         onAttach={() => fileInputRef.current?.click()}
         uploading={uploading}
         trailing={attachments.length > 0 ? (
-          <span className="text-[10px] text-slate-400 ml-1">
+          <span className="text-[10px] text-slate-400 ms-1">
             {attachments.length} fichier(s) - {formatFileSize(totalAttachmentSize)}
           </span>
         ) : undefined}

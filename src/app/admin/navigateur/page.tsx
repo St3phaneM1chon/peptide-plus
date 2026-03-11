@@ -206,7 +206,7 @@ export default function NavigateurPage() {
               <button
                 key={sec.id}
                 onClick={() => { setSelectedSection(sec); setSelectedSubSection(null); }}
-                className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
                   selectedSection?.id === sec.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
                 }`}
               >
@@ -239,7 +239,7 @@ export default function NavigateurPage() {
               <button
                 key={sub.id}
                 onClick={() => setSelectedSubSection(sub)}
-                className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
                   selectedSubSection?.id === sub.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
                 }`}
               >

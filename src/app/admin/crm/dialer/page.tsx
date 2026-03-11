@@ -474,7 +474,7 @@ export default function PowerDialerPage() {
                     </div>
                   )}
                 </div>
-                <div className="text-right text-sm text-gray-400">
+                <div className="text-end text-sm text-gray-400">
                   <p>{currentIndex + 1} / {leads.length}</p>
                   {currentLead.lastContactedAt && (
                     <p className="mt-1">Last: {new Date(currentLead.lastContactedAt).toLocaleDateString(locale)}</p>
@@ -548,7 +548,7 @@ export default function PowerDialerPage() {
                           disabled={actionInFlight}
                           className={`py-3 px-4 rounded-lg text-white text-sm font-medium ${d.color} hover:opacity-90 disabled:opacity-50`}
                         >
-                          <span className="mr-1">{d.icon}</span> {d.label}
+                          <span className="me-1">{d.icon}</span> {d.label}
                         </button>
                       ))}
                     </div>

@@ -546,7 +546,7 @@ export default function NewProductClient({ categories }: Props) {
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-neutral-200 rounded-full peer-checked:bg-green-500 transition-colors"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                      <div className="absolute start-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-neutral-700">{t('admin.productForm.active')}</span>

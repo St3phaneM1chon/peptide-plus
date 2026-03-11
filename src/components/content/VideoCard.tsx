@@ -121,7 +121,7 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors duration-300">
           <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg">
-            <Play className="w-6 h-6 text-gray-900 ml-1" />
+            <Play className="w-6 h-6 text-gray-900 ms-1" />
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
         {video.source && video.source !== 'upload' && (
           <div className="absolute top-2 end-2 flex items-center gap-1">
             <span className={`text-xs font-medium px-2 py-1 rounded ${getSourceColor(video.source)}`}>
-              <ExternalLink className="w-3 h-3 inline-block mr-1" />
+              <ExternalLink className="w-3 h-3 inline-block me-1" />
               {getSourceLabel(video.source)}
             </span>
           </div>

@@ -821,7 +821,7 @@ export default function VideoDetailPage() {
         {/* Save button for main form */}
         <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
           {hasChanges && (
-            <span className="text-xs text-amber-600 mr-auto">
+            <span className="text-xs text-amber-600 me-auto">
               {t('admin.media.unsavedChanges') || 'You have unsaved changes'}
             </span>
           )}
@@ -1110,7 +1110,7 @@ export default function VideoDetailPage() {
                       <span className="text-slate-600 flex-1">
                         {consent.client.name || consent.client.email}
                         {consent.formTemplate && (
-                          <span className="text-slate-400 ml-2">({consent.formTemplate.name})</span>
+                          <span className="text-slate-400 ms-2">({consent.formTemplate.name})</span>
                         )}
                       </span>
                       <span className="text-xs text-slate-400">

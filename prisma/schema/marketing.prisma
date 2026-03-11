@@ -1,0 +1,63 @@
+// ---------------------------------------------------------------------------
+// Social Post (Social Scheduler)
+// ---------------------------------------------------------------------------
+model SocialPost {
+  id          String    @id @default(cuid())
+  platform    String    // "instagram", "facebook", "twitter", "tiktok", "linkedin"
+  content     String    @db.Text
+  imageUrl    String?
+  scheduledAt DateTime
+  publishedAt DateTime?
+  status      String    @default("draft") // draft, scheduled, publishing, published, failed
+  error       String?
+  externalId  String? // ID of the post on the platform
+  externalUrl String? // URL of the published post
+  createdById String?
+  createdBy    User?     @relation("SocialPosts", fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  translations SocialPostTranslation[]
+
+  @@index([status, scheduledAt])
+  @@index([platform])
+  @@index([createdById])
+  @@index([externalId])
+}
+
+// ---------------------------------------------------------------------------
+// Social Post Translation (i18n)
+// ---------------------------------------------------------------------------
+model SocialPostTranslation {
+  id           String   @id @default(cuid())
+  socialPostId String
+  locale       String   @db.VarChar(10)
+  content      String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  socialPost   SocialPost @relation(fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  @@unique([socialPostId, locale])
+  @@index([socialPostId])
+}
+
+// ---------------------------------------------------------------------------
+// Ad Campaign Snapshot (Ads Dashboard)
+// ---------------------------------------------------------------------------
+model AdCampaignSnapshot {
+  id           String   @id @default(cuid())
+  platform     String // "youtube", "google-ads", "tiktok", "x", "linkedin", "meta"
+  campaignId   String?
+  campaignName String?
+  date         DateTime @db.Date
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  spend        Decimal  @default(0) @db.Decimal(12, 2)
+  conversions  Int      @default(0)
+  currency     String   @default("CAD")
+  rawData      Json? // Raw data from the platform
+  createdAt    DateTime @default(now())
+
+  @@unique([platform, campaignId, date])
+  @@index([platform, date])
+}
+

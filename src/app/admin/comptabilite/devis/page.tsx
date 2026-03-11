@@ -767,12 +767,12 @@ export default function DevisPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Produit</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Description</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 w-20">Qté</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 w-28">Prix unit.</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 w-20">Rem. %</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 w-28">Total</th>
+                    <th className="px-3 py-2 text-start font-medium text-gray-600">Produit</th>
+                    <th className="px-3 py-2 text-start font-medium text-gray-600">Description</th>
+                    <th className="px-3 py-2 text-end font-medium text-gray-600 w-20">Qté</th>
+                    <th className="px-3 py-2 text-end font-medium text-gray-600 w-28">Prix unit.</th>
+                    <th className="px-3 py-2 text-end font-medium text-gray-600 w-20">Rem. %</th>
+                    <th className="px-3 py-2 text-end font-medium text-gray-600 w-28">Total</th>
                     <th className="px-3 py-2 w-10"></th>
                   </tr>
                 </thead>
@@ -809,7 +809,7 @@ export default function DevisPage() {
                             step={0.01}
                             value={item.quantity}
                             onChange={(e) => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
-                            className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            className="w-full border-0 bg-transparent text-sm text-end focus:ring-0 p-1"
                             aria-label={`Quantité, ligne ${idx + 1}`}
                           />
                         </td>
@@ -820,7 +820,7 @@ export default function DevisPage() {
                             step={0.01}
                             value={item.unitPrice}
                             onChange={(e) => updateLine(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            className="w-full border-0 bg-transparent text-sm text-end focus:ring-0 p-1"
                             aria-label={`Prix unitaire, ligne ${idx + 1}`}
                           />
                         </td>
@@ -832,11 +832,11 @@ export default function DevisPage() {
                             step={0.5}
                             value={item.discountPercent}
                             onChange={(e) => updateLine(idx, 'discountPercent', parseFloat(e.target.value) || 0)}
-                            className="w-full border-0 bg-transparent text-sm text-right focus:ring-0 p-1"
+                            className="w-full border-0 bg-transparent text-sm text-end focus:ring-0 p-1"
                             aria-label={`Rabais %, ligne ${idx + 1}`}
                           />
                         </td>
-                        <td className="px-3 py-1 text-right font-medium text-sm">
+                        <td className="px-3 py-1 text-end font-medium text-sm">
                           ${lineTotal.toFixed(2)}
                         </td>
                         <td className="px-3 py-1">
@@ -950,7 +950,7 @@ export default function DevisPage() {
                   <p className="text-sm text-gray-500">{selectedEstimate.customerPhone}</p>
                 )}
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <StatusBadge
                   variant={statusConfig[selectedEstimate.status]?.variant || 'neutral'}
                 >{statusConfig[selectedEstimate.status]?.label || selectedEstimate.status}</StatusBadge>
@@ -968,12 +968,12 @@ export default function DevisPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-2 text-left">Produit</th>
-                    <th className="px-3 py-2 text-left">Description</th>
-                    <th className="px-3 py-2 text-right">Qté</th>
-                    <th className="px-3 py-2 text-right">Prix unit.</th>
-                    <th className="px-3 py-2 text-right">Rem. %</th>
-                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-3 py-2 text-start">Produit</th>
+                    <th className="px-3 py-2 text-start">Description</th>
+                    <th className="px-3 py-2 text-end">Qté</th>
+                    <th className="px-3 py-2 text-end">Prix unit.</th>
+                    <th className="px-3 py-2 text-end">Rem. %</th>
+                    <th className="px-3 py-2 text-end">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -981,10 +981,10 @@ export default function DevisPage() {
                     <tr key={item.id || `est-item-${idx}`} className="border-t">
                       <td className="px-3 py-2 font-medium">{item.productName}</td>
                       <td className="px-3 py-2 text-gray-600">{item.description || '-'}</td>
-                      <td className="px-3 py-2 text-right">{item.quantity}</td>
-                      <td className="px-3 py-2 text-right">${item.unitPrice.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right">{item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
-                      <td className="px-3 py-2 text-right font-medium">${item.lineTotal.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-end">{item.quantity}</td>
+                      <td className="px-3 py-2 text-end">${item.unitPrice.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-end">{item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
+                      <td className="px-3 py-2 text-end font-medium">${item.lineTotal.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

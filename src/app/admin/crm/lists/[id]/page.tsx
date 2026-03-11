@@ -613,12 +613,12 @@ export default function ProspectListDetailPage() {
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
                 placeholder={t('admin.crmLists.placeholderSearch')}
               />
             </div>
@@ -631,28 +631,28 @@ export default function ProspectListDetailPage() {
             {selected.size > 0 && (
               <div className="flex gap-2">
                 <button onClick={() => bulkSetStatus('VALIDATED')} className="rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700 hover:bg-green-100">
-                  <CheckCircle2 className="inline h-3.5 w-3.5 mr-1" />{t('admin.crmLists.validate')} ({selected.size})
+                  <CheckCircle2 className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.validate')} ({selected.size})
                 </button>
                 <button onClick={() => bulkSetStatus('EXCLUDED')} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
-                  <XCircle className="inline h-3.5 w-3.5 mr-1" />{t('admin.crmLists.exclude')} ({selected.size})
+                  <XCircle className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.exclude')} ({selected.size})
                 </button>
                 <button onClick={bulkDelete} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
-                  <Trash2 className="inline h-3.5 w-3.5 mr-1" />{t('admin.crmLists.delete')} ({selected.size})
+                  <Trash2 className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.delete')} ({selected.size})
                 </button>
               </div>
             )}
             <button onClick={bulkValidateWithRules} className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 hover:bg-green-100" title={t('admin.crmLists.bulkValidateRule')}>
-              <Shield className="inline h-3.5 w-3.5 mr-1" />{t('admin.crmLists.bulkValidate')}
+              <Shield className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.bulkValidate')}
             </button>
             <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-medium text-white hover:bg-teal-700">
-              <Plus className="inline h-3.5 w-3.5 mr-1" />{t('admin.crmLists.addProspect')}
+              <Plus className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.addProspect')}
             </button>
           </div>
 
           {/* Prospects Table */}
           <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
             <table className="w-full text-sm">
-              <thead className="border-b bg-gray-50 text-left text-gray-600">
+              <thead className="border-b bg-gray-50 text-start text-gray-600">
                 <tr>
                   <th className="w-8 px-3 py-3">
                     <input
@@ -702,7 +702,7 @@ export default function ProspectListDetailPage() {
                           {p.status}
                         </span>
                         {p.dncStatus === 'NATIONAL_DNC' && (
-                          <span className="ml-1 rounded bg-red-100 px-1 py-0.5 text-[10px] text-red-600">DNC</span>
+                          <span className="ms-1 rounded bg-red-100 px-1 py-0.5 text-[10px] text-red-600">DNC</span>
                         )}
                       </td>
                       {list.source === 'GOOGLE_MAPS' && (
@@ -812,7 +812,7 @@ export default function ProspectListDetailPage() {
               </div>
               <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
                 <table className="w-full text-sm">
-                  <thead className="border-b bg-gray-50 text-left text-gray-600">
+                  <thead className="border-b bg-gray-50 text-start text-gray-600">
                     <tr>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.companyName')}</th>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.address') || 'Address'}</th>
@@ -1072,13 +1072,13 @@ export default function ProspectListDetailPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="font-medium">{p.contactName}</span>
-                      {p.companyName && <span className="text-gray-500 ml-2">({p.companyName})</span>}
+                      {p.companyName && <span className="text-gray-500 ms-2">({p.companyName})</span>}
                       <div className="text-xs text-gray-500 mt-1">
-                        {p.email && <span className="mr-3">{p.email}</span>}
+                        {p.email && <span className="me-3">{p.email}</span>}
                         {p.phone && <span>{p.phone}</span>}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       {p.duplicateOf && (
                         <div className="text-xs text-orange-600">
                           {t('admin.crmLists.duplicateOf')}: <span className="font-medium">{p.duplicateOf.contactName}</span>
@@ -1341,7 +1341,7 @@ export default function ProspectListDetailPage() {
               {/* Active days */}
               <div className="mt-3">
                 <label className="block text-xs text-gray-500 mb-2">
-                  <CalendarDays className="inline h-3.5 w-3.5 mr-1" />
+                  <CalendarDays className="inline h-3.5 w-3.5 me-1" />
                   {t('admin.crmLists.activeDays')}
                 </label>
                 <div className="flex flex-wrap gap-2">

@@ -664,7 +664,7 @@ export default function AbonnementsPage() {
               onClick={() => setCfgFreeShipping(!cfgFreeShipping)}
               className={`w-11 h-6 rounded-full transition-colors relative ${cfgFreeShipping ? 'bg-green-500' : 'bg-slate-300'}`}
             >
-              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${cfgFreeShipping ? 'right-1' : 'left-1'}`} />
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${cfgFreeShipping ? 'end-1' : 'start-1'}`} />
             </button>
           </div>
           <FormField label={t('admin.subscriptions.reminderDays')}>

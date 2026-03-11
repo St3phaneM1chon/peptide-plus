@@ -221,7 +221,7 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
                   style={{ height: `${height}%` }}
                   title={`${d.date}: ${formatCurrency(d.spend)}`}
                 >
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">
+                  <div className="absolute bottom-full mb-1 start-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">
                     {d.date}: {formatCurrency(d.spend)}
                   </div>
                 </div>
@@ -256,23 +256,23 @@ export function AdsPlatformDashboard({ platform }: AdsPlatformDashboardProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 text-left">{t('admin.media.ads.campaignName') || 'Campaign'}</th>
-                  <th className="px-4 py-3 text-right">{t('admin.media.ads.impressions') || 'Impressions'}</th>
-                  <th className="px-4 py-3 text-right">{t('admin.media.ads.clicks') || 'Clicks'}</th>
-                  <th className="px-4 py-3 text-right">{t('admin.media.ads.ctr') || 'CTR'}</th>
-                  <th className="px-4 py-3 text-right">{t('admin.media.ads.spend') || 'Spend'}</th>
-                  <th className="px-4 py-3 text-right">{t('admin.media.ads.conversions') || 'Conv.'}</th>
+                  <th className="px-4 py-3 text-start">{t('admin.media.ads.campaignName') || 'Campaign'}</th>
+                  <th className="px-4 py-3 text-end">{t('admin.media.ads.impressions') || 'Impressions'}</th>
+                  <th className="px-4 py-3 text-end">{t('admin.media.ads.clicks') || 'Clicks'}</th>
+                  <th className="px-4 py-3 text-end">{t('admin.media.ads.ctr') || 'CTR'}</th>
+                  <th className="px-4 py-3 text-end">{t('admin.media.ads.spend') || 'Spend'}</th>
+                  <th className="px-4 py-3 text-end">{t('admin.media.ads.conversions') || 'Conv.'}</th>
                 </tr>
               </thead>
               <tbody>
                 {campaigns.map((c, i) => (
                   <tr key={c.campaignId || i} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3 text-slate-700 font-medium">{c.campaignName || c.campaignId || '-'}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatNumber(c.impressions)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatNumber(c.clicks)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{c.ctr}%</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(c.spend)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatNumber(c.conversions)}</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{formatNumber(c.impressions)}</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{formatNumber(c.clicks)}</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{c.ctr}%</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(c.spend)}</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{formatNumber(c.conversions)}</td>
                   </tr>
                 ))}
               </tbody>

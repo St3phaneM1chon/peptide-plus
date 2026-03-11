@@ -191,7 +191,7 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
                   <button
                     key={evt.id}
                     onClick={() => handleEventClick(evt)}
-                    className={`w-full text-left px-1.5 py-0.5 text-[10px] rounded border truncate ${cfg.color} ${evt.sourceType === 'campaign' ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                    className={`w-full text-start px-1.5 py-0.5 text-[10px] rounded border truncate ${cfg.color} ${evt.sourceType === 'campaign' ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
                     title={evt.title}
                   >
                     {evt.title}

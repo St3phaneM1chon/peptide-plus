@@ -179,7 +179,7 @@ export default function BlogAnalyticsPage() {
                             }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-slate-500 w-6 text-right">
+                        <span className="text-xs font-medium text-slate-500 w-6 text-end">
                           {cat.count}
                         </span>
                       </div>
@@ -220,12 +220,12 @@ export default function BlogAnalyticsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Title</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Category</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Author</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Status</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Published</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Read Time</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Title</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Category</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Author</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Status</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Published</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Read Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

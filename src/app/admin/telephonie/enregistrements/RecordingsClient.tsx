@@ -138,7 +138,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
       <div className="flex flex-col sm:flex-row gap-4">
         <form onSubmit={handleSearch} className="flex gap-2 flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
               value={searchQuery}

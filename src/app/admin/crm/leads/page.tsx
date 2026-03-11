@@ -234,13 +234,13 @@ export default function LeadsPage() {
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder={t('admin.crm.searchLeads') || 'Search leads...'}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md"
+            className="w-full ps-9 pe-3 py-2 text-sm border border-gray-300 rounded-md"
           />
         </div>
         <select
@@ -320,17 +320,17 @@ export default function LeadsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left">
+                <th className="px-4 py-3 text-start">
                   <input type="checkbox" onChange={selectAll} checked={selected.size === leads.length && leads.length > 0} className="rounded" />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.name') || 'Name'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.company') || 'Company'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.name') || 'Name'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.company') || 'Company'}</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.score') || 'Score'}</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.temperature') || 'Temp'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Status'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.source') || 'Source'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.crm.lastContact') || 'Last Contact'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Status'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.source') || 'Source'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.lastContact') || 'Last Contact'}</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">DNC</th>
               </tr>
             </thead>
@@ -448,7 +448,7 @@ export default function LeadsPage() {
                   const file = e.target.files?.[0];
                   if (file) handleImportCSV(file);
                 }}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                className="block w-full text-sm text-gray-500 file:me-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
               />
             </div>
             <div className="flex justify-end p-4 border-t">

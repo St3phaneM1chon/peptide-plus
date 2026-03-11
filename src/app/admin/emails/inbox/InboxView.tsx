@@ -45,10 +45,10 @@ const statusColors: Record<string, string> = {
 };
 
 const priorityColors: Record<string, string> = {
-  URGENT: 'border-l-red-500',
-  HIGH: 'border-l-orange-500',
-  NORMAL: 'border-l-transparent',
-  LOW: 'border-l-slate-300',
+  URGENT: 'border-s-red-500',
+  HIGH: 'border-s-orange-500',
+  NORMAL: 'border-s-transparent',
+  LOW: 'border-s-slate-300',
 };
 
 export default function InboxView({ onSelectConversation, selectedId }: InboxViewProps) {
@@ -111,13 +111,13 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
       {/* Search bar */}
       <div className="p-3 border-b border-slate-200">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder={t('admin.emails.inbox.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full ps-10 pe-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
               <button
                 key={conv.id}
                 onClick={() => onSelectConversation(conv.id)}
-                className={`w-full text-left p-3 border-b border-slate-100 border-l-4 transition-colors ${
+                className={`w-full text-start p-3 border-b border-slate-100 border-s-4 transition-colors ${
                   priorityColors[conv.priority] || ''
                 } ${isSelected ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
               >
@@ -216,7 +216,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
                           {tag}
                         </span>
                       ))}
-                      <span className="text-[10px] text-slate-400 ml-auto">
+                      <span className="text-[10px] text-slate-400 ms-auto">
                         {conv._count.inboundEmails + conv._count.outboundReplies} {t('admin.emails.inbox.messagesShort')}
                       </span>
                     </div>

@@ -265,7 +265,7 @@ export default function CoachingClient({
                     <div className="font-medium text-gray-900 truncate">{agent.name}</div>
                     <div className="text-xs text-gray-500">{agent.sessionCount} sessions</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className={`text-lg font-bold ${scoreColor(agent.avgScore)}`}>
                       {agent.avgScore}
                     </div>
@@ -389,11 +389,11 @@ export default function CoachingClient({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Coach</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">{t('voip.admin.coaching.agent')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Topic</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">Coach</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">{t('voip.admin.coaching.agent')}</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">Topic</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">{t('voip.admin.coaching.score')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">Date</th>
                 </tr>
               </thead>
               <tbody>

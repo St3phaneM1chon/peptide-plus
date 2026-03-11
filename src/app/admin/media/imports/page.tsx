@@ -311,25 +311,25 @@ export default function RecordingImportsPage() {
                     className="rounded border-gray-300"
                   />
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.recordingImports.filterPlatform')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.media.meetingLabel')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.media.dateLabel')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.media.durationLabel')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.consents.statusColumn')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-start text-xs font-medium uppercase text-gray-500">
                   {t('admin.media.consentSection')}
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-medium uppercase text-gray-500">
+                <th className="px-3 py-3 text-end text-xs font-medium uppercase text-gray-500">
                   {t('common.actions') || 'Actions'}
                 </th>
               </tr>
@@ -407,7 +407,7 @@ export default function RecordingImportsPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-3 py-3 text-end">
                       <div className="flex items-center justify-end gap-1">
                         {imp.status === 'pending' && (
                           <>

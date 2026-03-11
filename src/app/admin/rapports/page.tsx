@@ -354,7 +354,7 @@ export default function RapportsPage() {
                   className="flex-1 bg-teal-500 rounded-t hover:bg-teal-600 cursor-pointer transition-colors relative group"
                   style={{ height: `${maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0}%`, minHeight: day.revenue > 0 ? '4px' : '0px' }}
                 >
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                  <div className="absolute bottom-full start-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
                     {day.date}<br/>
                     {formatCurrency(day.revenue)}<br/>
                     {t('admin.reports.ordersCount', { count: day.orders })}

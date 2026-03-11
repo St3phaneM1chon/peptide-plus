@@ -162,7 +162,7 @@ export default function InboxPage() {
             const isSelected = selected?.id === conv.id;
             return (
               <button key={conv.id} onClick={() => selectConversation(conv)}
-                className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-teal-50 border-l-2 border-teal-500' : ''}`}>
+                className={`w-full text-start p-3 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-teal-50 border-s-2 border-teal-500' : ''}`}>
                 <div className="flex items-start gap-2">
                   <ChannelIcon className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">

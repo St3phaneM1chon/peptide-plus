@@ -1358,6 +1358,43 @@ model LoyaltyTransaction {
   @@index([userId, type]) // F-070: Composite for duplicate detection (EARN_SIGNUP, EARN_BIRTHDAY)
 }
 
+model LoyaltyTierConfig {
+  id                    String             @id @default(cuid())
+  name                  String             @unique // BRONZE, SILVER, GOLD, PLATINUM, DIAMOND
+  minPoints             Int                @default(0)
+  discountPercent       Decimal            @default(0) @db.Decimal(5, 2)
+  pointsMultiplier      Decimal            @default(1) @db.Decimal(3, 2)
+  freeShippingThreshold Decimal?           @db.Decimal(10, 2)
+  priority              Int                @default(0)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  tierPrices            ProductTierPrice[]
+
+  @@index([priority])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ProductTierPrice {
+  id        String            @id @default(cuid())
+  productId String
+  tierName  String
+  price     Decimal           @db.Decimal(10, 2)
+  active    Boolean           @default(true)
+  startDate DateTime          @default(now())
+  endDate   DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tier      LoyaltyTierConfig @relation(fields: [tierName], references: [name], onDelete: Cascade)
+
+  @@unique([productId, tierName])
+  @@index([productId])
+  @@index([tierName])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
 model Media {
   id           String   @id @default(cuid())
   filename     String
@@ -1883,6 +1920,7 @@ model Product {
   crmQuoteItems            CrmQuoteItem[]
   inventoryReservations    InventoryReservation[]
   inventoryTransactions    InventoryTransaction[]
+  tierPrices               ProductTierPrice[]
 
   @@index([categoryId])
   @@index([isBestseller])

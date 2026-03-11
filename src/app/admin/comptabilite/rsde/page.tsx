@@ -166,7 +166,7 @@ export default function RSDeAdminPage() {
                       <h4 className="font-semibold text-gray-900">{p.name}</h4>
                       <p className="text-sm text-gray-500">Année fiscale {p.fiscalYear} • {p.isSpcc ? 'SPCC' : 'Non-SPCC'}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <StatusBadge variant={STATUS_MAP[p.status]?.variant || 'default'}>{STATUS_MAP[p.status]?.label || p.status}</StatusBadge>
                       {p.lastCalculation && <p className="text-sm font-bold text-green-600 mt-1">{fmt(Number(p.lastCalculation.totalCredit))}</p>}
                     </div>
@@ -191,14 +191,14 @@ export default function RSDeAdminPage() {
               <h3 className="text-lg font-semibold mb-4">Dépenses — {selectedProject.name}</h3>
               <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-gray-500"><th className="pb-2">Date</th><th className="pb-2">Description</th><th className="pb-2">Catégorie</th><th className="pb-2 text-right">Montant</th><th className="pb-2">Éligible</th></tr></thead>
+                <thead><tr className="border-b text-start text-gray-500"><th className="pb-2">Date</th><th className="pb-2">Description</th><th className="pb-2">Catégorie</th><th className="pb-2 text-end">Montant</th><th className="pb-2">Éligible</th></tr></thead>
                 <tbody>
                   {expenses.map(e => (
                     <tr key={e.id} className="border-b border-gray-50">
                       <td className="py-2 text-gray-600">{new Date(e.date).toLocaleDateString('fr-CA')}</td>
                       <td className="py-2">{e.description}</td>
                       <td className="py-2"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{CATEGORY_LABELS[e.category] || e.category}</span></td>
-                      <td className="py-2 text-right font-medium">{fmt(e.amount)}</td>
+                      <td className="py-2 text-end font-medium">{fmt(e.amount)}</td>
                       <td className="py-2">{e.isEligible ? <Check className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-400" />}</td>
                     </tr>
                   ))}

@@ -226,7 +226,7 @@ export default function RecordingPlayer({
           />
         </div>
 
-        <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[4rem] text-right font-mono">
+        <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[4rem] text-end font-mono">
           {formatTime(currentTime)} / {formatTime(duration)}
         </span>
       </div>
@@ -333,7 +333,7 @@ export default function RecordingPlayer({
           />
 
           {/* Hover time tooltip */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-0.5 rounded pointer-events-none">
+          <div className="absolute bottom-full start-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-0.5 rounded pointer-events-none">
             {formatTime(currentTime)}
           </div>
         </div>
@@ -405,12 +405,12 @@ export default function RecordingPlayer({
           </button>
 
           {showSpeedMenu && (
-            <div className="absolute bottom-full right-0 mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10">
+            <div className="absolute bottom-full end-0 mb-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10">
               {SPEED_OPTIONS.map((speed) => (
                 <button
                   key={speed}
                   onClick={() => changeSpeed(speed)}
-                  className={`w-full px-3 py-1 text-xs text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                  className={`w-full px-3 py-1 text-xs text-start hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                     playbackSpeed === speed
                       ? 'text-teal-600 font-medium'
                       : 'text-gray-700 dark:text-gray-300'
@@ -432,7 +432,7 @@ export default function RecordingPlayer({
               <button
                 key={idx}
                 onClick={() => seek(seg.startTime)}
-                className={`w-full text-left flex gap-2 p-2 rounded-lg transition-colors ${
+                className={`w-full text-start flex gap-2 p-2 rounded-lg transition-colors ${
                   idx === activeTranscriptIndex
                     ? 'bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-800'

@@ -569,7 +569,7 @@ export default function VideoCategoriesPage() {
               />
               {t('admin.videoCategories.active') || 'Active'}
             </label>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ms-auto flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}

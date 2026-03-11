@@ -447,7 +447,7 @@ export default function ContractsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 text-left">
+                <tr className="bg-gray-50 text-start">
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                     {t('common.title') || 'Title'}
                   </th>
@@ -483,7 +483,7 @@ export default function ContractsPage() {
                     <td className="px-4 py-3">
                       <StatusBadge status={contract.status} />
                       {isExpiringSoon(contract.endDate) && contract.status === 'ACTIVE' && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-xs text-orange-600">
+                        <span className="ms-2 inline-flex items-center gap-1 text-xs text-orange-600">
                           <AlertTriangle className="h-3 w-3" />
                           {t('admin.crm.contracts.expiringSoon') || 'Expiring soon'}
                         </span>

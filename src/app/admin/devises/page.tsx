@@ -369,7 +369,7 @@ export default function DevisesPage() {
             aria-pressed={autoUpdate}
             className={`w-12 h-6 rounded-full transition-colors relative ${autoUpdate ? 'bg-emerald-500' : 'bg-slate-300'}`}
           >
-            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoUpdate ? 'right-1' : 'left-1'}`} />
+            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoUpdate ? 'end-1' : 'start-1'}`} />
           </button>
         </div>
       </div>
@@ -455,7 +455,7 @@ export default function DevisesPage() {
                     } ${currency.isDefault ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                      currency.isActive ? 'right-0.5' : 'left-0.5'
+                      currency.isActive ? 'end-0.5' : 'start-0.5'
                     }`} />
                   </button>
                 </td>

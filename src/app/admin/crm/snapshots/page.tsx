@@ -363,7 +363,7 @@ export default function SnapshotsPage() {
                     ))}
                   </div>
 
-                  <div className="text-right min-w-[160px]">
+                  <div className="text-end min-w-[160px]">
                     <p className="text-sm text-gray-700 flex items-center gap-1 justify-end">
                       <Clock className="h-3 w-3" />
                       {formatDate(snap.takenAt)}
@@ -424,11 +424,11 @@ export default function SnapshotsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="text-left px-6 py-3 text-gray-500 font-medium">Entity</th>
-                      <th className="text-left px-6 py-3 text-gray-500 font-medium">Metric</th>
-                      <th className="text-right px-6 py-3 text-gray-500 font-medium">Before</th>
-                      <th className="text-right px-6 py-3 text-gray-500 font-medium">After</th>
-                      <th className="text-right px-6 py-3 text-gray-500 font-medium">Change</th>
+                      <th className="text-start px-6 py-3 text-gray-500 font-medium">Entity</th>
+                      <th className="text-start px-6 py-3 text-gray-500 font-medium">Metric</th>
+                      <th className="text-end px-6 py-3 text-gray-500 font-medium">Before</th>
+                      <th className="text-end px-6 py-3 text-gray-500 font-medium">After</th>
+                      <th className="text-end px-6 py-3 text-gray-500 font-medium">Change</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -440,17 +440,17 @@ export default function SnapshotsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-3 text-gray-700">{change.field}</td>
-                        <td className="text-right px-6 py-3 text-gray-500">
+                        <td className="text-end px-6 py-3 text-gray-500">
                           {typeof change.oldValue === 'number'
                             ? change.oldValue.toLocaleString()
                             : change.oldValue}
                         </td>
-                        <td className="text-right px-6 py-3 font-medium text-gray-900">
+                        <td className="text-end px-6 py-3 font-medium text-gray-900">
                           {typeof change.newValue === 'number'
                             ? change.newValue.toLocaleString()
                             : change.newValue}
                         </td>
-                        <td className="text-right px-6 py-3">
+                        <td className="text-end px-6 py-3">
                           <span
                             className={`inline-flex items-center gap-1 text-xs font-medium ${
                               change.change > 0

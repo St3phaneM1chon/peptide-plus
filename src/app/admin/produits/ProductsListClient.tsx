@@ -698,7 +698,7 @@ export default function ProductsListClient({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-amber-800">
                   {t('admin.products.reorderAlertTitle') || 'Alerte de réapprovisionnement'}
-                  <span className="ml-1 font-normal text-amber-600">({reorderAlerts.length})</span>
+                  <span className="ms-1 font-normal text-amber-600">({reorderAlerts.length})</span>
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {reorderAlerts.slice(0, 5).map((p) => {
@@ -994,7 +994,7 @@ export default function ProductsListClient({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('admin.products.searchPlaceholder')}
-                className="w-full h-9 pl-3 pr-8 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full h-9 ps-3 pe-8 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
             <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -1069,7 +1069,7 @@ export default function ProductsListClient({
                       )}
                       {/* ABC badge top-left */}
                       {abc && (
-                        <span className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <span className={`absolute top-2 start-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           abc === 'A' ? 'bg-emerald-500 text-white' :
                           abc === 'B' ? 'bg-teal-500 text-white' :
                           'bg-slate-400 text-white'
@@ -1079,7 +1079,7 @@ export default function ProductsListClient({
                       )}
                       {/* Featured star top-right */}
                       {product.isFeatured && (
-                        <Star className="absolute top-2 right-2 w-5 h-5 text-amber-400 fill-amber-400 drop-shadow" />
+                        <Star className="absolute top-2 end-2 w-5 h-5 text-amber-400 fill-amber-400 drop-shadow" />
                       )}
                     </div>
 

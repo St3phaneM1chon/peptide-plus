@@ -334,7 +334,7 @@ export default function ParametresPage() {
     `w-12 h-6 rounded-full transition-colors relative ${active ? 'bg-green-500' : 'bg-slate-300'}`;
 
   const toggleDot = (active: boolean) =>
-    `absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${active ? 'right-1' : 'left-1'}`;
+    `absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${active ? 'end-1' : 'start-1'}`;
 
   return (
     <div className="flex flex-col md:flex-row gap-6" role="main" aria-label={t('admin.settingsPage.sidebarTitle') || 'Parametres'}>

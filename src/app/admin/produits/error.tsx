@@ -42,7 +42,7 @@ export default function ProductsError({
 
         {/* BUG-074 FIX: Display the actual error message so the admin can diagnose */}
         {error.message && (
-          <div className="mt-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-left">
+          <div className="mt-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-start">
             <p className="text-xs font-semibold text-red-800 mb-1">{t('admin.errors.errorDetails') || 'Error details'}:</p>
             <p className="text-sm text-red-700 font-mono break-all">{error.message}</p>
           </div>

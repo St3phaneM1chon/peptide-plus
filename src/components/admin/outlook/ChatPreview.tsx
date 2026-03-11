@@ -18,7 +18,7 @@ export default function ChatPreview() {
           {t('admin.chat.recentMessages')}
         </span>
         {chats.length > 0 && (
-          <span className="ml-auto text-xs bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 font-medium">
+          <span className="ms-auto text-xs bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 font-medium">
             {chats.length}
           </span>
         )}

@@ -247,7 +247,7 @@ export default function VideoPlayer({
         {/* Fullscreen button */}
         <button
           onClick={handleFullscreen}
-          className="absolute bottom-3 right-3 z-10 rounded-md bg-black/60 p-1.5 text-white/80 transition-colors hover:bg-black/80 hover:text-white"
+          className="absolute bottom-3 end-3 z-10 rounded-md bg-black/60 p-1.5 text-white/80 transition-colors hover:bg-black/80 hover:text-white"
           aria-label="Fullscreen"
         >
           <Maximize className="h-4 w-4" />
@@ -298,21 +298,21 @@ export default function VideoPlayer({
       </button>
 
       {/* Platform badge */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-white">
+      <div className="absolute top-3 end-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-white">
         <PlatformIcon source={resolvedSource} />
         <span>{PLATFORM_LABELS[resolvedSource]}</span>
       </div>
 
       {/* Title overlay (bottom) */}
       {title && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3 pt-8">
+        <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3 pt-8">
           <p className="truncate text-sm font-medium text-white">{title}</p>
         </div>
       )}
 
       {/* External link hint for non-embeddable sources */}
       {!isEmbeddable && (
-        <div className="absolute bottom-3 right-3 rounded-md bg-black/60 px-2 py-1 text-[10px] font-medium text-white/70">
+        <div className="absolute bottom-3 end-3 rounded-md bg-black/60 px-2 py-1 text-[10px] font-medium text-white/70">
           {t('video.opensInNewTab') ?? 'Opens in new tab'}
         </div>
       )}

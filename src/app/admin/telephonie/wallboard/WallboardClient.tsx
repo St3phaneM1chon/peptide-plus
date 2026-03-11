@@ -261,7 +261,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
                       {agent.name.charAt(0).toUpperCase()}
                     </div>
                     <div
-                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(agent.status)}`}
+                      className={`absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(agent.status)}`}
                     />
                   </div>
                   <div>

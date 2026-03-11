@@ -1,0 +1,617 @@
+model Article {
+  id              String               @id @default(cuid())
+  title           String
+  slug            String               @unique
+  excerpt         String?
+  content         String?
+  imageUrl        String?
+  author          String?
+  category        String?
+  tags            String?
+  readTime        Int?
+  difficulty      String?
+  isFeatured      Boolean              @default(false)
+  isPublished     Boolean              @default(false)
+  publishedAt     DateTime?
+  locale          String               @default("en")
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  translations    ArticleTranslation[]
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ArticleTranslation {
+  id              String             @id @default(cuid())
+  articleId       String
+  locale          String
+  title           String?
+  excerpt         String?
+  content         String?
+  metaTitle       String?
+  metaDescription String?
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  qualityLevel    TranslationQuality @default(draft)
+  article         Article            @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, locale])
+  @@index([articleId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BlogPost {
+  id              String                @id @default(cuid())
+  title           String
+  slug            String                @unique
+  excerpt         String?
+  content         String?
+  imageUrl        String?
+  author          String?
+  category        String?
+  tags            String?
+  readTime        Int?
+  isFeatured      Boolean               @default(false)
+  isPublished     Boolean               @default(false)
+  publishedAt     DateTime?
+  locale          String                @default("en")
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  translations    BlogPostTranslation[]
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BlogPostTranslation {
+  id              String             @id @default(cuid())
+  blogPostId      String
+  locale          String
+  title           String?
+  excerpt         String?
+  content         String?
+  metaTitle       String?
+  metaDescription String?
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  qualityLevel    TranslationQuality @default(draft)
+  blogPost        BlogPost           @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, locale])
+  @@index([blogPostId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Faq {
+  id           String           @id @default(cuid())
+  question     String
+  answer       String
+  category     String           @default("general")
+  locale       String           @default("en")
+  sortOrder    Int              @default(0)
+  isPublished  Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  translations FaqTranslation[]
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FaqTranslation {
+  id           String             @id @default(cuid())
+  faqId        String
+  locale       String
+  question     String
+  answer       String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  faq          Faq                @relation(fields: [faqId], references: [id], onDelete: Cascade)
+
+  @@unique([faqId, locale])
+  @@index([faqId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Guide {
+  id            String             @id @default(cuid())
+  title         String
+  slug          String             @unique
+  description   String?
+  category      String             @default("general")
+  fileUrl       String?
+  thumbnailUrl  String?
+  format        String?
+  pageCount     Int?
+  isFeatured    Boolean            @default(false)
+  isPublished   Boolean            @default(false)
+  locale        String             @default("en")
+  downloadCount Int                @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  translations  GuideTranslation[]
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model GuideTranslation {
+  id           String             @id @default(cuid())
+  guideId      String
+  locale       String
+  title        String?
+  description  String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  guide        Guide              @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  @@unique([guideId, locale])
+  @@index([guideId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model HeroSlide {
+  id               String                 @id @default(cuid())
+  slug             String                 @unique
+  mediaType        HeroMediaType          @default(IMAGE)
+  backgroundUrl    String
+  backgroundMobile String?
+  overlayOpacity   Int                    @default(70)
+  overlayGradient  String?
+  badgeText        String?
+  title            String
+  subtitle         String?
+  ctaText          String?
+  ctaUrl           String?
+  ctaStyle         String?                @default("primary")
+  cta2Text         String?
+  cta2Url          String?
+  cta2Style        String?                @default("outline")
+  statsJson        String?
+  sortOrder        Int                    @default(0)
+  isActive         Boolean                @default(true)
+  startDate        DateTime?
+  endDate          DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  translations     HeroSlideTranslation[]
+
+  @@index([isActive, sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model HeroSlideTranslation {
+  id           String             @id @default(cuid())
+  slideId      String
+  locale       String
+  badgeText    String?
+  title        String
+  subtitle     String?
+  ctaText      String?
+  cta2Text     String?
+  statsJson    String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  heroSlide    HeroSlide          @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@unique([slideId, locale])
+  @@index([locale])
+  @@index([slideId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model NewsArticle {
+  id           String                   @id @default(cuid())
+  title        String
+  slug         String                   @unique
+  excerpt      String?
+  content      String?
+  imageUrl     String?
+  type         String                   @default("news")
+  author       String?
+  isFeatured   Boolean                  @default(false)
+  isPublished  Boolean                  @default(false)
+  publishedAt  DateTime?
+  locale       String                   @default("en")
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  translations NewsArticleTranslation[]
+
+  @@index([isPublished])
+  @@index([slug])
+  @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model NewsArticleTranslation {
+  id            String             @id @default(cuid())
+  newsArticleId String
+  locale        String
+  title         String?
+  excerpt       String?
+  content       String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  contentHash   String?
+  translatedBy  String?            @default("gpt-4o-mini")
+  isApproved    Boolean            @default(false)
+  qualityLevel  TranslationQuality @default(draft)
+  newsArticle   NewsArticle        @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
+
+  @@unique([newsArticleId, locale])
+  @@index([newsArticleId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  isActive       Boolean   @default(true)
+  source         String?
+  locale         String    @default("fr")
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+  birthDate      DateTime?
+
+  @@index([isActive])
+  @@index([subscribedAt])
+  @@index([locale])
+}
+
+model Page {
+  id              String            @id @default(cuid())
+  title           String
+  slug            String            @unique
+  content         String
+  excerpt         String?
+  metaTitle       String?
+  metaDescription String?
+  locale          String            @default("en")
+  isPublished     Boolean           @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String?
+  template        String            @default("default")
+  translations    PageTranslation[]
+
+  @@index([isPublished])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model PageTranslation {
+  id              String             @id @default(cuid())
+  pageId          String
+  locale          String
+  title           String
+  content         String
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  qualityLevel    TranslationQuality @default(draft)
+  page            Page               @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, locale])
+  @@index([locale])
+  @@index([pageId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Testimonial {
+  id            String                   @id @default(cuid())
+  name          String
+  role          String?
+  company       String?
+  content       String
+  rating        Int                      @default(5)
+  imageUrl      String?
+  videoUrl      String?
+  videoDuration String?
+  locale        String                   @default("en")
+  isPublished   Boolean                  @default(true)
+  isFeatured    Boolean                  @default(false)
+  sortOrder     Int                      @default(0)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  translations  TestimonialTranslation[]
+
+  @@index([isPublished])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model TestimonialTranslation {
+  id            String             @id @default(cuid())
+  testimonialId String
+  locale        String
+  content       String?
+  role          String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  contentHash   String?
+  translatedBy  String?            @default("gpt-4o-mini")
+  isApproved    Boolean            @default(false)
+  qualityLevel  TranslationQuality @default(draft)
+  testimonial   Testimonial        @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
+
+  @@unique([testimonialId, locale])
+  @@index([testimonialId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Webinar {
+  id              String               @id @default(cuid())
+  title           String
+  slug            String               @unique
+  description     String?
+  thumbnailUrl    String?
+  speaker         String?
+  speakerTitle    String?
+  speakerImage    String?
+  scheduledAt     DateTime?
+  duration        Int?
+  category        String?
+  tags            String?
+  registrationUrl String?
+  recordingUrl    String?
+  maxAttendees    Int?
+  registeredCount Int                  @default(0)
+  isFeatured      Boolean              @default(false)
+  isPublished     Boolean              @default(false)
+  isLive          Boolean              @default(false)
+  locale          String               @default("en")
+  sortOrder       Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  translations    WebinarTranslation[]
+
+  @@index([isPublished])
+  @@index([scheduledAt])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model WebinarTranslation {
+  id           String             @id @default(cuid())
+  webinarId    String
+  locale       String
+  title        String?
+  description  String?
+  speakerTitle String?
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  qualityLevel TranslationQuality @default(draft)
+  webinar      Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+
+  @@unique([webinarId, locale])
+  @@index([locale])
+  @@index([webinarId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model TranslationJob {
+  id          String               @id @default(cuid())
+  model       String
+  entityId    String
+  pass        Int                  @default(1)
+  priority    Int                  @default(3)
+  status      TranslationJobStatus @default(pending)
+  retries     Int                  @default(0)
+  maxRetries  Int                  @default(3)
+  error       String?
+  scheduledAt DateTime             @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@unique([model, entityId, pass, status])
+  @@index([status, priority, scheduledAt])
+  @@index([model, entityId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model TranslationFeedback {
+  id        String   @id @default(cuid())
+  locale    String
+  rating    String // 'good' | 'bad'
+  comment   String?
+  page      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([locale, rating])
+  @@index([createdAt])
+}
+
+// =============================================
+// F-005 (Communauté CRITICAL): Forum community backend
+// =============================================
+model ForumCategory {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  icon        String?
+  sortOrder   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  posts       ForumPost[]
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model ForumPost {
+  id           String         @id @default(cuid())
+  title        String
+  content      String
+  authorId     String
+  categoryId   String
+  upvotes      Int            @default(0)
+  downvotes    Int            @default(0)
+  viewCount    Int            @default(0)
+  isPinned     Boolean        @default(false)
+  isLocked     Boolean        @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  author       User           @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  category     ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  replies      ForumReply[]
+  votes        ForumVote[]    @relation("PostVotes")
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([isPinned, createdAt])
+  @@index([deletedAt])
+}
+
+model ForumReply {
+  id            String       @id @default(cuid())
+  content       String
+  authorId      String
+  postId        String
+  parentReplyId String?
+  upvotes       Int          @default(0)
+  downvotes     Int          @default(0)
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  author        User         @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  post          ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentReply   ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  childReplies  ForumReply[] @relation("ReplyToReply")
+  votes         ForumVote[]  @relation("ReplyVotes")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentReplyId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model ForumVote {
+  id        String      @id @default(cuid())
+  userId    String
+  postId    String?
+  replyId   String?
+  value     Int         // +1 or -1
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      ForumPost?  @relation("PostVotes", fields: [postId], references: [id], onDelete: Cascade)
+  reply     ForumReply? @relation("ReplyVotes", fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, replyId])
+  @@index([postId])
+  @@index([replyId])
+}
+
+// =============================================
+// F-100 (Communauté): Contact form persistence
+// =============================================
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  userId    String?
+  ipAddress String?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User?     @relation("ContactMessageUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([isRead])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Brand Kit (C-05: Persistent brand settings)
+// ---------------------------------------------------------------------------
+model BrandKit {
+  id             String   @id @default(cuid())
+  name           String
+  logoUrl        String?
+  faviconUrl     String?
+  primaryColor   String?  // Hex color validated: /^#[0-9A-Fa-f]{6}$/
+  secondaryColor String?
+  accentColor    String?
+  fontHeading    String?
+  fontBody       String?
+  guidelines     String?  @db.Text
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive])
+}
+

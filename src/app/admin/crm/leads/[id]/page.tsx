@@ -141,9 +141,9 @@ export default function LeadDetailPage() {
             {lead.dncStatus !== 'CALLABLE' && <ShieldAlert className="h-5 w-5 text-red-500" />}
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            {lead.companyName && <span className="mr-3"><Building2 className="h-3.5 w-3.5 inline mr-1" />{lead.companyName}</span>}
-            {lead.email && <span className="mr-3"><Mail className="h-3.5 w-3.5 inline mr-1" />{lead.email}</span>}
-            {lead.phone && <span><Phone className="h-3.5 w-3.5 inline mr-1" />{lead.phone}</span>}
+            {lead.companyName && <span className="me-3"><Building2 className="h-3.5 w-3.5 inline me-1" />{lead.companyName}</span>}
+            {lead.email && <span className="me-3"><Mail className="h-3.5 w-3.5 inline me-1" />{lead.email}</span>}
+            {lead.phone && <span><Phone className="h-3.5 w-3.5 inline me-1" />{lead.phone}</span>}
           </p>
         </div>
         <div className="flex gap-2">
@@ -307,7 +307,7 @@ export default function LeadDetailPage() {
               <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.tags') || 'Tags'}</h3>
               <div className="flex flex-wrap gap-1.5">
                 {lead.tags.map(tag => (
-                  <span key={tag} className="px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-700"><Tag className="h-3 w-3 inline mr-1" />{tag}</span>
+                  <span key={tag} className="px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-700"><Tag className="h-3 w-3 inline me-1" />{tag}</span>
                 ))}
               </div>
             </div>

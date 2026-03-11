@@ -130,9 +130,9 @@ export default function QualificationPage() {
       {/* Search & Filters */}
       <div className="flex gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.crm.searchLeads') || 'Search leads...'} className="w-full pl-10 pr-3 py-2 border rounded-md text-sm" />
+            placeholder={t('admin.crm.searchLeads') || 'Search leads...'} className="w-full ps-10 pe-3 py-2 border rounded-md text-sm" />
         </div>
         <select value={frameworkFilter} onChange={e => setFrameworkFilter(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
           <option value="">{t('admin.crm.allFrameworks') || 'All Frameworks'}</option>
@@ -185,7 +185,7 @@ export default function QualificationPage() {
 
               return (
                 <div key={lead.id} className="bg-white rounded-lg border overflow-hidden">
-                  <button onClick={() => expandLead(lead)} className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50">
+                  <button onClick={() => expandLead(lead)} className="w-full text-start px-4 py-3 flex items-center gap-3 hover:bg-gray-50">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

@@ -165,13 +165,13 @@ export default function SmsTemplatesPage() {
       {/* Search & Filters */}
       <div className="flex gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('admin.crm.searchTemplates') || 'Search templates...'}
-            className="w-full pl-10 pr-3 py-2 border rounded-md text-sm"
+            className="w-full ps-10 pe-3 py-2 border rounded-md text-sm"
           />
         </div>
         <select value={activeFilter} onChange={e => setActiveFilter(e.target.value)} className="border rounded-md px-3 py-2 text-sm">

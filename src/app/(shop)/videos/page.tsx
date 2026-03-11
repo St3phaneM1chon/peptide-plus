@@ -307,7 +307,7 @@ export default function VideosPage() {
         {isLoading && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-            <span className="ml-3 text-neutral-500">{t('common.loading') || 'Loading...'}</span>
+            <span className="ms-3 text-neutral-500">{t('common.loading') || 'Loading...'}</span>
           </div>
         )}
 
@@ -341,7 +341,7 @@ export default function VideosPage() {
                     <button
                       key={video.id}
                       onClick={() => openVideoModal(video)}
-                      className="text-left bg-white rounded-xl overflow-hidden shadow-sm border border-neutral-200 hover:shadow-lg transition-shadow cursor-pointer group"
+                      className="text-start bg-white rounded-xl overflow-hidden shadow-sm border border-neutral-200 hover:shadow-lg transition-shadow cursor-pointer group"
                     >
                       <div className="relative aspect-video bg-neutral-200 overflow-hidden">
                         {video.thumbnailUrl ? (
@@ -403,7 +403,7 @@ export default function VideosPage() {
                   <button
                     key={video.id}
                     onClick={() => openVideoModal(video)}
-                    className="text-left bg-white rounded-xl overflow-hidden shadow-sm border border-neutral-200 hover:shadow-lg transition-shadow cursor-pointer group"
+                    className="text-start bg-white rounded-xl overflow-hidden shadow-sm border border-neutral-200 hover:shadow-lg transition-shadow cursor-pointer group"
                   >
                     <div className="relative aspect-video bg-neutral-200 overflow-hidden">
                       {video.thumbnailUrl ? (
@@ -432,7 +432,7 @@ export default function VideosPage() {
                       )}
                       {video.isFeatured && (
                         <span className="absolute top-2 start-2 px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded">
-                          <Star className="w-3 h-3 inline-block mr-1" />
+                          <Star className="w-3 h-3 inline-block me-1" />
                           {t('videos.featuredBadge') || 'Featured'}
                         </span>
                       )}

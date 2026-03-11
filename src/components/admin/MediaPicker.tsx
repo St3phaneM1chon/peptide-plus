@@ -154,23 +154,23 @@ export function MediaPicker({
         {/* Toolbar */}
         <div className="flex items-center gap-3 p-4 border-b dark:border-gray-700">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder={t('common.search') || 'Search...'}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-sm"
+              className="w-full ps-10 pe-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-sm"
             />
           </div>
           <div className="relative">
-            <FolderOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <FolderOpen className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Folder..."
               value={folder}
               onChange={(e) => setFolder(e.target.value)}
-              className="pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-sm w-40"
+              className="ps-10 pe-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 text-sm w-40"
             />
           </div>
         </div>
@@ -219,13 +219,13 @@ export function MediaPicker({
 
                   {/* Selection indicator */}
                   {selected.has(item.id) && (
-                    <div className="absolute top-1 right-1 bg-teal-500 rounded-full p-0.5">
+                    <div className="absolute top-1 end-1 bg-teal-500 rounded-full p-0.5">
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
 
                   {/* Hover overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 start-0 end-0 bg-black/60 text-white text-xs p-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
                     {item.originalName}
                   </div>
                 </button>

@@ -228,13 +228,13 @@ export default function SnippetsPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('admin.crm.snippets.searchPlaceholder') || 'Search snippets...'}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <select
@@ -387,7 +387,7 @@ export default function SnippetsPage() {
                 rows={5}
                 placeholder={t('admin.crm.snippets.contentPlaceholder') || 'Write your snippet content here...'}
               />
-              <p className="text-xs text-gray-400 mt-1 text-right">
+              <p className="text-xs text-gray-400 mt-1 text-end">
                 {form.content.length}/5000
               </p>
             </div>

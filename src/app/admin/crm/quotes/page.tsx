@@ -354,27 +354,27 @@ export default function QuotesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder={t('admin.crm.quotes.search') || 'Search quotes...'}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
           >
             <option value="">{t('admin.crm.quotes.allStatuses') || 'All Statuses'}</option>
             {STATUS_OPTIONS.filter(Boolean).map((s) => (
               <option key={s} value={s}>{STATUS_CONFIG[s]?.label || s}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
       </div>
 
@@ -399,22 +399,22 @@ export default function QuotesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.numberCol') || 'Quote #'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.dealCol') || 'Deal'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.statusCol') || 'Status'}
                   </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  <th className="text-end px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.totalCol') || 'Total'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.validUntilCol') || 'Valid Until'}
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-start px-4 py-3 font-medium text-gray-600">
                     {t('admin.crm.quotes.createdByCol') || 'Created By'}
                   </th>
                   <th className="px-4 py-3 font-medium text-gray-600">
@@ -443,7 +443,7 @@ export default function QuotesPage() {
                           {cfg.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-4 py-3 text-end font-medium text-gray-900">
                         {fmt(quote.total)}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
@@ -568,21 +568,21 @@ export default function QuotesPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="text-left px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.description') || 'Description'}</th>
-                        <th className="text-right px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.qty') || 'Qty'}</th>
-                        <th className="text-right px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.price') || 'Price'}</th>
-                        <th className="text-right px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.disc') || 'Disc%'}</th>
-                        <th className="text-right px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.total') || 'Total'}</th>
+                        <th className="text-start px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.description') || 'Description'}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.qty') || 'Qty'}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.price') || 'Price'}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.disc') || 'Disc%'}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.total') || 'Total'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {selectedQuote.items.map((item) => (
                         <tr key={item.id}>
                           <td className="px-3 py-2 text-gray-900">{item.description}</td>
-                          <td className="px-3 py-2 text-right text-gray-600">{item.quantity}</td>
-                          <td className="px-3 py-2 text-right text-gray-600">{fmt(item.unitPrice)}</td>
-                          <td className="px-3 py-2 text-right text-gray-600">{Number(item.discount)}%</td>
-                          <td className="px-3 py-2 text-right font-medium text-gray-900">{fmt(item.total)}</td>
+                          <td className="px-3 py-2 text-end text-gray-600">{item.quantity}</td>
+                          <td className="px-3 py-2 text-end text-gray-600">{fmt(item.unitPrice)}</td>
+                          <td className="px-3 py-2 text-end text-gray-600">{Number(item.discount)}%</td>
+                          <td className="px-3 py-2 text-end font-medium text-gray-900">{fmt(item.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -808,7 +808,7 @@ export default function QuotesPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right text-xs text-gray-500 mt-2">
+                      <div className="text-end text-xs text-gray-500 mt-2">
                         {t('admin.crm.quotes.itemTotal') || 'Item total'}: <span className="font-medium text-gray-700">{fmt(calcItemTotal(item))}</span>
                       </div>
                     </div>

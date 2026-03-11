@@ -308,7 +308,7 @@ export default function CloturePage() {
                 </p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-3xl font-bold text-slate-900">
                 {checklist.length > 0 ? Math.round((okTasks / checklist.length) * 100) : 0}%
               </p>

@@ -287,10 +287,10 @@ export default function CohortAnalysisPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-gray-500 font-medium sticky left-0 bg-gray-50 z-10 min-w-[120px]">
+                    <th className="text-start px-4 py-3 text-gray-500 font-medium sticky start-0 bg-gray-50 z-10 min-w-[120px]">
                       Cohort
                     </th>
-                    <th className="text-right px-3 py-3 text-gray-500 font-medium min-w-[60px]">
+                    <th className="text-end px-3 py-3 text-gray-500 font-medium min-w-[60px]">
                       Size
                     </th>
                     {(data?.periodLabels || []).map((label, i) => (
@@ -306,10 +306,10 @@ export default function CohortAnalysisPage() {
                 <tbody className="divide-y">
                   {(data?.rows || []).map((row) => (
                     <tr key={row.cohortKey} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-2 font-medium text-gray-900 sticky left-0 bg-white z-10">
+                      <td className="px-4 py-2 font-medium text-gray-900 sticky start-0 bg-white z-10">
                         {row.cohortKey}
                       </td>
-                      <td className="text-right px-3 py-2 text-gray-500">
+                      <td className="text-end px-3 py-2 text-gray-500">
                         {row.cohortSize}
                       </td>
                       {row.cells.map((cell, i) => (

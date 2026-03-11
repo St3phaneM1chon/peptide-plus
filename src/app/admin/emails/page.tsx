@@ -1419,7 +1419,7 @@ export default function EmailsPage() {
                     <button
                       key={email.id}
                       onClick={() => { setSelectedSentEmail(email); setSelectedConversation(null); }}
-                      className={`w-full text-left p-3 border-b border-slate-100 transition-colors ${
+                      className={`w-full text-start p-3 border-b border-slate-100 transition-colors ${
                         selectedSentEmail?.id === email.id ? 'bg-teal-50' : 'hover:bg-slate-50'
                       }`}
                     >
@@ -1552,7 +1552,7 @@ export default function EmailsPage() {
                         aria-checked={template.isActive}
                       >
                         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          template.isActive ? 'right-0.5' : 'left-0.5'
+                          template.isActive ? 'end-0.5' : 'start-0.5'
                         }`} />
                       </button>
                     </div>
@@ -1683,7 +1683,7 @@ export default function EmailsPage() {
                 <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
                     <span className="text-sm font-medium text-slate-900">{item.name}</span>
-                    <span className="text-xs text-slate-500 ml-2">{item.desc}</span>
+                    <span className="text-xs text-slate-500 ms-2">{item.desc}</span>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                     item.status === 'configured' ? 'bg-green-100 text-green-700' :

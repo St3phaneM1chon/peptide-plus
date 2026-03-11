@@ -454,7 +454,7 @@ export default function MediaImagesPage() {
           <button onClick={handleOrganizeImage} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
             {t('admin.media.moveToFolder') || 'Move to folder'}
           </button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-slate-500 hover:text-slate-700 text-xs">
+          <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
             {t('common.clearSelection') || 'Clear'}
           </button>
         </div>
@@ -462,9 +462,9 @@ export default function MediaImagesPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
-          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
+          className="w-full ps-9 pe-3 py-2 border border-slate-300 rounded-lg text-sm"
           placeholder={t('common.search')}
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
@@ -539,7 +539,7 @@ export default function MediaImagesPage() {
                     style={{ width: `${bf.progress}%` }}
                   />
                 </div>
-                <span className="text-xs w-16 text-right">
+                <span className="text-xs w-16 text-end">
                   {bf.status === 'done' && <span className="text-green-600">Terminé</span>}
                   {bf.status === 'error' && <span className="text-red-600">Erreur</span>}
                   {bf.status === 'uploading' && <span className="text-teal-600">En cours...</span>}
@@ -582,7 +582,7 @@ export default function MediaImagesPage() {
           {images.map(img => (
             <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(img.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
               {/* Selection checkbox */}
-              <div className="absolute top-2 left-2 z-10">
+              <div className="absolute top-2 start-2 z-10">
                 <input
                   type="checkbox"
                   checked={selectedIds.has(img.id)}
@@ -593,7 +593,7 @@ export default function MediaImagesPage() {
               </div>
               {/* A86 FIX: "New" badge for images uploaded less than 24 hours ago */}
               {(Date.now() - new Date(img.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
-                <span className="absolute top-2 left-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
+                <span className="absolute top-2 start-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
                   {t('common.new') || 'New'}
                 </span>
               )}
@@ -636,7 +636,7 @@ export default function MediaImagesPage() {
               </div>
 
               {/* Action buttons - copy + crop */}
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowCropPresets(showCropPresets === img.id ? null : img.id); }}
                   className="p-1.5 bg-white/80 rounded-full hover:bg-white"
@@ -657,18 +657,18 @@ export default function MediaImagesPage() {
 
               {/* Smart Crop Presets Dropdown */}
               {showCropPresets === img.id && (
-                <div className="absolute top-10 right-2 z-20 bg-white border border-slate-200 rounded-lg shadow-lg p-2 w-48" onClick={e => e.stopPropagation()}>
+                <div className="absolute top-10 end-2 z-20 bg-white border border-slate-200 rounded-lg shadow-lg p-2 w-48" onClick={e => e.stopPropagation()}>
                   <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1 px-1">Recadrage rapide</p>
                   {CROP_PRESETS.map(preset => (
                     <button
                       key={preset.id}
                       onClick={() => handleCropPreset(img.id, preset)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 rounded transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 rounded transition-colors text-start"
                     >
                       <ScissorsIcon className="w-3 h-3 text-slate-400" />
                       <div className="flex-1 min-w-0">
                         <span className="font-medium">{preset.nameFr}</span>
-                        <span className="text-slate-400 ml-1">({preset.aspectRatio})</span>
+                        <span className="text-slate-400 ms-1">({preset.aspectRatio})</span>
                       </div>
                       <span className="text-[9px] text-slate-400">{preset.width}x{preset.height}</span>
                     </button>
@@ -716,7 +716,7 @@ export default function MediaImagesPage() {
           }}
         >
           <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
+            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F3 - Use NextImage instead of native <img> */}

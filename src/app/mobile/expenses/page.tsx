@@ -100,7 +100,7 @@ export default function MobileExpenses() {
               <p className="text-sm font-medium text-gray-800 truncate">{e.description}</p>
               <p className="text-xs text-gray-400">{new Date(e.date).toLocaleDateString('fr-CA')}</p>
             </div>
-            <span className="text-sm font-bold text-red-600 ml-3">-{fmt(e.totalAmount)}</span>
+            <span className="text-sm font-bold text-red-600 ms-3">-{fmt(e.totalAmount)}</span>
           </div>
         ))}
         {expenses.length === 0 && <p className="px-4 py-6 text-sm text-gray-400 text-center">Aucune dépense récente</p>}

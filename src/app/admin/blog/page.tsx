@@ -70,13 +70,13 @@ export default function AdminBlogPage() {
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher un article..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full ps-10 pe-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
         <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
@@ -109,10 +109,10 @@ export default function AdminBlogPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Article</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Statut</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Date</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                <th className="text-start px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Article</th>
+                <th className="text-start px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Statut</th>
+                <th className="text-start px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Date</th>
+                <th className="text-end px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -132,7 +132,7 @@ export default function AdminBlogPage() {
                   <td className="px-4 py-3 text-slate-600">
                     {new Date(post.publishedAt || post.createdAt).toLocaleDateString(locale)}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/blog/${post.slug}`} className="p-1.5 text-slate-400 hover:text-slate-600 rounded">
                         <Eye className="w-4 h-4" />

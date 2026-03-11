@@ -155,13 +155,13 @@ export default function ForecastDashboard() {
             <select
               value={dateRange}
               onChange={e => setDateRange(e.target.value as DateRange)}
-              className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="appearance-none ps-3 pe-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="month">{t('admin.crm.forecast.thisMonth') || 'This Month'}</option>
               <option value="quarter">{t('admin.crm.forecast.thisQuarter') || 'This Quarter'}</option>
               <option value="year">{t('admin.crm.forecast.thisYear') || 'This Year'}</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
           </div>
           {/* Pipeline filter */}
           {pipelines.length > 0 && (
@@ -169,14 +169,14 @@ export default function ForecastDashboard() {
               <select
                 value={selectedPipeline}
                 onChange={e => setSelectedPipeline(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="appearance-none ps-3 pe-8 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">{t('admin.crm.forecast.allPipelines') || 'All Pipelines'}</option>
                 {pipelines.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
             </div>
           )}
         </div>
@@ -290,21 +290,21 @@ export default function ForecastDashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-xs text-gray-500 border-b border-gray-100">
-                        <th className="pb-2 text-left font-medium">{t('admin.crm.forecast.month') || 'Month'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.total') || 'Total'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.won') || 'Won'}</th>
+                        <th className="pb-2 text-start font-medium">{t('admin.crm.forecast.month') || 'Month'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.total') || 'Total'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.won') || 'Won'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {data.timeline.map(f => (
                         <tr key={f.month} className="hover:bg-gray-50">
                           <td className="py-2 font-medium text-gray-800">{f.month}</td>
-                          <td className="py-2 text-right text-gray-500">{f.dealCount}</td>
-                          <td className="py-2 text-right text-gray-600">{fmt(f.totalValue)}</td>
-                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(f.weightedValue)}</td>
-                          <td className="py-2 text-right text-green-600 font-medium">{fmt(f.wonValue)}</td>
+                          <td className="py-2 text-end text-gray-500">{f.dealCount}</td>
+                          <td className="py-2 text-end text-gray-600">{fmt(f.totalValue)}</td>
+                          <td className="py-2 text-end text-teal-600 font-medium">{fmt(f.weightedValue)}</td>
+                          <td className="py-2 text-end text-green-600 font-medium">{fmt(f.wonValue)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -329,19 +329,19 @@ export default function ForecastDashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-xs text-gray-500 border-b border-gray-100">
-                        <th className="pb-2 text-left font-medium">{t('admin.crm.forecast.pipeline') || 'Pipeline'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.total') || 'Total'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
+                        <th className="pb-2 text-start font-medium">{t('admin.crm.forecast.pipeline') || 'Pipeline'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.total') || 'Total'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {data.byPipeline.map(row => (
                         <tr key={row.pipelineId} className="hover:bg-gray-50">
                           <td className="py-2 font-medium text-gray-800">{row.pipelineName}</td>
-                          <td className="py-2 text-right text-gray-500">{row.dealCount}</td>
-                          <td className="py-2 text-right text-gray-600">{fmt(row.total)}</td>
-                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(row.weighted)}</td>
+                          <td className="py-2 text-end text-gray-500">{row.dealCount}</td>
+                          <td className="py-2 text-end text-gray-600">{fmt(row.total)}</td>
+                          <td className="py-2 text-end text-teal-600 font-medium">{fmt(row.weighted)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -363,9 +363,9 @@ export default function ForecastDashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-xs text-gray-500 border-b border-gray-100">
-                        <th className="pb-2 text-left font-medium">{t('admin.crm.forecast.agent') || 'Agent'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
-                        <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
+                        <th className="pb-2 text-start font-medium">{t('admin.crm.forecast.agent') || 'Agent'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.deals') || 'Deals'}</th>
+                        <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.weighted') || 'Weighted'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -377,8 +377,8 @@ export default function ForecastDashboard() {
                               <p className="text-xs text-gray-400">{row.agentEmail}</p>
                             )}
                           </td>
-                          <td className="py-2 text-right text-gray-500">{row.dealCount}</td>
-                          <td className="py-2 text-right text-teal-600 font-medium">{fmt(row.weighted)}</td>
+                          <td className="py-2 text-end text-gray-500">{row.dealCount}</td>
+                          <td className="py-2 text-end text-teal-600 font-medium">{fmt(row.weighted)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -417,19 +417,19 @@ export default function ForecastDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-xs text-gray-500 border-b border-gray-100">
-                    <th className="pb-2 text-left font-medium">{t('admin.crm.forecast.month') || 'Month'}</th>
-                    <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.wonRevenue') || 'Won Revenue'}</th>
-                    <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.wonDeals') || 'Won Deals'}</th>
-                    <th className="pb-2 text-right font-medium">{t('admin.crm.forecast.lostDeals') || 'Lost Deals'}</th>
+                    <th className="pb-2 text-start font-medium">{t('admin.crm.forecast.month') || 'Month'}</th>
+                    <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.wonRevenue') || 'Won Revenue'}</th>
+                    <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.wonDeals') || 'Won Deals'}</th>
+                    <th className="pb-2 text-end font-medium">{t('admin.crm.forecast.lostDeals') || 'Lost Deals'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {data.historicalTrend.map(h => (
                     <tr key={h.month} className="hover:bg-gray-50">
                       <td className="py-2 font-medium text-gray-800">{h.month}</td>
-                      <td className="py-2 text-right text-green-600 font-medium">{fmt(h.wonValue)}</td>
-                      <td className="py-2 text-right text-green-700">{h.wonCount}</td>
-                      <td className="py-2 text-right text-red-500">{h.lostCount}</td>
+                      <td className="py-2 text-end text-green-600 font-medium">{fmt(h.wonValue)}</td>
+                      <td className="py-2 text-end text-green-700">{h.wonCount}</td>
+                      <td className="py-2 text-end text-red-500">{h.lostCount}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -236,7 +236,7 @@ export default function HeatmapsPage() {
               {/* Grid rows */}
               {DAY_LABELS.map((day, dayIdx) => (
                 <div key={day} className="flex items-center gap-0.5 mb-0.5">
-                  <div className="w-12 text-xs text-gray-500 font-medium shrink-0 text-right pr-2">{day}</div>
+                  <div className="w-12 text-xs text-gray-500 font-medium shrink-0 text-end pe-2">{day}</div>
                   {Array.from({ length: 24 }, (_, h) => {
                     const cell = data?.cells?.find(c => c.day === dayIdx && c.hour === h);
                     const value = cell ? getCellValue(cell) : 0;
@@ -275,7 +275,7 @@ export default function HeatmapsPage() {
                 <div className="w-6 h-4 bg-green-500 rounded-sm" />
               </div>
               <span>High</span>
-              <span className="ml-4 text-gray-400">
+              <span className="ms-4 text-gray-400">
                 {metricType === 'success_rate' ? '(Answer Rate %)' : '(Call Volume)'}
               </span>
             </div>

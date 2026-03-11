@@ -179,7 +179,7 @@ export default function SecurityAuditPage() {
                     style={{ width: `${Math.round((report.passed / report.totalChecks) * 100)}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-slate-700 w-16 text-right">
+                <span className="text-sm font-semibold text-slate-700 w-16 text-end">
                   {Math.round((report.passed / report.totalChecks) * 100)}%
                 </span>
               </div>
@@ -197,7 +197,7 @@ export default function SecurityAuditPage() {
             </div>
             <div className="divide-y divide-slate-100">
               {report.checks.map((check, idx) => (
-                <div key={idx} className={`px-6 py-4 ${statusBg(check.status)} border-l-4`}>
+                <div key={idx} className={`px-6 py-4 ${statusBg(check.status)} border-s-4`}>
                   <div className="flex items-start gap-3">
                     {statusIcon(check.status)}
                     <div className="flex-1 min-w-0">

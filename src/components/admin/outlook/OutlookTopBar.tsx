@@ -204,7 +204,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
                       key={`${result.type}-${result.id}`}
                       type="button"
                       onClick={() => handleResultClick(result)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 text-left transition-colors border-b border-slate-100 last:border-0"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 text-start transition-colors border-b border-slate-100 last:border-0"
                     >
                       <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <div className="min-w-0 flex-1">

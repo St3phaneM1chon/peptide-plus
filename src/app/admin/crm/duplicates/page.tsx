@@ -245,7 +245,7 @@ function DuplicateCard({ pair, onMerge }: DuplicateCardProps) {
         </div>
 
         {/* Lead B */}
-        <div className="flex-1 min-w-0 text-right">
+        <div className="flex-1 min-w-0 text-end">
           <p className="font-semibold text-gray-900 truncate">{pair.leadB.contactName}</p>
           {pair.leadB.email && (
             <p className="text-sm text-gray-500 truncate">{pair.leadB.email}</p>

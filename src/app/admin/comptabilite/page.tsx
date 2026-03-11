@@ -780,7 +780,7 @@ export default function ComptabiliteDashboard() {
             <Clock className="w-4 h-4 text-teal-500" />
             <span className="text-xs font-medium text-slate-500">DSO</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{kpis.dso}<span className="text-sm font-normal text-slate-500 ml-1">{t('admin.accounting.chartDays')}</span></p>
+          <p className="text-2xl font-bold text-slate-900">{kpis.dso}<span className="text-sm font-normal text-slate-500 ms-1">{t('admin.accounting.chartDays')}</span></p>
           <p className="text-xs text-slate-500 mt-1">{t('admin.accounting.dsoLabel')}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -788,7 +788,7 @@ export default function ComptabiliteDashboard() {
             <Clock className="w-4 h-4 text-purple-500" />
             <span className="text-xs font-medium text-slate-500">DPO</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{kpis.dpo}<span className="text-sm font-normal text-slate-500 ml-1">{t('admin.accounting.chartDays')}</span></p>
+          <p className="text-2xl font-bold text-slate-900">{kpis.dpo}<span className="text-sm font-normal text-slate-500 ms-1">{t('admin.accounting.chartDays')}</span></p>
           <p className="text-xs text-slate-500 mt-1">{t('admin.accounting.dpoLabel')}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -890,7 +890,7 @@ export default function ComptabiliteDashboard() {
           <div className="space-y-3">
             <button
               onClick={() => handleAccountingExport('quickbooks_iif')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50/50 hover:bg-green-50 transition-colors text-left"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50/50 hover:bg-green-50 transition-colors text-start"
             >
               <span className="p-1.5 bg-green-100 rounded text-green-600"><Download className="w-4 h-4" /></span>
               <div>
@@ -900,7 +900,7 @@ export default function ComptabiliteDashboard() {
             </button>
             <button
               onClick={() => handleAccountingExport('xero_csv')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-colors text-left"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-colors text-start"
             >
               <span className="p-1.5 bg-teal-100 rounded text-teal-600"><Download className="w-4 h-4" /></span>
               <div>
@@ -910,7 +910,7 @@ export default function ComptabiliteDashboard() {
             </button>
             <button
               onClick={() => handleAccountingExport('generic_csv')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors text-start"
             >
               <span className="p-1.5 bg-slate-100 rounded text-slate-600"><Download className="w-4 h-4" /></span>
               <div>
@@ -931,7 +931,7 @@ export default function ComptabiliteDashboard() {
           </div>
           {fxLoading ? (
             <div className="flex items-center justify-center py-6 text-sm text-slate-400">
-              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              <RefreshCw className="w-4 h-4 animate-spin me-2" />
               {t('admin.accounting.fxLoading')}
             </div>
           ) : (
@@ -939,17 +939,17 @@ export default function ComptabiliteDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxPair')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxRate')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxSource')}</th>
+                    <th className="text-start py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxPair')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxRate')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.fxSource')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {fxRates.map((fx) => (
                     <tr key={`${fx.from}/${fx.to}`} className="hover:bg-slate-50">
                       <td className="py-2.5 font-medium text-slate-900">{fx.from}/{fx.to}</td>
-                      <td className="py-2.5 text-right font-mono text-slate-800">{fx.rate.toFixed(4)}</td>
-                      <td className="py-2.5 text-right">
+                      <td className="py-2.5 text-end font-mono text-slate-800">{fx.rate.toFixed(4)}</td>
+                      <td className="py-2.5 text-end">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           fx.source === 'bank_of_canada' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
                         }`}>
@@ -982,34 +982,34 @@ export default function ComptabiliteDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxProvince')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxGst')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxQst')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxHst')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxPst')}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxTotal')}</th>
+                    <th className="text-start py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxProvince')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxGst')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxQst')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxHst')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxPst')}</th>
+                    <th className="text-end py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.taxTotal')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {taxByProvince.map((tax) => (
                     <tr key={tax.province} className="hover:bg-slate-50">
                       <td className="py-2.5 font-medium text-slate-900">{tax.provinceName} ({tax.province})</td>
-                      <td className="py-2.5 text-right text-slate-700">{tax.gst > 0 ? formatCurrency(tax.gst) : '-'}</td>
-                      <td className="py-2.5 text-right text-slate-700">{tax.qst > 0 ? formatCurrency(tax.qst) : '-'}</td>
-                      <td className="py-2.5 text-right text-slate-700">{tax.hst > 0 ? formatCurrency(tax.hst) : '-'}</td>
-                      <td className="py-2.5 text-right text-slate-700">{tax.pst > 0 ? formatCurrency(tax.pst) : '-'}</td>
-                      <td className="py-2.5 text-right font-bold text-slate-900">{formatCurrency(tax.total)}</td>
+                      <td className="py-2.5 text-end text-slate-700">{tax.gst > 0 ? formatCurrency(tax.gst) : '-'}</td>
+                      <td className="py-2.5 text-end text-slate-700">{tax.qst > 0 ? formatCurrency(tax.qst) : '-'}</td>
+                      <td className="py-2.5 text-end text-slate-700">{tax.hst > 0 ? formatCurrency(tax.hst) : '-'}</td>
+                      <td className="py-2.5 text-end text-slate-700">{tax.pst > 0 ? formatCurrency(tax.pst) : '-'}</td>
+                      <td className="py-2.5 text-end font-bold text-slate-900">{formatCurrency(tax.total)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot className="border-t-2 border-slate-300">
                   <tr>
                     <td className="py-2.5 font-bold text-slate-900">{t('common.total')}</td>
-                    <td className="py-2.5 text-right font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.gst, 0))}</td>
-                    <td className="py-2.5 text-right font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.qst, 0))}</td>
-                    <td className="py-2.5 text-right font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.hst, 0))}</td>
-                    <td className="py-2.5 text-right font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.pst, 0))}</td>
-                    <td className="py-2.5 text-right font-bold text-emerald-700">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.total, 0))}</td>
+                    <td className="py-2.5 text-end font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.gst, 0))}</td>
+                    <td className="py-2.5 text-end font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.qst, 0))}</td>
+                    <td className="py-2.5 text-end font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.hst, 0))}</td>
+                    <td className="py-2.5 text-end font-bold text-slate-900">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.pst, 0))}</td>
+                    <td className="py-2.5 text-end font-bold text-emerald-700">{formatCurrency(taxByProvince.reduce((s, tp) => s + tp.total, 0))}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -1022,14 +1022,14 @@ export default function ComptabiliteDashboard() {
                   <CalendarDays className="w-4 h-4 text-teal-600" />
                   <span className="text-sm font-medium text-teal-800">{t('admin.accounting.taxRemittanceGst')}</span>
                 </div>
-                <p className="text-xs text-teal-600 ml-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
+                <p className="text-xs text-teal-600 ms-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
               </div>
               <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <CalendarDays className="w-4 h-4 text-violet-600" />
                   <span className="text-sm font-medium text-violet-800">{t('admin.accounting.taxRemittanceQst')}</span>
                 </div>
-                <p className="text-xs text-violet-600 ml-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
+                <p className="text-xs text-violet-600 ms-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
               </div>
             </div>
           </div>

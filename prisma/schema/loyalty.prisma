@@ -1,0 +1,132 @@
+model Ambassador {
+  id             String                 @id @default(cuid())
+  userId         String?
+  name           String
+  email          String?                @unique
+  phone          String?
+  referralCode   String                 @unique
+  commissionRate Decimal                @default(10) @db.Decimal(5, 2)
+  totalReferrals Int                    @default(0)
+  totalEarnings  Decimal                @default(0) @db.Decimal(12, 2)
+  status         String                 @default("ACTIVE")
+  tier           String                 @default("BRONZE")
+  joinedAt       DateTime               @default(now())
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  user           User?                  @relation(fields: [userId], references: [id])
+  commissions    AmbassadorCommission[]
+  payouts        AmbassadorPayout[]
+
+  @@index([referralCode])
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model AmbassadorCommission {
+  id               String            @id @default(cuid())
+  ambassadorId     String
+  orderId          String
+  orderNumber      String
+  orderTotal       Decimal           @db.Decimal(10, 2)
+  commissionRate   Decimal           @db.Decimal(5, 2)
+  commissionAmount Decimal           @db.Decimal(10, 2)
+  paidOut          Boolean           @default(false)
+  paidOutAt        DateTime?
+  payoutId         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  ambassador       Ambassador        @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  payout           AmbassadorPayout? @relation(fields: [payoutId], references: [id])
+
+  @@unique([ambassadorId, orderId])
+  @@index([ambassadorId])
+  @@index([paidOut])
+  @@index([payoutId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model AmbassadorPayout {
+  id            String                 @id @default(cuid())
+  ambassadorId  String
+  amount        Decimal                @db.Decimal(10, 2)
+  method        String?
+  reference     String?
+  notes         String?
+  processedById String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  commissions   AmbassadorCommission[]
+  ambassador    Ambassador             @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+
+  @@index([ambassadorId])
+  @@index([processedById])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model LoyaltyTransaction {
+  id           String                 @id @default(cuid())
+  userId       String
+  type         LoyaltyTransactionType
+  points       Int
+  description  String?
+  orderId      String?
+  referralId   String?
+  balanceAfter Int
+  metadata     String?
+  createdAt    DateTime               @default(now())
+  expiresAt    DateTime?
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([orderId])
+  @@index([referralId])
+  @@index([type])
+  @@index([userId])
+  @@index([userId, type]) // F-070: Composite for duplicate detection (EARN_SIGNUP, EARN_BIRTHDAY)
+}
+
+model LoyaltyTierConfig {
+  id                    String             @id @default(cuid())
+  name                  String             @unique // BRONZE, SILVER, GOLD, PLATINUM, DIAMOND
+  minPoints             Int                @default(0)
+  discountPercent       Decimal            @default(0) @db.Decimal(5, 2)
+  pointsMultiplier      Decimal            @default(1) @db.Decimal(3, 2)
+  freeShippingThreshold Decimal?           @db.Decimal(10, 2)
+  priority              Int                @default(0)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  tierPrices            ProductTierPrice[]
+
+  @@index([priority])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Referral {
+  id            String    @id @default(cuid())
+  referrerId    String
+  referredId    String
+  referralCode  String
+  status        ReferralStatus @default(PENDING)
+  orderAmount   Decimal?  @db.Decimal(10, 2)
+  pointsAwarded Int       @default(0)
+  discountGiven Decimal?  @db.Decimal(10, 2)
+  qualifiedAt   DateTime?
+  rewardedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  referred      User      @relation("Referral_referredIdToUser", fields: [referredId], references: [id], onDelete: Restrict)
+  referrer      User      @relation("Referral_referrerIdToUser", fields: [referrerId], references: [id], onDelete: Restrict)
+
+  @@index([referralCode])
+  @@index([referredId])
+  @@index([referrerId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+

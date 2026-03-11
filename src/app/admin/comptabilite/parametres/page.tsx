@@ -392,7 +392,7 @@ export default function ParametresComptablesPage() {
                   aria-checked={settings.autoReconcileStripe}
                 >
                   <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    settings.autoReconcileStripe ? 'right-1' : 'left-1'
+                    settings.autoReconcileStripe ? 'end-1' : 'start-1'
                   }`} />
                 </button>
               </div>
@@ -411,7 +411,7 @@ export default function ParametresComptablesPage() {
                   aria-checked={settings.autoCreateSaleEntries}
                 >
                   <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    settings.autoCreateSaleEntries ? 'right-1' : 'left-1'
+                    settings.autoCreateSaleEntries ? 'end-1' : 'start-1'
                   }`} />
                 </button>
               </div>
@@ -507,7 +507,7 @@ export default function ParametresComptablesPage() {
                   aria-checked={settings.quickMethodEnabled}
                 >
                   <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    settings.quickMethodEnabled ? 'right-1' : 'left-1'
+                    settings.quickMethodEnabled ? 'end-1' : 'start-1'
                   }`} />
                 </button>
               </div>
@@ -598,7 +598,7 @@ export default function ParametresComptablesPage() {
                   aria-checked={settings.blockDeletionDuringRetention}
                 >
                   <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    settings.blockDeletionDuringRetention ? 'right-1' : 'left-1'
+                    settings.blockDeletionDuringRetention ? 'end-1' : 'start-1'
                   }`} />
                 </button>
               </div>
@@ -645,7 +645,7 @@ export default function ParametresComptablesPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button className={`w-10 h-5 rounded-full transition-colors relative ${currency.active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-label={currency.active ? 'Desactiver la devise' : 'Activer la devise'} role="switch" aria-checked={currency.active}>
-                        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${currency.active ? 'right-0.5' : 'left-0.5'}`} />
+                        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${currency.active ? 'end-0.5' : 'start-0.5'}`} />
                       </button>
                     </td>
                   </tr>

@@ -20,7 +20,7 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, backHref, backLabel, actions, badge, theme }: PageHeaderProps) {
   const { t } = useI18n();
   return (
-    <div className={`mb-6 ${theme ? `border-l-4 ${theme.accentBar} pl-4` : ''}`}>
+    <div className={`mb-6 ${theme ? `border-s-4 ${theme.accentBar} ps-4` : ''}`}>
       {backHref && (
         <Link
           href={backHref}

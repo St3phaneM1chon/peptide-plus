@@ -500,32 +500,32 @@ export default function FournisseursPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
-                              <th className="pb-2 pr-3">{t('admin.suppliers.department')}</th>
-                              <th className="pb-2 pr-3">{t('admin.suppliers.contactName')}</th>
-                              <th className="pb-2 pr-3">{t('admin.suppliers.email')}</th>
-                              <th className="pb-2 pr-3">{t('admin.suppliers.phone')}</th>
-                              <th className="pb-2 pr-3">{t('admin.suppliers.extension')}</th>
+                            <tr className="text-start text-xs text-slate-500 border-b border-slate-200">
+                              <th className="pb-2 pe-3">{t('admin.suppliers.department')}</th>
+                              <th className="pb-2 pe-3">{t('admin.suppliers.contactName')}</th>
+                              <th className="pb-2 pe-3">{t('admin.suppliers.email')}</th>
+                              <th className="pb-2 pe-3">{t('admin.suppliers.phone')}</th>
+                              <th className="pb-2 pe-3">{t('admin.suppliers.extension')}</th>
                               <th className="pb-2">{t('admin.suppliers.jobTitle')}</th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedSupplier.contacts.map((c) => (
                               <tr key={c.id} className="border-b border-slate-100 last:border-0">
-                                <td className="py-2 pr-3">
+                                <td className="py-2 pe-3">
                                   <span className="inline-flex items-center gap-1">
                                     {getDeptLabel(c.department, t)}
                                     {c.isPrimary && <Star className="w-3 h-3 text-amber-500" fill="currentColor" />}
                                   </span>
                                 </td>
-                                <td className="py-2 pr-3 font-medium text-slate-900">{c.name}</td>
-                                <td className="py-2 pr-3">
+                                <td className="py-2 pe-3 font-medium text-slate-900">{c.name}</td>
+                                <td className="py-2 pe-3">
                                   {c.email ? (
                                     <a href={`mailto:${c.email}`} className="text-teal-600 hover:underline">{c.email}</a>
                                   ) : '-'}
                                 </td>
-                                <td className="py-2 pr-3">{c.phone || '-'}</td>
-                                <td className="py-2 pr-3">{c.extension || '-'}</td>
+                                <td className="py-2 pe-3">{c.phone || '-'}</td>
+                                <td className="py-2 pe-3">{c.extension || '-'}</td>
                                 <td className="py-2">{c.title || '-'}</td>
                               </tr>
                             ))}

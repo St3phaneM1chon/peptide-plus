@@ -317,7 +317,7 @@ export default function DeclarationTpsTvqPage() {
         {/* Province Tax Rates Reference */}
         <div className="border rounded-xl overflow-hidden">
           <button onClick={() => setShowTaxRates(!showTaxRates)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left">
+            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-start">
             <span className="font-medium text-slate-700">{t('admin.accounting.declaration.taxRatesRef')}</span>
             <span className="text-slate-400 text-sm">{showTaxRates ? t('admin.accounting.declaration.hide') : t('admin.accounting.declaration.show')}</span>
           </button>
@@ -325,21 +325,21 @@ export default function DeclarationTpsTvqPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="bg-slate-50 border-t">
-                  <th className="px-4 py-2 text-left font-medium text-slate-600">Province</th>
-                  <th className="px-4 py-2 text-right font-medium text-slate-600">TPS/GST</th>
-                  <th className="px-4 py-2 text-right font-medium text-slate-600">TVP/PST</th>
-                  <th className="px-4 py-2 text-right font-medium text-slate-600">TVH/HST</th>
-                  <th className="px-4 py-2 text-right font-medium text-slate-600">Total</th>
+                  <th className="px-4 py-2 text-start font-medium text-slate-600">Province</th>
+                  <th className="px-4 py-2 text-end font-medium text-slate-600">TPS/GST</th>
+                  <th className="px-4 py-2 text-end font-medium text-slate-600">TVP/PST</th>
+                  <th className="px-4 py-2 text-end font-medium text-slate-600">TVH/HST</th>
+                  <th className="px-4 py-2 text-end font-medium text-slate-600">Total</th>
                   <th className="px-4 py-2 text-center font-medium text-slate-600">Type</th>
                 </tr></thead>
                 <tbody className="divide-y">
                   {PROVINCIAL_TAX_RATES.map(p => (
                     <tr key={p.provinceCode} className="hover:bg-slate-50">
                       <td className="px-4 py-2 text-slate-900 font-medium">{locale === 'fr' ? p.provinceNameFr : p.provinceName} <span className="text-slate-400">({p.provinceCode})</span></td>
-                      <td className="px-4 py-2 text-right text-slate-700">{p.gstRate > 0 ? `${p.gstRate}%` : '-'}</td>
-                      <td className="px-4 py-2 text-right text-slate-700">{p.pstRate > 0 ? `${p.pstRate}%` : '-'}</td>
-                      <td className="px-4 py-2 text-right text-slate-700">{p.hstRate > 0 ? `${p.hstRate}%` : '-'}</td>
-                      <td className="px-4 py-2 text-right font-semibold text-slate-900">{p.totalRate}%</td>
+                      <td className="px-4 py-2 text-end text-slate-700">{p.gstRate > 0 ? `${p.gstRate}%` : '-'}</td>
+                      <td className="px-4 py-2 text-end text-slate-700">{p.pstRate > 0 ? `${p.pstRate}%` : '-'}</td>
+                      <td className="px-4 py-2 text-end text-slate-700">{p.hstRate > 0 ? `${p.hstRate}%` : '-'}</td>
+                      <td className="px-4 py-2 text-end font-semibold text-slate-900">{p.totalRate}%</td>
                       <td className="px-4 py-2 text-center">
                         <StatusBadge variant={p.hstRate > 0 ? 'info' : p.pstRate > 0 ? 'warning' : 'neutral'}>{p.pstName}</StatusBadge>
                       </td>

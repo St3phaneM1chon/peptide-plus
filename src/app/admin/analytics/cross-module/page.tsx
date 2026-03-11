@@ -105,7 +105,7 @@ export default function CrossModuleAnalyticsPage() {
 function LoadingState() {
   return (
     <div className="flex items-center justify-center py-20 text-gray-400">
-      <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading...
+      <Loader2 className="w-6 h-6 animate-spin me-2" /> Loading...
     </div>
   );
 }
@@ -149,18 +149,18 @@ function SalesFunnelTab({ days, fmt }: { days: number; fmt: (n: number) => strin
         <div className="space-y-3">
           {funnel.map((step, i) => (
             <div key={step.stage} className="flex items-center gap-4">
-              <div className="w-40 text-sm text-gray-600 text-right">{step.label}</div>
+              <div className="w-40 text-sm text-gray-600 text-end">{step.label}</div>
               <div className="flex-1 flex items-center gap-2">
                 <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
                   <div
-                    className="h-full bg-teal-500 rounded-full flex items-center justify-end pr-2 text-white text-xs font-medium transition-all"
+                    className="h-full bg-teal-500 rounded-full flex items-center justify-end pe-2 text-white text-xs font-medium transition-all"
                     style={{ width: `${Math.max((step.count / maxCount) * 100, 8)}%` }}
                   >
                     {step.count}
                   </div>
                 </div>
                 {step.rate !== undefined && (
-                  <span className="text-xs text-gray-500 w-14 text-right">{step.rate}%</span>
+                  <span className="text-xs text-gray-500 w-14 text-end">{step.rate}%</span>
                 )}
               </div>
               {i < funnel.length - 1 && (
@@ -257,14 +257,14 @@ function ClvTab({ fmt }: { fmt: (n: number) => string }) {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-gray-600">#</th>
-                <th className="px-4 py-2 text-left text-gray-600">Customer</th>
-                <th className="px-4 py-2 text-right text-gray-600">Spent</th>
-                <th className="px-4 py-2 text-right text-gray-600">Orders</th>
-                <th className="px-4 py-2 text-right text-gray-600">Avg Order</th>
-                <th className="px-4 py-2 text-right text-gray-600">Loyalty Pts</th>
-                <th className="px-4 py-2 text-right text-gray-600">CRM Deals</th>
-                <th className="px-4 py-2 text-right text-gray-600">Est. CLV</th>
+                <th className="px-4 py-2 text-start text-gray-600">#</th>
+                <th className="px-4 py-2 text-start text-gray-600">Customer</th>
+                <th className="px-4 py-2 text-end text-gray-600">Spent</th>
+                <th className="px-4 py-2 text-end text-gray-600">Orders</th>
+                <th className="px-4 py-2 text-end text-gray-600">Avg Order</th>
+                <th className="px-4 py-2 text-end text-gray-600">Loyalty Pts</th>
+                <th className="px-4 py-2 text-end text-gray-600">CRM Deals</th>
+                <th className="px-4 py-2 text-end text-gray-600">Est. CLV</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -272,12 +272,12 @@ function ClvTab({ fmt }: { fmt: (n: number) => string }) {
                 <tr key={c.userId} className="hover:bg-gray-50">
                   <td className="px-4 py-2 text-gray-400">{i + 1}</td>
                   <td className="px-4 py-2 font-mono text-xs text-gray-700">{c.userId.slice(0, 8)}...</td>
-                  <td className="px-4 py-2 text-right font-medium">{fmt(c.totalSpent)}</td>
-                  <td className="px-4 py-2 text-right">{c.orderCount}</td>
-                  <td className="px-4 py-2 text-right">{fmt(c.avgOrderValue)}</td>
-                  <td className="px-4 py-2 text-right">{c.loyaltyPoints}</td>
-                  <td className="px-4 py-2 text-right">{c.crmDeals}</td>
-                  <td className="px-4 py-2 text-right font-medium text-green-700">{fmt(c.estimatedClv)}</td>
+                  <td className="px-4 py-2 text-end font-medium">{fmt(c.totalSpent)}</td>
+                  <td className="px-4 py-2 text-end">{c.orderCount}</td>
+                  <td className="px-4 py-2 text-end">{fmt(c.avgOrderValue)}</td>
+                  <td className="px-4 py-2 text-end">{c.loyaltyPoints}</td>
+                  <td className="px-4 py-2 text-end">{c.crmDeals}</td>
+                  <td className="px-4 py-2 text-end font-medium text-green-700">{fmt(c.estimatedClv)}</td>
                 </tr>
               ))}
             </tbody>
@@ -352,13 +352,13 @@ function AttributionTab({ days, fmt }: { days: number; fmt: (n: number) => strin
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-gray-600">Code</th>
-                <th className="px-4 py-2 text-left text-gray-600">Type</th>
-                <th className="px-4 py-2 text-right text-gray-600">Usages</th>
-                <th className="px-4 py-2 text-right text-gray-600">Orders</th>
-                <th className="px-4 py-2 text-right text-gray-600">Revenue</th>
-                <th className="px-4 py-2 text-right text-gray-600">Discount</th>
-                <th className="px-4 py-2 text-right text-gray-600">ROI</th>
+                <th className="px-4 py-2 text-start text-gray-600">Code</th>
+                <th className="px-4 py-2 text-start text-gray-600">Type</th>
+                <th className="px-4 py-2 text-end text-gray-600">Usages</th>
+                <th className="px-4 py-2 text-end text-gray-600">Orders</th>
+                <th className="px-4 py-2 text-end text-gray-600">Revenue</th>
+                <th className="px-4 py-2 text-end text-gray-600">Discount</th>
+                <th className="px-4 py-2 text-end text-gray-600">ROI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -366,11 +366,11 @@ function AttributionTab({ days, fmt }: { days: number; fmt: (n: number) => strin
                 <tr key={p.code} className="hover:bg-gray-50">
                   <td className="px-4 py-2 font-mono font-medium">{p.code}</td>
                   <td className="px-4 py-2 text-gray-500">{p.type}</td>
-                  <td className="px-4 py-2 text-right">{p.usageCount}</td>
-                  <td className="px-4 py-2 text-right">{p.orderCount}</td>
-                  <td className="px-4 py-2 text-right font-medium">{fmt(p.revenue)}</td>
-                  <td className="px-4 py-2 text-right text-red-600">{fmt(p.totalDiscount)}</td>
-                  <td className="px-4 py-2 text-right font-medium text-green-700">{p.roi}x</td>
+                  <td className="px-4 py-2 text-end">{p.usageCount}</td>
+                  <td className="px-4 py-2 text-end">{p.orderCount}</td>
+                  <td className="px-4 py-2 text-end font-medium">{fmt(p.revenue)}</td>
+                  <td className="px-4 py-2 text-end text-red-600">{fmt(p.totalDiscount)}</td>
+                  <td className="px-4 py-2 text-end font-medium text-green-700">{p.roi}x</td>
                 </tr>
               ))}
               {promos.length === 0 && (
@@ -501,24 +501,24 @@ function ProductPerformanceTab({ days, fmt }: { days: number; fmt: (n: number) =
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-gray-600">Product</th>
-                <th className="px-4 py-2 text-right text-gray-600">Revenue</th>
-                <th className="px-4 py-2 text-right text-gray-600">Units</th>
-                <th className="px-4 py-2 text-right text-gray-600">Orders</th>
-                <th className="px-4 py-2 text-right text-gray-600">Rating</th>
-                <th className="px-4 py-2 text-right text-gray-600">Reviews</th>
-                <th className="px-4 py-2 text-right text-gray-600">Promos</th>
-                <th className="px-4 py-2 text-right text-gray-600">Videos</th>
+                <th className="px-4 py-2 text-start text-gray-600">Product</th>
+                <th className="px-4 py-2 text-end text-gray-600">Revenue</th>
+                <th className="px-4 py-2 text-end text-gray-600">Units</th>
+                <th className="px-4 py-2 text-end text-gray-600">Orders</th>
+                <th className="px-4 py-2 text-end text-gray-600">Rating</th>
+                <th className="px-4 py-2 text-end text-gray-600">Reviews</th>
+                <th className="px-4 py-2 text-end text-gray-600">Promos</th>
+                <th className="px-4 py-2 text-end text-gray-600">Videos</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {products.map((p) => (
                 <tr key={p.productId} className="hover:bg-gray-50">
                   <td className="px-4 py-2 font-medium">{p.name}</td>
-                  <td className="px-4 py-2 text-right">{fmt(p.revenue)}</td>
-                  <td className="px-4 py-2 text-right">{p.unitsSold}</td>
-                  <td className="px-4 py-2 text-right">{p.orderCount}</td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-2 text-end">{fmt(p.revenue)}</td>
+                  <td className="px-4 py-2 text-end">{p.unitsSold}</td>
+                  <td className="px-4 py-2 text-end">{p.orderCount}</td>
+                  <td className="px-4 py-2 text-end">
                     {p.avgRating ? (
                       <span className="inline-flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
@@ -526,9 +526,9 @@ function ProductPerformanceTab({ days, fmt }: { days: number; fmt: (n: number) =
                       </span>
                     ) : '-'}
                   </td>
-                  <td className="px-4 py-2 text-right">{p.reviewCount}</td>
-                  <td className="px-4 py-2 text-right">{p.activePromos}</td>
-                  <td className="px-4 py-2 text-right">{p.videoCount}</td>
+                  <td className="px-4 py-2 text-end">{p.reviewCount}</td>
+                  <td className="px-4 py-2 text-end">{p.activePromos}</td>
+                  <td className="px-4 py-2 text-end">{p.videoCount}</td>
                 </tr>
               ))}
               {products.length === 0 && (
@@ -596,16 +596,16 @@ function EngagementTab({ days }: { days: number }) {
         <div className="space-y-3">
           {activityShare.map((m) => (
             <div key={m.module} className="flex items-center gap-3">
-              <div className="w-28 text-sm text-gray-600 text-right">{m.label}</div>
+              <div className="w-28 text-sm text-gray-600 text-end">{m.label}</div>
               <div className="flex-1 bg-gray-100 rounded-full h-7 overflow-hidden">
                 <div
-                  className={`h-full ${moduleColors[m.module] || 'bg-gray-500'} rounded-full flex items-center justify-end pr-2 text-white text-xs font-medium transition-all`}
+                  className={`h-full ${moduleColors[m.module] || 'bg-gray-500'} rounded-full flex items-center justify-end pe-2 text-white text-xs font-medium transition-all`}
                   style={{ width: `${Math.max((m.activity / maxActivity) * 100, 6)}%` }}
                 >
                   {m.activity}
                 </div>
               </div>
-              <div className="w-14 text-sm text-gray-500 text-right">{m.share}%</div>
+              <div className="w-14 text-sm text-gray-500 text-end">{m.share}%</div>
             </div>
           ))}
         </div>

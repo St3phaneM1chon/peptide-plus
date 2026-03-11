@@ -601,7 +601,7 @@ export default function RapportsPersonnalisesPage() {
           title={t('admin.customReports.savedReports')}
           headerAction={
             <Button size="sm" onClick={() => { resetBuilder(); setActiveTab('builder'); }}>
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4 me-1" />
               {t('admin.customReports.newReport')}
             </Button>
           }
@@ -646,7 +646,7 @@ export default function RapportsPersonnalisesPage() {
                         : t('admin.customReports.neverRun')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 ms-4">
                     <button
                       onClick={() => handleRunSaved(report)}
                       disabled={running}
@@ -738,7 +738,7 @@ export default function RapportsPersonnalisesPage() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                  <Calendar className="w-3.5 h-3.5 inline me-1" />
                   {t('admin.customReports.from')}
                 </label>
                 <input
@@ -750,7 +750,7 @@ export default function RapportsPersonnalisesPage() {
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                  <Calendar className="w-3.5 h-3.5 inline me-1" />
                   {t('admin.customReports.to')}
                 </label>
                 <input
@@ -1000,11 +1000,11 @@ export default function RapportsPersonnalisesPage() {
           {/* Action Buttons */}
           <div className="flex items-center gap-3 sticky bottom-0 bg-white py-4 border-t border-gray-200 -mx-6 px-6">
             <Button onClick={handlePreview} disabled={running}>
-              {running ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
+              {running ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Play className="w-4 h-4 me-1" />}
               {t('admin.customReports.preview')}
             </Button>
             <Button variant="secondary" onClick={() => setShowSaveModal(true)}>
-              <FileText className="w-4 h-4 mr-1" />
+              <FileText className="w-4 h-4 me-1" />
               {editingId ? t('admin.customReports.updateReport') : t('admin.customReports.saveReport')}
             </Button>
             <Button variant="secondary" onClick={resetBuilder}>
@@ -1129,7 +1129,7 @@ export default function RapportsPersonnalisesPage() {
                       <th
                         key={col.key}
                         className={`px-4 py-3 font-medium text-gray-700 whitespace-nowrap ${
-                          col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                          col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                         }`}
                       >
                         {col.label}
@@ -1144,7 +1144,7 @@ export default function RapportsPersonnalisesPage() {
                         <td
                           key={col.key}
                           className={`px-4 py-2 whitespace-nowrap ${
-                            col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                            col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                           }`}
                         >
                           {formatCellValue(col, row[col.key])}
@@ -1159,7 +1159,7 @@ export default function RapportsPersonnalisesPage() {
                         <td
                           key={col.key}
                           className={`px-4 py-3 whitespace-nowrap ${
-                            col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                            col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                           }`}
                         >
                           {i === 0 && !result.totals![col.key] ? 'TOTALS' : result.totals![col.key] != null ? formatCurrency(result.totals![col.key]) : ''}
@@ -1190,7 +1190,7 @@ export default function RapportsPersonnalisesPage() {
                           <th
                             key={col.key}
                             className={`px-4 py-3 font-medium text-gray-700 whitespace-nowrap ${
-                              col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                              col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                             }`}
                           >
                             {col.label}
@@ -1205,7 +1205,7 @@ export default function RapportsPersonnalisesPage() {
                             <td
                               key={col.key}
                               className={`px-4 py-2 whitespace-nowrap ${
-                                col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                                col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                               }`}
                             >
                               {formatCellValue(col, row[col.key])}
@@ -1219,7 +1219,7 @@ export default function RapportsPersonnalisesPage() {
                             <td
                               key={col.key}
                               className={`px-4 py-3 whitespace-nowrap ${
-                                col.type === 'currency' || col.type === 'number' ? 'text-right' : 'text-left'
+                                col.type === 'currency' || col.type === 'number' ? 'text-end' : 'text-start'
                               }`}
                             >
                               {i === 0 && !result.comparison!.totals![col.key] ? 'TOTALS' : result.comparison!.totals![col.key] != null ? formatCurrency(result.comparison!.totals![col.key]) : ''}
@@ -1293,7 +1293,7 @@ export default function RapportsPersonnalisesPage() {
                 {t('common.cancel')}
               </Button>
               <Button onClick={handleSaveReport} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileText className="w-4 h-4 mr-1" />}
+                {saving ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <FileText className="w-4 h-4 me-1" />}
                 {editingId ? t('admin.customReports.update') : t('admin.customReports.save')}
               </Button>
             </div>

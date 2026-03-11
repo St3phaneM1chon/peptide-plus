@@ -434,10 +434,10 @@ export default function ApiPubliquePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-left py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.method')}</th>
-                      <th className="text-left py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.endpoint')}</th>
-                      <th className="text-left py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.permission')}</th>
-                      <th className="text-left py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.description')}</th>
+                      <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.method')}</th>
+                      <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.endpoint')}</th>
+                      <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.permission')}</th>
+                      <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.description')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -540,7 +540,7 @@ export default function ApiPubliquePage() {
                           />
                           <span className="text-sm font-medium text-slate-700">{group}</span>
                         </label>
-                        <div className="ml-6 flex flex-wrap gap-2">
+                        <div className="ms-6 flex flex-wrap gap-2">
                           {groupPerms.map((perm) => (
                             <label key={perm.key} className="flex items-center gap-1.5 cursor-pointer">
                               <input

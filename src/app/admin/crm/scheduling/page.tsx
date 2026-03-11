@@ -568,7 +568,7 @@ export default function SchedulingPage() {
               <button onClick={goToNextWeek} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
                 <ChevronRight className="h-5 w-5" />
               </button>
-              <span className="text-sm font-medium text-gray-700 ml-2">
+              <span className="text-sm font-medium text-gray-700 ms-2">
                 {formatDateDisplay(weekDates[0])} - {formatDateDisplay(weekDates[6])},{' '}
                 {weekDates[0].getFullYear()}
               </span>
@@ -610,7 +610,7 @@ export default function SchedulingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
                       {t('admin.crm.scheduling.agent') || 'Agent'}
                     </th>
                     {weekDates.map((date, idx) => (
@@ -769,12 +769,12 @@ export default function SchedulingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Agent</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Date</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Shift</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Preference</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                    <th className="text-right px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Agent</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Shift</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Preference</th>
+                    <th className="text-start px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th className="text-end px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -803,7 +803,7 @@ export default function SchedulingPage() {
                           {bid.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right">
+                      <td className="px-4 py-2.5 text-end">
                         {bid.status === 'pending' && (
                           <div className="flex gap-1 justify-end">
                             <button
@@ -865,10 +865,10 @@ export default function SchedulingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
                       {t('admin.crm.scheduling.agent') || 'Agent'}
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">
+                    <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">
                       {t('admin.crm.scheduling.skills') || 'Skills'}
                     </th>
                     {weekDates.map((date, idx) => (

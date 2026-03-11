@@ -527,7 +527,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
 
         {/* Performance summary bar */}
         {campaign.totalLeads > 0 && (
-          <div className="mt-3 ml-7 grid grid-cols-4 gap-2 text-center">
+          <div className="mt-3 ms-7 grid grid-cols-4 gap-2 text-center">
             <div className="bg-gray-50 rounded-lg px-3 py-1.5">
               <p className="text-xs text-gray-500">{t('admin.crm.campaigns.totalLeads') || 'Leads'}</p>
               <p className="text-sm font-semibold text-gray-800">{campaign.totalLeads.toLocaleString()}</p>
@@ -599,16 +599,16 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-xs text-gray-400 border-b border-gray-200">
-                          <th className="pb-1.5 text-left font-medium">
+                          <th className="pb-1.5 text-start font-medium">
                             {t('admin.crm.campaigns.channel') || 'Channel'}
                           </th>
-                          <th className="pb-1.5 text-right font-medium">
+                          <th className="pb-1.5 text-end font-medium">
                             {t('admin.crm.campaigns.total') || 'Total'}
                           </th>
-                          <th className="pb-1.5 text-right font-medium">
+                          <th className="pb-1.5 text-end font-medium">
                             {t('admin.crm.campaigns.completed') || 'Completed'}
                           </th>
-                          <th className="pb-1.5 text-right font-medium">
+                          <th className="pb-1.5 text-end font-medium">
                             {t('admin.crm.campaigns.rate') || 'Rate'}
                           </th>
                         </tr>
@@ -617,9 +617,9 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                         {stats.byChannel.map(row => (
                           <tr key={row.channel} className="hover:bg-white">
                             <td className="py-1.5 capitalize font-medium text-gray-700">{row.channel}</td>
-                            <td className="py-1.5 text-right text-gray-500">{row.total}</td>
-                            <td className="py-1.5 text-right text-green-600">{row.completed}</td>
-                            <td className="py-1.5 text-right text-gray-700">{row.completionRate}%</td>
+                            <td className="py-1.5 text-end text-gray-500">{row.total}</td>
+                            <td className="py-1.5 text-end text-green-600">{row.completed}</td>
+                            <td className="py-1.5 text-end text-gray-700">{row.completionRate}%</td>
                           </tr>
                         ))}
                       </tbody>
@@ -648,7 +648,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1 text-right">
+                  <p className="text-xs text-gray-400 mt-1 text-end">
                     {stats.dailyTimeline[stats.dailyTimeline.length - 1]?.date}
                   </p>
                 </div>
@@ -771,40 +771,40 @@ export default function CampaignsPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.crm.campaigns.search') || 'Search campaigns...'}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full ps-9 pe-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <div className="relative">
           <select
             value={filterStatus}
             onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <option value="">{t('admin.crm.campaigns.allStatuses') || 'All Statuses'}</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => (
               <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
         <div className="relative">
           <select
             value={filterType}
             onChange={e => { setFilterType(e.target.value); setPage(1); }}
-            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <option value="">{t('admin.crm.campaigns.allTypes') || 'All Types'}</option>
             {Object.entries(TYPE_CONFIG).map(([k, v]) => (
               <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
       </div>
 

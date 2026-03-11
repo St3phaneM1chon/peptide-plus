@@ -583,7 +583,7 @@ export default function AvisPage() {
           <span className="text-sm font-medium text-teal-800">
             {selectedIds.size} review(s) selected
           </span>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ms-auto">
             <button
               onClick={selectAllVisible}
               className="text-xs text-teal-600 hover:text-teal-700 font-medium"
@@ -656,7 +656,7 @@ export default function AvisPage() {
                   actions: (
                     <div className="flex items-center gap-2">
                       {/* Bulk selection checkbox */}
-                      <label className="flex items-center gap-1.5 cursor-pointer mr-1" title="Select for bulk actions">
+                      <label className="flex items-center gap-1.5 cursor-pointer me-1" title="Select for bulk actions">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(selectedReview.id)}
@@ -1059,7 +1059,7 @@ export default function AvisPage() {
           <button
             onClick={() => setLightboxOpen(false)}
             aria-label="Close image viewer"
-            className="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors z-10"
+            className="absolute top-4 end-4 text-white hover:text-neutral-300 transition-colors z-10"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1067,7 +1067,7 @@ export default function AvisPage() {
           </button>
 
           {/* Image counter */}
-          <div className="absolute top-4 left-4 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
+          <div className="absolute top-4 start-4 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
             {lightboxIndex + 1} / {lightboxImages.length}
           </div>
 
@@ -1075,7 +1075,7 @@ export default function AvisPage() {
           {lightboxImages.length > 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i === 0 ? lightboxImages.length - 1 : i - 1)); }}
-              className="absolute left-4 text-white hover:text-neutral-300 transition-colors z-10"
+              className="absolute start-4 text-white hover:text-neutral-300 transition-colors z-10"
             >
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1098,7 +1098,7 @@ export default function AvisPage() {
           {lightboxImages.length > 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i === lightboxImages.length - 1 ? 0 : i + 1)); }}
-              className="absolute right-4 text-white hover:text-neutral-300 transition-colors z-10"
+              className="absolute end-4 text-white hover:text-neutral-300 transition-colors z-10"
             >
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1107,7 +1107,7 @@ export default function AvisPage() {
           )}
 
           {/* Keyboard hint */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
+          <div className="absolute bottom-4 start-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
             ESC {t('common.close') || 'close'} {lightboxImages.length > 1 && '| \u2190 \u2192 navigate'}
           </div>
         </div>

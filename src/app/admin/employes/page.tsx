@@ -431,12 +431,12 @@ export default function EmployesPage() {
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-teal-100 text-teal-800'
                       }`}>
-                        {selectedEmployee.role === 'OWNER' ? <Crown className="w-4 h-4 mr-1.5" /> : <Shield className="w-4 h-4 mr-1.5" />}
+                        {selectedEmployee.role === 'OWNER' ? <Crown className="w-4 h-4 me-1.5" /> : <Shield className="w-4 h-4 me-1.5" />}
                         {selectedEmployee.role}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-auto">
+                    <div className="flex items-center gap-2 ms-auto">
                       <span className="text-sm text-slate-600">{t('admin.employees.statusCol')}:</span>
                       <button
                         onClick={() => toggleActive(selectedEmployee.id)}
@@ -446,7 +446,7 @@ export default function EmployesPage() {
                         } ${selectedEmployee.role === 'OWNER' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          selectedEmployee.isActive ? 'right-0.5' : 'left-0.5'
+                          selectedEmployee.isActive ? 'end-0.5' : 'start-0.5'
                         }`} />
                       </button>
                       <span className={`text-sm font-medium ${selectedEmployee.isActive ? 'text-emerald-600' : 'text-slate-400'}`}>

@@ -217,13 +217,13 @@ export default function CtiToolbar({ className = '', isSupervisor = false }: Cti
   // Minimized: just a status dot
   if (minimized) {
     return (
-      <div className={`fixed bottom-0 left-0 right-0 z-40 ${className}`}>
+      <div className={`fixed bottom-0 start-0 end-0 z-40 ${className}`}>
         <div className="bg-gray-900 border-t border-gray-800 px-4 py-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`inline-block h-2.5 w-2.5 rounded-full ${currentStatusConfig.color}`} />
             <span className="text-xs text-gray-400">{currentStatusConfig.label}</span>
             {activeCall && (
-              <span className="text-xs text-green-400 font-mono ml-2">
+              <span className="text-xs text-green-400 font-mono ms-2">
                 {formatDuration(activeCall.duration)}
               </span>
             )}
@@ -240,7 +240,7 @@ export default function CtiToolbar({ className = '', isSupervisor = false }: Cti
   }
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-40 ${className}`}>
+    <div className={`fixed bottom-0 start-0 end-0 z-40 ${className}`}>
       <div className="bg-gray-900 border-t border-gray-700 px-4 py-2">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Left: Agent status */}
@@ -309,7 +309,7 @@ export default function CtiToolbar({ className = '', isSupervisor = false }: Cti
 
                 <button
                   onClick={() => dispatchAction('hangup')}
-                  className="p-1.5 rounded bg-red-600 text-white hover:bg-red-700 ml-1"
+                  className="p-1.5 rounded bg-red-600 text-white hover:bg-red-700 ms-1"
                   title="Hang up"
                 >
                   <PhoneOff className="h-4 w-4" />
@@ -327,7 +327,7 @@ export default function CtiToolbar({ className = '', isSupervisor = false }: Cti
                   {coachingMode === 'whisper' && <MessageSquare className="h-3 w-3" />}
                   {coachingMode === 'barge' && <LogIn className="h-3 w-3" />}
                   <span className="capitalize">{coachingMode}</span>
-                  <button onClick={stopCoaching} className="ml-1 text-red-400 hover:text-red-300 font-bold">×</button>
+                  <button onClick={stopCoaching} className="ms-1 text-red-400 hover:text-red-300 font-bold">×</button>
                 </div>
               )}
               <button
@@ -374,7 +374,7 @@ export default function CtiToolbar({ className = '', isSupervisor = false }: Cti
                     <span className="text-sm text-gray-300 w-28 truncate">{call.agentName}</span>
                     <span className="text-xs text-gray-500 font-mono">{call.callerNumber}</span>
                     <span className="text-xs text-gray-500 font-mono">{formatDuration(call.duration)}</span>
-                    <div className="flex items-center gap-1 ml-auto">
+                    <div className="flex items-center gap-1 ms-auto">
                       <button
                         onClick={() => startCoaching(call.callControlId, 'listen')}
                         disabled={coachingMode !== 'none'}

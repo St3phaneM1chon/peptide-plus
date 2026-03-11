@@ -113,7 +113,7 @@ export default function MonitoringPage() {
           <p className="text-slate-500">Performance et santé des services</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-2xl font-bold text-green-600">{uptime}%</div>
             <div className="text-xs text-slate-500">Uptime (30j)</div>
           </div>
@@ -179,22 +179,22 @@ export default function MonitoringPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-500 border-b border-slate-100">
+              <tr className="text-start text-slate-500 border-b border-slate-100">
                 <th className="pb-3 font-medium">Route</th>
-                <th className="pb-3 font-medium text-right">P50</th>
-                <th className="pb-3 font-medium text-right">P95</th>
-                <th className="pb-3 font-medium text-right">P99</th>
-                <th className="pb-3 font-medium text-right">Requêtes</th>
+                <th className="pb-3 font-medium text-end">P50</th>
+                <th className="pb-3 font-medium text-end">P95</th>
+                <th className="pb-3 font-medium text-end">P99</th>
+                <th className="pb-3 font-medium text-end">Requêtes</th>
               </tr>
             </thead>
             <tbody>
               {metrics.map((m) => (
                 <tr key={m.route} className="border-b border-slate-50 hover:bg-slate-50">
                   <td className="py-3 font-medium text-slate-700">{m.route}</td>
-                  <td className="py-3 text-right text-green-600">{m.p50}ms</td>
-                  <td className="py-3 text-right text-yellow-600">{m.p95}ms</td>
-                  <td className={`py-3 text-right font-medium ${p99Color(m.p99)}`}>{m.p99}ms</td>
-                  <td className="py-3 text-right text-slate-500">{m.requests.toLocaleString()}</td>
+                  <td className="py-3 text-end text-green-600">{m.p50}ms</td>
+                  <td className="py-3 text-end text-yellow-600">{m.p95}ms</td>
+                  <td className={`py-3 text-end font-medium ${p99Color(m.p99)}`}>{m.p99}ms</td>
+                  <td className="py-3 text-end text-slate-500">{m.requests.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

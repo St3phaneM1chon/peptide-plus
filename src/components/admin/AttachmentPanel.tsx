@@ -306,7 +306,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
           <span>{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-auto p-0.5 hover:bg-red-100 rounded"
+            className="ms-auto p-0.5 hover:bg-red-100 rounded"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -358,7 +358,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
       {/* Attachment list */}
       {loading ? (
         <div className="flex items-center justify-center py-8 text-sm text-slate-400">
-          <div className="w-4 h-4 mr-2 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 me-2 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
           {t('common.loading') || 'Loading...'}
         </div>
       ) : attachments.length === 0 ? (
@@ -455,7 +455,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
           <div className="relative max-w-3xl max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setPreviewUrl(null)}
-              className="absolute -top-3 -right-3 p-1.5 bg-white rounded-full shadow-lg hover:bg-slate-100 transition-colors"
+              className="absolute -top-3 -end-3 p-1.5 bg-white rounded-full shadow-lg hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5 text-slate-600" />
             </button>

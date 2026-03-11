@@ -342,7 +342,7 @@ export default function EstimateClientPortalPage() {
                 <h1 className="text-2xl font-bold">BioCycle Peptides</h1>
                 <p className="text-indigo-200 text-sm mt-1">Research-grade peptides</p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-sm text-indigo-200">Devis n&deg;</p>
                 <p className="text-lg font-bold">{estimate.estimateNumber}</p>
               </div>
@@ -360,7 +360,7 @@ export default function EstimateClientPortalPage() {
           {/* Action Result */}
           {actionResult && (
             <div className={`px-8 py-3 ${actionResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'} text-sm font-medium`}>
-              {actionResult.success ? <CheckCircle className="inline w-4 h-4 mr-2" /> : <XCircle className="inline w-4 h-4 mr-2" />}
+              {actionResult.success ? <CheckCircle className="inline w-4 h-4 me-2" /> : <XCircle className="inline w-4 h-4 me-2" />}
               {actionResult.message}
             </div>
           )}
@@ -378,7 +378,7 @@ export default function EstimateClientPortalPage() {
                   <p className="text-sm text-gray-600">{estimate.customerPhone}</p>
                 )}
               </div>
-              <div className="md:text-right">
+              <div className="md:text-end">
                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dates</p>
                 <p className="text-sm text-gray-700">
                   Émis le: <strong>{formatDate(estimate.issueDate)}</strong>
@@ -396,13 +396,13 @@ export default function EstimateClientPortalPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 font-semibold text-gray-700">Article</th>
-                    <th className="text-right py-3 font-semibold text-gray-700">Qté</th>
-                    <th className="text-right py-3 font-semibold text-gray-700">Prix unit.</th>
+                    <th className="text-start py-3 font-semibold text-gray-700">Article</th>
+                    <th className="text-end py-3 font-semibold text-gray-700">Qté</th>
+                    <th className="text-end py-3 font-semibold text-gray-700">Prix unit.</th>
                     {estimate.items.some(i => i.discountPercent > 0) && (
-                      <th className="text-right py-3 font-semibold text-gray-700">Remise</th>
+                      <th className="text-end py-3 font-semibold text-gray-700">Remise</th>
                     )}
-                    <th className="text-right py-3 font-semibold text-gray-700">Total</th>
+                    <th className="text-end py-3 font-semibold text-gray-700">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -416,14 +416,14 @@ export default function EstimateClientPortalPage() {
                             <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
                           )}
                         </td>
-                        <td className="py-3 text-right text-gray-700">{item.quantity}</td>
-                        <td className="py-3 text-right text-gray-700">${item.unitPrice.toFixed(2)}</td>
+                        <td className="py-3 text-end text-gray-700">{item.quantity}</td>
+                        <td className="py-3 text-end text-gray-700">${item.unitPrice.toFixed(2)}</td>
                         {estimate.items.some(i => i.discountPercent > 0) && (
-                          <td className="py-3 text-right text-gray-700">
+                          <td className="py-3 text-end text-gray-700">
                             {item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}
                           </td>
                         )}
-                        <td className="py-3 text-right font-medium text-gray-900">${item.lineTotal.toFixed(2)}</td>
+                        <td className="py-3 text-end font-medium text-gray-900">${item.lineTotal.toFixed(2)}</td>
                       </tr>
                     ))}
                 </tbody>

@@ -163,7 +163,7 @@ export default function AttributionPage() {
           {/* Model Selector */}
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              <Filter className="inline h-4 w-4 mr-1" />
+              <Filter className="inline h-4 w-4 me-1" />
               {t('admin.crm.attribution.model') !== 'admin.crm.attribution.model'
                 ? t('admin.crm.attribution.model')
                 : 'Attribution Model'}
@@ -330,27 +330,27 @@ export default function AttributionPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.crm.attribution.source') !== 'admin.crm.attribution.source'
                       ? t('admin.crm.attribution.source')
                       : 'Source'}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.crm.attribution.leads') !== 'admin.crm.attribution.leads'
                       ? t('admin.crm.attribution.leads')
                       : 'Leads'}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.crm.attribution.deals') !== 'admin.crm.attribution.deals'
                       ? t('admin.crm.attribution.deals')
                       : 'Deals'}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.crm.attribution.revenue') !== 'admin.crm.attribution.revenue'
                       ? t('admin.crm.attribution.revenue')
                       : 'Revenue'}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.crm.attribution.share') !== 'admin.crm.attribution.share'
                       ? t('admin.crm.attribution.share')
                       : '% Share'}
@@ -370,16 +370,16 @@ export default function AttributionPage() {
                           <span className="text-sm font-medium text-gray-900">{row.source}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-end text-sm text-gray-700">
                         {Math.round(row.leads)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-end text-sm text-gray-700">
                         {Math.round(row.deals)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium text-green-700">
                         {formatCurrency(row.revenue)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-6 py-4 whitespace-nowrap text-end">
                         <div className="flex items-center justify-end gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
@@ -387,7 +387,7 @@ export default function AttributionPage() {
                               style={{ width: `${Math.min(row.percentage, 100)}%` }}
                             />
                           </div>
-                          <span className="text-sm text-gray-700 w-12 text-right">
+                          <span className="text-sm text-gray-700 w-12 text-end">
                             {row.percentage}%
                           </span>
                         </div>

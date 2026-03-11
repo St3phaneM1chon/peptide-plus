@@ -124,7 +124,7 @@ export function MediaGalleryUploader({
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-neutral-700">
           {t('admin.mediaGallery.title')}
-          <span className="text-neutral-400 font-normal ml-1.5">
+          <span className="text-neutral-400 font-normal ms-1.5">
             ({images.length}/{maxImages})
           </span>
         </p>
@@ -154,14 +154,14 @@ export function MediaGalleryUploader({
 
               {/* Primary badge */}
               {img.isPrimary && (
-                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-medium rounded-md flex items-center gap-0.5">
+                <div className="absolute top-1.5 start-1.5 px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-medium rounded-md flex items-center gap-0.5">
                   <Star className="w-2.5 h-2.5" />
                   {t('admin.mediaGallery.primary')}
                 </div>
               )}
 
               {/* Drag handle overlay */}
-              <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-1.5 end-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <GripVertical className="w-4 h-4 text-white drop-shadow-md" />
               </div>
 

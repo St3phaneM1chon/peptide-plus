@@ -1,0 +1,770 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TranslationQuality {
+  draft
+  improved
+  verified
+  human
+}
+
+enum TranslationJobStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum ChatSender {
+  VISITOR
+  ADMIN
+  BOT
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum ChatStatus {
+  ACTIVE
+  WAITING_ADMIN
+  CLOSED
+  ARCHIVED
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  APPLIED
+  VOID
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+enum FormatType {
+  VIAL_2ML
+  VIAL_10ML
+  CARTRIDGE_3ML
+  KIT_12
+  CAPSULE_60
+  CAPSULE_120
+  PACK_5
+  PACK_10
+  BUNDLE
+  ACCESSORY
+  NASAL_SPRAY
+  CREAM
+}
+
+enum HeroMediaType {
+  IMAGE
+  VIDEO
+  ANIMATION
+}
+
+enum InventoryReservationStatus {
+  RESERVED
+  RELEASED
+  CONSUMED
+}
+
+enum InventoryTransactionType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+  RETURN
+  LOSS
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
+  VOID
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  VOIDED
+}
+
+enum JournalEntryType {
+  MANUAL
+  AUTO_SALE
+  AUTO_REFUND
+  AUTO_STRIPE_FEE
+  AUTO_PAYPAL_FEE
+  AUTO_SHIPPING
+  AUTO_PURCHASE
+  RECURRING
+  ADJUSTMENT
+  CLOSING
+}
+
+enum LoyaltyTransactionType {
+  EARN_PURCHASE
+  EARN_REFERRAL
+  EARN_REVIEW
+  EARN_SIGNUP
+  EARN_BIRTHDAY
+  EARN_BONUS
+  EARN_REFERRAL_MILESTONE
+  REDEEM_DISCOUNT
+  REDEEM_PRODUCT
+  EXPIRE
+  ADJUST
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+enum PaymentMethod {
+  STRIPE_CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  PAYPAL
+  VISA_CLICK_TO_PAY
+  MASTERCARD_CLICK_TO_PAY
+  AURELIA_PAY
+}
+
+enum ProductType {
+  PEPTIDE
+  SUPPLEMENT
+  ACCESSORY
+  BUNDLE
+  CAPSULE
+  LAB_SUPPLY
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ReconciliationStatus {
+  PENDING
+  MATCHED
+  UNMATCHED
+  MANUAL
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  EXPIRED
+  CANCELLED
+}
+
+enum ShippingStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+enum StockStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  DISCONTINUED
+  COMING_SOON
+  PRE_ORDER
+  LIMITED
+}
+
+enum TaxReportStatus {
+  DRAFT
+  GENERATED
+  FILED
+  PAID
+}
+
+enum UserRole {
+  PUBLIC
+  CUSTOMER
+  CLIENT
+  EMPLOYEE
+  OWNER
+}
+
+enum WebhookEventStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+}
+
+enum MailingListStatus {
+  PENDING // Awaiting confirmation (double opt-in)
+  ACTIVE // Confirmed and subscribed
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum ConsentType {
+  EXPRESS // Active opt-in (CASL required)
+  IMPLIED // Existing business relationship (limited to 2 years)
+}
+
+// =============================================================================
+// RS&DE (Scientific Research & Experimental Development) Tax Credits
+// =============================================================================
+enum RSDeProjectStatus {
+  DRAFT
+  ACTIVE
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum RSDeExpenseCategory {
+  SALARY
+  MATERIALS
+  SUBCONTRACTOR
+  CAPITAL
+  OVERHEAD
+}
+
+// =====================================================
+// CONTENT HUB / MEDIATHEQUE
+// =====================================================
+enum VideoContentType {
+  PODCAST
+  TRAINING
+  PERSONAL_SESSION
+  PRODUCT_DEMO
+  TESTIMONIAL
+  FAQ_VIDEO
+  WEBINAR_RECORDING
+  TUTORIAL
+  BRAND_STORY
+  LIVE_STREAM
+  OTHER
+}
+
+enum VideoSource {
+  YOUTUBE
+  VIMEO
+  TEAMS
+  ZOOM
+  WEBEX
+  GOOGLE_MEET
+  WHATSAPP
+  X_TWITTER
+  TIKTOK
+  NATIVE_UPLOAD
+  OTHER
+}
+
+enum VideoSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ContentVisibility {
+  PUBLIC
+  CUSTOMERS_ONLY
+  CLIENTS_ONLY
+  EMPLOYEES_ONLY
+  PRIVATE
+}
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentPlacement {
+  HOMEPAGE_HERO
+  HOMEPAGE_FEATURED
+  PRODUCT_PAGE
+  VIDEO_LIBRARY
+  WEBINAR_ARCHIVE
+  LEARNING_CENTER
+  BLOG_EMBED
+  FAQ_SECTION
+  CUSTOMER_ACCOUNT
+  AMBASSADOR_PAGE
+  CALCULATOR_HELP
+  LAB_RESULTS
+  COMMUNITY
+}
+
+enum ContentConsentStatus {
+  PENDING
+  GRANTED
+  REVOKED
+  EXPIRED
+}
+
+enum ContentConsentType {
+  VIDEO_APPEARANCE
+  TESTIMONIAL
+  PHOTO
+  CASE_STUDY
+  MARKETING
+  OTHER
+}
+
+// ---------------------------------------------------------------------------
+// VoIP / Telephony (FusionPBX + FreeSWITCH integration)
+// ---------------------------------------------------------------------------
+enum PhoneNumberType {
+  LOCAL
+  TOLL_FREE
+  MOBILE
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+enum CallStatus {
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  VOICEMAIL
+  FAILED
+  TRANSFERRED
+}
+
+enum AgentStatus {
+  ONLINE
+  BUSY
+  DND
+  AWAY
+  OFFLINE
+}
+
+// =============================================================================
+// VoIP Phase 2: Dialer, Queues, IVR, Presence, Coaching
+// =============================================================================
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum QueueStrategy {
+  RING_ALL
+  ROUND_ROBIN
+  LEAST_RECENT
+  RANDOM
+  HUNT
+}
+
+enum DialerDispositionType {
+  INTERESTED
+  NOT_INTERESTED
+  CALLBACK
+  DO_NOT_CALL
+  NO_ANSWER
+  BUSY
+  VOICEMAIL
+  WRONG_NUMBER
+  OTHER
+}
+
+enum CoachingSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ============================================================================
+// CRM — Complete CRM for Sales, Telemarketing & Business Development
+// ============================================================================
+// --- CRM Enums ---
+enum LeadSource {
+  WEB
+  REFERRAL
+  IMPORT
+  CAMPAIGN
+  MANUAL
+  PARTNER
+  EMAIL
+  SOCIAL
+  CHATBOT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum LeadTemperature {
+  HOT
+  WARM
+  COLD
+}
+
+enum DncStatus {
+  CALLABLE
+  INTERNAL_DNC
+  NATIONAL_DNC
+}
+
+enum CrmTaskType {
+  CALL
+  EMAIL
+  MEETING
+  FOLLOW_UP
+  DEMO
+  OTHER
+}
+
+enum CrmTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CrmTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CrmActivityType {
+  CALL
+  EMAIL
+  SMS
+  MEETING
+  NOTE
+  STATUS_CHANGE
+  DEAL_CREATED
+  DEAL_WON
+  DEAL_LOST
+}
+
+enum InboxChannel {
+  EMAIL
+  SMS
+  PHONE
+  CHAT
+  WHATSAPP
+  FACEBOOK
+  INSTAGRAM
+}
+
+enum InboxStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum SlaPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SmsCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  COMPLETED
+  PAUSED
+}
+
+enum SmsCampaignMessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  OPTED_OUT
+}
+
+// ============================================================================
+// CRM Phase 1 — Workflow Automation, Campaigns, Compliance, Forecasting
+// ============================================================================
+// --- Workflow Enums ---
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum WorkflowTriggerType {
+  DEAL_STAGE_CHANGE
+  LEAD_STATUS_CHANGE
+  LEAD_SCORE_THRESHOLD
+  NEW_LEAD
+  NEW_DEAL
+  TIME_BASED
+  MANUAL
+  FORM_SUBMISSION
+}
+
+enum WorkflowActionType {
+  SEND_EMAIL
+  SEND_SMS
+  CREATE_TASK
+  UPDATE_FIELD
+  NOTIFY_AGENT
+  WEBHOOK
+  ASSIGN_TO
+  MOVE_STAGE
+  ADD_TAG
+  REMOVE_TAG
+  WAIT
+  REQUIRE_APPROVAL
+}
+
+enum WorkflowExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum CrmCampaignType {
+  CALL
+  EMAIL
+  SMS
+  MULTI_CHANNEL
+}
+
+enum CrmCampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CrmConsentChannel {
+  PHONE
+  EMAIL
+  SMS
+  ALL
+}
+
+// ============================================================================
+// CRM Phase 3 — Snippets, Quotes/CPQ, Approvals, Multi-Currency, Recurring Revenue,
+//               WFM (Agent Scheduling, QA Scoring, Break Management)
+// ============================================================================
+// --- Phase 3 Enums ---
+enum CrmQuoteStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AgentBreakType {
+  LUNCH
+  SHORT_BREAK
+  TRAINING
+  MEETING
+  PERSONAL
+  OTHER
+}
+
+enum AgentShiftType {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+  SPLIT
+  CUSTOM
+}
+
+// ==========================================================================
+// PHASE 4: NEW MODELS (2026-03-04)
+// ==========================================================================
+// --- 4H.1: Price Books / Price Lists (B8) ---
+enum PriceBookType {
+  STANDARD
+  CUSTOM
+  VOLUME
+  PROMOTIONAL
+}
+
+// --- 4H.3: Contract Management (B20) ---
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  ACTIVE
+  EXPIRED
+  RENEWED
+  CANCELLED
+  TERMINATED
+}
+
+// --- 4C.1: Support Tickets (E19) ---
+enum TicketStatus {
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  WAITING_INTERNAL
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+enum TicketCategory {
+  GENERAL
+  BILLING
+  TECHNICAL
+  SHIPPING
+  RETURNS
+  PRODUCT_INQUIRY
+  COMPLAINT
+  FEATURE_REQUEST
+  OTHER
+}
+
+// --- 4C.2: Knowledge Base Articles (E17) ---
+enum KBArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// --- 4G.1: Sales Playbooks (B16) ---
+enum PlaybookStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum VideoRoomStatus {
+  ACTIVE
+  ENDED
+  ARCHIVED
+}
+
+// ============================================================================
+// CRM Phase — Prospect Lists & Lead Attribution
+// ============================================================================
+enum ProspectListStatus {
+  DRAFT
+  ACTIVE
+  INTEGRATED
+  ARCHIVED
+}
+
+enum ProspectListSource {
+  MANUAL
+  CSV_IMPORT
+  GOOGLE_MAPS
+  WEB_SCRAPER
+  API
+}
+
+enum ProspectStatus {
+  NEW
+  VALIDATED
+  DUPLICATE
+  MERGED
+  INTEGRATED
+  EXCLUDED
+}
+
+enum LeadAssignmentMethod {
+  MANUAL
+  ROUND_ROBIN
+  LOAD_BALANCED
+  SCORE_BASED
+  TERRITORY
+}
+

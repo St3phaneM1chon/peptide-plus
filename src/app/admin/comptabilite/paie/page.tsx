@@ -386,7 +386,7 @@ export default function PayrollPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-        <span className="ml-3 text-slate-500">Chargement de la paie...</span>
+        <span className="ms-3 text-slate-500">Chargement de la paie...</span>
       </div>
     );
   }
@@ -499,13 +499,13 @@ export default function PayrollPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Periode</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Date de paie</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Statut</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Employes</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Brut total</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Net total</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Cout employeur</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Periode</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Date de paie</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Statut</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Employes</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Brut total</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Net total</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Cout employeur</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
@@ -523,10 +523,10 @@ export default function PayrollPage() {
                           {statusLabel(run.status)}
                         </StatusBadge>
                       </td>
-                      <td className="py-3 px-3 text-right">{run.employeeCount}</td>
-                      <td className="py-3 px-3 text-right font-mono">{formatMoney(run.totalGross)}</td>
-                      <td className="py-3 px-3 text-right font-mono font-medium">{formatMoney(run.totalNet)}</td>
-                      <td className="py-3 px-3 text-right font-mono text-slate-500">{formatMoney(run.totalEmployerCost)}</td>
+                      <td className="py-3 px-3 text-end">{run.employeeCount}</td>
+                      <td className="py-3 px-3 text-end font-mono">{formatMoney(run.totalGross)}</td>
+                      <td className="py-3 px-3 text-end font-mono font-medium">{formatMoney(run.totalNet)}</td>
+                      <td className="py-3 px-3 text-end font-mono text-slate-500">{formatMoney(run.totalEmployerCost)}</td>
                       <td className="py-3 px-3">
                         <div className="flex items-center justify-center gap-1">
                           {run.status === 'DRAFT' && (
@@ -617,14 +617,14 @@ export default function PayrollPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Nom</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Email</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Type</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Province</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Frequence</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Salaire/Taux</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Statut</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Embauche</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Nom</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Email</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Type</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Province</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Frequence</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Salaire/Taux</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Statut</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Embauche</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
@@ -648,7 +648,7 @@ export default function PayrollPage() {
                           {statusLabel(emp.payFrequency)}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right font-mono">
+                      <td className="py-3 px-3 text-end font-mono">
                         {emp.annualSalary
                           ? formatMoney(emp.annualSalary) + '/an'
                           : emp.hourlyRate
@@ -706,14 +706,14 @@ export default function PayrollPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Employe</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Periode</th>
-                    <th className="text-left py-3 px-3 font-medium text-slate-600">Date de paie</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Brut</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Deductions</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">Net</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">YTD Brut</th>
-                    <th className="text-right py-3 px-3 font-medium text-slate-600">YTD Net</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Periode</th>
+                    <th className="text-start py-3 px-3 font-medium text-slate-600">Date de paie</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Brut</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Deductions</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">Net</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">YTD Brut</th>
+                    <th className="text-end py-3 px-3 font-medium text-slate-600">YTD Net</th>
                     <th className="text-center py-3 px-3 font-medium text-slate-600">Actions</th>
                   </tr>
                 </thead>
@@ -727,15 +727,15 @@ export default function PayrollPage() {
                         {stub.periodStart} - {stub.periodEnd}
                       </td>
                       <td className="py-3 px-3">{stub.payDate}</td>
-                      <td className="py-3 px-3 text-right font-mono">{formatMoney(stub.grossPay)}</td>
-                      <td className="py-3 px-3 text-right font-mono text-red-600">
+                      <td className="py-3 px-3 text-end font-mono">{formatMoney(stub.grossPay)}</td>
+                      <td className="py-3 px-3 text-end font-mono text-red-600">
                         -{formatMoney(stub.totalDeductions)}
                       </td>
-                      <td className="py-3 px-3 text-right font-mono font-medium text-emerald-700">
+                      <td className="py-3 px-3 text-end font-mono font-medium text-emerald-700">
                         {formatMoney(stub.netPay)}
                       </td>
-                      <td className="py-3 px-3 text-right font-mono text-slate-500">{formatMoney(stub.ytdGross)}</td>
-                      <td className="py-3 px-3 text-right font-mono text-slate-500">{formatMoney(stub.ytdNet)}</td>
+                      <td className="py-3 px-3 text-end font-mono text-slate-500">{formatMoney(stub.ytdGross)}</td>
+                      <td className="py-3 px-3 text-end font-mono text-slate-500">{formatMoney(stub.ytdNet)}</td>
                       <td className="py-3 px-3 text-center">
                         <button
                           title="Telecharger"

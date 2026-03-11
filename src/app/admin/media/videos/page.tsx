@@ -505,7 +505,7 @@ export default function MediaVideosPage() {
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
-            <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="ms-auto px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save')}
             </button>
           </div>
@@ -525,7 +525,7 @@ export default function MediaVideosPage() {
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
           </button>
-          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-slate-500 hover:text-slate-700 text-xs">
+          <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
             {t('common.clearSelection') || 'Clear'}
           </button>
         </div>
@@ -534,9 +534,9 @@ export default function MediaVideosPage() {
       {/* Search & filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
+            className="w-full ps-9 pe-3 py-2 border border-slate-300 rounded-lg text-sm"
             placeholder={t('common.search')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
@@ -630,7 +630,7 @@ export default function MediaVideosPage() {
                         </div>
                       )}
                       {!v.thumbnailUrl && (
-                        <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-black/60 text-white px-1 rounded">
+                        <span className="absolute bottom-0.5 start-0.5 text-[8px] bg-black/60 text-white px-1 rounded">
                           Auto
                         </span>
                       )}
@@ -785,7 +785,7 @@ export default function MediaVideosPage() {
                       <div className="flex items-center gap-4">
                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoPublishedLabel') || 'Published'} checked={editForm.isPublished} onChange={e => setEditForm({ ...editForm, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={t('admin.media.videoFeaturedLabel') || 'Featured'} checked={editForm.isFeatured} onChange={e => setEditForm({ ...editForm, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
-                        <div className="ml-auto flex items-center gap-2">
+                        <div className="ms-auto flex items-center gap-2">
                           <button type="button" onClick={() => setEditingId(null)} className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-slate-50">
                             {t('common.cancel') || 'Cancel'}
                           </button>
@@ -847,7 +847,7 @@ export default function MediaVideosPage() {
       {playingVideo && playingVideo.videoUrl && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-6" onClick={() => setPlayingVideo(null)}>
           <div className="relative max-w-4xl w-full bg-black rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPlayingVideo(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" aria-label="Close video">
+            <button onClick={() => setPlayingVideo(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" aria-label="Close video">
               <X className="w-5 h-5" />
             </button>
             {playingVideo.videoUrl.includes('youtube.com') || playingVideo.videoUrl.includes('youtu.be') ? (

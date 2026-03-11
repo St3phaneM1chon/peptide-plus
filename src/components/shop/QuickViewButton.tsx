@@ -48,9 +48,9 @@ export default function QuickViewButton({ onClick, className = '' }: QuickViewBu
 
       {/* Tooltip */}
       {showTooltip && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded whitespace-nowrap pointer-events-none z-10">
+        <div className="absolute top-full start-1/2 -translate-x-1/2 mt-2 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded whitespace-nowrap pointer-events-none z-10">
           Quick View
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-black/80" />
+          <div className="absolute bottom-full start-1/2 -translate-x-1/2 border-4 border-transparent border-b-black/80" />
         </div>
       )}
     </div>

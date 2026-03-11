@@ -197,16 +197,16 @@ export default function VideoSessionsPage() {
           ))}
         </select>
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder={t('admin.videoSessions.selectClient') || 'Search...'}
-            className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg"
+            className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg"
           />
         </div>
-        <span className="text-xs text-gray-400 ml-auto">{total} sessions</span>
+        <span className="text-xs text-gray-400 ms-auto">{total} sessions</span>
       </div>
 
       {/* Table */}
@@ -225,14 +225,14 @@ export default function VideoSessionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
+                <tr className="bg-gray-50 text-start text-xs text-gray-500 uppercase tracking-wider">
                   <th className="px-4 py-3">{t('admin.videoSessions.scheduledAt') || 'Date'}</th>
                   <th className="px-4 py-3">{t('admin.videoSessions.platform') || 'Platform'}</th>
                   <th className="px-4 py-3">{t('admin.videoSessions.topic') || 'Subject'}</th>
                   <th className="px-4 py-3">{t('admin.videoSessions.client') || 'Client'}</th>
                   <th className="px-4 py-3">{t('admin.videoSessions.contentType') || 'Type'}</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -274,7 +274,7 @@ export default function VideoSessionsPage() {
                           {t(`admin.videoSessions.status.${s.status}`) || s.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-end">
                         <div className="flex items-center justify-end gap-1">
                           {s.hostJoinUrl && s.status !== 'CANCELLED' && s.status !== 'COMPLETED' && (
                             <a
@@ -517,7 +517,7 @@ function CreateSessionModal({
                       setClientSearch('');
                       setShowClientDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-50 last:border-0"
+                    className="w-full text-start px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-50 last:border-0"
                   >
                     <div className="font-medium text-gray-800">{c.name || c.email}</div>
                     {c.name && <div className="text-xs text-gray-400">{c.email}</div>}

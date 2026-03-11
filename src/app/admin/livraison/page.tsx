@@ -482,7 +482,7 @@ export default function LivraisonPage() {
                     }`}
                   >
                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      zone.isActive ? 'right-1' : 'left-1'
+                      zone.isActive ? 'end-1' : 'start-1'
                     }`} />
                   </button>
                   <Button
@@ -531,7 +531,7 @@ export default function LivraisonPage() {
                           }`}
                         >
                           <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                            method.isActive ? 'right-0.5' : 'left-0.5'
+                            method.isActive ? 'end-0.5' : 'start-0.5'
                           }`} />
                         </button>
                       </td>

@@ -118,7 +118,7 @@ export function IntegrationCard({
               onChange={(e) => onToggle(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
           </label>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function IntegrationCard({
               {/* A84 FIX: Label with tooltip hint on hover for integration form fields */}
               <label className="block text-sm font-medium text-slate-700 mb-1" title={field.hint || ''}>
                 {field.label}
-                {field.hint && <span className="ml-1 text-slate-400 cursor-help" title={field.hint}>&#9432;</span>}
+                {field.hint && <span className="ms-1 text-slate-400 cursor-help" title={field.hint}>&#9432;</span>}
               </label>
               <input
                 type={field.type || 'text'}

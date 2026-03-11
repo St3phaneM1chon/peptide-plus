@@ -283,7 +283,7 @@ export default function BudgetPage() {
           <p className="text-sm font-medium text-red-800">
             {t('admin.budget.thresholdWarning').replace('{count}', String(overBudgetLines.length))}
           </p>
-          <div className="ml-auto flex gap-2">
+          <div className="ms-auto flex gap-2">
             {overBudgetLines.slice(0, 3).map(l => (
               <span key={l.id} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
                 {l.category} ({l.percentUsed.toFixed(0)}%)
@@ -321,12 +321,12 @@ export default function BudgetPage() {
                       />
                       {isOver && (
                         <div
-                          className="absolute top-0 h-full bg-red-300 rounded-r-full opacity-50"
+                          className="absolute top-0 h-full bg-red-300 rounded-e-full opacity-50"
                           style={{ left: '100%', width: `${Math.min(line.percentUsed - 100, 30)}%` }}
                         />
                       )}
                     </div>
-                    <span className={`text-xs font-semibold w-14 text-right ${
+                    <span className={`text-xs font-semibold w-14 text-end ${
                       isOver ? 'text-red-600' : isNear ? 'text-yellow-600' : 'text-emerald-600'
                     }`}>
                       {line.percentUsed.toFixed(1)}%
@@ -337,7 +337,7 @@ export default function BudgetPage() {
                     <span className="text-xs text-slate-500">{t('admin.budget.budgetLegend')}: {formatCurrency(line.budget)}</span>
                   </div>
                 </div>
-                <div className="w-24 text-right">
+                <div className="w-24 text-end">
                   {isOver ? (
                     <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">
                       {t('admin.budget.alertOverBudget')}

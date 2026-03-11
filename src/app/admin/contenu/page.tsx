@@ -644,7 +644,7 @@ export default function ContenuPage() {
                                 )}
                               </div>
                             ))}
-                            <span className="ml-1.5 text-[10px] text-slate-500">
+                            <span className="ms-1.5 text-[10px] text-slate-500">
                               {steps[currentIdx]?.label || 'Brouillon'}
                             </span>
                           </div>
@@ -1000,7 +1000,7 @@ export default function ContenuPage() {
           {scheduleForm.scheduledAt && (
             <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
               <p className="text-sm text-teal-800">
-                <Calendar className="w-4 h-4 inline mr-1" />
+                <Calendar className="w-4 h-4 inline me-1" />
                 &laquo;{scheduleTarget?.title}&raquo; sera {scheduleForm.action === 'publish' ? 'publié' : 'dépublié'} le{' '}
                 <strong>{new Date(scheduleForm.scheduledAt).toLocaleDateString(locale)}</strong> à{' '}
                 <strong>{new Date(scheduleForm.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</strong>

@@ -219,7 +219,7 @@ export function CalendarView({
                       e.stopPropagation();
                       onEventClick?.(ev);
                     }}
-                    className={`w-full text-left text-[10px] px-1 py-0.5 rounded text-white truncate ${
+                    className={`w-full text-start text-[10px] px-1 py-0.5 rounded text-white truncate ${
                       ev.color || PLATFORM_COLORS[ev.platform] || 'bg-gray-500'
                     }`}
                     title={ev.title}
@@ -228,7 +228,7 @@ export function CalendarView({
                   </button>
                 ))}
                 {dayEvents.length > 3 && (
-                  <p className="text-[10px] text-gray-400 pl-1">
+                  <p className="text-[10px] text-gray-400 ps-1">
                     +{dayEvents.length - 3} more
                   </p>
                 )}

@@ -129,7 +129,7 @@ export default function ReconciliationPage() {
         <div className="flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              <Calendar className="w-3.5 h-3.5 inline mr-1" />
+              <Calendar className="w-3.5 h-3.5 inline me-1" />
               From
             </label>
             <input
@@ -144,7 +144,7 @@ export default function ReconciliationPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              <Calendar className="w-3.5 h-3.5 inline mr-1" />
+              <Calendar className="w-3.5 h-3.5 inline me-1" />
               To
             </label>
             <input
@@ -249,7 +249,7 @@ export default function ReconciliationPage() {
                     }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-slate-700 w-16 text-right">
+                <span className="text-sm font-semibold text-slate-700 w-16 text-end">
                   {Math.round((report.summary.matchedWithStripe / report.summary.totalOrders) * 100)}%
                 </span>
               </div>
@@ -277,10 +277,10 @@ export default function ReconciliationPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Order Number</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Total</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Payment Status</th>
-                    <th className="text-left px-6 py-3 font-medium text-slate-600">Date</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Order Number</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Total</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Payment Status</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

@@ -503,7 +503,7 @@ export default function FiscalPage() {
           }`}
         >
           <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-            r.isActive ? 'right-0.5' : 'left-0.5'
+            r.isActive ? 'end-0.5' : 'start-0.5'
           }`} />
         </button>
       ),
@@ -559,7 +559,7 @@ export default function FiscalPage() {
           }`}
         >
           <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-            r.isActive ? 'right-0.5' : 'left-0.5'
+            r.isActive ? 'end-0.5' : 'start-0.5'
           }`} />
         </button>
       ),
@@ -1202,7 +1202,7 @@ function ToggleSetting({
         }`}
       >
         <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-          checked ? 'right-1' : 'left-1'
+          checked ? 'end-1' : 'start-1'
         }`} />
       </button>
     </label>

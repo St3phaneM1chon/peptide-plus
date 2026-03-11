@@ -143,7 +143,7 @@ export default function ActivityReportsPage() {
           </select>
         </div>
         {data && (
-          <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
+          <div className="ms-auto flex items-center gap-2 text-sm text-gray-500">
             <Activity className="h-4 w-4" />
             <span>{data.totalActivities} total activities</span>
           </div>
@@ -198,13 +198,13 @@ export default function ActivityReportsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-gray-500 font-medium">Agent</th>
+                    <th className="text-start px-4 py-3 text-gray-500 font-medium">Agent</th>
                     {Object.keys(ACTIVITY_COLORS).map(type => (
-                      <th key={type} className="text-right px-3 py-3 text-gray-500 font-medium text-xs">
+                      <th key={type} className="text-end px-3 py-3 text-gray-500 font-medium text-xs">
                         {type.replace('_', ' ')}
                       </th>
                     ))}
-                    <th className="text-right px-4 py-3 text-gray-500 font-medium">Total</th>
+                    <th className="text-end px-4 py-3 text-gray-500 font-medium">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -215,11 +215,11 @@ export default function ActivityReportsPage() {
                         <p className="text-xs text-gray-400">{agent.email}</p>
                       </td>
                       {Object.keys(ACTIVITY_COLORS).map(type => (
-                        <td key={type} className="text-right px-3 py-3 text-gray-700">
+                        <td key={type} className="text-end px-3 py-3 text-gray-700">
                           {agent[type as keyof AgentActivity] || 0}
                         </td>
                       ))}
-                      <td className="text-right px-4 py-3 font-semibold text-gray-900">{agent.total}</td>
+                      <td className="text-end px-4 py-3 font-semibold text-gray-900">{agent.total}</td>
                     </tr>
                   ))}
                   {(data?.agents || []).length === 0 && (

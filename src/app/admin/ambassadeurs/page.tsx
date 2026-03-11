@@ -583,7 +583,7 @@ export default function AmbassadeursPage() {
             <Button variant="secondary" icon={Inbox} onClick={() => setShowApplicationsModal(true)}>
               {t('admin.ambassadors.applications')}
               {stats.pending > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold leading-none">{stats.pending}</span>
+                <span className="ms-1.5 px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold leading-none">{stats.pending}</span>
               )}
             </Button>
             <Button variant="primary" icon={Settings} onClick={openConfigModal}>
@@ -643,12 +643,12 @@ export default function AmbassadeursPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 px-3 font-medium text-slate-600">Ambassadeur</th>
-                    <th className="text-left py-2 px-3 font-medium text-slate-600">Code</th>
-                    <th className="text-right py-2 px-3 font-medium text-slate-600">Ventes générées</th>
-                    <th className="text-right py-2 px-3 font-medium text-slate-600">Commissions</th>
-                    <th className="text-right py-2 px-3 font-medium text-slate-600">Revenu net</th>
-                    <th className="text-right py-2 px-3 font-medium text-slate-600">% du total</th>
+                    <th className="text-start py-2 px-3 font-medium text-slate-600">Ambassadeur</th>
+                    <th className="text-start py-2 px-3 font-medium text-slate-600">Code</th>
+                    <th className="text-end py-2 px-3 font-medium text-slate-600">Ventes générées</th>
+                    <th className="text-end py-2 px-3 font-medium text-slate-600">Commissions</th>
+                    <th className="text-end py-2 px-3 font-medium text-slate-600">Revenu net</th>
+                    <th className="text-end py-2 px-3 font-medium text-slate-600">% du total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -667,10 +667,10 @@ export default function AmbassadeursPage() {
                           <td className="py-2 px-3">
                             <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-teal-700">{amb.referralCode}</code>
                           </td>
-                          <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(amb.totalSales)}</td>
-                          <td className="py-2 px-3 text-right text-red-600">{formatCurrency(amb.totalEarnings)}</td>
-                          <td className="py-2 px-3 text-right font-medium text-emerald-700">{formatCurrency(netRevenue)}</td>
-                          <td className="py-2 px-3 text-right">
+                          <td className="py-2 px-3 text-end text-slate-900">{formatCurrency(amb.totalSales)}</td>
+                          <td className="py-2 px-3 text-end text-red-600">{formatCurrency(amb.totalEarnings)}</td>
+                          <td className="py-2 px-3 text-end font-medium text-emerald-700">{formatCurrency(netRevenue)}</td>
+                          <td className="py-2 px-3 text-end">
                             <div className="flex items-center justify-end gap-1.5">
                               <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                 <div
@@ -724,7 +724,7 @@ export default function AmbassadeursPage() {
                           {amb.totalReferrals} référence{amb.totalReferrals > 1 ? 's' : ''} | Coût/réf: {formatCurrency(costPerReferral)}
                         </p>
                       </div>
-                      <div className="text-right ml-3">
+                      <div className="text-end ms-3">
                         <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-teal-700' : 'text-red-600'}`}>
                           {roi.toFixed(0)}%
                         </p>
@@ -1145,7 +1145,7 @@ export default function AmbassadeursPage() {
               onClick={() => setConfigAutoApprove(!configAutoApprove)}
               className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-teal-500' : 'bg-slate-300'}`}
             >
-              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configAutoApprove ? 'right-1' : 'left-1'}`} />
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configAutoApprove ? 'end-1' : 'start-1'}`} />
             </button>
           </div>
           <div className="flex items-center justify-between py-2">
@@ -1154,7 +1154,7 @@ export default function AmbassadeursPage() {
               onClick={() => setConfigProgramActive(!configProgramActive)}
               className={`w-11 h-6 rounded-full transition-colors relative ${configProgramActive ? 'bg-green-500' : 'bg-slate-300'}`}
             >
-              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configProgramActive ? 'right-1' : 'left-1'}`} />
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configProgramActive ? 'end-1' : 'start-1'}`} />
             </button>
           </div>
         </div>

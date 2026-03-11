@@ -608,13 +608,13 @@ export default function ProjetsCoutsPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Rechercher par nom, code ou client..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+            className="w-full ps-10 pe-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
           />
         </div>
         <select
@@ -628,11 +628,11 @@ export default function ProjetsCoutsPage() {
           ))}
         </select>
         <Button variant="outline" size="sm" onClick={() => fetchProjects()}>
-          <RefreshCw className="h-4 w-4 mr-1" />
+          <RefreshCw className="h-4 w-4 me-1" />
           Actualiser
         </Button>
         <Button variant="primary" size="sm" onClick={() => { resetForm(); setShowCreateProject(true); }}>
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="h-4 w-4 me-1" />
           Nouveau projet
         </Button>
       </div>
@@ -648,15 +648,15 @@ export default function ProjetsCoutsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Code</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Projet</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Client</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Methode</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Budget</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Couts</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Rentabilite</th>
-                  <th className="text-left py-3 px-3 font-medium text-gray-500">Statut</th>
-                  <th className="text-right py-3 px-3 font-medium text-gray-500">Actions</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Code</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Projet</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Client</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Methode</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Budget</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Couts</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Rentabilite</th>
+                  <th className="text-start py-3 px-3 font-medium text-gray-500">Statut</th>
+                  <th className="text-end py-3 px-3 font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -698,7 +698,7 @@ export default function ProjetsCoutsPage() {
                     <td className="py-3 px-3">
                       <StatusBadge variant={statusBadgeVariant(p.status)} dot>{statusLabel(p.status)}</StatusBadge>
                     </td>
-                    <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3 px-3 text-end" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => openProfitability(p)} className="p-1.5 hover:bg-teal-50 rounded text-teal-600" aria-label="Rentabilite">
                           <BarChart3 className="h-4 w-4" />
@@ -772,15 +772,15 @@ export default function ProjetsCoutsPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => { setShowGenerateInvoice(true); setInvoiceFormData({ dueDate: '', notes: '', milestoneId: '', selectedCostEntryIds: [] }); }}>
-              <FileText className="h-4 w-4 mr-1" />
+              <FileText className="h-4 w-4 me-1" />
               Facturer
             </Button>
             <Button variant="outline" size="sm" onClick={() => openEditProject(selectedProject)}>
-              <Edit3 className="h-4 w-4 mr-1" />
+              <Edit3 className="h-4 w-4 me-1" />
               Modifier
             </Button>
             <Button variant="primary" size="sm" onClick={() => openProfitability(selectedProject)}>
-              <BarChart3 className="h-4 w-4 mr-1" />
+              <BarChart3 className="h-4 w-4 me-1" />
               Rentabilite
             </Button>
           </div>
@@ -849,7 +849,7 @@ export default function ProjetsCoutsPage() {
               setMilestoneFormData({ name: '', description: '', dueDate: '', amount: '', status: 'PENDING', sortOrder: String(milestones.length) });
               setShowAddMilestone(true);
             }}>
-              <Plus className="h-4 w-4 mr-1" /> Ajouter
+              <Plus className="h-4 w-4 me-1" /> Ajouter
             </Button>
           }
         >
@@ -908,7 +908,7 @@ export default function ProjetsCoutsPage() {
               setCostFormData({ type: 'LABOR', description: '', date: new Date().toISOString().split('T')[0], quantity: '1', unitCost: '0', billableAmount: '0', isBillable: true, employeeName: '', notes: '' });
               setShowAddCost(true);
             }}>
-              <Plus className="h-4 w-4 mr-1" /> Ajouter
+              <Plus className="h-4 w-4 me-1" /> Ajouter
             </Button>
           }
         >
@@ -919,14 +919,14 @@ export default function ProjetsCoutsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left py-2 px-2 font-medium text-gray-500">Date</th>
-                    <th className="text-left py-2 px-2 font-medium text-gray-500">Type</th>
-                    <th className="text-left py-2 px-2 font-medium text-gray-500">Description</th>
-                    <th className="text-left py-2 px-2 font-medium text-gray-500">Employe</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-500">Qte</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-500">Cout unit.</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-500">Total</th>
-                    <th className="text-right py-2 px-2 font-medium text-gray-500">Facturable</th>
+                    <th className="text-start py-2 px-2 font-medium text-gray-500">Date</th>
+                    <th className="text-start py-2 px-2 font-medium text-gray-500">Type</th>
+                    <th className="text-start py-2 px-2 font-medium text-gray-500">Description</th>
+                    <th className="text-start py-2 px-2 font-medium text-gray-500">Employe</th>
+                    <th className="text-end py-2 px-2 font-medium text-gray-500">Qte</th>
+                    <th className="text-end py-2 px-2 font-medium text-gray-500">Cout unit.</th>
+                    <th className="text-end py-2 px-2 font-medium text-gray-500">Total</th>
+                    <th className="text-end py-2 px-2 font-medium text-gray-500">Facturable</th>
                     <th className="text-center py-2 px-2 font-medium text-gray-500">Facture</th>
                   </tr>
                 </thead>
@@ -939,10 +939,10 @@ export default function ProjetsCoutsPage() {
                       </td>
                       <td className="py-2 px-2 max-w-[200px] truncate">{e.description}</td>
                       <td className="py-2 px-2 text-gray-500">{e.employeeName || '-'}</td>
-                      <td className="py-2 px-2 text-right">{e.quantity}</td>
-                      <td className="py-2 px-2 text-right">{formatMoney(e.unitCost)}</td>
-                      <td className="py-2 px-2 text-right font-medium">{formatMoney(e.totalCost)}</td>
-                      <td className="py-2 px-2 text-right">
+                      <td className="py-2 px-2 text-end">{e.quantity}</td>
+                      <td className="py-2 px-2 text-end">{formatMoney(e.unitCost)}</td>
+                      <td className="py-2 px-2 text-end font-medium">{formatMoney(e.totalCost)}</td>
+                      <td className="py-2 px-2 text-end">
                         {e.isBillable ? formatMoney(e.billableAmount) : <span className="text-gray-400">N/A</span>}
                       </td>
                       <td className="py-2 px-2 text-center">
@@ -1115,8 +1115,8 @@ export default function ProjetsCoutsPage() {
                   <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-teal-500 rounded-full" style={{ width: `${data.pct}%` }} />
                   </div>
-                  <div className="w-24 text-sm text-right font-medium">{formatMoney(data.cost)}</div>
-                  <div className="w-12 text-xs text-gray-400 text-right">{data.pct}%</div>
+                  <div className="w-24 text-sm text-end font-medium">{formatMoney(data.cost)}</div>
+                  <div className="w-12 text-xs text-gray-400 text-end">{data.pct}%</div>
                 </div>
               ))}
             </div>
@@ -1132,19 +1132,19 @@ export default function ProjetsCoutsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-3 font-medium text-gray-500">Mois</th>
-                    <th className="text-right py-2 px-3 font-medium text-gray-500">Couts</th>
-                    <th className="text-right py-2 px-3 font-medium text-gray-500">Facturable</th>
-                    <th className="text-right py-2 px-3 font-medium text-gray-500">Entrees</th>
+                    <th className="text-start py-2 px-3 font-medium text-gray-500">Mois</th>
+                    <th className="text-end py-2 px-3 font-medium text-gray-500">Couts</th>
+                    <th className="text-end py-2 px-3 font-medium text-gray-500">Facturable</th>
+                    <th className="text-end py-2 px-3 font-medium text-gray-500">Entrees</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(p.monthlyTrend).sort().map(([month, data]) => (
                     <tr key={month} className="border-b border-gray-50">
                       <td className="py-2 px-3 font-medium">{month}</td>
-                      <td className="py-2 px-3 text-right">{formatMoney(data.cost)}</td>
-                      <td className="py-2 px-3 text-right">{formatMoney(data.billable)}</td>
-                      <td className="py-2 px-3 text-right">{data.entries}</td>
+                      <td className="py-2 px-3 text-end">{formatMoney(data.cost)}</td>
+                      <td className="py-2 px-3 text-end">{formatMoney(data.billable)}</td>
+                      <td className="py-2 px-3 text-end">{data.entries}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1296,7 +1296,7 @@ export default function ProjetsCoutsPage() {
           onClick={() => setActiveTab('projects')}
           className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'projects' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          <FolderKanban className="h-4 w-4 inline mr-1" />
+          <FolderKanban className="h-4 w-4 inline me-1" />
           Projets
         </button>
         {selectedProject && (
@@ -1305,14 +1305,14 @@ export default function ProjetsCoutsPage() {
               onClick={() => { setActiveTab('detail'); fetchProjectDetail(selectedProject.id); }}
               className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'detail' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              <FileText className="h-4 w-4 inline mr-1" />
+              <FileText className="h-4 w-4 inline me-1" />
               Detail: {selectedProject.code}
             </button>
             <button
               onClick={() => { setActiveTab('profitability'); fetchProfitability(selectedProject.id); }}
               className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'profitability' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              <BarChart3 className="h-4 w-4 inline mr-1" />
+              <BarChart3 className="h-4 w-4 inline me-1" />
               Rentabilite
             </button>
           </>
@@ -1404,8 +1404,8 @@ export default function ProjetsCoutsPage() {
             <textarea value={costFormData.notes} onChange={(e) => setCostFormData({ ...costFormData, notes: e.target.value })}
               className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
           </div>
-          <div className="bg-gray-50 p-3 rounded-lg text-right">
-            <span className="text-sm text-gray-500 mr-2">Total:</span>
+          <div className="bg-gray-50 p-3 rounded-lg text-end">
+            <span className="text-sm text-gray-500 me-2">Total:</span>
             <span className="text-lg font-bold">
               {formatMoney(parseFloat(costFormData.quantity || '0') * parseFloat(costFormData.unitCost || '0'))}
             </span>
@@ -1497,8 +1497,8 @@ export default function ProjetsCoutsPage() {
                 )}
               </div>
               {invoiceFormData.selectedCostEntryIds.length > 0 && (
-                <div className="bg-teal-50 p-2 rounded mt-2 text-right">
-                  <span className="text-sm text-teal-600 mr-2">Total selectionne:</span>
+                <div className="bg-teal-50 p-2 rounded mt-2 text-end">
+                  <span className="text-sm text-teal-600 me-2">Total selectionne:</span>
                   <span className="font-bold text-teal-800">
                     {formatMoney(
                       costEntries

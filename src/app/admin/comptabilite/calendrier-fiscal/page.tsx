@@ -61,10 +61,10 @@ const authorityColors: Record<string, string> = {
 };
 
 const authorityBorderColors: Record<string, string> = {
-  CRA: 'border-l-teal-500',
-  RQ: 'border-l-purple-500',
-  BOTH: 'border-l-indigo-500',
-  SERVICE_CANADA: 'border-l-green-500',
+  CRA: 'border-s-teal-500',
+  RQ: 'border-s-purple-500',
+  BOTH: 'border-s-indigo-500',
+  SERVICE_CANADA: 'border-s-green-500',
 };
 
 // Category/status/frequency labels moved inside component for i18n access
@@ -479,8 +479,8 @@ export default function CalendrierFiscalPage() {
                 return (
                   <div
                     key={event.id}
-                    className={`flex items-start gap-4 p-4 rounded-lg border border-l-4 bg-white
-                      ${authorityBorderColors[event.authority] || 'border-l-slate-300'}
+                    className={`flex items-start gap-4 p-4 rounded-lg border border-s-4 bg-white
+                      ${authorityBorderColors[event.authority] || 'border-s-slate-300'}
                       ${overdue ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}
                       hover:shadow-sm transition-shadow`}
                   >

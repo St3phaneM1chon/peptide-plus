@@ -417,7 +417,7 @@ export default function ClientPortalPage() {
                 {t('portal.clientPortal')}
               </p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="font-semibold text-lg">{access.clientName}</p>
               {access.companyName && (
                 <p className="text-indigo-200 text-sm">{access.companyName}</p>
@@ -531,7 +531,7 @@ export default function ClientPortalPage() {
                               </div>
                               <div className="flex items-center gap-4">
                                 <InvoiceStatusBadge status={inv.status} t={t} />
-                                <div className="text-right">
+                                <div className="text-end">
                                   <p className="font-bold text-gray-900">{formatCurrency(inv.total, inv.currency)}</p>
                                   {inv.balance > 0 && inv.status !== 'PAID' && (
                                     <p className="text-xs text-red-600">{t('portal.balanceDue')}: {formatCurrency(inv.balance, inv.currency)}</p>
@@ -550,20 +550,20 @@ export default function ClientPortalPage() {
                               <div className="border-t border-gray-200 bg-gray-50 p-4">
                                 <table className="w-full text-sm mb-4">
                                   <thead>
-                                    <tr className="text-left text-gray-500 border-b">
+                                    <tr className="text-start text-gray-500 border-b">
                                       <th className="pb-2 font-medium">{t('portal.description')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.qty')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.unitPrice')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.lineTotal')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.qty')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.unitPrice')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.lineTotal')}</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {inv.items.map((item) => (
                                       <tr key={item.id} className="border-b border-gray-100">
                                         <td className="py-2 text-gray-800">{item.description}</td>
-                                        <td className="py-2 text-right text-gray-700">{item.quantity}</td>
-                                        <td className="py-2 text-right text-gray-700">{formatCurrency(item.unitPrice, inv.currency)}</td>
-                                        <td className="py-2 text-right font-medium text-gray-900">{formatCurrency(item.total, inv.currency)}</td>
+                                        <td className="py-2 text-end text-gray-700">{item.quantity}</td>
+                                        <td className="py-2 text-end text-gray-700">{formatCurrency(item.unitPrice, inv.currency)}</td>
+                                        <td className="py-2 text-end font-medium text-gray-900">{formatCurrency(item.total, inv.currency)}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -675,11 +675,11 @@ export default function ClientPortalPage() {
                               <div className="border-t border-gray-200 bg-gray-50 p-4">
                                 <table className="w-full text-sm mb-4">
                                   <thead>
-                                    <tr className="text-left text-gray-500 border-b">
+                                    <tr className="text-start text-gray-500 border-b">
                                       <th className="pb-2 font-medium">{t('portal.product')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.qty')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.unitPrice')}</th>
-                                      <th className="pb-2 font-medium text-right">{t('portal.lineTotal')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.qty')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.unitPrice')}</th>
+                                      <th className="pb-2 font-medium text-end">{t('portal.lineTotal')}</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -693,9 +693,9 @@ export default function ClientPortalPage() {
                                               <p className="text-xs text-gray-500">{item.description}</p>
                                             )}
                                           </td>
-                                          <td className="py-2 text-right text-gray-700">{item.quantity}</td>
-                                          <td className="py-2 text-right text-gray-700">{formatCurrency(item.unitPrice, est.currency)}</td>
-                                          <td className="py-2 text-right font-medium text-gray-900">{formatCurrency(item.lineTotal, est.currency)}</td>
+                                          <td className="py-2 text-end text-gray-700">{item.quantity}</td>
+                                          <td className="py-2 text-end text-gray-700">{formatCurrency(item.unitPrice, est.currency)}</td>
+                                          <td className="py-2 text-end font-medium text-gray-900">{formatCurrency(item.lineTotal, est.currency)}</td>
                                         </tr>
                                       ))}
                                   </tbody>
@@ -805,10 +805,10 @@ export default function ClientPortalPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b-2 border-gray-200">
-                              <th className="py-3 text-left font-semibold text-gray-700">{t('portal.date')}</th>
-                              <th className="py-3 text-left font-semibold text-gray-700">{t('portal.invoice')}</th>
-                              <th className="py-3 text-right font-semibold text-gray-700">{t('portal.invoiceTotal')}</th>
-                              <th className="py-3 text-right font-semibold text-gray-700">{t('portal.amountPaid')}</th>
+                              <th className="py-3 text-start font-semibold text-gray-700">{t('portal.date')}</th>
+                              <th className="py-3 text-start font-semibold text-gray-700">{t('portal.invoice')}</th>
+                              <th className="py-3 text-end font-semibold text-gray-700">{t('portal.invoiceTotal')}</th>
+                              <th className="py-3 text-end font-semibold text-gray-700">{t('portal.amountPaid')}</th>
                               <th className="py-3 text-center font-semibold text-gray-700">{t('portal.statusLabel')}</th>
                             </tr>
                           </thead>
@@ -817,8 +817,8 @@ export default function ClientPortalPage() {
                               <tr key={pay.id} className="border-b border-gray-100 hover:bg-gray-50">
                                 <td className="py-3 text-gray-700">{formatDate(pay.paidAt)}</td>
                                 <td className="py-3 text-gray-900 font-medium">{pay.invoiceNumber}</td>
-                                <td className="py-3 text-right text-gray-700">{formatCurrency(pay.total, pay.currency)}</td>
-                                <td className="py-3 text-right font-semibold text-green-600">{formatCurrency(pay.amountPaid, pay.currency)}</td>
+                                <td className="py-3 text-end text-gray-700">{formatCurrency(pay.total, pay.currency)}</td>
+                                <td className="py-3 text-end font-semibold text-green-600">{formatCurrency(pay.amountPaid, pay.currency)}</td>
                                 <td className="py-3 text-center">
                                   <InvoiceStatusBadge status={pay.status} t={t} />
                                 </td>
@@ -827,8 +827,8 @@ export default function ClientPortalPage() {
                           </tbody>
                           <tfoot>
                             <tr className="border-t-2 border-gray-200 font-bold">
-                              <td colSpan={3} className="py-3 text-right text-gray-700">{t('portal.totalPaid')}</td>
-                              <td className="py-3 text-right text-green-600">
+                              <td colSpan={3} className="py-3 text-end text-gray-700">{t('portal.totalPaid')}</td>
+                              <td className="py-3 text-end text-green-600">
                                 {formatCurrency(
                                   payments.reduce((sum, p) => sum + p.amountPaid, 0),
                                   payments[0]?.currency
@@ -920,13 +920,13 @@ export default function ClientPortalPage() {
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b-2 border-gray-200">
-                                  <th className="py-3 text-left font-semibold text-gray-700">{t('portal.date')}</th>
-                                  <th className="py-3 text-left font-semibold text-gray-700">{t('portal.type')}</th>
-                                  <th className="py-3 text-left font-semibold text-gray-700">{t('portal.reference')}</th>
-                                  <th className="py-3 text-left font-semibold text-gray-700">{t('portal.description')}</th>
-                                  <th className="py-3 text-right font-semibold text-gray-700">{t('portal.debit')}</th>
-                                  <th className="py-3 text-right font-semibold text-gray-700">{t('portal.credit')}</th>
-                                  <th className="py-3 text-right font-semibold text-gray-700">{t('portal.balance')}</th>
+                                  <th className="py-3 text-start font-semibold text-gray-700">{t('portal.date')}</th>
+                                  <th className="py-3 text-start font-semibold text-gray-700">{t('portal.type')}</th>
+                                  <th className="py-3 text-start font-semibold text-gray-700">{t('portal.reference')}</th>
+                                  <th className="py-3 text-start font-semibold text-gray-700">{t('portal.description')}</th>
+                                  <th className="py-3 text-end font-semibold text-gray-700">{t('portal.debit')}</th>
+                                  <th className="py-3 text-end font-semibold text-gray-700">{t('portal.credit')}</th>
+                                  <th className="py-3 text-end font-semibold text-gray-700">{t('portal.balance')}</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -936,7 +936,7 @@ export default function ClientPortalPage() {
                                   <td colSpan={3} className="py-2 text-gray-500 italic">{t('portal.openingBalanceRow')}</td>
                                   <td></td>
                                   <td></td>
-                                  <td className="py-2 text-right font-medium text-gray-700">
+                                  <td className="py-2 text-end font-medium text-gray-700">
                                     {formatCurrency(statement.openingBalance, statement.currency)}
                                   </td>
                                 </tr>
@@ -962,13 +962,13 @@ export default function ClientPortalPage() {
                                       </td>
                                       <td className="py-2 text-gray-900 font-medium">{line.reference}</td>
                                       <td className="py-2 text-gray-600 max-w-xs truncate">{line.description}</td>
-                                      <td className="py-2 text-right text-red-600">
+                                      <td className="py-2 text-end text-red-600">
                                         {line.debit > 0 ? formatCurrency(line.debit, statement.currency) : ''}
                                       </td>
-                                      <td className="py-2 text-right text-green-600">
+                                      <td className="py-2 text-end text-green-600">
                                         {line.credit > 0 ? formatCurrency(line.credit, statement.currency) : ''}
                                       </td>
-                                      <td className="py-2 text-right font-medium text-gray-900">
+                                      <td className="py-2 text-end font-medium text-gray-900">
                                         {formatCurrency(line.runningBalance, statement.currency)}
                                       </td>
                                     </tr>
@@ -978,13 +978,13 @@ export default function ClientPortalPage() {
                                 <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
                                   <td className="py-3 text-gray-700">{formatDate(statement.dateTo)}</td>
                                   <td colSpan={3} className="py-3 text-gray-700">{t('portal.closingBalanceRow')}</td>
-                                  <td className="py-3 text-right text-red-700">
+                                  <td className="py-3 text-end text-red-700">
                                     {formatCurrency(statement.totalDebits, statement.currency)}
                                   </td>
-                                  <td className="py-3 text-right text-green-700">
+                                  <td className="py-3 text-end text-green-700">
                                     {formatCurrency(statement.totalCredits, statement.currency)}
                                   </td>
-                                  <td className={`py-3 text-right ${statement.closingBalance > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                                  <td className={`py-3 text-end ${statement.closingBalance > 0 ? 'text-red-700' : 'text-green-700'}`}>
                                     {formatCurrency(statement.closingBalance, statement.currency)}
                                   </td>
                                 </tr>
