@@ -2,7 +2,8 @@
   "audit_name": "mega-audit-fonctionnel-10-angles-2026-03",
   "started": "2026-03-10",
   "last_session": "2026-03-10T18:30",
-  "status": "P0_P1_P2_P3_COMPLETE",
+  "status": "AUDIT_COMPLETE",
+  "completed": "2026-03-11",
   "total_findings": {
     "critical": 32,
     "high": 56,
@@ -135,5 +136,24 @@
       {"id": "p3-rtl-tailwind", "status": "DONE", "files": 310, "note": "1318 Tailwind classes converted to logical properties across 310 files for full RTL support."}
     ],
     "build_status": "SUCCESS"
+  },
+  "cicd_hardening": {
+    "date": "2026-03-11",
+    "status": "DONE",
+    "guards": [
+      "prisma validate pre-build (dummy DATABASE_URL)",
+      "auto-detect schema format (directory vs single file)",
+      "standalone package integrity checks",
+      "idempotent Azure infra settings (no restart loop)",
+      "FK orphan guidance on db push failure",
+      "extended health check (12x30s = 6min)"
+    ],
+    "kedb_total": 11,
+    "deploy_runs": {
+      "22931701564": "FAILED (cp prisma/schema.prisma - file split into directory)",
+      "22932117405": "SUCCESS (fixed: cp -r prisma/schema)",
+      "22933084562": "FAILED (prisma validate needs DATABASE_URL)",
+      "22933305671": "SUCCESS (fixed: dummy DATABASE_URL + 6 guard rails)"
+    }
   }
 }

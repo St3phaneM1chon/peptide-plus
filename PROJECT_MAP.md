@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-07 (LeadEngine: Google Maps scraper, waterfall enrichment, AI scoring, DNC compliance, 1-click campaign, 12 API routes, 7 lib files, 29 i18n keys)
+# LAST UPDATED: 2026-03-10 (Mega-Audit P0-P3: schema split, dynamic pricing, BullMQ, exports, CDN, RTL)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 286 | **API Routes**: 774 | **Prisma Models**: 267 | **Enums**: 61 | **Components**: 141 | **Hooks**: 24 | **Lib files**: 376
+- **Pages**: 332 | **API Routes**: 830 | **Prisma Models**: 302 | **Enums**: 87 | **Components**: 158 | **Hooks**: 25 | **Lib files**: 455
 - **Loading skeletons**: 198 loading.tsx files (coverage expanded beyond admin pages)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
@@ -1160,6 +1160,31 @@ orders, users/[id], users/[id]/points, **users/[id]/email** (POST - admin transa
 | /api/cron/churn-alerts | POST | cron-secret | Churn prediction email alerts |
 | /api/cron/birthday-bonus | POST | cron-secret | Birthday loyalty bonus points |
 
+### BullMQ Job Queues (NEW 2026-03-10)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/queues | GET | - | OWNER | All queue stats overview |
+| /api/admin/queues/[name] | GET,POST,DELETE | - | OWNER | Trigger jobs, clean jobs |
+
+### Dynamic Pricing (NEW 2026-03-10)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/loyalty/tiers | GET,POST | LoyaltyTierConfig | OWNER | Tier discount config |
+| /api/admin/loyalty/tiers/[id] | GET,PUT,DELETE | LoyaltyTierConfig | OWNER | Single tier CRUD |
+| /api/admin/products/[id]/tier-prices | GET,POST | ProductTierPrice | OWNER | Product-specific tier prices |
+| /api/products/[id]/price | GET | Product,ProductTierPrice | public | Effective price by tier |
+
+### Accounting Export (NEW 2026-03-10)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/comptabilite/export | GET | JournalEntry,ChartOfAccount | accounting.view | QuickBooks IIF, Xero CSV, Generic CSV |
+
+### Media CDN (NEW 2026-03-10)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/media/presigned-url | POST | - | ADMIN | Azure Blob presigned upload URL |
+| /api/admin/media/stats | GET | Media | ADMIN | Storage stats by category |
+
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
 
@@ -1414,6 +1439,29 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | `Media` | New fields | Added `width Int?` and `height Int?` for image dimensions |
 | `User` | New relations | Added `forumPosts`, `forumReplies`, `forumVotes`, `contactMessages` relations |
 
+### Schema Split (2026-03-10)
+Single `prisma/schema.prisma` split into 12 domain files in `prisma/schema/`:
+| File | Domain | Notes |
+|------|--------|-------|
+| `_base.prisma` | Datasource, generators, 87 enums | Shared foundation |
+| `auth.prisma` | Auth & User models (11) | User, Account, Session, MFA, etc. |
+| `ecommerce.prisma` | Commerce models (56) | Product, Order, Cart, Payments, etc. |
+| `accounting.prisma` | Accounting models (43) | JournalEntry, ChartOfAccount, Budget, etc. |
+| `crm.prisma` | CRM models (44) | CrmDeal, CrmLead, Tickets, etc. |
+| `communications.prisma` | Email & Chat models (53) | EmailLog, Chat, Newsletter, etc. |
+| `content.prisma` | Content models (27) | Blog, Pages, FAQ, etc. |
+| `inventory.prisma` | Inventory models (14) | Stock, Warehouse, Supplier, etc. |
+| `loyalty.prisma` | Loyalty & Rewards models (6) | LoyaltyTier, Ambassador, etc. |
+| `marketing.prisma` | Marketing models (3) | Promotions, PromoCode, etc. |
+| `media.prisma` | Media models (17) | Video, Media, SocialPost, etc. |
+| `system.prisma` | System models (28) | Settings, Logs, Audit, etc. |
+
+### New Models (2026-03-10 - Dynamic Pricing)
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `LoyaltyTierConfig` | id, tierName, minPoints, discountPercent, isActive, createdAt, updatedAt | productTierPrices[] | Global tier-based discount configuration |
+| `ProductTierPrice` | id, productId, tierId, overridePrice, createdAt, updatedAt | product(Product), tier(LoyaltyTierConfig) | Product-specific tier price override |
+
 ### Orphan Models (36 -- no Prisma @relation)
 **Critical orphans** (should probably have FK):
 - `InventoryReservation` (soft: productId, formatId, orderId, cartId)
@@ -1457,9 +1505,12 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | **Order** | order-status-machine.ts (valid transition validator), order-events.ts (OrderEvent recording) | Order API routes, admin order management |
 | **Cache** | cache.ts (Redis + in-memory TTL fallback) | API routes requiring caching |
 | **Loyalty** | loyalty/referral-milestones.ts (milestone-based referral bonus logic) | /api/cron/birthday-bonus, referral routes |
+| **Pricing** | pricing.ts (dynamic pricing resolution: ProductTierPrice > LoyaltyTierConfig > base) | /api/products/[id]/price, checkout - NEW 2026-03-10 |
+| **Queues** | queue.ts (BullMQ queue factory, 33 queues, graceful Redis fallback), queue-registry.ts (queue processor registry) | /api/admin/queues, background jobs - NEW 2026-03-10 |
+| **Jobs** | jobs/media-cleanup.ts (Media cleanup BullMQ job processor) | queue system - NEW 2026-03-10 |
 
-### `/src/lib/accounting/` (34 files)
-auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **ai-accountant.service** (rule-based NLP chat, 18 intents, bilingual, session management)
+### `/src/lib/accounting/` (35 files)
+auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates, **ai-accountant.service** (rule-based NLP chat, 18 intents, bilingual, session management), **quickbooks-export.ts** (QuickBooks IIF + Xero CSV + Generic CSV export - NEW 2026-03-10)
 
 ### `/src/lib/email/` (14 files)
 email-service (multi-provider: Resend/SendGrid/SMTP), templates (base, order, marketing), order-lifecycle, automation-engine, bounce-handler, inbound-handler, unsubscribe, tracking (HMAC pixel/link injection), ab-test-engine (Z-test statistical significance), meeting-invitation
@@ -2130,3 +2181,41 @@ Under `admin.bridges`: orderProducts, orderReviews, promoProducts, reviewPurchas
 - **Schema change**: `EmailLog.campaignId` FK added for Marketing↔Email bridges
 - **All bridges**: Feature-flag gated via `ff.{module}_module` in SiteSetting
 - **Registry**: `src/lib/bridges/registry.ts` (complete index of all 45 bridges)
+
+### New Files (2026-03-10 Mega-Audit P0-P3: Schema Split, Dynamic Pricing, BullMQ, Exports, CDN, RTL)
+
+#### Prisma Schema Split (12 files replacing single schema.prisma)
+- `prisma/schema/_base.prisma` -- Datasource, generators, 87 enums
+- `prisma/schema/auth.prisma` -- Auth & User models (11)
+- `prisma/schema/ecommerce.prisma` -- Commerce models (56) incl. new ProductTierPrice
+- `prisma/schema/accounting.prisma` -- Accounting models (43)
+- `prisma/schema/crm.prisma` -- CRM models (44)
+- `prisma/schema/communications.prisma` -- Email & Chat models (53)
+- `prisma/schema/content.prisma` -- Content models (27)
+- `prisma/schema/inventory.prisma` -- Inventory models (14)
+- `prisma/schema/loyalty.prisma` -- Loyalty & Rewards models (6) incl. new LoyaltyTierConfig
+- `prisma/schema/marketing.prisma` -- Marketing models (3)
+- `prisma/schema/media.prisma` -- Media models (17)
+- `prisma/schema/system.prisma` -- System models (28)
+
+#### New Prisma Models (2)
+- `LoyaltyTierConfig` -- Global tier-based discount configuration (tierName, minPoints, discountPercent, isActive)
+- `ProductTierPrice` -- Product-specific tier price override (productId, tierId, overridePrice)
+
+#### New API Routes (10 files)
+- `src/app/api/admin/queues/route.ts` -- GET all queue stats overview (BullMQ)
+- `src/app/api/admin/queues/[name]/route.ts` -- GET,POST,DELETE queue details, trigger/clean jobs
+- `src/app/api/admin/loyalty/tiers/route.ts` -- GET,POST loyalty tier discount config
+- `src/app/api/admin/loyalty/tiers/[id]/route.ts` -- GET,PUT,DELETE single tier CRUD
+- `src/app/api/admin/products/[id]/tier-prices/route.ts` -- GET,POST product-specific tier prices
+- `src/app/api/products/[id]/price/route.ts` -- GET effective price by loyalty tier (public)
+- `src/app/api/admin/comptabilite/export/route.ts` -- GET accounting export (QuickBooks IIF, Xero CSV, Generic CSV)
+- `src/app/api/admin/media/presigned-url/route.ts` -- POST Azure Blob presigned upload URL
+- `src/app/api/admin/media/stats/route.ts` -- GET storage stats by media category
+
+#### New Lib Files (5)
+- `src/lib/pricing.ts` -- Dynamic pricing resolution (ProductTierPrice > LoyaltyTierConfig > base price)
+- `src/lib/queue.ts` -- BullMQ queue factory (33 queues, graceful Redis fallback)
+- `src/lib/queue-registry.ts` -- Queue processor registry
+- `src/lib/jobs/media-cleanup.ts` -- Media cleanup BullMQ job processor
+- `src/lib/accounting/quickbooks-export.ts` -- QuickBooks IIF + Xero CSV + Generic CSV export
