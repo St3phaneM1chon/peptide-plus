@@ -4372,7 +4372,8 @@
       "inviteResent": "Invitation renvoyée avec succès",
       "phoneLabel": "Numéro de téléphone",
       "selectPhone": "Sélectionner un numéro",
-      "noPhoneAssigned": "Aucun numéro assigné"
+      "noPhoneAssigned": "Aucun numéro assigné",
+      "phoneAssigned": "déjà assigné"
     },
     "entries": {
       "title": "Écritures de journal",

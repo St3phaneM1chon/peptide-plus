@@ -147,6 +147,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
         name: user.name || '',
         image: user.image,
         role: user.role,
+        phone: user.phone || null,
         permissions: user.role === 'OWNER' ? ['*'] : uniquePermissions,
         permissionGroups: userPerms?.groups || [],
         lastLogin,

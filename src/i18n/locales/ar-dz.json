@@ -3810,7 +3810,8 @@
       "inviteResent": "Invitation resent successfully",
       "phoneLabel": "Phone number",
       "selectPhone": "Select a number",
-      "noPhoneAssigned": "No phone assigned"
+      "noPhoneAssigned": "No phone assigned",
+      "phoneAssigned": "already assigned"
     },
     "entries": {
       "accountHeader": "الحساب",

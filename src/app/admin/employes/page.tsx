@@ -24,6 +24,7 @@ interface Employee {
   email: string;
   name: string;
   role: 'OWNER' | 'EMPLOYEE';
+  phone: string | null;
   permissions: string[];
   lastLogin?: string;
   isActive: boolean;
@@ -248,11 +249,27 @@ export default function EmployesPage() {
     setShowForm(false);
   };
 
-  const startEdit = (emp: Employee) => {
-    setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions, phoneNumberId: '' });
+  const startEdit = async (emp: Employee) => {
     setEditingEmployee(emp);
     setShowForm(true);
-    fetchAvailablePhones();
+    // Fetch phones first, then pre-select the employee's current phone
+    try {
+      const res = await fetch('/api/admin/voip/phone-numbers/available');
+      if (res.ok) {
+        const data = await res.json();
+        const phones: AvailablePhone[] = data.phoneNumbers || [];
+        setAvailablePhones(phones);
+        // Find the phone that matches this employee's number
+        const currentPhone = emp.phone ? phones.find(p => p.number === emp.phone) : null;
+        setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions, phoneNumberId: currentPhone?.id || '' });
+      } else {
+        setAvailablePhones([]);
+        setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions, phoneNumberId: '' });
+      }
+    } catch {
+      setAvailablePhones([]);
+      setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions, phoneNumberId: '' });
+    }
   };
 
   const togglePermission = (key: string) => {
@@ -648,9 +665,9 @@ export default function EmployesPage() {
                   className="w-full h-9 ps-9 pe-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">{t('admin.employees.noPhoneAssigned')}</option>
-                  {availablePhones.filter(p => !p.isAssigned).map((phone) => (
+                  {availablePhones.map((phone) => (
                     <option key={phone.id} value={phone.id}>
-                      {phone.number} {phone.displayName ? `(${phone.displayName})` : ''}
+                      {phone.number} {phone.displayName ? `(${phone.displayName})` : ''}{phone.isAssigned && phone.id !== formData.phoneNumberId ? ` — ${t('admin.employees.phoneAssigned')}` : ''}
                     </option>
                   ))}
                 </select>
