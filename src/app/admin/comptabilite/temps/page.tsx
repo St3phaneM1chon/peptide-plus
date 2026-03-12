@@ -11,6 +11,7 @@ import type { BadgeVariant } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 import { addCSRFHeader } from '@/lib/csrf';
 
 // =============================================================================
@@ -159,6 +160,7 @@ function todayString(): string {
 
 export default function TimeTrackingPage() {
   useI18n();
+  const { data: session } = useSession();
   const theme = sectionThemes.compliance;
 
   const [activeTab, setActiveTab] = useState<'timesheet' | 'projects' | 'reports' | 'approvals'>('timesheet');
@@ -251,7 +253,7 @@ export default function TimeTrackingPage() {
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'start',
-          userName: 'Admin', // TODO: use session user name
+          userName: session?.user?.name || 'Admin',
           description: timerDescription,
           projectName: timerProject || null,
           taskCategory: timerCategory || null,

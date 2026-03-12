@@ -63,14 +63,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Item 11: Optional field selection via ?fields=name,price,slug
-    // TODO: Use fieldSelect to filter response fields
-    // parseFieldSelection(request, [
-    //   'id', 'name', 'subtitle', 'slug', 'shortDescription', 'description',
-    //   'productType', 'price', 'compareAtPrice', 'imageUrl', 'videoUrl',
-    //   'categoryId', 'isFeatured', 'isActive', 'createdAt', 'updatedAt',
-    //   'sku', 'barcode', 'weight', 'manufacturer', 'origin', 'purity',
-    //   'metaTitle', 'metaDescription',
-    // ]);
+    // NOTE: parseFieldSelection() from api-response.ts produces a Prisma `select` object,
+    // but this route uses `include` for relations (category, formats, etc.). Prisma does not
+    // allow mixing `select` and `include` at the same level. To implement field selection,
+    // either strip unwanted keys from the response after fetch, or refactor to use nested
+    // `select` with explicit relation fields. Deferred for now.
 
     const where: Record<string, unknown> = {};
 

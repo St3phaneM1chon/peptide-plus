@@ -155,28 +155,29 @@ function ComparePageContent() {
     return bestProductSlug;
   };
 
-  // TODO: Re-enable highestPurity comparison highlight when UI is wired up
-  // const getHighestPurity = () => {
-  //   if (products.length === 0) return null;
-  //   let highestPurity = 0;
-  //   let bestProductSlug = '';
-  //   products.forEach(product => {
-  //     const specs = product.specifications;
-  //     if (specs) {
-  //       const purityMatch = specs.match(/purity[:\s]+(\d+(?:\.\d+)?)/i);
-  //       if (purityMatch) {
-  //         const purity = parseFloat(purityMatch[1]);
-  //         if (purity > highestPurity) {
-  //           highestPurity = purity;
-  //           bestProductSlug = product.slug;
-  //         }
-  //       }
-  //     }
-  //   });
-  //   return bestProductSlug || null;
-  // };
+  // Highest purity comparison highlight
+  const getHighestPurity = () => {
+    if (products.length === 0) return null;
+    let highestPurity = 0;
+    let bestProductSlug = '';
+    products.forEach(product => {
+      const specs = product.specifications;
+      if (specs) {
+        const purityMatch = specs.match(/purity[:\s]+(\d+(?:\.\d+)?)/i);
+        if (purityMatch) {
+          const purity = parseFloat(purityMatch[1]);
+          if (purity > highestPurity) {
+            highestPurity = purity;
+            bestProductSlug = product.slug;
+          }
+        }
+      }
+    });
+    return bestProductSlug || null;
+  };
 
   const bestValue = getBestValue();
+  const highestPurity = getHighestPurity();
 
   // Empty state
   if (!isLoading && products.length === 0) {
@@ -329,6 +330,11 @@ function ComparePageContent() {
                     {product.slug === bestValue && (
                       <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                         {t('compare.bestValue')}
+                      </span>
+                    )}
+                    {product.slug === highestPurity && (
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                        {t('compare.highestPurity')}
                       </span>
                     )}
                   </div>

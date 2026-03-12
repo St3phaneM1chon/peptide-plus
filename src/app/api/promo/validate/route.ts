@@ -167,8 +167,8 @@ export async function POST(request: NextRequest) {
     // NOTE: FLAW-079 - productIds/categoryIds stored as JSON string; junction table migration deferred
     if (promoCode.productIds) {
       if (!cartItems || cartItems.length === 0) {
-        // TODO: If cart items are not provided in the validate request,
-        // we skip this check here. The create-checkout route performs a
+        // NOTE: If cart items are not provided in the validate request,
+        // we skip this check. The create-checkout route performs a
         // server-side re-validation with the actual cart, so this is safe.
       } else {
         let allowedProductIds: string[] = [];
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     // E-04: Vérifier categoryIds - le code ne s'applique qu'à certaines catégories
     if (promoCode.categoryIds) {
       if (!cartItems || cartItems.length === 0) {
-        // TODO: Same as productIds - skip if cart items not provided;
+        // NOTE: Same as productIds - skip if cart items not provided;
         // create-checkout will enforce this server-side.
       } else {
         let allowedCategoryIds: string[] = [];

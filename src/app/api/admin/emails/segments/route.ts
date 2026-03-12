@@ -281,8 +281,15 @@ async function countSegment(rawQuery: Record<string, unknown>, now: Date): Promi
   }
 
   if (query.minSpent) {
-    // Approximate: filter by loyalty tier as proxy
-    // TODO: Use raw SQL for accurate monetary filtering
+    // TODO: Use raw SQL (SELECT SUM(total) FROM "Order" WHERE userId = ?) for accurate monetary filtering.
+    // Approximate: filter by loyalty tier as proxy for minimum spend.
+    const minSpent = Number(query.minSpent);
+    if (minSpent >= 500) {
+      where.loyaltyTier = { in: ['GOLD', 'PLATINUM', 'VIP'] };
+    } else if (minSpent >= 200) {
+      where.loyaltyTier = { in: ['SILVER', 'GOLD', 'PLATINUM', 'VIP'] };
+    }
+    // Below 200: no tier filter (most users qualify)
   }
 
   try {

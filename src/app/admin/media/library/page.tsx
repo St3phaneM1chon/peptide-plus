@@ -1,11 +1,8 @@
 // IMP-016: TODO: Add global drag-and-drop zone for multi-file upload (currently only MediaUploader supports DnD)
-// IMP-017: DONE: Bulk delete is implemented via selection toolbar + handleDeleteSelected
 // IMP-018: PARTIALLY_DONE: Alt text editing exists via handleRenameFile; full metadata editor (title, description, tags) is TODO
 // IMP-025: TODO: Implement blur placeholder + intersection observer for progressive image loading in gallery
 // IMP-026: TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoded list
-// IMP-029: DONE: Pagination is already implemented with page/limit params and pagination controls
 // IMP-030: TODO: Add advanced filters (date range, size range, dimensions, uploadedBy, usage status)
-// IMP-031: DONE: Sort parameters (sortBy, sortDir) added to API; TODO: add sort buttons in UI
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -418,7 +415,7 @@ export default function MediaLibraryPage() {
           <option value="video">{t('admin.media.videosTitle')}</option>
           <option value="application/pdf">PDF</option>
         </select>
-        {/* FIX: F81 - TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoding */}
+        {/* See IMP-026: Folders should be loaded dynamically from DB */}
         <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allFolders')}>
           <option value="">{t('admin.media.allFolders')}</option>
           <option value="general">{t('admin.media.folderGeneral')}</option>

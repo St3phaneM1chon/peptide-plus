@@ -99,30 +99,46 @@ export function MediaUploader({
     setUploading(true);
     setProgress(0);
 
-    // FIX: F91 - TODO: Replace simulated progress with real XMLHttpRequest.upload.onprogress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 3, 90));
-    }, 80);
-
     try {
       const formData = new FormData();
       formData.append('files', file);
       formData.append('folder', config.folder);
 
-      const res = await fetch('/api/admin/medias', {
-        method: 'POST',
-        headers: addCSRFHeader(),
-        body: formData,
+      // Use XMLHttpRequest for real upload progress tracking
+      const csrfHeaders = addCSRFHeader();
+      const data = await new Promise<{ media?: Array<{ id: string; url: string }> }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/admin/medias');
+
+        // Set CSRF headers
+        Object.entries(csrfHeaders).forEach(([key, value]) => {
+          if (value) xhr.setRequestHeader(key, value);
+        });
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const pct = Math.round((event.loaded / event.total) * 95); // Cap at 95% until response
+            setProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const json = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(json);
+            } else {
+              reject(new Error(json.error || t('admin.mediaUploader.uploadFailed')));
+            }
+          } catch {
+            reject(new Error(t('admin.mediaUploader.uploadFailed')));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error(t('admin.mediaUploader.uploadFailed')));
+        xhr.send(formData);
       });
 
-      clearInterval(progressInterval);
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || t('admin.mediaUploader.uploadFailed'));
-      }
-
-      const data = await res.json();
       const uploaded = data.media?.[0];
       if (uploaded) {
         setProgress(100);
@@ -130,7 +146,6 @@ export function MediaUploader({
         onChange(uploaded.url);
       }
     } catch (err) {
-      clearInterval(progressInterval);
       setError(err instanceof Error ? err.message : t('admin.mediaUploader.uploadFailed'));
     } finally {
       setTimeout(() => {

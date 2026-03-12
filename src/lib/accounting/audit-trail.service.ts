@@ -67,11 +67,9 @@ export interface ChangeDetail {
  * FIX (F044): NOTE - This service has TWO logging systems:
  *   1. logAuditEntry() -> writes to AuditLog table (this function)
  *   2. logAuditTrail() -> writes to AuditTrail table (below)
- * Routes inconsistently use one or the other. The recommended approach is:
- *   - Use logAuditTrail() for all new code (it supports per-field tracking)
- *   - logAuditEntry() is kept for backward compatibility
- * TODO: Migrate all logAuditEntry() callers to logAuditTrail() and deprecate this.
- * @deprecated Use logAuditTrail() instead for new code
+ * All callers have been migrated to logAuditTrail(). This function is kept
+ * only for backward compatibility and may be removed in a future cleanup.
+ * @deprecated Use logAuditTrail() instead. No remaining callers as of 2026-03-12.
  */
 export async function logAuditEntry(
   action: AuditAction,

@@ -869,13 +869,12 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
                 placeholder={t('admin.seo.keywordsPlaceholder')}
               />
             </FormField>
-            {/* FIX: FLAW-085 - TODO: Replace plain Input with MediaUploader component for consistent OG image selection */}
             <FormField label={t('admin.seo.ogImage')}>
-              <Input
-                type="text"
+              <MediaUploader
                 value={editOgImage}
-                onChange={(e) => setEditOgImage(e.target.value)}
-                placeholder="/images/og-page.jpg"
+                onChange={(url) => setEditOgImage(url)}
+                context="seo"
+                previewSize="md"
               />
             </FormField>
             <div className="flex gap-3 pt-4 border-t border-slate-200">

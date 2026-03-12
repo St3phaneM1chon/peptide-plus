@@ -1,13 +1,16 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { defaultLocale } from '@/i18n/config';
 
 // GET - Slides actives (public, cache 60s)
-export async function GET() {
+// Accepts ?locale= param to filter translations (returns requested locale + default fallback)
+export async function GET(request: NextRequest) {
   try {
     const now = new Date();
+    const locale = request.nextUrl.searchParams.get('locale') || defaultLocale;
 
     const slides = await prisma.heroSlide.findMany({
       where: {
@@ -19,8 +22,11 @@ export async function GET() {
           { startDate: { lte: now }, endDate: { gte: now } },
         ],
       },
-      // FIX: FLAW-091 - TODO: Accept locale param and filter translations: where: { locale: { in: [locale, 'en'] } }
-      include: { translations: true },
+      include: {
+        translations: {
+          where: { locale: { in: locale !== defaultLocale ? [locale, defaultLocale] : [defaultLocale] } },
+        },
+      },
       orderBy: { sortOrder: 'asc' },
     });
 

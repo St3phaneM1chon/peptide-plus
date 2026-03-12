@@ -45,14 +45,14 @@ function markProductShown(productId: string) {
   }
 }
 
-// TODO: Wire up hasSessionBeenShown for display rule checks
-// function hasSessionBeenShown(): boolean {
-//   try {
-//     return sessionStorage.getItem(UPSELL_SESSION_KEY + '-session') === 'true';
-//   } catch {
-//     return false;
-//   }
-// }
+// Display rule helper: checks if upsell has been shown this session
+function hasSessionBeenShown(): boolean {
+  try {
+    return sessionStorage.getItem(UPSELL_SESSION_KEY + '-session') === 'true';
+  } catch {
+    return false;
+  }
+}
 
 function markSessionShown() {
   try {
@@ -70,9 +70,15 @@ export function UpsellProvider({ children }: { children: ReactNode }) {
   pendingItemRef.current = pendingItem;
 
   const addItemWithUpsell = useCallback((item: CartItemParams) => {
+    // Display rule: skip upsell if already shown this session or for this product
+    const shownProducts = getShownProducts();
+    if (hasSessionBeenShown() || shownProducts[item.productId]) {
+      addItem(item);
+      return;
+    }
     setPendingItem(item);
     setIsModalOpen(true);
-  }, []);
+  }, [addItem]);
 
   const handleDecline = useCallback(
     (item: CartItemParams) => {
