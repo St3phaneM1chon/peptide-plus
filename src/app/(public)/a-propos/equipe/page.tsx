@@ -1,167 +1,104 @@
-import Link from 'next/link';
+'use client';
 
-/**
- * PAGE NOTRE ÉQUIPE - BioCycle Peptides
- * Server Component — no client-side hooks or event handlers needed
- */
+import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function EquipePage() {
+  const { t } = useTranslations();
+
+  const departments = [
+    { icon: '\uD83D\uDD2C', titleKey: 'about.team.scientificTitle', descKey: 'about.team.scientificDesc', borderColor: 'border-emerald-500' },
+    { icon: '\uD83D\uDCE6', titleKey: 'about.team.logisticsTitle', descKey: 'about.team.logisticsDesc', borderColor: 'border-blue-500' },
+    { icon: '\uD83D\uDCAC', titleKey: 'about.team.supportTitle', descKey: 'about.team.supportDesc', borderColor: 'border-orange-500' },
+    { icon: '\uD83D\uDCBB', titleKey: 'about.team.techTitle', descKey: 'about.team.techDesc', borderColor: 'border-violet-500' },
+  ];
+
+  const unitValues = [
+    { icon: '\uD83C\uDFAF', key: 'about.team.precision' },
+    { icon: '\uD83E\uDD1D', key: 'about.team.collaboration' },
+    { icon: '\uD83D\uDCA1', key: 'about.team.innovation' },
+    { icon: '\u2764\uFE0F', key: 'about.team.passion' },
+    { icon: '\uD83D\uDD12', key: 'about.team.integrity' },
+  ];
+
   return (
-    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-white">
       {/* Hero */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
-        color: 'white', 
-        padding: '80px 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Link href="/a-propos" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '14px' }}>
-            ← Retour à À propos
+      <section className="bg-gradient-to-br from-blue-500 to-blue-700 text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
+            &larr; {t('about.backToAbout')}
           </Link>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginTop: '24px', marginBottom: '24px' }}>
-            Notre Équipe
+          <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-6">
+            {t('about.team.title')}
           </h1>
-          <p style={{ fontSize: '20px', lineHeight: 1.6 }}>
-            Une équipe passionnée au service de la recherche scientifique
+          <p className="text-xl leading-relaxed text-blue-100">
+            {t('about.team.subtitle')}
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Content */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
+      <div className="max-w-5xl mx-auto px-6 py-16">
         {/* Introduction */}
-        <section style={{ marginBottom: '48px', textAlign: 'center' }}>
-          <p style={{ fontSize: '18px', lineHeight: 1.8, color: '#4b5563' }}>
-            Chez BioCycle Peptides, nous sommes une équipe diversifiée de scientifiques, 
-            de spécialistes en logistique et de passionnés du service client. Unis par 
-            notre engagement envers la qualité et l&apos;excellence, nous travaillons chaque 
-            jour pour soutenir la communauté scientifique.
+        <section className="mb-12 text-center">
+          <p className="text-lg leading-relaxed text-gray-600 max-w-3xl mx-auto">
+            {t('about.team.introText')}
           </p>
         </section>
 
-        {/* Departments */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-          <DepartmentCard
-            icon="🔬"
-            title="Équipe Scientifique"
-            description="Nos experts en biochimie et pharmacologie supervisent la sélection des produits, vérifient les certificats d'analyse et assurent que chaque peptide répond à nos standards de qualité."
-            color="#10b981"
-          />
-          <DepartmentCard
-            icon="📦"
-            title="Équipe Logistique"
-            description="Spécialistes de la chaîne du froid et de l'emballage sécurisé, ils garantissent que vos produits arrivent en parfait état, avec les conditions de stockage optimales."
-            color="#3b82f6"
-          />
-          <DepartmentCard
-            icon="💬"
-            title="Service Client"
-            description="Disponibles pour répondre à vos questions, notre équipe support vous accompagne de la commande à la livraison et au-delà."
-            color="#CC5500"
-          />
-          <DepartmentCard
-            icon="💻"
-            title="Équipe Technique"
-            description="Nos développeurs et designers travaillent continuellement pour améliorer votre expérience sur notre plateforme et développer de nouvelles fonctionnalités."
-            color="#8b5cf6"
-          />
+        {/* Departments Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+          {departments.map((dept, index) => (
+            <div
+              key={index}
+              className={`p-8 bg-gray-50 rounded-2xl border-s-4 ${dept.borderColor}`}
+            >
+              <div className="text-4xl mb-4">{dept.icon}</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                {t(dept.titleKey)}
+              </h3>
+              <p className="text-sm leading-relaxed text-gray-500">
+                {t(dept.descKey)}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* Values */}
-        <section style={{ 
-          marginTop: '64px', 
-          padding: '40px', 
-          backgroundColor: '#f9fafb', 
-          borderRadius: '16px',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: '#1f2937' }}>
-            Ce qui nous unit
+        {/* What Unites Us */}
+        <section className="p-10 bg-gray-50 rounded-2xl text-center mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            {t('about.team.unitsUsTitle')}
           </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
-            <ValueBadge icon="🎯" text="Précision" />
-            <ValueBadge icon="🤝" text="Collaboration" />
-            <ValueBadge icon="💡" text="Innovation" />
-            <ValueBadge icon="❤️" text="Passion" />
-            <ValueBadge icon="🔒" text="Intégrité" />
+          <div className="flex flex-wrap justify-center gap-4">
+            {unitValues.map((val, index) => (
+              <span
+                key={index}
+                className="flex items-center gap-2 px-5 py-3 bg-white rounded-full border border-gray-200"
+              >
+                <span>{val.icon}</span>
+                <span className="font-medium text-gray-700">{t(val.key)}</span>
+              </span>
+            ))}
           </div>
         </section>
 
         {/* Join Us */}
-        <section style={{ 
-          marginTop: '48px', 
-          padding: '40px', 
-          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', 
-          borderRadius: '16px',
-          textAlign: 'center',
-          color: 'white'
-        }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '16px' }}>
-            Rejoignez notre équipe
+        <section className="p-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl text-center text-white">
+          <h2 className="text-2xl font-semibold mb-4">
+            {t('about.team.joinTitle')}
           </h2>
-          <p style={{ fontSize: '16px', color: '#9ca3af', marginBottom: '24px' }}>
-            Nous sommes toujours à la recherche de talents passionnés par la science 
-            et le service client. Consultez nos offres d&apos;emploi ou envoyez-nous 
-            votre candidature spontanée.
+          <p className="text-gray-400 mb-6 max-w-xl mx-auto">
+            {t('about.team.joinText')}
           </p>
-          <Link 
+          <a
             href="mailto:careers@biocyclepeptides.com"
-            style={{ 
-              display: 'inline-block',
-              padding: '14px 32px', 
-              backgroundColor: '#CC5500', 
-              color: 'white', 
-              borderRadius: '8px',
-              fontWeight: 600,
-              textDecoration: 'none'
-            }}
+            className="inline-block px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-colors"
           >
-            📧 careers@biocyclepeptides.com
-          </Link>
+            careers@biocyclepeptides.com
+          </a>
         </section>
       </div>
-    </div>
-  );
-}
-
-function DepartmentCard({ icon, title, description, color }: { 
-  icon: string; 
-  title: string; 
-  description: string;
-  color: string;
-}) {
-  return (
-    <div style={{ 
-      padding: '32px', 
-      backgroundColor: '#f9fafb', 
-      borderRadius: '16px',
-      borderLeft: `4px solid ${color}`
-    }}>
-      <div style={{ fontSize: '36px', marginBottom: '16px' }}>{icon}</div>
-      <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
-        {title}
-      </h3>
-      <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#6b7280' }}>
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function ValueBadge({ icon, text }: { icon: string; text: string }) {
-  return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '8px',
-      padding: '12px 20px',
-      backgroundColor: 'white',
-      borderRadius: '24px',
-      border: '1px solid #e5e7eb'
-    }}>
-      <span>{icon}</span>
-      <span style={{ fontWeight: 500, color: '#374151' }}>{text}</span>
     </div>
   );
 }

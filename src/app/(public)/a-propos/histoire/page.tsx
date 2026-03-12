@@ -1,132 +1,101 @@
-import Link from 'next/link';
+'use client';
 
-/**
- * PAGE NOTRE HISTOIRE - BioCycle Peptides
- * Server Component — no client-side hooks or event handlers needed
- */
+import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function HistoirePage() {
+  const { t } = useTranslations();
+
   const timeline = [
     {
       year: '2023',
-      title: 'La naissance d\'une idée',
-      description: 'Face au manque de fournisseurs canadiens fiables de peptides de recherche, l\'idée de BioCycle Peptides émerge à Montréal. L\'objectif: créer une source locale de composés de haute qualité pour les chercheurs canadiens.',
-      color: '#CC5500'
+      titleKey: 'about.history.year2023Title',
+      descKey: 'about.history.year2023Desc',
+      color: 'bg-orange-600',
+      ring: 'ring-orange-600',
+      badge: 'bg-orange-600',
     },
     {
       year: '2024',
-      title: 'Fondation et premiers produits',
-      description: 'Lancement officiel de BioCycle Peptides avec une gamme initiale de 50 peptides. Partenariat avec des laboratoires d\'analyse accrédités pour garantir la qualité de chaque lot.',
-      color: '#3b82f6'
+      titleKey: 'about.history.year2024Title',
+      descKey: 'about.history.year2024Desc',
+      color: 'bg-blue-500',
+      ring: 'ring-blue-500',
+      badge: 'bg-blue-500',
     },
     {
       year: '2025',
-      title: 'Expansion du catalogue',
-      description: 'Élargissement à plus de 200 produits incluant peptides, suppléments de recherche et accessoires. Mise en place du programme de fidélité pour récompenser nos clients réguliers.',
-      color: '#10b981'
+      titleKey: 'about.history.year2025Title',
+      descKey: 'about.history.year2025Desc',
+      color: 'bg-emerald-500',
+      ring: 'ring-emerald-500',
+      badge: 'bg-emerald-500',
     },
     {
       year: '2026',
-      title: 'Aujourd\'hui et demain',
-      description: 'Plus de 500 produits disponibles et des milliers de chercheurs servis à travers le monde. Lancement de ressources éducatives et de la communauté BioCycle pour partager les connaissances.',
-      color: '#8b5cf6'
-    }
+      titleKey: 'about.history.year2026Title',
+      descKey: 'about.history.year2026Desc',
+      color: 'bg-violet-500',
+      ring: 'ring-violet-500',
+      badge: 'bg-violet-500',
+    },
   ];
 
   return (
-    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-white">
       {/* Hero */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', 
-        color: 'white', 
-        padding: '80px 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Link href="/a-propos" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '14px' }}>
-            ← Retour à À propos
+      <section className="bg-gradient-to-br from-gray-800 to-gray-900 text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
+            &larr; {t('about.backToAbout')}
           </Link>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginTop: '24px', marginBottom: '24px' }}>
-            Notre Histoire
+          <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-6">
+            {t('about.history.title')}
           </h1>
-          <p style={{ fontSize: '20px', lineHeight: 1.6, color: '#d1d5db' }}>
-            De l&apos;idée à la réalité: le parcours de BioCycle Peptides
+          <p className="text-xl leading-relaxed text-gray-300">
+            {t('about.history.subtitle')}
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Timeline */}
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '64px 24px' }}>
-        <div style={{ position: 'relative' }}>
+      <div className="max-w-3xl mx-auto px-6 py-16">
+        <div className="relative">
           {/* Vertical line */}
-          <div style={{ 
-            position: 'absolute', 
-            left: '24px', 
-            top: '0', 
-            bottom: '0', 
-            width: '2px', 
-            backgroundColor: '#e5e7eb' 
-          }} />
+          <div className="absolute start-6 top-0 bottom-0 w-0.5 bg-gray-200" />
 
           {timeline.map((item, index) => (
-            <div key={index} style={{ 
-              position: 'relative', 
-              paddingLeft: '72px', 
-              paddingBottom: index === timeline.length - 1 ? '0' : '48px' 
-            }}>
+            <div
+              key={item.year}
+              className={`relative ps-[72px] ${index < timeline.length - 1 ? 'pb-12' : ''}`}
+            >
               {/* Dot */}
-              <div style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '4px',
-                width: '24px', 
-                height: '24px', 
-                borderRadius: '50%', 
-                backgroundColor: item.color,
-                border: '4px solid white',
-                boxShadow: '0 0 0 2px ' + item.color
-              }} />
+              <div
+                className={`absolute start-3 top-1 w-6 h-6 rounded-full ${item.color} border-4 border-white ring-2 ${item.ring}`}
+              />
 
               {/* Year badge */}
-              <div style={{ 
-                display: 'inline-block',
-                padding: '4px 12px', 
-                backgroundColor: item.color, 
-                color: 'white', 
-                borderRadius: '16px',
-                fontSize: '14px',
-                fontWeight: 600,
-                marginBottom: '12px'
-              }}>
+              <span className={`inline-block px-3 py-1 ${item.badge} text-white rounded-full text-sm font-semibold mb-3`}>
                 {item.year}
-              </div>
+              </span>
 
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
-                {item.title}
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                {t(item.titleKey)}
               </h3>
-              <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#6b7280' }}>
-                {item.description}
+              <p className="text-base leading-relaxed text-gray-500">
+                {t(item.descKey)}
               </p>
             </div>
           ))}
         </div>
 
         {/* Future */}
-        <div style={{ 
-          marginTop: '64px', 
-          padding: '32px', 
-          backgroundColor: '#f0fdf4', 
-          borderRadius: '16px',
-          border: '1px solid #86efac',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: '#166534' }}>
-            🚀 L&apos;avenir
+        <div className="mt-16 p-8 bg-green-50 rounded-2xl border border-green-300 text-center">
+          <h3 className="text-xl font-semibold text-green-800 mb-3">
+            {t('about.history.futureTitle')}
           </h3>
-          <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#166534' }}>
-            Nous continuons d&apos;innover pour offrir les meilleurs produits et services à la communauté 
-            scientifique. Nouveaux peptides, nouvelles ressources éducatives, et toujours plus de 
-            qualité à chaque étape.
+          <p className="text-base leading-relaxed text-green-700">
+            {t('about.history.futureText')}
           </p>
         </div>
       </div>

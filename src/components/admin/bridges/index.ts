@@ -19,3 +19,9 @@ export {
 export {
   MediaMarketingBridgeCard,
 } from './MediaBridgeCards';
+
+export { RecentOrdersWidget } from './RecentOrdersWidget';
+export { CustomerStatsWidget } from './CustomerStatsWidget';
+export { AccountingSummaryWidget } from './AccountingSummaryWidget';
+export { LoyaltyBadgeWidget } from './LoyaltyBadgeWidget';
+export { ActivityTimelineWidget } from './ActivityTimelineWidget';

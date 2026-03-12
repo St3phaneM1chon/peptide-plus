@@ -1,114 +1,63 @@
-import Link from 'next/link';
+'use client';
 
-/**
- * PAGE NOS VALEURS - BioCycle Peptides
- * Server Component — no client-side hooks or event handlers needed
- */
+import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function ValeursPage() {
+  const { t } = useTranslations();
+
   const values = [
-    {
-      icon: '🔬',
-      title: 'Rigueur scientifique',
-      description: 'Chaque produit est soumis à des tests rigoureux par des laboratoires tiers indépendants. Nous ne faisons aucun compromis sur la qualité et la pureté de nos peptides.',
-      color: '#3b82f6'
-    },
-    {
-      icon: '🤝',
-      title: 'Intégrité',
-      description: 'Transparence totale sur nos produits, nos méthodes et nos certifications. Nous fournissons une documentation complète pour chaque lot produit.',
-      color: '#10b981'
-    },
-    {
-      icon: '💡',
-      title: 'Innovation',
-      description: 'Nous restons à la pointe de la recherche pour offrir les derniers peptides et composés demandés par la communauté scientifique.',
-      color: '#f59e0b'
-    },
-    {
-      icon: '🌍',
-      title: 'Responsabilité',
-      description: 'Engagement envers une utilisation éthique de nos produits. Nous promouvons activement la recherche responsable et le respect des réglementations.',
-      color: '#8b5cf6'
-    },
-    {
-      icon: '⚡',
-      title: 'Excellence du service',
-      description: 'Livraison rapide, emballage sécurisé et support client réactif. Votre satisfaction et la réussite de vos recherches sont notre priorité.',
-      color: '#ef4444'
-    },
-    {
-      icon: '📚',
-      title: 'Éducation',
-      description: 'Nous partageons nos connaissances à travers des guides, des FAQ détaillées et des ressources pour aider nos clients à utiliser nos produits de manière optimale.',
-      color: '#06b6d4'
-    }
+    { icon: '\uD83D\uDD2C', titleKey: 'about.values.scientificRigorTitle', descKey: 'about.values.scientificRigorDesc', borderColor: 'border-blue-500' },
+    { icon: '\uD83E\uDD1D', titleKey: 'about.values.integrityTitle', descKey: 'about.values.integrityDesc', borderColor: 'border-emerald-500' },
+    { icon: '\uD83D\uDCA1', titleKey: 'about.values.innovationTitle', descKey: 'about.values.innovationDesc', borderColor: 'border-amber-500' },
+    { icon: '\uD83C\uDF0D', titleKey: 'about.values.responsibilityTitle', descKey: 'about.values.responsibilityDesc', borderColor: 'border-violet-500' },
+    { icon: '\u26A1', titleKey: 'about.values.serviceTitle', descKey: 'about.values.serviceDesc', borderColor: 'border-red-500' },
+    { icon: '\uD83D\uDCDA', titleKey: 'about.values.educationTitle', descKey: 'about.values.educationDesc', borderColor: 'border-cyan-500' },
   ];
 
   return (
-    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-white">
       {/* Hero */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
-        color: 'white', 
-        padding: '80px 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Link href="/a-propos" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '14px' }}>
-            ← Retour à À propos
+      <section className="bg-gradient-to-br from-violet-500 to-violet-700 text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
+            &larr; {t('about.backToAbout')}
           </Link>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginTop: '24px', marginBottom: '24px' }}>
-            Nos Valeurs
+          <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-6">
+            {t('about.values.title')}
           </h1>
-          <p style={{ fontSize: '20px', lineHeight: 1.6 }}>
-            Les principes qui guident chacune de nos actions
+          <p className="text-xl leading-relaxed text-violet-100">
+            {t('about.values.subtitle')}
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* Content */}
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '64px 24px' }}>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '32px' 
-        }}>
+      {/* Values Grid */}
+      <div className="max-w-5xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {values.map((value, index) => (
-            <div 
+            <div
               key={index}
-              style={{ 
-                padding: '32px', 
-                backgroundColor: '#f9fafb', 
-                borderRadius: '16px',
-                borderTop: `4px solid ${value.color}`
-              }}
+              className={`p-8 bg-gray-50 rounded-2xl border-t-4 ${value.borderColor}`}
             >
-              <div style={{ fontSize: '40px', marginBottom: '20px' }}>{value.icon}</div>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
-                {value.title}
+              <div className="text-4xl mb-5">{value.icon}</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                {t(value.titleKey)}
               </h3>
-              <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#6b7280' }}>
-                {value.description}
+              <p className="text-sm leading-relaxed text-gray-500">
+                {t(value.descKey)}
               </p>
             </div>
           ))}
         </div>
 
         {/* Quote */}
-        <div style={{ 
-          marginTop: '64px', 
-          padding: '40px', 
-          backgroundColor: '#1f2937', 
-          borderRadius: '16px',
-          textAlign: 'center',
-          color: 'white'
-        }}>
-          <p style={{ fontSize: '24px', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '16px' }}>
-            &ldquo;La qualité n&apos;est jamais un accident; c&apos;est toujours le résultat d&apos;un effort intelligent.&rdquo;
+        <div className="mt-16 p-10 bg-gray-800 rounded-2xl text-center text-white">
+          <p className="text-2xl italic leading-relaxed mb-4">
+            &ldquo;{t('about.values.quoteText')}&rdquo;
           </p>
-          <p style={{ fontSize: '14px', color: '#9ca3af' }}>
-            — Notre philosophie chez BioCycle Peptides
+          <p className="text-sm text-gray-400">
+            &mdash; {t('about.values.quoteAuthor')}
           </p>
         </div>
       </div>

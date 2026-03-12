@@ -592,6 +592,7 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
           { href: '/admin/monitoring', labelKey: 'admin.nav.monitoring', icon: Monitor },
+          { href: '/admin/system/crons', labelKey: 'admin.nav.cronMonitoring', icon: Clock },
           { href: '/admin/webhooks', labelKey: 'admin.nav.webhooks', icon: ArrowRightLeft },
           { href: '/admin/analytics', labelKey: 'admin.nav.analytics', icon: BarChart3 },
           { href: '/admin/analytics/cross-module', labelKey: 'admin.nav.crossModuleAnalytics', icon: BarChart2 },
@@ -631,6 +632,6 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/media')) return 'media';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
   if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper')) return 'crm';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/analytics') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/analytics') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/system')) return 'system';
   return 'dashboard';
 }

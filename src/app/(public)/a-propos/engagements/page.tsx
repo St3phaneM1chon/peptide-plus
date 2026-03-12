@@ -1,186 +1,110 @@
-import Link from 'next/link';
+'use client';
 
-/**
- * PAGE NOS ENGAGEMENTS - BioCycle Peptides
- * Server Component — no client-side hooks or event handlers needed
- */
+import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function EngagementsPage() {
+  const { t } = useTranslations();
+
+  const engagements = [
+    {
+      icon: '\uD83C\uDFC6',
+      titleKey: 'about.engagements.qualityTitle',
+      itemPrefix: 'about.engagements.qualityItems',
+      count: 5,
+      color: 'text-orange-600',
+      bg: 'bg-orange-50',
+    },
+    {
+      icon: '\u26A1',
+      titleKey: 'about.engagements.serviceTitle',
+      itemPrefix: 'about.engagements.serviceItems',
+      count: 5,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+    },
+    {
+      icon: '\uD83D\uDC41\uFE0F',
+      titleKey: 'about.engagements.transparencyTitle',
+      itemPrefix: 'about.engagements.transparencyItems',
+      count: 5,
+      color: 'text-violet-600',
+      bg: 'bg-violet-50',
+    },
+    {
+      icon: '\uD83C\uDF31',
+      titleKey: 'about.engagements.environmentTitle',
+      itemPrefix: 'about.engagements.environmentItems',
+      count: 5,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+    },
+    {
+      icon: '\u2696\uFE0F',
+      titleKey: 'about.engagements.ethicsTitle',
+      itemPrefix: 'about.engagements.ethicsItems',
+      count: 5,
+      color: 'text-red-600',
+      bg: 'bg-red-50',
+    },
+  ];
+
   return (
-    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-white">
       {/* Hero */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-        color: 'white', 
-        padding: '80px 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Link href="/a-propos" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '14px' }}>
-            ← Retour à À propos
+      <section className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
+            &larr; {t('about.backToAbout')}
           </Link>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginTop: '24px', marginBottom: '24px' }}>
-            Nos Engagements
+          <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-6">
+            {t('about.engagements.title')}
           </h1>
-          <p style={{ fontSize: '20px', lineHeight: 1.6 }}>
-            Des promesses concrètes pour une recherche de qualité
+          <p className="text-xl leading-relaxed text-emerald-100">
+            {t('about.engagements.subtitle')}
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Content */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 24px' }}>
-        {/* Engagement 1: Qualité */}
-        <EngagementSection
-          icon="🏆"
-          title="Engagement Qualité"
-          color="#CC5500"
-          items={[
-            'Pureté minimale garantie de 99% sur tous nos peptides',
-            'Tests par laboratoires tiers indépendants et accrédités',
-            'Certificat d\'analyse (COA) fourni avec chaque produit',
-            'Analyses HPLC et spectrométrie de masse disponibles',
-            'Traçabilité complète de chaque lot de fabrication'
-          ]}
-        />
-
-        {/* Engagement 2: Service */}
-        <EngagementSection
-          icon="⚡"
-          title="Engagement Service"
-          color="#3b82f6"
-          items={[
-            'Expédition sous 24-48h pour les commandes avant 14h',
-            'Emballage sécurisé et discret avec cold packs si nécessaire',
-            'Support client réactif par courriel et chat',
-            'Suivi de commande en temps réel',
-            'Retours et remboursements sans tracas pour produits défectueux'
-          ]}
-        />
-
-        {/* Engagement 3: Transparence */}
-        <EngagementSection
-          icon="👁️"
-          title="Engagement Transparence"
-          color="#8b5cf6"
-          items={[
-            'Prix clairs et sans frais cachés',
-            'Information complète sur chaque produit',
-            'Politique de confidentialité respectueuse de vos données',
-            'Communication honnête sur les délais et la disponibilité',
-            'Résultats de tests accessibles pour chaque lot'
-          ]}
-        />
-
-        {/* Engagement 4: Environnement */}
-        <EngagementSection
-          icon="🌱"
-          title="Engagement Environnemental"
-          color="#10b981"
-          items={[
-            'Réduction des emballages plastiques au minimum nécessaire',
-            'Utilisation de matériaux recyclables quand possible',
-            'Optimisation des routes de livraison pour réduire l\'empreinte carbone',
-            'Gestion responsable des déchets de laboratoire',
-            'Partenariat avec des fournisseurs responsables'
-          ]}
-        />
-
-        {/* Engagement 5: Éthique */}
-        <EngagementSection
-          icon="⚖️"
-          title="Engagement Éthique"
-          color="#ef4444"
-          items={[
-            'Promotion exclusive de l\'usage recherche de nos produits',
-            'Vérification de la légitimité des commandes importantes',
-            'Respect des réglementations canadiennes et internationales',
-            'Refus de vente en cas de doute sur l\'utilisation prévue',
-            'Éducation des clients sur l\'usage responsable'
-          ]}
-        />
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        {engagements.map((eng, idx) => (
+          <section key={idx} className="mb-12">
+            <div className="flex items-center gap-4 mb-5">
+              <div className={`w-12 h-12 ${eng.bg} rounded-xl flex items-center justify-center text-2xl`}>
+                {eng.icon}
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {t(eng.titleKey)}
+              </h2>
+            </div>
+            <ul className="space-y-3 ps-6">
+              {Array.from({ length: eng.count }, (_, i) => (
+                <li key={i} className="relative ps-6 text-base leading-relaxed text-gray-600">
+                  <span className={`absolute start-0 font-bold ${eng.color}`}>{'\u2713'}</span>
+                  {t(`${eng.itemPrefix}${i + 1}`)}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
 
         {/* CTA */}
-        <div style={{ 
-          marginTop: '64px', 
-          padding: '40px', 
-          backgroundColor: '#1f2937', 
-          borderRadius: '16px',
-          textAlign: 'center',
-          color: 'white'
-        }}>
-          <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '16px' }}>
-            Des questions sur nos engagements?
+        <div className="mt-16 p-10 bg-gray-800 rounded-2xl text-center text-white">
+          <h3 className="text-2xl font-semibold mb-4">
+            {t('about.engagements.ctaTitle')}
           </h3>
-          <p style={{ fontSize: '16px', color: '#9ca3af', marginBottom: '24px' }}>
-            Notre équipe est disponible pour répondre à toutes vos questions.
+          <p className="text-gray-400 mb-6">
+            {t('about.engagements.ctaText')}
           </p>
-          <Link 
+          <Link
             href="/contact"
-            style={{ 
-              display: 'inline-block',
-              padding: '14px 32px', 
-              backgroundColor: '#CC5500', 
-              color: 'white', 
-              borderRadius: '8px',
-              fontWeight: 600,
-              textDecoration: 'none'
-            }}
+            className="inline-block px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-colors"
           >
-            Nous contacter →
+            {t('about.engagements.ctaButton')} &rarr;
           </Link>
         </div>
       </div>
     </div>
-  );
-}
-
-function EngagementSection({ icon, title, color, items }: { 
-  icon: string; 
-  title: string; 
-  color: string; 
-  items: string[] 
-}) {
-  return (
-    <section style={{ marginBottom: '48px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ 
-          width: '48px', 
-          height: '48px', 
-          backgroundColor: color + '20',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px'
-        }}>
-          {icon}
-        </div>
-        <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#1f2937' }}>
-          {title}
-        </h2>
-      </div>
-      <ul style={{ paddingLeft: '24px' }}>
-        {items.map((item, index) => (
-          <li key={index} style={{ 
-            fontSize: '15px', 
-            lineHeight: 1.8, 
-            color: '#4b5563',
-            marginBottom: '8px',
-            listStyleType: 'none',
-            position: 'relative',
-            paddingLeft: '24px'
-          }}>
-            <span style={{ 
-              position: 'absolute', 
-              left: 0, 
-              color: color,
-              fontWeight: 'bold'
-            }}>✓</span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

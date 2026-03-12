@@ -1,10 +1,8 @@
 'use client';
-/**
- * PAGE RÉFÉRENCES
- */
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface ClientReference {
   id: string;
@@ -20,6 +18,7 @@ interface ClientReference {
 }
 
 export default function ReferencesPage() {
+  const { t } = useTranslations();
   const [byIndustry, setByIndustry] = useState<Record<string, ClientReference[]>>({});
   const [loading, setLoading] = useState(true);
 
@@ -40,71 +39,48 @@ export default function ReferencesPage() {
   const industries = Object.keys(byIndustry);
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section
-        style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
-          padding: '80px 24px',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Nos références
+      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            {t('references.title')}
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Plus de 500 entreprises nous font confiance pour former leurs équipes.
+          <p className="text-lg text-gray-300 leading-relaxed">
+            {t('references.heroText')}
           </p>
         </div>
       </section>
 
-      {/* Clients by industry */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Clients by Industry */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
-                Chargement des références...
-              </p>
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">{t('references.loading')}</p>
             </div>
           ) : industries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
-                Aucune référence disponible pour le moment.
-              </p>
+            <div className="text-center py-16">
+              <p className="text-gray-500">{t('references.noReferences')}</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div className="flex flex-col gap-8">
               {industries.map((industry, i) => (
-                <div
-                  key={i}
-                  style={{
-                    backgroundColor: 'white',
-                    borderRadius: '16px',
-                    padding: '32px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-500)' }}>
+                <div key={i} className="bg-white rounded-2xl p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">
                       {industry}
                     </h2>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
-                      {byIndustry[industry].length} clients
+                    <span className="text-sm text-gray-400">
+                      {byIndustry[industry].length} {t('references.clients')}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  <div className="flex flex-wrap gap-3">
                     {byIndustry[industry].map((client, j) => (
                       <span
                         key={j}
-                        style={{
-                          padding: '10px 16px',
-                          backgroundColor: 'var(--gray-50)',
-                          borderRadius: '8px',
-                          fontSize: '14px',
-                          color: 'var(--gray-500)',
-                        }}
+                        className="px-4 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-700"
                       >
                         {client.name}
                       </span>
@@ -117,39 +93,42 @@ export default function ReferencesPage() {
         </div>
       </section>
 
-      {/* Summary */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '32px', marginBottom: '40px' }}>
+      {/* Stats Summary */}
+      <section className="bg-white py-16 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-10">
             <div>
-              <p style={{ fontSize: '40px', fontWeight: 700, color: 'var(--gray-500)' }}>500+</p>
-              <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>Entreprises clientes</p>
+              <p className="text-4xl font-bold text-gray-900">500+</p>
+              <p className="text-sm text-gray-500 mt-1">{t('references.statsResearchers')}</p>
             </div>
             <div>
-              <p style={{ fontSize: '40px', fontWeight: 700, color: 'var(--gray-500)' }}>8</p>
-              <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>Secteurs d'activité</p>
+              <p className="text-4xl font-bold text-gray-900">12</p>
+              <p className="text-sm text-gray-500 mt-1">{t('references.statsCountries')}</p>
             </div>
             <div>
-              <p style={{ fontSize: '40px', fontWeight: 700, color: 'var(--gray-500)' }}>12</p>
-              <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>Pays</p>
+              <p className="text-4xl font-bold text-gray-900">500+</p>
+              <p className="text-sm text-gray-500 mt-1">{t('references.statsProducts')}</p>
             </div>
           </div>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            Cette liste n'est pas exhaustive. Contactez-nous pour des références spécifiques à votre secteur.
+          <p className="text-sm text-gray-400">
+            {t('references.disclaimer')}
           </p>
         </div>
       </section>
 
       {/* CTA */}
-      <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-          Besoin de références dans votre secteur?
+      <section className="py-16 px-6 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+          {t('references.needRefsTitle')}
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-          Nous pouvons vous mettre en contact avec des clients similaires.
+        <p className="text-gray-600 mb-6">
+          {t('references.needRefsText')}
         </p>
-        <Link href="/contact" className="btn btn-primary" style={{ padding: '14px 32px' }}>
-          Contactez-nous
+        <Link
+          href="/contact"
+          className="inline-block px-8 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+        >
+          {t('references.contactUs')}
         </Link>
       </section>
     </div>

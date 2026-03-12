@@ -28,19 +28,14 @@ export interface CronJobStats {
 
 // ---------------------------------------------------------------------------
 // Known cron intervals (milliseconds)
+// T4-1: Now sourced from cron-registry.ts for all 34 cron jobs
 // ---------------------------------------------------------------------------
 
-const CRON_INTERVALS: Record<string, number> = {
-  'update-exchange-rates': 6 * 60 * 60 * 1000,  // every 6 hours
-  'abandoned-cart': 2 * 60 * 60 * 1000,          // every 2 hours
-  'birthday-emails': 24 * 60 * 60 * 1000,        // daily at 9am
-  'points-expiring': 24 * 60 * 60 * 1000,        // daily
-  'stock-alerts': 60 * 60 * 1000,                 // every hour
-  'price-drop-alerts': 24 * 60 * 60 * 1000,       // daily
-  'release-reservations': 60 * 60 * 1000,          // every hour
-  'satisfaction-survey': 24 * 60 * 60 * 1000,      // daily
-  'welcome-series': 24 * 60 * 60 * 1000,           // daily
-};
+import { CRON_REGISTRY } from '@/lib/cron-registry';
+
+const CRON_INTERVALS: Record<string, number> = Object.fromEntries(
+  CRON_REGISTRY.map(c => [c.name, c.expectedIntervalMs])
+);
 
 // In-memory fallback
 const memStats = new Map<string, {

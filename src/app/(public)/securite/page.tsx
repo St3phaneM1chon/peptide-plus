@@ -1,118 +1,69 @@
-/**
- * PAGE SÉCURITÉ
- */
+'use client';
 
 import Link from 'next/link';
-
-export const metadata = {
-  title: 'Sécurité',
-  description: 'Découvrez comment BioCycle Peptides protège vos données et assure la sécurité de sa plateforme. Chiffrement, authentification et conformité.',
-  openGraph: {
-    title: 'Sécurité | BioCycle Peptides',
-    description: 'Comment BioCycle Peptides protège vos données et assure la sécurité de sa plateforme.',
-    url: 'https://biocyclepeptides.com/securite',
-    siteName: 'BioCycle Peptides',
-    type: 'website',
-  },
-};
-
-const securityFeatures = [
-  {
-    icon: '🔐',
-    title: 'Chiffrement de bout en bout',
-    description: 'Toutes les données sont chiffrées en transit (TLS 1.3) et au repos (AES-256).',
-  },
-  {
-    icon: '🛡️',
-    title: 'Authentification forte',
-    description: 'Authentification à deux facteurs (2FA) obligatoire et support des clés de sécurité.',
-  },
-  {
-    icon: '🔍',
-    title: 'Audits réguliers',
-    description: 'Tests de pénétration annuels par des firmes indépendantes certifiées.',
-  },
-  {
-    icon: '📊',
-    title: 'Surveillance continue',
-    description: 'Monitoring 24/7 des systèmes et détection des intrusions en temps réel.',
-  },
-  {
-    icon: '💾',
-    title: 'Sauvegardes sécurisées',
-    description: 'Sauvegardes chiffrées quotidiennes avec rétention de 30 jours.',
-  },
-  {
-    icon: '🌐',
-    title: 'Infrastructure cloud',
-    description: 'Hébergement sur Microsoft Azure avec conformité SOC 2 et ISO 27001.',
-  },
-];
-
-const certifications = [
-  { name: 'SOC 2 Type II', status: 'Certifié', icon: '✅' },
-  { name: 'ISO 27001', status: 'Certifié', icon: '✅' },
-  { name: 'PCI DSS', status: 'Conforme', icon: '✅' },
-  { name: 'RGPD', status: 'Conforme', icon: '✅' },
-  { name: 'PIPEDA', status: 'Conforme', icon: '✅' },
-  { name: 'Loi 25', status: 'Conforme', icon: '✅' },
-];
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function SecurityPage() {
+  const { t } = useTranslations();
+
+  const securityFeatures = [
+    { icon: '\uD83D\uDD10', titleKey: 'security.encryption', descKey: 'security.encryptionDesc' },
+    { icon: '\uD83D\uDEE1\uFE0F', titleKey: 'security.authStrong', descKey: 'security.authStrongDesc' },
+    { icon: '\uD83D\uDD0D', titleKey: 'security.audits', descKey: 'security.auditsDesc' },
+    { icon: '\uD83D\uDCCA', titleKey: 'security.monitoring', descKey: 'security.monitoringDesc' },
+    { icon: '\uD83D\uDCBE', titleKey: 'security.backups', descKey: 'security.backupsDesc' },
+    { icon: '\uD83C\uDF10', titleKey: 'security.cloudInfra', descKey: 'security.cloudInfraDesc' },
+  ];
+
+  const certifications = [
+    { name: 'SOC 2 Type II', statusKey: 'security.certified' },
+    { name: 'ISO 27001', statusKey: 'security.certified' },
+    { name: 'PCI DSS', statusKey: 'security.compliant' },
+    { name: 'RGPD', statusKey: 'security.compliant' },
+    { name: 'PIPEDA', statusKey: 'security.compliant' },
+    { name: 'Loi 25', statusKey: 'security.compliant' },
+  ];
+
+  const tips = [
+    'security.tip1',
+    'security.tip2',
+    'security.tip3',
+    'security.tip4',
+    'security.tip5',
+    'security.tip6',
+  ];
+
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section
-        style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
-          padding: '80px 24px',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <span style={{ fontSize: '48px', display: 'block', marginBottom: '24px' }}>🔒</span>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Sécurité et conformité
+      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <span className="text-5xl block mb-6">{'\uD83D\uDD12'}</span>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            {t('security.title')}
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            La protection de vos données est notre priorité absolue. Découvrez les mesures 
-            que nous mettons en place pour garantir la sécurité de notre plateforme.
+          <p className="text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
+            {t('security.heroText')}
           </p>
         </div>
       </section>
 
-      {/* Features */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '48px', color: 'var(--gray-500)' }}>
-            Nos mesures de sécurité
+      {/* Security Features */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
+            {t('security.featuresTitle')}
           </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '24px',
-            }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {securityFeatures.map((feature, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '12px',
-                  padding: '32px',
-                  display: 'flex',
-                  gap: '16px',
-                }}
-              >
-                <span style={{ fontSize: '32px' }}>{feature.icon}</span>
+              <div key={i} className="bg-white rounded-xl p-8 flex gap-4">
+                <span className="text-3xl shrink-0">{feature.icon}</span>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
-                    {feature.title}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {t(feature.titleKey)}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6 }}>
-                    {feature.description}
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {t(feature.descKey)}
                   </p>
                 </div>
               </div>
@@ -122,65 +73,35 @@ export default function SecurityPage() {
       </section>
 
       {/* Certifications */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
-            Certifications et conformité
+      <section className="bg-white py-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
+            {t('security.certificationsTitle')}
           </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: '16px',
-            }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {certifications.map((cert, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: '24px',
-                  backgroundColor: 'var(--gray-50)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                }}
-              >
-                <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>{cert.icon}</span>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  {cert.name}
-                </h3>
-                <span style={{ fontSize: '12px', color: '#22c55e' }}>{cert.status}</span>
+              <div key={i} className="p-6 bg-gray-50 rounded-xl text-center">
+                <span className="text-2xl block mb-2">{'\u2705'}</span>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">{cert.name}</h3>
+                <span className="text-xs text-green-500 font-medium">{t(cert.statusKey)}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Best practices */}
-      <section style={{ padding: '64px 24px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: 'var(--gray-500)' }}>
-            Bonnes pratiques recommandées
+      {/* Best Practices */}
+      <section className="py-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+            {t('security.bestPracticesTitle')}
           </h2>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px' }}>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {[
-                'Activez l\'authentification à deux facteurs sur votre compte',
-                'Utilisez un mot de passe unique et complexe',
-                'Ne partagez jamais vos identifiants de connexion',
-                'Déconnectez-vous des appareils publics après utilisation',
-                'Signalez immédiatement toute activité suspecte',
-                'Gardez votre navigateur et vos appareils à jour',
-              ].map((tip, i) => (
-                <li
-                  key={i}
-                  style={{
-                    padding: '16px 0',
-                    borderBottom: i < 5 ? '1px solid var(--gray-100)' : 'none',
-                    fontSize: '15px',
-                    color: 'var(--gray-500)',
-                  }}
-                >
-                  ✓ {tip}
+          <div className="bg-white rounded-xl p-8">
+            <ul className="divide-y divide-gray-100">
+              {tips.map((tipKey, i) => (
+                <li key={i} className="py-4 text-base text-gray-700 flex items-start gap-3">
+                  <span className="text-green-500 shrink-0 mt-0.5">{'\u2713'}</span>
+                  {t(tipKey)}
                 </li>
               ))}
             </ul>
@@ -188,18 +109,20 @@ export default function SecurityPage() {
         </div>
       </section>
 
-      {/* Bug bounty */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-            Programme de Bug Bounty
+      {/* Bug Bounty */}
+      <section className="bg-white py-16 px-6 text-center">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {t('security.bugBountyTitle')}
           </h2>
-          <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-            Vous avez découvert une faille de sécurité? Nous récompensons les chercheurs 
-            qui nous aident à améliorer notre sécurité de manière responsable.
+          <p className="text-gray-600 mb-6">
+            {t('security.bugBountyText')}
           </p>
-          <Link href="/contact?subject=security" className="btn btn-primary" style={{ padding: '14px 32px' }}>
-            Signaler une vulnérabilité
+          <Link
+            href="/contact?subject=security"
+            className="inline-block px-8 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+          >
+            {t('security.reportVulnerability')}
           </Link>
         </div>
       </section>
