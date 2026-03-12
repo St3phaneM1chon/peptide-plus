@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Nos Clients | Formations Pro',
-  description: 'Découvrez les entreprises qui nous font confiance et leurs témoignages.',
+  title: 'Nos clients',
+  description: 'Découvrez les entreprises et chercheurs qui font confiance à BioCycle Peptides pour leurs peptides de recherche.',
+  openGraph: {
+    title: 'Nos clients | BioCycle Peptides',
+    description: 'Les entreprises et chercheurs qui font confiance à BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/clients',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const clients = [

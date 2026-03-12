@@ -8,15 +8,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
-import { getServerLocale, createServerTranslator } from '@/i18n/server';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
 import type { Locale } from '@/i18n/config';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 
-// ISR: revalidate every 5 minutes
-// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
-// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes (uses getStaticLocale to avoid cookies/headers)
+export const revalidate = 300;
 
 // ---------------------------------------------------------------------------
 // Metadata
@@ -137,13 +135,7 @@ function formatDate(date: Date | null): string {
 // ---------------------------------------------------------------------------
 
 export default async function BlogPage() {
-  let locale: string;
-  try {
-    locale = await getServerLocale();
-  } catch (error: unknown) {
-    console.error('Failed to get server locale, falling back to "en":', error instanceof Error ? error.message : error);
-    locale = 'en';
-  }
+  const locale = getStaticLocale();
 
   const t = createServerTranslator(locale as Locale);
 

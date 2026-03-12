@@ -22,22 +22,31 @@ export interface TaxBreakdown {
   registrationNumber?: string;
 }
 
-// Canadian provincial tax rates (2026)
-const PROVINCE_TAX: Record<string, { gst: number; pst: number; hst: number; qst: number; name: string }> = {
-  AB: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Alberta' },
-  BC: { gst: 5, pst: 7, hst: 0, qst: 0, name: 'Colombie-Britannique' },
-  MB: { gst: 5, pst: 7, hst: 0, qst: 0, name: 'Manitoba' },
-  NB: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Nouveau-Brunswick' },
-  NL: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Terre-Neuve' },
-  NS: { gst: 0, pst: 0, hst: 14, qst: 0, name: 'Nouvelle-Écosse' },
-  NT: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Territoires du N.-O.' },
-  NU: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Nunavut' },
-  ON: { gst: 0, pst: 0, hst: 13, qst: 0, name: 'Ontario' },
-  PE: { gst: 0, pst: 0, hst: 15, qst: 0, name: 'Île-du-Prince-Édouard' },
-  QC: { gst: 5, pst: 0, hst: 0, qst: 9.975, name: 'Québec' },
-  SK: { gst: 5, pst: 6, hst: 0, qst: 0, name: 'Saskatchewan' },
-  YT: { gst: 5, pst: 0, hst: 0, qst: 0, name: 'Yukon' },
-};
+/**
+ * A8-P2-006 FIX: Derive PROVINCE_TAX from the canonical PROVINCIAL_TAX_RATES
+ * in canadian-tax-config.ts (single source of truth). Previously this was a
+ * separate hardcoded table that could drift out of sync.
+ */
+import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
+
+const PROVINCE_TAX: Record<string, { gst: number; pst: number; hst: number; qst: number; name: string }> = (() => {
+  const map: Record<string, { gst: number; pst: number; hst: number; qst: number; name: string }> = {};
+  const seen = new Set<string>();
+  // Iterate in reverse so the latest effectiveDate wins for each province
+  for (let i = PROVINCIAL_TAX_RATES.length - 1; i >= 0; i--) {
+    const p = PROVINCIAL_TAX_RATES[i];
+    if (seen.has(p.provinceCode)) continue;
+    seen.add(p.provinceCode);
+    map[p.provinceCode] = {
+      gst: p.hstRate > 0 ? 0 : p.gstRate,
+      pst: (p.pstName === 'PST' || p.pstName === 'RST') ? p.pstRate : 0,
+      hst: p.hstRate,
+      qst: p.pstName === 'QST' ? p.pstRate : 0,
+      name: p.provinceNameFr,
+    };
+  }
+  return map;
+})();
 
 export function calculateTax(
   subtotal: number,
@@ -46,7 +55,18 @@ export function calculateTax(
   tvqNumber?: string
 ): TaxResult {
   const prov = province.toUpperCase();
-  const rates = PROVINCE_TAX[prov] || PROVINCE_TAX.QC; // Default to QC
+  const rates = PROVINCE_TAX[prov];
+  // A8-P2-001 FIX: Unknown provinces get GST-only (5%) instead of QC rates
+  if (!rates) {
+    console.warn(`[canadian-tax-engine] Unknown province code "${province}" — using GST-only fallback`);
+    const gst = round(subtotal * 5 / 100);
+    return {
+      subtotal, gst, pst: 0, hst: 0, qst: 0,
+      totalTax: gst, total: round(subtotal + gst),
+      province: prov,
+      breakdown: [{ name: 'TPS / GST', rate: 5, amount: gst, registrationNumber: tpsNumber }],
+    };
+  }
 
   const breakdown: TaxBreakdown[] = [];
   let gst = 0, pst = 0, hst = 0, qst = 0;
@@ -96,7 +116,11 @@ export function getProvinces(): Array<{ code: string; name: string; taxSummary: 
 
 export function getTotalTaxRate(province: string): number {
   const prov = province.toUpperCase();
-  const rates = PROVINCE_TAX[prov] || PROVINCE_TAX.QC;
+  const rates = PROVINCE_TAX[prov];
+  if (!rates) {
+    console.warn(`[canadian-tax-engine] Unknown province code "${province}" in getTotalTaxRate — using GST-only (5%)`);
+    return 5; // GST only
+  }
   if (rates.hst > 0) return rates.hst;
   return rates.gst + rates.pst + rates.qst;
 }
@@ -317,7 +341,18 @@ export function calculateDigitalGoodsTax(
   province: string
 ): DigitalGoodsTaxResult {
   const prov = province.toUpperCase();
-  const rates = PROVINCE_TAX[prov] || PROVINCE_TAX.QC;
+  const rates = PROVINCE_TAX[prov];
+  // A8-P2-001 FIX: Unknown provinces get GST-only instead of QC rates
+  if (!rates) {
+    console.warn(`[canadian-tax-engine] Unknown province code "${province}" in calculateDigitalGoodsTax — using GST-only fallback`);
+    const gst = round(subtotal * 5 / 100);
+    return {
+      subtotal, gst, pst: 0, hst: 0, qst: 0,
+      totalTax: gst, total: round(subtotal + gst),
+      province: prov, isPstExempt: false,
+      breakdown: [{ name: 'TPS / GST', rate: 5, amount: gst }],
+    };
+  }
   const isPstExempt = DIGITAL_GOODS_PST_EXEMPT_PROVINCES.has(prov);
 
   const breakdown: TaxBreakdown[] = [];

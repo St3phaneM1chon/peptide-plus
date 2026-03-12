@@ -116,7 +116,7 @@ interface RecentEntry {
 
 const categoryColors: Record<string, string> = {
   SALES: 'bg-emerald-50 text-emerald-700',
-  PURCHASES: 'bg-teal-50 text-teal-700',
+  PURCHASES: 'bg-indigo-50 text-indigo-700',
   PAYROLL: 'bg-purple-50 text-purple-700',
   TAXES: 'bg-amber-50 text-amber-700',
   ADJUSTMENTS: 'bg-red-50 text-red-700',
@@ -393,23 +393,23 @@ export default function QuickEntryPage() {
   // -- Ribbon actions --
   const handleNewEntry = useCallback(() => {
     setSelectedTemplate(null);
-    toast.info(t('admin.quickEntry.selectTemplate') || 'Selectionnez un modele ci-dessous pour creer une nouvelle ecriture.');
+    toast.info(t('admin.quickEntry.selectTemplate'));
   }, [t]);
   const handleDeleteAction = useCallback(() => {
-    if (recentEntries.length === 0) { toast.info(t('admin.quickEntry.noRecentEntries') || 'Aucune ecriture recente a supprimer.'); return; }
-    toast.info(t('admin.quickEntry.deleteInfo') || 'Selectionnez une ecriture recente pour la supprimer.');
+    if (recentEntries.length === 0) { toast.info(t('admin.quickEntry.noRecentEntries')); return; }
+    toast.info(t('admin.quickEntry.deleteInfo'));
   }, [recentEntries, t]);
   const handleValidate = useCallback(() => { if (selectedTemplate) handleSave(true); }, [selectedTemplate]);
   const handleCancel = useCallback(() => { setSelectedTemplate(null); }, []);
   const handleDuplicate = useCallback(() => {
-    if (!selectedTemplate) { toast.info(t('admin.quickEntry.selectToDuplicate') || 'Selectionnez un modele pour le dupliquer.'); return; }
+    if (!selectedTemplate) { toast.info(t('admin.quickEntry.selectToDuplicate')); return; }
     toast.success(t('admin.quickEntry.duplicateReady') || `Modele "${selectedTemplate.name}" selectionne. Modifiez les valeurs et validez.`);
   }, [selectedTemplate, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
   const handleExport = useCallback(() => {
-    if (recentEntries.length === 0) { toast.error(t('admin.quickEntry.noDataToExport') || 'Aucune ecriture a exporter'); return; }
+    if (recentEntries.length === 0) { toast.error(t('admin.quickEntry.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.quickEntry.colDate') || 'Date', t('admin.quickEntry.colDescription') || 'Description', t('admin.quickEntry.colAmount') || 'Montant', t('admin.quickEntry.colStatus') || 'Statut'];
+    const headers = [t('admin.quickEntry.colDate'), t('admin.quickEntry.colDescription'), t('admin.quickEntry.colAmount'), t('admin.quickEntry.colStatus')];
     const rows = recentEntries.map(e => [new Date(e.date).toISOString().split('T')[0], e.description, String(e.amount), e.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

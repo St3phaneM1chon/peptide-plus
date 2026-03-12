@@ -179,7 +179,7 @@ export default function AccountConsentsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700"
-                      title="PDF"
+                      title={t('account.consents.downloadPdf')}
                     >
                       <Download className="h-4 w-4" />
                     </a>

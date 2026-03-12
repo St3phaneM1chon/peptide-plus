@@ -416,7 +416,7 @@ export default function WebinarsPage() {
             <input
               type="email"
               placeholder={t('webinars.placeholderEmail')}
-              aria-label="Email address for webinar notifications"
+              aria-label={t('webinars.aria.emailNotifications')}
               className="flex-1 px-4 py-3 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-white"
             />
             <button className="px-6 py-3 bg-white text-teal-600 rounded-lg font-medium hover:bg-teal-50 transition-colors" aria-label={t('webinars.subscribe') || 'Subscribe to webinar notifications'}>
@@ -433,7 +433,7 @@ export default function WebinarsPage() {
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
                 <h3 id="webinar-registration-modal-title" className="text-xl font-bold">{t('webinars.registerWebinar') || 'Register for Webinar'}</h3>
-                <button onClick={() => setShowRegistrationModal(null)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
+                <button onClick={() => setShowRegistrationModal(null)} aria-label={t('common.close')} className="p-2 hover:bg-neutral-100 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

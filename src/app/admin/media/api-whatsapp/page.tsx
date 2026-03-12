@@ -43,7 +43,7 @@ export default function MediaWhatsAppPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -62,7 +62,7 @@ export default function MediaWhatsAppPage() {
     const el = document.querySelector<HTMLInputElement>('input[placeholder]');
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
   }, []);
-  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk') || 'Connection OK'); else toast.error(r.error || t('admin.media.testFailed') || 'Test failed'); }); }, [t]);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk')); else toast.error(r.error || t('admin.media.testFailed')); }); }, [t]);
   const onRefreshToken = useCallback(() => {
     setLoading(true);
     fetch('/api/admin/integrations/whatsapp').then(res => res.json()).then(data => {
@@ -79,7 +79,7 @@ export default function MediaWhatsAppPage() {
   useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (

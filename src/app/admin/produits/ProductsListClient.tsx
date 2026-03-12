@@ -238,7 +238,7 @@ export default function ProductsListClient({
 
     // Client-side file size validation (matches server-side 5MB limit)
     if (file.size > MAX_IMPORT_FILE_SIZE) {
-      toast.error(t('admin.products.fileTooLarge') || 'File too large. Maximum size: 5MB');
+      toast.error(t('admin.products.fileTooLarge'));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -326,18 +326,18 @@ export default function ProductsListClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.products.duplicateError') || 'Failed to duplicate product');
+        toast.error(data.error || t('admin.products.duplicateError'));
         return;
       }
       const data = await res.json();
-      toast.success(t('admin.products.duplicateSuccess') || 'Product duplicated');
+      toast.success(t('admin.products.duplicateSuccess'));
       if (data.product?.id) {
         router.push(`/admin/produits/${data.product.id}`);
       } else {
         window.location.reload();
       }
     } catch {
-      toast.error(t('admin.products.duplicateError') || 'Failed to duplicate product');
+      toast.error(t('admin.products.duplicateError'));
     }
   }, [selectedProductId, t, router]);
 
@@ -354,12 +354,12 @@ export default function ProductsListClient({
       });
       if (res.ok) {
         setProducts(prev => prev.map(p => p.id === selectedProductId ? { ...p, isActive: true } : p));
-        toast.success(t('admin.products.publishSuccess') || 'Product published');
+        toast.success(t('admin.products.publishSuccess'));
       } else {
-        toast.error(t('admin.products.publishError') || 'Failed to publish product');
+        toast.error(t('admin.products.publishError'));
       }
     } catch {
-      toast.error(t('admin.products.publishError') || 'Failed to publish product');
+      toast.error(t('admin.products.publishError'));
     }
   }, [selectedProductId, t]);
 
@@ -376,12 +376,12 @@ export default function ProductsListClient({
       });
       if (res.ok) {
         setProducts(prev => prev.map(p => p.id === selectedProductId ? { ...p, isActive: false } : p));
-        toast.success(t('admin.products.unpublishSuccess') || 'Product unpublished');
+        toast.success(t('admin.products.unpublishSuccess'));
       } else {
-        toast.error(t('admin.products.unpublishError') || 'Failed to unpublish product');
+        toast.error(t('admin.products.unpublishError'));
       }
     } catch {
-      toast.error(t('admin.products.unpublishError') || 'Failed to unpublish product');
+      toast.error(t('admin.products.unpublishError'));
     }
   }, [selectedProductId, t]);
 
@@ -402,7 +402,7 @@ export default function ProductsListClient({
 
   const applyBulkPriceUpdate = useCallback(async () => {
     if (bulkPricePercent <= 0 || bulkPricePercent > 100) {
-      toast.error(t('admin.products.bulkPriceInvalidPercent') || 'Enter a valid percentage (1-100)');
+      toast.error(t('admin.products.bulkPriceInvalidPercent'));
       return;
     }
     setBulkPriceApplying(true);
@@ -418,17 +418,17 @@ export default function ProductsListClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.products.bulkPriceError') || 'Failed to update prices');
+        toast.error(data.error || t('admin.products.bulkPriceError'));
         return;
       }
       const data = await res.json();
       toast.success(
-        (t('admin.products.bulkPriceSuccess') || 'Prices updated for {count} products').replace('{count}', String(data.updated || 0))
+        (t('admin.products.bulkPriceSuccess')).replace('{count}', String(data.updated || 0))
       );
       setShowBulkPriceModal(false);
       window.location.reload();
     } catch {
-      toast.error(t('admin.products.bulkPriceError') || 'Failed to update prices');
+      toast.error(t('admin.products.bulkPriceError'));
     } finally {
       setBulkPriceApplying(false);
     }
@@ -436,7 +436,7 @@ export default function ProductsListClient({
 
   const handleSchedulePublish = useCallback(async () => {
     if (!selectedProductId || !scheduleDate) {
-      toast.error(t('admin.products.scheduleSelectDate') || 'Sélectionnez une date');
+      toast.error(t('admin.products.scheduleSelectDate'));
       return;
     }
     setSchedulingSave(true);
@@ -451,18 +451,18 @@ export default function ProductsListClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.products.scheduleError') || 'Erreur lors de la planification');
+        toast.error(data.error || t('admin.products.scheduleError'));
         return;
       }
       toast.success(
         scheduleAction === 'publish'
-          ? (t('admin.products.schedulePublishSuccess') || 'Publication planifiée')
-          : (t('admin.products.scheduleUnpublishSuccess') || 'Dépublication planifiée')
+          ? (t('admin.products.schedulePublishSuccess'))
+          : (t('admin.products.scheduleUnpublishSuccess'))
       );
       setShowScheduleModal(false);
       setScheduleDate('');
     } catch {
-      toast.error(t('admin.products.scheduleError') || 'Erreur lors de la planification');
+      toast.error(t('admin.products.scheduleError'));
     } finally {
       setSchedulingSave(false);
     }
@@ -502,7 +502,7 @@ export default function ProductsListClient({
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
-    toast.success(t('admin.products.catalogExportSuccess') || 'Catalog exported');
+    toast.success(t('admin.products.catalogExportSuccess'));
   }, [products, t]);
 
   const handleImportCsv = useCallback(() => {
@@ -621,7 +621,7 @@ export default function ProductsListClient({
         accept=".csv,text/csv"
         onChange={handleImport}
         className="hidden"
-        aria-label={t('admin.products.importCsv') || 'Import CSV file'}
+        aria-label={t('admin.products.importCsv')}
       />
 
       {/* Header + Stats */}
@@ -639,18 +639,18 @@ export default function ProductsListClient({
               <button
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-sm border-r border-slate-300 ${
-                  viewMode === 'list' ? 'bg-teal-50 text-teal-700' : 'text-slate-500 hover:bg-slate-50'
+                  viewMode === 'list' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'
                 }`}
-                title={t('admin.products.listView') || 'List View'}
+                title={t('admin.products.listView')}
               >
                 <List className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 text-sm ${
-                  viewMode === 'grid' ? 'bg-teal-50 text-teal-700' : 'text-slate-500 hover:bg-slate-50'
+                  viewMode === 'grid' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'
                 }`}
-                title={t('admin.products.gridView') || 'Grid View'}
+                title={t('admin.products.gridView')}
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
@@ -697,7 +697,7 @@ export default function ProductsListClient({
               <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-amber-800">
-                  {t('admin.products.reorderAlertTitle') || 'Alerte de réapprovisionnement'}
+                  {t('admin.products.reorderAlertTitle')}
                   <span className="ms-1 font-normal text-amber-600">({reorderAlerts.length})</span>
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
@@ -714,14 +714,14 @@ export default function ProductsListClient({
                       >
                         <span className="font-medium">{p.name}</span>
                         <span className="text-amber-600">
-                          ({t('admin.products.reorderStock') || 'Stock'}: {totalStock}/{p.reorderPoint})
+                          ({t('admin.products.reorderStock')}: {totalStock}/{p.reorderPoint})
                         </span>
                       </button>
                     );
                   })}
                   {reorderAlerts.length > 5 && (
                     <span className="text-xs text-amber-600 py-1">
-                      +{reorderAlerts.length - 5} {t('admin.products.reorderMore') || 'autres'}
+                      +{reorderAlerts.length - 5} {t('admin.products.reorderMore')}
                     </span>
                   )}
                 </div>
@@ -736,8 +736,8 @@ export default function ProductsListClient({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              aria-label={t('admin.products.filterByCategory') || 'Filter by category'}
-              className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              aria-label={t('admin.products.filterByCategory')}
+              className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">{t('admin.products.allCategories')}</option>
               {categories.map((c) => (
@@ -797,9 +797,9 @@ export default function ProductsListClient({
                             setScheduleDate('');
                             setShowScheduleModal(true);
                           }}
-                          title={t('admin.products.schedulePublish') || 'Planifier publication'}
+                          title={t('admin.products.schedulePublish')}
                         >
-                          {t('admin.products.schedule') || 'Planifier'}
+                          {t('admin.products.schedule')}
                         </Button>
                         <Link href={`/product/${selectedProduct.slug}`} target="_blank">
                           <Button variant="ghost" size="sm" icon={ExternalLink}>
@@ -875,15 +875,15 @@ export default function ProductsListClient({
                       </div>
                       {/* ABC Classification */}
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <p className="text-xs text-slate-500">{t('admin.products.abcClassification') || 'Classification ABC'}</p>
+                        <p className="text-xs text-slate-500">{t('admin.products.abcClassification')}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <TrendingUp className="w-4 h-4 text-slate-400" />
                           {(() => {
                             const abc = abcClassification[selectedProduct.id];
                             const configs = {
-                              A: { label: 'A - ' + (t('admin.products.abcA') || 'Haute contribution'), className: 'text-emerald-700 bg-emerald-100' },
-                              B: { label: 'B - ' + (t('admin.products.abcB') || 'Contribution moyenne'), className: 'text-teal-700 bg-teal-100' },
-                              C: { label: 'C - ' + (t('admin.products.abcC') || 'Faible contribution'), className: 'text-slate-600 bg-slate-100' },
+                              A: { label: 'A - ' + (t('admin.products.abcA')), className: 'text-emerald-700 bg-emerald-100' },
+                              B: { label: 'B - ' + (t('admin.products.abcB')), className: 'text-indigo-700 bg-indigo-100' },
+                              C: { label: 'C - ' + (t('admin.products.abcC')), className: 'text-slate-600 bg-slate-100' },
                             };
                             const config = configs[abc || 'C'];
                             return (
@@ -994,7 +994,7 @@ export default function ProductsListClient({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('admin.products.searchPlaceholder')}
-                className="w-full h-9 ps-3 pe-8 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full h-9 ps-3 pe-8 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -1004,7 +1004,7 @@ export default function ProductsListClient({
                   onClick={() => setStatusFilter(tab.key)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
                     statusFilter === tab.key
-                      ? 'bg-teal-100 text-teal-800'
+                      ? 'bg-indigo-100 text-indigo-800'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -1042,7 +1042,7 @@ export default function ProductsListClient({
                 return (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group"
+                    className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group"
                     onClick={() => router.push(`/admin/produits/${product.id}`)}
                   >
                     {/* Image */}
@@ -1071,7 +1071,7 @@ export default function ProductsListClient({
                       {abc && (
                         <span className={`absolute top-2 start-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           abc === 'A' ? 'bg-emerald-500 text-white' :
-                          abc === 'B' ? 'bg-teal-500 text-white' :
+                          abc === 'B' ? 'bg-indigo-500 text-white' :
                           'bg-slate-400 text-white'
                         }`}>
                           {abc}
@@ -1086,10 +1086,10 @@ export default function ProductsListClient({
                     {/* Content */}
                     <div className="p-3">
                       <p className="text-xs text-slate-500 mb-0.5">{product.category.name}</p>
-                      <h3 className="font-semibold text-sm text-slate-900 truncate group-hover:text-teal-700 transition-colors">
+                      <h3 className="font-semibold text-sm text-slate-900 truncate group-hover:text-indigo-700 transition-colors">
                         {product.name}
                       </h3>
-                      <p className="text-lg font-bold text-teal-700 mt-1">{priceDisplay}</p>
+                      <p className="text-lg font-bold text-indigo-700 mt-1">{priceDisplay}</p>
 
                       {/* Bottom row: stock + badges */}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
@@ -1099,7 +1099,7 @@ export default function ProductsListClient({
                           </StatusBadge>
                         </div>
                         <span className="text-xs text-slate-400">
-                          {t('admin.products.totalStock') || 'Stock'}: {totalStock}
+                          {t('admin.products.totalStock')}: {totalStock}
                         </span>
                       </div>
 
@@ -1121,10 +1121,10 @@ export default function ProductsListClient({
       {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmDeleteId}
-        title={t('admin.products.deleteTitle') || 'Delete Product'}
-        message={t('admin.products.confirmDelete') || 'Are you sure you want to delete this product? This action cannot be undone.'}
+        title={t('admin.products.deleteTitle')}
+        message={t('admin.products.confirmDelete')}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
         onCancel={() => setConfirmDeleteId(null)}
       />
@@ -1133,13 +1133,13 @@ export default function ProductsListClient({
       <Modal
         isOpen={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
-        title={t('admin.products.scheduleTitle') || 'Planifier la publication'}
+        title={t('admin.products.scheduleTitle')}
         subtitle={selectedProduct ? selectedProduct.name : ''}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>
-              {t('common.cancel') || 'Annuler'}
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -1148,7 +1148,7 @@ export default function ProductsListClient({
               onClick={handleSchedulePublish}
               disabled={schedulingSave || !scheduleDate}
             >
-              {t('admin.products.scheduleConfirm') || 'Planifier'}
+              {t('admin.products.scheduleConfirm')}
             </Button>
           </>
         }
@@ -1156,7 +1156,7 @@ export default function ProductsListClient({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('admin.products.scheduleActionLabel') || 'Action'}
+              {t('admin.products.scheduleActionLabel')}
             </label>
             <div className="flex gap-3">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -1165,10 +1165,10 @@ export default function ProductsListClient({
                   name="scheduleAction"
                   checked={scheduleAction === 'publish'}
                   onChange={() => setScheduleAction('publish')}
-                  className="w-4 h-4 text-teal-600 border-slate-300 focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                 />
                 <span className="text-sm text-slate-700">
-                  {t('admin.products.scheduleActionPublish') || 'Publier'}
+                  {t('admin.products.scheduleActionPublish')}
                 </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -1177,32 +1177,32 @@ export default function ProductsListClient({
                   name="scheduleAction"
                   checked={scheduleAction === 'unpublish'}
                   onChange={() => setScheduleAction('unpublish')}
-                  className="w-4 h-4 text-teal-600 border-slate-300 focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                 />
                 <span className="text-sm text-slate-700">
-                  {t('admin.products.scheduleActionUnpublish') || 'Dépublier'}
+                  {t('admin.products.scheduleActionUnpublish')}
                 </span>
               </label>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('admin.products.scheduleDateLabel') || 'Date et heure'}
+              {t('admin.products.scheduleDateLabel')}
             </label>
             <input
               type="datetime-local"
               value={scheduleDate}
               onChange={(e) => setScheduleDate(e.target.value)}
               min={new Date().toISOString().slice(0, 16)}
-              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           {scheduleDate && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-              <p className="text-sm text-teal-800">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <p className="text-sm text-indigo-800">
                 {scheduleAction === 'publish'
-                  ? (t('admin.products.schedulePublishPreview') || 'Le produit sera publié le')
-                  : (t('admin.products.scheduleUnpublishPreview') || 'Le produit sera dépublié le')
+                  ? (t('admin.products.schedulePublishPreview'))
+                  : (t('admin.products.scheduleUnpublishPreview'))
                 }{' '}
                 <strong>{new Date(scheduleDate).toLocaleString(locale)}</strong>
               </p>
@@ -1215,13 +1215,13 @@ export default function ProductsListClient({
       <Modal
         isOpen={showBulkPriceModal}
         onClose={() => setShowBulkPriceModal(false)}
-        title={t('admin.products.bulkPriceTitle') || 'Bulk Price Update'}
-        subtitle={t('admin.products.bulkPriceSubtitle') || 'Adjust prices for all products by a percentage'}
+        title={t('admin.products.bulkPriceTitle')}
+        subtitle={t('admin.products.bulkPriceSubtitle')}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowBulkPriceModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -1230,7 +1230,7 @@ export default function ProductsListClient({
               onClick={applyBulkPriceUpdate}
               disabled={bulkPriceApplying || bulkPricePercent <= 0}
             >
-              {t('admin.products.bulkPriceApply') || 'Apply'}
+              {t('admin.products.bulkPriceApply')}
             </Button>
           </>
         }
@@ -1238,7 +1238,7 @@ export default function ProductsListClient({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('admin.products.bulkPriceDirectionLabel') || 'Direction'}
+              {t('admin.products.bulkPriceDirectionLabel')}
             </label>
             <div className="flex gap-3">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -1247,10 +1247,10 @@ export default function ProductsListClient({
                   name="priceDirection"
                   checked={bulkPriceDirection === 'increase'}
                   onChange={() => setBulkPriceDirection('increase')}
-                  className="w-4 h-4 text-teal-600 border-slate-300 focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                 />
                 <span className="text-sm text-slate-700">
-                  {t('admin.products.bulkPriceIncrease') || 'Increase'}
+                  {t('admin.products.bulkPriceIncrease')}
                 </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -1259,17 +1259,17 @@ export default function ProductsListClient({
                   name="priceDirection"
                   checked={bulkPriceDirection === 'decrease'}
                   onChange={() => setBulkPriceDirection('decrease')}
-                  className="w-4 h-4 text-teal-600 border-slate-300 focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                 />
                 <span className="text-sm text-slate-700">
-                  {t('admin.products.bulkPriceDecrease') || 'Decrease'}
+                  {t('admin.products.bulkPriceDecrease')}
                 </span>
               </label>
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              {t('admin.products.bulkPricePercentLabel') || 'Percentage (%)'}
+              {t('admin.products.bulkPricePercentLabel')}
             </label>
             <input
               type="number"
@@ -1278,20 +1278,20 @@ export default function ProductsListClient({
               step={0.5}
               value={bulkPricePercent}
               onChange={(e) => setBulkPricePercent(parseFloat(e.target.value) || 0)}
-              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="e.g. 10"
             />
           </div>
           {categoryFilter && (
             <p className="text-xs text-slate-500 bg-slate-50 rounded-lg p-2">
-              {(t('admin.products.bulkPriceCategoryNote') || 'Only products in the currently filtered category will be affected.').replace('{category}', categoryFilter)}
+              {(t('admin.products.bulkPriceCategoryNote')).replace('{category}', categoryFilter)}
             </p>
           )}
           {bulkPricePercent > 0 && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-              <p className="text-sm text-teal-800">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <p className="text-sm text-indigo-800">
                 {bulkPriceDirection === 'increase' ? '+' : '-'}{bulkPricePercent}%{' '}
-                {t('admin.products.bulkPricePreview') || 'will be applied to all product format prices'}
+                {t('admin.products.bulkPricePreview')}
                 {categoryFilter ? ` (${categoryFilter})` : ''}
               </p>
             </div>
@@ -1313,7 +1313,7 @@ function MiniStat({
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
-      <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center text-teal-600 flex-shrink-0">
+      <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
         <Icon className="w-4 h-4" />
       </div>
       <div>

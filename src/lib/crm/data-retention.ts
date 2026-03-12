@@ -202,9 +202,11 @@ async function anonymizeOldRecords(entityType: string, retentionDays: number): P
 
   if (entityType === 'lead') {
     // Batch fetch all leads to anonymize with their PII fields
+    // A7-P2-003: Add take limit to prevent unbounded batch operations
     const leads = await prisma.crmLead.findMany({
       where: { createdAt: { lt: cutoff } },
       select: { id: true, contactName: true, email: true, phone: true, companyName: true },
+      take: 1000,
     });
 
     // Batch anonymize using a transaction instead of N individual updates
@@ -236,11 +238,13 @@ async function archiveOldRecords(entityType: string, retentionDays: number): Pro
 
   if (entityType === 'deal') {
     // Archive won/lost deals older than retention period
+    // A7-P2-003: Add take limit to prevent unbounded batch operations
     const deals = await prisma.crmDeal.findMany({
       where: {
         actualCloseDate: { lt: cutoff },
       },
       select: { id: true },
+      take: 1000,
     });
 
     // Batch archive using a transaction instead of N individual updates

@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Our Mission | BioCycle Peptides',
-  description: 'BioCycle Peptides mission: advancing scientific research by providing third-party tested, high-purity peptides to researchers across Canada.',
+  title: 'Notre mission',
+  description: 'La mission de BioCycle Peptides : faire avancer la recherche scientifique en fournissant des peptides de haute pureté testés par des tiers aux chercheurs du Canada.',
   openGraph: {
-    title: 'Our Mission | BioCycle Peptides',
-    description: 'BioCycle Peptides mission: advancing scientific research by providing third-party tested, high-purity peptides to researchers across Canada.',
+    title: 'Notre mission | BioCycle Peptides',
+    description: 'Faire avancer la recherche scientifique avec des peptides de haute pureté.',
+    url: 'https://biocyclepeptides.com/a-propos/mission',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
   },
 };
 

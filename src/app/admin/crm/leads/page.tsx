@@ -36,7 +36,7 @@ interface Lead {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-teal-100 text-teal-700',
+  NEW: 'bg-indigo-100 text-indigo-700',
   CONTACTED: 'bg-yellow-100 text-yellow-700',
   QUALIFIED: 'bg-green-100 text-green-700',
   UNQUALIFIED: 'bg-gray-100 text-gray-600',
@@ -212,21 +212,21 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.leads') || 'Leads'}</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} {t('admin.crm.leadsTotal') || 'total leads'}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.leads')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{total} {t('admin.crm.leadsTotal')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowImportModal(true)}
             className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
           >
-            <Upload className="h-4 w-4" /> {t('admin.crm.importCSV') || 'Import CSV'}
+            <Upload className="h-4 w-4" /> {t('admin.crm.importCSV')}
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           >
-            <Plus className="h-4 w-4" /> {t('admin.crm.newLead') || 'New Lead'}
+            <Plus className="h-4 w-4" /> {t('admin.crm.newLead')}
           </button>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function LeadsPage() {
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder={t('admin.crm.searchLeads') || 'Search leads...'}
+            placeholder={t('admin.crm.searchLeads')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="w-full ps-9 pe-3 py-2 text-sm border border-gray-300 rounded-md"
@@ -248,7 +248,7 @@ export default function LeadsPage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="text-sm border border-gray-300 rounded-md px-3 py-2"
         >
-          <option value="">{t('admin.crm.allStatuses') || 'All Statuses'}</option>
+          <option value="">{t('admin.crm.allStatuses')}</option>
           {['NEW', 'CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'CONVERTED', 'LOST'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -258,7 +258,7 @@ export default function LeadsPage() {
           onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
           className="text-sm border border-gray-300 rounded-md px-3 py-2"
         >
-          <option value="">{t('admin.crm.allSources') || 'All Sources'}</option>
+          <option value="">{t('admin.crm.allSources')}</option>
           {['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -268,7 +268,7 @@ export default function LeadsPage() {
           onChange={(e) => { setTempFilter(e.target.value); setPage(1); }}
           className="text-sm border border-gray-300 rounded-md px-3 py-2"
         >
-          <option value="">{t('admin.crm.allTemperatures') || 'All Temperatures'}</option>
+          <option value="">{t('admin.crm.allTemperatures')}</option>
           {['HOT', 'WARM', 'COLD'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -277,37 +277,37 @@ export default function LeadsPage() {
 
       {/* Bulk Action Bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-teal-50 border border-teal-200 rounded-lg">
-          <span className="text-sm font-medium text-teal-800">
-            {selected.size} {t('common.selected') || 'selected'}
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <span className="text-sm font-medium text-indigo-800">
+            {selected.size} {t('common.selected')}
           </span>
-          <div className="w-px h-5 bg-teal-200" />
+          <div className="w-px h-5 bg-indigo-200" />
           <select
             defaultValue=""
             onChange={(e) => { if (e.target.value) bulkUpdateStatus(e.target.value); e.target.value = ''; }}
-            className="text-xs border border-teal-300 rounded-md px-2 py-1 bg-white text-teal-700"
+            className="text-xs border border-indigo-300 rounded-md px-2 py-1 bg-white text-indigo-700"
           >
-            <option value="">{t('admin.crm.changeStatus') || 'Change Status...'}</option>
+            <option value="">{t('admin.crm.changeStatus')}</option>
             {['NEW', 'CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'LOST'].map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
           <button
             onClick={bulkRecalculateScores}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs text-teal-700 bg-white border border-teal-300 rounded-md hover:bg-teal-100"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs text-indigo-700 bg-white border border-indigo-300 rounded-md hover:bg-indigo-100"
           >
-            <RefreshCw className="h-3 w-3" /> {t('admin.crm.recalculate') || 'Recalculate'}
+            <RefreshCw className="h-3 w-3" /> {t('admin.crm.recalculate')}
           </button>
           <div className="flex-1" />
           <button
             onClick={bulkDelete}
             className="flex items-center gap-1 px-2.5 py-1 text-xs text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50"
           >
-            <Trash2 className="h-3 w-3" /> {t('common.delete') || 'Delete'}
+            <Trash2 className="h-3 w-3" /> {t('common.delete')}
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="p-1 text-teal-500 hover:bg-teal-100 rounded"
+            className="p-1 text-indigo-500 hover:bg-indigo-100 rounded"
           >
             <X className="h-4 w-4" />
           </button>
@@ -323,25 +323,27 @@ export default function LeadsPage() {
                 <th className="px-4 py-3 text-start">
                   <input type="checkbox" onChange={selectAll} checked={selected.size === leads.length && leads.length > 0} className="rounded" />
                 </th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.name') || 'Name'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.company') || 'Company'}</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.score') || 'Score'}</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.temperature') || 'Temp'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Status'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.source') || 'Source'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.lastContact') || 'Last Contact'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.name')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.company')}</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.score')}</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.crm.temperature')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.source')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.lastContact')}</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">DNC</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mx-auto" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto" />
                 </td></tr>
               ) : leads.length === 0 ? (
-                <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">
-                  {t('admin.crm.noLeads') || 'No leads found'}
+                <tr><td colSpan={10} className="px-4 py-16 text-center">
+                  <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-500">{t('admin.crm.noLeads')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('admin.crm.noLeadsDescription')}</p>
                 </td></tr>
               ) : leads.map((lead) => {
                 const TempIcon = TEMP_ICONS[lead.temperature] || Thermometer;
@@ -431,14 +433,14 @@ export default function LeadsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">{t('admin.crm.importCSV') || 'Import CSV'}</h2>
+              <h2 className="text-lg font-semibold">{t('admin.crm.importCSV')}</h2>
               <button onClick={() => setShowImportModal(false)} className="p-1 hover:bg-gray-100 rounded">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="p-4">
               <p className="text-sm text-gray-600 mb-4">
-                {t('admin.crm.importInstructions') || 'Upload a CSV file with columns: name/nom, email/courriel, phone/tel, company/entreprise'}
+                {t('admin.crm.importInstructions')}
               </p>
               <input
                 ref={fileInputRef}
@@ -448,12 +450,12 @@ export default function LeadsPage() {
                   const file = e.target.files?.[0];
                   if (file) handleImportCSV(file);
                 }}
-                className="block w-full text-sm text-gray-500 file:me-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                className="block w-full text-sm text-gray-500 file:me-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
               />
             </div>
             <div className="flex justify-end p-4 border-t">
               <button onClick={() => setShowImportModal(false)} className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -499,34 +501,34 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{t('admin.crm.newLead') || 'New Lead'}</h2>
+          <h2 className="text-lg font-semibold">{t('admin.crm.newLead')}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X className="h-5 w-5" /></button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.contactName') || 'Contact Name'} *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.contactName')} *</label>
             <input type="text" value={form.contactName} onChange={(e) => setForm(p => ({ ...p, contactName: e.target.value }))}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" autoFocus />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.company') || 'Company'}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.company')}</label>
             <input type="text" value={form.companyName} onChange={(e) => setForm(p => ({ ...p, companyName: e.target.value }))}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.email') || 'Email'}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.email')}</label>
               <input type="email" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.phone') || 'Phone'}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.phone')}</label>
               <input type="tel" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.source') || 'Source'}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.source')}</label>
             <select value={form.source} onChange={(e) => setForm(p => ({ ...p, source: e.target.value }))}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
               {['MANUAL', 'WEB', 'REFERRAL', 'CAMPAIGN', 'PARTNER'].map(s => (
@@ -537,10 +539,10 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
         </div>
         <div className="flex justify-end gap-2 p-4 border-t">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </button>
-          <button onClick={submit} disabled={creating} className="px-4 py-2 text-sm text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50">
-            {creating ? '...' : t('common.create') || 'Create'}
+          <button onClick={submit} disabled={creating} className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50">
+            {creating ? '...' : t('common.create')}
           </button>
         </div>
       </div>

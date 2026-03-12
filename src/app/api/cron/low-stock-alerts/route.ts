@@ -11,11 +11,12 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
+import { timingSafeEqual, createHash } from 'crypto';
 import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/email-service';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 const LOW_STOCK_DEFAULT_THRESHOLD = 5;
 
@@ -82,6 +83,35 @@ export async function GET(request: NextRequest) {
           success: true,
           message: 'No low-stock products found',
           alertCount: 0,
+        });
+      }
+
+      // FIX A9-P1-005: Dedup — skip if the exact same set of items was already alerted
+      const alertHash = createHash('sha256')
+        .update(alertFormats.map(f => `${f.id}:${f.stockQuantity}`).sort().join('|'))
+        .digest('hex')
+        .slice(0, 16);
+
+      try {
+        const redis = await getRedisClient();
+        if (redis) {
+          const lastHash = await redis.get('low-stock-alerts:last-hash');
+          if (lastHash === alertHash) {
+            logger.info('[low-stock-alerts] Skipped — same items already alerted (dedup)');
+            return NextResponse.json({
+              success: true,
+              message: 'No new low-stock changes since last alert',
+              alertCount: alertFormats.length,
+              skippedDedup: true,
+            });
+          }
+          // Store hash with 24h TTL — a new alert will be sent if items change OR after 24h
+          await redis.set('low-stock-alerts:last-hash', alertHash, 'EX', 86400);
+        }
+      } catch (redisErr) {
+        // Redis down — proceed with sending (prefer alert over silence)
+        logger.warn('[low-stock-alerts] Redis dedup check failed, sending anyway', {
+          error: redisErr instanceof Error ? redisErr.message : String(redisErr),
         });
       }
 

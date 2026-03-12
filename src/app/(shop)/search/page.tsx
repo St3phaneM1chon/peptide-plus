@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import { ProductCard } from '@/components/shop';
+import ProductCard from '@/components/shop/ProductCard';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
@@ -389,7 +389,7 @@ function SearchPageInner() {
                 <button
                   className="lg:hidden p-2 text-neutral-500 hover:text-neutral-800"
                   onClick={() => setShowFilters(false)}
-                  aria-label="Close filters"
+                  aria-label={t('shop.aria.closeFilters')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

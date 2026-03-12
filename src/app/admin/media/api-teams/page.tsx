@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { PlatformConnectionStatus } from '@/components/admin/PlatformConnectionStatus';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -43,7 +44,7 @@ export default function MediaTeamsPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -62,7 +63,7 @@ export default function MediaTeamsPage() {
     const el = document.querySelector<HTMLInputElement>('input[placeholder]');
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
   }, []);
-  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk') || 'Connection OK'); else toast.error(r.error || t('admin.media.testFailed') || 'Test failed'); }); }, [t]);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk')); else toast.error(r.error || t('admin.media.testFailed')); }); }, [t]);
   const onRefreshToken = useCallback(() => {
     setLoading(true);
     fetch('/api/admin/integrations/teams').then(res => res.json()).then(data => {
@@ -83,7 +84,8 @@ export default function MediaTeamsPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-3xl space-y-4">
+      <PlatformConnectionStatus platform="teams" usesOAuth={true} />
       <IntegrationCard
         title={t('admin.media.teamsTitle')}
         description={t('admin.integrations.teamsSetupDesc')}

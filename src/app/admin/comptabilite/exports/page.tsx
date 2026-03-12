@@ -165,19 +165,19 @@ export default function ExportsPage() {
   // Ribbon actions
   const handleRibbonGenerateReport = useCallback(() => { handleExport(); }, [handleExport]);
   const handleRibbonSchedule = useCallback(() => {
-    toast.info(t('admin.exports.scheduleInfo') || 'La planification automatique des exports sera disponible prochainement.');
+    toast.info(t('admin.exports.scheduleInfo'));
   }, [t]);
   const handleRibbonComparePeriods = useCallback(() => {
     window.location.href = '/admin/comptabilite/etats-financiers';
   }, []);
   const handleRibbonExportPdf = useCallback(() => {
     window.print();
-    toast.success(t('admin.exports.pdfInfo') || 'Utilisez la boite de dialogue pour enregistrer en PDF.');
+    toast.success(t('admin.exports.pdfInfo'));
   }, [t]);
   const handleRibbonExportExcel = useCallback(() => {
-    if (history.length === 0) { toast.error(t('admin.exports.noHistoryToExport') || 'Aucun historique a exporter'); return; }
+    if (history.length === 0) { toast.error(t('admin.exports.noHistoryToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.exports.colDate') || 'Date', t('admin.exports.colType') || 'Type', t('admin.exports.colFormat') || 'Format', t('admin.exports.colPeriod') || 'Periode', t('admin.exports.colRecords') || 'Enregistrements', t('admin.exports.colStatus') || 'Statut'];
+    const headers = [t('admin.exports.colDate'), t('admin.exports.colType'), t('admin.exports.colFormat'), t('admin.exports.colPeriod'), t('admin.exports.colRecords'), t('admin.exports.colStatus')];
     const rows = history.map(j => [new Date(j.createdAt).toISOString().split('T')[0], j.type, j.format, j.dateRange, String(j.records), j.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -213,7 +213,7 @@ export default function ExportsPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadHistory} className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg">{t('admin.exports.retry')}</button>
+        <button onClick={loadHistory} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">{t('admin.exports.retry')}</button>
       </div>
     );
   }
@@ -361,7 +361,7 @@ export default function ExportsPage() {
 
         <SectionCard theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
+            <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
             <div>
               <h3 className="font-medium text-slate-900">Sage 50</h3>
               <p className="text-xs text-slate-500">{t('admin.exports.manualExport')}</p>

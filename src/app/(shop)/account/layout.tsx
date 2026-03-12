@@ -2,9 +2,15 @@ import type { Metadata } from 'next';
 import AccountSidebar from '@/components/account/AccountSidebar';
 
 export const metadata: Metadata = {
-  title: 'My Account',
-  description: 'Manage your BioCycle Peptides account, orders, addresses, and preferences.',
+  title: 'Mon compte',
+  description: 'Gérez votre compte BioCycle Peptides, vos commandes, adresses et préférences.',
   robots: { index: false, follow: false },
+  openGraph: {
+    title: 'Mon compte | BioCycle Peptides',
+    description: 'Gérez votre compte BioCycle Peptides.',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {

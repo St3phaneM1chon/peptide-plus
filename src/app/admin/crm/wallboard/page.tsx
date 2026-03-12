@@ -69,7 +69,7 @@ export default function WallboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function WallboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">{t('admin.crm.wallboard') || 'Call Center Wallboard'}</h1>
+          <h1 className="text-3xl font-bold">{t('admin.crm.wallboard')}</h1>
           <p className="text-gray-400 text-sm mt-1">
             Last updated: {lastRefresh.toLocaleTimeString(locale)}
           </p>
@@ -104,12 +104,12 @@ export default function WallboardPage() {
 
         <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-teal-500/20">
-              <Phone className="h-6 w-6 text-teal-400" />
+            <div className="p-2 rounded-lg bg-indigo-500/20">
+              <Phone className="h-6 w-6 text-indigo-400" />
             </div>
             <span className="text-sm text-gray-400">Calls Today</span>
           </div>
-          <p className="text-4xl font-bold text-teal-400">{data?.todayStats?.totalCalls || 0}</p>
+          <p className="text-4xl font-bold text-indigo-400">{data?.todayStats?.totalCalls || 0}</p>
           <p className="text-sm text-gray-500 mt-1">
             <span className="text-green-400">{data?.todayStats?.answered || 0}</span> answered ·{' '}
             <span className="text-red-400">{data?.todayStats?.missed || 0}</span> missed
@@ -181,7 +181,7 @@ export default function WallboardPage() {
               <div key={h} className="flex-1 flex flex-col items-center">
                 <div
                   className={`w-full rounded-t transition-all ${
-                    h === currentHour ? 'bg-teal-500' : isActive ? 'bg-teal-500/40' : 'bg-gray-800'
+                    h === currentHour ? 'bg-indigo-500' : isActive ? 'bg-indigo-500/40' : 'bg-gray-800'
                   }`}
                   style={{ height: `${heightPct}%` }}
                 />

@@ -2,9 +2,17 @@ export const dynamic = 'force-dynamic';
 
 // SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+
+const gdprErasureSchema = z.object({
+  userId: z.string().min(1, 'userId is required'),
+  confirmation: z.literal('CONFIRM_ERASURE', {
+    errorMap: () => ({ message: 'confirmation must be "CONFIRM_ERASURE"' }),
+  }),
+});
 
 // GDPR/PIPEDA: Data export for a user
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -80,11 +88,15 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
     }
 
     const body = await request.json();
-    const { userId, confirmation } = body as { userId: string; confirmation: string };
-
-    if (!userId || confirmation !== 'CONFIRM_ERASURE') {
-      return NextResponse.json({ error: 'userId et confirmation "CONFIRM_ERASURE" requis' }, { status: 400 });
+    const parsed = gdprErasureSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
+    const { userId, confirmation } = parsed.data;
+    void confirmation; // Used for validation only
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {

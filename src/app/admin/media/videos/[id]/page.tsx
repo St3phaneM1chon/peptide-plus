@@ -223,7 +223,7 @@ export default function VideoDetailPage() {
       setProductLinks(v.productLinks || []);
     } catch (err) {
       console.error('Failed to load video:', err);
-      toast.error(t('admin.media.videoLoadError') || 'Failed to load video');
+      toast.error(t('admin.media.videoLoadError'));
     }
   }, [id, t]);
 
@@ -301,16 +301,16 @@ export default function VideoDetailPage() {
         body: JSON.stringify(form),
       });
       if (res.ok) {
-        toast.success(t('admin.media.videoUpdated') || 'Video updated successfully');
+        toast.success(t('admin.media.videoUpdated'));
         setForm({});
         await loadVideo();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.videoUpdateFailed') || 'Failed to update video');
+        toast.error(data.error || t('admin.media.videoUpdateFailed'));
       }
     } catch (err) {
       console.error('Save error:', err);
-      toast.error(t('admin.media.videoUpdateFailed') || 'Failed to update video');
+      toast.error(t('admin.media.videoUpdateFailed'));
     } finally {
       setSaving(false);
     }
@@ -353,13 +353,13 @@ export default function VideoDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setTags(data.tags || tags);
-        toast.success(t('admin.media.tagsSaved') || 'Tags saved');
+        toast.success(t('admin.media.tagsSaved'));
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.failedSaveTags') || 'Failed to save tags');
+        toast.error(data.error || t('admin.media.failedSaveTags'));
       }
     } catch {
-      toast.error(t('admin.media.failedSaveTags') || 'Failed to save tags');
+      toast.error(t('admin.media.failedSaveTags'));
     } finally {
       setSavingTags(false);
     }
@@ -392,7 +392,7 @@ export default function VideoDetailPage() {
           setPlacements(prev => prev.filter(p => p.id !== existing.id));
         } else {
           const data = await res.json().catch(() => ({}));
-          toast.error(data.error || t('admin.media.failedTogglePlacement') || 'Failed to remove placement');
+          toast.error(data.error || t('admin.media.failedTogglePlacement'));
         }
       } else {
         // Add
@@ -406,11 +406,11 @@ export default function VideoDetailPage() {
           setPlacements(prev => [...prev, data.placement]);
         } else {
           const data = await res.json().catch(() => ({}));
-          toast.error(data.error || t('admin.media.failedTogglePlacement') || 'Failed to add placement');
+          toast.error(data.error || t('admin.media.failedTogglePlacement'));
         }
       }
     } catch {
-      toast.error(t('admin.media.failedTogglePlacement') || 'Failed to toggle placement');
+      toast.error(t('admin.media.failedTogglePlacement'));
     } finally {
       setTogglingPlacement(null);
     }
@@ -427,8 +427,7 @@ export default function VideoDetailPage() {
     setRequestingConsent(true);
     try {
       toast.info(
-        t('admin.media.consentRequestInfo') ||
-        'Consent request flow requires selecting a form template. This feature is coming soon.',
+        t('admin.media.consentRequestInfo'),
       );
     } finally {
       setRequestingConsent(false);
@@ -449,13 +448,13 @@ export default function VideoDetailPage() {
       });
       if (res.ok) {
         setProductLinks(prev => prev.filter(pl => pl.product.id !== productId));
-        toast.success(t('admin.media.productUnlinked') || 'Product unlinked');
+        toast.success(t('admin.media.productUnlinked'));
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.failedUnlinkProduct') || 'Failed to unlink product');
+        toast.error(data.error || t('admin.media.failedUnlinkProduct'));
       }
     } catch {
-      toast.error(t('admin.media.failedUnlinkProduct') || 'Failed to unlink product');
+      toast.error(t('admin.media.failedUnlinkProduct'));
     } finally {
       setRemovingProduct(null);
     }
@@ -468,7 +467,7 @@ export default function VideoDetailPage() {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -477,24 +476,24 @@ export default function VideoDetailPage() {
     return (
       <div className="p-6 max-w-3xl space-y-4">
         <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1">
-            <House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}
+          <Link href="/admin" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+            <House className="w-3 h-3" />{t('admin.nav.dashboard')}
           </Link>
           <ChevronRight className="w-3 h-3" />
-          <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+          <Link href="/admin/media" className="hover:text-indigo-600 transition-colors">{t('admin.nav.media')}</Link>
           <ChevronRight className="w-3 h-3" />
-          <Link href="/admin/media/videos" className="hover:text-teal-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
+          <Link href="/admin/media/videos" className="hover:text-indigo-600 transition-colors">{t('admin.media.videosTitle')}</Link>
         </nav>
         <div className="text-center py-16">
           <VideoIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-slate-700">{t('admin.media.videoNotFound') || 'Video not found'}</h2>
-          <p className="text-sm text-slate-500 mt-1">{t('admin.media.videoNotFoundDesc') || 'The video you are looking for does not exist or has been deleted.'}</p>
+          <h2 className="text-lg font-semibold text-slate-700">{t('admin.media.videoNotFound')}</h2>
+          <p className="text-sm text-slate-500 mt-1">{t('admin.media.videoNotFoundDesc')}</p>
           <Link
             href="/admin/media/videos"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            {t('admin.media.backToVideos') || 'Back to Videos'}
+            {t('admin.media.backToVideos')}
           </Link>
         </div>
       </div>
@@ -519,13 +518,13 @@ export default function VideoDetailPage() {
     <div className="p-6 max-w-6xl space-y-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1">
-          <House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}
+        <Link href="/admin" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+          <House className="w-3 h-3" />{t('admin.nav.dashboard')}
         </Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-indigo-600 transition-colors">{t('admin.nav.media')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media/videos" className="hover:text-teal-600 transition-colors">{t('admin.media.videosTitle') || 'Videos'}</Link>
+        <Link href="/admin/media/videos" className="hover:text-indigo-600 transition-colors">{t('admin.media.videosTitle')}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium truncate max-w-[200px]">{video.title}</span>
       </nav>
@@ -535,16 +534,16 @@ export default function VideoDetailPage() {
         <Link
           href="/admin/media/videos"
           className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-          title={t('admin.media.backToVideos') || 'Back to Videos'}
+          title={t('admin.media.backToVideos')}
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-slate-900 truncate">{video.title}</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            {t('admin.media.slug') || 'Slug'}: <span className="font-mono text-slate-600">{video.slug}</span>
+            {t('admin.media.slug')}: <span className="font-mono text-slate-600">{video.slug}</span>
             {video.createdBy && (
-              <> &middot; {t('admin.media.createdBy') || 'Created by'}: {video.createdBy.name || video.createdBy.email}</>
+              <> &middot; {t('admin.media.createdBy')}: {video.createdBy.name || video.createdBy.email}</>
             )}
           </p>
         </div>
@@ -561,17 +560,17 @@ export default function VideoDetailPage() {
           {/* Left column: Main info */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-              {t('admin.media.videoInfo') || 'Video Information'}
+              {t('admin.media.videoInfo')}
             </h2>
 
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.videoTitleLabel') || 'Title'} <span className="text-red-500">*</span>
+                {t('admin.media.videoTitleLabel')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 value={getFormValue('title', video.title)}
                 onChange={e => setField('title', e.target.value)}
                 required
@@ -581,7 +580,7 @@ export default function VideoDetailPage() {
             {/* Slug (read-only) */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.slug') || 'Slug'}
+                {t('admin.media.slug')}
               </label>
               <input
                 type="text"
@@ -595,10 +594,10 @@ export default function VideoDetailPage() {
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.descriptionLabel') || 'Description'}
+                {t('admin.media.descriptionLabel')}
               </label>
               <textarea
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 rows={4}
                 value={getFormValue('description', video.description || '')}
                 onChange={e => setField('description', e.target.value)}
@@ -608,11 +607,11 @@ export default function VideoDetailPage() {
             {/* Video URL */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.videoUrlLabel') || 'Video URL'}
+                {t('admin.media.videoUrlLabel')}
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 placeholder="https://youtube.com/watch?v=..."
                 value={getFormValue('videoUrl', video.videoUrl || '')}
                 onChange={e => setField('videoUrl', e.target.value)}
@@ -622,11 +621,11 @@ export default function VideoDetailPage() {
             {/* Thumbnail URL + preview */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.thumbnailUrlLabel') || 'Thumbnail URL'}
+                {t('admin.media.thumbnailUrlLabel')}
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 placeholder="https://..."
                 value={getFormValue('thumbnailUrl', video.thumbnailUrl || '')}
                 onChange={e => setField('thumbnailUrl', e.target.value)}
@@ -635,7 +634,7 @@ export default function VideoDetailPage() {
                 <div className="mt-2 relative w-40 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
                   <Image
                     src={getFormValue('thumbnailUrl', video.thumbnailUrl || '') as string}
-                    alt={t('admin.media.thumbnailPreview') || 'Thumbnail preview'}
+                    alt={t('admin.media.thumbnailPreview')}
                     className="object-cover"
                     fill
                   />
@@ -646,11 +645,11 @@ export default function VideoDetailPage() {
             {/* Source URL */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.sourceUrlLabel') || 'Source URL (original platform link)'}
+                {t('admin.media.sourceUrlLabel')}
               </label>
               <input
                 type="url"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 placeholder="https://..."
                 value={getFormValue('sourceUrl', video.sourceUrl || '')}
                 onChange={e => setField('sourceUrl', e.target.value)}
@@ -661,11 +660,11 @@ export default function VideoDetailPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
-                {t('admin.media.durationLabel') || 'Duration'}
+                {t('admin.media.durationLabel')}
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 placeholder="e.g. 12:30"
                 value={getFormValue('duration', video.duration || '')}
                 onChange={e => setField('duration', e.target.value)}
@@ -676,16 +675,16 @@ export default function VideoDetailPage() {
           {/* Right column: Metadata */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-              {t('admin.media.videoMetadata') || 'Metadata'}
+              {t('admin.media.videoMetadata')}
             </h2>
 
             {/* Content Type */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.contentTypeLabel') || 'Content Type'}
+                {t('admin.media.contentTypeLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
                 value={getFormValue('contentType', video.contentType)}
                 onChange={e => setField('contentType', e.target.value)}
               >
@@ -698,10 +697,10 @@ export default function VideoDetailPage() {
             {/* Source */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.sourceLabel') || 'Source'}
+                {t('admin.media.sourceLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
                 value={getFormValue('source', video.source)}
                 onChange={e => setField('source', e.target.value)}
               >
@@ -714,14 +713,14 @@ export default function VideoDetailPage() {
             {/* Video Category */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.videoCategoryLabel') || 'Video Category'}
+                {t('admin.media.videoCategoryLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
                 value={getFormValue('videoCategoryId', video.videoCategoryId || '')}
                 onChange={e => setField('videoCategoryId', e.target.value || null)}
               >
-                <option value="">{t('admin.media.noCategorySelected') || '-- No category --'}</option>
+                <option value="">{t('admin.media.noCategorySelected')}</option>
                 {flatCategories.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -731,10 +730,10 @@ export default function VideoDetailPage() {
             {/* Status */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.statusLabel') || 'Status'}
+                {t('admin.media.statusLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
                 value={getFormValue('status', video.status)}
                 onChange={e => setField('status', e.target.value)}
               >
@@ -748,10 +747,10 @@ export default function VideoDetailPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1.5">
                 <Eye className="w-3.5 h-3.5 text-slate-400" />
-                {t('admin.media.visibilityLabel') || 'Visibility'}
+                {t('admin.media.visibilityLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
                 value={getFormValue('visibility', video.visibility)}
                 onChange={e => setField('visibility', e.target.value)}
               >
@@ -764,11 +763,11 @@ export default function VideoDetailPage() {
             {/* Instructor */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t('admin.media.instructorLabel') || 'Instructor'}
+                {t('admin.media.instructorLabel')}
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 value={getFormValue('instructor', video.instructor || '')}
                 onChange={e => setField('instructor', e.target.value)}
               />
@@ -779,39 +778,39 @@ export default function VideoDetailPage() {
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   checked={getFormValue('isPublished', video.isPublished) as boolean}
                   onChange={e => setField('isPublished', e.target.checked)}
                 />
-                {t('admin.media.published') || 'Published'} <span className="text-xs text-slate-400">({t('admin.media.legacy') || 'legacy'})</span>
+                {t('admin.media.published')} <span className="text-xs text-slate-400">({t('admin.media.legacy')})</span>
               </label>
 
               <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   checked={getFormValue('isFeatured', video.isFeatured) as boolean}
                   onChange={e => setField('isFeatured', e.target.checked)}
                 />
-                {t('admin.media.featured') || 'Featured'} <span className="text-xs text-slate-400">({t('admin.media.legacy') || 'legacy'})</span>
+                {t('admin.media.featured')} <span className="text-xs text-slate-400">({t('admin.media.legacy')})</span>
               </label>
             </div>
 
             {/* Meta info (read-only) */}
             <div className="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-500 space-y-1">
-              <p>{t('admin.media.videoId') || 'ID'}: <span className="font-mono">{video.id}</span></p>
-              <p>{t('admin.media.views') || 'Views'}: <span className="font-semibold text-slate-700">{video.views.toLocaleString()}</span></p>
-              <p>{t('admin.media.createdAt') || 'Created'}: {new Date(video.createdAt).toLocaleString(locale)}</p>
-              <p>{t('admin.media.updatedAt') || 'Updated'}: {new Date(video.updatedAt).toLocaleString(locale)}</p>
+              <p>{t('admin.media.videoId')}: <span className="font-mono">{video.id}</span></p>
+              <p>{t('admin.media.views')}: <span className="font-semibold text-slate-700">{video.views.toLocaleString()}</span></p>
+              <p>{t('admin.media.createdAt')}: {new Date(video.createdAt).toLocaleString(locale)}</p>
+              <p>{t('admin.media.updatedAt')}: {new Date(video.updatedAt).toLocaleString(locale)}</p>
               {video.videoUrl && (
                 <a
                   href={video.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-teal-600 hover:text-teal-700 mt-1"
+                  className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 mt-1"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  {t('admin.media.openVideo') || 'Open video'}
+                  {t('admin.media.openVideo')}
                 </a>
               )}
             </div>
@@ -822,16 +821,16 @@ export default function VideoDetailPage() {
         <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
           {hasChanges && (
             <span className="text-xs text-amber-600 me-auto">
-              {t('admin.media.unsavedChanges') || 'You have unsaved changes'}
+              {t('admin.media.unsavedChanges')}
             </span>
           )}
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t('common.save') || 'Save Changes'}
+            {t('common.save')}
           </button>
         </div>
       </div>
@@ -842,13 +841,13 @@ export default function VideoDetailPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <Tag className="w-4 h-4 text-slate-400" />
-          {t('admin.media.tagsSection') || 'Tags'}
+          {t('admin.media.tagsSection')}
         </h2>
 
         {/* Tag pills */}
         <div className="flex flex-wrap gap-2 mb-3 min-h-[32px]">
           {tags.length === 0 && (
-            <span className="text-sm text-slate-400 italic">{t('admin.media.noTags') || 'No tags yet'}</span>
+            <span className="text-sm text-slate-400 italic">{t('admin.media.noTags')}</span>
           )}
           {tags.map(tag => (
             <span
@@ -859,7 +858,7 @@ export default function VideoDetailPage() {
               <button
                 onClick={() => removeTag(tag)}
                 className="text-slate-400 hover:text-red-500 transition-colors"
-                aria-label={`${t('common.remove') || 'Remove'} ${tag}`}
+                aria-label={`${t('common.remove')} ${tag}`}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -872,8 +871,8 @@ export default function VideoDetailPage() {
           <input
             ref={tagInputRef}
             type="text"
-            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
-            placeholder={t('admin.media.addTagPlaceholder') || 'Type a tag and press Enter'}
+            className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+            placeholder={t('admin.media.addTagPlaceholder')}
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
             onKeyDown={handleTagKeyDown}
@@ -888,10 +887,10 @@ export default function VideoDetailPage() {
           <button
             onClick={saveTags}
             disabled={savingTags}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
           >
             {savingTags ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {t('admin.media.saveTags') || 'Save Tags'}
+            {t('admin.media.saveTags')}
           </button>
         </div>
       </div>
@@ -902,10 +901,10 @@ export default function VideoDetailPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <MapPin className="w-4 h-4 text-slate-400" />
-          {t('admin.media.placementsSection') || 'Content Placements'}
+          {t('admin.media.placementsSection')}
         </h2>
         <p className="text-xs text-slate-500 mb-4">
-          {t('admin.media.placementsDesc') || 'Select where this video should appear on the site. Changes are saved immediately.'}
+          {t('admin.media.placementsDesc')}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -917,16 +916,16 @@ export default function VideoDetailPage() {
                 key={placement}
                 className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
                   active
-                    ? 'bg-teal-50 border-teal-200 text-teal-800'
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
                 {toggling ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-teal-500 flex-shrink-0" />
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-500 flex-shrink-0" />
                 ) : (
                   <input
                     type="checkbox"
-                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 flex-shrink-0"
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
                     checked={active}
                     onChange={() => togglePlacement(placement)}
                   />
@@ -944,12 +943,12 @@ export default function VideoDetailPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <Package className="w-4 h-4 text-slate-400" />
-          {t('admin.media.linkedProducts') || 'Linked Products'}
+          {t('admin.media.linkedProducts')}
         </h2>
 
         {productLinks.length === 0 ? (
           <p className="text-sm text-slate-400 italic">
-            {t('admin.media.noLinkedProducts') || 'No products linked to this video.'}
+            {t('admin.media.noLinkedProducts')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -982,7 +981,7 @@ export default function VideoDetailPage() {
                   onClick={() => removeProductLink(pl.product.id)}
                   disabled={removingProduct === pl.product.id}
                   className="text-slate-400 hover:text-red-500 transition-colors p-1 disabled:opacity-50"
-                  aria-label={`${t('common.remove') || 'Remove'} ${pl.product.name}`}
+                  aria-label={`${t('common.remove')} ${pl.product.name}`}
                 >
                   {removingProduct === pl.product.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1003,16 +1002,16 @@ export default function VideoDetailPage() {
         <div className="bg-white rounded-xl border border-emerald-200 p-6">
           <h2 className="text-sm font-semibold text-emerald-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
-            {t('admin.bridges.videoSales') || 'Video Product Sales'}
+            {t('admin.bridges.videoSales')}
           </h2>
           <div className="grid grid-cols-2 gap-4 mb-3">
             <div>
               <p className="text-2xl font-bold text-emerald-600">${(salesBridge.totalRevenue ?? 0).toFixed(2)}</p>
-              <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue') || 'Revenue'}</p>
+              <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue')}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{salesBridge.totalUnits}</p>
-              <p className="text-xs text-slate-500">{t('admin.bridges.unitsSold') || 'Units sold'}</p>
+              <p className="text-xs text-slate-500">{t('admin.bridges.unitsSold')}</p>
             </div>
           </div>
           {salesBridge.products && salesBridge.products.length > 0 && (
@@ -1035,7 +1034,7 @@ export default function VideoDetailPage() {
         <div className="bg-white rounded-xl border border-violet-200 p-6">
           <h2 className="text-sm font-semibold text-violet-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <MessageSquare className="w-4 h-4 text-violet-500" />
-            {t('admin.bridges.videoCommunity') || 'Video Reviews'}
+            {t('admin.bridges.videoCommunity')}
             <span className="text-xs font-normal text-violet-400">({communityBridge.reviewCount})</span>
           </h2>
           {communityBridge.avgRating && (
@@ -1066,13 +1065,13 @@ export default function VideoDetailPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <ShieldCheck className="w-4 h-4 text-slate-400" />
-            {t('admin.media.consentSection') || 'Client Consent'}
+            {t('admin.media.consentSection')}
           </h2>
 
           {/* Featured client info */}
           <div className="mb-4 p-3 bg-slate-50 rounded-lg text-sm">
             <p className="text-slate-600">
-              <span className="font-medium text-slate-700">{t('admin.media.featuredClient') || 'Featured client'}:</span>{' '}
+              <span className="font-medium text-slate-700">{t('admin.media.featuredClient')}:</span>{' '}
               {video.featuredClient?.name || video.featuredClient?.email || video.featuredClientId}
             </p>
           </div>
@@ -1081,21 +1080,21 @@ export default function VideoDetailPage() {
           {consentData ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-600">{t('admin.media.canPublish') || 'Can publish'}:</span>
+                <span className="text-sm text-slate-600">{t('admin.media.canPublish')}:</span>
                 {consentData.canPublish ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                    {t('common.yes') || 'Yes'}
+                    {t('common.yes')}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                    {t('common.no') || 'No'} &mdash; {t('admin.media.consentRequired') || 'consent required'}
+                    {t('common.no')} &mdash; {t('admin.media.consentRequired')}
                   </span>
                 )}
               </div>
 
               {consentData.consents.length === 0 ? (
                 <p className="text-sm text-slate-400 italic">
-                  {t('admin.media.noConsentRequested') || 'No consent has been requested yet.'}
+                  {t('admin.media.noConsentRequested')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1126,17 +1125,17 @@ export default function VideoDetailPage() {
                 <button
                   onClick={handleRequestConsent}
                   disabled={requestingConsent}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-teal-300 text-teal-700 rounded-lg text-sm hover:bg-teal-50 disabled:opacity-50 mt-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-indigo-300 text-indigo-700 rounded-lg text-sm hover:bg-indigo-50 disabled:opacity-50 mt-2"
                 >
                   {requestingConsent ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                  {t('admin.media.requestConsent') || 'Request Consent'}
+                  {t('admin.media.requestConsent')}
                 </button>
               )}
             </div>
           ) : (
             <div className="flex items-center gap-2 text-sm text-slate-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              {t('common.loading') || 'Loading...'}
+              {t('common.loading')}
             </div>
           )}
         </div>
@@ -1149,22 +1148,22 @@ export default function VideoDetailPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <MonitorPlay className="w-4 h-4 text-slate-400" />
-            {t('admin.media.recordingSource') || 'Recording Source'}
+            {t('admin.media.recordingSource')}
           </h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-slate-500">{t('admin.recordingImports.filterPlatform') || 'Platform'}:</span>{' '}
+              <span className="text-slate-500">{t('admin.recordingImports.filterPlatform')}:</span>{' '}
               <span className="font-medium text-slate-700 capitalize">{video.recordingImport.platform}</span>
             </div>
             {video.recordingImport.meetingTitle && (
               <div>
-                <span className="text-slate-500">{t('admin.media.meetingLabel') || 'Meeting'}:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.meetingLabel')}:</span>{' '}
                 <span className="font-medium text-slate-700">{video.recordingImport.meetingTitle}</span>
               </div>
             )}
             {video.recordingImport.meetingDate && (
               <div>
-                <span className="text-slate-500">{t('admin.media.dateLabel') || 'Date'}:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.dateLabel')}:</span>{' '}
                 <span className="font-medium text-slate-700">
                   {new Date(video.recordingImport.meetingDate).toLocaleDateString(undefined, {
                     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -1174,18 +1173,18 @@ export default function VideoDetailPage() {
             )}
             {video.recordingImport.hostEmail && (
               <div>
-                <span className="text-slate-500">{t('admin.media.hostLabel') || 'Host'}:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.hostLabel')}:</span>{' '}
                 <span className="font-medium text-slate-700">{video.recordingImport.hostEmail}</span>
               </div>
             )}
             {video.platformMeetingId && (
               <div>
-                <span className="text-slate-500">{t('admin.media.meetingIdLabel') || 'Meeting ID'}:</span>{' '}
+                <span className="text-slate-500">{t('admin.media.meetingIdLabel')}:</span>{' '}
                 <span className="font-mono text-xs text-slate-600">{video.platformMeetingId}</span>
               </div>
             )}
             <div>
-              <span className="text-slate-500">{t('admin.recordingImports.importAction') || 'Imported'}:</span>{' '}
+              <span className="text-slate-500">{t('admin.recordingImports.importAction')}:</span>{' '}
               <span className="font-medium text-slate-700">
                 {new Date(video.recordingImport.createdAt).toLocaleDateString(locale)}
               </span>
@@ -1201,10 +1200,10 @@ export default function VideoDetailPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <Youtube className="w-4 h-4 text-red-500" />
-            {t('admin.media.publishYouTube') || 'Publish to YouTube'}
+            {t('admin.media.publishYouTube')}
           </h2>
           <p className="text-sm text-slate-500 mb-4">
-            {t('admin.media.publishYouTubeDesc') || 'Upload this video to your YouTube channel. The video will be uploaded as unlisted by default.'}
+            {t('admin.media.publishYouTubeDesc')}
           </p>
 
           {/* YouTube result link */}
@@ -1212,12 +1211,12 @@ export default function VideoDetailPage() {
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
               <Youtube className="w-5 h-5 text-red-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-green-800">{t('admin.media.publishedYouTube') || 'Published to YouTube!'}</p>
-                <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline truncate block">
+                <p className="text-sm font-medium text-green-800">{t('admin.media.publishedYouTube')}</p>
+                <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline truncate block">
                   {ytResult.youtubeUrl}
                 </a>
               </div>
-              <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg">
+              <a href={ytResult.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg">
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
@@ -1236,7 +1235,7 @@ export default function VideoDetailPage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm"
           >
             <Youtube className="w-4 h-4" />
-            {t('admin.media.publishYouTubeBtn') || 'Publish to YouTube'}
+            {t('admin.media.publishYouTubeBtn')}
           </button>
         </div>
       )}
@@ -1247,20 +1246,20 @@ export default function VideoDetailPage() {
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
               <Youtube className="w-5 h-5 text-red-500" />
-              {t('admin.media.publishYouTube') || 'Publish to YouTube'}
+              {t('admin.media.publishYouTube')}
             </h3>
 
             <div className="space-y-4">
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.media.ytTitle') || 'Title'}
+                  {t('admin.media.ytTitle')}
                 </label>
                 <input
                   type="text"
                   value={ytForm.title}
                   onChange={e => setYtForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                   maxLength={100}
                 />
               </div>
@@ -1268,13 +1267,13 @@ export default function VideoDetailPage() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.media.ytDescription') || 'Description'}
+                  {t('admin.media.ytDescription')}
                 </label>
                 <textarea
                   value={ytForm.description}
                   onChange={e => setYtForm(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400 resize-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 resize-none"
                   maxLength={5000}
                 />
               </div>
@@ -1282,13 +1281,13 @@ export default function VideoDetailPage() {
               {/* Tags */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.media.ytTags') || 'Tags (comma-separated)'}
+                  {t('admin.media.ytTags')}
                 </label>
                 <input
                   type="text"
                   value={ytForm.tags}
                   onChange={e => setYtForm(prev => ({ ...prev, tags: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                   placeholder="peptides, research, biocycle"
                 />
               </div>
@@ -1296,16 +1295,16 @@ export default function VideoDetailPage() {
               {/* Privacy */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.media.ytPrivacy') || 'Privacy'}
+                  {t('admin.media.ytPrivacy')}
                 </label>
                 <select
                   value={ytForm.privacyStatus}
                   onChange={e => setYtForm(prev => ({ ...prev, privacyStatus: e.target.value as 'public' | 'unlisted' | 'private' }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                 >
-                  <option value="unlisted">{t('admin.media.ytUnlisted') || 'Unlisted'}</option>
-                  <option value="public">{t('admin.media.ytPublic') || 'Public'}</option>
-                  <option value="private">{t('admin.media.ytPrivate') || 'Private'}</option>
+                  <option value="unlisted">{t('admin.media.ytUnlisted')}</option>
+                  <option value="public">{t('admin.media.ytPublic')}</option>
+                  <option value="private">{t('admin.media.ytPrivate')}</option>
                 </select>
               </div>
             </div>
@@ -1317,7 +1316,7 @@ export default function VideoDetailPage() {
                 disabled={ytPublishing}
                 className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm disabled:opacity-50"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={async () => {
@@ -1336,14 +1335,14 @@ export default function VideoDetailPage() {
                     });
                     const data = await res.json();
                     if (data.success) {
-                      toast.success(t('admin.media.publishedYouTube') || 'Published to YouTube!');
+                      toast.success(t('admin.media.publishedYouTube'));
                       setYtResult({ youtubeUrl: data.youtubeUrl });
                       setShowYTModal(false);
                     } else {
-                      toast.error(data.error || t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+                      toast.error(data.error || t('admin.media.publishYouTubeError'));
                     }
                   } catch {
-                    toast.error(t('admin.media.publishYouTubeError') || 'YouTube upload failed');
+                    toast.error(t('admin.media.publishYouTubeError'));
                   } finally {
                     setYtPublishing(false);
                   }
@@ -1353,8 +1352,8 @@ export default function VideoDetailPage() {
               >
                 {ytPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4" />}
                 {ytPublishing
-                  ? (t('admin.media.publishingYouTube') || 'Uploading...')
-                  : (t('admin.media.publishYouTubeBtn') || 'Publish to YouTube')}
+                  ? (t('admin.media.publishingYouTube'))
+                  : (t('admin.media.publishYouTubeBtn'))}
               </button>
             </div>
           </div>
@@ -1369,15 +1368,15 @@ export default function VideoDetailPage() {
           href="/admin/media/videos"
           className="px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition-colors"
         >
-          {t('common.cancel') || 'Cancel'}
+          {t('common.cancel')}
         </Link>
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {t('common.save') || 'Save Changes'}
+          {t('common.save')}
         </button>
       </div>
     </div>

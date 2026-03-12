@@ -133,6 +133,7 @@ export default function StockAlertButton({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('shop.stockAlert.emailPlaceholder') || 'your@email.com'}
+          aria-label={t('shop.stockAlert.emailPlaceholder') || 'Email for stock alert'}
           disabled={isLoading}
           className="flex-1 px-4 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />

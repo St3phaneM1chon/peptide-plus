@@ -61,6 +61,20 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     const accounts = await prisma.bankAccount.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        accountNumber: true,
+        institution: true,
+        type: true,
+        currency: true,
+        currentBalance: true,
+        isActive: true,
+        chartAccountId: true,
+        apiCredentials: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     // Decrypt and mask sensitive fields
@@ -86,7 +100,7 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.bank.manage' });
 
 // ---------------------------------------------------------------------------
 // POST /api/accounting/bank-accounts - Create a new bank account
@@ -145,7 +159,7 @@ export const POST = withAdminGuard(async (request, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.bank.manage' });
 
 // ---------------------------------------------------------------------------
 // PUT /api/accounting/bank-accounts - Update a bank account
@@ -214,7 +228,7 @@ export const PUT = withAdminGuard(async (request, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.bank.manage' });
 
 // ---------------------------------------------------------------------------
 // DELETE /api/accounting/bank-accounts - Soft-delete a bank account
@@ -278,4 +292,4 @@ export const DELETE = withAdminGuard(async (request, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.bank.manage' });

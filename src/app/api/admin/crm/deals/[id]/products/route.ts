@@ -7,9 +7,18 @@ export const dynamic = 'force-dynamic';
  */
 
 import { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
+
+const addDealProductSchema = z.object({
+  productId: z.string().min(1, 'productId required'),
+  quantity: z.number().int().min(1).optional().default(1),
+  unitPrice: z.number().min(0).optional(),
+  discount: z.number().min(0).max(100).optional().default(0),
+  notes: z.string().max(2000).optional(),
+});
 
 export const GET = withAdminGuard(async (request, { params: paramsPromise }) => {
   const { id } = await paramsPromise as unknown as { id: string };
@@ -28,9 +37,11 @@ export const GET = withAdminGuard(async (request, { params: paramsPromise }) => 
 export const POST = withAdminGuard(async (request, { params: paramsPromise }) => {
   const { id: dealId } = await paramsPromise as unknown as { id: string };
   const body = await request.json();
-  const { productId, quantity = 1, unitPrice, discount = 0, notes } = body;
-
-  if (!productId) return apiError('productId required', 'VALIDATION_ERROR', { status: 400 });
+  const parsed = addDealProductSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError('Invalid data', 'VALIDATION_ERROR', { status: 400, details: parsed.error.errors });
+  }
+  const { productId, quantity, unitPrice, discount, notes } = parsed.data;
 
   // Verify deal exists
   const deal = await prisma.crmDeal.findUnique({ where: { id: dealId }, select: { id: true } });

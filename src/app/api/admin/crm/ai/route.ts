@@ -40,7 +40,7 @@ const emailSuggestionSchema = z.object({
   action: z.literal('email_suggestion'),
   leadId: z.string().optional(),
   dealId: z.string().optional(),
-  purpose: z.string().max(500).optional(),
+  purpose: z.enum(['follow_up', 'introduction', 'proposal', 'thank_you', 'meeting_request']).optional(),
   language: z.string().max(10).optional(),
 }).refine(
   (d) => d.leadId || d.dealId,
@@ -52,12 +52,8 @@ const callSummarySchema = z.object({
   transcriptionText: z.string().min(1, 'transcriptionText required').max(100000),
 });
 
-const aiActionSchema = z.discriminatedUnion('action', [
-  scoreLeadSchema,
-  scoreDealSchema,
-  // emailSuggestionSchema uses refine so can't be in discriminatedUnion
-  callSummarySchema,
-]);
+// Note: emailSuggestionSchema uses refine so can't be in discriminatedUnion.
+// Individual schemas are validated per-action in the switch below.
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   let rawBody: unknown;
@@ -102,7 +98,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       const result = await generateEmailSuggestion({
         leadId: parsed.data.leadId,
         dealId: parsed.data.dealId,
-        purpose: parsed.data.purpose,
+        purpose: parsed.data.purpose ?? 'follow_up',
         language: parsed.data.language,
       });
       return apiSuccess(result, { request });

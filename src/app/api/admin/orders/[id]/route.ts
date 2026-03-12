@@ -707,6 +707,89 @@ async function handleRefund(
     logger.error('Failed to clawback ambassador commission', { error: commError instanceof Error ? commError.message : String(commError) });
   }
 
+  // A5-P1-003: Revoke loyalty points awarded for this order on refund
+  let loyaltyRevocation: { pointsRevoked: number; transactionId: string } | null = null;
+  if (order.userId) {
+    try {
+      // Find all loyalty EARN transactions linked to this order
+      const earnTransactions = await prisma.loyaltyTransaction.findMany({
+        where: {
+          orderId: orderId,
+          type: { in: ['EARN_PURCHASE', 'EARN_BONUS'] },
+          points: { gt: 0 },
+        },
+        select: { id: true, points: true },
+      });
+
+      const totalEarnedPoints = earnTransactions.reduce((sum, t) => sum + t.points, 0);
+
+      if (totalEarnedPoints > 0) {
+        // For partial refunds, revoke proportionally; for full refunds, revoke all
+        const pointsToRevoke = isFullRefund
+          ? totalEarnedPoints
+          : Math.floor(totalEarnedPoints * (amount / orderTotal));
+
+        if (pointsToRevoke > 0) {
+          // Atomic: decrement user balance + create ADJUST transaction
+          const { revokeTx } = await prisma.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
+              where: { id: order.userId! },
+              data: {
+                loyaltyPoints: { decrement: pointsToRevoke },
+              },
+            });
+
+            // Prevent negative balance
+            if (updatedUser.loyaltyPoints < 0) {
+              await tx.user.update({
+                where: { id: order.userId! },
+                data: { loyaltyPoints: 0 },
+              });
+            }
+
+            const finalBalance = Math.max(updatedUser.loyaltyPoints, 0);
+
+            const rTx = await tx.loyaltyTransaction.create({
+              data: {
+                userId: order.userId!,
+                type: 'ADJUST',
+                points: -pointsToRevoke,
+                description: `Points revoked: order ${order.orderNumber} refunded ($${amount}${isFullRefund ? ' - full' : ' - partial'})`,
+                orderId: orderId,
+                balanceAfter: finalBalance,
+                metadata: JSON.stringify({
+                  reason: 'refund_revocation',
+                  refundAmount: amount,
+                  isFullRefund,
+                  originalPointsEarned: totalEarnedPoints,
+                }),
+              },
+            });
+
+            return { revokeTx: rTx };
+          });
+
+          loyaltyRevocation = {
+            pointsRevoked: pointsToRevoke,
+            transactionId: revokeTx.id,
+          };
+
+          logger.info('Loyalty points revoked on refund', {
+            orderId,
+            userId: order.userId,
+            pointsRevoked: pointsToRevoke,
+            transactionId: revokeTx.id,
+          });
+        }
+      }
+    } catch (loyaltyError) {
+      logger.error('Failed to revoke loyalty points on refund', {
+        orderId,
+        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
+      });
+    }
+  }
+
   // Audit log for refund (fire-and-forget)
   logAdminAction({
     adminUserId: session.user.id,
@@ -717,7 +800,12 @@ async function handleRefund(
     newValue: { paymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND', amount, reason, isFullRefund },
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
-    metadata: { journalEntryId: entryId, creditNoteId, commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null },
+    metadata: {
+      journalEntryId: entryId,
+      creditNoteId,
+      commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null,
+      loyaltyRevocation,
+    },
   }).catch((err: unknown) => { logger.error('[AdminOrder] Non-blocking audit log for refund failed', { error: err instanceof Error ? err.message : String(err) }); });
 
   // ── Send refund email (fire-and-forget) ──────────────────────────────
@@ -752,6 +840,7 @@ async function handleRefund(
       commissionClawback: commissionClawback.clawbackAmount
         ? commissionClawback
         : null,
+      loyaltyRevocation,
     },
   });
 }

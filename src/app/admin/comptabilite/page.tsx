@@ -274,7 +274,7 @@ function CashFlowLineChart({
         {/* Data points and month labels */}
         {points.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r={4} className="fill-white stroke-teal-500" strokeWidth={2}>
+            <circle cx={p.x} cy={p.y} r={4} className="fill-white stroke-indigo-500" strokeWidth={2}>
               <title>{`${p.month}: ${formatCurrency(p.value)}`}</title>
             </circle>
             <text x={p.x} y={chartH - 4} textAnchor="middle" className="text-[10px] fill-slate-500">
@@ -285,7 +285,7 @@ function CashFlowLineChart({
       </svg>
       {/* Legend */}
       <div className="flex items-center justify-center gap-2 mt-1">
-        <span className="w-6 h-0.5 bg-teal-500 rounded" />
+        <span className="w-6 h-0.5 bg-indigo-500 rounded" />
         <span className="text-sm text-slate-600">{label}</span>
       </div>
     </div>
@@ -651,26 +651,26 @@ export default function ComptabiliteDashboard() {
   const handleRefresh = useCallback(() => { setLoading(true); fetchDashboard(); }, [fetchDashboard]);
   const handleExportReport = useCallback(() => {
     const headers = [
-      t('admin.accounting.metric') || 'Indicateur',
-      t('admin.accounting.value') || 'Valeur',
-      t('admin.accounting.period') || 'Periode',
+      t('admin.accounting.metric'),
+      t('admin.accounting.value'),
+      t('admin.accounting.period'),
     ];
     const rows = [
-      [t('admin.accounting.treasury') || 'Tresorerie', String(stats.tresorerie), selectedPeriod],
-      [t('admin.accounting.monthlyRevenue') || 'CA mensuel', String(stats.caMonth), selectedPeriod],
-      [t('admin.accounting.grossMargin') || 'Marge brute', `${stats.margeBrute}%`, selectedPeriod],
-      [t('admin.accounting.netProfit') || 'Benefice net', String(stats.beneficeNet), selectedPeriod],
-      ['DSO', `${kpis.dso} ${t('admin.accounting.chartDays') || 'jours'}`, selectedPeriod],
-      ['DPO', `${kpis.dpo} ${t('admin.accounting.chartDays') || 'jours'}`, selectedPeriod],
-      [t('admin.accounting.currentRatioLabel') || 'Ratio courant', String(kpis.currentRatio.toFixed(2)), selectedPeriod],
+      [t('admin.accounting.treasury'), String(stats.tresorerie), selectedPeriod],
+      [t('admin.accounting.monthlyRevenue'), String(stats.caMonth), selectedPeriod],
+      [t('admin.accounting.grossMargin'), `${stats.margeBrute}%`, selectedPeriod],
+      [t('admin.accounting.netProfit'), String(stats.beneficeNet), selectedPeriod],
+      ['DSO', `${kpis.dso} ${t('admin.accounting.chartDays')}`, selectedPeriod],
+      ['DPO', `${kpis.dpo} ${t('admin.accounting.chartDays')}`, selectedPeriod],
+      [t('admin.accounting.currentRatioLabel'), String(kpis.currentRatio.toFixed(2)), selectedPeriod],
       ['AR', String(kpis.arOutstanding), selectedPeriod],
       ['AP', String(kpis.apOutstanding), selectedPeriod],
     ];
     // Add monthly trends
     if (monthlyTrends.length > 0) {
       rows.push(['', '', '']);
-      rows.push([t('admin.accounting.revenueVsExpensesChart') || 'Tendances mensuelles', '', '']);
-      rows.push([t('admin.accounting.monthCol') || 'Mois', t('admin.accounting.revenueLabel') || 'Revenus', t('admin.accounting.expensesLabel') || 'Depenses']);
+      rows.push([t('admin.accounting.revenueVsExpensesChart'), '', '']);
+      rows.push([t('admin.accounting.monthCol'), t('admin.accounting.revenueLabel'), t('admin.accounting.expensesLabel')]);
       monthlyTrends.forEach(m => {
         rows.push([m.month, String(m.revenue), String(m.expenses)]);
       });
@@ -681,7 +681,7 @@ export default function ComptabiliteDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `rapport-comptabilite-${selectedPeriod}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Rapport exporte avec succes');
+    toast.success(t('common.exported'));
   }, [stats, kpis, monthlyTrends, selectedPeriod, t]);
   const handleClosePeriod = useCallback(() => {
     window.location.href = '/admin/comptabilite/cloture';
@@ -777,7 +777,7 @@ export default function ComptabiliteDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-teal-500" />
+            <Clock className="w-4 h-4 text-indigo-500" />
             <span className="text-xs font-medium text-slate-500">DSO</span>
           </div>
           <p className="text-2xl font-bold text-slate-900">{kpis.dso}<span className="text-sm font-normal text-slate-500 ms-1">{t('admin.accounting.chartDays')}</span></p>
@@ -806,7 +806,7 @@ export default function ComptabiliteDashboard() {
             <DollarSign className="w-4 h-4 text-amber-500" />
             <span className="text-xs font-medium text-slate-500">AR / AP</span>
           </div>
-          <p className="text-lg font-bold text-teal-600">{formatCurrency(kpis.arOutstanding)}</p>
+          <p className="text-lg font-bold text-indigo-600">{formatCurrency(kpis.arOutstanding)}</p>
           <p className="text-lg font-bold text-red-600">{formatCurrency(kpis.apOutstanding)}</p>
         </div>
       </div>
@@ -833,10 +833,10 @@ export default function ComptabiliteDashboard() {
               {stats.caMonth > 0 ? `${((cogs / stats.caMonth) * 100).toFixed(1)}% du CA` : '--'}
             </p>
           </div>
-          <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
-            <p className="text-xs font-medium text-teal-600 uppercase">{t('admin.accounting.grossMargin')}</p>
-            <p className="text-xl font-bold text-teal-700 mt-1">{formatCurrency(grossProfit)}</p>
-            <p className="text-xs text-teal-500 mt-1">
+          <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+            <p className="text-xs font-medium text-indigo-600 uppercase">{t('admin.accounting.grossMargin')}</p>
+            <p className="text-xl font-bold text-indigo-700 mt-1">{formatCurrency(grossProfit)}</p>
+            <p className="text-xs text-indigo-500 mt-1">
               {stats.caMonth > 0 ? `${((grossProfit / stats.caMonth) * 100).toFixed(1)}%` : '--'}
             </p>
           </div>
@@ -882,8 +882,8 @@ export default function ComptabiliteDashboard() {
         {/* QuickBooks/Xero Export */}
         <SectionCard title={t('admin.accounting.exportSection')} theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-teal-100 rounded-lg">
-              <FileDown className="w-5 h-5 text-teal-600" />
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <FileDown className="w-5 h-5 text-indigo-600" />
             </div>
             <p className="text-sm text-slate-600">{t('admin.accounting.period')}: {selectedPeriod}</p>
           </div>
@@ -900,9 +900,9 @@ export default function ComptabiliteDashboard() {
             </button>
             <button
               onClick={() => handleAccountingExport('xero_csv')}
-              className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-colors text-start"
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors text-start"
             >
-              <span className="p-1.5 bg-teal-100 rounded text-teal-600"><Download className="w-4 h-4" /></span>
+              <span className="p-1.5 bg-indigo-100 rounded text-indigo-600"><Download className="w-4 h-4" /></span>
               <div>
                 <span className="text-sm font-medium text-slate-800">{t('admin.accounting.exportXero')}</span>
                 <p className="text-xs text-slate-500">Xero CSV Import</p>
@@ -1017,12 +1017,12 @@ export default function ComptabiliteDashboard() {
             {/* Upcoming Remittance Dates */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-700">{t('admin.accounting.taxRemittanceDates')}</h4>
-              <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg">
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <CalendarDays className="w-4 h-4 text-teal-600" />
-                  <span className="text-sm font-medium text-teal-800">{t('admin.accounting.taxRemittanceGst')}</span>
+                  <CalendarDays className="w-4 h-4 text-indigo-600" />
+                  <span className="text-sm font-medium text-indigo-800">{t('admin.accounting.taxRemittanceGst')}</span>
                 </div>
-                <p className="text-xs text-teal-600 ms-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
+                <p className="text-xs text-indigo-600 ms-6">{t('admin.accounting.taxQuarterly')} - 30 avril 2026</p>
               </div>
               <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
@@ -1087,18 +1087,18 @@ export default function ComptabiliteDashboard() {
                   className={`flex items-start gap-3 p-3 rounded-lg border ${
                     alert.type === 'danger' ? 'bg-red-50 border-red-200' :
                     alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
-                    'bg-teal-50 border-teal-200'
+                    'bg-indigo-50 border-indigo-200'
                   }`}
                 >
                   <AlertIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
                     alert.type === 'danger' ? 'text-red-500' :
                     alert.type === 'warning' ? 'text-yellow-500' :
-                    'text-teal-500'
+                    'text-indigo-500'
                   }`} />
                   <p className={`text-sm ${
                     alert.type === 'danger' ? 'text-red-800' :
                     alert.type === 'warning' ? 'text-yellow-800' :
-                    'text-teal-800'
+                    'text-indigo-800'
                   }`}>
                     {alert.message}
                   </p>
@@ -1168,9 +1168,9 @@ export default function ComptabiliteDashboard() {
             </Link>
             <Link
               href="/admin/comptabilite/rapprochement"
-              className="flex items-center gap-3 p-4 rounded-lg border border-teal-100 bg-teal-50/50 hover:bg-teal-50 transition-colors group"
+              className="flex items-center gap-3 p-4 rounded-lg border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 transition-colors group"
             >
-              <span className="p-2 bg-teal-100 rounded-lg text-teal-600 group-hover:bg-teal-200 transition-colors">
+              <span className="p-2 bg-indigo-100 rounded-lg text-indigo-600 group-hover:bg-indigo-200 transition-colors">
                 <CheckCircle className="w-5 h-5" />
               </span>
               <div>

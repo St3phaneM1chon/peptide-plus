@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import './admin.css';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';

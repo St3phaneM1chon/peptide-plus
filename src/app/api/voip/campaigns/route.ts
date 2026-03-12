@@ -12,7 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { markCampaignDncl } from '@/lib/voip/dncl';
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const { searchParams } = request.nextUrl;
     const companyId = searchParams.get('companyId');
@@ -44,7 +44,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   }
 });
 
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const raw = await request.json();
     const parsed = z.object({

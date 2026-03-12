@@ -157,7 +157,7 @@ export default function AbonnementsPage() {
         return;
       }
       setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
-      toast.success(t('admin.subscriptions.statusUpdated') || 'Status updated');
+      toast.success(t('admin.subscriptions.statusUpdated'));
     } catch (err) {
       console.error('Error updating subscription status:', err);
       toast.error(t('common.networkError'));
@@ -320,35 +320,35 @@ export default function AbonnementsPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewSubscription = useCallback(() => {
-    toast.info(t('admin.subscriptions.newSubFromShop') || 'Subscriptions are created by customers from the shop. Use the product page to set up subscription options.');
+    toast.info(t('admin.subscriptions.newSubFromShop'));
   }, [t]);
 
   const handleRibbonDelete = useCallback(() => {
-    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst')); return; }
     if (selectedSub.status === 'CANCELLED') {
-      toast.info(t('admin.subscriptions.alreadyCancelled') || 'This subscription is already cancelled');
+      toast.info(t('admin.subscriptions.alreadyCancelled'));
       return;
     }
     setConfirmCancelId(selectedSub.id);
   }, [selectedSub, t]);
 
   const handleRibbonSuspend = useCallback(() => {
-    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst')); return; }
     if (selectedSub.status !== 'ACTIVE') {
-      toast.info(t('admin.subscriptions.canOnlyPauseActive') || 'Only active subscriptions can be paused');
+      toast.info(t('admin.subscriptions.canOnlyPauseActive'));
       return;
     }
     updateStatus(selectedSub.id, 'PAUSED');
   }, [selectedSub, t]);
 
   const handleRibbonReactivate = useCallback(() => {
-    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst')); return; }
     if (selectedSub.status === 'ACTIVE') {
-      toast.info(t('admin.subscriptions.alreadyActive') || 'This subscription is already active');
+      toast.info(t('admin.subscriptions.alreadyActive'));
       return;
     }
     if (selectedSub.status === 'CANCELLED') {
-      toast.info(t('admin.subscriptions.cannotReactivateCancelled') || 'Cancelled subscriptions cannot be reactivated. The customer must create a new subscription.');
+      toast.info(t('admin.subscriptions.cannotReactivateCancelled'));
       return;
     }
     updateStatus(selectedSub.id, 'ACTIVE');
@@ -356,10 +356,10 @@ export default function AbonnementsPage() {
 
   const handleRibbonRefund = useCallback(() => {
     if (!selectedSub) {
-      toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first');
+      toast.info(t('admin.subscriptions.selectSubFirst'));
       return;
     }
-    toast.info(t('admin.subscriptions.refundViaStripe') || 'Process refunds through the Stripe dashboard for subscription payments');
+    toast.info(t('admin.subscriptions.refundViaStripe'));
   }, [selectedSub, t]);
 
   const handleRibbonMrrStats = useCallback(() => {
@@ -367,13 +367,13 @@ export default function AbonnementsPage() {
     const mrr = stats.monthlyRevenue;
     const arr = mrr * 12;
     toast.info(
-      `MRR: ${formatCurrency(mrr)} | ARR: ${formatCurrency(arr)} | ${activeSubs.length} ${t('admin.subscriptions.activeSubscriptions') || 'active subscriptions'}`
+      `MRR: ${formatCurrency(mrr)} | ARR: ${formatCurrency(arr)} | ${activeSubs.length} ${t('admin.subscriptions.activeSubscriptions')}`
     );
   }, [subscriptions, stats, formatCurrency, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (subscriptions.length === 0) {
-      toast.info(t('admin.subscriptions.noSubscriptions') || 'No subscriptions to export');
+      toast.info(t('admin.subscriptions.noSubscriptions'));
       return;
     }
     const BOM = '\uFEFF';
@@ -401,7 +401,7 @@ export default function AbonnementsPage() {
     a.download = `subscriptions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [subscriptions, frequencyLabels, statusLabels, locale, t]);
 
   useRibbonAction('newSubscription', handleRibbonNewSubscription);
@@ -417,7 +417,7 @@ export default function AbonnementsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -460,7 +460,7 @@ export default function AbonnementsPage() {
             label={t('admin.subscriptions.estimatedMonthlyRevenue')}
             value={formatCurrency(stats.monthlyRevenue)}
             icon={DollarSign}
-            className="bg-teal-50 border-teal-200"
+            className="bg-indigo-50 border-indigo-200"
           />
         </div>
 
@@ -473,7 +473,7 @@ export default function AbonnementsPage() {
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberDiscount')}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg text-center">
-              <p className="font-bold text-lg">{cfgFreeShipping ? t('admin.subscriptions.free') : t('admin.subscriptions.paid') || 'Paid'}</p>
+              <p className="font-bold text-lg">{cfgFreeShipping ? t('admin.subscriptions.free') : t('admin.subscriptions.paid')}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberShipping')}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg text-center">
@@ -639,10 +639,10 @@ export default function AbonnementsPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowConfigModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSaveConfig} loading={savingConfig}>
-              {t('common.save') || 'Save'}
+              {t('common.save')}
             </Button>
           </>
         }
@@ -698,10 +698,10 @@ export default function AbonnementsPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowModifyModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSaveModify} loading={savingModify}>
-              {t('common.save') || 'Save'}
+              {t('common.save')}
             </Button>
           </>
         }
@@ -717,7 +717,7 @@ export default function AbonnementsPage() {
             <select
               value={modFrequency}
               onChange={(e) => setModFrequency(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="EVERY_2_MONTHS">{frequencyLabels.EVERY_2_MONTHS}</option>
               <option value="EVERY_4_MONTHS">{frequencyLabels.EVERY_4_MONTHS}</option>
@@ -757,10 +757,10 @@ export default function AbonnementsPage() {
       {/* ─── CANCEL CONFIRM DIALOG ─────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmCancelId}
-        title={t('admin.subscriptions.cancelConfirmTitle') || 'Cancel Subscription'}
-        message={t('admin.subscriptions.cancelConfirmMessage') || 'Are you sure you want to cancel this subscription? The customer will no longer receive deliveries.'}
+        title={t('admin.subscriptions.cancelConfirmTitle')}
+        message={t('admin.subscriptions.cancelConfirmMessage')}
         variant="danger"
-        confirmLabel={t('admin.subscriptions.cancel') || 'Cancel Subscription'}
+        confirmLabel={t('admin.subscriptions.cancel')}
         onConfirm={() => {
           if (confirmCancelId) {
             updateStatus(confirmCancelId, 'CANCELLED');

@@ -18,6 +18,7 @@ import {
   LOYALTY_POINTS_CONFIG,
   calculateTierName,
   calculatePurchasePoints,
+  calculateTierFromPoints,
 } from '@/lib/constants';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
@@ -105,7 +106,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Amount is required for purchase' }, { status: 400 });
         }
         // F-004/F-005: Use safe calculation with overflow protection
-        pointsToEarn = calculatePurchasePoints(amount);
+        // A8-P2-004 FIX: Apply tier multiplier at earn-time
+        const tier = calculateTierFromPoints(user.lifetimePoints || 0);
+        pointsToEarn = calculatePurchasePoints(amount, tier.multiplier);
         transactionType = 'EARN_PURCHASE';
         transactionDescription = description || `Points earned on purchase${orderId ? ` #${orderId}` : ''}`;
         break;
@@ -224,10 +227,10 @@ export async function POST(request: NextRequest) {
           description: transactionDescription,
           orderId: orderId || null,
           balanceAfter: updated.loyaltyPoints,
-          // Points de purchase expirent après 1 an
-          expiresAt: type.toUpperCase() === 'PURCHASE'
-            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            : null,
+          // A8-P2-005 FIX: All earn-type points expire after 12 months.
+          // Previously only PURCHASE points had expiresAt set; non-purchase
+          // points (bonus, referral, review, birthday, signup) never expired.
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         },
       });
 

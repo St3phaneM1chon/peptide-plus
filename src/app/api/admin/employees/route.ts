@@ -7,10 +7,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { inviteEmployeeSchema } from '@/lib/validations/employee';
+import { sendEmail } from '@/lib/email/email-service';
+import { buildInviteEmployeeEmail } from '@/lib/email/templates/invite-employee';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/employees - List employees and owners
@@ -43,6 +46,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
           image: true,
           role: true,
           phone: true,
+          password: true,
           createdAt: true,
           updatedAt: true,
           sessions: {
@@ -58,20 +62,32 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
       prisma.user.count({ where }),
     ]);
 
-    // Get permission groups for each user
+    // A7-P2-008: Flatten 3-level include into separate queries
+    // (was: userPermissionGroup -> group -> permissions -> permission)
     const userIds = users.map((u) => u.id);
     const userPermGroups = await prisma.userPermissionGroup.findMany({
       where: { userId: { in: userIds } },
       include: {
-        group: {
-          include: {
-            permissions: {
-              include: { permission: true },
-            },
-          },
-        },
+        group: { select: { id: true, name: true } },
       },
     });
+
+    // Fetch group permissions in a separate flat query
+    const groupIds = [...new Set(userPermGroups.map((upg) => upg.groupId))];
+    const groupPermissions = groupIds.length > 0
+      ? await prisma.permissionGroupPermission.findMany({
+          where: { groupId: { in: groupIds } },
+          include: { permission: { select: { code: true } } },
+        })
+      : [];
+
+    // Build a map: groupId -> permission codes
+    const permsByGroup = new Map<string, string[]>();
+    for (const gp of groupPermissions) {
+      const arr = permsByGroup.get(gp.groupId) || [];
+      arr.push(gp.permission.code);
+      permsByGroup.set(gp.groupId, arr);
+    }
 
     // Group permissions by userId
     const permissionsByUser = new Map<
@@ -84,9 +100,10 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
         permissions: [],
       };
       existing.groups.push(upg.group.name);
-      for (const gp of upg.group.permissions) {
-        if (!existing.permissions.includes(gp.permission.code)) {
-          existing.permissions.push(gp.permission.code);
+      const codes = permsByGroup.get(upg.groupId) || [];
+      for (const code of codes) {
+        if (!existing.permissions.includes(code)) {
+          existing.permissions.push(code);
         }
       }
       permissionsByUser.set(upg.userId, existing);
@@ -99,7 +116,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
 
     const overridesByUser = new Map<string, string[]>();
     for (const override of overrides) {
-      if (override.granted) {
+      if (override.granted && override.userId) {
         const existing = overridesByUser.get(override.userId) || [];
         existing.push(override.permissionCode);
         overridesByUser.set(override.userId, existing);
@@ -134,6 +151,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
         permissionGroups: userPerms?.groups || [],
         lastLogin,
         isActive,
+        hasPassword: !!user.password,
         createdAt: user.createdAt.toISOString(),
       };
     });
@@ -154,7 +172,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'users.view' });
 
 // POST /api/admin/employees - Create/invite a new employee
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -177,7 +195,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         { status: 400 }
       );
     }
-    const { email, name, role, permissions } = parsed.data;
+    const { email, name, role, permissions, phoneNumberId } = parsed.data;
     const targetRole = role;
 
     // Check if user already exists
@@ -241,6 +259,52 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       }
     }
 
+    // Assign phone number if provided
+    if (phoneNumberId) {
+      const phoneNumber = await prisma.phoneNumber.findUnique({
+        where: { id: phoneNumberId },
+        select: { number: true, id: true },
+      });
+      if (phoneNumber) {
+        await prisma.user.update({
+          where: { id: employee.id },
+          data: { phone: phoneNumber.number },
+        });
+      }
+    }
+
+    // Generate invite token and send invitation email
+    const inviteToken = crypto.randomBytes(32).toString('hex');
+    const inviteTokenExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72h
+
+    await prisma.user.update({
+      where: { id: employee.id },
+      data: { inviteToken, inviteTokenExpiry },
+    });
+
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+    const inviteUrl = `${baseUrl}/auth/accept-invite?token=${inviteToken}`;
+    const inviterName = session.user.name || session.user.email || 'Admin';
+    const recipientLocale = 'fr'; // Default to FR
+
+    const emailTemplate = buildInviteEmployeeEmail({
+      recipientName: employee.name || email,
+      inviterName,
+      inviteUrl,
+      locale: recipientLocale,
+    });
+
+    // Fire-and-forget email sending
+    sendEmail({
+      to: { email: employee.email!, name: employee.name || undefined },
+      subject: emailTemplate.subject,
+      html: emailTemplate.html,
+      text: emailTemplate.text,
+      tags: ['invite-employee'],
+    }).catch((err) => {
+      logger.error('Failed to send invite email', { employeeId: employee.id, error: err instanceof Error ? err.message : String(err) });
+    });
+
     // Audit log (fire-and-forget)
     logAdminAction({
       adminUserId: session.user.id,
@@ -268,4 +332,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'users.change_role', requireMfa: true });

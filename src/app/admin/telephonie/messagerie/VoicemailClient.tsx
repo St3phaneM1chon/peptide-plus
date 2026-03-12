@@ -114,7 +114,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">{t('voip.voicemail.title')}</h1>
           {unreadCount > 0 && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
               {unreadCount} {t('voip.voicemail.unread')}
             </span>
           )}
@@ -132,9 +132,9 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {f === 'all' ? t('voip.voicemail.filterAll') || 'All'
-                : f === 'unread' ? t('voip.voicemail.filterUnread') || 'Unread'
-                : t('voip.voicemail.filterRead') || 'Read'}
+              {f === 'all' ? t('voip.voicemail.filterAll')
+                : f === 'unread' ? t('voip.voicemail.filterUnread')
+                : t('voip.voicemail.filterRead')}
             </button>
           ))}
         </div>
@@ -148,9 +148,9 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
               const unreadIds = voicemails.filter((vm) => !vm.isRead).map((vm) => vm.id);
               handleAction(unreadIds, 'markRead');
             }}
-            className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
           >
-            {t('voip.voicemail.markAllRead') || 'Mark all as read'}
+            {t('voip.voicemail.markAllRead')}
           </button>
         </div>
       )}
@@ -164,7 +164,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
             <div
               key={vm.id}
               className={`bg-white border rounded-xl overflow-hidden transition-shadow ${
-                vm.isRead ? 'border-gray-200' : 'border-teal-200 bg-teal-50/30 shadow-sm'
+                vm.isRead ? 'border-gray-200' : 'border-indigo-200 bg-indigo-50/30 shadow-sm'
               }`}
             >
               {/* Main row */}
@@ -174,7 +174,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     {vm.isRead ? (
                       <MailOpen className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     ) : (
-                      <Mail className="w-5 h-5 text-teal-600 flex-shrink-0" />
+                      <Mail className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                     )}
                     <div>
                       <div className="font-medium text-gray-900">
@@ -195,7 +195,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     {/* Urgency indicator */}
                     {vm.urgency === 'high' && (
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase">
-                        {t('voip.voicemail.urgent') || 'Urgent'}
+                        {t('voip.voicemail.urgent')}
                       </span>
                     )}
 
@@ -216,7 +216,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     {!vm.isRead && (
                       <button
                         onClick={() => handleAction([vm.id], 'markRead')}
-                        className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                       >
                         {t('voip.voicemail.markRead')}
                       </button>
@@ -226,7 +226,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     <button
                       onClick={() => handleCallback(vm.callerNumber)}
                       className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
-                      title={t('voip.voicemail.callback') || 'Call back'}
+                      title={t('voip.voicemail.callback')}
                     >
                       <PhoneOutgoing className="w-4 h-4" />
                     </button>
@@ -244,7 +244,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                     <button
                       onClick={() => handleAction([vm.id], 'delete')}
                       className="p-1 text-gray-400 hover:text-red-500"
-                      title={t('voip.voicemail.delete') || 'Delete'}
+                      title={t('voip.voicemail.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -284,7 +284,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                       <div className="flex items-center gap-1.5 mb-1">
                         <FileText className="w-3.5 h-3.5 text-gray-500" />
                         <span className="text-xs font-medium text-gray-700">
-                          {t('voip.voicemail.transcriptionLabel') || 'Transcription'}
+                          {t('voip.voicemail.transcriptionLabel')}
                         </span>
                       </div>
                       <p className="text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
@@ -299,7 +299,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                       <div className="flex items-center gap-1.5 mb-1">
                         <Sparkles className="w-3.5 h-3.5 text-purple-500" />
                         <span className="text-xs font-medium text-gray-700">
-                          {t('voip.voicemail.aiSummary') || 'AI Summary'}
+                          {t('voip.voicemail.aiSummary')}
                         </span>
                       </div>
                       <p className="text-sm text-gray-700 bg-purple-50 rounded-lg p-3 border border-purple-100">
@@ -311,7 +311,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                   {/* Keywords */}
                   {vm.keywords && vm.keywords.length > 0 && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs text-gray-500">{t('voip.voicemail.keywords') || 'Keywords'}:</span>
+                      <span className="text-xs text-gray-500">{t('voip.voicemail.keywords')}:</span>
                       {vm.keywords.map((kw, i) => (
                         <span key={i} className="px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600">
                           {kw}
@@ -336,7 +336,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                         href={`/admin/crm/contacts/${vm.client.id}`}
                         className="ms-auto text-xs text-emerald-600 hover:text-emerald-700 font-medium"
                       >
-                        {t('voip.voicemail.viewContact') || 'View Contact'}
+                        {t('voip.voicemail.viewContact')}
                       </a>
                     </div>
                   )}
@@ -351,7 +351,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
           <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             <Voicemail className="w-8 h-8 mx-auto mb-2 text-gray-300" />
             {filter !== 'all'
-              ? t('voip.voicemail.noResults') || 'No voicemails match your filter'
+              ? t('voip.voicemail.noResults')
               : t('voip.voicemail.empty')}
           </div>
         )}

@@ -14,6 +14,7 @@ export const inviteEmployeeSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
   role: z.enum(['EMPLOYEE', 'OWNER']).optional().default('EMPLOYEE'),
   permissions: z.array(z.string().max(100)).optional(),
+  phoneNumberId: z.string().max(100).optional(),
 });
 
 export type InviteEmployeeInput = z.infer<typeof inviteEmployeeSchema>;

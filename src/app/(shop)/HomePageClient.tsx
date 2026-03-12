@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ProductCard, TrustBadges } from '@/components/shop';
-import { TrustBadgesHero } from '@/components/shop/TrustBadges';
+import ProductCard from '@/components/shop/ProductCard';
+import TrustBadges, { TrustBadgesHero } from '@/components/shop/TrustBadges';
 import HeroSlider from '@/components/shop/HeroSlider';
 import { useI18n } from '@/i18n/client';
 

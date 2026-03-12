@@ -54,8 +54,8 @@ export default function AdminBlogPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <PageHeader
-        title={t('admin.blog.title') || 'Gestion du Blog'}
-        subtitle={t('admin.blog.subtitle') || 'Creer et gerer les articles du blog'}
+        title={t('admin.blog.title')}
+        subtitle={t('admin.blog.subtitle')}
         actions={
           <Link
             href="/admin/blog/new"

@@ -3,15 +3,16 @@
  * Protection contre XSS, injection SQL, et validation des données
  */
 
-import DOMPurify from 'isomorphic-dompurify';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 // =====================================================
 // HTML SANITIZATION (Server-side DOMPurify)
+// Uses lazy import to avoid pulling 440KB jsdom into client bundles.
+// These functions are only called from server-side API routes.
 // =====================================================
 
 /** Safe HTML tags allowed in rich-text content (blog, articles, product descriptions) */
-const RICH_TEXT_CONFIG: DOMPurify.Config = {
+const RICH_TEXT_CONFIG = {
   ALLOWED_TAGS: [
     'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's',
     'h2', 'h3', 'h4', 'h5', 'h6',
@@ -33,37 +34,50 @@ const RICH_TEXT_CONFIG: DOMPurify.Config = {
 };
 
 /** Minimal tags for simple formatted text (comments, reviews, FAQ answers) */
-const SIMPLE_TEXT_CONFIG: DOMPurify.Config = {
+const SIMPLE_TEXT_CONFIG = {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'a'],
   ALLOWED_ATTR: ['href', 'target', 'rel'],
   ALLOW_DATA_ATTR: false,
 };
 
+// Lazy-loaded DOMPurify instance (server-side only, avoids bundling jsdom into client)
+let _DOMPurify: typeof import('isomorphic-dompurify').default | null = null;
+function getDOMPurify() {
+  if (!_DOMPurify) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _DOMPurify = require('isomorphic-dompurify').default;
+  }
+  return _DOMPurify!;
+}
+
 /**
  * Sanitize rich HTML content (blog posts, articles, product descriptions).
  * Allows a safe subset of tags while stripping scripts, event handlers, etc.
+ * Server-side only — do not call from client components.
  */
 export function sanitizeHtml(html: string): string {
   if (!html) return '';
-  return DOMPurify.sanitize(html, RICH_TEXT_CONFIG as Parameters<typeof DOMPurify.sanitize>[1]);
+  return getDOMPurify().sanitize(html, RICH_TEXT_CONFIG);
 }
 
 /**
  * Sanitize simple formatted text (reviews, comments, FAQ answers).
  * Only allows basic formatting tags.
+ * Server-side only — do not call from client components.
  */
 export function sanitizeSimpleHtml(html: string): string {
   if (!html) return '';
-  return DOMPurify.sanitize(html, SIMPLE_TEXT_CONFIG as Parameters<typeof DOMPurify.sanitize>[1]);
+  return getDOMPurify().sanitize(html, SIMPLE_TEXT_CONFIG);
 }
 
 /**
  * Strip ALL HTML tags, returning plain text only.
  * Use for fields that should never contain HTML (names, codes, etc.)
+ * Server-side only — do not call from client components.
  */
 export function stripHtml(html: string): string {
   if (!html) return '';
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+  return getDOMPurify().sanitize(html, { ALLOWED_TAGS: [] });
 }
 
 // =====================================================

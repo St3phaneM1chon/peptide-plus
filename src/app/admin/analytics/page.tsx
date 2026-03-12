@@ -86,7 +86,7 @@ export default function AnalyticsPage() {
   };
 
   const funnelSteps = [
-    { key: 'visitors', label: t('admin.analytics.funnelVisitors'), value: funnel.visitors, icon: Eye, color: 'bg-teal-500' },
+    { key: 'visitors', label: t('admin.analytics.funnelVisitors'), value: funnel.visitors, icon: Eye, color: 'bg-indigo-500' },
     { key: 'productViews', label: t('admin.analytics.funnelProductViews'), value: funnel.productViews, icon: ShoppingBag, color: 'bg-indigo-500' },
     { key: 'addToCart', label: t('admin.analytics.funnelAddToCart'), value: funnel.addToCart, icon: ShoppingCart, color: 'bg-purple-500' },
     { key: 'checkout', label: t('admin.analytics.funnelCheckout'), value: funnel.checkout, icon: CreditCard, color: 'bg-amber-500' },
@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
         </div>
       ) : !isLive ? (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-sm text-amber-800">
-          <span className="font-semibold">{t('admin.analytics.loading') || 'Loading...'}</span>
+          <span className="font-semibold">{t('admin.analytics.loading')}</span>
         </div>
       ) : null}
 
@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
                 <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isLive ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               </span>
               <span className={`text-xs font-medium ${isLive ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {isLive ? t('admin.analytics.liveIndicator') : t('admin.analytics.connecting') || 'Connecting...'}
+                {isLive ? t('admin.analytics.liveIndicator') : t('admin.analytics.connecting')}
               </span>
             </div>
             <span className="text-xs text-slate-400">
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
             label={t('admin.analytics.revenueThisWeek')}
             value={fmt(revenue.thisWeek)}
             icon={TrendingUp}
-            className="bg-teal-50 border-teal-200"
+            className="bg-indigo-50 border-indigo-200"
           />
           <StatCard
             label={t('admin.analytics.revenueThisMonth')}
@@ -170,14 +170,14 @@ export default function AnalyticsPage() {
       {/* Active Users — Note: real active users requires analytics integration */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-teal-600" />
+          <Users className="w-5 h-5 text-indigo-600" />
           <h3 className="font-semibold text-slate-900">{t('admin.analytics.activeUsers')}</h3>
           <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-            {t('admin.analytics.requiresAnalytics') || 'Requires GA4/Plausible'}
+            {t('admin.analytics.requiresAnalytics')}
           </span>
         </div>
         <p className="text-sm text-slate-500">
-          {t('admin.analytics.connectAnalyticsProvider') || 'Connect Google Analytics or Plausible for real-time active user data.'}
+          {t('admin.analytics.connectAnalyticsProvider')}
         </p>
       </div>
 
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
             <h3 className="font-semibold text-slate-900">{t('admin.analytics.conversionFunnel')}</h3>
             {funnel.visitors === 0 && (
               <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
-                {t('admin.analytics.estimatedData') || 'Estimated from orders'}
+                {t('admin.analytics.estimatedData')}
               </span>
             )}
           </div>
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
       {/* RFM Distribution */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-1">
-          <BarChart3 className="w-5 h-5 text-teal-600" />
+          <BarChart3 className="w-5 h-5 text-indigo-600" />
           <h3 className="font-semibold text-slate-900">{t('admin.analytics.rfmDistribution')}</h3>
         </div>
         <p className="text-sm text-slate-500 mb-6">{t('admin.analytics.rfmDistributionSubtitle')}</p>

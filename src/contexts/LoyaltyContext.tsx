@@ -120,27 +120,13 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     }
   }, [session?.user?.name, generateReferralCode]);
 
-  // Load loyalty data
+  // Load loyalty data -- ONLY fetch from API when authenticated.
+  // For unauthenticated users, skip the API call entirely and just
+  // set defaults (no localStorage read needed for perf).
   useEffect(() => {
     if (session?.user?.email) {
       loadLoyaltyData();
     } else {
-      // Load from localStorage for non-authenticated users
-      try {
-        if (typeof window !== 'undefined') {
-          const saved = localStorage.getItem('loyalty_preview');
-          if (saved) {
-            const data = JSON.parse(saved);
-            setState(prev => ({
-              ...prev,
-              points: data.points || 0,
-              lifetimePoints: data.lifetimePoints || 0,
-            }));
-          }
-        }
-      } catch (e) {
-        console.error('Error loading loyalty preview:', e);
-      }
       setIsLoading(false);
     }
   }, [session, loadLoyaltyData]);
@@ -337,10 +323,20 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Safe default for when useLoyalty is called outside a LoyaltyProvider
+const defaultLoyaltyContext: LoyaltyContextType = {
+  ...defaultState,
+  isLoading: false,
+  earnPoints: () => {},
+  redeemReward: async () => false,
+  getPointsForPurchase: () => 0,
+  getDiscountFromPoints: () => 0,
+  getTierProgress: () => ({ current: 0, next: 0, percentage: 0 }),
+  canRedeemReward: () => false,
+};
+
 export function useLoyalty() {
   const context = useContext(LoyaltyContext);
-  if (context === undefined) {
-    throw new Error('useLoyalty must be used within a LoyaltyProvider');
-  }
-  return context;
+  // Return safe defaults if used outside provider instead of throwing
+  return context ?? defaultLoyaltyContext;
 }

@@ -210,25 +210,25 @@ export default function RapportsPage() {
 
   const handleRibbonSchedule = useCallback(() => {
     const summary = [
-      `${t('admin.reports.totalRevenue') || 'Revenue'}: ${formatCurrency(totalRevenue)}`,
-      `${t('admin.reports.orders') || 'Orders'}: ${totalOrders}`,
-      `${t('admin.reports.avgCart') || 'Avg cart'}: ${formatCurrency(avgOrderValue)}`,
-      `${t('admin.reports.topProducts') || 'Top products'}: ${topProducts.slice(0, 3).map(p => p.name).join(', ') || '-'}`,
+      `${t('admin.reports.totalRevenue')}: ${formatCurrency(totalRevenue)}`,
+      `${t('admin.reports.orders')}: ${totalOrders}`,
+      `${t('admin.reports.avgCart')}: ${formatCurrency(avgOrderValue)}`,
+      `${t('admin.reports.topProducts')}: ${topProducts.slice(0, 3).map(p => p.name).join(', ') || '-'}`,
     ].join('\n');
-    toast.success(t('admin.reports.summaryGenerated') || 'Report summary generated', { description: summary, duration: 8000 });
+    toast.success(t('admin.reports.summaryGenerated'), { description: summary, duration: 8000 });
   }, [t, totalRevenue, totalOrders, avgOrderValue, topProducts, formatCurrency]);
 
   const handleRibbonComparePeriods = useCallback(() => {
     if (previousPeriodRevenue === 0) {
-      toast.info(t('admin.reports.noPreviousData') || 'No previous period data available for comparison');
+      toast.info(t('admin.reports.noPreviousData'));
       return;
     }
     const comparison = [
-      `${t('admin.reports.totalRevenue') || 'Revenue'}: ${formatCurrency(totalRevenue)} vs ${formatCurrency(previousPeriodRevenue)} (${revenueTrend >= 0 ? '+' : ''}${Math.round(revenueTrend * 10) / 10}%)`,
-      `${t('admin.reports.orders') || 'Orders'}: ${totalOrders} vs ${previousPeriodOrders} (${ordersTrend >= 0 ? '+' : ''}${Math.round(ordersTrend * 10) / 10}%)`,
-      `${t('admin.reports.avgCart') || 'Avg cart'}: ${formatCurrency(avgOrderValue)} vs ${formatCurrency(previousAvgOrder)} (${avgOrderTrend >= 0 ? '+' : ''}${Math.round(avgOrderTrend * 10) / 10}%)`,
+      `${t('admin.reports.totalRevenue')}: ${formatCurrency(totalRevenue)} vs ${formatCurrency(previousPeriodRevenue)} (${revenueTrend >= 0 ? '+' : ''}${Math.round(revenueTrend * 10) / 10}%)`,
+      `${t('admin.reports.orders')}: ${totalOrders} vs ${previousPeriodOrders} (${ordersTrend >= 0 ? '+' : ''}${Math.round(ordersTrend * 10) / 10}%)`,
+      `${t('admin.reports.avgCart')}: ${formatCurrency(avgOrderValue)} vs ${formatCurrency(previousAvgOrder)} (${avgOrderTrend >= 0 ? '+' : ''}${Math.round(avgOrderTrend * 10) / 10}%)`,
     ].join('\n');
-    toast.success(t('admin.reports.periodComparison') || 'Period comparison', { description: comparison, duration: 10000 });
+    toast.success(t('admin.reports.periodComparison'), { description: comparison, duration: 10000 });
   }, [t, totalRevenue, previousPeriodRevenue, revenueTrend, totalOrders, previousPeriodOrders, ordersTrend, avgOrderValue, previousAvgOrder, avgOrderTrend, formatCurrency]);
 
   // G5-FLAW-06: Implement PDF export via accounting reports endpoint
@@ -239,17 +239,17 @@ export default function RapportsPage() {
 
   const handleRibbonExportExcel = useCallback(() => {
     if (salesData.length === 0 && topProducts.length === 0 && regionData.length === 0) {
-      toast.info(t('admin.reports.noDataForPeriod') || 'No data for this period');
+      toast.info(t('admin.reports.noDataForPeriod'));
       return;
     }
     const bom = '\uFEFF';
-    const headers = [t('admin.reports.date') || 'Date', t('admin.reports.totalRevenue') || 'Revenue', t('admin.reports.orders') || 'Orders', t('admin.reports.avgCart') || 'Avg Order Value'];
+    const headers = [t('admin.reports.date'), t('admin.reports.totalRevenue'), t('admin.reports.orders'), t('admin.reports.avgCart')];
     const rows = salesData.map(d => [d.date, d.revenue.toFixed(2), d.orders.toString(), d.avgOrderValue.toFixed(2)]);
     // Add top products section
-    rows.push([''], [t('admin.reports.topProducts') || 'Top Products', t('admin.reports.salesCount', { count: '' }) || 'Sales', t('admin.reports.totalRevenue') || 'Revenue', '']);
+    rows.push([''], [t('admin.reports.topProducts'), t('admin.reports.salesCount', { count: '' }) || 'Sales', t('admin.reports.totalRevenue'), '']);
     topProducts.forEach(p => rows.push([p.name, p.sales.toString(), p.revenue.toFixed(2), '']));
     // Add region section
-    rows.push([''], [t('admin.reports.salesByRegion') || 'Sales by Region', t('admin.reports.orders') || 'Orders', t('admin.reports.totalRevenue') || 'Revenue', '']);
+    rows.push([''], [t('admin.reports.salesByRegion'), t('admin.reports.orders'), t('admin.reports.totalRevenue'), '']);
     regionData.forEach(r => rows.push([r.region, r.orders.toString(), r.revenue.toFixed(2), '']));
 
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -260,7 +260,7 @@ export default function RapportsPage() {
     a.download = `report-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [t, salesData, topProducts, regionData, period]);
 
   const handleRibbonPrint = useCallback(() => {
@@ -277,7 +277,7 @@ export default function RapportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -343,7 +343,7 @@ export default function RapportsPage() {
         <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.dailyRevenue')}</h3>
         {salesData.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-slate-400">
-            {t('admin.reports.noDataForPeriod') || 'No data for this period'}
+            {t('admin.reports.noDataForPeriod')}
           </div>
         ) : (
           <>
@@ -351,7 +351,7 @@ export default function RapportsPage() {
               {salesData.slice(-30).map((day) => (
                 <div
                   key={day.date}
-                  className="flex-1 bg-teal-500 rounded-t hover:bg-teal-600 cursor-pointer transition-colors relative group"
+                  className="flex-1 bg-indigo-500 rounded-t hover:bg-indigo-600 cursor-pointer transition-colors relative group"
                   style={{ height: `${maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0}%`, minHeight: day.revenue > 0 ? '4px' : '0px' }}
                 >
                   <div className="absolute bottom-full start-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
@@ -375,19 +375,19 @@ export default function RapportsPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.topProducts')}</h3>
           {topProducts.length === 0 ? (
-            <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod') || 'No data'}</div>
+            <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
           ) : (
             <div className="space-y-4">
               {topProducts.map((product, i) => (
                 <div key={product.name} className="flex items-center gap-4">
-                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold">
+                  <span className="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-900 truncate">{product.name}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
-                        className="bg-teal-500 h-2 rounded-full"
+                        className="bg-indigo-500 h-2 rounded-full"
                         style={{ width: `${topProducts[0]?.sales ? (product.sales / topProducts[0].sales) * 100 : 0}%` }}
                       />
                     </div>
@@ -406,7 +406,7 @@ export default function RapportsPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.salesByRegion')}</h3>
           {regionData.length === 0 ? (
-            <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod') || 'No data'}</div>
+            <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
           ) : (
             <div className="space-y-4">
               {regionData.map((region) => (
@@ -415,7 +415,7 @@ export default function RapportsPage() {
                     <p className="font-medium text-slate-900">{region.region}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
-                        className="bg-teal-500 h-2 rounded-full"
+                        className="bg-indigo-500 h-2 rounded-full"
                         style={{ width: `${regionData[0]?.revenue ? (region.revenue / regionData[0].revenue) * 100 : 0}%` }}
                       />
                     </div>
@@ -435,7 +435,7 @@ export default function RapportsPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h4 className="font-semibold text-slate-900 mb-3">{t('admin.reports.salesByRegion')}</h4>
         {regionData.length === 0 ? (
-          <div className="py-4 text-center text-slate-400">{t('admin.reports.noDataForPeriod') || 'No data'}</div>
+          <div className="py-4 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
         ) : (
           <div className="space-y-2">
             {regionData.slice(0, 8).map((region) => {
@@ -444,7 +444,7 @@ export default function RapportsPage() {
                 <div key={region.region} className="flex items-center gap-4">
                   <span className="text-slate-600 w-32 truncate">{region.region}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-2">
-                    <div className="bg-teal-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                    <div className="bg-indigo-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <span className="font-medium w-16 text-end">{pct.toFixed(1)}%</span>
                 </div>

@@ -1,0 +1,153 @@
+/**
+ * ADMIN CSS - Styles only needed in admin pages
+ * Extracted from globals.css to reduce CSS shipped to shop customers.
+ */
+
+/* =====================================================
+   DENSITY MODES (data-density on <html>)
+   ===================================================== */
+
+/* Compact: tighter spacing for power users / data-heavy views */
+[data-density="compact"] {
+  --density-py: 0.25rem;   /* vertical padding */
+  --density-px: 0.5rem;    /* horizontal padding */
+  --density-gap: 0.25rem;  /* gap between elements */
+  --density-text: 0.8125rem; /* 13px */
+  --density-row-h: 2rem;   /* 32px table rows */
+  --density-card-p: 0.75rem;
+}
+
+[data-density="standard"] {
+  --density-py: 0.5rem;
+  --density-px: 0.75rem;
+  --density-gap: 0.5rem;
+  --density-text: 0.875rem; /* 14px */
+  --density-row-h: 2.5rem;  /* 40px */
+  --density-card-p: 1rem;
+}
+
+[data-density="focus"] {
+  --density-py: 0.75rem;
+  --density-px: 1rem;
+  --density-gap: 0.75rem;
+  --density-text: 0.9375rem; /* 15px */
+  --density-row-h: 3rem;     /* 48px */
+  --density-card-p: 1.25rem;
+}
+
+/* Apply density to admin tables */
+.admin-outlook table td,
+.admin-outlook table th {
+  padding: var(--density-py, 0.5rem) var(--density-px, 0.75rem);
+  font-size: var(--density-text, 0.875rem);
+}
+
+.admin-outlook table tr {
+  height: var(--density-row-h, 2.5rem);
+}
+
+/* Apply density to admin cards */
+.admin-outlook .density-card {
+  padding: var(--density-card-p, 1rem);
+}
+
+/* Apply density to admin lists */
+.admin-outlook .density-list > * {
+  gap: var(--density-gap, 0.5rem);
+  padding-top: var(--density-py, 0.5rem);
+  padding-bottom: var(--density-py, 0.5rem);
+  font-size: var(--density-text, 0.875rem);
+}
+
+/* =====================================================
+   OUTLOOK ADMIN LAYOUT
+   ===================================================== */
+
+.admin-outlook {
+  --rail-width: 48px;
+  --folder-width: 260px;
+  --folder-collapsed-width: 0px;
+  --list-width: 380px;
+  --list-min-width: 280px;
+  --topbar-height: 48px;
+  --rail-bg: #1e2463;
+  --rail-active: #4f46e5;
+  --rail-hover: #2a306e;
+  --selected-bg: #eef2ff;
+  --selected-border: #6366f1;
+  --accent: #4f46e5;
+  --border-color: #E2E8F0;
+}
+
+/* Marble texture background for the icon rail */
+.admin-marble-rail {
+  background:
+    url('/images/admin-marble-bg.png') repeat-y center / cover,
+    linear-gradient(175deg, #1f2567 0%, #1a2058 30%, #1e2463 55%, #171c53 80%, #1a1f5c 100%);
+}
+
+/* Marble for wider panels */
+.admin-marble-wide {
+  background:
+    url('/images/admin-marble-wide.png') repeat-y center / cover,
+    linear-gradient(175deg, #1f2567 0%, #1e2463 50%, #171c53 100%);
+}
+
+/* Thin scrollbar for admin panels */
+.admin-outlook .outlook-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-outlook .outlook-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 3px;
+}
+.admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8;
+}
+.admin-outlook .outlook-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+/* =====================================================
+   DARK MODE — Admin-specific overrides
+   ===================================================== */
+
+/* Admin outlook dark overrides */
+html.dark .admin-outlook {
+  --rail-bg: #0f1235;
+  --rail-active: #818cf8;
+  --rail-hover: #1a1f4d;
+  --selected-bg: #1e1b4b;
+  --selected-border: #818cf8;
+  --accent: #818cf8;
+  --border-color: #2E2E32;
+}
+
+/* Admin scrollbars dark */
+html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
+  background-color: #3F3F46;
+}
+html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #52525B;
+}
+html.dark .admin-outlook .outlook-scroll {
+  scrollbar-color: #3F3F46 transparent;
+}
+
+/* =====================================================
+   RTL — Admin-specific overrides
+   ===================================================== */
+
+/* --- Admin outlook layout: flip rail and folder pane order --- */
+[dir="rtl"] .admin-outlook .flex {
+  flex-direction: row-reverse;
+}
+/* Restore column direction for vertical flex containers */
+[dir="rtl"] .admin-outlook .flex.flex-col,
+[dir="rtl"] .admin-outlook .flex-col {
+  flex-direction: column;
+}

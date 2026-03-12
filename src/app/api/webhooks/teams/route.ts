@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { handleTeamsWebhook } from '@/lib/platform/webhook-handlers';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 const teamsWebhookSchema = z.object({
   value: z.array(z.record(z.unknown())).optional(),
@@ -76,6 +77,28 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
+
+    // Idempotency check: skip if this notification was already processed (Redis-based, TTL 24h)
+    // Teams Graph notifications don't have a single event ID, so derive one from payload hash
+    const teamsEventId = createHmac('sha256', 'teams-dedup').update(JSON.stringify(raw)).digest('hex').slice(0, 32);
+    try {
+      const redis = await getRedisClient();
+      if (redis) {
+        const idempotencyKey = `webhook:teams:${teamsEventId}`;
+        const alreadyProcessed = await redis.get(idempotencyKey);
+        if (alreadyProcessed) {
+          logger.info('[Webhook] Teams duplicate event skipped', { eventId: teamsEventId });
+          return NextResponse.json({ status: 'already_processed' });
+        }
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
+    } catch (redisErr) {
+      // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+      logger.debug('[Webhook] Teams Redis idempotency check unavailable, proceeding', {
+        error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+      });
+    }
+
     const result = await handleTeamsWebhook(parsed.data);
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {

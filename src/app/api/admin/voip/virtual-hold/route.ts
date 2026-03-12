@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
@@ -94,27 +95,28 @@ export const GET = withAdminGuard(async () => {
 /**
  * PUT - Update virtual hold / callback queue settings.
  */
+const virtualHoldUpdateSchema = z.object({
+  enabled: z.boolean().optional(),
+  ewtThreshold: z.number().int().min(0).max(3600).optional(),
+  maxCallbackAttempts: z.number().int().min(1).max(10).optional(),
+  callbackMessage: z.string().min(1).max(2000).trim().optional(),
+  callbackRetryDelay: z.number().int().min(30).max(3600).optional(),
+  maxQueueSize: z.number().int().min(1).max(500).optional(),
+});
+
 export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { enabled, ewtThreshold, maxCallbackAttempts, callbackMessage, callbackRetryDelay, maxQueueSize } = body;
+    const parsed = virtualHoldUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { enabled, ewtThreshold, maxCallbackAttempts, callbackMessage, callbackRetryDelay, maxQueueSize } = parsed.data;
 
     const current = await loadVirtualHoldConfig();
-
-    // Validate numeric fields
-    if (ewtThreshold !== undefined && (typeof ewtThreshold !== 'number' || ewtThreshold < 0)) {
-      return NextResponse.json(
-        { error: 'ewtThreshold must be a non-negative number (seconds)' },
-        { status: 400 }
-      );
-    }
-
-    if (maxCallbackAttempts !== undefined && (typeof maxCallbackAttempts !== 'number' || maxCallbackAttempts < 1 || maxCallbackAttempts > 10)) {
-      return NextResponse.json(
-        { error: 'maxCallbackAttempts must be between 1 and 10' },
-        { status: 400 }
-      );
-    }
 
     const updated: VirtualHoldConfig = {
       enabled: enabled !== undefined ? enabled : current.enabled,

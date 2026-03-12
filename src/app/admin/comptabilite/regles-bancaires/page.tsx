@@ -136,7 +136,7 @@ export default function ReglesBancairesPage() {
       setStats(json.stats || { total: 0, active: 0, inactive: 0, totalApplied: 0 });
     } catch (err) {
       console.error('Error fetching bank rules:', err);
-      toast.error(t('admin.bankRules.errorLoading') || 'Error loading rules');
+      toast.error(t('admin.bankRules.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -227,7 +227,7 @@ export default function ReglesBancairesPage() {
     const errors: Record<string, string> = {};
 
     if (!form.name.trim()) {
-      errors.name = t('admin.bankRules.errorNameRequired') || 'Name is required';
+      errors.name = t('admin.bankRules.errorNameRequired');
     }
 
     // Check at least one condition
@@ -241,13 +241,13 @@ export default function ReglesBancairesPage() {
       form.transactionType
     );
     if (!hasCondition) {
-      errors.conditions = t('admin.bankRules.errorNoCondition') || 'At least one condition is required';
+      errors.conditions = t('admin.bankRules.errorNoCondition');
     }
 
     // Check at least one action
     const hasAction = !!(form.accountId || form.categoryTag);
     if (!hasAction) {
-      errors.actions = t('admin.bankRules.errorNoAction') || 'At least one action is required (account or category tag)';
+      errors.actions = t('admin.bankRules.errorNoAction');
     }
 
     if (Object.keys(errors).length > 0) {
@@ -291,8 +291,8 @@ export default function ReglesBancairesPage() {
 
       toast.success(
         editingRule
-          ? t('admin.bankRules.ruleUpdated') || 'Rule updated'
-          : t('admin.bankRules.ruleCreated') || 'Rule created'
+          ? t('admin.bankRules.ruleUpdated')
+          : t('admin.bankRules.ruleCreated')
       );
       closeModal();
       fetchRules();
@@ -331,7 +331,7 @@ export default function ReglesBancairesPage() {
     try {
       const res = await fetch(`/api/accounting/bank-rules?id=${rule.id}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (!res.ok) throw new Error('Failed to delete rule');
-      toast.success(t('admin.bankRules.ruleDeleted') || 'Rule deleted');
+      toast.success(t('admin.bankRules.ruleDeleted'));
       fetchRules();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error deleting rule');
@@ -373,7 +373,7 @@ export default function ReglesBancairesPage() {
       if (!res.ok) throw new Error('Failed to apply rules');
       const json = await res.json();
       toast.success(
-        `${json.matched} ${t('admin.bankRules.transactionsMatched') || 'transactions matched'}, ${json.unmatched} ${t('admin.bankRules.unmatched') || 'unmatched'}`
+        `${json.matched} ${t('admin.bankRules.transactionsMatched')}, ${json.unmatched} ${t('admin.bankRules.unmatched')}`
       );
       fetchRules(); // refresh stats
     } catch (err) {
@@ -399,9 +399,9 @@ export default function ReglesBancairesPage() {
 
   const conditionBadges = (rule: BankRule) => {
     const badges: Array<{ label: string; color: string }> = [];
-    if (rule.descriptionContains) badges.push({ label: `"...${rule.descriptionContains}..."`, color: 'bg-teal-100 text-teal-700' });
-    if (rule.descriptionStartsWith) badges.push({ label: `"${rule.descriptionStartsWith}..."`, color: 'bg-teal-100 text-teal-700' });
-    if (rule.descriptionExact) badges.push({ label: `="${rule.descriptionExact}"`, color: 'bg-teal-100 text-teal-700' });
+    if (rule.descriptionContains) badges.push({ label: `"...${rule.descriptionContains}..."`, color: 'bg-indigo-100 text-indigo-700' });
+    if (rule.descriptionStartsWith) badges.push({ label: `"${rule.descriptionStartsWith}..."`, color: 'bg-indigo-100 text-indigo-700' });
+    if (rule.descriptionExact) badges.push({ label: `="${rule.descriptionExact}"`, color: 'bg-indigo-100 text-indigo-700' });
     if (rule.amountMin !== null) badges.push({ label: `>= $${rule.amountMin}`, color: 'bg-emerald-100 text-emerald-700' });
     if (rule.amountMax !== null) badges.push({ label: `<= $${rule.amountMax}`, color: 'bg-emerald-100 text-emerald-700' });
     if (rule.amountExact !== null) badges.push({ label: `= $${rule.amountExact}`, color: 'bg-emerald-100 text-emerald-700' });
@@ -425,12 +425,12 @@ export default function ReglesBancairesPage() {
   const handleRibbonAutoMatch = useCallback(() => { handleApplyRules(); }, [handleApplyRules]);
   const handleRibbonBankRules = useCallback(() => {
     fetchRules();
-    toast.success(t('admin.bankRules.refreshed') || 'Regles bancaires actualisees');
+    toast.success(t('admin.bankRules.refreshed'));
   }, [fetchRules, t]);
   const handleRibbonExport = useCallback(() => {
-    if (rules.length === 0) { toast.error(t('admin.bankRules.noRulesToExport') || 'Aucune regle a exporter'); return; }
+    if (rules.length === 0) { toast.error(t('admin.bankRules.noRulesToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.bankRules.colName') || 'Nom', t('admin.bankRules.colCondition') || 'Condition', t('admin.bankRules.colAccount') || 'Compte', t('admin.bankRules.colPriority') || 'Priorite', t('admin.bankRules.colActive') || 'Active', t('admin.bankRules.colTimesApplied') || 'Applications'];
+    const headers = [t('admin.bankRules.colName'), t('admin.bankRules.colCondition'), t('admin.bankRules.colAccount'), t('admin.bankRules.colPriority'), t('admin.bankRules.colActive'), t('admin.bankRules.colTimesApplied')];
     const rows = rules.map(r => {
       const conditions = [r.descriptionContains ? `contient:${r.descriptionContains}` : '', r.amountMin ? `min:${r.amountMin}` : '', r.amountMax ? `max:${r.amountMax}` : ''].filter(Boolean).join('; ') || '-';
       return [r.name, conditions, r.account?.name || r.accountId || '-', String(r.priority || 0), r.isActive ? 'Oui' : 'Non', String(r.timesApplied || 0)];
@@ -457,7 +457,7 @@ export default function ReglesBancairesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -466,8 +466,8 @@ export default function ReglesBancairesPage() {
   return (
     <div>
       <PageHeader
-        title={t('admin.bankRules.title') || 'Bank Rules'}
-        subtitle={t('admin.bankRules.subtitle') || 'Auto-categorize bank transactions with rules'}
+        title={t('admin.bankRules.title')}
+        subtitle={t('admin.bankRules.subtitle')}
         theme={theme}
         actions={
           <div className="flex items-center gap-2">
@@ -478,10 +478,10 @@ export default function ReglesBancairesPage() {
               loading={applying}
               disabled={stats.active === 0}
             >
-              {t('admin.bankRules.applyRules') || 'Apply Rules'}
+              {t('admin.bankRules.applyRules')}
             </Button>
             <Button variant="primary" icon={Plus} onClick={openCreateModal}>
-              {t('admin.bankRules.addRule') || 'Add Rule'}
+              {t('admin.bankRules.addRule')}
             </Button>
           </div>
         }
@@ -490,19 +490,19 @@ export default function ReglesBancairesPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard
-          label={t('admin.bankRules.totalRules') || 'Total Rules'}
+          label={t('admin.bankRules.totalRules')}
           value={stats.total}
           icon={ListChecks}
           theme={theme}
         />
         <StatCard
-          label={t('admin.bankRules.activeRules') || 'Active Rules'}
+          label={t('admin.bankRules.activeRules')}
           value={stats.active}
           icon={CheckCircle2}
           theme={theme}
         />
         <StatCard
-          label={t('admin.bankRules.transactionsMatched') || 'Transactions Matched'}
+          label={t('admin.bankRules.transactionsMatched')}
           value={stats.totalApplied}
           icon={Zap}
           theme={theme}
@@ -513,7 +513,7 @@ export default function ReglesBancairesPage() {
       <FilterBar
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder={t('admin.bankRules.searchPlaceholder') || 'Search rules...'}
+        searchPlaceholder={t('admin.bankRules.searchPlaceholder')}
       />
 
       {/* Rules table */}
@@ -521,20 +521,20 @@ export default function ReglesBancairesPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400">
             <Zap className="w-12 h-12 mb-3" />
-            <p className="text-sm font-medium">{t('admin.bankRules.noRules') || 'No bank rules yet'}</p>
-            <p className="text-xs mt-1">{t('admin.bankRules.noRulesHint') || 'Create a rule to start auto-categorizing transactions'}</p>
+            <p className="text-sm font-medium">{t('admin.bankRules.noRules')}</p>
+            <p className="text-xs mt-1">{t('admin.bankRules.noRulesHint')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-start">
-                  <th className="px-4 py-3 font-medium text-slate-500 w-16">{t('admin.bankRules.priority') || 'Priority'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.ruleName') || 'Name'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.conditions') || 'Conditions'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.actionCol') || 'Actions'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500 text-center w-24">{t('admin.bankRules.applied') || 'Applied'}</th>
-                  <th className="px-4 py-3 font-medium text-slate-500 text-center w-20">{t('admin.bankRules.status') || 'Status'}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500 w-16">{t('admin.bankRules.priority')}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.ruleName')}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.conditions')}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500">{t('admin.bankRules.actionCol')}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500 text-center w-24">{t('admin.bankRules.applied')}</th>
+                  <th className="px-4 py-3 font-medium text-slate-500 text-center w-20">{t('admin.bankRules.status')}</th>
                   <th className="px-4 py-3 font-medium text-slate-500 text-end w-32"></th>
                 </tr>
               </thead>
@@ -628,8 +628,8 @@ export default function ReglesBancairesPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEditModal(rule)}
-                          className="p-1.5 rounded-lg hover:bg-teal-50 text-slate-400 hover:text-teal-600 transition-colors"
-                          title={t('admin.bankRules.edit') || 'Edit'}
+                          className="p-1.5 rounded-lg hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-colors"
+                          title={t('admin.bankRules.edit')}
                           aria-label="Modifier la regle"
                         >
                           <Pencil className="w-4 h-4" />
@@ -638,7 +638,7 @@ export default function ReglesBancairesPage() {
                           onClick={() => setConfirmDeleteRule(rule)}
                           disabled={deletingId === rule.id}
                           className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                          title={t('admin.bankRules.delete') || 'Delete'}
+                          title={t('admin.bankRules.delete')}
                           aria-label="Supprimer la regle"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -659,16 +659,16 @@ export default function ReglesBancairesPage() {
       <Modal
         isOpen={modalOpen}
         onClose={closeModal}
-        title={editingRule ? (t('admin.bankRules.editRule') || 'Edit Rule') : (t('admin.bankRules.addRule') || 'Add Rule')}
-        subtitle={t('admin.bankRules.modalSubtitle') || 'Define conditions and actions for auto-categorization'}
+        title={editingRule ? (t('admin.bankRules.editRule')) : (t('admin.bankRules.addRule'))}
+        subtitle={t('admin.bankRules.modalSubtitle')}
         size="lg"
         footer={
           <>
             <Button variant="secondary" onClick={closeModal}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSave} loading={saving}>
-              {editingRule ? (t('common.save') || 'Save') : (t('common.create') || 'Create')}
+              {editingRule ? (t('common.save')) : (t('common.create'))}
             </Button>
           </>
         }
@@ -676,15 +676,15 @@ export default function ReglesBancairesPage() {
         <div className="space-y-6">
           {/* Basic info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField label={t('admin.bankRules.ruleName') || 'Name'} required error={formErrors.name}>
+            <FormField label={t('admin.bankRules.ruleName')} required error={formErrors.name}>
               <Input
                 value={form.name}
                 onChange={e => updateForm('name', e.target.value)}
-                placeholder={t('admin.bankRules.ruleNamePlaceholder') || 'e.g. Desjardins bank fees'}
+                placeholder={t('admin.bankRules.ruleNamePlaceholder')}
                 error={!!formErrors.name}
               />
             </FormField>
-            <FormField label={t('admin.bankRules.priority') || 'Priority'} hint={t('admin.bankRules.priorityHint') || 'Higher = evaluated first'}>
+            <FormField label={t('admin.bankRules.priority')} hint={t('admin.bankRules.priorityHint')}>
               <Input
                 type="number"
                 value={form.priority}
@@ -697,8 +697,8 @@ export default function ReglesBancairesPage() {
           {/* Conditions */}
           <div>
             <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-teal-500" />
-              {t('admin.bankRules.conditionsSection') || 'Conditions'} <span className="text-xs font-normal text-slate-400">({t('admin.bankRules.andLogic') || 'AND logic'})</span>
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              {t('admin.bankRules.conditionsSection')} <span className="text-xs font-normal text-slate-400">({t('admin.bankRules.andLogic')})</span>
             </h3>
             {formErrors.conditions && (
               <div className="flex items-center gap-2 mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
@@ -707,40 +707,40 @@ export default function ReglesBancairesPage() {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label={t('admin.bankRules.descContains') || 'Description contains'}>
+              <FormField label={t('admin.bankRules.descContains')}>
                 <Input
                   value={form.descriptionContains}
                   onChange={e => updateForm('descriptionContains', e.target.value)}
-                  placeholder={t('admin.bankRules.descContainsPlaceholder') || 'e.g. FRAIS MENSUELS'}
+                  placeholder={t('admin.bankRules.descContainsPlaceholder')}
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.descStartsWith') || 'Description starts with'}>
+              <FormField label={t('admin.bankRules.descStartsWith')}>
                 <Input
                   value={form.descriptionStartsWith}
                   onChange={e => updateForm('descriptionStartsWith', e.target.value)}
-                  placeholder={t('admin.bankRules.descStartsWithPlaceholder') || 'e.g. VIREMENT'}
+                  placeholder={t('admin.bankRules.descStartsWithPlaceholder')}
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.descExact') || 'Description exact match'}>
+              <FormField label={t('admin.bankRules.descExact')}>
                 <Input
                   value={form.descriptionExact}
                   onChange={e => updateForm('descriptionExact', e.target.value)}
-                  placeholder={t('admin.bankRules.descExactPlaceholder') || 'e.g. FRAIS MENSUELS DESJARDINS'}
+                  placeholder={t('admin.bankRules.descExactPlaceholder')}
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.transactionType') || 'Transaction type'}>
+              <FormField label={t('admin.bankRules.transactionType')}>
                 <select
                   value={form.transactionType}
                   onChange={e => updateForm('transactionType', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  aria-label={t('admin.bankRules.transactionType') || 'Transaction type'}
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  aria-label={t('admin.bankRules.transactionType')}
                 >
-                  <option value="">{t('admin.bankRules.anyType') || '-- Any type --'}</option>
-                  <option value="DEBIT">{t('admin.bankRules.debit') || 'Debit'}</option>
-                  <option value="CREDIT">{t('admin.bankRules.credit') || 'Credit'}</option>
+                  <option value="">{t('admin.bankRules.anyType')}</option>
+                  <option value="DEBIT">{t('admin.bankRules.debit')}</option>
+                  <option value="CREDIT">{t('admin.bankRules.credit')}</option>
                 </select>
               </FormField>
-              <FormField label={t('admin.bankRules.amountMin') || 'Amount minimum'}>
+              <FormField label={t('admin.bankRules.amountMin')}>
                 <Input
                   type="number"
                   step="0.01"
@@ -749,7 +749,7 @@ export default function ReglesBancairesPage() {
                   placeholder="0.00"
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.amountMax') || 'Amount maximum'}>
+              <FormField label={t('admin.bankRules.amountMax')}>
                 <Input
                   type="number"
                   step="0.01"
@@ -758,7 +758,7 @@ export default function ReglesBancairesPage() {
                   placeholder="0.00"
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.amountExact') || 'Amount exact'}>
+              <FormField label={t('admin.bankRules.amountExact')}>
                 <Input
                   type="number"
                   step="0.01"
@@ -774,7 +774,7 @@ export default function ReglesBancairesPage() {
           <div>
             <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              {t('admin.bankRules.actionsSection') || 'Actions'}
+              {t('admin.bankRules.actionsSection')}
             </h3>
             {formErrors.actions && (
               <div className="flex items-center gap-2 mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
@@ -783,43 +783,43 @@ export default function ReglesBancairesPage() {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label={t('admin.bankRules.account') || 'Account'}>
+              <FormField label={t('admin.bankRules.account')}>
                 <select
                   value={form.accountId}
                   onChange={e => updateForm('accountId', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  aria-label={t('admin.bankRules.account') || 'Account'}
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  aria-label={t('admin.bankRules.account')}
                 >
-                  <option value="">{t('admin.bankRules.selectAccount') || '-- Select account --'}</option>
+                  <option value="">{t('admin.bankRules.selectAccount')}</option>
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                   ))}
                 </select>
               </FormField>
-              <FormField label={t('admin.bankRules.categoryTag') || 'Category tag'}>
+              <FormField label={t('admin.bankRules.categoryTag')}>
                 <Input
                   value={form.categoryTag}
                   onChange={e => updateForm('categoryTag', e.target.value)}
-                  placeholder={t('admin.bankRules.categoryTagPlaceholder') || 'e.g. bank-fees'}
+                  placeholder={t('admin.bankRules.categoryTagPlaceholder')}
                 />
               </FormField>
-              <FormField label={t('admin.bankRules.taxCode') || 'Tax code'}>
+              <FormField label={t('admin.bankRules.taxCode')}>
                 <select
                   value={form.taxCode}
                   onChange={e => updateForm('taxCode', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  aria-label={t('admin.bankRules.taxCode') || 'Tax code'}
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  aria-label={t('admin.bankRules.taxCode')}
                 >
                   {TAX_CODES.map(tc => (
                     <option key={tc.value} value={tc.value}>{tc.label}</option>
                   ))}
                 </select>
               </FormField>
-              <FormField label={t('admin.bankRules.descriptionOverride') || 'Description override'}>
+              <FormField label={t('admin.bankRules.descriptionOverride')}>
                 <Input
                   value={form.description}
                   onChange={e => updateForm('description', e.target.value)}
-                  placeholder={t('admin.bankRules.descriptionOverridePlaceholder') || 'Override transaction description'}
+                  placeholder={t('admin.bankRules.descriptionOverridePlaceholder')}
                 />
               </FormField>
             </div>
@@ -830,10 +830,10 @@ export default function ReglesBancairesPage() {
       {/* ─── DELETE RULE CONFIRM DIALOG ─────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmDeleteRule}
-        title={t('admin.bankRules.deleteTitle') || 'Delete Bank Rule'}
+        title={t('admin.bankRules.deleteTitle')}
         message={t('admin.bankRules.confirmDelete') || `Are you sure you want to delete the rule "${confirmDeleteRule?.name}"?`}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmDeleteRule && handleDelete(confirmDeleteRule)}
         onCancel={() => setConfirmDeleteRule(null)}
       />

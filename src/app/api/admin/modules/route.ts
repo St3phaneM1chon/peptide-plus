@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
@@ -53,6 +54,15 @@ export const GET = withAdminGuard(async (
     });
     return apiError('Failed to fetch module flags', ErrorCode.INTERNAL_ERROR, { request });
   }
+}, { requiredPermission: 'admin.settings' });
+
+const moduleItemSchema = z.object({
+  key: z.enum(['ecommerce', 'crm', 'accounting', 'voip', 'email', 'marketing', 'loyalty', 'media', 'community', 'catalog']),
+  enabled: z.boolean(),
+});
+
+const updateModulesSchema = z.object({
+  modules: z.array(moduleItemSchema).min(1).max(20),
 });
 
 export const PUT = withAdminGuard(async (
@@ -60,11 +70,11 @@ export const PUT = withAdminGuard(async (
 ) => {
   try {
     const body = await request.json();
-    const { modules } = body as { modules: { key: ModuleKey; enabled: boolean }[] };
-
-    if (!Array.isArray(modules)) {
-      return apiError('modules must be an array', ErrorCode.VALIDATION_ERROR, { request });
+    const parsed = updateModulesSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError('Validation error: ' + parsed.error.issues.map(i => i.message).join(', '), ErrorCode.VALIDATION_ERROR, { request });
     }
+    const { modules } = parsed.data;
 
     const validKeys = new Set(ALL_MODULES.map((m) => m.key));
 
@@ -92,4 +102,4 @@ export const PUT = withAdminGuard(async (
     });
     return apiError('Failed to update module flags', ErrorCode.INTERNAL_ERROR, { request });
   }
-});
+}, { requiredPermission: 'admin.settings' });

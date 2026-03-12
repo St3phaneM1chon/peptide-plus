@@ -159,9 +159,9 @@ export default function CloturePage() {
   }, []);
   const handleRibbonClosePeriod = useCallback(() => { handleLockPeriod(); }, [handleLockPeriod]);
   const handleRibbonReopen = useCallback(async () => {
-    if (!selectedPeriod) { toast.info(t('admin.periodClosing.selectPeriod') || 'Selectionnez une periode a rouvrir.'); return; }
+    if (!selectedPeriod) { toast.info(t('admin.periodClosing.selectPeriod')); return; }
     const period = periods.find(p => p.code === selectedPeriod);
-    if (!period || period.status !== 'LOCKED') { toast.error(t('admin.periodClosing.notLocked') || 'Seule une periode verrouillee peut etre rouverte.'); return; }
+    if (!period || period.status !== 'LOCKED') { toast.error(t('admin.periodClosing.notLocked')); return; }
     try {
       const res = await fetch('/api/accounting/periods', {
         method: 'PUT',
@@ -173,7 +173,7 @@ export default function CloturePage() {
       const firstCode = await fetchPeriods();
       if (firstCode) fetchChecklist(firstCode);
     } catch {
-      toast.error(t('admin.periodClosing.reopenError') || 'Erreur lors de la reouverture');
+      toast.error(t('admin.periodClosing.reopenError'));
     }
   }, [selectedPeriod, periods, fetchPeriods, fetchChecklist, t]);
   const handleRibbonFiscalCalendar = useCallback(() => {
@@ -183,16 +183,16 @@ export default function CloturePage() {
     window.location.href = '/admin/comptabilite/declaration-tps-tvq';
   }, []);
   const handleRibbonExport = useCallback(() => {
-    if (checklist.length === 0) { toast.error(t('admin.periodClosing.noChecklistToExport') || 'Aucune checklist a exporter'); return; }
+    if (checklist.length === 0) { toast.error(t('admin.periodClosing.noChecklistToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.periodClosing.colTask') || 'Tache', t('admin.periodClosing.colCompleted') || 'Complete'];
+    const headers = [t('admin.periodClosing.colTask'), t('admin.periodClosing.colCompleted')];
     const rows = checklist.map(item => [item.label || item.id, item.status === 'ok' ? 'Oui' : item.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `cloture-${selectedPeriod}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.periodClosing.exportSuccess') || 'Checklist exportee');
+    toast.success(t('admin.periodClosing.exportSuccess'));
   }, [checklist, selectedPeriod, t]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
@@ -490,26 +490,26 @@ export default function CloturePage() {
       )}
 
       {/* Tips */}
-      <div className="bg-teal-50 border border-teal-200 rounded-xl p-6">
+      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
         <div className="flex items-center gap-2 mb-2">
-          <Info className="w-5 h-5 text-teal-600" />
-          <h3 className="font-semibold text-teal-900">{t('admin.closing.tipsTitle')}</h3>
+          <Info className="w-5 h-5 text-indigo-600" />
+          <h3 className="font-semibold text-indigo-900">{t('admin.closing.tipsTitle')}</h3>
         </div>
-        <ul className="space-y-2 text-sm text-teal-800">
+        <ul className="space-y-2 text-sm text-indigo-800">
           <li className="flex items-start gap-2">
-            <span className="text-teal-500">&#8226;</span>
+            <span className="text-indigo-500">&#8226;</span>
             {t('admin.closing.tip1')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-teal-500">&#8226;</span>
+            <span className="text-indigo-500">&#8226;</span>
             {t('admin.closing.tip2')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-teal-500">&#8226;</span>
+            <span className="text-indigo-500">&#8226;</span>
             {t('admin.closing.tip3')}
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-teal-500">&#8226;</span>
+            <span className="text-indigo-500">&#8226;</span>
             {t('admin.closing.tip4')}
           </li>
         </ul>

@@ -1,10 +1,22 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const replaceTagsSchema = z.object({
+  tags: z.array(z.string()),
+});
+
+const patchTagsSchema = z.object({
+  add: z.array(z.string()).optional(),
+  remove: z.array(z.string()).optional(),
+}).refine((data) => data.add !== undefined || data.remove !== undefined, {
+  message: 'Le corps doit contenir "add" ou "remove"',
+});
 
 // GET: Return user's tags
 export const GET = withAdminGuard(
@@ -39,16 +51,15 @@ export const PUT = withAdminGuard(
       const id = params!.id as string;
 
       const body = await request.json();
-      const { tags } = body as { tags: unknown };
-
-      if (!Array.isArray(tags) || tags.some((t) => typeof t !== 'string')) {
+      const parsed = replaceTagsSchema.safeParse(body);
+      if (!parsed.success) {
         return NextResponse.json(
-          { error: 'Le champ "tags" doit être un tableau de chaînes de caractères' },
+          { error: 'Invalid data', details: parsed.error.errors },
           { status: 400 }
         );
       }
 
-      const cleanTags = (tags as string[]).map((t) => t.trim()).filter(Boolean);
+      const cleanTags = parsed.data.tags.map((t) => t.trim()).filter(Boolean);
 
       const exists = await prisma.user.findUnique({ where: { id }, select: { id: true } });
       if (!exists) {
@@ -92,31 +103,14 @@ export const PATCH = withAdminGuard(
       const id = params!.id as string;
 
       const body = await request.json();
-      const { add, remove } = body as { add?: unknown; remove?: unknown };
-
-      if (add === undefined && remove === undefined) {
+      const parsed = patchTagsSchema.safeParse(body);
+      if (!parsed.success) {
         return NextResponse.json(
-          { error: 'Le corps doit contenir "add" ou "remove"' },
+          { error: 'Invalid data', details: parsed.error.errors },
           { status: 400 }
         );
       }
-
-      if (add !== undefined && (!Array.isArray(add) || add.some((t) => typeof t !== 'string'))) {
-        return NextResponse.json(
-          { error: 'Le champ "add" doit être un tableau de chaînes de caractères' },
-          { status: 400 }
-        );
-      }
-
-      if (
-        remove !== undefined &&
-        (!Array.isArray(remove) || remove.some((t) => typeof t !== 'string'))
-      ) {
-        return NextResponse.json(
-          { error: 'Le champ "remove" doit être un tableau de chaînes de caractères' },
-          { status: 400 }
-        );
-      }
+      const { add, remove } = parsed.data;
 
       const user = await prisma.user.findUnique({
         where: { id },

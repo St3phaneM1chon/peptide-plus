@@ -302,21 +302,19 @@ export async function POST(request: NextRequest) {
         error: errorMsg,
       });
       await failWebhookEvent(event.id, errorMsg);
-      // COMMERCE-018 FIX: Return 200 for processing errors after signature verification.
-      // Returning 500 causes Stripe to retry, which can lead to duplicate processing
-      // or infinite retry loops for permanent data errors. The error is logged and
-      // stored in failWebhookEvent for admin review / dead-letter processing.
-      return NextResponse.json({ received: true, error: 'Handler failed — logged for review' });
+      // A9-P2-004 FIX: Return 500 so Stripe retries the event. The idempotence
+      // layer (dedup cache + WebhookEvent record) prevents duplicate processing
+      // on retry. Returning 200 here would silently swallow failures.
+      return NextResponse.json({ error: 'Handler failed — logged for review' }, { status: 500 });
     }
   } catch (error) {
     logger.error('Webhook error', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    // COMMERCE-018: Signature verification failures still return 400 (handled above).
-    // This catch handles truly unexpected errors — return 200 to prevent Stripe retries
-    // since the event was likely already recorded.
-    return NextResponse.json({ received: true, error: 'Unexpected error — logged for review' });
+    // A9-P2-004 FIX: Return 500 for unexpected errors so Stripe retries.
+    // Idempotence checks at the top of the handler prevent duplicate processing.
+    return NextResponse.json({ error: 'Unexpected error — logged for review' }, { status: 500 });
   }
 }
 
@@ -914,6 +912,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
               points: pointsToAward,
               description: `Purchase ${orderNumber}`,
               balanceAfter: newBalance,
+              // A8-P2-005 FIX: Set expiration on purchase points (12 months)
+              expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
               metadata: JSON.stringify({ orderId: order.id, orderNumber, total: Number(cadTotal) }),
             },
           });
@@ -1115,6 +1115,78 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       orderId: order.id,
       error: commError instanceof Error ? commError.message : String(commError),
     });
+  }
+
+  // A5-P1-003: Revoke loyalty points awarded for this order on refund
+  if (order.userId) {
+    try {
+      const earnTransactions = await prisma.loyaltyTransaction.findMany({
+        where: {
+          orderId: order.id,
+          type: { in: ['EARN_PURCHASE', 'EARN_BONUS'] },
+          points: { gt: 0 },
+        },
+        select: { id: true, points: true },
+      });
+
+      const totalEarnedPoints = earnTransactions.reduce((sum, t) => sum + t.points, 0);
+
+      if (totalEarnedPoints > 0) {
+        const pointsToRevoke = isFullRefund
+          ? totalEarnedPoints
+          : Math.floor(totalEarnedPoints * (refundAmount / orderTotal));
+
+        if (pointsToRevoke > 0) {
+          await prisma.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
+              where: { id: order.userId! },
+              data: {
+                loyaltyPoints: { decrement: pointsToRevoke },
+              },
+            });
+
+            // Prevent negative balance
+            if (updatedUser.loyaltyPoints < 0) {
+              await tx.user.update({
+                where: { id: order.userId! },
+                data: { loyaltyPoints: 0 },
+              });
+            }
+
+            const finalBalance = Math.max(updatedUser.loyaltyPoints, 0);
+
+            await tx.loyaltyTransaction.create({
+              data: {
+                userId: order.userId!,
+                type: 'ADJUST',
+                points: -pointsToRevoke,
+                description: `Points revoked: order ${order.orderNumber} refunded via Stripe ($${refundAmount}${isFullRefund ? ' - full' : ' - partial'})`,
+                orderId: order.id,
+                balanceAfter: finalBalance,
+                metadata: JSON.stringify({
+                  reason: 'refund_revocation',
+                  refundAmount,
+                  isFullRefund,
+                  originalPointsEarned: totalEarnedPoints,
+                  source: 'stripe_webhook',
+                }),
+              },
+            });
+          });
+
+          logger.info('Loyalty points revoked on Stripe refund', {
+            orderId: order.id,
+            userId: order.userId,
+            pointsRevoked: pointsToRevoke,
+          });
+        }
+      }
+    } catch (loyaltyError) {
+      logger.error('Failed to revoke loyalty points on Stripe refund', {
+        orderId: order.id,
+        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
+      });
+    }
   }
 
   await completeWebhookEvent(eventId, order.id);

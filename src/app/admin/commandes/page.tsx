@@ -210,17 +210,17 @@ function statusLabel(status: string): string {
 }
 
 /** Fraud risk badge config */
-function fraudRiskConfig(level: FraudResult['riskLevel']): { label: string; className: string; icon: typeof Shield } {
+function fraudRiskConfig(level: FraudResult['riskLevel'], t: (key: string) => string): { label: string; className: string; icon: typeof Shield } {
   switch (level) {
     case 'CRITICAL':
-      return { label: 'Critique', className: 'bg-red-100 text-red-700 border-red-200', icon: ShieldAlert };
+      return { label: t('admin.commandes.fraudRiskCritical'), className: 'bg-red-100 text-red-700 border-red-200', icon: ShieldAlert };
     case 'HIGH':
-      return { label: 'Elevé', className: 'bg-orange-100 text-orange-700 border-orange-200', icon: ShieldAlert };
+      return { label: t('admin.commandes.fraudRiskHigh'), className: 'bg-orange-100 text-orange-700 border-orange-200', icon: ShieldAlert };
     case 'MEDIUM':
-      return { label: 'Moyen', className: 'bg-amber-100 text-amber-700 border-amber-200', icon: Shield };
+      return { label: t('admin.commandes.fraudRiskMedium'), className: 'bg-amber-100 text-amber-700 border-amber-200', icon: Shield };
     case 'LOW':
     default:
-      return { label: 'Faible', className: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: ShieldCheck };
+      return { label: t('admin.commandes.fraudRiskLow'), className: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: ShieldCheck };
   }
 }
 
@@ -237,15 +237,15 @@ function computeOrderTags(order: Order): string[] {
 }
 
 /** Build timeline events from order data */
-function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): TimelineEvent[] {
+function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[], t: (key: string, params?: Record<string, string | number>) => string): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
   // Order creation
   events.push({
     id: `${order.id}-created`,
     type: 'created',
-    title: 'Commande créée',
-    description: `Commande #${order.orderNumber} pour ${order.items?.length || 0} article(s)`,
+    title: t('admin.commandes.timelineOrderCreated'),
+    description: t('admin.commandes.timelineOrderCreatedDesc', { orderNumber: order.orderNumber, itemCount: order.items?.length || 0 }),
     timestamp: new Date(order.createdAt),
   });
 
@@ -254,8 +254,8 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-paid`,
       type: 'paid',
-      title: 'Paiement reçu',
-      description: `Montant: ${order.total.toFixed(2)} ${order.currencyCode}`,
+      title: t('admin.commandes.timelinePaymentReceived'),
+      description: t('admin.commandes.timelinePaymentDesc', { amount: order.total.toFixed(2), currency: order.currencyCode }),
       timestamp: new Date(new Date(order.createdAt).getTime() + 60000),
     });
   }
@@ -265,7 +265,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-processing`,
       type: 'processing',
-      title: 'En traitement',
+      title: t('admin.commandes.timelineProcessing'),
       timestamp: new Date(new Date(order.createdAt).getTime() + 120000),
     });
   }
@@ -274,10 +274,10 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-shipped`,
       type: 'shipped',
-      title: 'Expédiée',
+      title: t('admin.commandes.timelineShipped'),
       description: order.carrier ? `Via ${order.carrier}${order.trackingNumber ? ` - ${order.trackingNumber}` : ''}` : undefined,
       timestamp: new Date(new Date(order.createdAt).getTime() + 180000),
-      metadata: order.trackingNumber ? { 'Suivi': order.trackingNumber } : undefined,
+      metadata: order.trackingNumber ? { [t('admin.commandes.timelineTracking')]: order.trackingNumber } : undefined,
     });
   }
 
@@ -285,7 +285,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-delivered`,
       type: 'delivered',
-      title: 'Livrée',
+      title: t('admin.commandes.timelineDelivered'),
       timestamp: new Date(new Date(order.createdAt).getTime() + 240000),
     });
   }
@@ -294,7 +294,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-cancelled`,
       type: 'cancelled',
-      title: 'Annulée',
+      title: t('admin.commandes.timelineCancelled'),
       timestamp: new Date(new Date(order.createdAt).getTime() + 120000),
     });
   }
@@ -304,7 +304,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `cn-${cn.id}`,
       type: 'refunded',
-      title: `Remboursement ${cn.creditNoteNumber}`,
+      title: t('admin.commandes.timelineRefund', { creditNoteNumber: cn.creditNoteNumber }),
       description: `${cn.reason} - ${cn.total.toFixed(2)} ${order.currencyCode}`,
       timestamp: cn.issuedAt ? new Date(cn.issuedAt) : new Date(),
     });
@@ -315,7 +315,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
     events.push({
       id: `${order.id}-note`,
       type: 'note',
-      title: 'Note interne',
+      title: t('admin.commandes.timelineInternalNote'),
       description: order.adminNotes,
       timestamp: new Date(new Date(order.createdAt).getTime() + 300000),
     });
@@ -327,7 +327,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
       events.push({
         id: `reship-${ro.id}`,
         type: 'return',
-        title: `Ré-expédition ${ro.orderNumber}`,
+        title: t('admin.commandes.timelineReshipment', { orderNumber: ro.orderNumber }),
         description: ro.replacementReason,
         timestamp: new Date(ro.createdAt),
       });
@@ -338,7 +338,7 @@ function buildTimelineEvents(order: Order, creditNotes: CreditNoteRef[]): Timeli
 }
 
 /** Group orders by date buckets: Today, Yesterday, This Week, Older */
-function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday: string; thisWeek: string; older: string; replacement: string }, fmtCurrency?: (amount: number) => string, fraudResults?: Record<string, FraudResult>): ContentListGroup[] {
+function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday: string; thisWeek: string; older: string; replacement: string; articles?: string; fraudRiskHighBadge?: string; fraudRiskMediumBadge?: string }, fmtCurrency?: (amount: number) => string, fraudResults?: Record<string, FraudResult>): ContentListGroup[] {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
@@ -379,9 +379,9 @@ function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday:
     // Fraud risk badge (only for MEDIUM+ risk)
     const fraud = fraudResults?.[order.id];
     if (fraud && (fraud.riskLevel === 'HIGH' || fraud.riskLevel === 'CRITICAL')) {
-      badges.push({ text: `Risque ${fraud.riskLevel === 'CRITICAL' ? 'critique' : 'élevé'}`, variant: 'error' as const });
+      badges.push({ text: labels?.fraudRiskHighBadge || (fraud.riskLevel === 'CRITICAL' ? 'Critical risk' : 'High risk'), variant: 'error' as const });
     } else if (fraud && fraud.riskLevel === 'MEDIUM') {
-      badges.push({ text: 'Risque moyen', variant: 'warning' as const });
+      badges.push({ text: labels?.fraudRiskMediumBadge || 'Medium risk', variant: 'warning' as const });
     }
 
     // Auto-tags (show first 2 tags as badges)
@@ -396,7 +396,7 @@ function groupOrdersByDate(orders: Order[], labels?: { today: string; yesterday:
       avatar: { text: order.userName || order.shippingName || 'C' },
       title: `#${order.orderNumber}`,
       subtitle: order.userName || order.userEmail || '',
-      preview: `${fmtCurrency ? fmtCurrency(order.total) : String(order.total)} - ${order.items?.length || 0} articles`,
+      preview: `${fmtCurrency ? fmtCurrency(order.total) : String(order.total)} - ${order.items?.length || 0} ${labels?.articles || 'items'}`,
       timestamp: order.createdAt,
       badges,
     };
@@ -694,7 +694,7 @@ export default function OrdersPage() {
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
-      toast.success(t('admin.commandes.statusUpdated') || 'Order status updated');
+      toast.success(t('admin.commandes.statusUpdated'));
     } catch (err) {
       console.error('Error updating order:', err);
       toast.error(t('common.networkError'));
@@ -1130,12 +1130,11 @@ export default function OrdersPage() {
           t('admin.commandes.bulkPartialSuccess', {
             succeeded: String(updated),
             failed: String(skipped + notFound),
-          }) || `${updated} updated, ${skipped + notFound} skipped/not found`
+          })
         );
       } else {
         toast.success(
           t('admin.commandes.bulkStatusUpdated', { count: String(updated) })
-            || `${updated} orders updated`
         );
       }
 
@@ -1175,7 +1174,7 @@ export default function OrdersPage() {
     const totalAmount = filteredOrders.reduce((acc, o) => acc + o.total, 0);
 
     const html = `<!DOCTYPE html>
-<html><head><title>${t('admin.commandes.printOrdersListTitle') || 'Orders List'}</title>
+<html><head><title>${t('admin.commandes.printOrdersListTitle')}</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 0 auto; padding: 32px; color: #1e293b; }
   h1 { font-size: 20px; margin-bottom: 4px; }
@@ -1185,8 +1184,8 @@ export default function OrdersPage() {
   .summary { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; }
   @media print { body { padding: 0; } }
 </style></head><body>
-<h1>${t('admin.commandes.printOrdersListTitle') || 'Orders List'}</h1>
-<p class="meta">${t('admin.commandes.printGeneratedOn') || 'Generated on'} ${new Date().toLocaleDateString(locale)} &mdash; ${filteredOrders.length} ${t('admin.commandes.printOrdersCount') || 'orders'}</p>
+<h1>${t('admin.commandes.printOrdersListTitle')}</h1>
+<p class="meta">${t('admin.commandes.printGeneratedOn')} ${new Date().toLocaleDateString(locale)} &mdash; ${filteredOrders.length} ${t('admin.commandes.printOrdersCount')}</p>
 <table>
   <thead><tr>
     <th>${t('admin.commandes.colOrder')}</th>
@@ -1199,7 +1198,7 @@ export default function OrdersPage() {
   <tbody>${rowsHtml}</tbody>
 </table>
 <div class="summary">
-  <span><strong>${filteredOrders.length}</strong> ${t('admin.commandes.printOrdersCount') || 'orders'}</span>
+  <span><strong>${filteredOrders.length}</strong> ${t('admin.commandes.printOrdersCount')}</span>
   <span><strong>${t('admin.commandes.total')}: ${formatCurrency(totalAmount)}</strong></span>
 </div>
 </body></html>`;
@@ -1297,7 +1296,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
     if (selectedOrder) {
       setConfirmCancelOrderId(selectedOrder.id);
     } else {
-      toast.info(t('admin.commandes.selectOrderFirst') || 'Select an order first');
+      toast.info(t('admin.commandes.selectOrderFirst'));
     }
   }, [selectedOrder, t]);
 
@@ -1349,6 +1348,9 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
     thisWeek: t('admin.commandes.thisWeek'),
     older: t('admin.commandes.older'),
     replacement: t('admin.commandes.replacement'),
+    articles: t('admin.commandes.articles'),
+    fraudRiskHighBadge: t('admin.commandes.fraudRiskHighBadge'),
+    fraudRiskMediumBadge: t('admin.commandes.fraudRiskMediumBadge'),
   }), [t]);
   const orderGroups = useMemo(() => groupOrdersByDate(filteredOrders, dateLabels, formatCurrency, fraudResults), [filteredOrders, dateLabels, formatCurrency, fraudResults]);
 
@@ -1420,12 +1422,11 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
       {/* Bulk Action Bar */}
       {showBulkBar && selectedOrderIds.size > 0 && (
         <div className="mx-4 lg:mx-6 mb-2 flex-shrink-0">
-          <div className="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5">
+          <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5">
             <div className="flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-teal-600" />
-              <span className="text-sm font-medium text-teal-800">
-                {t('admin.commandes.bulkSelected', { count: String(selectedOrderIds.size) })
-                  || `${selectedOrderIds.size} order(s) selected`}
+              <CheckSquare className="w-4 h-4 text-indigo-600" />
+              <span className="text-sm font-medium text-indigo-800">
+                {t('admin.commandes.bulkSelected', { count: String(selectedOrderIds.size) })}
               </span>
             </div>
 
@@ -1433,9 +1434,9 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               <select
                 value={bulkStatus}
                 onChange={(e) => setBulkStatus(e.target.value)}
-                className="h-8 px-2 rounded border border-teal-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="h-8 px-2 rounded border border-indigo-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">{t('admin.commandes.bulkSelectStatus') || 'Change status to...'}</option>
+                <option value="">{t('admin.commandes.bulkSelectStatus')}</option>
                 {statusOptionValues.map(s => (
                   <option key={s} value={s}>{statusLabel(s)}</option>
                 ))}
@@ -1449,7 +1450,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               >
                 {bulkUpdating
                   ? (t('admin.commandes.processing'))
-                  : (t('admin.commandes.bulkApply') || 'Apply')}
+                  : (t('admin.commandes.bulkApply'))}
               </Button>
 
               <Button
@@ -1461,21 +1462,21 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               >
                 {bulkPrinting
                   ? (t('admin.commandes.processing'))
-                  : (t('admin.commandes.bulkPrint') || 'Imprimer sélection')}
+                  : (t('admin.commandes.bulkPrint'))}
               </Button>
 
               <button
                 type="button"
                 onClick={() => selectAllFiltered()}
-                className="text-xs text-teal-700 hover:text-teal-900 hover:underline px-1"
+                className="text-xs text-indigo-700 hover:text-indigo-900 hover:underline px-1"
               >
-                {t('admin.commandes.bulkSelectAll') || 'Select all'}
+                {t('admin.commandes.bulkSelectAll')}
               </button>
 
               <button
                 type="button"
                 onClick={clearSelection}
-                className="p-1 rounded hover:bg-teal-100 text-teal-600"
+                className="p-1 rounded hover:bg-indigo-100 text-indigo-600"
                 title={t('admin.commandes.cancel')}
               >
                 <X className="w-4 h-4" />
@@ -1517,13 +1518,13 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                   }}
                   className={`p-1.5 rounded transition-colors ${
                     selectedOrderIds.size > 0
-                      ? 'text-teal-700 bg-teal-100 hover:bg-teal-200'
+                      ? 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'
                       : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                   }`}
                   title={
                     selectedOrderIds.size > 0
-                      ? (t('admin.commandes.bulkClearSelection') || 'Clear selection')
-                      : (t('admin.commandes.bulkSelectAll') || 'Select all')
+                      ? (t('admin.commandes.bulkClearSelection'))
+                      : (t('admin.commandes.bulkSelectAll'))
                   }
                 >
                   {selectedOrderIds.size > 0 ? (
@@ -1570,7 +1571,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                   {/* Fraud Detection Badge */}
                   {fraudResults[selectedOrder.id] && fraudResults[selectedOrder.id].riskLevel !== 'LOW' && (() => {
                     const fraud = fraudResults[selectedOrder.id];
-                    const config = fraudRiskConfig(fraud.riskLevel);
+                    const config = fraudRiskConfig(fraud.riskLevel, t);
                     const FraudIcon = config.icon;
                     return (
                       <div className={`rounded-lg p-3 border flex items-start gap-3 ${config.className}`}>
@@ -1635,7 +1636,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                           updateOrderStatus(selectedOrder.id, newStatus);
                         }}
                         disabled={updating}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       >
                         {statusOptionValues.map(s => (
                           <option key={s} value={s}>{s}</option>
@@ -1703,7 +1704,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                         <History className="w-4 h-4" />
                         {t('admin.commandes.timelineTitle')}
                       </h3>
-                      <OrderTimeline events={buildTimelineEvents(selectedOrder, creditNotes)} />
+                      <OrderTimeline events={buildTimelineEvents(selectedOrder, creditNotes, t)} />
                     </div>
                   )}
 
@@ -1793,7 +1794,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                       <h3 className="font-semibold text-slate-900 mb-2">{t('admin.commandes.customerTitle')}</h3>
                       <p className="text-slate-700">{selectedOrder.userName}</p>
                       <p className="text-slate-500 text-sm">{selectedOrder.userEmail}</p>
-                      <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-teal-600 text-sm hover:underline">
+                      <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-indigo-600 text-sm hover:underline">
                         {t('admin.commandes.viewProfile')} &rarr;
                       </Link>
                     </div>
@@ -1816,10 +1817,10 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                         <select
                           defaultValue={selectedOrder.carrier || ''}
                           onChange={(e) => updateTracking(selectedOrder.id, e.target.value, selectedOrder.trackingNumber || '')}
-                          className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="">{t('admin.commandes.carrierSelect')}</option>
-                          <option value="Postes Canada">{t('admin.commandes.carrierCanadaPost') || 'Canada Post'}</option>
+                          <option value="Postes Canada">{t('admin.commandes.carrierCanadaPost')}</option>
                           <option value="FedEx">FedEx</option>
                           <option value="UPS">UPS</option>
                           <option value="Purolator">Purolator</option>
@@ -2088,19 +2089,19 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
 
                   {/* Bridge #22: Commerce → Emails */}
                   {emailsBridge?.enabled && (emailsBridge.totalSent ?? 0) > 0 && (
-                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-teal-800 mb-3 flex items-center gap-2">
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-indigo-800 mb-3 flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         {t('admin.bridges.orderEmails')}
-                        <span className="text-xs font-normal text-teal-500 ms-auto">{emailsBridge.totalSent} {t('admin.bridges.totalEmails').toLowerCase()}</span>
+                        <span className="text-xs font-normal text-indigo-500 ms-auto">{emailsBridge.totalSent} {t('admin.bridges.totalEmails').toLowerCase()}</span>
                       </h3>
                       <div className="space-y-1.5">
                         {emailsBridge.recentEmails?.map((email) => (
                           <div
                             key={email.id}
-                            className="flex items-center justify-between text-xs p-2 rounded-md bg-teal-100/50"
+                            className="flex items-center justify-between text-xs p-2 rounded-md bg-indigo-100/50"
                           >
-                            <span className="text-teal-800 truncate">{email.subject}</span>
+                            <span className="text-indigo-800 truncate">{email.subject}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                               email.status === 'delivered' || email.status === 'sent' ? 'bg-green-100 text-green-700' :
                               email.status === 'bounced' ? 'bg-red-100 text-red-700' :
@@ -2127,7 +2128,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                             className="flex items-center justify-between text-xs p-2 rounded-md bg-indigo-100/50"
                           >
                             <div className="flex items-center gap-2">
-                              <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-teal-600'}`}>
+                              <span className={`${call.direction === 'inbound' ? 'text-green-600' : 'text-indigo-600'}`}>
                                 {call.direction === 'inbound' ? '↓' : '↑'}
                               </span>
                               <span className="text-indigo-800">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
@@ -2326,8 +2327,8 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
         }
       >
         <div className="space-y-4">
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-            <p className="text-sm text-teal-800">
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+            <p className="text-sm text-indigo-800">
               {t('admin.commandes.reshipInfo')}
             </p>
           </div>
@@ -2336,7 +2337,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
             <select
               value={reshipReason}
               onChange={(e) => setReshipReason(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {reshipReasons.map((r) => (
                 <option key={r} value={r}>{r}</option>
@@ -2370,10 +2371,10 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
       {/* ─── CANCEL ORDER CONFIRM DIALOG ───────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmCancelOrderId}
-        title={t('admin.commandes.cancelOrderTitle') || 'Cancel Order'}
-        message={t('admin.commandes.confirmCancel') || 'Are you sure you want to cancel this order? This action cannot be undone.'}
+        title={t('admin.commandes.cancelOrderTitle')}
+        message={t('admin.commandes.confirmCancel')}
         variant="danger"
-        confirmLabel={t('admin.commandes.confirmCancelBtn') || 'Cancel Order'}
+        confirmLabel={t('admin.commandes.confirmCancelBtn')}
         onConfirm={() => {
           if (confirmCancelOrderId) {
             updateOrderStatus(confirmCancelOrderId, 'CANCELLED');

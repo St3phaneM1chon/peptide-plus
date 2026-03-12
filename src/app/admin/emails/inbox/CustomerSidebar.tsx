@@ -18,7 +18,7 @@ const tierColors: Record<string, string> = {
   SILVER: 'text-slate-600 bg-slate-100',
   GOLD: 'text-yellow-600 bg-yellow-50',
   PLATINUM: 'text-purple-600 bg-purple-50',
-  DIAMOND: 'text-teal-600 bg-teal-50',
+  DIAMOND: 'text-indigo-600 bg-indigo-50',
 };
 
 export default function CustomerSidebar({ customer, stats }: CustomerSidebarProps) {
@@ -121,7 +121,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
         <div className="p-4 border-b border-slate-100">
           <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2 flex items-center gap-1">
             <Briefcase className="h-3 w-3" />
-            {t('admin.bridges.emailCrm') || 'CRM Deals'}
+            {t('admin.bridges.emailCrm')}
           </h4>
           <div className="space-y-1.5">
             {crmDeals.slice(0, 3).map((deal) => (
@@ -147,7 +147,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
                   <span className="font-medium text-slate-900">#{order.orderNumber as string}</span>
                   <span className={`ms-2 text-[10px] px-1.5 py-0.5 rounded ${
                     order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                    order.status === 'SHIPPED' ? 'bg-teal-100 text-teal-700' :
+                    order.status === 'SHIPPED' ? 'bg-indigo-100 text-indigo-700' :
                     order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                     'bg-slate-100 text-slate-600'
                   }`}>

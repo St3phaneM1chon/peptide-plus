@@ -163,13 +163,19 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     case 'record-consent': {
-      const id = await recordConsent(data);
+      const id = await recordConsent({
+        phone: data.phone,
+        email: data.email,
+        type: data.consentType || 'general',
+        source: data.source || 'admin',
+        channel: data.channel as 'PHONE' | 'EMAIL' | 'SMS' | 'ALL' | undefined,
+      });
       return apiSuccess({ id }, { request, status: 201 });
     }
 
     case 'revoke-consent': {
       const { phone, email, channel } = data;
-      const count = await revokeConsent({ phone, email }, channel);
+      const count = await revokeConsent({ phone, email }, channel as 'PHONE' | 'EMAIL' | 'SMS' | 'ALL' | undefined);
       return apiSuccess({ revoked: count }, { request });
     }
 

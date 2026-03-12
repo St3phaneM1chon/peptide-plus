@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { validateTransition } from '@/lib/order-status-machine';
@@ -19,7 +20,7 @@ import { consumeReservation } from '@/lib/inventory';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
-import { multiply, applyRate } from '@/lib/decimal-calculator';
+import { applyRate } from '@/lib/decimal-calculator';
 
 /**
  * Verify PayPal webhook signature
@@ -69,7 +70,15 @@ async function verifyWebhookSignature(
     );
 
     const verifyData = await verifyResponse.json();
-    return verifyData.verification_status === 'SUCCESS';
+    // A9-P2-006 FIX: Use timing-safe comparison for the verification status
+    // to prevent timing side-channel attacks on the webhook verification result.
+    const status = String(verifyData.verification_status || '');
+    const expected = 'SUCCESS';
+    if (status.length !== expected.length) return false;
+    return crypto.timingSafeEqual(
+      Buffer.from(status),
+      Buffer.from(expected)
+    );
   } catch (error) {
     logger.error('PayPal webhook verification error', {
       webhookId,
@@ -240,9 +249,12 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
     // Don't throw - order is still valid even if accounting fails
   }
 
-  // Consume inventory reservations
+  // A8-P2-003 FIX: Consume inventory reservations using the paypalOrderId-based
+  // cartId that was set during create-order. Without the cartId, consumeReservation
+  // searched by orderId which found nothing (reservations don't have orderId set
+  // until consumption), so stock was never decremented.
   try {
-    await consumeReservation(order.id);
+    await consumeReservation(order.id, `paypal:${paypalOrderId}`);
     logger.info('Inventory consumed', { orderId: order.id, orderNumber: order.orderNumber });
   } catch (invError) {
     logger.error('Failed to consume inventory', { orderId: order.id, error: invError instanceof Error ? invError.message : String(invError) });
@@ -347,6 +359,12 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
               where: { id: item.formatId },
               data: { stockQuantity: { increment: item.quantity } },
             });
+          } else {
+            // A8-P2-003 + E-07 FIX: Also restore stock for base products (no formatId)
+            await tx.product.updateMany({
+              where: { id: item.productId, trackInventory: true },
+              data: { stockQuantity: { increment: item.quantity } },
+            });
           }
 
           // Get current WAC
@@ -402,6 +420,78 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
       orderId: order.id,
       error: commError instanceof Error ? commError.message : String(commError),
     });
+  }
+
+  // A5-P1-003: Revoke loyalty points awarded for this order on refund
+  if (order.userId) {
+    try {
+      const earnTransactions = await prisma.loyaltyTransaction.findMany({
+        where: {
+          orderId: order.id,
+          type: { in: ['EARN_PURCHASE', 'EARN_BONUS'] },
+          points: { gt: 0 },
+        },
+        select: { id: true, points: true },
+      });
+
+      const totalEarnedPoints = earnTransactions.reduce((sum, t) => sum + t.points, 0);
+
+      if (totalEarnedPoints > 0) {
+        const pointsToRevoke = isFullRefund
+          ? totalEarnedPoints
+          : Math.floor(totalEarnedPoints * (refundAmount / orderTotal));
+
+        if (pointsToRevoke > 0) {
+          await prisma.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
+              where: { id: order.userId! },
+              data: {
+                loyaltyPoints: { decrement: pointsToRevoke },
+              },
+            });
+
+            // Prevent negative balance
+            if (updatedUser.loyaltyPoints < 0) {
+              await tx.user.update({
+                where: { id: order.userId! },
+                data: { loyaltyPoints: 0 },
+              });
+            }
+
+            const finalBalance = Math.max(updatedUser.loyaltyPoints, 0);
+
+            await tx.loyaltyTransaction.create({
+              data: {
+                userId: order.userId!,
+                type: 'ADJUST',
+                points: -pointsToRevoke,
+                description: `Points revoked: order ${order.orderNumber} refunded via PayPal ($${refundAmount}${isFullRefund ? ' - full' : ' - partial'})`,
+                orderId: order.id,
+                balanceAfter: finalBalance,
+                metadata: JSON.stringify({
+                  reason: 'refund_revocation',
+                  refundAmount,
+                  isFullRefund,
+                  originalPointsEarned: totalEarnedPoints,
+                  source: 'paypal_webhook',
+                }),
+              },
+            });
+          });
+
+          logger.info('Loyalty points revoked on PayPal refund', {
+            orderId: order.id,
+            userId: order.userId,
+            pointsRevoked: pointsToRevoke,
+          });
+        }
+      }
+    } catch (loyaltyError) {
+      logger.error('Failed to revoke loyalty points on PayPal refund', {
+        orderId: order.id,
+        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
+      });
+    }
   }
 }
 

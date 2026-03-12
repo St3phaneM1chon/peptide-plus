@@ -83,11 +83,11 @@ export default function LivraisonPage() {
       if (!res.ok) {
         // Revert on failure
         setZones(zones.map(z => z.id === id ? { ...z, isActive: !newActive } : z));
-        toast.error(t('admin.shipping.updateError') || 'Failed to update zone');
+        toast.error(t('admin.shipping.updateError'));
       }
     } catch {
       setZones(zones.map(z => z.id === id ? { ...z, isActive: !newActive } : z));
-      toast.error(t('admin.shipping.updateError') || 'Failed to update zone');
+      toast.error(t('admin.shipping.updateError'));
     }
   };
 
@@ -137,7 +137,7 @@ export default function LivraisonPage() {
           }
           return z;
         }));
-        toast.error(t('admin.shipping.updateError') || 'Failed to update shipping method');
+        toast.error(t('admin.shipping.updateError'));
       }
     } catch {
       setZones(zones.map(z => {
@@ -151,7 +151,7 @@ export default function LivraisonPage() {
         }
         return z;
       }));
-      toast.error(t('admin.shipping.updateError') || 'Failed to update shipping method');
+      toast.error(t('admin.shipping.updateError'));
     }
   };
 
@@ -200,12 +200,12 @@ export default function LivraisonPage() {
 
   const handleSaveZone = async () => {
     if (!formName.trim()) {
-      toast.error(t('admin.shipping.nameRequired') || 'Zone name is required');
+      toast.error(t('admin.shipping.nameRequired'));
       return;
     }
     const countries = formCountries.split(',').map(c => c.trim()).filter(Boolean);
     if (countries.length === 0) {
-      toast.error(t('admin.shipping.countriesRequired') || 'At least one country is required');
+      toast.error(t('admin.shipping.countriesRequired'));
       return;
     }
     setSaving(true);
@@ -229,8 +229,8 @@ export default function LivraisonPage() {
       });
       if (res.ok) {
         toast.success(editingZone
-          ? (t('admin.shipping.zoneUpdated') || 'Zone updated')
-          : (t('admin.shipping.zoneCreated') || 'Zone created'));
+          ? (t('admin.shipping.zoneUpdated'))
+          : (t('admin.shipping.zoneCreated')));
         setShowForm(false);
         setEditingZone(null);
         resetForm();
@@ -259,7 +259,7 @@ export default function LivraisonPage() {
 
   const handleAddMethod = async () => {
     if (!addMethodZoneId || !methodName.trim()) {
-      toast.error(t('admin.shipping.nameRequired') || 'Method name is required');
+      toast.error(t('admin.shipping.nameRequired'));
       return;
     }
     setSavingMethod(true);
@@ -306,7 +306,7 @@ export default function LivraisonPage() {
     // Reload zones from server to discard unsaved local changes
     setLoading(true);
     fetchZones();
-    toast.success(t('admin.shipping.zonesReloaded') || 'Shipping zones reloaded from server');
+    toast.success(t('admin.shipping.zonesReloaded'));
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
@@ -320,7 +320,7 @@ export default function LivraisonPage() {
         const text = await file.text();
         const imported = JSON.parse(text);
         if (!Array.isArray(imported.zones)) {
-          toast.error(t('admin.shipping.importError') || 'Invalid format: expected { zones: [...] }');
+          toast.error(t('admin.shipping.importError'));
           return;
         }
         // Create each zone via API
@@ -336,9 +336,9 @@ export default function LivraisonPage() {
           } catch { /* skip invalid */ }
         }
         await fetchZones();
-        toast.success(`${created} ${t('admin.shipping.zones') || 'zones'} ${t('admin.shipping.zoneCreated') || 'imported'}`);
+        toast.success(`${created} ${t('admin.shipping.zones')} ${t('admin.shipping.zoneCreated')}`);
       } catch {
-        toast.error(t('admin.shipping.importError') || 'Invalid JSON file');
+        toast.error(t('admin.shipping.importError'));
       }
     };
     input.click();
@@ -346,18 +346,18 @@ export default function LivraisonPage() {
 
   const handleRibbonExportConfig = useCallback(() => {
     if (zones.length === 0) {
-      toast.info(t('admin.shipping.emptyTitle') || 'No zones to export');
+      toast.info(t('admin.shipping.emptyTitle'));
       return;
     }
     const headers = [
-      t('admin.shipping.zoneName') || 'Zone',
-      t('admin.shipping.countriesLabel') || 'Countries',
-      t('admin.shipping.method') || 'Method',
-      t('admin.shipping.carrier') || 'Carrier',
-      t('admin.shipping.delay') || 'Delivery Days',
-      t('admin.shipping.price') || 'Price',
-      t('admin.shipping.freeAbove') || 'Free Above',
-      t('admin.shipping.activeCol') || 'Active',
+      t('admin.shipping.zoneName'),
+      t('admin.shipping.countriesLabel'),
+      t('admin.shipping.method'),
+      t('admin.shipping.carrier'),
+      t('admin.shipping.delay'),
+      t('admin.shipping.price'),
+      t('admin.shipping.freeAbove'),
+      t('admin.shipping.activeCol'),
     ];
     const rows: (string | number | boolean)[][] = [];
     for (const z of zones) {
@@ -378,7 +378,7 @@ export default function LivraisonPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `shipping-zones-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [zones, t]);
 
   const handleRibbonTest = useCallback(() => {
@@ -388,9 +388,9 @@ export default function LivraisonPage() {
     const totalMethods = zones.reduce((sum, z) => sum + z.methods.length, 0);
     const activeMethods = zones.reduce((sum, z) => sum + z.methods.filter(m => m.isActive).length, 0);
     toast.success(
-      `${t('admin.shipping.zones') || 'Zones'}: ${activeZones}/${zones.length} ${t('admin.shipping.active') || 'active'} | ` +
-      `${t('admin.shipping.countriesCovered') || 'Countries'}: ${totalCountries} | ` +
-      `${t('admin.shipping.methods') || 'Methods'}: ${activeMethods}/${totalMethods} ${t('admin.shipping.active') || 'active'}`,
+      `${t('admin.shipping.zones')}: ${activeZones}/${zones.length} ${t('admin.shipping.active')} | ` +
+      `${t('admin.shipping.countriesCovered')}: ${totalCountries} | ` +
+      `${t('admin.shipping.methods')}: ${activeMethods}/${totalMethods} ${t('admin.shipping.active')}`,
       { duration: 6000 }
     );
   }, [zones, t]);
@@ -404,7 +404,7 @@ export default function LivraisonPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -445,13 +445,13 @@ export default function LivraisonPage() {
           label={t('admin.shipping.countriesCovered')}
           value={new Set(zones.flatMap(z => z.countries)).size}
           icon={Globe}
-          className="!border-teal-200 !bg-teal-50"
+          className="!border-indigo-200 !bg-indigo-50"
         />
         <StatCard
           label={t('admin.shipping.methods')}
           value={zones.reduce((sum, z) => sum + z.methods.length, 0)}
           icon={Truck}
-          className="!border-teal-200 !bg-teal-50"
+          className="!border-indigo-200 !bg-indigo-50"
         />
       </div>
 
@@ -541,7 +541,7 @@ export default function LivraisonPage() {
               </table>
               <button
                 onClick={() => openAddMethodModal(zone.id)}
-                className="mt-3 text-sm text-teal-600 hover:text-teal-700 inline-flex items-center gap-1"
+                className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {t('admin.shipping.addMethod')}
@@ -581,44 +581,44 @@ export default function LivraisonPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.zoneName') || 'Zone Name'}</label>
-            <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="Canada, USA, Europe..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.zoneName')}</label>
+            <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="Canada, USA, Europe..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.countriesLabel') || 'Countries (comma-separated ISO codes)'}</label>
-            <input type="text" value={formCountries} onChange={e => setFormCountries(e.target.value)} placeholder="CA, US, FR, DE..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
-            <p className="text-xs text-slate-400 mt-1">{t('admin.shipping.countriesHint') || 'Use ISO 3166-1 alpha-2 codes'}</p>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.countriesLabel')}</label>
+            <input type="text" value={formCountries} onChange={e => setFormCountries(e.target.value)} placeholder="CA, US, FR, DE..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
+            <p className="text-xs text-slate-400 mt-1">{t('admin.shipping.countriesHint')}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.baseFee') || 'Base Fee ($)'}</label>
-              <input type="number" step="0.01" min="0" value={formBaseFee} onChange={e => setFormBaseFee(e.target.value)} aria-label={t('admin.shipping.baseFee') || 'Base Fee'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.baseFee')}</label>
+              <input type="number" step="0.01" min="0" value={formBaseFee} onChange={e => setFormBaseFee(e.target.value)} aria-label={t('admin.shipping.baseFee')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.perItemFee') || 'Per Item Fee ($)'}</label>
-              <input type="number" step="0.01" min="0" value={formPerItemFee} onChange={e => setFormPerItemFee(e.target.value)} aria-label={t('admin.shipping.perItemFee') || 'Per Item Fee'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.perItemFee')}</label>
+              <input type="number" step="0.01" min="0" value={formPerItemFee} onChange={e => setFormPerItemFee(e.target.value)} aria-label={t('admin.shipping.perItemFee')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.freeAbove') || 'Free Shipping Threshold ($)'}</label>
-            <input type="number" step="0.01" min="0" value={formFreeThreshold} onChange={e => setFormFreeThreshold(e.target.value)} placeholder={t('admin.shipping.optional') || 'Optional'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.freeAbove')}</label>
+            <input type="number" step="0.01" min="0" value={formFreeThreshold} onChange={e => setFormFreeThreshold(e.target.value)} placeholder={t('admin.shipping.optional')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.minDays') || 'Min Delivery Days'}</label>
-              <input type="number" min="1" value={formMinDays} onChange={e => setFormMinDays(e.target.value)} aria-label={t('admin.shipping.minDays') || 'Min Delivery Days'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.minDays')}</label>
+              <input type="number" min="1" value={formMinDays} onChange={e => setFormMinDays(e.target.value)} aria-label={t('admin.shipping.minDays')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.maxDays') || 'Max Delivery Days'}</label>
-              <input type="number" min="1" value={formMaxDays} onChange={e => setFormMaxDays(e.target.value)} aria-label={t('admin.shipping.maxDays') || 'Max Delivery Days'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.maxDays')}</label>
+              <input type="number" min="1" value={formMaxDays} onChange={e => setFormMaxDays(e.target.value)} aria-label={t('admin.shipping.maxDays')} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => { setShowForm(false); setEditingZone(null); resetForm(); }}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSaveZone} loading={saving}>
-              {editingZone ? (t('common.save') || 'Save') : (t('admin.shipping.createZone') || 'Create Zone')}
+              {editingZone ? (t('common.save')) : (t('admin.shipping.createZone'))}
             </Button>
           </div>
         </div>
@@ -638,8 +638,8 @@ export default function LivraisonPage() {
               type="text"
               value={methodName}
               onChange={e => setMethodName(e.target.value)}
-              placeholder={t('admin.shipping.methodNamePlaceholder') || 'Standard, Express, Economy...'}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+              placeholder={t('admin.shipping.methodNamePlaceholder')}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
@@ -648,8 +648,8 @@ export default function LivraisonPage() {
               type="text"
               value={methodCarrier}
               onChange={e => setMethodCarrier(e.target.value)}
-              placeholder={t('admin.shipping.methodCarrierPlaceholder') || 'Canada Post, UPS, FedEx...'}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+              placeholder={t('admin.shipping.methodCarrierPlaceholder')}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
@@ -660,7 +660,7 @@ export default function LivraisonPage() {
               min="0"
               value={methodBaseRate}
               onChange={e => setMethodBaseRate(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -671,7 +671,7 @@ export default function LivraisonPage() {
                 min="1"
                 value={methodMinDays}
                 onChange={e => setMethodMinDays(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             <div>
@@ -681,7 +681,7 @@ export default function LivraisonPage() {
                 min="1"
                 value={methodMaxDays}
                 onChange={e => setMethodMaxDays(e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
@@ -693,13 +693,13 @@ export default function LivraisonPage() {
               min="0"
               value={methodFreeAbove}
               onChange={e => setMethodFreeAbove(e.target.value)}
-              placeholder={t('admin.shipping.optional') || 'Optional'}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+              placeholder={t('admin.shipping.optional')}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => setShowAddMethodModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleAddMethod} loading={savingMethod}>
               {t('admin.shipping.addMethod')}

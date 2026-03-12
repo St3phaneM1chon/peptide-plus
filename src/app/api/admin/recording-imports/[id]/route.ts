@@ -7,9 +7,14 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+
+const patchSchema = z.object({
+  action: z.enum(['skip', 'retry']),
+});
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -49,7 +54,14 @@ export const PATCH = withAdminGuard(async (request: NextRequest, context: RouteP
 
   try {
     const body = await request.json();
-    const { action } = body as { action: 'skip' | 'retry' };
+    const parsed = patchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { action } = parsed.data;
 
     const imp = await prisma.recordingImport.findUnique({ where: { id } });
     if (!imp) {

@@ -36,6 +36,7 @@ model InventoryTransaction {
   reason            String?
   createdBy         String?
   createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
   product           Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   format            ProductFormat?           @relation(fields: [formatId], references: [id], onDelete: SetNull)
   order             Order?                   @relation(fields: [orderId], references: [id], onDelete: SetNull)
@@ -129,6 +130,7 @@ model PurchaseOrderReceipt {
   receivedBy      String?
   notes           String?
   createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
   purchaseOrder   PurchaseOrder              @relation(fields: [purchaseOrderId], references: [id])
   items           PurchaseOrderReceiptItem[]
 
@@ -161,10 +163,13 @@ model Supplier {
   country    String?           @default("CA")
   notes      String?
   isActive   Boolean           @default(true)
-  contacts   SupplierContact[]
-  links      SupplierLink[]
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  contacts          SupplierContact[]
+  links             SupplierLink[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // FIX A1-P0-002: Reverse relation for SupplierInvoice FK
+  supplierInvoices  SupplierInvoice[] @relation("SupplierInvoices")
 
   @@index([name])
   @@index([isActive])
@@ -245,6 +250,8 @@ model StockLevel {
   lastCountDate DateTime?
   updatedAt    DateTime  @updatedAt
 
+  // FIX A1-P0-003: Add Product FK for referential integrity
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   warehouse Warehouse @relation(fields: [warehouseId], references: [id])
 
   @@unique([productId, warehouseId])
@@ -266,7 +273,10 @@ model StockMovement {
   notes         String?
   createdBy     String?
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  // FIX A1-P0-003: Add Product FK for referential integrity
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   warehouse Warehouse @relation(fields: [warehouseId], references: [id])
 
   @@index([productId])

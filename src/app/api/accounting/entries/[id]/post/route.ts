@@ -98,4 +98,4 @@ export const POST = withAdminGuard(async (_request, { session, params }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.journal.post' });

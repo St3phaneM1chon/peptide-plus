@@ -126,8 +126,8 @@ export function DataTable<T>({
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       {/* Chantier 3.4: Bulk actions bar */}
       {selectable && selectedIds && selectedIds.size > 0 && bulkActions && bulkActions.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-teal-50 border-b border-teal-100">
-          <span className="text-sm font-medium text-teal-800">
+        <div className="flex items-center gap-3 px-4 py-2 bg-indigo-50 border-b border-indigo-100">
+          <span className="text-sm font-medium text-indigo-800">
             {selectedIds.size} {t('admin.dataTable.selected') || 'selected'}
           </span>
           <div className="flex items-center gap-2 ms-auto">
@@ -147,7 +147,7 @@ export function DataTable<T>({
             ))}
             <button
               onClick={() => onSelectChange?.(new Set())}
-              className="text-sm text-teal-600 hover:text-teal-800 ms-2"
+              className="text-sm text-indigo-600 hover:text-indigo-800 ms-2"
             >
               {t('common.clearSelection') || 'Clear'}
             </button>
@@ -168,7 +168,7 @@ export function DataTable<T>({
                     checked={allSelected}
                     onChange={toggleAll}
                     aria-label={t('admin.dataTable.selectAll') || 'Select all'}
-                    className="w-4.5 h-4.5 rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer"
+                    className="w-4.5 h-4.5 rounded border-slate-300 text-indigo-700 focus:ring-indigo-700 cursor-pointer"
                   />
                 </th>
               )}
@@ -211,7 +211,7 @@ export function DataTable<T>({
                   className={`
                     transition-colors duration-150
                     ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/70' : ''}
-                    ${selectedIds?.has(id) ? 'bg-teal-100 dark:bg-teal-900/30' : ''}
+                    ${selectedIds?.has(id) ? 'bg-indigo-100 dark:bg-indigo-900/30' : ''}
                   `}
                   onClick={() => onRowClick?.(row)}
                 >
@@ -222,7 +222,7 @@ export function DataTable<T>({
                         checked={selectedIds?.has(id) || false}
                         onChange={() => toggleOne(id)}
                         aria-label={t('admin.dataTable.selectRow') || 'Select row'}
-                        className="w-4.5 h-4.5 rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer"
+                        className="w-4.5 h-4.5 rounded border-slate-300 text-indigo-700 focus:ring-indigo-700 cursor-pointer"
                       />
                     </td>
                   )}

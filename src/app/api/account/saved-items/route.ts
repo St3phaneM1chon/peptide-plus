@@ -43,18 +43,10 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     }
 
     // Fetch current product details for all saved items
-    const productIds = savedItems.map((item) => item.productId);
+    const productIds = savedItems.map((item) => item.productId).filter((id): id is string => id != null);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        imageUrl: true,
-        price: true,
-        compareAtPrice: true,
-        purity: true,
-        isActive: true,
+      include: {
         images: {
           where: { isPrimary: true },
           take: 1,
@@ -83,6 +75,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
     const items = savedItems
       .map((saved) => {
+        if (!saved.productId) return null;
         const product = productMap.get(saved.productId);
         if (!product) return null;
 

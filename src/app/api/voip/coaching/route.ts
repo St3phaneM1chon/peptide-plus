@@ -34,7 +34,7 @@ import { AuditLogger } from '@/lib/voip/audit-log';
 
 const auditLogger = new AuditLogger({ flushSize: 10, flushIntervalMs: 60_000 });
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const { searchParams } = request.nextUrl;
     const companyId = searchParams.get('companyId');

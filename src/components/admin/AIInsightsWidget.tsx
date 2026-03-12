@@ -61,11 +61,11 @@ export default function AIInsightsWidget() {
   return (
     <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-teal-50/60 to-white dark:from-teal-950/30 dark:to-slate-900">
+      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-indigo-50/60 to-white dark:from-indigo-950/30 dark:to-slate-900">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -83,7 +83,7 @@ export default function AIInsightsWidget() {
             <button
               onClick={fetchInsights}
               disabled={loading}
-              className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors disabled:opacity-40"
+              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors disabled:opacity-40"
               title={t('common.refresh') || 'Refresh'}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />

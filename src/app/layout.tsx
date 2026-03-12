@@ -21,6 +21,14 @@ import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { WebVitals } from '@/components/analytics/WebVitals';
 import { logger } from '@/lib/logger';
 
+/**
+ * PERF FIX: Instead of passing the FULL locale JSON (540-686 KB) through the
+ * RSC payload to every page, we only extract essential namespaces (~23 KB)
+ * needed for the shell (nav, footer, common UI). The I18nProvider on the
+ * client side lazily loads the full locale via dynamic import() — this keeps
+ * the RSC serialization payload small while all t() keys still work.
+ */
+
 // Only import en/fr statically (most common); others loaded dynamically
 import en from '@/i18n/locales/en.json';
 import fr from '@/i18n/locales/fr.json';
@@ -31,10 +39,34 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+// Namespaces that must be available immediately for the app shell (nav, footer,
+// common UI elements, auth prompts, cart badge, cookie consent, toasts, etc.).
+// Everything else is loaded client-side by I18nProvider via dynamic import().
+const ESSENTIAL_NAMESPACES = [
+  'common', 'nav', 'footer', 'navigation', 'auth', 'cart', 'search',
+  'cookies', 'consent', 'currency', 'pwa', 'toast', 'errors', 'validation',
+] as const;
+
+/**
+ * Extract only the essential namespaces from a full locale object.
+ * This reduces the RSC payload from ~540KB to ~23KB.
+ */
+function extractEssentialMessages(
+  fullMessages: Record<string, unknown>
+): Record<string, unknown> {
+  const essential: Record<string, unknown> = {};
+  for (const ns of ESSENTIAL_NAMESPACES) {
+    if (ns in fullMessages) {
+      essential[ns] = fullMessages[ns];
+    }
+  }
+  return essential;
+}
+
 // Dynamic locale loader - only loads the needed locale on demand (server-side)
 const localeLoaders: Record<string, () => Promise<Record<string, unknown>>> = {
-  en: () => Promise.resolve(en),
-  fr: () => Promise.resolve(fr),
+  en: () => Promise.resolve(en as Record<string, unknown>),
+  fr: () => Promise.resolve(fr as Record<string, unknown>),
   es: () => import('@/i18n/locales/es.json').then(m => m.default),
   de: () => import('@/i18n/locales/de.json').then(m => m.default),
   it: () => import('@/i18n/locales/it.json').then(m => m.default),
@@ -57,13 +89,14 @@ const localeLoaders: Record<string, () => Promise<Record<string, unknown>>> = {
   ta: () => import('@/i18n/locales/ta.json').then(m => m.default),
 };
 
-async function loadMessages(locale: string): Promise<Record<string, unknown>> {
+async function loadEssentialMessages(locale: string): Promise<Record<string, unknown>> {
   const loader = localeLoaders[locale];
-  if (!loader) return en;
+  if (!loader) return extractEssentialMessages(en as Record<string, unknown>);
   try {
-    return await loader();
+    const full = await loader();
+    return extractEssentialMessages(full);
   } catch {
-    return en;
+    return extractEssentialMessages(en as Record<string, unknown>);
   }
 }
 
@@ -183,8 +216,9 @@ export default async function RootLayout({
     locale = defaultLocale;
   }
   
-  // Get messages for the locale, fallback to English if not found
-  const messages = await loadMessages(locale);
+  // PERF: Only pass essential namespaces (~23KB) through RSC props.
+  // The full locale (~540KB) is loaded client-side by I18nProvider via dynamic import().
+  const messages = await loadEssentialMessages(locale);
   const dir = localeDirections[locale] || 'ltr';
   
   return (
@@ -196,7 +230,7 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BioCycle" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* hreflang for all 22 supported locales */}
         {locales.map((loc) => (
           <link key={loc} rel="alternate" hrefLang={loc} href={`https://biocyclepeptides.com?lang=${loc}`} />

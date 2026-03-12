@@ -67,6 +67,23 @@ model PermissionGroupPermission {
   @@index([createdAt])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// A1-P2-004 CLARIFICATION: SiteSetting vs SiteSettings are INTENTIONALLY separate.
+//
+//   SiteSetting  (singular) — Dynamic key-value store for feature flags,
+//                              module config, integration tokens, etc.
+//                              Queried by key: prisma.siteSetting.findUnique({ where: { key } })
+//                              ~50 consumers across admin/integrations/modules.
+//
+//   SiteSettings (plural)   — Typed singleton record (id="default") holding
+//                              company info, shipping, newsletter, disclaimers, etc.
+//                              Queried as: prisma.siteSettings.findUnique({ where: { id: 'default' } })
+//                              ~9 consumers (admin settings, loyalty config, cron).
+//
+// DO NOT merge them. They serve different architectural roles.
+// If renaming is ever desired, prefer: SiteKVSetting + SiteConfig.
+// ─────────────────────────────────────────────────────────────────────────────
+
 model SiteSetting {
   id          String   @id @default(cuid())
   key         String   @unique

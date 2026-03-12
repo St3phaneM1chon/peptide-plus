@@ -167,7 +167,7 @@ export default function AdminConsentsPage() {
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder={t('admin.consents.searchPlaceholder') || 'Client name or email...'}
+                placeholder={t('admin.consents.searchPlaceholder')}
                 className="flex-1 border rounded px-3 py-1.5 text-sm"
               />
               <button onClick={handleSearch} className="px-3 py-1.5 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
@@ -185,21 +185,21 @@ export default function AdminConsentsPage() {
               onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
               className="border rounded px-3 py-1.5 text-sm"
             >
-              <option value="">{t('common.all') || 'All'}</option>
-              <option value="PENDING">{t('admin.consents.pending') || 'Pending'}</option>
-              <option value="GRANTED">{t('admin.consents.granted') || 'Granted'}</option>
-              <option value="REVOKED">{t('admin.consents.revoked') || 'Revoked'}</option>
-              <option value="EXPIRED">{t('admin.consents.expired') || 'Expired'}</option>
+              <option value="">{t('common.all')}</option>
+              <option value="PENDING">{t('admin.consents.pending')}</option>
+              <option value="GRANTED">{t('admin.consents.granted')}</option>
+              <option value="REVOKED">{t('admin.consents.revoked')}</option>
+              <option value="EXPIRED">{t('admin.consents.expired')}</option>
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">{t('admin.consents.typeColumn') || 'Type'}</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('admin.consents.typeColumn')}</label>
             <select
               value={filterType}
               onChange={e => { setFilterType(e.target.value); setPage(1); }}
               className="border rounded px-3 py-1.5 text-sm"
             >
-              <option value="">{t('common.all') || 'All'}</option>
+              <option value="">{t('common.all')}</option>
               {['VIDEO_APPEARANCE', 'TESTIMONIAL', 'PHOTO', 'CASE_STUDY', 'MARKETING', 'OTHER'].map(k => (
                 <option key={k} value={k}>{t(`consentType.${k}`)}</option>
               ))}
@@ -210,7 +210,7 @@ export default function AdminConsentsPage() {
               onClick={() => { setSearch(''); setSearchInput(''); setFilterStatus(''); setFilterType(''); setPage(1); }}
               className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
-              <X className="h-3 w-3" /> {t('common.clear') || 'Clear'}
+              <X className="h-3 w-3" /> {t('common.clear')}
             </button>
           )}
         </div>
@@ -254,7 +254,7 @@ export default function AdminConsentsPage() {
                       <div className="text-xs text-gray-500">{consent.client.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
                         {t(`consentType.${consent.type}`)}
                       </span>
                     </td>

@@ -62,6 +62,8 @@ interface RefundData {
   tps: number;
   tvq: number;
   tvh: number;
+  /** PST for BC, SK, MB refunds — maps to PST_PAYABLE (2150) */
+  pst?: number;
   reason: string;
   paymentMethod: 'STRIPE' | 'PAYPAL' | 'BANK_TRANSFER';
 }
@@ -182,14 +184,18 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
     credit: 0,
   });
 
-  // CREDIT: Sales revenue (before taxes)
+  // CREDIT: Sales revenue (gross, before discount & taxes)
+  // FIX A8-P0-001: Credit gross subtotal, not net. The discount is recorded
+  // separately as a debit to contra-revenue (DISCOUNTS_RETURNS). Previously
+  // this credited (subtotal - discount) AND debited discount, double-counting
+  // the discount and creating an unbalanced entry.
   lines.push({
     id: `${uniqueId('line')}-2`,
     accountCode: salesAccount,
     accountName: getAccountName(salesAccount),
     description: `Vente ${order.orderNumber}`,
     debit: 0,
-    credit: order.subtotal - order.discount,
+    credit: order.subtotal,
   });
 
   // CREDIT: Shipping charged to customer
@@ -249,6 +255,18 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
       description: `PST sur ${order.orderNumber}`,
       debit: 0,
       credit: order.pst,
+    });
+  }
+
+  // FIX A8-P1-001: CREDIT: Other taxes payable (international, customs, etc.)
+  if (order.otherTax > 0) {
+    lines.push({
+      id: `${uniqueId('line')}-9`,
+      accountCode: ACCOUNT_CODES.INTL_TAX_PAYABLE,
+      accountName: 'Taxes internationales à payer',
+      description: `Autre taxe sur ${order.orderNumber}`,
+      debit: 0,
+      credit: order.otherTax,
     });
   }
 
@@ -376,12 +394,13 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
   const bankAccount = getBankAccount(refund.paymentMethod);
 
   // DEBIT: Discounts/Returns (contra-revenue)
+  // FIX A8-P0-001: Include PST in tax subtraction for correct net amount
   lines.push({
     id: `${uniqueId('line')}-1`,
     accountCode: ACCOUNT_CODES.DISCOUNTS_RETURNS,
     accountName: 'Remises et retours',
     description: `Remboursement ${refund.orderNumber}`,
-    debit: refund.amount - refund.tps - refund.tvq - refund.tvh,
+    debit: refund.amount - refund.tps - refund.tvq - refund.tvh - (refund.pst || 0),
     credit: 0,
   });
 
@@ -417,6 +436,18 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
       accountName: 'TVH à payer',
       description: `TVH remboursée ${refund.orderNumber}`,
       debit: refund.tvh,
+      credit: 0,
+    });
+  }
+
+  // FIX A8-P0-001: DEBIT PST payable (reverse) for BC, SK, MB refunds
+  if (refund.pst && refund.pst > 0) {
+    lines.push({
+      id: `${uniqueId('line')}-4b`,
+      accountCode: ACCOUNT_CODES.PST_PAYABLE,
+      accountName: 'PST à payer',
+      description: `PST remboursée ${refund.orderNumber}`,
+      debit: refund.pst,
       credit: 0,
     });
   }
@@ -538,6 +569,124 @@ export function generateRecurringEntry(
     type: 'RECURRING',
     status: 'POSTED',
     reference,
+    lines,
+    createdBy: 'Système',
+    createdAt: new Date(),
+    postedAt: new Date(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Loyalty Points Accounting (A5-P2-003)
+// ---------------------------------------------------------------------------
+
+interface LoyaltyPointsData {
+  /** Order or transaction ID triggering the award/redemption */
+  referenceId: string;
+  /** Human-readable reference (e.g., order number) */
+  reference: string;
+  /** Dollar value of the loyalty points (points * pointsValue) */
+  amount: number;
+  /** Date of the transaction */
+  date: Date;
+  /** Customer name for description */
+  customerName?: string;
+}
+
+/**
+ * Generate journal entry when loyalty points are AWARDED.
+ * Debit: Marketing Expense (6250) — cost of the loyalty program
+ * Credit: Loyalty Points Liability (2200) — obligation to honour the points
+ */
+export function generateLoyaltyAwardEntry(data: LoyaltyPointsData): JournalEntry {
+  if (data.amount <= 0) {
+    throw new AutoEntryError(
+      `Montant de points invalide (${data.amount}) pour ${data.reference}`,
+      'AUTO_LOYALTY_AWARD',
+      data.referenceId
+    );
+  }
+
+  const lines: JournalLine[] = [
+    {
+      id: `${uniqueId('line')}-1`,
+      accountCode: ACCOUNT_CODES.LOYALTY_MARKETING,
+      accountName: getAccountName(ACCOUNT_CODES.LOYALTY_MARKETING),
+      description: `Points fidélité attribués - ${data.reference}`,
+      debit: data.amount,
+      credit: 0,
+    },
+    {
+      id: `${uniqueId('line')}-2`,
+      accountCode: ACCOUNT_CODES.LOYALTY_POINTS_LIABILITY,
+      accountName: getAccountName(ACCOUNT_CODES.LOYALTY_POINTS_LIABILITY),
+      description: `Points fidélité attribués - ${data.reference}`,
+      debit: 0,
+      credit: data.amount,
+    },
+  ];
+
+  assertJournalBalance(lines, `auto-loyalty-award ${data.reference}`);
+
+  return {
+    id: `${uniqueId('entry-loyalty-award')}`,
+    entryNumber: generateEntryNumber(),
+    date: data.date,
+    description: `Points fidélité attribués - ${data.reference}${data.customerName ? ` - ${data.customerName}` : ''}`,
+    type: 'AUTO_LOYALTY_AWARD',
+    status: 'POSTED',
+    reference: `LYL-AWD-${data.reference}`,
+    orderId: data.referenceId,
+    lines,
+    createdBy: 'Système',
+    createdAt: new Date(),
+    postedAt: new Date(),
+  };
+}
+
+/**
+ * Generate journal entry when loyalty points are REDEEMED.
+ * Reverses the liability: Debit Loyalty Points Liability, Credit Marketing Expense.
+ */
+export function generateLoyaltyRedeemEntry(data: LoyaltyPointsData): JournalEntry {
+  if (data.amount <= 0) {
+    throw new AutoEntryError(
+      `Montant de rédemption invalide (${data.amount}) pour ${data.reference}`,
+      'AUTO_LOYALTY_REDEEM',
+      data.referenceId
+    );
+  }
+
+  const lines: JournalLine[] = [
+    {
+      id: `${uniqueId('line')}-1`,
+      accountCode: ACCOUNT_CODES.LOYALTY_POINTS_LIABILITY,
+      accountName: getAccountName(ACCOUNT_CODES.LOYALTY_POINTS_LIABILITY),
+      description: `Points fidélité utilisés - ${data.reference}`,
+      debit: data.amount,
+      credit: 0,
+    },
+    {
+      id: `${uniqueId('line')}-2`,
+      accountCode: ACCOUNT_CODES.LOYALTY_MARKETING,
+      accountName: getAccountName(ACCOUNT_CODES.LOYALTY_MARKETING),
+      description: `Points fidélité utilisés - ${data.reference}`,
+      debit: 0,
+      credit: data.amount,
+    },
+  ];
+
+  assertJournalBalance(lines, `auto-loyalty-redeem ${data.reference}`);
+
+  return {
+    id: `${uniqueId('entry-loyalty-redeem')}`,
+    entryNumber: generateEntryNumber(),
+    date: data.date,
+    description: `Points fidélité utilisés - ${data.reference}${data.customerName ? ` - ${data.customerName}` : ''}`,
+    type: 'AUTO_LOYALTY_REDEEM',
+    status: 'POSTED',
+    reference: `LYL-RDM-${data.reference}`,
+    orderId: data.referenceId,
     lines,
     createdBy: 'Système',
     createdAt: new Date(),
@@ -716,6 +865,7 @@ function getAccountName(code: string): string {
     [ACCOUNT_CODES.TVH_PAYABLE]: 'TVH à payer',
     [ACCOUNT_CODES.PST_PAYABLE]: 'TVP à payer',
     [ACCOUNT_CODES.INTL_TAX_PAYABLE]: 'Taxes internationales à payer',
+    [ACCOUNT_CODES.LOYALTY_POINTS_LIABILITY]: 'Points fidélité à honorer',
     [ACCOUNT_CODES.DEFERRED_REVENUE]: 'Revenus reportés',
     [ACCOUNT_CODES.SHARE_CAPITAL]: 'Capital-actions',
     [ACCOUNT_CODES.RETAINED_EARNINGS]: 'Bénéfices non répartis',
@@ -731,6 +881,7 @@ function getAccountName(code: string): string {
     [ACCOUNT_CODES.STRIPE_FEES]: 'Frais Stripe',
     [ACCOUNT_CODES.PAYPAL_FEES]: 'Frais PayPal',
     [ACCOUNT_CODES.BANK_FEES]: 'Frais bancaires',
+    [ACCOUNT_CODES.LOYALTY_MARKETING]: 'Frais marketing fidélité',
     [ACCOUNT_CODES.DEPRECIATION]: 'Amortissement',
     [ACCOUNT_CODES.FX_GAINS_LOSSES]: 'Gains/pertes de change',
     [ACCOUNT_CODES.FX_LOSS]: 'Pertes de change',

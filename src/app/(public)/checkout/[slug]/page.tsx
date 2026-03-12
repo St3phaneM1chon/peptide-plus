@@ -22,12 +22,21 @@ export async function generateMetadata({ params }: CheckoutPageProps): Promise<M
     select: { name: true },
   });
 
+  const title = product ? `Paiement - ${product.name}` : 'Paiement';
+  const description = product
+    ? `Complétez votre achat de ${product.name} chez BioCycle Peptides.`
+    : 'Complétez votre achat chez BioCycle Peptides.';
+
   return {
-    title: product ? `Checkout - ${product.name}` : 'Checkout',
-    description: product
-      ? `Complete your purchase of ${product.name} from BioCycle Peptides.`
-      : 'Complete your purchase from BioCycle Peptides.',
+    title,
+    description,
     robots: { index: false, follow: false },
+    openGraph: {
+      title: `${title} | BioCycle Peptides`,
+      description,
+      siteName: 'BioCycle Peptides',
+      type: 'website',
+    },
   };
 }
 

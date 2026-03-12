@@ -47,8 +47,8 @@ export default function PipelinesPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <PageHeader
-        title={t('admin.crm.pipelines') || 'Pipelines CRM'}
-        subtitle={t('admin.crm.pipelinesDesc') || 'Configurez les etapes de vos pipelines de vente'}
+        title={t('admin.crm.pipelines')}
+        subtitle={t('admin.crm.pipelinesDesc')}
         actions={
           <button
             onClick={() => toast.info('Creation de pipeline a venir')}

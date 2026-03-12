@@ -103,6 +103,8 @@ model User {
   referredById           String?
   resetToken             String?
   resetTokenExpiry       DateTime?
+  inviteToken            String?   @unique
+  inviteTokenExpiry      DateTime?
   accounts               Account[]
   ambassadors            Ambassador[]
   company                Company?
@@ -227,6 +229,27 @@ model User {
   // Prospect Lists
   prospectListsCreated   ProspectList[]        @relation("ProspectListCreator")
 
+  // FIX A1-P0-002: Reverse relations for newly added FKs
+  subscriptions          Subscription[]        @relation("UserSubscriptions")
+  wishlists              Wishlist[]            @relation("UserWishlists")
+  customerMetrics        CustomerMetrics?      @relation("UserCustomerMetrics")
+  abandonedCarts         AbandonedCart[]       @relation("UserAbandonedCarts")
+  customerPreference     CustomerPreference?   @relation("UserCustomerPreference")
+  productViews           ProductView[]         @relation("UserProductViews")
+  dealTeams              CrmDealTeam[]         @relation("UserDealTeams")
+  crmContracts           CrmContract[]         @relation("UserCrmContracts")
+  createdCrmContracts    CrmContract[]         @relation("UserCreatedCrmContracts")
+  crmWorkflowVersions    CrmWorkflowVersion[]  @relation("UserCrmWorkflowVersions")
+  crmConsentRecords      CrmConsentRecord[]    @relation("UserCrmConsentRecords")
+  permissionOverrides    UserPermissionOverride[] @relation("UserPermissionOverrides")
+  permissionOverridesGranted UserPermissionOverride[] @relation("UserPermissionOverridesGrantedBy")
+  emailEngagements       EmailEngagement[]     @relation("UserEmailEngagements")
+  timeEntries            TimeEntry[]           @relation("UserTimeEntries")
+
+  // FIX A1-P2-003: CRM Ticket reverse relations
+  crmTicketsAsContact    CrmTicket[]           @relation("CrmTicketContact")
+  crmTicketsAssigned     CrmTicket[]           @relation("CrmTicketAssignee")
+
   @@index([role])
   @@index([createdAt])
   @@index([loyaltyTier])
@@ -292,14 +315,18 @@ model UserPermissionGroup {
 
 model UserPermissionOverride {
   id             String    @id @default(cuid())
-  userId         String
+  userId         String?
   permissionCode String
   granted        Boolean
   reason         String?
-  grantedBy      String
+  grantedBy      String?
   expiresAt      DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user           User?     @relation("UserPermissionOverrides", fields: [userId], references: [id], onDelete: SetNull)
+  grantor        User?     @relation("UserPermissionOverridesGrantedBy", fields: [grantedBy], references: [id], onDelete: SetNull)
 
   @@unique([userId, permissionCode])
   @@index([permissionCode])

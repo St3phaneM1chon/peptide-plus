@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 const zapierPostSchema = z.discriminatedUnion('action', [
   z.object({
@@ -155,6 +156,27 @@ export async function POST(request: NextRequest) {
     }
 
     const { action } = parsed.data;
+
+    // Idempotency check: skip if this exact request was already processed (Redis-based, TTL 1h)
+    // Zapier may retry on timeout; use payload hash to deduplicate
+    const zapierEventId = createHmac('sha256', 'zapier-dedup').update(JSON.stringify(raw)).digest('hex').slice(0, 32);
+    try {
+      const redis = await getRedisClient();
+      if (redis) {
+        const idempotencyKey = `webhook:zapier:${zapierEventId}`;
+        const alreadyProcessed = await redis.get(idempotencyKey);
+        if (alreadyProcessed) {
+          logger.info('[zapier] Duplicate action skipped', { action, eventId: zapierEventId });
+          return NextResponse.json({ success: true, status: 'already_processed' });
+        }
+        await redis.set(idempotencyKey, '1', 'EX', 3600); // 1h TTL for actions
+      }
+    } catch (redisErr) {
+      // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+      logger.debug('[zapier] Redis idempotency check unavailable, proceeding', {
+        error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+      });
+    }
 
     logger.info('[zapier] Action received', { action, body: JSON.stringify(parsed.data).slice(0, 500) });
 

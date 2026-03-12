@@ -388,6 +388,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         onChange={(e) => promoActions.setCode(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') promoActions.apply(); }}
                         placeholder={t('cart.promoPlaceholder')}
+                        aria-label={t('cart.promoPlaceholder') || 'Promo code'}
                         className="flex-1 px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
                       />
                       <button
@@ -529,6 +530,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     type="text"
                     readOnly
                     value={shareUrl}
+                    aria-label={t('cart.shareLinkReady') || 'Shareable cart link'}
                     className="flex-1 text-xs bg-white border border-green-300 rounded px-2 py-1 text-neutral-600 truncate"
                     onClick={(e) => (e.target as HTMLInputElement).select()}
                   />

@@ -1,5 +1,3 @@
-'use client';
-
 import ForecastDashboard from '@/components/admin/crm/ForecastDashboard';
 
 export default function ForecastPage() {

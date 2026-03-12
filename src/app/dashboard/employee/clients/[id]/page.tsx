@@ -17,67 +17,106 @@ interface PageProps {
 }
 
 async function getClientDetails(clientId: string) {
+  // Query 1: company basics + owner
   const company = await prisma.company.findUnique({
     where: { id: clientId },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      contactEmail: true,
+      phone: true,
+      billingAddress: true,
+      billingCity: true,
+      billingState: true,
+      billingPostal: true,
+      billingCountry: true,
+      isActive: true,
+      createdAt: true,
       owner: {
         select: { id: true, name: true, email: true, image: true, createdAt: true },
-      },
-      customers: {
-        include: {
-          user: {
-            include: {
-              courseAccesses: {
-                include: { product: { select: { id: true, name: true } } },
-              },
-              purchases: {
-                where: { status: 'COMPLETED' },
-                select: { id: true, amount: true, createdAt: true },
-                take: 5,
-              },
-            },
-          },
-        },
-        orderBy: { addedAt: 'desc' },
-      },
-      purchases: {
-        include: {
-          product: { select: { id: true, name: true, price: true } },
-          user: { select: { id: true, name: true, email: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
       },
     },
   });
 
   if (!company) return null;
 
-  // Statistiques
+  // Query 2: customers (flat)
+  const customers = await prisma.companyCustomer.findMany({
+    where: { companyId: clientId },
+    select: {
+      id: true,
+      customerId: true,
+      addedAt: true,
+      user: {
+        select: { id: true, name: true, email: true },
+      },
+    },
+    orderBy: { addedAt: 'desc' },
+  });
+
+  // Query 3: course accesses for those customers
+  const customerIds = customers.map((c) => c.customerId);
+  const courseAccesses = await prisma.courseAccess.findMany({
+    where: { userId: { in: customerIds } },
+    select: { userId: true, completedAt: true, product: { select: { id: true, name: true } } },
+  });
+
+  // Query 4: company purchases (with product + user)
+  const purchases = await prisma.purchase.findMany({
+    where: { companyId: clientId },
+    select: {
+      id: true,
+      amount: true,
+      status: true,
+      createdAt: true,
+      product: { select: { id: true, name: true, price: true } },
+      user: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  // Query 5: total spent aggregate
   const totalSpent = await prisma.purchase.aggregate({
     where: { companyId: clientId, status: 'COMPLETED' },
     _sum: { amount: true },
   });
 
-  type CompanyCustomer = (typeof company.customers)[number];
+  // Build lookup: userId -> courseAccesses
+  const accessesByUser = new Map<string, typeof courseAccesses>();
+  for (const a of courseAccesses) {
+    const list = accessesByUser.get(a.userId) ?? [];
+    list.push(a);
+    accessesByUser.set(a.userId, list);
+  }
 
-  const completedCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
-    return acc + cc.user.courseAccesses.filter((a: { completedAt: Date | null }) => a.completedAt).length;
-  }, 0);
+  // Merge customers + their accesses for the template
+  const customersWithAccesses = customers.map((c) => ({
+    ...c,
+    user: {
+      ...c.user,
+      courseAccesses: accessesByUser.get(c.customerId) ?? [],
+    },
+  }));
 
-  const totalCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
-    return acc + cc.user.courseAccesses.length;
-  }, 0);
+  // Compute stats
+  const completedCourses = courseAccesses.filter((a) => a.completedAt).length;
+  const totalCoursesCount = courseAccesses.length;
 
   return {
-    company,
+    company: {
+      ...company,
+      customers: customersWithAccesses,
+      purchases,
+    },
     stats: {
-      totalStudents: company.customers.length,
+      totalStudents: customers.length,
       completedCourses,
-      totalCourses,
-      completionRate: totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0,
+      totalCourses: totalCoursesCount,
+      completionRate: totalCoursesCount > 0 ? Math.round((completedCourses / totalCoursesCount) * 100) : 0,
       totalSpent: totalSpent._sum.amount || 0,
-      totalPurchases: company.purchases.length,
+      totalPurchases: purchases.length,
     },
   };
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { PlatformConnectionStatus } from '@/components/admin/PlatformConnectionStatus';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -43,7 +44,7 @@ export default function MediaZoomPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -62,7 +63,7 @@ export default function MediaZoomPage() {
     const el = document.querySelector<HTMLInputElement>('input[placeholder]');
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
   }, []);
-  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk') || 'Connection OK'); else toast.error(r.error || t('admin.media.testFailed') || 'Test failed'); }); }, [t]);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success(t('admin.media.connectionOk')); else toast.error(r.error || t('admin.media.testFailed')); }); }, [t]);
   const onRefreshToken = useCallback(() => {
     setLoading(true);
     fetch('/api/admin/integrations/zoom').then(res => res.json()).then(data => {
@@ -79,16 +80,17 @@ export default function MediaZoomPage() {
   useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-3xl space-y-4">
+      <PlatformConnectionStatus platform="zoom" usesOAuth={true} />
       <IntegrationCard
         title={t('admin.media.zoomTitle')}
         description={t('admin.integrations.zoomSetupDesc')}
         icon={<Video className="w-6 h-6" />}
-        color="from-teal-500 to-teal-600"
+        color="from-indigo-500 to-indigo-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

@@ -79,7 +79,8 @@ model LoyaltyTransaction {
   metadata     String?
   createdAt    DateTime               @default(now())
   expiresAt    DateTime?
-  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-007: Loyalty transactions are financial records, must not be deleted
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([createdAt])
   @@index([expiresAt])

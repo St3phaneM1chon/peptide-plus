@@ -74,7 +74,7 @@ interface Agent {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-teal-100 text-teal-700',
+  NEW: 'bg-indigo-100 text-indigo-700',
   VALIDATED: 'bg-green-100 text-green-700',
   DUPLICATE: 'bg-orange-100 text-orange-700',
   MERGED: 'bg-gray-100 text-gray-600',
@@ -594,7 +594,7 @@ export default function ProspectListDetailPage() {
             key={t_tab}
             onClick={() => setTab(t_tab)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              tab === t_tab ? 'border-teal-600 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              tab === t_tab ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {t_tab === 'prospects' && t('admin.crmLists.prospects')}
@@ -618,7 +618,7 @@ export default function ProspectListDetailPage() {
                 type="text"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 placeholder={t('admin.crmLists.placeholderSearch')}
               />
             </div>
@@ -644,7 +644,7 @@ export default function ProspectListDetailPage() {
             <button onClick={bulkValidateWithRules} className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 hover:bg-green-100" title={t('admin.crmLists.bulkValidateRule')}>
               <Shield className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.bulkValidate')}
             </button>
-            <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-medium text-white hover:bg-teal-700">
+            <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700">
               <Plus className="inline h-3.5 w-3.5 me-1" />{t('admin.crmLists.addProspect')}
             </button>
           </div>
@@ -763,7 +763,7 @@ export default function ProspectListDetailPage() {
                   value={gmQuery}
                   onChange={(e) => setGmQuery(e.target.value)}
                   placeholder={t('admin.crmLists.placeholderGoogleSearch')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -772,7 +772,7 @@ export default function ProspectListDetailPage() {
                   value={gmLocation}
                   onChange={(e) => setGmLocation(e.target.value)}
                   placeholder={t('admin.crmLists.placeholderLocation')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -815,7 +815,7 @@ export default function ProspectListDetailPage() {
                   <thead className="border-b bg-gray-50 text-start text-gray-600">
                     <tr>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.companyName')}</th>
-                      <th className="px-3 py-3 font-medium">{t('admin.crmLists.address') || 'Address'}</th>
+                      <th className="px-3 py-3 font-medium">{t('admin.crmLists.address')}</th>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.phone')}</th>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.email')}</th>
                       <th className="px-3 py-3 font-medium">{t('admin.crmLists.website')}</th>
@@ -846,7 +846,7 @@ export default function ProspectListDetailPage() {
                         </td>
                         <td className="px-3 py-2.5">
                           {p.phone ? (
-                            <a href={`tel:${p.phone}`} className="flex items-center gap-1 text-teal-600 hover:underline text-xs">
+                            <a href={`tel:${p.phone}`} className="flex items-center gap-1 text-indigo-600 hover:underline text-xs">
                               <Phone className="h-3 w-3" />{p.phone}
                             </a>
                           ) : <span className="text-gray-300">-</span>}
@@ -860,7 +860,7 @@ export default function ProspectListDetailPage() {
                         </td>
                         <td className="px-3 py-2.5">
                           {p.website ? (
-                            <a href={p.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-teal-600 hover:underline text-xs">
+                            <a href={p.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-600 hover:underline text-xs">
                               <Globe className="h-3 w-3" />
                               {(() => { try { return new URL(p.website).hostname.replace('www.', ''); } catch { return 'site'; } })()}
                             </a>
@@ -882,8 +882,8 @@ export default function ProspectListDetailPage() {
                               href={`https://www.google.com/maps/place/?q=place_id:${p.googlePlaceId}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
-                              title={t('admin.crmLists.viewOnGoogleMaps') || 'View on Google Maps'}
+                              className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+                              title={t('admin.crmLists.viewOnGoogleMaps')}
                             >
                               <ExternalLink className="h-3 w-3" /> {t('admin.crmLists.viewOnGoogleMaps')}
                             </a>
@@ -898,8 +898,8 @@ export default function ProspectListDetailPage() {
           ) : (
             <div className="rounded-lg border bg-white p-8 text-center text-gray-400">
               <MapPin className="mx-auto mb-2 h-10 w-10 text-gray-300" />
-              <p className="font-medium text-gray-500">{t('admin.crmLists.noGoogleMapsResults') || 'No Google Maps results yet'}</p>
-              <p className="text-sm mt-1">{t('admin.crmLists.noGoogleMapsResultsDesc') || 'Search above to find businesses and add them to this list'}</p>
+              <p className="font-medium text-gray-500">{t('admin.crmLists.noGoogleMapsResults')}</p>
+              <p className="text-sm mt-1">{t('admin.crmLists.noGoogleMapsResultsDesc')}</p>
             </div>
           )}
         </div>
@@ -934,14 +934,14 @@ export default function ProspectListDetailPage() {
 
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-teal-500" />
+                  <BarChart3 className="h-4 w-4 text-indigo-500" />
                   <h4 className="font-medium text-sm">{t('admin.crmLists.scoreProspects')}</h4>
                 </div>
                 <p className="text-xs text-gray-500">{t('admin.crmLists.scoreProspectsDesc')}</p>
                 <button
                   onClick={handleScore}
                   disabled={scoring}
-                  className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {scoring ? <RefreshCw className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
                   {scoring ? t('admin.crmLists.scoring') : t('admin.crmLists.scoreProspects')}
@@ -991,12 +991,12 @@ export default function ProspectListDetailPage() {
 
             {/* Score result */}
             {scoreResult && !scoring && (
-              <div className="rounded-lg border border-teal-200 bg-teal-50 p-4">
-                <h4 className="text-sm font-medium text-teal-800 mb-2">{t('admin.crmLists.scoreSuccess')}</h4>
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+                <h4 className="text-sm font-medium text-indigo-800 mb-2">{t('admin.crmLists.scoreSuccess')}</h4>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <div className="text-lg font-bold text-teal-800">{scoreResult.averageScore}</div>
-                    <div className="text-xs text-teal-600">{t('admin.crmLists.avgScore')}</div>
+                    <div className="text-lg font-bold text-indigo-800">{scoreResult.averageScore}</div>
+                    <div className="text-xs text-indigo-600">{t('admin.crmLists.avgScore')}</div>
                   </div>
                   <div>
                     <div className="text-lg font-bold text-red-600">{scoreResult.distribution.hot}</div>
@@ -1105,7 +1105,7 @@ export default function ProspectListDetailPage() {
         <div className="space-y-4">
           <div className="rounded-lg border bg-white p-6 space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
-              <Users className="h-5 w-5 text-teal-500" />
+              <Users className="h-5 w-5 text-indigo-500" />
               {t('admin.crmLists.assignment')}
             </h3>
 
@@ -1177,7 +1177,7 @@ export default function ProspectListDetailPage() {
         <div className="space-y-4">
           <div className="rounded-lg border bg-white p-6 space-y-6">
             <h3 className="text-lg font-medium flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-teal-600" />
+              <Megaphone className="h-5 w-5 text-indigo-600" />
               {t('admin.crmLists.campaignTab')}
             </h3>
 
@@ -1189,7 +1189,7 @@ export default function ProspectListDetailPage() {
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
                   placeholder={t('admin.crmLists.campaignNamePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -1198,7 +1198,7 @@ export default function ProspectListDetailPage() {
                   value={callerIdNumber}
                   onChange={(e) => setCallerIdNumber(e.target.value)}
                   placeholder={t('admin.crmLists.callerIdPlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -1249,7 +1249,7 @@ export default function ProspectListDetailPage() {
                               e.target.checked ? [...prev, agent.id] : prev.filter((id) => id !== agent.id),
                             )
                           }
-                          className="rounded border-gray-300 text-teal-600"
+                          className="rounded border-gray-300 text-indigo-600"
                         />
                         {agent.name || agent.email}
                       </label>
@@ -1267,7 +1267,7 @@ export default function ProspectListDetailPage() {
                   value={scriptTitle}
                   onChange={(e) => setScriptTitle(e.target.value)}
                   placeholder={t('admin.crmLists.scriptTitlePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -1277,7 +1277,7 @@ export default function ProspectListDetailPage() {
                   onChange={(e) => setScriptBody(e.target.value)}
                   placeholder={t('admin.crmLists.scriptBodyPlaceholder')}
                   rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none resize-y"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none resize-y"
                 />
               </div>
             </div>
@@ -1356,7 +1356,7 @@ export default function ProspectListDetailPage() {
                       }
                       className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
                         campaignActiveDays.includes(day)
-                          ? 'bg-teal-100 text-teal-700 border-teal-300'
+                          ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
                           : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -1373,7 +1373,7 @@ export default function ProspectListDetailPage() {
                 type="checkbox"
                 checked={campaignUseAmd}
                 onChange={(e) => setCampaignUseAmd(e.target.checked)}
-                className="rounded border-gray-300 text-teal-600"
+                className="rounded border-gray-300 text-indigo-600"
               />
               <div>
                 <span className="text-sm font-medium text-gray-700">{t('admin.crmLists.useAmd')}</span>
@@ -1382,14 +1382,14 @@ export default function ProspectListDetailPage() {
             </label>
 
             {/* Preview */}
-            <div className="rounded-lg bg-teal-50 border border-teal-100 p-4">
-              <h4 className="text-sm font-medium text-teal-800 mb-1">{t('admin.crmLists.campaignPreview')}</h4>
-              <p className="text-sm text-teal-700">
+            <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-4">
+              <h4 className="text-sm font-medium text-indigo-800 mb-1">{t('admin.crmLists.campaignPreview')}</h4>
+              <p className="text-sm text-indigo-700">
                 {t('admin.crmLists.campaignPreviewDesc')
                   .replace('{validated}', String(list.validatedCount))
                   .replace('{agents}', String(selectedAgents.length))}
               </p>
-              <p className="text-xs text-teal-600 mt-1">{t('admin.crmLists.dncPreCheck')}</p>
+              <p className="text-xs text-indigo-600 mt-1">{t('admin.crmLists.dncPreCheck')}</p>
             </div>
 
             {/* Launch button */}
@@ -1397,7 +1397,7 @@ export default function ProspectListDetailPage() {
               <button
                 onClick={handleStartCampaign}
                 disabled={launchingCampaign || !campaignName.trim() || !callerIdNumber.trim() || selectedAgents.length === 0 || list.validatedCount === 0}
-                className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-6 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
               >
                 {launchingCampaign ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
                 {launchingCampaign ? t('admin.crmLists.launching') : t('admin.crmLists.launchCampaign')}
@@ -1419,14 +1419,14 @@ export default function ProspectListDetailPage() {
                   <input
                     value={newProspect[field]}
                     onChange={(e) => setNewProspect({ ...newProspect, [field]: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
               ))}
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowAddModal(false)} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">{t('admin.crmLists.cancel')}</button>
-              <button onClick={handleAddProspect} disabled={!newProspect.contactName.trim()} className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50">
+              <button onClick={handleAddProspect} disabled={!newProspect.contactName.trim()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50">
                 {t('admin.crmLists.addProspect')}
               </button>
             </div>
@@ -1453,7 +1453,7 @@ export default function ProspectListDetailPage() {
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditingCell(null); }}
-              className="w-full rounded border border-teal-400 px-2 py-1 text-sm focus:outline-none"
+              className="w-full rounded border border-indigo-400 px-2 py-1 text-sm focus:outline-none"
             />
             <button onClick={saveEdit} className="text-green-600"><Check className="h-3.5 w-3.5" /></button>
             <button onClick={() => setEditingCell(null)} className="text-gray-400"><X className="h-3.5 w-3.5" /></button>
@@ -1464,7 +1464,7 @@ export default function ProspectListDetailPage() {
 
     return (
       <td
-        className="px-3 py-2 cursor-pointer hover:bg-teal-50 group"
+        className="px-3 py-2 cursor-pointer hover:bg-indigo-50 group"
         onClick={() => startEdit(p.id, field, value)}
       >
         <div className="flex items-center gap-1">

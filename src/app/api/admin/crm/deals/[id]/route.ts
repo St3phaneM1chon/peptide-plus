@@ -149,18 +149,30 @@ export const GET = withAdminGuard(async (
       };
     }
 
-    // Bridge #11: CRM → Email (email history)
+    // Bridge #11 + #15: Fetch contact user data once for both email and loyalty bridges
     let emailHistory: {
       recentEmails: Array<{ id: string; subject: string; status: string; sentAt: Date | null }>;
       totalSent: number;
     } | null = null;
 
-    if (deal.contactId && flags.email) {
+    let loyaltyInfo: {
+      currentTier: string;
+      currentPoints: number;
+    } | null = null;
+
+    if (deal.contactId && (flags.email || flags.loyalty)) {
+      // Single query instead of 2 separate queries for the same user
       const contactUser = await prisma.user.findUnique({
         where: { id: deal.contactId },
-        select: { email: true },
+        select: {
+          email: true,
+          loyaltyTier: true,
+          loyaltyPoints: true,
+        },
       });
-      if (contactUser?.email) {
+
+      // Bridge #11: CRM → Email (email history)
+      if (contactUser?.email && flags.email) {
         const [recentEmails, emailCount] = await Promise.all([
           prisma.emailLog.findMany({
             where: { to: contactUser.email },
@@ -174,23 +186,12 @@ export const GET = withAdminGuard(async (
         ]);
         emailHistory = { recentEmails, totalSent: emailCount };
       }
-    }
 
-    // Bridge #15: CRM → Fidélité (loyalty info)
-    let loyaltyInfo: {
-      currentTier: string;
-      currentPoints: number;
-    } | null = null;
-
-    if (deal.contactId && flags.loyalty) {
-      const loyaltyUser = await prisma.user.findUnique({
-        where: { id: deal.contactId },
-        select: { loyaltyTier: true, loyaltyPoints: true },
-      });
-      if (loyaltyUser) {
+      // Bridge #15: CRM → Fidélité (loyalty info)
+      if (contactUser && flags.loyalty) {
         loyaltyInfo = {
-          currentTier: loyaltyUser.loyaltyTier,
-          currentPoints: loyaltyUser.loyaltyPoints,
+          currentTier: contactUser.loyaltyTier,
+          currentPoints: contactUser.loyaltyPoints,
         };
       }
     }

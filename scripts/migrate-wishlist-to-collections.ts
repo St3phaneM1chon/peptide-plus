@@ -27,8 +27,9 @@ async function migrateWishlists() {
       return;
     }
 
-    // Group by userId
+    // Group by userId (skip entries without a userId)
     const wishlistsByUser = legacyWishlists.reduce((acc, item) => {
+      if (!item.userId) return acc;
       if (!acc[item.userId]) {
         acc[item.userId] = [];
       }
@@ -73,7 +74,7 @@ async function migrateWishlists() {
           await prisma.wishlistItem.create({
             data: {
               collectionId: collection.id,
-              productId: item.productId,
+              productId: item.productId!,
               createdAt: item.createdAt,
             },
           });

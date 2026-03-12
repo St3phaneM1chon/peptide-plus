@@ -48,11 +48,17 @@ export async function GET(
 
     const result = await getEffectivePrice(productId, tierName);
 
+    // A8-P2-002: Clarify pricing semantics in the public API response.
+    // - effectivePrice is the final price the customer pays (always absolute).
+    // - discountPercent is the computed % off the base price.
+    // - hasTierPrice indicates a product-specific override vs. general tier discount.
+    // - priceType: "absolute" means effectivePrice is a fixed dollar amount, not a % off.
     const response = NextResponse.json({
       productId,
       tierName: result.tierName,
       basePrice: Number(result.basePrice),
       effectivePrice: Number(result.effectivePrice),
+      priceType: 'absolute',
       discountPercent: Number(result.discountPercent),
       savings: Number(result.savings),
       hasTierPrice: result.tierPrice !== null,

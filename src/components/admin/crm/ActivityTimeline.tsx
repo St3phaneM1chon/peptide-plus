@@ -34,12 +34,12 @@ interface ActivityTimelineProps {
 
 const ACTIVITY_CONFIG: Record<string, { icon: typeof Phone; color: string; bg: string }> = {
   CALL:           { icon: Phone,         color: 'text-green-600',  bg: 'bg-green-100' },
-  EMAIL:          { icon: Mail,          color: 'text-teal-600',   bg: 'bg-teal-100' },
+  EMAIL:          { icon: Mail,          color: 'text-indigo-600',   bg: 'bg-indigo-100' },
   SMS:            { icon: Send,          color: 'text-purple-600', bg: 'bg-purple-100' },
   MEETING:        { icon: Calendar,      color: 'text-indigo-600', bg: 'bg-indigo-100' },
   NOTE:           { icon: MessageSquare, color: 'text-amber-600',  bg: 'bg-amber-100' },
   STATUS_CHANGE:  { icon: ArrowRightLeft,color: 'text-gray-600',   bg: 'bg-gray-200' },
-  DEAL_CREATED:   { icon: Plus,          color: 'text-teal-600',   bg: 'bg-teal-100' },
+  DEAL_CREATED:   { icon: Plus,          color: 'text-indigo-600',   bg: 'bg-indigo-100' },
   DEAL_WON:       { icon: CheckCircle2,  color: 'text-green-600',  bg: 'bg-green-100' },
   DEAL_LOST:      { icon: XCircle,       color: 'text-red-600',    bg: 'bg-red-100' },
 };
@@ -138,7 +138,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
               onClick={() => setShowFilter(!showFilter)}
               className={`flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors ${
                 filter !== 'ALL'
-                  ? 'bg-teal-50 text-teal-700'
+                  ? 'bg-indigo-50 text-indigo-700'
                   : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
@@ -156,7 +156,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
                       key={type}
                       onClick={() => { setFilter(type); setShowFilter(false); }}
                       className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 ${
-                        filter === type ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-700'
+                        filter === type ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'
                       }`}
                     >
                       {Icon && <Icon className={`h-3 w-3 ${cfg?.color || ''}`} />}
@@ -177,7 +177,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
                 title={t(labelKey) || type}
                 className={`p-1.5 rounded-md transition-colors ${
                   showQuickAdd === type
-                    ? 'bg-teal-100 text-teal-700'
+                    ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
                 }`}
               >
@@ -206,7 +206,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
             value={quickAddTitle}
             onChange={e => setQuickAddTitle(e.target.value)}
             placeholder={t('admin.crm.activityTitle') || 'Title...'}
-            className="w-full border rounded-md px-3 py-1.5 text-sm mb-2 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full border rounded-md px-3 py-1.5 text-sm mb-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             autoFocus
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitActivity(showQuickAdd); } }}
           />
@@ -214,7 +214,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
             value={quickAddDesc}
             onChange={e => setQuickAddDesc(e.target.value)}
             placeholder={t('admin.crm.activityDescription') || 'Notes (optional)...'}
-            className="w-full border rounded-md px-3 py-1.5 text-sm resize-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full border rounded-md px-3 py-1.5 text-sm resize-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             rows={2}
           />
           <div className="flex justify-end gap-2 mt-2">
@@ -227,7 +227,7 @@ export function ActivityTimeline({ activities, leadId, dealId, onActivityAdded, 
             <button
               onClick={() => submitActivity(showQuickAdd)}
               disabled={submitting || !quickAddTitle.trim()}
-              className="px-3 py-1 text-xs text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50"
+              className="px-3 py-1 text-xs text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
             >
               {submitting ? '...' : t('common.save') || 'Save'}
             </button>

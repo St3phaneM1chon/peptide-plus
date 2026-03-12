@@ -37,17 +37,43 @@ export const GET = withAdminGuard(async (
     const productIds = [...new Set(order.items.map((i) => i.productId))];
     if (productIds.length === 0) return apiSuccess({ enabled: true, products: [] }, { request });
 
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true, slug: true, sku: true, isActive: true, price: true },
-    });
+    // Fetch products and their format-level stock in parallel
+    const [products, formats] = await Promise.all([
+      prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true, slug: true, sku: true, isActive: true, price: true },
+      }),
+      prisma.productFormat.findMany({
+        where: { productId: { in: productIds } },
+        select: {
+          id: true,
+          productId: true,
+          name: true,
+          sku: true,
+          stockQuantity: true,
+          inStock: true,
+          availability: true,
+        },
+      }),
+    ]);
 
     const productMap = new Map(products.map((p) => [p.id, p]));
+
+    // Group formats by productId for quick lookup
+    const formatsByProduct = new Map<string, typeof formats>();
+    for (const f of formats) {
+      const arr = formatsByProduct.get(f.productId) || [];
+      arr.push(f);
+      formatsByProduct.set(f.productId, arr);
+    }
 
     return apiSuccess({
       enabled: true,
       products: order.items.map((item) => {
         const prod = productMap.get(item.productId);
+        const prodFormats = formatsByProduct.get(item.productId) || [];
+        const totalStock = prodFormats.reduce((sum, f) => sum + f.stockQuantity, 0);
+
         return {
           productId: item.productId,
           name: item.productName,
@@ -57,6 +83,18 @@ export const GET = withAdminGuard(async (
           currentPrice: prod ? Number(prod.price) : null,
           orderedPrice: Number(item.unitPrice),
           quantity: item.quantity,
+          // A5-P2-005: Inventory data
+          stock: {
+            totalStock,
+            formats: prodFormats.map((f) => ({
+              formatId: f.id,
+              name: f.name,
+              sku: f.sku,
+              stockQuantity: f.stockQuantity,
+              inStock: f.inStock,
+              availability: f.availability,
+            })),
+          },
         };
       }),
     }, { request });

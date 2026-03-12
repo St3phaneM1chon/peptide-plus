@@ -9,7 +9,7 @@ const AVATAR_COLORS = [
   'bg-amber-600',
   'bg-rose-600',
   'bg-indigo-600',
-  'bg-teal-600',
+  'bg-indigo-600',
   'bg-orange-600',
   'bg-pink-600',
   'bg-sky-600',

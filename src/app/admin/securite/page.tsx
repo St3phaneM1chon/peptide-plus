@@ -43,7 +43,7 @@ interface AuditReport {
 const gradeColors: Record<string, { bg: string; text: string; border: string }> = {
   'A+': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
   'A':  { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  'B':  { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+  'B':  { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
   'C':  { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   'D':  { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
   'F':  { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
@@ -131,7 +131,7 @@ export default function SecurityAuditPage() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center h-48" role="status">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
         </div>
       )}
 

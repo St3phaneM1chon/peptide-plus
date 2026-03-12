@@ -32,7 +32,13 @@ export const GET = withAdminGuard(async () => {
       prisma.loyaltyTransaction.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          type: true,
+          points: true,
+          description: true,
+          balanceAfter: true,
+          createdAt: true,
           user: { select: { name: true, email: true } },
         },
       }),

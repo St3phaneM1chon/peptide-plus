@@ -11,15 +11,23 @@ export async function GET(
   try {
     const { slug } = await params;
 
+    // A7-P2-008: Flatten 3-level nested include into 2 parallel queries
     const bundle = await prisma.bundle.findUnique({
       where: { slug },
       include: {
         items: {
           include: {
             product: {
-              include: {
-                formats: true,
-                images: true,
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                price: true,
+                compareAtPrice: true,
+                purity: true,
+                molecularWeight: true,
+                weight: true,
+                imageUrl: true,
               },
             },
           },
@@ -34,15 +42,41 @@ export async function GET(
       );
     }
 
+    // Fetch formats and images for all products in parallel (avoids 3-level nesting)
+    const productIds = [...new Set(bundle.items.map((item) => item.product.id))];
+    const [formats, images] = await Promise.all([
+      prisma.productFormat.findMany({
+        where: { productId: { in: productIds } },
+      }),
+      prisma.productImage.findMany({
+        where: { productId: { in: productIds } },
+      }),
+    ]);
+
+    // Group by productId for fast lookup
+    const formatsByProduct = new Map<string, typeof formats>();
+    for (const f of formats) {
+      const arr = formatsByProduct.get(f.productId) || [];
+      arr.push(f);
+      formatsByProduct.set(f.productId, arr);
+    }
+    const imagesByProduct = new Map<string, typeof images>();
+    for (const img of images) {
+      const arr = imagesByProduct.get(img.productId) || [];
+      arr.push(img);
+      imagesByProduct.set(img.productId, arr);
+    }
+
     // Calculate prices
     let originalTotal = 0;
 
     const items = bundle.items.map((item) => {
+      const productFormats = formatsByProduct.get(item.product.id) || [];
       let itemPrice = Number(item.product.price);
 
       // If a specific format is selected, use its price
       if (item.formatId) {
-        const format = item.product.formats.find((f) => f.id === item.formatId);
+        const format = productFormats.find((f) => f.id === item.formatId);
         if (format) {
           itemPrice = Number(format.price);
         }
@@ -60,7 +94,7 @@ export async function GET(
           purity: item.product.purity ? Number(item.product.purity) : null,
           molecularWeight: item.product.molecularWeight ? Number(item.product.molecularWeight) : null,
           weight: item.product.weight ? Number(item.product.weight) : null,
-          formats: item.product.formats.map((f) => ({
+          formats: productFormats.map((f) => ({
             ...f,
             price: Number(f.price),
             comparePrice: f.comparePrice ? Number(f.comparePrice) : null,

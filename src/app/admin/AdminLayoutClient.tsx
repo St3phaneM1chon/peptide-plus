@@ -105,7 +105,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
     <div className="admin-outlook min-h-screen bg-slate-50">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-teal-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-teal-400"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-indigo-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-indigo-400"
       >
         {t('admin.skipToContent')}
       </a>
@@ -118,9 +118,9 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
           <>
             <button
               onClick={() => setCopilotOpen((v) => !v)}
-              className={`p-1.5 rounded-md transition-colors ${copilotOpen ? 'bg-teal-100 text-teal-700' : 'text-slate-500 hover:text-teal-600 hover:bg-teal-50'}`}
-              title={`${t('admin.copilot.title') || 'AI Copilot'} (⌘J)`}
-              aria-label={t('admin.copilot.title') || 'AI Copilot'}
+              className={`p-1.5 rounded-md transition-colors ${copilotOpen ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
+              title={`${t('admin.copilot.title')} (⌘J)`}
+              aria-label={t('admin.copilot.title')}
             >
               <Sparkles className="w-4.5 h-4.5" />
             </button>

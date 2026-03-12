@@ -78,18 +78,36 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     const refreshCounts = searchParams.get('refreshCounts') === 'true';
     const now = new Date();
 
-    // Calculate RFM segment counts
-    const segmentsWithCounts = await Promise.all(
-      RFM_SEGMENTS.map(async (segment) => {
-        const count = await countSegment(segment.query, now);
-        return { ...segment, count, lastCountedAt: now.toISOString(), type: 'rfm' as const };
-      })
-    );
+    // Calculate RFM segment counts + built-in segment counts in parallel
+    // instead of sequential awaits for each segment
+    const [
+      rfmCounts,
+      totalUsers,
+      vipCount,
+      newsletterCount,
+      frCount,
+      enCount,
+    ] = await Promise.all([
+      // All RFM segments in parallel
+      Promise.all(
+        RFM_SEGMENTS.map((segment) => countSegment(segment.query, now))
+      ),
+      // Built-in segment counts in parallel
+      prisma.user.count({ where: { emailVerified: { not: null } } }),
+      prisma.user.count({ where: { loyaltyTier: { in: ['GOLD', 'PLATINUM', 'DIAMOND'] } } }),
+      prisma.newsletterSubscriber.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { locale: 'fr' } }),
+      prisma.user.count({ where: { locale: 'en' } }),
+    ]);
 
-    // Get total user count
-    const totalUsers = await prisma.user.count({ where: { emailVerified: { not: null } } });
+    const segmentsWithCounts = RFM_SEGMENTS.map((segment, i) => ({
+      ...segment,
+      count: rfmCounts[i],
+      lastCountedAt: now.toISOString(),
+      type: 'rfm' as const,
+    }));
 
-    // Built-in segments
+    // Built-in segments (counts already fetched above)
     const builtInSegments = [
       {
         id: 'all-subscribers',
@@ -105,9 +123,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
         name: 'Tier VIP+',
         description: 'Clients Gold, Platinum, Diamond',
         color: '#F59E0B',
-        count: await prisma.user.count({
-          where: { loyaltyTier: { in: ['GOLD', 'PLATINUM', 'DIAMOND'] } },
-        }),
+        count: vipCount,
         lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
@@ -116,7 +132,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
         name: 'Newsletter',
         description: 'Abonnes newsletter',
         color: '#10B981',
-        count: await prisma.newsletterSubscriber.count({ where: { isActive: true } }),
+        count: newsletterCount,
         lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
@@ -125,7 +141,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
         name: 'Francophones',
         description: 'Clients en francais',
         color: '#3B82F6',
-        count: await prisma.user.count({ where: { locale: 'fr' } }),
+        count: frCount,
         lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
@@ -134,47 +150,66 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
         name: 'Anglophones',
         description: 'Clients en anglais',
         color: '#EF4444',
-        count: await prisma.user.count({ where: { locale: 'en' } }),
+        count: enCount,
         lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
     ];
 
-    // Load custom segments from DB
+    // Load custom segments from DB (select only needed fields)
     const customSegments = await prisma.emailSegment.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        color: true,
+        query: true,
+        contactCount: true,
+        updatedAt: true,
+      },
     });
 
-    // If refreshCounts=true, recalculate counts for custom segments and persist them
+    // If refreshCounts=true, recalculate counts for custom segments in parallel and persist
     let customWithType;
     if (refreshCounts && customSegments.length > 0) {
-      customWithType = await Promise.all(
-        customSegments.map(async (s) => {
-          let queryObj: Record<string, unknown> = {};
-          try {
-            queryObj = JSON.parse(s.query);
-          } catch (error) { logger.error('[EmailSegments] Failed to parse segment query JSON', { error: error instanceof Error ? error.message : String(error) }); /* use empty query */ }
+      // Parse all queries first
+      const parsedQueries = customSegments.map((s) => {
+        try {
+          return JSON.parse(s.query) as Record<string, unknown>;
+        } catch (error) {
+          logger.error('[EmailSegments] Failed to parse segment query JSON', { error: error instanceof Error ? error.message : String(error) });
+          return {} as Record<string, unknown>;
+        }
+      });
 
-          const count = await countSegment(queryObj, now);
-
-          // Persist the recalculated count
-          await prisma.emailSegment.update({
-            where: { id: s.id },
-            data: { contactCount: count },
-          }).catch((error: unknown) => { logger.error('[EmailSegments] Non-blocking segment count update failed', { error: error instanceof Error ? error.message : String(error) }); }); // non-blocking
-
-          return {
-            id: s.id,
-            name: s.name,
-            description: s.description,
-            color: s.color || '#6B7280',
-            count,
-            lastCountedAt: now.toISOString(),
-            type: 'custom' as const,
-            query: s.query,
-          };
-        })
+      // Count all custom segments in parallel instead of sequentially
+      const counts = await Promise.all(
+        parsedQueries.map((queryObj) => countSegment(queryObj, now))
       );
+
+      // Persist all updated counts in parallel (fire-and-forget)
+      Promise.all(
+        customSegments.map((s, i) =>
+          prisma.emailSegment.update({
+            where: { id: s.id },
+            data: { contactCount: counts[i] },
+          }).catch((error: unknown) => {
+            logger.error('[EmailSegments] Non-blocking segment count update failed', { error: error instanceof Error ? error.message : String(error) });
+          })
+        )
+      ).catch(() => {}); // non-blocking
+
+      customWithType = customSegments.map((s, i) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        color: s.color || '#6B7280',
+        count: counts[i],
+        lastCountedAt: now.toISOString(),
+        type: 'custom' as const,
+        query: s.query,
+      }));
     } else {
       customWithType = customSegments.map(s => ({
         id: s.id,

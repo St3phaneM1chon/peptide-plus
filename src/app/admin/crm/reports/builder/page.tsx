@@ -108,8 +108,8 @@ export default function ReportBuilderPage() {
 
       setResults(rows);
       toast.success(
-        (t('admin.crm.reports.resultsLoaded') || 'Report loaded') +
-        ` - ${rows.length} ${t('admin.crm.reports.rows') || 'rows'}`
+        (t('admin.crm.reports.resultsLoaded')) +
+        ` - ${rows.length} ${t('admin.crm.reports.rows')}`
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to run report');
@@ -138,7 +138,7 @@ export default function ReportBuilderPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success(t('admin.crm.reports.exported') || 'CSV exported');
+      toast.success(t('admin.crm.reports.exported'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Export failed');
     }
@@ -155,10 +155,10 @@ export default function ReportBuilderPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-indigo-600" />
-          {t('admin.crm.reports.builderTitle') || 'Custom Report Builder'}
+          {t('admin.crm.reports.builderTitle')}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          {t('admin.crm.reports.builderSubtitle') || 'Build and export custom CRM reports'}
+          {t('admin.crm.reports.builderSubtitle')}
         </p>
       </div>
 
@@ -168,13 +168,13 @@ export default function ReportBuilderPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-5">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
               <Filter className="h-4 w-4" />
-              {t('admin.crm.reports.filters') || 'Report Filters'}
+              {t('admin.crm.reports.filters')}
             </h2>
 
             {/* Entity selector */}
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.reports.entity') || 'Entity'}
+                {t('admin.crm.reports.entity')}
               </label>
               <select
                 value={entity}
@@ -190,7 +190,7 @@ export default function ReportBuilderPage() {
             {/* Date range */}
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.reports.dateFrom') || 'From'}
+                {t('admin.crm.reports.dateFrom')}
               </label>
               <input
                 type="date"
@@ -201,7 +201,7 @@ export default function ReportBuilderPage() {
             </div>
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.reports.dateTo') || 'To'}
+                {t('admin.crm.reports.dateTo')}
               </label>
               <input
                 type="date"
@@ -214,7 +214,7 @@ export default function ReportBuilderPage() {
             {/* Metric checkboxes */}
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-600 mb-2">
-                {t('admin.crm.reports.columns') || 'Columns'}
+                {t('admin.crm.reports.columns')}
               </label>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {ENTITY_CONFIG[entity].metrics.map((metric) => (
@@ -240,8 +240,8 @@ export default function ReportBuilderPage() {
               >
                 <Table className="h-4 w-4" />
                 {loading
-                  ? (t('admin.crm.reports.running') || 'Running...')
-                  : (t('admin.crm.reports.runReport') || 'Run Report')}
+                  ? (t('admin.crm.reports.running'))
+                  : (t('admin.crm.reports.runReport'))}
               </button>
               <button
                 onClick={exportCSV}
@@ -249,7 +249,7 @@ export default function ReportBuilderPage() {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 <Download className="h-4 w-4" />
-                {t('admin.crm.reports.exportCSV') || 'Export CSV'}
+                {t('admin.crm.reports.exportCSV')}
               </button>
             </div>
           </div>
@@ -261,10 +261,10 @@ export default function ReportBuilderPage() {
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <BarChart3 className="h-16 w-16 text-gray-200 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">
-                {t('admin.crm.reports.noReportYet') || 'No report generated yet'}
+                {t('admin.crm.reports.noReportYet')}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {t('admin.crm.reports.selectAndRun') || 'Select an entity and click "Run Report" to see results'}
+                {t('admin.crm.reports.selectAndRun')}
               </p>
             </div>
           ) : loading ? (
@@ -275,25 +275,25 @@ export default function ReportBuilderPage() {
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <Table className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">
-                {t('admin.crm.reports.noResults') || 'No results found'}
+                {t('admin.crm.reports.noResults')}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {t('admin.crm.reports.adjustFilters') || 'Try adjusting your date range or filters'}
+                {t('admin.crm.reports.adjustFilters')}
               </p>
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                 <p className="text-sm text-gray-600">
-                  {results.length} {t('admin.crm.reports.rows') || 'rows'} |{' '}
-                  {visibleColumns.length} {t('admin.crm.reports.columns') || 'columns'}
+                  {results.length} {t('admin.crm.reports.rows')} |{' '}
+                  {visibleColumns.length} {t('admin.crm.reports.columns')}
                 </p>
                 <button
                   onClick={exportCSV}
                   className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  {t('admin.crm.reports.exportCSV') || 'Export CSV'}
+                  {t('admin.crm.reports.exportCSV')}
                 </button>
               </div>
               <div className="overflow-x-auto">
@@ -325,8 +325,8 @@ export default function ReportBuilderPage() {
               </div>
               {results.length > 100 && (
                 <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500">
-                  {t('admin.crm.reports.showingFirst') || 'Showing first 100 of'} {results.length} {t('admin.crm.reports.rows') || 'rows'}.{' '}
-                  {t('admin.crm.reports.exportForAll') || 'Export CSV for all data.'}
+                  {t('admin.crm.reports.showingFirst')} {results.length} {t('admin.crm.reports.rows')}.{' '}
+                  {t('admin.crm.reports.exportForAll')}
                 </div>
               )}
             </div>

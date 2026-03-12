@@ -111,18 +111,18 @@ export default function NotesCreditPage() {
       });
       if (!res.ok) throw new Error();
       await fetchCreditNotes();
-      toast.success(t('admin.creditNotes.created') || 'Note de credit creee en brouillon');
+      toast.success(t('admin.creditNotes.created'));
     } catch {
-      toast.error(t('admin.creditNotes.createError') || 'Erreur lors de la creation de la note de credit');
+      toast.error(t('admin.creditNotes.createError'));
     }
   }, [fetchCreditNotes, t]);
   const handleDeleteAction = useCallback(() => {
-    if (!selectedNote) { toast.info(t('admin.creditNotes.selectFirst') || 'Selectionnez une note de credit dans le tableau.'); return; }
-    if (selectedNote.status === 'ISSUED') { toast.error(t('admin.creditNotes.cannotDeleteIssued') || 'Impossible de supprimer une note de credit emise. Annulez-la d\'abord.'); return; }
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectFirst')); return; }
+    if (selectedNote.status === 'ISSUED') { toast.error(t('admin.creditNotes.cannotDeleteIssued')); return; }
     toast.info(t('admin.creditNotes.deleteConfirm') || `Suppression de ${selectedNote.creditNoteNumber} - fonctionnalite en cours d'integration.`);
   }, [selectedNote, t]);
   const handleApply = useCallback(async () => {
-    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToApply') || 'Selectionnez une note de credit a emettre.'); return; }
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToApply')); return; }
     try {
       const res = await fetch('/api/accounting/credit-notes', {
         method: 'PUT',
@@ -132,13 +132,13 @@ export default function NotesCreditPage() {
       if (!res.ok) throw new Error();
       await fetchCreditNotes();
       setSelectedNote(null);
-      toast.success(t('admin.creditNotes.issued') || 'Note de credit emise avec succes');
+      toast.success(t('admin.creditNotes.issued'));
     } catch {
-      toast.error(t('admin.creditNotes.issueError') || 'Erreur lors de l\'emission');
+      toast.error(t('admin.creditNotes.issueError'));
     }
   }, [selectedNote, fetchCreditNotes, t]);
   const handleCancel = useCallback(async () => {
-    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToCancel') || 'Selectionnez une note de credit a annuler.'); return; }
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToCancel')); return; }
     try {
       const res = await fetch('/api/accounting/credit-notes', {
         method: 'PUT',
@@ -148,15 +148,15 @@ export default function NotesCreditPage() {
       if (!res.ok) throw new Error();
       await fetchCreditNotes();
       setSelectedNote(null);
-      toast.success(t('admin.creditNotes.voided') || 'Note de credit annulee');
+      toast.success(t('admin.creditNotes.voided'));
     } catch {
-      toast.error(t('admin.creditNotes.voidError') || 'Erreur lors de l\'annulation');
+      toast.error(t('admin.creditNotes.voidError'));
     }
   }, [selectedNote, fetchCreditNotes, t]);
   const handleExportPdf = useCallback(() => {
-    if (creditNotes.length === 0) { toast.error(t('admin.creditNotes.noDataToExport') || 'Aucune note de credit a exporter'); return; }
+    if (creditNotes.length === 0) { toast.error(t('admin.creditNotes.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.creditNotes.colNumber') || 'Numero', t('admin.creditNotes.colCustomer') || 'Client', t('admin.creditNotes.colSubtotal') || 'Sous-total', t('admin.creditNotes.colTPS') || 'TPS', t('admin.creditNotes.colTVQ') || 'TVQ', t('admin.creditNotes.colTotal') || 'Total', t('admin.creditNotes.colStatus') || 'Statut', t('admin.creditNotes.colReason') || 'Raison'];
+    const headers = [t('admin.creditNotes.colNumber'), t('admin.creditNotes.colCustomer'), t('admin.creditNotes.colSubtotal'), t('admin.creditNotes.colTPS'), t('admin.creditNotes.colTVQ'), t('admin.creditNotes.colTotal'), t('admin.creditNotes.colStatus'), t('admin.creditNotes.colReason')];
     const rows = creditNotes.map(cn => [cn.creditNoteNumber, cn.customerName, String(cn.subtotal), String(cn.taxTps), String(cn.taxTvq), String(cn.total), cn.status, cn.reason]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -193,7 +193,7 @@ export default function NotesCreditPage() {
         <div>
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedNote(cn); }}
-            className="font-mono text-sm text-teal-600 hover:underline"
+            className="font-mono text-sm text-indigo-600 hover:underline"
           >
             {cn.creditNoteNumber}
           </button>
@@ -256,7 +256,7 @@ export default function NotesCreditPage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedNote(cn)}
-            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
             title={t('admin.creditNotes.view')}
             aria-label={t('admin.creditNotes.view')}
           >
@@ -349,7 +349,7 @@ export default function NotesCreditPage() {
                   {t('admin.creditNotes.issuedOn')}: {cn.issuedAt ? new Date(cn.issuedAt).toLocaleDateString(locale) : 'N/A'}
                 </p>
                 {cn.invoice && (
-                  <p className="text-sm text-teal-600">
+                  <p className="text-sm text-indigo-600">
                     {t('admin.creditNotes.invoice')}: {cn.invoice.invoiceNumber}
                   </p>
                 )}

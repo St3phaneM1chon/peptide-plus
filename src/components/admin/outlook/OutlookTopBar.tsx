@@ -182,7 +182,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
             aria-label={t('admin.outlook.searchPlaceholder')}
             className="w-full ps-9 pe-3 py-1.5 text-sm bg-slate-100 border border-transparent
                        rounded-lg placeholder:text-slate-400
-                       focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white focus:border-teal-300
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-300
                        transition-colors"
           />
           {/* Search results dropdown */}
@@ -190,7 +190,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
             <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-slate-200 max-h-80 overflow-y-auto z-50">
               {searchLoading ? (
                 <div className="p-3 text-center text-sm text-slate-400">
-                  <div className="animate-spin inline-block w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full" />
+                  <div className="animate-spin inline-block w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
                 </div>
               ) : searchResults.length === 0 ? (
                 <div className="p-3 text-center text-sm text-slate-400">
@@ -259,7 +259,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
           <MessageCircle className="w-[18px] h-[18px] text-slate-500" />
           {unreadChats > 0 && (
             <span
-              className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-teal-500 text-white
+              className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-indigo-500 text-white
                          text-[10px] font-semibold rounded-full flex items-center justify-center
                          leading-none px-1"
             >

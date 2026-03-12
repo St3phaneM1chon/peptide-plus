@@ -434,7 +434,7 @@ export default function SEOPage() {
       googleTagManagerId: '',
       facebookPixelId: '',
     });
-    toast.success(t('admin.seo.resetSuccess') || 'Settings reset to defaults');
+    toast.success(t('admin.seo.resetSuccess'));
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
@@ -448,9 +448,9 @@ export default function SEOPage() {
         const text = await file.text();
         const config = JSON.parse(text);
         if (config.siteName) setGlobalSettings((prev) => ({ ...prev, ...config }));
-        toast.success(t('admin.seo.importSuccess') || 'Configuration imported');
+        toast.success(t('admin.seo.importSuccess'));
       } catch {
-        toast.error(t('admin.seo.importError') || 'Invalid JSON file');
+        toast.error(t('admin.seo.importError'));
       }
     };
     input.click();
@@ -465,7 +465,7 @@ export default function SEOPage() {
     a.download = `seo-config-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [globalSettings, t]);
 
   const handleRibbonTest = useCallback(() => {
@@ -481,7 +481,7 @@ export default function SEOPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -592,7 +592,7 @@ export default function SEOPage() {
               <tr>
                 <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
                   <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">{t('admin.seo.noPages') || 'Aucune page SEO configurée'}</p>
+                  <p className="text-sm">{t('admin.seo.noPages')}</p>
                 </td>
               </tr>
             )}
@@ -627,7 +627,7 @@ export default function SEOPage() {
                     </Button>
                     <button
                       onClick={() => setShowOgPreview(showOgPreview === page.id ? null : page.id)}
-                      className={`p-1.5 rounded hover:bg-teal-50 transition-colors ${showOgPreview === page.id ? 'text-teal-600' : 'text-slate-400'}`}
+                      className={`p-1.5 rounded hover:bg-indigo-50 transition-colors ${showOgPreview === page.id ? 'text-indigo-600' : 'text-slate-400'}`}
                       title="Aperçu Open Graph"
                     >
                       <Eye className="w-4 h-4" />
@@ -731,7 +731,7 @@ export default function SEOPage() {
                         </Button>
                         <button
                           onClick={() => setShowOgPreview(showOgPreview === `prod-${product.id}` ? null : `prod-${product.id}`)}
-                          className={`p-1.5 rounded hover:bg-teal-50 ${showOgPreview === `prod-${product.id}` ? 'text-teal-600' : 'text-slate-400'}`}
+                          className={`p-1.5 rounded hover:bg-indigo-50 ${showOgPreview === `prod-${product.id}` ? 'text-indigo-600' : 'text-slate-400'}`}
                           title="Aperçu OG"
                         >
                           <Eye className="w-4 h-4" />

@@ -85,7 +85,7 @@ export const GET = withAdminGuard(async (request) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.tax_reports.manage' });
 
 /**
  * POST /api/accounting/tax-reports
@@ -249,7 +249,7 @@ export const POST = withAdminGuard(async (request) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.tax_reports.manage' });
 
 /**
  * PUT /api/accounting/tax-reports
@@ -376,4 +376,4 @@ export const PUT = withAdminGuard(async (request) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.tax_reports.manage' });

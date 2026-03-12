@@ -154,7 +154,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
     // ---- Step 3: Enrich order items with product info (batch lookup) ----
     const allProductIds = [...new Set(rawOrders.flatMap((o) => o.items.map((i) => i.productId)))];
     const wishlistProductIds = wishlistResult.length > 0
-      ? wishlistResult.map((w) => w.productId)
+      ? wishlistResult.map((w) => w.productId).filter((id): id is string => id != null)
       : [];
 
     // Combine product IDs from orders + wishlist for a single batch query
@@ -219,7 +219,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
 
     // Enrich wishlist items with product data (reuse productMap from batch query)
     const wishlist = wishlistResult.map((w) => {
-      const product = productMap.get(w.productId);
+      const product = w.productId ? productMap.get(w.productId) : null;
       return {
         ...w,
         product: product

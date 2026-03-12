@@ -128,7 +128,7 @@ async function runSegmentQuery(c: SegmentCriteria) {
       where: metricsWhere,
       select: { userId: true },
     });
-    eligibleUserIds = metricsRows.map((m) => m.userId);
+    eligibleUserIds = metricsRows.map((m) => m.userId).filter((id): id is string => id != null);
 
     // No users match the metrics filter — bail out early.
     if (eligibleUserIds.length === 0) {

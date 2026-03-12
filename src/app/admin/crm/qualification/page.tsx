@@ -99,7 +99,7 @@ export default function QualificationPage() {
       });
       const json = await res.json();
       if (json.success) {
-        toast.success(t('admin.crm.qualificationSaved') || 'Qualification saved');
+        toast.success(t('admin.crm.qualificationSaved'));
         fetchLeads();
       } else toast.error(json.error?.message || 'Failed');
     } catch { toast.error('Network error'); }
@@ -121,8 +121,8 @@ export default function QualificationPage() {
             <Target className="h-5 w-5 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.qualification') || 'Lead Qualification'}</h1>
-            <p className="text-sm text-gray-500">{t('admin.crm.qualificationDesc') || 'BANT & MEDDIC qualification frameworks'}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.qualification')}</h1>
+            <p className="text-sm text-gray-500">{t('admin.crm.qualificationDesc')}</p>
           </div>
         </div>
       </div>
@@ -132,13 +132,13 @@ export default function QualificationPage() {
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.crm.searchLeads') || 'Search leads...'} className="w-full ps-10 pe-3 py-2 border rounded-md text-sm" />
+            placeholder={t('admin.crm.searchLeads')} className="w-full ps-10 pe-3 py-2 border rounded-md text-sm" />
         </div>
         <select value={frameworkFilter} onChange={e => setFrameworkFilter(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
-          <option value="">{t('admin.crm.allFrameworks') || 'All Frameworks'}</option>
+          <option value="">{t('admin.crm.allFrameworks')}</option>
           <option value="BANT">BANT</option>
           <option value="MEDDIC">MEDDIC</option>
-          <option value="none">{t('admin.crm.notQualified') || 'Not Qualified'}</option>
+          <option value="none">{t('admin.crm.notQualified')}</option>
         </select>
       </div>
 
@@ -146,10 +146,10 @@ export default function QualificationPage() {
       <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="bg-white border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-gray-900">{total}</p>
-          <p className="text-xs text-gray-500">{t('admin.crm.totalLeads') || 'Total Leads'}</p>
+          <p className="text-xs text-gray-500">{t('admin.crm.totalLeads')}</p>
         </div>
         <div className="bg-white border rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-teal-600">{leads.filter(l => l.qualificationFramework === 'BANT').length}</p>
+          <p className="text-2xl font-bold text-indigo-600">{leads.filter(l => l.qualificationFramework === 'BANT').length}</p>
           <p className="text-xs text-gray-500">BANT</p>
         </div>
         <div className="bg-white border rounded-lg p-3 text-center">
@@ -158,7 +158,7 @@ export default function QualificationPage() {
         </div>
         <div className="bg-white border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-gray-400">{leads.filter(l => !l.qualificationFramework).length}</p>
-          <p className="text-xs text-gray-500">{t('admin.crm.notQualified') || 'Not Qualified'}</p>
+          <p className="text-xs text-gray-500">{t('admin.crm.notQualified')}</p>
         </div>
       </div>
 
@@ -168,7 +168,7 @@ export default function QualificationPage() {
       ) : leads.length === 0 ? (
         <div className="text-center py-12 text-gray-400 bg-white rounded-lg border border-dashed">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
-          <p>{t('admin.crm.noLeads') || 'No leads found'}</p>
+          <p>{t('admin.crm.noLeads')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -193,8 +193,8 @@ export default function QualificationPage() {
                         {lead.companyName && <span className="text-xs text-gray-500">- {lead.companyName}</span>}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
-                        <span>{t('admin.crm.score') || 'Score'}: {lead.score}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full ${lead.temperature === 'HOT' ? 'bg-red-50 text-red-600' : lead.temperature === 'WARM' ? 'bg-orange-50 text-orange-600' : 'bg-teal-50 text-teal-600'}`}>
+                        <span>{t('admin.crm.score')}: {lead.score}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full ${lead.temperature === 'HOT' ? 'bg-red-50 text-red-600' : lead.temperature === 'WARM' ? 'bg-orange-50 text-orange-600' : 'bg-indigo-50 text-indigo-600'}`}>
                           {lead.temperature}
                         </span>
                         <span>{lead.status}</span>
@@ -203,7 +203,7 @@ export default function QualificationPage() {
                     <div className="flex items-center gap-2">
                       {fw ? (
                         <>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fw === 'BANT' ? 'bg-teal-50 text-teal-700' : 'bg-purple-50 text-purple-700'}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${fw === 'BANT' ? 'bg-indigo-50 text-indigo-700' : 'bg-purple-50 text-purple-700'}`}>
                             {fw}
                           </span>
                           <span className={`text-xs font-medium ${score!.percentage >= 75 ? 'text-green-600' : score!.percentage >= 50 ? 'text-yellow-600' : 'text-gray-400'}`}>
@@ -211,7 +211,7 @@ export default function QualificationPage() {
                           </span>
                         </>
                       ) : (
-                        <span className="text-xs text-gray-400">{t('admin.crm.notQualified') || 'Not qualified'}</span>
+                        <span className="text-xs text-gray-400">{t('admin.crm.notQualified')}</span>
                       )}
                     </div>
                   </button>
@@ -220,11 +220,11 @@ export default function QualificationPage() {
                     <div className="border-t px-4 py-4 bg-gray-50">
                       {/* Framework selector */}
                       <div className="flex items-center gap-3 mb-4">
-                        <label className="text-sm font-medium text-gray-700">{t('admin.crm.framework') || 'Framework'}:</label>
+                        <label className="text-sm font-medium text-gray-700">{t('admin.crm.framework')}:</label>
                         <div className="flex gap-2">
                           {(['BANT', 'MEDDIC'] as Framework[]).map(fw => (
                             <button key={fw} onClick={() => setEditingFramework(fw)}
-                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-teal-600 text-white' : 'bg-purple-600 text-white') : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>
+                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-indigo-600 text-white' : 'bg-purple-600 text-white') : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>
                               {fw}
                             </button>
                           ))}
@@ -270,7 +270,7 @@ export default function QualificationPage() {
                       <div className="flex justify-end mt-4">
                         <button onClick={() => saveQualification(lead.id)} disabled={saving}
                           className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50">
-                          <Save className="h-4 w-4" /> {saving ? '...' : (t('common.save') || 'Save Qualification')}
+                          <Save className="h-4 w-4" /> {saving ? '...' : (t('common.save'))}
                         </button>
                       </div>
                     </div>
@@ -285,10 +285,10 @@ export default function QualificationPage() {
       {total > limit && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50">{t('common.previous') || 'Previous'}</button>
-          <span className="text-sm text-gray-500">{t('common.page') || 'Page'} {page} / {Math.ceil(total / limit)}</span>
+            className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50">{t('common.previous')}</button>
+          <span className="text-sm text-gray-500">{t('common.page')} {page} / {Math.ceil(total / limit)}</span>
           <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(total / limit)}
-            className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50">{t('common.next') || 'Next'}</button>
+            className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50">{t('common.next')}</button>
         </div>
       )}
     </div>

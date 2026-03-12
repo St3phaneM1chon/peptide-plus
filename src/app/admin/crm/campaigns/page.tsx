@@ -59,7 +59,7 @@ interface Pagination {
 // ---------------------------------------------------------------------------
 
 const TYPE_CONFIG: Record<CampaignType, { label: string; icon: React.ReactNode; color: string }> = {
-  CALL: { label: 'Call', icon: <Phone className="h-3.5 w-3.5" />, color: 'bg-teal-100 text-teal-700' },
+  CALL: { label: 'Call', icon: <Phone className="h-3.5 w-3.5" />, color: 'bg-indigo-100 text-indigo-700' },
   EMAIL: { label: 'Email', icon: <Mail className="h-3.5 w-3.5" />, color: 'bg-purple-100 text-purple-700' },
   SMS: { label: 'SMS', icon: <MessageSquare className="h-3.5 w-3.5" />, color: 'bg-green-100 text-green-700' },
   MULTI_CHANNEL: { label: 'Multi', icon: <Layers className="h-3.5 w-3.5" />, color: 'bg-orange-100 text-orange-700' },
@@ -67,7 +67,7 @@ const TYPE_CONFIG: Record<CampaignType, { label: string; icon: React.ReactNode; 
 
 const STATUS_CONFIG: Record<CampaignStatus, { label: string; color: string }> = {
   DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
-  SCHEDULED: { label: 'Scheduled', color: 'bg-teal-100 text-teal-700' },
+  SCHEDULED: { label: 'Scheduled', color: 'bg-indigo-100 text-indigo-700' },
   ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700' },
   PAUSED: { label: 'Paused', color: 'bg-yellow-100 text-yellow-700' },
   COMPLETED: { label: 'Completed', color: 'bg-indigo-100 text-indigo-700' },
@@ -106,7 +106,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
-      toast.error(t('admin.crm.campaigns.nameRequired') || 'Campaign name is required');
+      toast.error(t('admin.crm.campaigns.nameRequired'));
       return;
     }
 
@@ -144,7 +144,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
         throw new Error(json.error?.message || 'Failed to create campaign');
       }
 
-      toast.success(t('admin.crm.campaigns.created') || 'Campaign created');
+      toast.success(t('admin.crm.campaigns.created'));
       onCreated(json.data);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create campaign');
@@ -153,7 +153,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
   const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
 
   return (
@@ -162,7 +162,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            {t('admin.crm.campaigns.createTitle') || 'Create Campaign'}
+            {t('admin.crm.campaigns.createTitle')}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -173,7 +173,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className={labelCls}>{t('admin.crm.campaigns.name') || 'Campaign Name'} *</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.name')} *</label>
               <input
                 type="text"
                 value={form.name}
@@ -185,7 +185,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.type') || 'Type'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.type')}</label>
               <select
                 value={form.type}
                 onChange={e => setForm(f => ({ ...f, type: e.target.value as CampaignType }))}
@@ -199,7 +199,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.callerId') || 'Caller ID (optional)'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.callerId')}</label>
               <input
                 type="tel"
                 value={form.callerIdNumber}
@@ -210,7 +210,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.startAt') || 'Start Date'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.startAt')}</label>
               <input
                 type="datetime-local"
                 value={form.startAt}
@@ -220,7 +220,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.endAt') || 'End Date'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.endAt')}</label>
               <input
                 type="datetime-local"
                 value={form.endAt}
@@ -230,7 +230,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.maxAttempts') || 'Max Attempts per Lead'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.maxAttempts')}</label>
               <input
                 type="number"
                 min={1}
@@ -242,7 +242,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div>
-              <label className={labelCls}>{t('admin.crm.campaigns.retryInterval') || 'Retry Interval (hours)'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.retryInterval')}</label>
               <input
                 type="number"
                 min={1}
@@ -254,7 +254,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
             </div>
 
             <div className="sm:col-span-2">
-              <label className={labelCls}>{t('admin.crm.campaigns.description') || 'Description'}</label>
+              <label className={labelCls}>{t('admin.crm.campaigns.description')}</label>
               <textarea
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -267,17 +267,17 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
           {/* Target Criteria */}
           <div className="border-t border-gray-100 pt-5">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              {t('admin.crm.campaigns.targetCriteria') || 'Target Lead Criteria'}
+              {t('admin.crm.campaigns.targetCriteria')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>{t('admin.crm.campaigns.leadStatus') || 'Lead Status'}</label>
+                <label className={labelCls}>{t('admin.crm.campaigns.leadStatus')}</label>
                 <select
                   value={form.status}
                   onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
                   className={inputCls}
                 >
-                  <option value="">{t('admin.crm.campaigns.any') || 'Any'}</option>
+                  <option value="">{t('admin.crm.campaigns.any')}</option>
                   <option value="NEW">New</option>
                   <option value="CONTACTED">Contacted</option>
                   <option value="QUALIFIED">Qualified</option>
@@ -286,13 +286,13 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
               </div>
 
               <div>
-                <label className={labelCls}>{t('admin.crm.campaigns.temperature') || 'Temperature'}</label>
+                <label className={labelCls}>{t('admin.crm.campaigns.temperature')}</label>
                 <select
                   value={form.temperature}
                   onChange={e => setForm(f => ({ ...f, temperature: e.target.value }))}
                   className={inputCls}
                 >
-                  <option value="">{t('admin.crm.campaigns.any') || 'Any'}</option>
+                  <option value="">{t('admin.crm.campaigns.any')}</option>
                   <option value="COLD">Cold</option>
                   <option value="WARM">Warm</option>
                   <option value="HOT">Hot</option>
@@ -300,7 +300,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
               </div>
 
               <div>
-                <label className={labelCls}>{t('admin.crm.campaigns.minScore') || 'Min Score (0-100)'}</label>
+                <label className={labelCls}>{t('admin.crm.campaigns.minScore')}</label>
                 <input
                   type="number"
                   min={0}
@@ -313,7 +313,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
               </div>
 
               <div>
-                <label className={labelCls}>{t('admin.crm.campaigns.maxScore') || 'Max Score (0-100)'}</label>
+                <label className={labelCls}>{t('admin.crm.campaigns.maxScore')}</label>
                 <input
                   type="number"
                   min={0}
@@ -326,7 +326,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
               </div>
 
               <div className="sm:col-span-2">
-                <label className={labelCls}>{t('admin.crm.campaigns.tags') || 'Tags (comma-separated)'}</label>
+                <label className={labelCls}>{t('admin.crm.campaigns.tags')}</label>
                 <input
                   type="text"
                   value={form.tags}
@@ -345,16 +345,16 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
               onClick={onClose}
               className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
               {saving
-                ? (t('common.saving') || 'Saving...')
-                : (t('admin.crm.campaigns.create') || 'Create Campaign')}
+                ? (t('common.saving'))
+                : (t('admin.crm.campaigns.create'))}
             </button>
           </div>
         </form>
@@ -419,10 +419,10 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
       if (!json.success) throw new Error(json.error?.message || 'Action failed');
       toast.success(
         action === 'start'
-          ? (t('admin.crm.campaigns.started') || 'Campaign started')
+          ? (t('admin.crm.campaigns.started'))
           : action === 'pause'
-          ? (t('admin.crm.campaigns.paused') || 'Campaign paused')
-          : (t('admin.crm.campaigns.stopped') || 'Campaign stopped')
+          ? (t('admin.crm.campaigns.paused'))
+          : (t('admin.crm.campaigns.stopped'))
       );
       onRefresh();
     } catch (err) {
@@ -483,10 +483,10 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                 onClick={() => handleAction('start')}
                 disabled={actionLoading}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                title={t('admin.crm.campaigns.start') || 'Start'}
+                title={t('admin.crm.campaigns.start')}
               >
                 <Play className="h-3.5 w-3.5" />
-                {t('admin.crm.campaigns.start') || 'Start'}
+                {t('admin.crm.campaigns.start')}
               </button>
             )}
             {campaign.status === 'ACTIVE' && (
@@ -494,10 +494,10 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                 onClick={() => handleAction('pause')}
                 disabled={actionLoading}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50"
-                title={t('admin.crm.campaigns.pause') || 'Pause'}
+                title={t('admin.crm.campaigns.pause')}
               >
                 <Pause className="h-3.5 w-3.5" />
-                {t('admin.crm.campaigns.pause') || 'Pause'}
+                {t('admin.crm.campaigns.pause')}
               </button>
             )}
             {campaign.status === 'PAUSED' && (
@@ -505,10 +505,10 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                 onClick={() => handleAction('start')}
                 disabled={actionLoading}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                title={t('admin.crm.campaigns.resume') || 'Resume'}
+                title={t('admin.crm.campaigns.resume')}
               >
                 <Play className="h-3.5 w-3.5" />
-                {t('admin.crm.campaigns.resume') || 'Resume'}
+                {t('admin.crm.campaigns.resume')}
               </button>
             )}
             {(campaign.status === 'ACTIVE' || campaign.status === 'PAUSED') && (
@@ -516,10 +516,10 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                 onClick={() => handleAction('stop')}
                 disabled={actionLoading}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
-                title={t('admin.crm.campaigns.stop') || 'Stop'}
+                title={t('admin.crm.campaigns.stop')}
               >
                 <Square className="h-3.5 w-3.5" />
-                {t('admin.crm.campaigns.stop') || 'Stop'}
+                {t('admin.crm.campaigns.stop')}
               </button>
             )}
           </div>
@@ -529,19 +529,19 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
         {campaign.totalLeads > 0 && (
           <div className="mt-3 ms-7 grid grid-cols-4 gap-2 text-center">
             <div className="bg-gray-50 rounded-lg px-3 py-1.5">
-              <p className="text-xs text-gray-500">{t('admin.crm.campaigns.totalLeads') || 'Leads'}</p>
+              <p className="text-xs text-gray-500">{t('admin.crm.campaigns.totalLeads')}</p>
               <p className="text-sm font-semibold text-gray-800">{campaign.totalLeads.toLocaleString()}</p>
             </div>
-            <div className="bg-teal-50 rounded-lg px-3 py-1.5">
-              <p className="text-xs text-teal-500">{t('admin.crm.campaigns.contacted') || 'Contacted'}</p>
-              <p className="text-sm font-semibold text-teal-700">{campaign.contacted.toLocaleString()}</p>
+            <div className="bg-indigo-50 rounded-lg px-3 py-1.5">
+              <p className="text-xs text-indigo-500">{t('admin.crm.campaigns.contacted')}</p>
+              <p className="text-sm font-semibold text-indigo-700">{campaign.contacted.toLocaleString()}</p>
             </div>
             <div className="bg-green-50 rounded-lg px-3 py-1.5">
-              <p className="text-xs text-green-500">{t('admin.crm.campaigns.converted') || 'Converted'}</p>
+              <p className="text-xs text-green-500">{t('admin.crm.campaigns.converted')}</p>
               <p className="text-sm font-semibold text-green-700">{campaign.converted.toLocaleString()}</p>
             </div>
             <div className="bg-purple-50 rounded-lg px-3 py-1.5">
-              <p className="text-xs text-purple-500">{t('admin.crm.campaigns.conversionRate') || 'Conv. Rate'}</p>
+              <p className="text-xs text-purple-500">{t('admin.crm.campaigns.conversionRate')}</p>
               <p className="text-sm font-semibold text-purple-700">{campaign.conversionRate}%</p>
             </div>
           </div>
@@ -553,11 +553,11 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
         <div className="border-t border-gray-100 bg-gray-50 p-5">
           {loadingStats ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
             </div>
           ) : !stats ? (
             <p className="text-sm text-gray-400 text-center py-4">
-              {t('admin.crm.campaigns.noStats') || 'No statistics available yet'}
+              {t('admin.crm.campaigns.noStats')}
             </p>
           ) : (
             <div className="space-y-6">
@@ -565,25 +565,25 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <MetricCard
                   icon={<Phone className="h-4 w-4" />}
-                  label={t('admin.crm.campaigns.contactRate') || 'Contact Rate'}
+                  label={t('admin.crm.campaigns.contactRate')}
                   value={`${stats.rates.contactRate}%`}
-                  color="text-teal-600"
+                  color="text-indigo-600"
                 />
                 <MetricCard
                   icon={<Users className="h-4 w-4" />}
-                  label={t('admin.crm.campaigns.connectionRate') || 'Connection Rate'}
+                  label={t('admin.crm.campaigns.connectionRate')}
                   value={`${stats.rates.connectionRate}%`}
                   color="text-green-600"
                 />
                 <MetricCard
                   icon={<TrendingUp className="h-4 w-4" />}
-                  label={t('admin.crm.campaigns.conversionRate') || 'Conversion Rate'}
+                  label={t('admin.crm.campaigns.conversionRate')}
                   value={`${stats.rates.conversionRate}%`}
                   color="text-purple-600"
                 />
                 <MetricCard
                   icon={<BarChart3 className="h-4 w-4" />}
-                  label={t('admin.crm.campaigns.revenue') || 'Revenue'}
+                  label={t('admin.crm.campaigns.revenue')}
                   value={`$${stats.totals.revenue.toFixed(0)}`}
                   color="text-orange-600"
                 />
@@ -593,23 +593,23 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
               {stats.byChannel.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                    {t('admin.crm.campaigns.byChannel') || 'By Channel'}
+                    {t('admin.crm.campaigns.byChannel')}
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-xs text-gray-400 border-b border-gray-200">
                           <th className="pb-1.5 text-start font-medium">
-                            {t('admin.crm.campaigns.channel') || 'Channel'}
+                            {t('admin.crm.campaigns.channel')}
                           </th>
                           <th className="pb-1.5 text-end font-medium">
-                            {t('admin.crm.campaigns.total') || 'Total'}
+                            {t('admin.crm.campaigns.total')}
                           </th>
                           <th className="pb-1.5 text-end font-medium">
-                            {t('admin.crm.campaigns.completed') || 'Completed'}
+                            {t('admin.crm.campaigns.completed')}
                           </th>
                           <th className="pb-1.5 text-end font-medium">
-                            {t('admin.crm.campaigns.rate') || 'Rate'}
+                            {t('admin.crm.campaigns.rate')}
                           </th>
                         </tr>
                       </thead>
@@ -632,7 +632,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
               {stats.dailyTimeline.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                    {t('admin.crm.campaigns.dailyActivity') || 'Daily Activity (last 30 days)'}
+                    {t('admin.crm.campaigns.dailyActivity')}
                   </p>
                   <div className="flex items-end gap-0.5 h-16">
                     {stats.dailyTimeline.slice(-30).map(day => {
@@ -641,7 +641,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                       return (
                         <div
                           key={day.date}
-                          className="flex-1 bg-teal-400 rounded-t hover:bg-teal-500 transition-colors"
+                          className="flex-1 bg-indigo-400 rounded-t hover:bg-indigo-500 transition-colors"
                           style={{ height: `${hPct}%` }}
                           title={`${day.date}: ${day.total} activities (${day.completed} completed, ${day.failed} failed)`}
                         />
@@ -661,14 +661,14 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                   <span>
                     {campaign.startAt
                       ? new Date(campaign.startAt).toLocaleDateString(locale)
-                      : (t('admin.crm.campaigns.noStartDate') || 'No start date')}
+                      : (t('admin.crm.campaigns.noStartDate'))}
                     {campaign.endAt && ` → ${new Date(campaign.endAt).toLocaleDateString(locale)}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>
-                    {t('admin.crm.campaigns.created') || 'Created'}:{' '}
+                    {t('admin.crm.campaigns.created')}:{' '}
                     {new Date(campaign.createdAt).toLocaleDateString(locale)}
                   </span>
                 </div>
@@ -731,7 +731,7 @@ export default function CampaignsPage() {
         setPagination(json.pagination || null);
       }
     } catch {
-      toast.error(t('admin.crm.campaigns.loadError') || 'Failed to load campaigns');
+      toast.error(t('admin.crm.campaigns.loadError'));
     } finally {
       setLoading(false);
     }
@@ -752,19 +752,19 @@ export default function CampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.campaigns.title') || 'Campaign Management'}
+            <BarChart3 className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.campaigns.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.campaigns.subtitle') || 'Create, manage, and monitor outreach campaigns'}
+            {t('admin.crm.campaigns.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.campaigns.new') || 'New Campaign'}
+          {t('admin.crm.campaigns.new')}
         </button>
       </div>
 
@@ -776,17 +776,17 @@ export default function CampaignsPage() {
             type="text"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.crm.campaigns.search') || 'Search campaigns...'}
-            className="w-full ps-9 pe-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder={t('admin.crm.campaigns.search')}
+            className="w-full ps-9 pe-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div className="relative">
           <select
             value={filterStatus}
             onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">{t('admin.crm.campaigns.allStatuses') || 'All Statuses'}</option>
+            <option value="">{t('admin.crm.campaigns.allStatuses')}</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => (
               <option key={k} value={k}>{v.label}</option>
             ))}
@@ -797,9 +797,9 @@ export default function CampaignsPage() {
           <select
             value={filterType}
             onChange={e => { setFilterType(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">{t('admin.crm.campaigns.allTypes') || 'All Types'}</option>
+            <option value="">{t('admin.crm.campaigns.allTypes')}</option>
             {Object.entries(TYPE_CONFIG).map(([k, v]) => (
               <option key={k} value={k}>{v.label}</option>
             ))}
@@ -811,23 +811,23 @@ export default function CampaignsPage() {
       {/* Campaign list */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : campaigns.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.campaigns.empty') || 'No campaigns found'}
+            {t('admin.crm.campaigns.empty')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.campaigns.emptyDesc') || 'Create your first campaign to start reaching leads'}
+            {t('admin.crm.campaigns.emptyDesc')}
           </p>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
-            {t('admin.crm.campaigns.new') || 'New Campaign'}
+            {t('admin.crm.campaigns.new')}
           </button>
         </div>
       ) : (
@@ -842,12 +842,12 @@ export default function CampaignsPage() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between mt-6 text-sm text-gray-500">
           <p>
-            {t('admin.crm.campaigns.showing') || 'Showing'}{' '}
+            {t('admin.crm.campaigns.showing')}{' '}
             {((pagination.page - 1) * pagination.pageSize) + 1}
             {' - '}
             {Math.min(pagination.page * pagination.pageSize, pagination.total)}
             {' '}
-            {t('common.of') || 'of'} {pagination.total}
+            {t('common.of')} {pagination.total}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -855,7 +855,7 @@ export default function CampaignsPage() {
               disabled={!pagination.hasPrev}
               className="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40"
             >
-              {t('common.previous') || 'Previous'}
+              {t('common.previous')}
             </button>
             <span className="px-3 py-1.5 text-gray-700 font-medium">
               {pagination.page} / {pagination.totalPages}
@@ -865,7 +865,7 @@ export default function CampaignsPage() {
               disabled={!pagination.hasNext}
               className="px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40"
             >
-              {t('common.next') || 'Next'}
+              {t('common.next')}
             </button>
           </div>
         </div>

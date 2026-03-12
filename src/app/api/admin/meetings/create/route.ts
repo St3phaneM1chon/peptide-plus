@@ -6,41 +6,36 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createPlatformMeeting } from '@/lib/platform/meeting-creation';
 import { sendMeetingInvitationEmail } from '@/lib/email/meeting-invitation';
 import { SUPPORTED_PLATFORMS, type Platform } from '@/lib/platform/oauth';
 import { logger } from '@/lib/logger';
 
-const VIDEO_PLATFORMS = ['zoom', 'teams', 'google-meet', 'webex'];
+const VIDEO_PLATFORMS = ['zoom', 'teams', 'google-meet', 'webex'] as const;
+
+const createMeetingSchema = z.object({
+  platform: z.enum(VIDEO_PLATFORMS),
+  topic: z.string().min(1).max(500).trim(),
+  startTime: z.string().datetime(),
+  duration: z.number().int().min(5).max(480).optional(),
+  inviteeEmail: z.string().email().max(320).optional(),
+  inviteeName: z.string().max(200).trim().optional(),
+});
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { platform, topic, startTime, duration, inviteeEmail, inviteeName } = body as {
-      platform?: string;
-      topic?: string;
-      startTime?: string;
-      duration?: number;
-      inviteeEmail?: string;
-      inviteeName?: string;
-    };
-
-    if (!platform || !topic || !startTime) {
+    const parsed = createMeetingSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: platform, topic, startTime' },
-        { status: 400 },
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
       );
     }
+    const { platform, topic, startTime, duration, inviteeEmail, inviteeName } = parsed.data;
 
-    if (!VIDEO_PLATFORMS.includes(platform)) {
-      return NextResponse.json(
-        { error: `Invalid platform. Supported: ${VIDEO_PLATFORMS.join(', ')}` },
-        { status: 400 },
-      );
-    }
-
-    // Verify platform is in supported list
     if (!SUPPORTED_PLATFORMS.some((sp) => sp.id === platform)) {
       return NextResponse.json({ error: 'Unsupported platform' }, { status: 400 });
     }

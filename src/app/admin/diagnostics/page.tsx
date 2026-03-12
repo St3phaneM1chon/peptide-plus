@@ -83,7 +83,7 @@ export default function NetworkDiagnosticsPage() {
         <button
           onClick={runDiagnostics}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Test en cours...' : 'Lancer le diagnostic'}
@@ -102,10 +102,10 @@ export default function NetworkDiagnosticsPage() {
 
       {/* Loading */}
       {loading && !data && (
-        <div className="rounded-lg border border-teal-200 bg-teal-50 p-8 text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-3" />
-          <p className="text-teal-700 font-medium">Test en cours...</p>
-          <p className="text-teal-500 text-sm mt-1">DNS, endpoints, vitesse de telechargement (~15-30s)</p>
+        <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-8 text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-3" />
+          <p className="text-indigo-700 font-medium">Test en cours...</p>
+          <p className="text-indigo-500 text-sm mt-1">DNS, endpoints, vitesse de telechargement (~15-30s)</p>
         </div>
       )}
 

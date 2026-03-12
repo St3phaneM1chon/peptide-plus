@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 const smsInboundSchema = z.object({
   data: z.object({
@@ -81,6 +82,28 @@ export async function POST(request: NextRequest) {
     const event = body.data;
     if (!event || event.event_type !== 'message.received') {
       return NextResponse.json({ success: true }); // Acknowledge non-message events
+    }
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    const smsEventId = event.id;
+    if (smsEventId) {
+      try {
+        const redis = await getRedisClient();
+        if (redis) {
+          const idempotencyKey = `webhook:sms-inbound:${smsEventId}`;
+          const alreadyProcessed = await redis.get(idempotencyKey);
+          if (alreadyProcessed) {
+            logger.info('[SMS Inbound] Duplicate event skipped', { eventId: smsEventId });
+            return NextResponse.json({ success: true });
+          }
+          await redis.set(idempotencyKey, '1', 'EX', 86400);
+        }
+      } catch (redisErr) {
+        // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+        logger.debug('[SMS Inbound] Redis idempotency check unavailable, proceeding', {
+          error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+        });
+      }
     }
 
     const payload = event.payload;

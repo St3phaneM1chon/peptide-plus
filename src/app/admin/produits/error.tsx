@@ -43,7 +43,7 @@ export default function ProductsError({
         {/* BUG-074 FIX: Display the actual error message so the admin can diagnose */}
         {error.message && (
           <div className="mt-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-start">
-            <p className="text-xs font-semibold text-red-800 mb-1">{t('admin.errors.errorDetails') || 'Error details'}:</p>
+            <p className="text-xs font-semibold text-red-800 mb-1">{t('admin.errors.errorDetails')}:</p>
             <p className="text-sm text-red-700 font-mono break-all">{error.message}</p>
           </div>
         )}
@@ -57,7 +57,7 @@ export default function ProductsError({
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -68,7 +68,7 @@ export default function ProductsError({
             href="/admin/produits"
             className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors min-h-[44px]"
           >
-            {t('admin.products.title') || 'Products list'}
+            {t('admin.products.title')}
           </Link>
         </div>
       </div>

@@ -299,6 +299,8 @@ export async function POST(request: NextRequest) {
             points: pointsToAward,
             description: `Review for product ${productId}${imageUrls?.length ? ' (with photos)' : ''}`,
             balanceAfter: newBalance,
+            // A8-P2-005 FIX: Non-purchase points expire after 12 months
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             metadata: JSON.stringify({
               reviewId: review.id,
               productId,

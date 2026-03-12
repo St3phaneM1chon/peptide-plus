@@ -14,8 +14,15 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { Product } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'Catalog',
-  description: 'Browse our complete catalog of premium research peptides. Filter by category, type, and price. Lab-tested, 99%+ purity.',
+  title: 'Catalogue',
+  description: 'Parcourez notre catalogue complet de peptides de recherche premium. Filtrez par catégorie, type et prix. Testés en laboratoire, pureté 99 %+.',
+  openGraph: {
+    title: 'Catalogue | BioCycle Peptides',
+    description: 'Catalogue complet de peptides de recherche premium. Testés en laboratoire, pureté 99 %+.',
+    url: 'https://biocyclepeptides.com/catalogue',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 interface CataloguePageProps {

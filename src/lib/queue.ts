@@ -75,6 +75,13 @@ export const QUEUE_NAMES = {
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 
+// FIX A9-P0-001: Only these queues have registered processors in queue-registry.ts.
+// The other 32 queues are cron HTTP routes — NOT BullMQ workers.
+// This prevents creating dead Redis queue instances and makes the admin dashboard honest.
+export const ACTIVE_QUEUE_NAMES = new Set<string>([
+  QUEUE_NAMES.MEDIA_CLEANUP,
+]);
+
 // ---------------------------------------------------------------------------
 // Connection
 // ---------------------------------------------------------------------------
@@ -162,7 +169,8 @@ export function createQueue(name: string): Queue | null {
           count: 1000,        // Keep last 1000 completed jobs max
         },
         removeOnFail: {
-          age: 30 * 24 * 3600, // Keep failed jobs for 30 days
+          count: 1000,          // Keep last 1000 failed jobs (DLQ equivalent)
+          age: 30 * 24 * 3600,  // Keep failed jobs for 30 days
         },
       },
     });
@@ -226,12 +234,30 @@ export function createWorker(
     });
 
     worker.on('failed', (job: Job | undefined, err: Error) => {
-      logger.error('[queue] Job failed', {
-        queue: name,
-        jobId: job?.id,
-        attempt: job?.attemptsMade,
-        error: err.message,
-      });
+      const attemptsMade = job?.attemptsMade ?? 0;
+      const maxAttempts = (job?.opts?.attempts as number) ?? 3;
+      const isDeadLettered = attemptsMade >= maxAttempts;
+
+      if (isDeadLettered) {
+        // All retries exhausted — job moves to "failed" state (DLQ equivalent).
+        // These remain queryable via getQueueStats().failed and the admin dashboard.
+        logger.error('[queue] Job dead-lettered (all retries exhausted)', {
+          queue: name,
+          jobId: job?.id,
+          attempts: attemptsMade,
+          maxAttempts,
+          error: err.message,
+          data: job?.data,
+        });
+      } else {
+        logger.warn('[queue] Job failed (will retry)', {
+          queue: name,
+          jobId: job?.id,
+          attempt: attemptsMade,
+          maxAttempts,
+          error: err.message,
+        });
+      }
     });
 
     worker.on('error', (err: Error) => {
@@ -381,9 +407,13 @@ export async function getQueueStats(name: string): Promise<QueueStats | null> {
 
 /**
  * Get stats for all known queues.
+ * FIX A9-P0-001: Only creates Redis connections for active queues (those with processors).
+ * Pass activeOnly=false to include all 33 queues (for admin overview).
  */
-export async function getAllQueueStats(): Promise<QueueStats[]> {
-  const names = Object.values(QUEUE_NAMES);
+export async function getAllQueueStats(activeOnly = true): Promise<QueueStats[]> {
+  const names = activeOnly
+    ? Array.from(ACTIVE_QUEUE_NAMES)
+    : Object.values(QUEUE_NAMES);
   const results = await Promise.allSettled(
     names.map((name) => getQueueStats(name))
   );

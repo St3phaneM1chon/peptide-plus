@@ -1390,100 +1390,7 @@ a:focus-visible,
   }
 }
 
-/* =====================================================
-   DENSITY MODES (data-density on <html>)
-   ===================================================== */
-
-/* Compact: tighter spacing for power users / data-heavy views */
-[data-density="compact"] {
-  --density-py: 0.25rem;   /* vertical padding */
-  --density-px: 0.5rem;    /* horizontal padding */
-  --density-gap: 0.25rem;  /* gap between elements */
-  --density-text: 0.8125rem; /* 13px */
-  --density-row-h: 2rem;   /* 32px table rows */
-  --density-card-p: 0.75rem;
-}
-
-[data-density="standard"] {
-  --density-py: 0.5rem;
-  --density-px: 0.75rem;
-  --density-gap: 0.5rem;
-  --density-text: 0.875rem; /* 14px */
-  --density-row-h: 2.5rem;  /* 40px */
-  --density-card-p: 1rem;
-}
-
-[data-density="focus"] {
-  --density-py: 0.75rem;
-  --density-px: 1rem;
-  --density-gap: 0.75rem;
-  --density-text: 0.9375rem; /* 15px */
-  --density-row-h: 3rem;     /* 48px */
-  --density-card-p: 1.25rem;
-}
-
-/* Apply density to admin tables */
-.admin-outlook table td,
-.admin-outlook table th {
-  padding: var(--density-py, 0.5rem) var(--density-px, 0.75rem);
-  font-size: var(--density-text, 0.875rem);
-}
-
-.admin-outlook table tr {
-  height: var(--density-row-h, 2.5rem);
-}
-
-/* Apply density to admin cards */
-.admin-outlook .density-card {
-  padding: var(--density-card-p, 1rem);
-}
-
-/* Apply density to admin lists */
-.admin-outlook .density-list > * {
-  gap: var(--density-gap, 0.5rem);
-  padding-top: var(--density-py, 0.5rem);
-  padding-bottom: var(--density-py, 0.5rem);
-  font-size: var(--density-text, 0.875rem);
-}
-
-/* =====================================================
-   OUTLOOK ADMIN LAYOUT
-   ===================================================== */
-
-.admin-outlook {
-  --rail-width: 48px;
-  --folder-width: 260px;
-  --folder-collapsed-width: 0px;
-  --list-width: 380px;
-  --list-min-width: 280px;
-  --topbar-height: 48px;
-  --rail-bg: #115E59;
-  --rail-active: #0D9488;
-  --rail-hover: #0F766E;
-  --selected-bg: #F0FDFA;
-  --selected-border: #5EEAD4;
-  --accent: #0D9488;
-  --border-color: #E2E8F0;
-}
-
-/* Thin scrollbar for admin panels */
-.admin-outlook .outlook-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.admin-outlook .outlook-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
-  border-radius: 3px;
-}
-.admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #94A3B8;
-}
-.admin-outlook .outlook-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
-}
+/* Density modes & admin outlook layout moved to admin/admin.css */
 
 /* =====================================================
    DARK MODE
@@ -1518,17 +1425,6 @@ html.dark :root {
   --error: #F87171;
   --warning: #FBBF24;
   --info: #38BDF8;
-}
-
-/* Admin outlook dark overrides */
-html.dark .admin-outlook {
-  --rail-bg: #042F2E;
-  --rail-active: #2DD4BF;
-  --rail-hover: #134E4A;
-  --selected-bg: #134E4A;
-  --selected-border: #2DD4BF;
-  --accent: #2DD4BF;
-  --border-color: #2E2E32;
 }
 
 /* Global dark mode overrides for Tailwind utility classes that reference
@@ -1606,17 +1502,6 @@ html.dark tr:hover td { background-color: #1F1F23; }
 /* Modals / Overlays */
 html.dark [role="dialog"] { background-color: #1C1C1F; color: #E8E8E8; }
 
-/* Scrollbars */
-html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
-  background-color: #3F3F46;
-}
-html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #52525B;
-}
-html.dark .admin-outlook .outlook-scroll {
-  scrollbar-color: #3F3F46 transparent;
-}
-
 /* Cards & panels */
 html.dark .rounded-xl { border-color: #2E2E32; }
 
@@ -1656,4 +1541,103 @@ html.dark [data-sonner-toaster] [data-sonner-toast] {
   background-color: #1C1C1F !important;
   color: #E8E8E8 !important;
   border-color: #3F3F46 !important;
+}
+
+/* =====================================================
+   RTL (Right-to-Left) SUPPORT
+   Applied when <html dir="rtl"> for Arabic locales
+   (ar, ar-dz, ar-lb, ar-ma)
+   ===================================================== */
+
+/* --- General text alignment flip --- */
+[dir="rtl"] .text-left { text-align: right; }
+[dir="rtl"] .text-right { text-align: left; }
+
+/* --- Flex row reversal for main layout components --- */
+[dir="rtl"] .header__inner { flex-direction: row-reverse; }
+[dir="rtl"] .header__nav { flex-direction: row-reverse; }
+[dir="rtl"] .header__actions { flex-direction: row-reverse; }
+
+/* --- Cart drawer: slide from left in RTL --- */
+[dir="rtl"] .cart-drawer {
+  right: auto;
+  left: 0;
+  transform: translateX(-100%);
+}
+[dir="rtl"] .cart-drawer.open {
+  transform: translateX(0);
+}
+[dir="rtl"] .cart-drawer__header { flex-direction: row-reverse; }
+
+/* --- Cart icon badge: flip to left side in RTL --- */
+[dir="rtl"] .cart-icon__count {
+  right: auto;
+  left: -4px;
+}
+
+/* --- Product card badge: flip to right in RTL --- */
+[dir="rtl"] .product-card__badge {
+  left: auto;
+  right: 12px;
+}
+
+/* --- Product card price: reverse flex for RTL --- */
+[dir="rtl"] .product-card__price { flex-direction: row-reverse; }
+[dir="rtl"] .product-info__price { flex-direction: row-reverse; }
+
+/* --- Cart item layout: reverse flex for RTL --- */
+[dir="rtl"] .cart-item { flex-direction: row-reverse; }
+[dir="rtl"] .cart-item__actions { flex-direction: row-reverse; }
+
+/* --- Cart subtotal line: reverse for RTL --- */
+[dir="rtl"] .cart-drawer__subtotal { flex-direction: row-reverse; }
+
+/* --- Form select: flip dropdown arrow to left in RTL --- */
+[dir="rtl"] .form-select {
+  background-position: left 12px center;
+  padding-right: 16px;
+  padding-left: 40px;
+}
+
+/* --- Legal content: flip list padding --- */
+[dir="rtl"] .legal-content ul {
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+/* --- Slide-in animation: from left in RTL --- */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+[dir="rtl"] .animate-slide-in-right {
+  animation: slide-in-left 0.25s ease-out;
+}
+
+/* --- Margin/padding utility flips for RTL --- */
+[dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .mr-auto { margin-right: 0; margin-left: auto; }
+[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+[dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+[dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+[dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+[dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+[dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+[dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
+[dir="rtl"] .pl-6 { padding-left: 0; padding-right: 1.5rem; }
+[dir="rtl"] .pr-6 { padding-right: 0; padding-left: 1.5rem; }
+
+/* --- Print styles: flip for RTL --- */
+@media print {
+  [dir="rtl"] .print-invoice-container {
+    left: auto !important;
+    right: 0 !important;
+  }
 }

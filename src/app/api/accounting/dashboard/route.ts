@@ -470,4 +470,4 @@ export const GET = withAdminGuard(async (request) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.view' });

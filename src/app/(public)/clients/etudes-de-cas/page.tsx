@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Études de cas | Formations Pro',
-  description: 'Découvrez comment nos clients ont atteint leurs objectifs grâce à nos formations.',
+  title: 'Études de cas',
+  description: 'Découvrez comment nos clients utilisent les peptides de recherche BioCycle Peptides pour atteindre leurs objectifs scientifiques.',
+  openGraph: {
+    title: 'Études de cas | BioCycle Peptides',
+    description: 'Découvrez comment nos clients utilisent les peptides BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/clients/etudes-de-cas',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const caseStudies = [

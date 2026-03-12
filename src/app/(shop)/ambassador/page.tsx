@@ -416,6 +416,7 @@ export default function AmbassadorPage() {
                   type="text"
                   readOnly
                   value={`${process.env.NEXT_PUBLIC_APP_URL || ''}/ref/${session?.user?.name?.replace(/\s+/g, '') || 'unknown'}`}
+                  aria-label={t('ambassador.yourReferralLink') || 'Your referral link'}
                   className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-300 rounded-lg"
                 />
                 <button className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600" aria-label={t('common.copy') || 'Copy referral link'}>

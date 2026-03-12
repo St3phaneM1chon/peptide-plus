@@ -211,29 +211,29 @@ export default function RecurringEntriesPage() {
   const handleRibbonNewEntry = useCallback(() => { handleSave(); }, [handleSave]);
   const handleRibbonDelete = useCallback(async () => {
     const inactiveEntries = entries.filter(e => !e.isActive);
-    if (inactiveEntries.length === 0) { toast.info(t('admin.recurringEntries.noInactiveToDelete') || 'Aucune ecriture recurrente inactive a supprimer. Desactivez d\'abord.'); return; }
-    toast.info(t('admin.recurringEntries.deleteInfo') || `${inactiveEntries.length} ecritures inactives peuvent etre supprimees.`);
+    if (inactiveEntries.length === 0) { toast.info(t('admin.recurringEntries.noInactiveToDelete')); return; }
+    toast.info(t('admin.recurringEntries.deleteInfo'));
   }, [entries, t]);
   const handleRibbonValidate = useCallback(() => { handleProcessDue(); }, [handleProcessDue]);
   const handleRibbonCancel = useCallback(() => {
-    toast.info(t('admin.recurringEntries.cancelInfo') || 'Pour desactiver une ecriture recurrente, utilisez le bouton pause dans la liste.');
+    toast.info(t('admin.recurringEntries.cancelInfo'));
   }, [t]);
   const handleRibbonDuplicate = useCallback(() => {
-    if (entries.length === 0) { toast.info(t('admin.recurringEntries.noEntriesToDuplicate') || 'Aucune ecriture a dupliquer.'); return; }
-    toast.info(t('admin.recurringEntries.duplicateInfo') || 'Selectionnez une ecriture recurrente puis utilisez le formulaire de creation pour la dupliquer.');
+    if (entries.length === 0) { toast.info(t('admin.recurringEntries.noEntriesToDuplicate')); return; }
+    toast.info(t('admin.recurringEntries.duplicateInfo'));
   }, [entries, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
   const handleRibbonExport = useCallback(() => {
-    if (entries.length === 0) { toast.error(t('admin.recurringEntries.noDataToExport') || 'Aucune ecriture recurrente a exporter'); return; }
+    if (entries.length === 0) { toast.error(t('admin.recurringEntries.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.recurringEntries.colName') || 'Nom', t('admin.recurringEntries.colFrequency') || 'Frequence', t('admin.recurringEntries.colAmount') || 'Montant', t('admin.recurringEntries.colNextRun') || 'Prochaine execution', t('admin.recurringEntries.colActive') || 'Active', t('admin.recurringEntries.colTotalRuns') || 'Executions totales'];
+    const headers = [t('admin.recurringEntries.colName'), t('admin.recurringEntries.colFrequency'), t('admin.recurringEntries.colAmount'), t('admin.recurringEntries.colNextRun'), t('admin.recurringEntries.colActive'), t('admin.recurringEntries.colTotalRuns')];
     const rows = entries.map(e => [e.name, e.frequency, String(e.amount), new Date(e.nextRunDate).toISOString().split('T')[0], e.isActive ? 'Oui' : 'Non', String(e.totalRuns)]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `ecritures-recurrentes-${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.recurringEntries.exportSuccess') || `${entries.length} ecritures exportees`);
+    toast.success(t('admin.recurringEntries.exportSuccess'));
   }, [entries, t]);
 
   useRibbonAction('newEntry', handleRibbonNewEntry);

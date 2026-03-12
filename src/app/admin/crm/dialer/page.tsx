@@ -75,7 +75,7 @@ interface SessionStateResponse {
 
 const DISPOSITIONS = [
   { label: 'Sale', value: 'INTERESTED', color: 'bg-green-600', icon: '🎉' },
-  { label: 'Callback', value: 'CALLBACK', color: 'bg-teal-600', icon: '📞' },
+  { label: 'Callback', value: 'CALLBACK', color: 'bg-indigo-600', icon: '📞' },
   { label: 'Not Interested', value: 'NOT_INTERESTED', color: 'bg-gray-500', icon: '👎' },
   { label: 'Voicemail', value: 'VOICEMAIL', color: 'bg-yellow-600', icon: '📧' },
   { label: 'DNC', value: 'DO_NOT_CALL', color: 'bg-red-600', icon: '🚫' },
@@ -418,34 +418,34 @@ export default function PowerDialerPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
           </div>
         ) : !currentLead ? (
           <div className="text-center text-gray-400 py-16">
             <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg">{t('admin.crm.dialer.noLeads') || 'No leads to call'}</p>
-            <p className="text-sm mt-1">{t('admin.crm.dialer.adjustFilters') || 'Adjust filters to load leads'}</p>
+            <p className="text-lg">{t('admin.crm.dialer.noLeads')}</p>
+            <p className="text-sm mt-1">{t('admin.crm.dialer.adjustFilters')}</p>
           </div>
         ) : (
           <div>
             {/* Session banner */}
             {sessionActive && campaignId && (
-              <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-lg px-4 py-2 mb-4">
-                <span className="text-sm text-teal-700 font-medium">
-                  {t('admin.crm.dialer.sessionActive') || 'Session active'}
+              <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2 mb-4">
+                <span className="text-sm text-indigo-700 font-medium">
+                  {t('admin.crm.dialer.sessionActive')}
                 </span>
                 <button
                   onClick={stopSession}
                   disabled={actionInFlight}
                   className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
                 >
-                  {t('admin.crm.dialer.stopSession') || 'Stop session'}
+                  {t('admin.crm.dialer.stopSession')}
                 </button>
               </div>
             )}
 
             {/* Current Lead Card */}
-            <div className="bg-white rounded-xl border-2 border-teal-200 p-6 mb-6">
+            <div className="bg-white rounded-xl border-2 border-indigo-200 p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -493,14 +493,14 @@ export default function PowerDialerPage() {
                       disabled={actionInFlight}
                       className="flex items-center gap-2 px-4 py-3 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
-                      <SkipForward className="h-4 w-4" /> {t('common.skip') || 'Skip'}
+                      <SkipForward className="h-4 w-4" /> {t('common.skip')}
                     </button>
                     <button
                       onClick={startDialing}
                       disabled={actionInFlight}
                       className="flex items-center gap-2 px-8 py-3 text-lg font-semibold text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:opacity-50"
                     >
-                      <Phone className="h-5 w-5" /> {sessionActive ? (t('admin.crm.dialer.dialNext') || 'Dial Next') : (t('admin.crm.dialer.startDialing') || 'Start Dialing')}
+                      <Phone className="h-5 w-5" /> {sessionActive ? (t('admin.crm.dialer.dialNext')) : (t('admin.crm.dialer.startDialing'))}
                     </button>
                   </>
                 )}
@@ -510,14 +510,14 @@ export default function PowerDialerPage() {
                       <Phone className="h-10 w-10 mx-auto" />
                     </div>
                     <p className="text-lg font-medium">
-                      {dialerState === 'dialing' ? (t('admin.crm.dialer.dialing') || 'Dialing...') : (t('admin.crm.dialer.ringing') || 'Ringing...')}
+                      {dialerState === 'dialing' ? (t('admin.crm.dialer.dialing')) : (t('admin.crm.dialer.ringing'))}
                     </p>
                     <button
                       onClick={hangUp}
                       disabled={actionInFlight}
                       className="mt-4 flex items-center gap-2 px-6 py-2 text-white bg-red-600 rounded-lg mx-auto disabled:opacity-50"
                     >
-                      <PhoneOff className="h-4 w-4" /> {t('common.cancel') || 'Cancel'}
+                      <PhoneOff className="h-4 w-4" /> {t('common.cancel')}
                     </button>
                   </div>
                 )}
@@ -531,14 +531,14 @@ export default function PowerDialerPage() {
                       disabled={actionInFlight}
                       className="flex items-center gap-2 px-8 py-3 text-lg text-white bg-red-600 rounded-xl hover:bg-red-700 mx-auto disabled:opacity-50"
                     >
-                      <PhoneOff className="h-5 w-5" /> {t('admin.crm.dialer.endCall') || 'End Call'}
+                      <PhoneOff className="h-5 w-5" /> {t('admin.crm.dialer.endCall')}
                     </button>
                   </div>
                 )}
                 {dialerState === 'wrap-up' && (
                   <div className="w-full">
                     <p className="text-center text-sm text-gray-500 mb-3">
-                      {t('admin.crm.dialer.wrapUp') || 'Wrap-up'} ({wrapUpTimer}s) — {t('admin.crm.dialer.selectDisposition') || 'Select disposition'}:
+                      {t('admin.crm.dialer.wrapUp')} ({wrapUpTimer}s) — {t('admin.crm.dialer.selectDisposition')}:
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {DISPOSITIONS.map(d => (
@@ -556,13 +556,13 @@ export default function PowerDialerPage() {
                 )}
                 {dialerState === 'paused' && (
                   <div className="text-center">
-                    <p className="text-gray-500 text-lg mb-4">{t('admin.crm.dialer.sessionPaused') || 'Session paused'}</p>
+                    <p className="text-gray-500 text-lg mb-4">{t('admin.crm.dialer.sessionPaused')}</p>
                     <button
                       onClick={startDialing}
                       disabled={actionInFlight}
                       className="flex items-center gap-2 px-8 py-3 text-lg font-semibold text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:opacity-50 mx-auto"
                     >
-                      <Phone className="h-5 w-5" /> {t('admin.crm.dialer.resume') || 'Resume'}
+                      <Phone className="h-5 w-5" /> {t('admin.crm.dialer.resume')}
                     </button>
                   </div>
                 )}
@@ -571,7 +571,7 @@ export default function PowerDialerPage() {
 
             {/* Lead Queue Preview */}
             <div className="bg-white rounded-xl border p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.dialer.nextInQueue') || 'Next in Queue'}</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.dialer.nextInQueue')}</h3>
               <div className="space-y-2">
                 {leads.slice(currentIndex + 1, currentIndex + 6).map((lead, i) => (
                   <div key={lead.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 text-sm">
@@ -584,7 +584,7 @@ export default function PowerDialerPage() {
                   </div>
                 ))}
                 {leads.length <= currentIndex + 1 && (
-                  <p className="text-xs text-gray-400 text-center">{t('admin.crm.dialer.endOfList') || 'End of list'}</p>
+                  <p className="text-xs text-gray-400 text-center">{t('admin.crm.dialer.endOfList')}</p>
                 )}
               </div>
             </div>
@@ -597,24 +597,24 @@ export default function PowerDialerPage() {
         {/* Session Stats */}
         <div className="bg-white rounded-lg border p-4 mb-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" /> {t('admin.crm.dialer.sessionStats') || 'Session Stats'}
+            <BarChart3 className="h-4 w-4" /> {t('admin.crm.dialer.sessionStats')}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-900">{sessionStats.calls}</p>
-              <p className="text-xs text-gray-500">{t('admin.crm.calls') || 'Calls'}</p>
+              <p className="text-xs text-gray-500">{t('admin.crm.calls')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600">{sessionStats.connected}</p>
-              <p className="text-xs text-gray-500">{t('admin.crm.dialer.connected') || 'Connected'}</p>
+              <p className="text-xs text-gray-500">{t('admin.crm.dialer.connected')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-purple-600">{sessionStats.conversions}</p>
-              <p className="text-xs text-gray-500">{t('admin.crm.conversions') || 'Conversions'}</p>
+              <p className="text-xs text-gray-500">{t('admin.crm.conversions')}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-teal-600">{formatDuration(sessionStats.totalTalkTime)}</p>
-              <p className="text-xs text-gray-500">{t('admin.crm.dialer.talkTime') || 'Talk Time'}</p>
+              <p className="text-2xl font-bold text-indigo-600">{formatDuration(sessionStats.totalTalkTime)}</p>
+              <p className="text-xs text-gray-500">{t('admin.crm.dialer.talkTime')}</p>
             </div>
           </div>
           {sessionStats.calls > 0 && (
@@ -627,10 +627,10 @@ export default function PowerDialerPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg border p-4 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.filters') || 'Filters'}</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.filters')}</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">{t('common.status') || 'Status'}</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('common.status')}</label>
               <select
                 value={filters.status}
                 onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
@@ -644,7 +644,7 @@ export default function PowerDialerPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">{t('admin.crm.temperature') || 'Temperature'}</label>
+              <label className="block text-xs text-gray-500 mb-1">{t('admin.crm.temperature')}</label>
               <select
                 value={filters.temperature}
                 onChange={e => setFilters(f => ({ ...f, temperature: e.target.value }))}
@@ -665,7 +665,7 @@ export default function PowerDialerPage() {
 
         {/* Settings */}
         <div className="bg-white rounded-lg border p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.settings') || 'Settings'}</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.settings')}</h3>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
@@ -673,7 +673,7 @@ export default function PowerDialerPage() {
               onChange={e => setAutoDialEnabled(e.target.checked)}
               className="rounded"
             />
-            {t('admin.crm.dialer.autoDialNext') || 'Auto-dial next lead'}
+            {t('admin.crm.dialer.autoDialNext')}
           </label>
         </div>
       </div>

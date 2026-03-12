@@ -15,7 +15,7 @@ import { isValidEmail } from '@/lib/validation';
 import { FormError } from '@/components/ui/FormError';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 import { useDiscountCode } from '@/hooks/useDiscountCode';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'dompurify';
 // TODO: Consider lazy-loading the tax calculation module (e.g. dynamic import)
 // to reduce the initial bundle size of the checkout page, since tax calculations
 // are only needed after the user enters their shipping address.
@@ -1583,7 +1583,7 @@ export default function CheckoutPage() {
                     </div>
                     <button
                       onClick={removePromoCode}
-                      aria-label="Remove promo code"
+                      aria-label={t('checkout.aria.removePromoCode')}
                       className="text-green-700 hover:text-green-900"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1599,6 +1599,7 @@ export default function CheckoutPage() {
                         value={promoCode}
                         onChange={(e) => promoActions.setCode(e.target.value.toUpperCase())}
                         placeholder={t('cart.promoCode')}
+                        aria-label={t('cart.promoCode') || 'Promo code'}
                         className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase"
                         onKeyDown={(e) => e.key === 'Enter' && applyPromoCode()}
                       />
@@ -1630,7 +1631,7 @@ export default function CheckoutPage() {
                     </div>
                     <button
                       onClick={removeGiftCard}
-                      aria-label="Remove gift card"
+                      aria-label={t('checkout.aria.removeGiftCard')}
                       className="text-orange-700 hover:text-orange-900"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1646,6 +1647,7 @@ export default function CheckoutPage() {
                         value={giftCardCode}
                         onChange={(e) => giftCardActions.setCode(e.target.value.toUpperCase())}
                         placeholder={t('checkout.placeholderGiftCard')}
+                        aria-label={t('checkout.placeholderGiftCard') || 'Gift card code'}
                         className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase font-mono"
                         maxLength={19}
                         onKeyDown={(e) => e.key === 'Enter' && applyGiftCard()}

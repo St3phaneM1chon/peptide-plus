@@ -88,7 +88,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     logger.error('[admin/permissions] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.manage_permissions' });
 
 // POST /api/admin/permissions - Create group or override
 // FAILLE-004 FIX: Require users.manage_permissions for mutation operations (defense-in-depth)

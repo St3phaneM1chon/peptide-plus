@@ -7,10 +7,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { VideoSessionStatus } from '@prisma/client';
 import { logger } from '@/lib/logger';
+
+const updateSessionSchema = z.object({
+  status: z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
+  recordingImportId: z.string().max(200).optional(),
+  videoId: z.string().max(200).optional(),
+  notes: z.string().max(5000).optional(),
+});
 
 // ---------------------------------------------------------------------------
 // GET - Session Detail
@@ -49,12 +56,14 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }) => {
   try {
     const { id } = params as { id: string };
     const body = await request.json();
-    const { status, recordingImportId, videoId, notes } = body as {
-      status?: string;
-      recordingImportId?: string;
-      videoId?: string;
-      notes?: string;
-    };
+    const parsed = updateSessionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { status, recordingImportId, videoId, notes } = parsed.data;
 
     const existing = await prisma.videoSession.findUnique({ where: { id } });
     if (!existing) {
@@ -65,9 +74,6 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }) => {
     const updateData: any = {};
 
     if (status) {
-      if (!Object.values(VideoSessionStatus).includes(status as VideoSessionStatus)) {
-        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-      }
       updateData.status = status;
 
       if (status === 'IN_PROGRESS' && !existing.startedAt) {

@@ -275,8 +275,8 @@ export default function AvisPage() {
       }
       setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
       toast.success(status === 'APPROVED'
-        ? (t('admin.reviews.approved') || 'Review approved')
-        : (t('admin.reviews.rejected') || 'Review rejected'));
+        ? (t('admin.reviews.approved'))
+        : (t('admin.reviews.rejected')));
     } catch (err) {
       console.error('Error updating review:', err);
       toast.error(t('common.networkError'));
@@ -307,7 +307,7 @@ export default function AvisPage() {
       setReviews(prev => prev.map(r => r.id === id ? { ...r, adminResponse } : r));
       setAdminResponse('');
       setShowResponseModal(false);
-      toast.success(t('admin.reviews.responsePublished') || 'Response published');
+      toast.success(t('admin.reviews.responsePublished'));
     } catch (err) {
       console.error('Error submitting response:', err);
       toast.error(t('common.networkError'));
@@ -425,53 +425,53 @@ export default function AvisPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
-    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst')); return; }
     setAdminResponse(selectedReview.adminResponse || '');
     setShowResponseModal(true);
   }, [selectedReview, t]);
 
   const handleRibbonApprove = useCallback(() => {
-    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst')); return; }
     updateReviewStatus(selectedReview.id, 'APPROVED');
   }, [selectedReview, t]);
 
   const handleRibbonReject = useCallback(() => {
-    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst')); return; }
     updateReviewStatus(selectedReview.id, 'REJECTED');
   }, [selectedReview, t]);
 
   const handleRibbonReportContent = useCallback(() => {
     if (!selectedReview) {
-      toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first');
+      toast.info(t('admin.reviews.selectReviewFirst'));
       return;
     }
     // Reject the review to hide inappropriate content
     if (selectedReview.status !== 'REJECTED') {
       updateReviewStatus(selectedReview.id, 'REJECTED');
-      toast.success(t('admin.reviews.contentReported') || 'Review flagged and hidden from public');
+      toast.success(t('admin.reviews.contentReported'));
     } else {
-      toast.info(t('admin.reviews.alreadyRejected') || 'This review is already rejected');
+      toast.info(t('admin.reviews.alreadyRejected'));
     }
   }, [selectedReview, t]);
 
   const handleRibbonConvertTestimonial = useCallback(() => {
     if (!selectedReview) {
-      toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first');
+      toast.info(t('admin.reviews.selectReviewFirst'));
       return;
     }
     if (selectedReview.rating < 4) {
-      toast.info(t('admin.reviews.lowRatingTestimonial') || 'Only 4-5 star reviews can be used as testimonials');
+      toast.info(t('admin.reviews.lowRatingTestimonial'));
       return;
     }
     // Copy review as testimonial format to clipboard
     const testimonial = `"${selectedReview.content}" - ${selectedReview.userName || 'Anonymous'}, ${selectedReview.rating}/5 stars`;
     navigator.clipboard.writeText(testimonial);
-    toast.success(t('admin.reviews.testimonialCopied') || 'Testimonial copied to clipboard');
+    toast.success(t('admin.reviews.testimonialCopied'));
   }, [selectedReview, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (reviews.length === 0) {
-      toast.info(t('admin.reviews.noReviewsToExport') || 'No reviews to export');
+      toast.info(t('admin.reviews.noReviewsToExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -497,7 +497,7 @@ export default function AvisPage() {
     a.download = `reviews-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [reviews, locale, t]);
 
   useRibbonAction('respond', handleRibbonRespond);
@@ -509,7 +509,7 @@ export default function AvisPage() {
 
   // F090 FIX: Add aria-label to star rating display for screen reader accessibility
   const renderStars = (rating: number) => (
-    <div className="flex gap-0.5" role="img" aria-label={`${rating} ${t('admin.reviews.outOf5Stars') || 'out of 5 stars'}`}>
+    <div className="flex gap-0.5" role="img" aria-label={`${rating} ${t('admin.reviews.outOf5Stars')}`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
@@ -525,7 +525,7 @@ export default function AvisPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -579,14 +579,14 @@ export default function AvisPage() {
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
-        <div className="mx-4 lg:mx-6 mb-2 flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5 flex-shrink-0">
-          <span className="text-sm font-medium text-teal-800">
+        <div className="mx-4 lg:mx-6 mb-2 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5 flex-shrink-0">
+          <span className="text-sm font-medium text-indigo-800">
             {selectedIds.size} review(s) selected
           </span>
           <div className="flex items-center gap-2 ms-auto">
             <button
               onClick={selectAllVisible}
-              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
             >
               Select all visible
             </button>
@@ -661,7 +661,7 @@ export default function AvisPage() {
                           type="checkbox"
                           checked={selectedIds.has(selectedReview.id)}
                           onChange={() => toggleSelectReview(selectedReview.id)}
-                          className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                         />
                         <span className="text-xs text-slate-500">Select</span>
                       </label>
@@ -673,8 +673,8 @@ export default function AvisPage() {
                             icon={ThumbsUp}
                             onClick={() => setConfirmAction({
                               isOpen: true,
-                              title: t('admin.reviews.confirmApproveTitle') || 'Approve this review?',
-                              message: t('admin.reviews.confirmApproveMessage') || 'This review will be visible to all customers on the product page.',
+                              title: t('admin.reviews.confirmApproveTitle'),
+                              message: t('admin.reviews.confirmApproveMessage'),
                               variant: 'info',
                               onConfirm: () => {
                                 updateReviewStatus(selectedReview.id, 'APPROVED');
@@ -692,8 +692,8 @@ export default function AvisPage() {
                             icon={ThumbsDown}
                             onClick={() => setConfirmAction({
                               isOpen: true,
-                              title: t('admin.reviews.confirmRejectTitle') || 'Reject this review?',
-                              message: t('admin.reviews.confirmRejectMessage') || 'This review will be hidden from customers. The author will not be notified.',
+                              title: t('admin.reviews.confirmRejectTitle'),
+                              message: t('admin.reviews.confirmRejectMessage'),
                               variant: 'danger',
                               onConfirm: () => {
                                 updateReviewStatus(selectedReview.id, 'REJECTED');
@@ -715,7 +715,7 @@ export default function AvisPage() {
                           setAdminResponse(selectedReview.adminResponse || '');
                           setShowResponseModal(true);
                         }}
-                        className="text-teal-700 hover:bg-teal-100"
+                        className="text-indigo-700 hover:bg-indigo-100"
                       >
                         {selectedReview.adminResponse ? t('admin.reviews.editResponse') : t('admin.reviews.respond')}
                       </Button>
@@ -795,7 +795,7 @@ export default function AvisPage() {
                               setLightboxIndex(idx);
                               setLightboxOpen(true);
                             }}
-                            className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-teal-400 transition-colors cursor-pointer group"
+                            className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition-colors cursor-pointer group"
                           >
                             <Image
                               src={img}
@@ -818,10 +818,10 @@ export default function AvisPage() {
 
                   {/* Product info */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-2">{t('admin.reviews.productInfo') || 'Produit'}</h4>
+                    <h4 className="font-semibold text-slate-900 mb-2">{t('admin.reviews.productInfo')}</h4>
                     <p className="text-slate-700">{selectedReview.productName}</p>
                     <p className="text-sm text-slate-500 mt-1">
-                      {t('admin.reviews.reviewedOn') || 'Avis laiss\u00e9 le'} {new Date(selectedReview.createdAt).toLocaleDateString(locale)}
+                      {t('admin.reviews.reviewedOn')} {new Date(selectedReview.createdAt).toLocaleDateString(locale)}
                     </p>
                     {selectedReview.userEmail && (
                       <p className="text-sm text-slate-500">{selectedReview.userEmail}</p>
@@ -833,10 +833,10 @@ export default function AvisPage() {
                     <div className="bg-emerald-50 rounded-lg p-4">
                       <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-1.5 mb-2">
                         <ShoppingBag className="w-4 h-4" />
-                        {t('admin.bridges.reviewPurchases') || 'Reviewer Purchases'}
+                        {t('admin.bridges.reviewPurchases')}
                       </h3>
                       <div className={`text-xs px-2 py-1 rounded inline-block mb-2 font-medium ${purchaseBridge.hasPurchased ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {purchaseBridge.hasPurchased ? (t('admin.bridges.verifiedPurchase') || 'Verified purchase') : (t('admin.bridges.notPurchased') || 'Not purchased')}
+                        {purchaseBridge.hasPurchased ? (t('admin.bridges.verifiedPurchase')) : (t('admin.bridges.notPurchased'))}
                       </div>
                       {purchaseBridge.orders && purchaseBridge.orders.length > 0 && (
                         <div className="space-y-1">
@@ -856,7 +856,7 @@ export default function AvisPage() {
                     <div className="bg-amber-50 rounded-lg p-4">
                       <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
                         <Package className="w-4 h-4" />
-                        {t('admin.bridges.reviewProduct') || 'Reviewed Product'}
+                        {t('admin.bridges.reviewProduct')}
                       </h3>
                       <div className="text-sm text-amber-700">{productBridge.product.name}</div>
                       {productBridge.product.sku && <div className="text-xs text-amber-500">SKU: {productBridge.product.sku}</div>}
@@ -870,7 +870,7 @@ export default function AvisPage() {
                     <div className="bg-purple-50 rounded-lg p-4">
                       <h3 className="text-sm font-semibold text-purple-800 flex items-center gap-1.5 mb-2">
                         <Briefcase className="w-4 h-4" />
-                        {t('admin.bridges.reviewCrm') || 'Reviewer CRM'}
+                        {t('admin.bridges.reviewCrm')}
                       </h3>
                       <div className="space-y-1">
                         {crmBridge.deals?.slice(0, 3).map((d) => (
@@ -887,9 +887,9 @@ export default function AvisPage() {
 
                   {/* Existing admin response */}
                   {selectedReview.adminResponse && (
-                    <div className="bg-teal-50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-teal-800 mb-2">{t('admin.reviews.responseBioCycle')}</h4>
-                      <p className="text-sm text-teal-700">{selectedReview.adminResponse}</p>
+                    <div className="bg-indigo-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-indigo-800 mb-2">{t('admin.reviews.responseBioCycle')}</h4>
+                      <p className="text-sm text-indigo-700">{selectedReview.adminResponse}</p>
                     </div>
                   )}
                 </div>
@@ -910,8 +910,8 @@ export default function AvisPage() {
       {totalPages > 1 && (
         <div className="flex-shrink-0 flex items-center justify-between px-4 lg:px-6 py-3 border-t border-slate-200 bg-white">
           <p className="text-sm text-slate-500">
-            {t('common.page') || 'Page'} {currentPage} / {totalPages}
-            {' '}({totalReviews} {t('admin.reviews.totalReviews') || 'avis'})
+            {t('common.page')} {currentPage} / {totalPages}
+            {' '}({totalReviews} {t('admin.reviews.totalReviews')})
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -921,7 +921,7 @@ export default function AvisPage() {
               disabled={currentPage <= 1}
               onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setLoading(true); }}
             >
-              {t('common.previous') || 'Precedent'}
+              {t('common.previous')}
             </Button>
             <Button
               size="sm"
@@ -930,7 +930,7 @@ export default function AvisPage() {
               disabled={currentPage >= totalPages}
               onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setLoading(true); }}
             >
-              {t('common.next') || 'Suivant'}
+              {t('common.next')}
             </Button>
           </div>
         </div>
@@ -990,7 +990,7 @@ export default function AvisPage() {
                         setLightboxIndex(idx);
                         setLightboxOpen(true);
                       }}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 hover:border-teal-400 transition-colors cursor-pointer group"
+                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition-colors cursor-pointer group"
                     >
                       <Image
                         src={img}
@@ -1012,7 +1012,7 @@ export default function AvisPage() {
                   <button
                     key={template.id}
                     onClick={() => setAdminResponse(template.text)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg border border-teal-200 transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
                   >
                     <Copy className="w-3 h-3" />
                     {template.label}
@@ -1030,7 +1030,7 @@ export default function AvisPage() {
               />
               <div className="flex items-center justify-between mt-1">
                 {/* A-057: Keyboard shortcut hint */}
-                <p className="text-xs text-slate-400">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit') || 'to submit'}</p>
+                <p className="text-xs text-slate-400">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit')}</p>
                 <p className={`text-xs ${adminResponse.length > 4800 ? 'text-red-500' : adminResponse.length > 4000 ? 'text-amber-500' : 'text-slate-400'}`}>
                   {adminResponse.length}/5000
                 </p>
@@ -1108,7 +1108,7 @@ export default function AvisPage() {
 
           {/* Keyboard hint */}
           <div className="absolute bottom-4 start-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
-            ESC {t('common.close') || 'close'} {lightboxImages.length > 1 && '| \u2190 \u2192 navigate'}
+            ESC {t('common.close')} {lightboxImages.length > 1 && '| \u2190 \u2192 navigate'}
           </div>
         </div>
       )}

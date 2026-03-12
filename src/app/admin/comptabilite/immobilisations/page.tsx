@@ -302,9 +302,9 @@ export default function ImmobilisationsPage() {
 
   const handleRibbonNewEntry = useCallback(() => { openCreate(); }, []);
   const handleRibbonDelete = useCallback(() => {
-    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDelete') || 'Selectionnez une immobilisation dans le tableau pour la supprimer.'); return; }
-    if (editingAsset.status === 'DISPOSED') { toast.error(t('admin.fixedAssets.alreadyDisposed') || 'Cette immobilisation est deja disposee.'); return; }
-    toast.info(t('admin.fixedAssets.useDisposeAction') || 'Utilisez la fonction "Disposer" pour retirer une immobilisation.');
+    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDelete')); return; }
+    if (editingAsset.status === 'DISPOSED') { toast.error(t('admin.fixedAssets.alreadyDisposed')); return; }
+    toast.info(t('admin.fixedAssets.useDisposeAction'));
   }, [editingAsset, t]);
   const handleRibbonValidate = useCallback(() => {
     const totalCost = assets.reduce((s, a) => s + a.acquisitionCost, 0);
@@ -314,18 +314,18 @@ export default function ImmobilisationsPage() {
   }, [assets, t]);
   const handleRibbonCancel = useCallback(() => {
     setEditingAsset(null);
-    toast.info(t('admin.fixedAssets.selectionCleared') || 'Selection annulee');
+    toast.info(t('admin.fixedAssets.selectionCleared'));
   }, [t]);
   const handleRibbonDuplicate = useCallback(() => {
-    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDuplicate') || 'Selectionnez une immobilisation a dupliquer.'); return; }
+    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDuplicate')); return; }
     openCreate();
     toast.info(t('admin.fixedAssets.duplicateInfo') || `Formulaire ouvert avec les donnees de ${editingAsset.name} comme base.`);
   }, [editingAsset, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
   const handleRibbonExport = useCallback(() => {
-    if (assets.length === 0) { toast.error(t('admin.fixedAssets.noDataToExport') || 'Aucune immobilisation a exporter'); return; }
+    if (assets.length === 0) { toast.error(t('admin.fixedAssets.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.fixedAssets.colName') || 'Nom', t('admin.fixedAssets.colAssetNumber') || 'Numero', t('admin.fixedAssets.colCcaClass') || 'Classe CCA', t('admin.fixedAssets.colAcquisitionDate') || 'Date acquisition', t('admin.fixedAssets.colAcquisitionCost') || 'Cout acquisition', t('admin.fixedAssets.colBookValue') || 'Valeur comptable', t('admin.fixedAssets.colDepreciation') || 'Amortissement cumule', t('admin.fixedAssets.colStatus') || 'Statut'];
+    const headers = [t('admin.fixedAssets.colName'), t('admin.fixedAssets.colAssetNumber'), t('admin.fixedAssets.colCcaClass'), t('admin.fixedAssets.colAcquisitionDate'), t('admin.fixedAssets.colAcquisitionCost'), t('admin.fixedAssets.colBookValue'), t('admin.fixedAssets.colDepreciation'), t('admin.fixedAssets.colStatus')];
     const rows = assets.map(a => [a.name, a.assetNumber, String(a.ccaClass), a.acquisitionDate, String(a.acquisitionCost), String(a.currentBookValue), String(a.accumulatedDepreciation), a.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -678,7 +678,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.ccaClass}
                 onChange={(e) => handleCCAClassChange(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.selectClass')}</option>
                 {CCA_CLASSES.map((c) => (
@@ -696,7 +696,7 @@ export default function ImmobilisationsPage() {
                 <select
                   value={form.depreciationMethod}
                   onChange={(e) => setForm((f) => ({ ...f, depreciationMethod: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                 >
                   <option value="DECLINING_BALANCE">{t('admin.accounting.assets.methodDeclining')}</option>
                   <option value="STRAIGHT_LINE">{t('admin.accounting.assets.methodStraight')}</option>
@@ -744,7 +744,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.assetAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, assetAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -754,7 +754,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.depreciationAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, depreciationAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -764,7 +764,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.expenseAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, expenseAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}

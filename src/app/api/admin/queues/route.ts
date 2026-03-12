@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { getAllQueueStats, QUEUE_NAMES } from '@/lib/queue';
+import { getAllQueueStats, QUEUE_NAMES, ACTIVE_QUEUE_NAMES } from '@/lib/queue';
 import { isRedisAvailable } from '@/lib/redis';
 import { logger } from '@/lib/logger';
 
@@ -26,12 +26,16 @@ export const GET = withAdminGuard(async () => {
       });
     }
 
-    const stats = await getAllQueueStats();
+    // FIX A9-P0-001: Only query active queues by default (those with processors)
+    // to avoid creating dead Redis queue instances
+    const stats = await getAllQueueStats(true);
 
     // Compute aggregate summary
+    const allQueueNames = Object.values(QUEUE_NAMES);
     const summary = {
-      totalQueues: Object.keys(QUEUE_NAMES).length,
-      activeQueues: stats.length,
+      totalQueues: allQueueNames.length,
+      activeQueues: ACTIVE_QUEUE_NAMES.size,
+      httpCronQueues: allQueueNames.length - ACTIVE_QUEUE_NAMES.size,
       totalWaiting: stats.reduce((s, q) => s + q.waiting, 0),
       totalActive: stats.reduce((s, q) => s + q.active, 0),
       totalCompleted: stats.reduce((s, q) => s + q.completed, 0),
@@ -43,6 +47,11 @@ export const GET = withAdminGuard(async () => {
       available: true,
       summary,
       queues: stats,
+      // List all queue names with their type for admin reference
+      allQueues: allQueueNames.map((name) => ({
+        name,
+        type: ACTIVE_QUEUE_NAMES.has(name) ? 'bullmq-worker' : 'http-cron',
+      })),
     });
   } catch (error) {
     logger.error('[admin/queues] Failed to get queue stats', {

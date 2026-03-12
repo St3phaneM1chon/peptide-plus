@@ -107,7 +107,7 @@ export function withUserGuard(
   handler: UserHandler,
   options?: UserGuardOptions
 ) {
-  return async (request: NextRequest, routeContext?: { params?: Promise<Record<string, string>> }): Promise<NextResponse> => {
+  return async (request: NextRequest, routeContext: { params: Promise<Record<string, string>> }): Promise<NextResponse> => {
     try {
       // ---------------------------------------------------------------
       // 1. Authentication
@@ -165,7 +165,7 @@ export function withUserGuard(
       // ---------------------------------------------------------------
       let params: Record<string, string> | undefined;
       if (routeContext?.params) {
-        params = await routeContext.params;
+        try { params = await routeContext.params; } catch { /* no params */ }
       }
 
       const response = await handler(request, { session, params });

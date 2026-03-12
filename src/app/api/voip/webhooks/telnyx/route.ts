@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 import { handleCallEvent } from '@/lib/voip/call-control';
 import { WebhookDispatcher } from '@/lib/voip/webhook-dispatcher';
 
@@ -127,8 +128,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    const { event_type, payload } = event.data;
+    const { event_type, id: telnyxEventId, payload } = event.data;
     const callControlId = payload.call_control_id;
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    if (telnyxEventId) {
+      try {
+        const redis = await getRedisClient();
+        if (redis) {
+          const idempotencyKey = `webhook:telnyx:${telnyxEventId}`;
+          const alreadyProcessed = await redis.get(idempotencyKey);
+          if (alreadyProcessed) {
+            logger.info('[Telnyx Webhook] Duplicate event skipped', { eventId: telnyxEventId, type: event_type });
+            return NextResponse.json({ status: 'already_processed' });
+          }
+          await redis.set(idempotencyKey, '1', 'EX', 86400);
+        }
+      } catch (redisErr) {
+        // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+        logger.debug('[Telnyx Webhook] Redis idempotency check unavailable, proceeding', {
+          error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+        });
+      }
+    }
 
     logger.info('[Telnyx Webhook] Event received', {
       type: event_type,

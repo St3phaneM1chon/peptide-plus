@@ -2,22 +2,28 @@ export const dynamic = 'force-dynamic';
 
 // SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+
+const aiDescribeSchema = z.object({
+  productName: z.string().min(1, 'Product name is required').max(300).trim(),
+  category: z.string().max(200).trim().optional(),
+  attributes: z.record(z.string().max(500)).optional(),
+  language: z.enum(['fr', 'en']).default('fr'),
+});
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { productName, category, attributes, language = 'fr' } = body as {
-      productName: string;
-      category?: string;
-      attributes?: Record<string, string>;
-      language?: string;
-    };
-
-    if (!productName) {
-      return NextResponse.json({ error: 'Nom du produit requis' }, { status: 400 });
+    const parsed = aiDescribeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { productName, category, attributes, language } = parsed.data;
 
     // Generate description using templates (no external API dependency)
     const attrList = attributes ? Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(', ') : '';

@@ -229,7 +229,7 @@ export default function ProspectListsPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
             {t('admin.crmLists.newList')}
@@ -246,7 +246,7 @@ export default function ProspectListsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.crmLists.searchQuery')}
-            className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-teal-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           />
         </div>
         <select
@@ -378,7 +378,7 @@ export default function ProspectListsPage() {
                 <input
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   placeholder={t('admin.crmLists.name')}
                   autoFocus
                 />
@@ -388,7 +388,7 @@ export default function ProspectListsPage() {
                 <textarea
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   rows={3}
                 />
               </div>
@@ -412,7 +412,7 @@ export default function ProspectListsPage() {
               <button
                 onClick={handleCreate}
                 disabled={creating || !newName.trim()}
-                className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {creating ? '...' : t('admin.crmLists.newList')}
               </button>
@@ -460,7 +460,7 @@ export default function ProspectListsPage() {
               <button
                 onClick={handleCsvImport}
                 disabled={importing || !csvFile || !csvListId}
-                className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {importing ? '...' : t('admin.crmLists.importCSV')}
               </button>

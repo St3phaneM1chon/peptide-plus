@@ -1,11 +1,17 @@
 /**
  * I18N CLIENT
  * Hooks et contexte pour la traduction côté client
+ *
+ * PERF: The root layout passes only essential namespaces (~23KB) via RSC props.
+ * This provider lazily loads the FULL locale JSON on the client via dynamic
+ * import(), so the 540-686KB payload is never serialized through RSC.
+ * The t() function works immediately with essential keys; remaining keys
+ * resolve once the full locale finishes loading (typically <200ms).
  */
 
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { type Locale, defaultLocale, locales, localeNames, localeFlags, localeDirections } from './config';
 
@@ -26,15 +32,91 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
+// ---------------------------------------------------------------------------
+// Module-level cache for full locale files (shared across mounts/re-renders)
+// ---------------------------------------------------------------------------
+const fullLocaleCache = new Map<string, Messages>();
+
+/**
+ * Dynamically import the FULL locale JSON.
+ * Next.js code-splits each locale into its own chunk.
+ */
+async function loadFullLocale(locale: string): Promise<Messages> {
+  if (fullLocaleCache.has(locale)) {
+    return fullLocaleCache.get(locale)!;
+  }
+  try {
+    const mod = await import(`@/i18n/locales/${locale}.json`);
+    const msgs: Messages = mod.default ?? mod;
+    fullLocaleCache.set(locale, msgs);
+    return msgs;
+  } catch {
+    // Fallback: try English
+    if (locale !== 'en') {
+      return loadFullLocale('en');
+    }
+    return {};
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Deep merge: overlay full locale on top of essential (server) messages.
+// This ensures any key present in either source is available.
+// ---------------------------------------------------------------------------
+function deepMerge(base: Messages, overlay: Messages): Messages {
+  const result: Messages = { ...base };
+  for (const key of Object.keys(overlay)) {
+    const baseVal = base[key];
+    const overVal = overlay[key];
+    if (
+      baseVal && overVal &&
+      typeof baseVal === 'object' && !Array.isArray(baseVal) &&
+      typeof overVal === 'object' && !Array.isArray(overVal)
+    ) {
+      result[key] = deepMerge(baseVal as Messages, overVal as Messages);
+    } else {
+      result[key] = overVal;
+    }
+  }
+  return result;
+}
+
 interface I18nProviderProps {
   children: ReactNode;
   locale: Locale;
   messages: Messages;
 }
 
-export function I18nProvider({ children, locale: initialLocale, messages }: I18nProviderProps) {
+export function I18nProvider({ children, locale: initialLocale, messages: serverMessages }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
+  // Start with the essential (server-provided) messages; full locale merges in later
+  const [messages, setMessages] = useState<Messages>(serverMessages);
+  const latestLocaleRef = useRef<string>(initialLocale);
   usePathname(); // For router updates
+
+  // ------------------------------------------------------------------
+  // PERF: Lazily load the FULL locale JSON on mount (client-side only).
+  // The server only sends essential namespaces (~23KB). This dynamic
+  // import loads the remaining ~500KB as a separate JS chunk, avoiding
+  // the RSC serialization cost entirely.
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    const currentLocale = locale;
+    latestLocaleRef.current = currentLocale;
+
+    // If we already have the full locale cached, merge immediately
+    if (fullLocaleCache.has(currentLocale)) {
+      setMessages(deepMerge(serverMessages, fullLocaleCache.get(currentLocale)!));
+      return;
+    }
+
+    // Load asynchronously
+    loadFullLocale(currentLocale).then((full) => {
+      if (latestLocaleRef.current === currentLocale) {
+        setMessages(deepMerge(serverMessages, full));
+      }
+    });
+  }, [locale, serverMessages]);
 
   // Charger la locale sauvegardée
   useEffect(() => {
@@ -55,7 +137,7 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
 
     // Sauvegarder la préférence dans localStorage
     localStorage.setItem('locale', newLocale);
-    
+
     // Sauvegarder dans un cookie pour que le serveur le détecte
     document.cookie = `locale=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
 
@@ -84,13 +166,12 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     for (const k of keys) {
       value = (value as Record<string, unknown>)?.[k];
       if (value === undefined) {
-        console.warn(`Translation key not found: ${key}`);
+        // Don't warn during initial load — key may arrive with full locale
         return key;
       }
     }
 
     if (typeof value !== 'string') {
-      console.warn(`Translation key is not a string: ${key}`);
       return key;
     }
 

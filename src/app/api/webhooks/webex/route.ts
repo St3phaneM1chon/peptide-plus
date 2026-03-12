@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateWebexSignature, handleWebexWebhook } from '@/lib/platform/webhook-handlers';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = JSON.parse(rawBody);
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    // Webex webhooks include an `id` field in the payload
+    const webexEventId = body.id || body.actorId;
+    if (webexEventId) {
+      try {
+        const redis = await getRedisClient();
+        if (redis) {
+          const idempotencyKey = `webhook:webex:${webexEventId}`;
+          const alreadyProcessed = await redis.get(idempotencyKey);
+          if (alreadyProcessed) {
+            logger.info('[Webhook] Webex duplicate event skipped', { eventId: webexEventId });
+            return NextResponse.json({ status: 'already_processed' });
+          }
+          await redis.set(idempotencyKey, '1', 'EX', 86400);
+        }
+      } catch (redisErr) {
+        // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+        logger.debug('[Webhook] Webex Redis idempotency check unavailable, proceeding', {
+          error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+        });
+      }
+    }
+
     const result = await handleWebexWebhook(body);
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {

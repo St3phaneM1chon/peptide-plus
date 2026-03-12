@@ -215,22 +215,37 @@ export async function syncInboundEmails(): Promise<{ synced: number; errors: num
         data: { lastMessageAt: email.date, status: 'OPEN' },
       });
 
-      // Create CRM activity if linked to a lead
+      // Create CRM activity if linked to a lead (with A9-P2-002 dedup check)
       if (leadId) {
-        await prisma.crmActivity.create({
-          data: {
-            type: 'EMAIL',
-            title: `Inbound email: ${email.subject || '(no subject)'}`,
-            description: email.body.slice(0, 500),
+        const existingActivity = await prisma.crmActivity.findFirst({
+          where: {
             leadId,
+            type: 'EMAIL',
             metadata: {
-              direction: 'inbound',
-              from: email.from,
-              subject: email.subject,
-              conversationId: conversation.id,
+              path: ['messageId'],
+              equals: email.messageId,
             },
           },
+          select: { id: true },
         });
+
+        if (!existingActivity) {
+          await prisma.crmActivity.create({
+            data: {
+              type: 'EMAIL',
+              title: `Inbound email: ${email.subject || '(no subject)'}`,
+              description: email.body.slice(0, 500),
+              leadId,
+              metadata: {
+                direction: 'inbound',
+                from: email.from,
+                subject: email.subject,
+                messageId: email.messageId,
+                conversationId: conversation.id,
+              },
+            },
+          });
+        }
       }
 
       synced++;

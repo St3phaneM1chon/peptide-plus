@@ -16,11 +16,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
+
+const dealStatsActionSchema = z.object({
+  action: z.enum(['take_snapshot', 'schedule_snapshot']),
+  name: z.string().max(200).optional(),
+  entities: z.array(z.string()).optional(),
+  frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Metric Handlers
@@ -472,23 +480,31 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { action } = body;
+    const parsed = dealStatsActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError('Invalid data', ErrorCode.VALIDATION_ERROR, {
+        status: 400,
+        details: parsed.error.errors,
+        request,
+      });
+    }
+    const { action, name, entities, frequency } = parsed.data;
 
     switch (action) {
       case 'take_snapshot':
         // No CrmSnapshot model yet — acknowledge but no-op
         return apiSuccess({
           id: `snap_${Date.now()}`,
-          name: body.name || 'Manual Snapshot',
-          entities: body.entities || [],
+          name: name || 'Manual Snapshot',
+          entities: entities || [],
           takenAt: new Date().toISOString(),
           message: 'Snapshot feature requires CrmSnapshot model — coming soon',
         }, { status: 201, request });
 
       case 'schedule_snapshot':
         return apiSuccess({
-          frequency: body.frequency || 'daily',
-          entities: body.entities || [],
+          frequency: frequency || 'daily',
+          entities: entities || [],
           message: 'Snapshot scheduling requires CrmSnapshot model — coming soon',
         }, { request });
 

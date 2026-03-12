@@ -2,19 +2,28 @@ export const dynamic = 'force-dynamic';
 
 // SEC-FIX: Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { generateInvoiceHTML } from '@/lib/pdf-generator';
 import { logger } from '@/lib/logger';
 
+const printBatchSchema = z.object({
+  orderIds: z.array(z.string()).min(1).max(50),
+  type: z.enum(['invoice', 'packing_slip']).optional().default('invoice'),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { orderIds, type = 'invoice' } = body as { orderIds: string[]; type?: 'invoice' | 'packing_slip' };
-
-    if (!Array.isArray(orderIds) || orderIds.length === 0 || orderIds.length > 50) {
-      return NextResponse.json({ error: 'Selectionnez entre 1 et 50 commandes' }, { status: 400 });
+    const parsed = printBatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
+    const { orderIds, type } = parsed.data;
 
     const orders = await prisma.order.findMany({
       where: { id: { in: orderIds } },

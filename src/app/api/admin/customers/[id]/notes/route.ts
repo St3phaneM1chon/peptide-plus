@@ -1,10 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 // H5/I-CRM-5: Customer Notes API
+
+const createNoteSchema = z.object({
+  content: z.string().min(1, 'Content is required').max(5000).trim(),
+});
 
 // GET: List notes for a customer
 export const GET = withAdminGuard(async (
@@ -26,11 +31,15 @@ export const POST = withAdminGuard(async (
   { params, session }: { params: Promise<{ id: string }>; session: { user: { id: string } } }
 ) => {
   const { id } = await params;
-  const { content } = await request.json();
-
-  if (!content || typeof content !== 'string') {
-    return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+  const body = await request.json();
+  const parsed = createNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
+  const { content } = parsed.data;
 
   const note = await prisma.customerNote.create({
     data: {

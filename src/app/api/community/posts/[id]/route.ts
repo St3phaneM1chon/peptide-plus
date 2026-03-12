@@ -123,12 +123,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
       authorName: post.author.name || 'Anonymous',
       authorAvatar: post.author.image,
       authorRole: post.author.role,
-      category: {
+      category: post.category ? {
         id: post.category.id,
         name: post.category.name,
         slug: post.category.slug,
         icon: post.category.icon,
-      },
+      } : null,
       upvotes: post.upvotes,
       downvotes: post.downvotes,
       viewCount: post.viewCount + 1, // Include the current view

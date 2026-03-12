@@ -21,6 +21,7 @@ import {
   Star,
   Calculator,
   Video,
+  Route,
 } from 'lucide-react';
 import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
 
@@ -170,7 +171,7 @@ export default function DealDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
       </div>
     );
   }
@@ -179,7 +180,7 @@ export default function DealDetailPage() {
     return (
       <div className="p-8 text-center text-gray-500">
         <p>Deal not found</p>
-        <button onClick={() => router.push('/admin/crm/pipeline')} className="mt-4 text-teal-600 hover:underline">
+        <button onClick={() => router.push('/admin/crm/pipeline')} className="mt-4 text-indigo-600 hover:underline">
           Back to Pipeline
         </button>
       </div>
@@ -217,14 +218,14 @@ export default function DealDetailPage() {
         <div className="flex gap-2">
           {deal.contact?.phone && (
             <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-50 text-green-700 rounded-md hover:bg-green-100">
-              <Phone className="h-4 w-4" /> {t('admin.crm.call') || 'Call'}
+              <Phone className="h-4 w-4" /> {t('admin.crm.call')}
             </button>
           )}
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-50 text-teal-700 rounded-md hover:bg-teal-100">
-            <Mail className="h-4 w-4" /> {t('admin.crm.sendEmail') || 'Email'}
+          <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100">
+            <Mail className="h-4 w-4" /> {t('admin.crm.sendEmail')}
           </button>
           <button className="flex items-center gap-1.5 px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
-            <ClipboardList className="h-4 w-4" /> {t('admin.crm.addTask') || 'Task'}
+            <ClipboardList className="h-4 w-4" /> {t('admin.crm.addTask')}
           </button>
         </div>
       </div>
@@ -271,11 +272,11 @@ export default function DealDetailPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab
-                      ? 'border-teal-500 text-teal-600'
+                      ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {tab === 'timeline' ? t('admin.crm.timeline') || 'Timeline' : tab === 'tasks' ? t('admin.crm.tasks') || 'Tasks' : t('admin.crm.notes') || 'Notes'}
+                  {tab === 'timeline' ? t('admin.crm.timeline') : tab === 'tasks' ? t('admin.crm.tasks') : t('admin.crm.notes')}
                 </button>
               ))}
             </div>
@@ -298,7 +299,7 @@ export default function DealDetailPage() {
                   {deal.tasks.map((task) => (
                     <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                       <div className={`w-2 h-2 rounded-full ${
-                        task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-teal-500'
+                        task.status === 'COMPLETED' ? 'bg-green-500' : task.priority === 'URGENT' ? 'bg-red-500' : task.priority === 'HIGH' ? 'bg-orange-500' : 'bg-indigo-500'
                       }`} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${task.status === 'COMPLETED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>{task.title}</p>
@@ -309,7 +310,7 @@ export default function DealDetailPage() {
                         </div>
                       </div>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : task.status === 'IN_PROGRESS' ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
+                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : task.status === 'IN_PROGRESS' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {task.status}
                       </span>
@@ -339,7 +340,16 @@ export default function DealDetailPage() {
 
           {/* Stage History */}
           <div className="bg-white rounded-lg border p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.stageHistory') || 'Stage History'}</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.stageHistory')}</h3>
+              <Link
+                href={`/admin/crm/deal-journey?deal=${dealId}`}
+                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                <Route className="h-3.5 w-3.5" />
+                {t('admin.crm.viewFullJourney')}
+              </Link>
+            </div>
             <div className="space-y-3">
               {deal.stageHistory.map((entry) => (
                 <div key={entry.id} className="flex items-center gap-3 text-sm">
@@ -377,34 +387,34 @@ export default function DealDetailPage() {
         <div className="space-y-6">
           {/* Deal Details Card */}
           <div className="bg-white rounded-lg border p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.dealDetails') || 'Details'}</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.dealDetails')}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">{t('admin.crm.pipeline') || 'Pipeline'}</span>
+                <span className="text-gray-500">{t('admin.crm.pipeline')}</span>
                 <span className="text-gray-900">{deal.pipeline.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">{t('admin.crm.probability') || 'Probability'}</span>
+                <span className="text-gray-500">{t('admin.crm.probability')}</span>
                 <span className="text-gray-900">{Math.round(deal.stage.probability * 100)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">{t('admin.crm.weightedValue') || 'Weighted'}</span>
+                <span className="text-gray-500">{t('admin.crm.weightedValue')}</span>
                 <span className="text-green-700 font-medium">{fmt(deal.value * deal.stage.probability)}</span>
               </div>
               {deal.expectedCloseDate && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.expectedClose') || 'Expected Close'}</span>
+                  <span className="text-gray-500">{t('admin.crm.expectedClose')}</span>
                   <span className="text-gray-900">{new Date(deal.expectedCloseDate).toLocaleDateString(locale)}</span>
                 </div>
               )}
               {deal.actualCloseDate && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.closedDate') || 'Closed'}</span>
+                  <span className="text-gray-500">{t('admin.crm.closedDate')}</span>
                   <span className="text-gray-900">{new Date(deal.actualCloseDate).toLocaleDateString(locale)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-500">{t('common.createdAt') || 'Created'}</span>
+                <span className="text-gray-500">{t('common.createdAt')}</span>
                 <span className="text-gray-900">{new Date(deal.createdAt).toLocaleDateString(locale)}</span>
               </div>
             </div>
@@ -413,7 +423,7 @@ export default function DealDetailPage() {
           {/* Contact Card */}
           {(deal.contact || deal.lead) && (
             <div className="bg-white rounded-lg border p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.contact') || 'Contact'}</h3>
+              <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.contact')}</h3>
               <div className="space-y-2 text-sm">
                 <p className="font-medium text-gray-900">{deal.contact?.name || deal.lead?.contactName}</p>
                 {(deal.contact?.email || deal.lead?.email) && (
@@ -437,21 +447,21 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <ShoppingCart className="h-4 w-4" />
-                {t('admin.crm.purchaseHistory') || 'Purchase History'}
+                {t('admin.crm.purchaseHistory')}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.totalOrders') || 'Total Orders'}</span>
+                  <span className="text-gray-500">{t('admin.crm.totalOrders')}</span>
                   <span className="font-medium text-gray-900">{deal.purchaseHistory.totalOrders}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.totalSpent') || 'Total Spent'}</span>
+                  <span className="text-gray-500">{t('admin.crm.totalSpent')}</span>
                   <span className="font-medium text-green-700">{fmt(deal.purchaseHistory.totalSpent)}</span>
                 </div>
               </div>
               {deal.purchaseHistory.recentOrders.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentOrders') || 'Recent Orders'}</p>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentOrders')}</p>
                   <div className="space-y-1.5">
                     {deal.purchaseHistory.recentOrders.map((order) => (
                       <Link
@@ -469,10 +479,10 @@ export default function DealDetailPage() {
               {deal.contact && (
                 <Link
                   href={`/admin/customers/${deal.contact.id}`}
-                  className="flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-800 pt-1"
+                  className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 pt-1"
                 >
                   <ExternalLink className="h-3 w-3" />
-                  {t('admin.crm.viewFullProfile') || 'View full customer profile'}
+                  {t('admin.crm.viewFullProfile')}
                 </Link>
               )}
             </div>
@@ -483,15 +493,15 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <PhoneCall className="h-4 w-4" />
-                {t('admin.crm.callHistory') || 'Call History'}
+                {t('admin.crm.callHistory')}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.totalCalls') || 'Total Calls'}</span>
+                  <span className="text-gray-500">{t('admin.crm.totalCalls')}</span>
                   <span className="font-medium text-gray-900">{deal.callHistory.totalCalls}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.crm.totalDuration') || 'Total Duration'}</span>
+                  <span className="text-gray-500">{t('admin.crm.totalDuration')}</span>
                   <span className="font-medium text-gray-900">
                     {Math.floor(deal.callHistory.totalDuration / 60)}m {deal.callHistory.totalDuration % 60}s
                   </span>
@@ -499,7 +509,7 @@ export default function DealDetailPage() {
               </div>
               {deal.callHistory.recentCalls.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentCalls') || 'Recent Calls'}</p>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentCalls')}</p>
                   <div className="space-y-1.5">
                     {deal.callHistory.recentCalls.map((call) => (
                       <div
@@ -507,7 +517,7 @@ export default function DealDetailPage() {
                         className="flex items-center justify-between text-xs p-2 rounded-md bg-gray-50"
                       >
                         <span className={`px-1.5 py-0.5 rounded ${
-                          call.direction === 'INBOUND' ? 'bg-teal-100 text-teal-700' : 'bg-green-100 text-green-700'
+                          call.direction === 'INBOUND' ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'
                         }`}>{call.direction}</span>
                         <span className="text-gray-500">{Math.floor(call.duration / 60)}m {call.duration % 60}s</span>
                         <span className="text-gray-400">{new Date(call.startedAt).toLocaleDateString(locale)}</span>
@@ -524,15 +534,15 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Inbox className="h-4 w-4" />
-                {t('admin.crm.emailHistory') || 'Email History'}
+                {t('admin.crm.emailHistory')}
               </h3>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">{t('admin.crm.totalEmails') || 'Total Emails'}</span>
+                <span className="text-gray-500">{t('admin.crm.totalEmails')}</span>
                 <span className="font-medium text-gray-900">{deal.emailHistory.totalSent}</span>
               </div>
               {deal.emailHistory.recentEmails.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentEmails') || 'Recent Emails'}</p>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.crm.recentEmails')}</p>
                   <div className="space-y-1.5">
                     {deal.emailHistory.recentEmails.map((email) => (
                       <div
@@ -543,7 +553,7 @@ export default function DealDetailPage() {
                         <div className="flex items-center gap-2 mt-0.5 text-gray-400">
                           <span className={`px-1 py-0.5 rounded ${
                             email.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                            email.status === 'opened' ? 'bg-teal-100 text-teal-700' :
+                            email.status === 'opened' ? 'bg-indigo-100 text-indigo-700' :
                             'bg-gray-100 text-gray-600'
                           }`}>{email.status}</span>
                           {email.sentAt && <span>{new Date(email.sentAt).toLocaleDateString(locale)}</span>}
@@ -561,15 +571,15 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Star className="h-4 w-4" />
-                {t('admin.crm.loyaltyInfo') || 'Loyalty'}
+                {t('admin.crm.loyaltyInfo')}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.orders.loyalty.currentTier') || 'Tier'}</span>
+                  <span className="text-gray-500">{t('admin.orders.loyalty.currentTier')}</span>
                   <span className="font-medium text-purple-700">{deal.loyaltyInfo.currentTier}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.orders.loyalty.pointsEarned') || 'Points'}</span>
+                  <span className="text-gray-500">{t('admin.orders.loyalty.pointsEarned')}</span>
                   <span className="font-medium text-gray-900">{deal.loyaltyInfo.currentPoints.toLocaleString()}</span>
                 </div>
               </div>
@@ -581,27 +591,27 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Calculator className="h-4 w-4" />
-                {t('admin.bridges.accountingInfo') || 'Accounting'}
+                {t('admin.bridges.accountingInfo')}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.bridges.totalInvoiced') || 'Total Invoiced'}</span>
+                  <span className="text-gray-500">{t('admin.bridges.totalInvoiced')}</span>
                   <span className="font-medium text-gray-900">{fmt(deal.accountingInfo.totalInvoiced)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">{t('admin.bridges.totalPaid') || 'Total Paid'}</span>
+                  <span className="text-gray-500">{t('admin.bridges.totalPaid')}</span>
                   <span className="font-medium text-green-700">{fmt(deal.accountingInfo.totalPaid)}</span>
                 </div>
                 {deal.accountingInfo.outstandingBalance > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">{t('admin.bridges.outstandingBalance') || 'Outstanding'}</span>
+                    <span className="text-gray-500">{t('admin.bridges.outstandingBalance')}</span>
                     <span className="font-medium text-red-600">{fmt(deal.accountingInfo.outstandingBalance)}</span>
                   </div>
                 )}
               </div>
               {deal.accountingInfo.recentEntries.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.bridges.recentEntries') || 'Recent Entries'}</p>
+                  <p className="text-xs font-medium text-gray-500 pt-1">{t('admin.bridges.recentEntries')}</p>
                   <div className="space-y-1.5">
                     {deal.accountingInfo.recentEntries.slice(0, 3).map((entry) => (
                       <Link
@@ -624,7 +634,7 @@ export default function DealDetailPage() {
             <div className="bg-white rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Video className="h-4 w-4" />
-                {t('admin.bridges.dealMedia') || 'Deal Videos'}
+                {t('admin.bridges.dealMedia')}
                 <span className="text-xs font-normal text-gray-400">({mediaBridge.videos?.length})</span>
               </h3>
               <div className="space-y-1.5">
@@ -653,7 +663,7 @@ export default function DealDetailPage() {
           {/* Tags */}
           {deal.tags.length > 0 && (
             <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.tags') || 'Tags'}</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.tags')}</h3>
               <div className="flex flex-wrap gap-1.5">
                 {deal.tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-700">

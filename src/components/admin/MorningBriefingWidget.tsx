@@ -237,7 +237,7 @@ function PriorityBadge({ label, count, color }: { label: string; count: number; 
   const colors: Record<string, string> = {
     amber: 'bg-amber-100 text-amber-800 border-amber-200',
     red: 'bg-red-100 text-red-800 border-red-200',
-    teal: 'bg-teal-100 text-teal-800 border-teal-200',
+    teal: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     orange: 'bg-orange-100 text-orange-800 border-orange-200',
   };
   return (

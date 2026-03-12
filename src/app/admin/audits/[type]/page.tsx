@@ -54,7 +54,7 @@ const severityBadge: Record<string, string> = {
   CRITICAL: 'bg-red-100 text-red-800 border-red-200',
   HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
   MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  LOW: 'bg-teal-100 text-teal-800 border-teal-200',
+  LOW: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   INFO: 'bg-slate-100 text-slate-800 border-slate-200',
 };
 
@@ -169,7 +169,7 @@ export default function AuditDetailPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/admin/audits" className="hover:text-teal-600">
+        <Link href="/admin/audits" className="hover:text-indigo-600">
           {isFr ? 'Audits' : 'Audits'}
         </Link>
         <span>/</span>
@@ -190,7 +190,7 @@ export default function AuditDetailPage() {
         <button
           onClick={handleRunAudit}
           disabled={runningAudit}
-          className="ms-auto px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm font-medium"
+          className="ms-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium"
         >
           {runningAudit
             ? (isFr ? 'Exécution en cours...' : 'Running...')
@@ -211,7 +211,7 @@ export default function AuditDetailPage() {
                 onClick={() => { setSelectedRun(run.id === selectedRun ? null : run.id); }}
                 className={`text-xs px-3 py-1.5 rounded border transition-colors ${
                   (selectedRun === run.id || (!selectedRun && run.id === runs[0]?.id))
-                    ? 'bg-teal-50 border-teal-300 text-teal-700'
+                    ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -346,7 +346,7 @@ export default function AuditDetailPage() {
                             </pre>
                           )}
                           {f.recommendation && (
-                            <div className="bg-teal-50 border border-teal-200 rounded p-2 text-teal-800 text-xs">
+                            <div className="bg-indigo-50 border border-indigo-200 rounded p-2 text-indigo-800 text-xs">
                               <strong>{isFr ? 'Recommandation' : 'Recommendation'}:</strong> {f.recommendation}
                             </div>
                           )}

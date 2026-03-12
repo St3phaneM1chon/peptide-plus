@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Centre d\'aide | Formations Pro',
-  description: 'Trouvez de l\'aide et du support pour utiliser notre plateforme.',
+  title: 'Centre d\'aide',
+  description: 'Trouvez de l\'aide et du support pour utiliser la plateforme BioCycle Peptides. FAQ, guides et assistance technique.',
+  openGraph: {
+    title: 'Centre d\'aide | BioCycle Peptides',
+    description: 'Trouvez de l\'aide et du support pour utiliser la plateforme BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/aide',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const helpCategories = [

@@ -110,7 +110,7 @@ export default function VideoCategoriesPage() {
       });
     } catch (err) {
       console.error('Failed to load video categories:', err);
-      toast.error(t('admin.videoCategories.loadError') || 'Failed to load video categories');
+      toast.error(t('admin.videoCategories.loadError'));
     } finally {
       setLoading(false);
     }
@@ -156,7 +156,7 @@ export default function VideoCategoriesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.name.trim()) {
-      toast.error(t('admin.videoCategories.nameRequired') || 'Name is required');
+      toast.error(t('admin.videoCategories.nameRequired'));
       return;
     }
     setSaving(true);
@@ -175,17 +175,17 @@ export default function VideoCategoriesPage() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        toast.success(t('admin.videoCategories.created') || 'Category created');
+        toast.success(t('admin.videoCategories.created'));
         setShowCreateForm(false);
         setCreateForm({ ...emptyForm });
         loadCategories();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.videoCategories.createError') || 'Failed to create category');
+        toast.error(data.error || t('admin.videoCategories.createError'));
       }
     } catch (err) {
       console.error('Create error:', err);
-      toast.error(t('admin.videoCategories.createError') || 'Failed to create category');
+      toast.error(t('admin.videoCategories.createError'));
     } finally {
       setSaving(false);
     }
@@ -210,7 +210,7 @@ export default function VideoCategoriesPage() {
   const saveInlineEdit = useCallback(async () => {
     if (!editingId) return;
     if (!editName.trim()) {
-      toast.error(t('admin.videoCategories.nameRequired') || 'Name is required');
+      toast.error(t('admin.videoCategories.nameRequired'));
       return;
     }
     setUpdating(true);
@@ -221,16 +221,16 @@ export default function VideoCategoriesPage() {
         body: JSON.stringify({ name: editName.trim(), sortOrder: editSortOrder }),
       });
       if (res.ok) {
-        toast.success(t('admin.videoCategories.updated') || 'Category updated');
+        toast.success(t('admin.videoCategories.updated'));
         cancelInlineEdit();
         loadCategories();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.videoCategories.updateError') || 'Failed to update category');
+        toast.error(data.error || t('admin.videoCategories.updateError'));
       }
     } catch (err) {
       console.error('Update error:', err);
-      toast.error(t('admin.videoCategories.updateError') || 'Failed to update category');
+      toast.error(t('admin.videoCategories.updateError'));
     } finally {
       setUpdating(false);
     }
@@ -251,10 +251,10 @@ export default function VideoCategoriesPage() {
         loadCategories();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.videoCategories.updateError') || 'Failed to update');
+        toast.error(data.error || t('admin.videoCategories.updateError'));
       }
     } catch {
-      toast.error(t('admin.videoCategories.updateError') || 'Failed to update');
+      toast.error(t('admin.videoCategories.updateError'));
     }
   }, [t, loadCategories]);
 
@@ -270,15 +270,15 @@ export default function VideoCategoriesPage() {
         method: 'DELETE',
       });
       if (res.ok) {
-        toast.success(t('admin.videoCategories.deleted') || 'Category deleted');
+        toast.success(t('admin.videoCategories.deleted'));
         loadCategories();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.videoCategories.deleteError') || 'Failed to delete category');
+        toast.error(data.error || t('admin.videoCategories.deleteError'));
       }
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error(t('admin.videoCategories.deleteError') || 'Failed to delete category');
+      toast.error(t('admin.videoCategories.deleteError'));
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -352,7 +352,7 @@ export default function VideoCategoriesPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  className="border border-teal-300 rounded px-2 py-1 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-teal-400 focus:outline-none"
+                  className="border border-indigo-300 rounded px-2 py-1 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => {
@@ -362,10 +362,10 @@ export default function VideoCategoriesPage() {
                   autoFocus
                 />
                 <label className="flex items-center gap-1 text-xs text-slate-500">
-                  <span>{t('admin.videoCategories.sortOrder') || 'Order'}:</span>
+                  <span>{t('admin.videoCategories.sortOrder')}:</span>
                   <input
                     type="number"
-                    className="border border-slate-300 rounded px-2 py-1 text-sm w-16 focus:ring-2 focus:ring-teal-400 focus:outline-none"
+                    className="border border-slate-300 rounded px-2 py-1 text-sm w-16 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                     value={editSortOrder}
                     onChange={e => setEditSortOrder(parseInt(e.target.value) || 0)}
                     onKeyDown={e => {
@@ -378,14 +378,14 @@ export default function VideoCategoriesPage() {
                   onClick={saveInlineEdit}
                   disabled={updating}
                   className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                  title={t('common.save') || 'Save'}
+                  title={t('common.save')}
                 >
                   {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={cancelInlineEdit}
                   className="p-1 text-slate-400 hover:bg-slate-100 rounded"
-                  title={t('common.cancel') || 'Cancel'}
+                  title={t('common.cancel')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -402,15 +402,15 @@ export default function VideoCategoriesPage() {
 
           {/* Video count badge */}
           {!isEditing && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg flex-shrink-0" title={`${totalVideos} ${t('admin.videoCategories.videos') || 'videos'}`}>
-              <Video className="w-3.5 h-3.5 text-teal-500" />
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg flex-shrink-0" title={`${totalVideos} ${t('admin.videoCategories.videos')}`}>
+              <Video className="w-3.5 h-3.5 text-indigo-500" />
               <span className="text-xs font-semibold text-slate-700">{totalVideos}</span>
             </div>
           )}
 
           {/* Sort order badge */}
           {!isEditing && (
-            <span className="text-xs text-slate-400 w-8 text-center flex-shrink-0" title={t('admin.videoCategories.sortOrder') || 'Sort order'}>
+            <span className="text-xs text-slate-400 w-8 text-center flex-shrink-0" title={t('admin.videoCategories.sortOrder')}>
               #{cat.sortOrder}
             </span>
           )}
@@ -422,7 +422,7 @@ export default function VideoCategoriesPage() {
               className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${
                 cat.isActive ? 'bg-green-500' : 'bg-slate-300'
               }`}
-              title={cat.isActive ? (t('admin.videoCategories.active') || 'Active') : (t('admin.videoCategories.inactive') || 'Inactive')}
+              title={cat.isActive ? (t('admin.videoCategories.active')) : (t('admin.videoCategories.inactive'))}
             >
               <span
                 className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
@@ -437,15 +437,15 @@ export default function VideoCategoriesPage() {
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={() => startInlineEdit(cat)}
-                className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors"
-                title={t('admin.videoCategories.edit') || 'Edit'}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                title={t('admin.videoCategories.edit')}
               >
                 <Edit2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeleteTarget(cat)}
                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                title={t('admin.videoCategories.delete') || 'Delete'}
+                title={t('admin.videoCategories.delete')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -471,16 +471,16 @@ export default function VideoCategoriesPage() {
     <div className="p-6 max-w-5xl space-y-4">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-teal-600 transition-colors">
-          {t('admin.nav.dashboard') || 'Admin'}
+        <Link href="/admin" className="hover:text-indigo-600 transition-colors">
+          {t('admin.nav.dashboard')}
         </Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">
-          {t('admin.nav.media') || 'Media'}
+        <Link href="/admin/media" className="hover:text-indigo-600 transition-colors">
+          {t('admin.nav.media')}
         </Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-slate-700 font-medium">
-          {t('admin.videoCategories.title') || 'Video Categories'}
+          {t('admin.videoCategories.title')}
         </span>
       </nav>
 
@@ -488,18 +488,18 @@ export default function VideoCategoriesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {t('admin.videoCategories.title') || 'Video Categories'}
+            {t('admin.videoCategories.title')}
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            {t('admin.videoCategories.subtitle') || 'Organize your videos into categories and subcategories'}
+            {t('admin.videoCategories.subtitle')}
           </p>
         </div>
         <button
           onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
-          {t('admin.videoCategories.create') || 'New Category'}
+          {t('admin.videoCategories.create')}
         </button>
       </div>
 
@@ -508,7 +508,7 @@ export default function VideoCategoriesPage() {
         <form onSubmit={handleCreate} className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-semibold text-slate-700">
-              {t('admin.videoCategories.create') || 'New Category'}
+              {t('admin.videoCategories.create')}
             </h2>
             <button
               type="button"
@@ -521,18 +521,18 @@ export default function VideoCategoriesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
-              placeholder={t('admin.videoCategories.namePlaceholder') || 'Category name *'}
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              placeholder={t('admin.videoCategories.namePlaceholder')}
               value={createForm.name}
               onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
               required
             />
             <select
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
               value={createForm.parentId}
               onChange={e => setCreateForm({ ...createForm, parentId: e.target.value })}
             >
-              <option value="">{t('admin.videoCategories.noParent') || '-- No parent (root) --'}</option>
+              <option value="">{t('admin.videoCategories.noParent')}</option>
               {flatCategories.map(fc => (
                 <option key={fc.id} value={fc.id}>
                   {'  '.repeat(fc.depth)}{fc.name}
@@ -540,22 +540,22 @@ export default function VideoCategoriesPage() {
               ))}
             </select>
             <input
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
-              placeholder={t('admin.videoCategories.iconPlaceholder') || 'Icon (emoji or code)'}
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              placeholder={t('admin.videoCategories.iconPlaceholder')}
               value={createForm.icon}
               onChange={e => setCreateForm({ ...createForm, icon: e.target.value })}
             />
             <input
               type="number"
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
-              placeholder={t('admin.videoCategories.sortOrderPlaceholder') || 'Sort order'}
+              className="border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              placeholder={t('admin.videoCategories.sortOrderPlaceholder')}
               value={createForm.sortOrder}
               onChange={e => setCreateForm({ ...createForm, sortOrder: parseInt(e.target.value) || 0 })}
             />
           </div>
           <textarea
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
-            placeholder={t('admin.videoCategories.descriptionPlaceholder') || 'Description (optional)'}
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+            placeholder={t('admin.videoCategories.descriptionPlaceholder')}
             rows={2}
             value={createForm.description}
             onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
@@ -567,7 +567,7 @@ export default function VideoCategoriesPage() {
                 checked={createForm.isActive}
                 onChange={e => setCreateForm({ ...createForm, isActive: e.target.checked })}
               />
-              {t('admin.videoCategories.active') || 'Active'}
+              {t('admin.videoCategories.active')}
             </label>
             <div className="ms-auto flex items-center gap-2">
               <button
@@ -575,15 +575,15 @@ export default function VideoCategoriesPage() {
                 onClick={() => setShowCreateForm(false)}
                 className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-slate-50"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                {t('admin.videoCategories.create') || 'Create'}
+                {t('admin.videoCategories.create')}
               </button>
             </div>
           </div>
@@ -593,23 +593,23 @@ export default function VideoCategoriesPage() {
       {/* Category tree */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
         </div>
       ) : categories.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
           <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 mb-1">
-            {t('admin.videoCategories.empty') || 'No video categories yet'}
+            {t('admin.videoCategories.empty')}
           </p>
           <p className="text-sm text-slate-400 mb-4">
-            {t('admin.videoCategories.emptyHint') || 'Create your first category to start organizing videos'}
+            {t('admin.videoCategories.emptyHint')}
           </p>
           <button
             onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
-            {t('admin.videoCategories.create') || 'New Category'}
+            {t('admin.videoCategories.create')}
           </button>
         </div>
       ) : (
@@ -619,11 +619,11 @@ export default function VideoCategoriesPage() {
             <span className="w-5" /> {/* expand toggle spacer */}
             <span className="w-4" /> {/* grip spacer */}
             <span className="w-8" /> {/* icon spacer */}
-            <span className="flex-1">{t('admin.videoCategories.columnName') || 'Category'}</span>
-            <span className="w-16 text-center">{t('admin.videoCategories.columnVideos') || 'Videos'}</span>
-            <span className="w-8 text-center">{t('admin.videoCategories.columnOrder') || '#'}</span>
-            <span className="w-10 text-center">{t('admin.videoCategories.columnStatus') || 'Status'}</span>
-            <span className="w-20 text-center">{t('admin.videoCategories.columnActions') || 'Actions'}</span>
+            <span className="flex-1">{t('admin.videoCategories.columnName')}</span>
+            <span className="w-16 text-center">{t('admin.videoCategories.columnVideos')}</span>
+            <span className="w-8 text-center">{t('admin.videoCategories.columnOrder')}</span>
+            <span className="w-10 text-center">{t('admin.videoCategories.columnStatus')}</span>
+            <span className="w-20 text-center">{t('admin.videoCategories.columnActions')}</span>
           </div>
           {/* Tree body */}
           {categories.map(cat => renderCategoryNode(cat, 0))}
@@ -633,20 +633,20 @@ export default function VideoCategoriesPage() {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         isOpen={!!deleteTarget}
-        title={t('admin.videoCategories.deleteTitle') || 'Delete Category'}
+        title={t('admin.videoCategories.deleteTitle')}
         message={
           deleteTarget
-            ? `${t('admin.videoCategories.deleteMessage') || 'Are you sure you want to delete'} "${deleteTarget.name}"? ${
+            ? `${t('admin.videoCategories.deleteMessage')} "${deleteTarget.name}"? ${
                 deleteTarget._count.videos > 0
-                  ? `${t('admin.videoCategories.hasVideos') || 'This category has'} ${deleteTarget._count.videos} ${t('admin.videoCategories.videos') || 'video(s)'}.`
+                  ? `${t('admin.videoCategories.hasVideos')} ${deleteTarget._count.videos} ${t('admin.videoCategories.videos')}.`
                   : ''
               } ${deleteTarget._count.children > 0
-                ? `${t('admin.videoCategories.hasChildren') || 'This category has'} ${deleteTarget._count.children} ${t('admin.videoCategories.subcategories') || 'subcategorie(s)'}.`
+                ? `${t('admin.videoCategories.hasChildren')} ${deleteTarget._count.children} ${t('admin.videoCategories.subcategories')}.`
                 : ''
-              } ${t('admin.videoCategories.deleteWarning') || 'This action cannot be undone.'}`
+              } ${t('admin.videoCategories.deleteWarning')}`
             : ''
         }
-        confirmLabel={deleting ? '...' : (t('common.delete') || 'Delete')}
+        confirmLabel={deleting ? '...' : (t('common.delete'))}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
         variant="danger"

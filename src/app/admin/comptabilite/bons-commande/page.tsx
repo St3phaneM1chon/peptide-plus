@@ -505,7 +505,7 @@ export default function BonsCommandePage() {
       render: (po) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedOrder(po); }}
-          className="font-mono text-sm text-teal-600 hover:underline"
+          className="font-mono text-sm text-indigo-600 hover:underline"
         >
           {po.poNumber}
         </button>
@@ -556,7 +556,7 @@ export default function BonsCommandePage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedOrder(po)}
-            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
             title="Voir"
           >
             <Eye className="w-4 h-4" />
@@ -713,7 +713,7 @@ export default function BonsCommandePage() {
                 </>
               )}
               {['CONFIRMED', 'SENT', 'PARTIALLY_RECEIVED'].includes(po.status) && (
-                <Button variant="primary" icon={Package} onClick={() => openReceiveModal(po)} className="bg-teal-600 hover:bg-teal-700 border-transparent text-white">
+                <Button variant="primary" icon={Package} onClick={() => openReceiveModal(po)} className="bg-indigo-600 hover:bg-indigo-700 border-transparent text-white">
                   Recevoir marchandises
                 </Button>
               )}
@@ -764,7 +764,7 @@ export default function BonsCommandePage() {
               {po.supplierInvoiceId && (
                 <div>
                   <p className="text-xs text-slate-500">Facture fournisseur</p>
-                  <p className="font-medium text-teal-600">{po.supplierInvoiceId}</p>
+                  <p className="font-medium text-indigo-600">{po.supplierInvoiceId}</p>
                 </div>
               )}
             </div>
@@ -1113,7 +1113,7 @@ export default function BonsCommandePage() {
               variant="primary"
               icon={Package}
               onClick={handleReceive}
-              className="bg-teal-600 hover:bg-teal-700 border-transparent text-white"
+              className="bg-indigo-600 hover:bg-indigo-700 border-transparent text-white"
             >
               Enregistrer la reception
             </Button>
@@ -1153,7 +1153,7 @@ export default function BonsCommandePage() {
                             max={remaining}
                             step="1"
                             disabled={fullyReceived}
-                            className="w-full h-8 px-2 border border-slate-200 rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:bg-slate-100"
+                            className="w-full h-8 px-2 border border-slate-200 rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100"
                             value={item.id ? receiveItems[item.id] || 0 : 0}
                             onChange={(e) => {
                               if (!item.id) return;

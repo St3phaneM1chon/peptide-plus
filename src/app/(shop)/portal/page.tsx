@@ -300,8 +300,8 @@ export default function CustomerPortalPage() {
               <h2 className="font-semibold text-slate-900">
                 {t('portal.createTicket') || 'Submit a Request'}
               </h2>
-              <button onClick={() => setActiveTab('tickets')} className="p-1 hover:bg-slate-100 rounded">
-                <X className="w-5 h-5 text-slate-400" />
+              <button onClick={() => setActiveTab('tickets')} className="p-1 hover:bg-slate-100 rounded" aria-label={t('common.close') || 'Close'}>
+                <X className="w-5 h-5 text-slate-400" aria-hidden="true" />
               </button>
             </div>
 

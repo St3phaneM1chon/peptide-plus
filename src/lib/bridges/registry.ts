@@ -184,7 +184,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.emailCrm',
     endpoint: '/api/admin/emails/{id}/crm',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'emails/page.tsx (sent detail) + emails/inbox/CustomerSidebar.tsx',
   },
   {
     id: '#14',
@@ -194,7 +194,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.accountingCrm',
     endpoint: '/api/admin/accounting/entries/{id}/crm',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'comptabilite/ecritures/page.tsx',
   },
   {
     id: '#6',
@@ -204,7 +204,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.loyaltyOrders',
     endpoint: '/api/admin/loyalty/members/{id}/orders',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'components/admin/bridges/LoyaltyBridgeCards.tsx',
   },
   {
     id: '#10',
@@ -224,7 +224,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.marketingCrm',
     endpoint: '/api/admin/promo-codes/{id}/crm',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'promo-codes/page.tsx',
   },
   {
     id: '#17',
@@ -304,7 +304,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.emailOrders',
     endpoint: '/api/admin/emails/{id}/orders',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'emails/page.tsx (sent detail)',
   },
   {
     id: '#45',
@@ -314,7 +314,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.voipLoyalty',
     endpoint: '/api/admin/voip/call-logs/{id}/loyalty',
     status: 'done',
-    renderedIn: '(API ready, consumed by call detail)',
+    renderedIn: 'telephonie/journal/CallLogClient.tsx',
   },
   {
     id: '#46',
@@ -324,7 +324,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.voipEmails',
     endpoint: '/api/admin/voip/call-logs/{id}/emails',
     status: 'done',
-    renderedIn: '(API ready, consumed by call detail)',
+    renderedIn: 'telephonie/journal/CallLogClient.tsx',
   },
   {
     id: '#50',
@@ -365,7 +365,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.orderProducts',
     endpoint: '/api/admin/orders/{id}/products',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'commandes/page.tsx',
   },
   {
     id: '#20',
@@ -375,7 +375,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.orderReviews',
     endpoint: '/api/admin/orders/{id}/reviews',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'commandes/page.tsx',
   },
   {
     id: '#29',
@@ -385,7 +385,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.promoProducts',
     endpoint: '/api/admin/promo-codes/{id}/products',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'promo-codes/page.tsx',
   },
   {
     id: '#34',
@@ -395,7 +395,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.reviewPurchases',
     endpoint: '/api/admin/reviews/{id}/purchases',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'avis/page.tsx',
   },
   {
     id: '#35',
@@ -405,7 +405,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.reviewProduct',
     endpoint: '/api/admin/reviews/{id}/product',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'avis/page.tsx',
   },
   {
     id: '#36',
@@ -415,7 +415,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.reviewCrm',
     endpoint: '/api/admin/reviews/{id}/crm',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'avis/page.tsx',
   },
   {
     id: '#37',
@@ -425,7 +425,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.loyaltyPromos',
     endpoint: '/api/admin/loyalty/transactions/promos',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'fidelite/page.tsx',
   },
   {
     id: '#38',
@@ -435,7 +435,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.loyaltyCommunity',
     endpoint: '/api/admin/loyalty/transactions/community',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'fidelite/page.tsx',
   },
   {
     id: '#39',
@@ -445,7 +445,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.videoSales',
     endpoint: '/api/admin/media/videos/{id}/sales',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'media/videos/[id]/page.tsx',
   },
   {
     id: '#40',
@@ -455,7 +455,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.videoProducts',
     endpoint: '/api/admin/media/videos/{id}/products',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'media/videos/[id]/page.tsx (productLinks)',
   },
   {
     id: '#41',
@@ -465,7 +465,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.mediaMarketing',
     endpoint: '/api/admin/media/social-posts/marketing',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'media/social-scheduler/page.tsx',
   },
   {
     id: '#42',
@@ -475,7 +475,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.videoCommunity',
     endpoint: '/api/admin/media/videos/{id}/community',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'media/videos/[id]/page.tsx',
   },
   {
     id: '#49',
@@ -485,7 +485,7 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     i18nKey: 'admin.bridges.dealMedia',
     endpoint: '/api/admin/crm/deals/{id}/media',
     status: 'done',
-    renderedIn: '(API ready)',
+    renderedIn: 'crm/deals/[id]/page.tsx',
   },
 ];
 

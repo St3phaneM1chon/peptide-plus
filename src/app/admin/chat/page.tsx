@@ -344,7 +344,7 @@ export default function AdminChatPage() {
   const handleRibbonNewMessage = useCallback(() => {
     // Focus the input field if a conversation is selected, otherwise prompt to select one
     if (!selectedConversation) {
-      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      toast.info(t('admin.chat.selectConversation'));
       return;
     }
     const input = document.querySelector<HTMLInputElement>('input[type="text"]');
@@ -353,7 +353,7 @@ export default function AdminChatPage() {
 
   const handleRibbonCloseConversation = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      toast.info(t('admin.chat.selectConversation'));
       return;
     }
     try {
@@ -363,7 +363,7 @@ export default function AdminChatPage() {
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'CLOSED' }),
       });
       if (res.ok) {
-        toast.success(t('admin.chat.conversationClosed') || 'Conversation closed');
+        toast.success(t('admin.chat.conversationClosed'));
         setSelectedConversation(null);
         loadConversations();
       } else {
@@ -376,15 +376,15 @@ export default function AdminChatPage() {
 
   const handleRibbonTransfer = useCallback(() => {
     if (!selectedConversation) {
-      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      toast.info(t('admin.chat.selectConversation'));
       return;
     }
-    toast.info(t('admin.chat.transferNotAvailable') || 'Transfer requires multiple agents. Configure additional agents in settings.');
+    toast.info(t('admin.chat.transferNotAvailable'));
   }, [selectedConversation, t]);
 
   const handleRibbonMarkResolved = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      toast.info(t('admin.chat.selectConversation'));
       return;
     }
     try {
@@ -394,7 +394,7 @@ export default function AdminChatPage() {
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'RESOLVED' }),
       });
       if (res.ok) {
-        toast.success(t('admin.chat.conversationResolved') || 'Conversation marked as resolved');
+        toast.success(t('admin.chat.conversationResolved'));
         loadConversations();
       } else {
         toast.error(t('common.errorOccurred'));
@@ -406,7 +406,7 @@ export default function AdminChatPage() {
 
   const handleRibbonArchive = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      toast.info(t('admin.chat.selectConversation'));
       return;
     }
     try {
@@ -416,7 +416,7 @@ export default function AdminChatPage() {
         body: JSON.stringify({ conversationId: selectedConversation.id, status: 'ARCHIVED' }),
       });
       if (res.ok) {
-        toast.success(t('admin.chat.conversationArchived') || 'Conversation archived');
+        toast.success(t('admin.chat.conversationArchived'));
         setSelectedConversation(null);
         loadConversations();
       } else {
@@ -429,7 +429,7 @@ export default function AdminChatPage() {
 
   const handleRibbonExportHistory = useCallback(() => {
     if (!selectedConversation || messages.length === 0) {
-      toast.info(t('admin.chat.noMessagesToExport') || 'No messages to export');
+      toast.info(t('admin.chat.noMessagesToExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -450,7 +450,7 @@ export default function AdminChatPage() {
     a.download = `chat-${selectedConversation.visitorId.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [selectedConversation, messages, locale, t]);
 
   useRibbonAction('newMessage', handleRibbonNewMessage);
@@ -516,7 +516,7 @@ export default function AdminChatPage() {
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
                   className={`w-full p-4 text-start border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                    selectedConversation?.id === conv.id ? 'bg-teal-50 border-s-4 border-s-teal-500' : ''
+                    selectedConversation?.id === conv.id ? 'bg-indigo-50 border-s-4 border-s-indigo-500' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -616,7 +616,7 @@ export default function AdminChatPage() {
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-3 ${
                         message.sender === 'ADMIN'
-                          ? 'bg-teal-500 text-white rounded-br-md'
+                          ? 'bg-indigo-500 text-white rounded-br-md'
                           : message.sender === 'BOT'
                           ? 'bg-purple-100 text-purple-900 rounded-bl-md border border-purple-200'
                           : 'bg-white text-slate-800 rounded-bl-md shadow-sm'
@@ -669,7 +669,7 @@ export default function AdminChatPage() {
                         {message.sender === 'ADMIN' && (
                           <span className="inline-flex items-center">
                             {message.isRead ? (
-                              <CheckCheck className="w-3.5 h-3.5 text-teal-200" aria-label={t('admin.chat.read')} />
+                              <CheckCheck className="w-3.5 h-3.5 text-indigo-200" aria-label={t('admin.chat.read')} />
                             ) : (
                               <Check className="w-3.5 h-3.5 opacity-50" aria-label={t('admin.chat.delivered')} />
                             )}
@@ -719,7 +719,7 @@ export default function AdminChatPage() {
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                      title={t('chat.emoji') || 'Emoji'}
+                      title={t('chat.emoji')}
                     >
                       <Smile className="w-5 h-5 text-slate-500" />
                     </button>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { PlatformConnectionStatus } from '@/components/admin/PlatformConnectionStatus';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
@@ -42,7 +43,7 @@ export default function ApiGoogleMeetPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -76,10 +77,11 @@ export default function ApiGoogleMeetPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-3xl space-y-4">
+      <PlatformConnectionStatus platform="google-meet" usesOAuth={true} />
       <IntegrationCard
-        title={t('admin.media.googleMeetTitle') || 'Google Meet'}
-        description={t('admin.media.googleMeetDescription') || 'Configure Google Meet API credentials for video conferencing.'}
+        title={t('admin.media.googleMeetTitle')}
+        description={t('admin.media.googleMeetDescription')}
         icon={<Video className="w-6 h-6" />}
         color="from-green-500 to-green-600"
         enabled={enabled}

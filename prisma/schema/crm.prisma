@@ -10,7 +10,8 @@ model CustomerNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation("customerNotes", fields: [userId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-006: Preserve CRM notes when user is deleted
+  user      User     @relation("customerNotes", fields: [userId], references: [id], onDelete: Restrict)
   author    User     @relation("authoredNotes", fields: [authorId], references: [id], onDelete: Restrict)
 
   @@index([userId, createdAt])
@@ -99,7 +100,11 @@ model CrmLead {
   sourceProspect      Prospect?            @relation("ProspectToLead")
   dialerEntries       DialerListEntry[]    @relation("DialerListLead")
 
+  // FIX A1-P0-002: Reverse relation for CrmConsentRecord FK
+  consentRecords      CrmConsentRecord[]   @relation("CrmLeadConsentRecords")
+
   @@index([status, assignedToId])
+  @@index([assignedToId, status]) // A7-P2: Reverse composite for queries filtering by assignedToId first
   @@index([score(sort: Desc)])
   @@index([nextFollowUpAt])
   @@index([source])
@@ -183,7 +188,12 @@ model CrmDeal {
   // Bridge: orders generated from this deal
   orders            Order[]                @relation("DealOrders")
 
+  // FIX A1-P0-002: Reverse relations for newly added FKs
+  dealTeamMembers   CrmDealTeam[]          @relation("CrmDealTeamMembers")
+  contracts         CrmContract[]          @relation("CrmDealContracts")
+
   @@index([stageId, assignedToId])
+  @@index([assignedToId]) // A7-P2: Standalone index for deals filtered by assignedToId alone
   @@index([pipelineId])
   @@index([expectedCloseDate])
   @@index([leadId])
@@ -205,6 +215,7 @@ model CrmDealProduct {
   total     Decimal  @db.Decimal(10, 2)
   notes     String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([dealId, productId])
   @@index([dealId])
@@ -224,6 +235,7 @@ model CrmDealStageHistory {
   changedBy   User             @relation("CrmDealStageChanger", fields: [changedById], references: [id])
   duration    Int              @default(0) // seconds in previous stage
   createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([dealId])
   @@index([createdAt])
@@ -276,6 +288,7 @@ model CrmActivity {
   performedById String?
   performedBy   User?           @relation("CrmActivityPerformer", fields: [performedById], references: [id])
   createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([dealId])
   @@index([leadId])
@@ -324,6 +337,7 @@ model InboxMessage {
   metadata        Json?  // callLogId, emailId, etc.
   readAt          DateTime?
   createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([conversationId])
   @@index([createdAt])
@@ -386,6 +400,9 @@ model CrmWorkflow {
   steps       CrmWorkflowStep[]
   executions  CrmWorkflowExecution[]
 
+  // FIX A1-P0-002: Reverse relation for CrmWorkflowVersion FK
+  versions    CrmWorkflowVersion[] @relation("CrmWorkflowVersions")
+
   @@index([status])
   @@index([triggerType])
   @@index([createdById])
@@ -401,6 +418,7 @@ model CrmWorkflowStep {
   delayMinutes Int              @default(0)
   conditionJson Json?           // optional condition to execute this step
   createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@unique([workflowId, position])
   @@index([workflowId])
@@ -473,6 +491,7 @@ model CrmCampaignActivity {
   scheduledAt DateTime?
   completedAt DateTime?
   createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([campaignId])
   @@index([leadId])
@@ -496,6 +515,10 @@ model CrmConsentRecord {
   userId      String?           // if tied to a User
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  lead        CrmLead?          @relation("CrmLeadConsentRecords", fields: [leadId], references: [id], onDelete: SetNull)
+  user        User?             @relation("UserCrmConsentRecords", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([phone])
   @@index([email])
@@ -646,6 +669,7 @@ model CrmQuoteItem {
   total       Decimal  @db.Decimal(10, 2)
   position    Int      @default(0)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([quoteId])
   @@index([productId])
@@ -744,6 +768,7 @@ model AgentBreak {
   duration  Int?           // seconds, computed on end
   notes     String?
   createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@index([agentId])
   @@index([startedAt])
@@ -752,14 +777,18 @@ model AgentBreak {
 
 // --- 4H.2: Deal Team / Commission Splits (B17) ---
 model CrmDealTeam {
-  id             String  @id @default(cuid())
-  dealId         String
-  userId         String
-  role           String  @default("member") // owner, member, support, overlay
-  splitPercent   Decimal @db.Decimal(5, 2) // commission split %
-  isPrimary      Boolean @default(false)
+  id             String   @id @default(cuid())
+  dealId         String?
+  userId         String?
+  role           String   @default("member") // owner, member, support, overlay
+  splitPercent   Decimal  @db.Decimal(5, 2) // commission split %
+  isPrimary      Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  deal           CrmDeal? @relation("CrmDealTeamMembers", fields: [dealId], references: [id], onDelete: SetNull)
+  user           User?    @relation("UserDealTeams", fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([dealId, userId])
   @@index([dealId])
@@ -786,6 +815,11 @@ model CrmContract {
   createdById     String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  deal            CrmDeal?       @relation("CrmDealContracts", fields: [dealId], references: [id], onDelete: SetNull)
+  contact         User?          @relation("UserCrmContracts", fields: [contactId], references: [id], onDelete: SetNull)
+  createdBy       User?          @relation("UserCreatedCrmContracts", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([dealId])
   @@index([contactId])
@@ -816,6 +850,10 @@ model CrmTicket {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  // FIX A1-P2-003: Add consistent nullable FK relations with proper onDelete
+  contact    User?  @relation("CrmTicketContact", fields: [contactId], references: [id], onDelete: SetNull)
+  assignedTo User?  @relation("CrmTicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
   comments CrmTicketComment[]
 
   @@index([status])
@@ -836,6 +874,7 @@ model CrmTicketComment {
   content   String   @db.Text
   isInternal Boolean @default(false) // internal note vs customer-visible
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ticketId])
   @@index([authorId])
@@ -888,15 +927,20 @@ model KBCategory {
 
 // --- 4D.1: Workflow Versioning (I16) ---
 model CrmWorkflowVersion {
-  id           String   @id @default(cuid())
-  workflowId   String
-  version      Int      @default(1)
+  id           String       @id @default(cuid())
+  workflowId   String?
+  version      Int          @default(1)
   triggerType  String
   triggerConfig Json
-  steps        Json     // snapshot of all steps at this version
-  notes        String?  // changelog note
+  steps        Json         // snapshot of all steps at this version
+  notes        String?      // changelog note
   createdById  String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  workflow     CrmWorkflow? @relation("CrmWorkflowVersions", fields: [workflowId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("UserCrmWorkflowVersions", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([workflowId, version])
   @@index([workflowId])

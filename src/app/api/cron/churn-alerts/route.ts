@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       }
 
       // ── 2. Load user details for at-risk customers ─────────────────────────
-      const userIds = atRiskMetrics.map((m) => m.userId);
+      const userIds = atRiskMetrics.map((m) => m.userId).filter((id): id is string => id != null);
 
       const users = await prisma.user.findMany({
         where: {
@@ -137,6 +137,7 @@ export async function GET(request: NextRequest) {
 
       // Build final list of candidates to notify
       const candidates = atRiskMetrics.filter((m) => {
+        if (!m.userId) return false;
         const user = userMap.get(m.userId);
         if (!user) return false; // banned or non-customer
         if (recentlySentSet.has(user.email)) return false; // already notified
@@ -165,7 +166,7 @@ export async function GET(request: NextRequest) {
         const batch = candidates.slice(i, i + BATCH_SIZE);
 
         const batchPromises = batch.map(async (metrics): Promise<AlertResult> => {
-          const user = userMap.get(metrics.userId)!;
+          const user = userMap.get(metrics.userId!)!;
 
           try {
             // Bounce suppression check
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest) {
             if (suppressed) {
               logger.info('Churn alert: email suppressed (bounce)', { email: user.email });
               return {
-                userId: metrics.userId,
+                userId: metrics.userId!,
                 email: user.email,
                 success: false,
                 skipped: true,
@@ -185,7 +186,7 @@ export async function GET(request: NextRequest) {
             const unsubscribeUrl = await generateUnsubscribeUrl(
               user.email,
               'marketing',
-              metrics.userId,
+              metrics.userId!,
             ).catch(() => undefined);
 
             const locale = (user.locale?.startsWith('en') ? 'en' : 'fr') as 'fr' | 'en';
@@ -238,14 +239,14 @@ export async function GET(request: NextRequest) {
             });
 
             return {
-              userId: metrics.userId,
+              userId: metrics.userId!,
               email: user.email,
               success: result.success,
               messageId: result.messageId,
             };
           } catch (error) {
             logger.error('Churn alert: failed for customer', {
-              userId: metrics.userId,
+              userId: metrics.userId!,
               email: user.email,
               error: error instanceof Error ? error.message : String(error),
             });
@@ -268,7 +269,7 @@ export async function GET(request: NextRequest) {
               );
 
             return {
-              userId: metrics.userId,
+              userId: metrics.userId!,
               email: user.email,
               success: false,
               error: 'Failed to send churn alert',

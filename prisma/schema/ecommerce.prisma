@@ -81,6 +81,9 @@ model Category {
   translations CategoryTranslation[]
   products     Product[]
 
+  // FIX A1-P0-002: Reverse relation for Discount FK
+  discounts    Discount[] @relation("CategoryDiscounts")
+
   @@index([parentId])
   @@index([isActive])
   @@index([name])
@@ -234,6 +237,10 @@ model Discount {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  category     Category?    @relation("CategoryDiscounts", fields: [categoryId], references: [id], onDelete: SetNull)
+  product      Product?     @relation("ProductDiscounts", fields: [productId], references: [id], onDelete: SetNull)
+
   @@index([categoryId])
   @@index([isActive])
   @@index([productId])
@@ -263,6 +270,7 @@ model GiftCard {
 
   @@index([code])
   @@index([purchaserId])
+  @@index([recipientEmail])
   @@index([redeemedBy])
   @@index([createdAt])
 }
@@ -285,11 +293,14 @@ model Grade {
   @@index([userId])
 }
 
+// A8-P2-002: `price` is an ABSOLUTE price (e.g. $45.00), NOT a discount percentage.
+// It replaces the product's base price for customers in the given loyalty tier.
+// If price >= Product.price, the customer sees no savings — admin should be warned.
 model ProductTierPrice {
   id        String            @id @default(cuid())
   productId String
   tierName  String
-  price     Decimal           @db.Decimal(10, 2)
+  price     Decimal           @db.Decimal(10, 2) // Absolute price for this tier (NOT a discount)
   active    Boolean           @default(true)
   startDate DateTime          @default(now())
   endDate   DateTime?
@@ -389,6 +400,10 @@ model Order {
   events                   OrderEvent[]
   inventoryReservations    InventoryReservation[]
   inventoryTransactions    InventoryTransaction[]
+
+  // FIX A1-P0-002: Reverse relations for newly added FKs
+  refunds                  Refund[]              @relation("OrderRefunds")
+  abandonedCartRecoveries  AbandonedCart[]        @relation("AbandonedCartRecoveredOrder")
 
   @@index([createdAt])
   @@index([dealId])
@@ -599,6 +614,15 @@ model Product {
   inventoryReservations    InventoryReservation[]
   inventoryTransactions    InventoryTransaction[]
   tierPrices               ProductTierPrice[]
+  // FIX A1-P0-003: Add FK relations for inventory stock tracking
+  stockLevels              StockLevel[]
+  stockMovements           StockMovement[]
+
+  // FIX A1-P0-002: Reverse relations for newly added FKs
+  subscriptions            Subscription[]       @relation("ProductSubscriptions")
+  wishlists                Wishlist[]            @relation("ProductWishlists")
+  productViews             ProductView[]         @relation("ProductViews")
+  discounts                Discount[]            @relation("ProductDiscounts")
 
   @@index([categoryId])
   @@index([isBestseller])
@@ -611,6 +635,8 @@ model Product {
   @@index([isActive]) // S10: Standalone index for active product filter (search, suggest, catalog queries)
   @@index([categoryId, isActive])
   @@index([isActive, createdAt])
+  @@index([price])
+  @@index([averageRating])
   @@index([createdAt])
   @@index([updatedAt])
 }
@@ -620,9 +646,13 @@ model Product {
 // without adding to cart. Rows older than 30 days are cleaned up by data-retention cron.
 model ProductView {
   id        String   @id @default(cuid())
-  userId    String
-  productId String
+  userId    String?
+  productId String?
   viewedAt  DateTime @default(now())
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user      User?    @relation("UserProductViews", fields: [userId], references: [id], onDelete: SetNull)
+  product   Product? @relation("ProductViews", fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([userId, productId])
   @@index([userId, viewedAt])
@@ -666,6 +696,9 @@ model ProductFormat {
   translations             ProductFormatTranslation[]
   inventoryReservations    InventoryReservation[]
   inventoryTransactions    InventoryTransaction[]
+
+  // FIX A1-P0-002: Reverse relation for Subscription FK
+  subscriptions            Subscription[]             @relation("FormatSubscriptions")
 
   @@index([availability])
   @@index([formatType])
@@ -805,6 +838,7 @@ model PromoCodeUsage {
 
   @@index([orderId])
   @@index([promoCodeId])
+  @@index([promoCodeId, userId])
   @@index([usedAt])
   @@index([userId])
 }
@@ -871,6 +905,9 @@ model ReturnRequest {
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
   user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  // FIX A1-P0-002: Reverse relation for Refund FK
+  refunds     Refund[] @relation("ReturnRequestRefunds")
+
   @@index([orderItemId])
   @@index([orderId])
   @@index([status])
@@ -880,19 +917,23 @@ model ReturnRequest {
 }
 
 model Refund {
-  id              String    @id @default(cuid())
-  orderId         String
+  id              String         @id @default(cuid())
+  orderId         String?
   returnRequestId String?
-  amount          Decimal   @db.Decimal(10, 2)
-  status          String    @default("PENDING")
+  amount          Decimal        @db.Decimal(10, 2)
+  status          String         @default("PENDING")
   reason          String
   processedAt     DateTime?
   processedBy     String?
   stripeRefundId  String?
   paypalRefundId  String?
   notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  order           Order?         @relation("OrderRefunds", fields: [orderId], references: [id], onDelete: SetNull)
+  returnRequest   ReturnRequest? @relation("ReturnRequestRefunds", fields: [returnRequestId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([returnRequestId])
@@ -1026,23 +1067,28 @@ model StockAlert {
 }
 
 model Subscription {
-  id              String    @id @default(cuid())
-  userId          String
-  productId       String
+  id              String         @id @default(cuid())
+  userId          String?
+  productId       String?
   formatId        String?
   productName     String
   formatName      String?
-  quantity        Int       @default(1)
-  frequency       String    @default("EVERY_2_MONTHS")
-  discountPercent Int       @default(10)
-  unitPrice       Decimal   @db.Decimal(10, 2)
-  status          String    @default("ACTIVE")
+  quantity        Int            @default(1)
+  frequency       String         @default("EVERY_2_MONTHS")
+  discountPercent Int            @default(10)
+  unitPrice       Decimal        @db.Decimal(10, 2)
+  status          String         @default("ACTIVE")
   nextDelivery    DateTime
   nextBillingDate DateTime?
   lastDelivery    DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   cancelledAt     DateTime?
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user            User?          @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: SetNull)
+  product         Product?       @relation("ProductSubscriptions", fields: [productId], references: [id], onDelete: SetNull)
+  format          ProductFormat? @relation("FormatSubscriptions", fields: [formatId], references: [id], onDelete: SetNull)
 
   @@index([formatId])
   @@index([nextDelivery])
@@ -1050,15 +1096,20 @@ model Subscription {
   @@index([productId])
   @@index([status])
   @@index([userId])
+  @@index([userId, status])
   @@index([createdAt])
   @@index([updatedAt])
 }
 
 model Wishlist {
   id        String   @id @default(cuid())
-  userId    String
-  productId String
+  userId    String?
+  productId String?
   createdAt DateTime @default(now())
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user      User?    @relation("UserWishlists", fields: [userId], references: [id], onDelete: SetNull)
+  product   Product? @relation("ProductWishlists", fields: [productId], references: [id], onDelete: SetNull)
 
   @@unique([userId, productId])
   @@index([productId])
@@ -1123,7 +1174,7 @@ model UpsellConfig {
 // DB-001: Customer Metrics for CLV prediction, RFM segmentation, churn scoring
 model CustomerMetrics {
   id               String   @id @default(cuid())
-  userId           String   @unique
+  userId           String?  @unique
   predictedCLV     Decimal  @default(0) @db.Decimal(12, 2)
   rfmSegment       String   @default("NEW") // CHAMPIONS, LOYAL, AT_RISK, LOST, NEW, etc.
   churnScore       Decimal  @default(0) @db.Decimal(5, 4) // 0.0000 to 1.0000
@@ -1140,6 +1191,9 @@ model CustomerMetrics {
   calculatedAt     DateTime @default(now())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  // FIX A1-P0-002: Add @relation directive for FK field
+  user             User?    @relation("UserCustomerMetrics", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([rfmSegment])
   @@index([churnScore])
@@ -1165,6 +1219,10 @@ model AbandonedCart {
   expiresAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user             User?     @relation("UserAbandonedCarts", fields: [userId], references: [id], onDelete: SetNull)
+  recoveredOrder   Order?    @relation("AbandonedCartRecoveredOrder", fields: [recoveredOrderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([sessionId])
@@ -1240,7 +1298,7 @@ model SocialProofEvent {
 // DB-014: Customer preferences from quizzes, interests, communication
 model CustomerPreference {
   id                 String   @id @default(cuid())
-  userId             String   @unique
+  userId             String?  @unique
   quizAnswers        Json?    // Structured quiz responses
   interests          Json?    // Array of interest tags
   communicationPrefs Json?    // {email: true, sms: false, push: true}
@@ -1252,6 +1310,9 @@ model CustomerPreference {
   completedAt        DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  // FIX A1-P0-002: Add @relation directive for FK field
+  user               User?    @relation("UserCustomerPreference", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])

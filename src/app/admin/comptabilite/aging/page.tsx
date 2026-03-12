@@ -115,7 +115,7 @@ export default function AgingPage() {
   const getBucketColor = (index: number) => {
     const colors = [
       'bg-green-100 text-green-800',
-      'bg-teal-100 text-teal-800',
+      'bg-indigo-100 text-indigo-800',
       'bg-yellow-100 text-yellow-800',
       'bg-amber-100 text-amber-800',
       'bg-red-100 text-red-800',
@@ -127,16 +127,16 @@ export default function AgingPage() {
   const handleRibbonRefresh = useCallback(() => { fetchAgingReport(); }, [fetchAgingReport]);
   const handleRibbonSendReminders = useCallback(async () => {
     if (!report || report.byCustomer.length === 0) {
-      toast.warning(t('admin.aging.noOverdueCustomers') || 'Aucun client en retard de paiement');
+      toast.warning(t('admin.aging.noOverdueCustomers'));
       return;
     }
     const overdueCustomers = report.byCustomer.filter(c => c.days31to60 > 0 || c.days61to90 > 0 || c.over90 > 0);
     if (overdueCustomers.length === 0) {
-      toast.info(t('admin.aging.allCurrent') || 'Tous les comptes sont a jour');
+      toast.info(t('admin.aging.allCurrent'));
       return;
     }
     const confirmed = window.confirm(
-      (t('admin.aging.confirmSendReminders') || `Envoyer des rappels de paiement a ${overdueCustomers.length} client(s) en retard?`).replace('{count}', String(overdueCustomers.length))
+      (t('admin.aging.confirmSendReminders')).replace('{count}', String(overdueCustomers.length))
     );
     if (!confirmed) return;
     try {
@@ -149,12 +149,12 @@ export default function AgingPage() {
         }),
       });
       if (response.ok) {
-        toast.success(t('admin.aging.remindersSent') || `Rappels envoyes a ${overdueCustomers.length} client(s)`);
+        toast.success(t('admin.aging.remindersSent'));
       } else {
-        toast.error(t('admin.aging.remindersError') || 'Erreur lors de l\'envoi des rappels');
+        toast.error(t('admin.aging.remindersError'));
       }
     } catch {
-      toast.error(t('admin.aging.remindersError') || 'Erreur lors de l\'envoi des rappels');
+      toast.error(t('admin.aging.remindersError'));
     }
   }, [report, reportType, t]);
   const handleRibbonExport = useCallback(() => { exportCSV(); }, [exportCSV]);
@@ -215,7 +215,7 @@ export default function AgingPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500" />
           <span className="sr-only">Loading...</span>
         </div>
       ) : report && stats ? (
@@ -370,7 +370,7 @@ export default function AgingPage() {
                       <td className="text-end py-3 px-4 text-green-600">
                         {customer.current > 0 ? formatCurrency(customer.current) : '-'}
                       </td>
-                      <td className="text-end py-3 px-4 text-teal-600">
+                      <td className="text-end py-3 px-4 text-indigo-600">
                         {customer.days1to30 > 0 ? formatCurrency(customer.days1to30) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-yellow-600">

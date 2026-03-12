@@ -327,7 +327,7 @@ function UserMenu({ session, userRole, t }: { session: { user?: { name?: string 
         {session.user?.image ? (
           <Image
             src={session.user.image}
-            alt=""
+            alt={session.user.name || 'User avatar'}
             width={28}
             height={28}
             style={{ borderRadius: '50%' }}

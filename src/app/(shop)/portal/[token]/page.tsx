@@ -480,7 +480,7 @@ export default function ClientPortalPage() {
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="border-b border-gray-200">
-            <nav className="flex overflow-x-auto" aria-label="Tabs">
+            <nav className="flex overflow-x-auto" aria-label={t('portal.aria.tabs')}>
               {tabs.map((tab) => (
                 <button
                   key={tab.key}

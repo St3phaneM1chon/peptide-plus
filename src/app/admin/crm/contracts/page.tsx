@@ -50,7 +50,7 @@ function StatusBadge({ status }: { status: Contract['status'] }) {
     PENDING_SIGNATURE: { label: 'Pending Signature', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
     ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700', icon: CheckCircle },
     EXPIRED: { label: 'Expired', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
-    RENEWED: { label: 'Renewed', color: 'bg-teal-100 text-teal-700', icon: RefreshCw },
+    RENEWED: { label: 'Renewed', color: 'bg-indigo-100 text-indigo-700', icon: RefreshCw },
     CANCELLED: { label: 'Cancelled', color: 'bg-gray-100 text-gray-500', icon: XCircle },
     TERMINATED: { label: 'Terminated', color: 'bg-red-100 text-red-700', icon: XCircle },
   };
@@ -106,7 +106,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
 
   const handleSave = async () => {
     if (!title.trim() || !startDate || !endDate || !value) {
-      toast.error(t('admin.crm.contracts.requiredFields') || 'Title, dates, and value are required');
+      toast.error(t('admin.crm.contracts.requiredFields'));
       return;
     }
 
@@ -140,8 +140,8 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
 
       toast.success(
         contract
-          ? (t('admin.crm.contracts.updated') || 'Contract updated')
-          : (t('admin.crm.contracts.created') || 'Contract created')
+          ? (t('admin.crm.contracts.updated'))
+          : (t('admin.crm.contracts.created'))
       );
       onSave();
     } catch (err) {
@@ -157,10 +157,10 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-teal-600" />
+            <FileText className="h-5 w-5 text-indigo-600" />
             {contract
-              ? (t('admin.crm.contracts.editContract') || 'Edit Contract')
-              : (t('admin.crm.contracts.createContract') || 'Create Contract')}
+              ? (t('admin.crm.contracts.editContract'))
+              : (t('admin.crm.contracts.createContract'))}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XCircle className="h-5 w-5" />
@@ -171,49 +171,49 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('common.title') || 'Title'} *
+              {t('common.title')} *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.contracts.companyName') || 'Company Name'}
+              {t('admin.crm.contracts.companyName')}
             </label>
             <input
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.contracts.startDate') || 'Start Date'} *
+                {t('admin.crm.contracts.startDate')} *
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.contracts.endDate') || 'End Date'} *
+                {t('admin.crm.contracts.endDate')} *
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -221,24 +221,24 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.contracts.value') || 'Value'} *
+                {t('admin.crm.contracts.value')} *
               </label>
               <input
                 type="number"
                 step="0.01"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('common.currency') || 'Currency'}
+                {t('common.currency')}
               </label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="CAD">CAD</option>
                 <option value="USD">USD</option>
@@ -251,12 +251,12 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('common.status') || 'Status'}
+                {t('common.status')}
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Contract['status'])}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PENDING_SIGNATURE">Pending Signature</option>
@@ -269,12 +269,12 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.contracts.renewalType') || 'Renewal Type'}
+                {t('admin.crm.contracts.renewalType')}
               </label>
               <select
                 value={renewalType}
                 onChange={(e) => setRenewalType(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="manual">Manual</option>
                 <option value="auto">Auto-Renew</option>
@@ -285,25 +285,25 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.contracts.renewalNoticeDays') || 'Renewal Notice (days)'}
+              {t('admin.crm.contracts.renewalNoticeDays')}
             </label>
             <input
               type="number"
               value={renewalNoticeDays}
               onChange={(e) => setRenewalNoticeDays(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.contracts.terms') || 'Terms & Conditions'}
+              {t('admin.crm.contracts.terms')}
             </label>
             <textarea
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
           </div>
         </div>
@@ -314,15 +314,15 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
-            {saving ? (t('common.saving') || 'Saving...') : (t('common.save') || 'Save')}
+            {saving ? (t('common.saving')) : (t('common.save'))}
           </button>
         </div>
       </div>
@@ -352,7 +352,7 @@ export default function ContractsPage() {
         setContracts(json.data || json.items || []);
       }
     } catch {
-      toast.error(t('admin.crm.contracts.loadError') || 'Failed to load contracts');
+      toast.error(t('admin.crm.contracts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -376,19 +376,19 @@ export default function ContractsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.contracts.title') || 'Contracts'}
+            <FileText className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.contracts.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.contracts.subtitle') || 'Manage contracts and track renewals'}
+            {t('admin.crm.contracts.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setModal({ contract: null })}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.contracts.create') || 'Create Contract'}
+          {t('admin.crm.contracts.create')}
         </button>
       </div>
 
@@ -403,7 +403,7 @@ export default function ContractsPage() {
           }`}
         >
           <FileText className="h-4 w-4" />
-          {t('admin.crm.contracts.allTab') || 'All Contracts'}
+          {t('admin.crm.contracts.allTab')}
         </button>
         <button
           onClick={() => setActiveTab('renewals')}
@@ -414,7 +414,7 @@ export default function ContractsPage() {
           }`}
         >
           <AlertTriangle className="h-4 w-4" />
-          {t('admin.crm.contracts.renewalsTab') || 'Renewals'}
+          {t('admin.crm.contracts.renewalsTab')}
           {renewalCount > 0 && activeTab !== 'renewals' && (
             <span className="bg-orange-100 text-orange-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
               {renewalCount}
@@ -426,20 +426,20 @@ export default function ContractsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         </div>
       ) : contracts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {activeTab === 'renewals'
-              ? (t('admin.crm.contracts.noRenewals') || 'No upcoming renewals')
-              : (t('admin.crm.contracts.noContracts') || 'No contracts yet')}
+              ? (t('admin.crm.contracts.noRenewals'))
+              : (t('admin.crm.contracts.noContracts'))}
           </p>
           <p className="text-sm text-gray-400 mt-1">
             {activeTab === 'renewals'
-              ? (t('admin.crm.contracts.noRenewalsDesc') || 'No contracts are expiring within 30 days')
-              : (t('admin.crm.contracts.noContractsDesc') || 'Create your first contract to start tracking')}
+              ? (t('admin.crm.contracts.noRenewalsDesc'))
+              : (t('admin.crm.contracts.noContractsDesc'))}
           </p>
         </div>
       ) : (
@@ -449,19 +449,19 @@ export default function ContractsPage() {
               <thead>
                 <tr className="bg-gray-50 text-start">
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                    {t('common.title') || 'Title'}
+                    {t('common.title')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                    {t('common.status') || 'Status'}
+                    {t('common.status')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                    {t('admin.crm.contracts.dates') || 'Dates'}
+                    {t('admin.crm.contracts.dates')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                    {t('admin.crm.contracts.value') || 'Value'}
+                    {t('admin.crm.contracts.value')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                    {t('admin.crm.contracts.renewalType') || 'Renewal'}
+                    {t('admin.crm.contracts.renewalType')}
                   </th>
                 </tr>
               </thead>
@@ -485,7 +485,7 @@ export default function ContractsPage() {
                       {isExpiringSoon(contract.endDate) && contract.status === 'ACTIVE' && (
                         <span className="ms-2 inline-flex items-center gap-1 text-xs text-orange-600">
                           <AlertTriangle className="h-3 w-3" />
-                          {t('admin.crm.contracts.expiringSoon') || 'Expiring soon'}
+                          {t('admin.crm.contracts.expiringSoon')}
                         </span>
                       )}
                     </td>

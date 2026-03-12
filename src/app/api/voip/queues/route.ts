@@ -30,7 +30,7 @@ const queueCreateSchema = z.object({
   })).default([]),
 });
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const { searchParams } = request.nextUrl;
     const companyId = searchParams.get('companyId');
@@ -72,7 +72,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   }
 });
 
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const raw = await request.json();
     const parsed = queueCreateSchema.safeParse(raw);

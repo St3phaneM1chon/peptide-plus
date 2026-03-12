@@ -17,6 +17,24 @@ interface CoursePageProps {
   params: Promise<{ slug: string }>;
 }
 
+// ---------------------------------------------------------------------------
+// Static params for ISR
+// ---------------------------------------------------------------------------
+
+export async function generateStaticParams() {
+  try {
+    // Courses are products that have modules
+    const products = await prisma.product.findMany({
+      where: { isActive: true, modules: { some: {} } },
+      select: { slug: true },
+    });
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (error) {
+    console.warn('[generateStaticParams] DB unavailable during build for course pages, will use ISR:', error);
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
@@ -24,11 +42,21 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     select: { name: true, shortDescription: true },
   });
 
+  const title = product?.name ?? 'Cours';
+  const description = product?.shortDescription
+    ? String(product.shortDescription).slice(0, 160)
+    : 'Consultez les détails, modules et avis sur les cours BioCycle Peptides.';
+
   return {
-    title: product?.name ?? 'Course',
-    description: product?.shortDescription
-      ? String(product.shortDescription).slice(0, 160)
-      : 'Browse course details, modules, and reviews on BioCycle Peptides.',
+    title,
+    description,
+    openGraph: {
+      title: `${title} | BioCycle Peptides`,
+      description,
+      url: `https://biocyclepeptides.com/cours/${slug}`,
+      siteName: 'BioCycle Peptides',
+      type: 'website',
+    },
   };
 }
 

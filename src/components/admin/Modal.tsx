@@ -26,12 +26,17 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer, size
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
   const titleId = useId();
+
+  // Stable ref for onClose to avoid re-running effects when onClose changes identity
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -54,22 +59,15 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer, size
         }
       }
     },
-    [onClose]
+    []
   );
 
+  // Effect 1: Keyboard listener + overflow management
   useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
-
-      // Focus first focusable element
-      requestAnimationFrame(() => {
-        const focusable = dialogRef.current?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        focusable?.focus();
-      });
     }
 
     return () => {
@@ -78,6 +76,19 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer, size
       previousFocusRef.current?.focus();
     };
   }, [isOpen, handleKeyDown]);
+
+  // Effect 2: Auto-focus on open transition (closed → open) only
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current) {
+      requestAnimationFrame(() => {
+        const focusable = dialogRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      });
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

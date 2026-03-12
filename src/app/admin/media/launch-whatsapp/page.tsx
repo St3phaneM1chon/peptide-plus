@@ -9,10 +9,10 @@ import { useI18n } from '@/i18n/client';
 export default function LaunchWhatsAppPage() {
   const { t } = useI18n();
 
-  const handleUploadRibbon = useCallback(() => toast.info(t('admin.media.platformUploadHint') || 'File sharing is available within WhatsApp.'), [t]);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.platformDeleteHint') || 'Message history can be managed in WhatsApp.'), [t]);
-  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.platformPlayHint') || 'Voice messages and media are available within WhatsApp.'), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.platformExportHint') || 'Export chat data from within WhatsApp.'), [t]);
+  const handleUploadRibbon = useCallback(() => toast.info(t('admin.media.platformUploadHint')), [t]);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.platformDeleteHint')), [t]);
+  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.platformPlayHint')), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.platformExportHint')), [t]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);

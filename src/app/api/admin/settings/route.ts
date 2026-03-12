@@ -183,7 +183,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'admin.settings', requireMfa: true });
 
 // PUT /api/admin/settings - Update settings
 // FAILLE-004 FIX: Require admin.settings permission for settings mutations (defense-in-depth)

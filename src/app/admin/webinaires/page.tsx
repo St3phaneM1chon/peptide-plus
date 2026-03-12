@@ -180,19 +180,19 @@ export default function WebinairesPage() {
     // UX FIX: Validate form fields with inline error messages
     const errors: Record<string, string> = {};
     if (!formTitle.trim()) {
-      errors.title = t('admin.webinars.titleRequired') || 'Title is required';
+      errors.title = t('admin.webinars.titleRequired');
     }
     if (!formDescription.trim()) {
-      errors.description = t('admin.webinars.descriptionRequired') || 'Description is required';
+      errors.description = t('admin.webinars.descriptionRequired');
     }
     if (!formHost.trim()) {
-      errors.host = t('admin.webinars.hostRequired') || 'Host name is required';
+      errors.host = t('admin.webinars.hostRequired');
     }
     if (!formDateTime) {
-      errors.dateTime = t('admin.webinars.dateTimeRequired') || 'Date and time are required';
+      errors.dateTime = t('admin.webinars.dateTimeRequired');
     }
     if (formDuration <= 0) {
-      errors.duration = t('admin.webinars.durationRequired') || 'Duration must be greater than 0';
+      errors.duration = t('admin.webinars.durationRequired');
     }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -331,24 +331,24 @@ export default function WebinairesPage() {
   }, []);
 
   const handleRibbonDelete = useCallback(() => {
-    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first'); return; }
+    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst')); return; }
     handleCancelWebinar(selectedWebinar);
   }, [selectedWebinar, t]);
 
   const handleRibbonSchedule = useCallback(() => {
-    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first'); return; }
+    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst')); return; }
     openEditForm(selectedWebinar);
   }, [selectedWebinar, t]);
 
   const handleRibbonLaunchNow = useCallback(async () => {
     if (!selectedWebinar) {
-      toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first');
+      toast.info(t('admin.webinars.selectWebinarFirst'));
       return;
     }
     if (selectedWebinar.meetingUrl) {
       window.open(selectedWebinar.meetingUrl, '_blank');
     } else {
-      toast.info(t('admin.webinars.noMeetingLink') || 'No meeting link configured. Edit the webinar to add one.');
+      toast.info(t('admin.webinars.noMeetingLink'));
     }
   }, [selectedWebinar, t]);
 
@@ -356,23 +356,23 @@ export default function WebinairesPage() {
     if (selectedWebinar?.recordingUrl) {
       window.open(selectedWebinar.recordingUrl, '_blank');
     } else {
-      toast.info(t('admin.webinars.noRecording') || 'No recording available for this webinar');
+      toast.info(t('admin.webinars.noRecording'));
     }
   }, [selectedWebinar, t]);
 
   const handleRibbonParticipantStats = useCallback(() => {
     if (!selectedWebinar) {
-      toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first');
+      toast.info(t('admin.webinars.selectWebinarFirst'));
       return;
     }
     toast.info(
-      `${selectedWebinar.title}: ${selectedWebinar.registeredCount} ${t('admin.webinars.registered') || 'registered'}, ${selectedWebinar.attendedCount} ${t('admin.webinars.attended') || 'attended'} (${selectedWebinar.registeredCount > 0 ? Math.round((selectedWebinar.attendedCount / selectedWebinar.registeredCount) * 100) : 0}%)`
+      `${selectedWebinar.title}: ${selectedWebinar.registeredCount} ${t('admin.webinars.registered')}, ${selectedWebinar.attendedCount} ${t('admin.webinars.attended')} (${selectedWebinar.registeredCount > 0 ? Math.round((selectedWebinar.attendedCount / selectedWebinar.registeredCount) * 100) : 0}%)`
     );
   }, [selectedWebinar, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (webinars.length === 0) {
-      toast.info(t('admin.webinars.noWebinars') || 'No webinars to export');
+      toast.info(t('admin.webinars.noWebinars'));
       return;
     }
     const BOM = '\uFEFF';
@@ -398,7 +398,7 @@ export default function WebinairesPage() {
     a.download = `webinars-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [webinars, locale, t]);
 
   useRibbonAction('newWebinar', handleRibbonNewWebinar);
@@ -414,7 +414,7 @@ export default function WebinairesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -456,7 +456,7 @@ export default function WebinairesPage() {
               onFilterChange={setStatusFilter}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.webinars.searchPlaceholder') || 'Rechercher un webinaire...'}
+              searchPlaceholder={t('admin.webinars.searchPlaceholder')}
               loading={loading}
               emptyIcon={Video}
               emptyTitle={t('admin.webinars.noWebinars')}
@@ -491,7 +491,7 @@ export default function WebinairesPage() {
                   <div className="flex flex-wrap gap-3 items-center">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       selectedWebinar.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
-                      selectedWebinar.status === 'SCHEDULED' ? 'bg-teal-100 text-teal-800' :
+                      selectedWebinar.status === 'SCHEDULED' ? 'bg-indigo-100 text-indigo-800' :
                       selectedWebinar.status === 'LIVE' ? 'bg-red-100 text-red-800' :
                       selectedWebinar.status === 'CANCELLED' ? 'bg-slate-100 text-slate-700' :
                       'bg-slate-100 text-slate-600'
@@ -508,7 +508,7 @@ export default function WebinairesPage() {
 
                   {/* Details Grid */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.webinars.formTitle') || 'Details'}</h3>
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.webinars.formTitle')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
@@ -572,7 +572,7 @@ export default function WebinairesPage() {
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
-                          className="bg-teal-500 h-2 rounded-full transition-all"
+                          className="bg-indigo-500 h-2 rounded-full transition-all"
                           style={{ width: `${Math.min((selectedWebinar.registeredCount / selectedWebinar.maxAttendees) * 100, 100)}%` }}
                         />
                       </div>
@@ -586,7 +586,7 @@ export default function WebinairesPage() {
                         href={selectedWebinar.meetingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-3 bg-teal-50 border border-teal-200 rounded-lg text-teal-700 hover:bg-teal-100 transition-colors"
+                        className="flex items-center gap-2 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 hover:bg-indigo-100 transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span className="text-sm font-medium">{t('admin.webinars.formMeetingLink')}</span>
@@ -616,10 +616,10 @@ export default function WebinairesPage() {
                       size="sm"
                       icon={Users}
                       disabled
-                      title={t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon'}
+                      title={t('admin.webinars.registrationTrackingComingSoon')}
                       onClick={() => {
                         // NOTE: FLAW-045/IMP-002 - Attendee modal pending WebinarRegistration model creation
-                        toast.info(t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon');
+                        toast.info(t('admin.webinars.registrationTrackingComingSoon'));
                       }}
                     >
                       {t('admin.webinars.viewRegistered')}
@@ -642,10 +642,10 @@ export default function WebinairesPage() {
       {/* UX FIX: ConfirmDialog for cancel webinar action */}
       <ConfirmDialog
         isOpen={confirmCancel.isOpen}
-        title={t('admin.webinars.confirmCancelTitle') || 'Cancel webinar?'}
+        title={t('admin.webinars.confirmCancelTitle')}
         message={t('admin.webinars.confirmCancelMessage') || `Are you sure you want to cancel "${confirmCancel.webinar?.title || ''}"? ${confirmCancel.webinar?.registeredCount ? `${confirmCancel.webinar.registeredCount} registered attendees will be affected.` : ''}`}
         variant="danger"
-        confirmLabel={t('admin.webinars.cancelWebinar') || 'Cancel Webinar'}
+        confirmLabel={t('admin.webinars.cancelWebinar')}
         onConfirm={() => {
           if (confirmCancel.webinar) executeCancelWebinar(confirmCancel.webinar);
           setConfirmCancel({ isOpen: false, webinar: null });

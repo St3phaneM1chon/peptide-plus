@@ -75,10 +75,10 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.crm.analytics') || 'Pipeline Analytics'}
+            {t('admin.crm.analytics')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.analyticsDesc') || 'Performance metrics and forecasting'}
+            {t('admin.crm.analyticsDesc')}
           </p>
         </div>
         {activeTab === 'pipeline' && (
@@ -98,26 +98,26 @@ export default function AnalyticsPage() {
           onClick={() => setActiveTab('pipeline')}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'pipeline'
-              ? 'border-teal-600 text-teal-600'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
         >
           <span className="flex items-center gap-2">
             <PieChart className="h-4 w-4" />
-            {t('admin.crm.pipelineAnalytics') || 'Pipeline Analytics'}
+            {t('admin.crm.pipelineAnalytics')}
           </span>
         </button>
         <button
           onClick={() => setActiveTab('forecast')}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'forecast'
-              ? 'border-teal-600 text-teal-600'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
         >
           <span className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            {t('admin.crm.revenueForecast') || 'Revenue Forecast'}
+            {t('admin.crm.revenueForecast')}
           </span>
         </button>
       </div>
@@ -127,7 +127,7 @@ export default function AnalyticsPage() {
         <>
           {loading ? (
             <div className="flex items-center justify-center h-96">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
             </div>
           ) : (
             <>
@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
                   <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                     <Target className="h-4 w-4" /> Win Rate
                   </div>
-                  <p className="text-2xl font-bold text-teal-600">{Math.round((stats?.winRate || 0) * 100)}%</p>
+                  <p className="text-2xl font-bold text-indigo-600">{Math.round((stats?.winRate || 0) * 100)}%</p>
                   <p className="text-xs text-gray-400 mt-1">{stats?.wonCount || 0} won / {stats?.lostCount || 0} lost</p>
                 </div>
                 <div className="bg-white rounded-xl border p-5">
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-600 transition-all"
+                            className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-indigo-600 transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
                   Switch to the{' '}
                   <button
                     onClick={() => setActiveTab('forecast')}
-                    className="text-teal-600 underline hover:text-teal-800"
+                    className="text-indigo-600 underline hover:text-indigo-800"
                   >
                     Revenue Forecast tab
                   </button>

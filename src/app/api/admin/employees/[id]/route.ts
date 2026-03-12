@@ -9,16 +9,21 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { sendEmail } from '@/lib/email/email-service';
+import { buildInviteEmployeeEmail } from '@/lib/email/templates/invite-employee';
 import { logger } from '@/lib/logger';
 
 // Zod schema for PATCH /api/admin/employees/[id] (update employee)
 const updateEmployeeSchema = z.object({
+  action: z.enum(['resend-invite']).optional(),
   role: z.enum(['EMPLOYEE', 'OWNER', 'PUBLIC']).optional(),
   name: z.string().optional(),
   phone: z.string().nullable().optional(),
+  phoneNumberId: z.string().optional(),
   isActive: z.boolean().optional(),
   permissions: z.array(z.string()).optional(),
 }).strict();
@@ -38,6 +43,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         role: true,
         phone: true,
         locale: true,
+        password: true,
         createdAt: true,
         updatedAt: true,
         sessions: {
@@ -56,30 +62,38 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       return NextResponse.json({ error: 'User is not an employee' }, { status: 404 });
     }
 
-    // Get permission groups
+    // A7-P2-008: Flatten 3-level include into separate queries
+    // (was: userPermissionGroup -> group -> permissions -> permission)
     const userPermGroups = await prisma.userPermissionGroup.findMany({
       where: { userId: id },
       include: {
-        group: {
-          include: {
-            permissions: {
-              include: { permission: true },
-            },
-          },
-        },
+        group: { select: { id: true, name: true, description: true, color: true } },
       },
     });
+
+    // Fetch group permissions separately to avoid 3-level nesting
+    const groupIds = userPermGroups.map((upg) => upg.groupId);
+    const groupPerms = groupIds.length > 0
+      ? await prisma.permissionGroupPermission.findMany({
+          where: { groupId: { in: groupIds } },
+          include: { permission: { select: { code: true, name: true, module: true } } },
+        })
+      : [];
+
+    // Group permissions by groupId
+    const permsByGroupId = new Map<string, Array<{ code: string; name: string; module: string }>>();
+    for (const gp of groupPerms) {
+      const arr = permsByGroupId.get(gp.groupId) || [];
+      arr.push({ code: gp.permission.code, name: gp.permission.name, module: gp.permission.module });
+      permsByGroupId.set(gp.groupId, arr);
+    }
 
     const groups = userPermGroups.map((upg) => ({
       id: upg.group.id,
       name: upg.group.name,
       description: upg.group.description,
       color: upg.group.color,
-      permissions: upg.group.permissions.map((gp) => ({
-        code: gp.permission.code,
-        name: gp.permission.name,
-        module: gp.permission.module,
-      })),
+      permissions: permsByGroupId.get(upg.groupId) || [],
     }));
 
     // Get individual overrides
@@ -113,6 +127,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         role: user.role,
         phone: user.phone,
         locale: user.locale,
+        hasPassword: !!user.password,
         isActive: true,
         lastLogin,
         createdAt: user.createdAt.toISOString(),
@@ -169,6 +184,58 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
     }
 
+    // Handle resend-invite action
+    if (data.action === 'resend-invite') {
+      // User must not already have a password (i.e., hasn't accepted yet)
+      if (existing.password) {
+        return NextResponse.json(
+          { error: 'This employee has already set up their account' },
+          { status: 400 }
+        );
+      }
+
+      const inviteToken = crypto.randomBytes(32).toString('hex');
+      const inviteTokenExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
+
+      await prisma.user.update({
+        where: { id },
+        data: { inviteToken, inviteTokenExpiry },
+      });
+
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+      const inviteUrl = `${baseUrl}/auth/accept-invite?token=${inviteToken}`;
+      const inviterName = session.user.name || session.user.email || 'Admin';
+
+      const emailTemplate = buildInviteEmployeeEmail({
+        recipientName: existing.name || existing.email || '',
+        inviterName,
+        inviteUrl,
+        locale: 'fr',
+      });
+
+      sendEmail({
+        to: { email: existing.email!, name: existing.name || undefined },
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+        tags: ['resend-invite-employee'],
+      }).catch((err) => {
+        logger.error('Failed to resend invite email', { employeeId: id, error: err instanceof Error ? err.message : String(err) });
+      });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'RESEND_INVITE',
+        targetType: 'User',
+        targetId: id,
+        newValue: { email: existing.email },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
+      return NextResponse.json({ success: true, message: 'Invitation renvoyée' });
+    }
+
     // Prevent modifying your own role
     if (id === session.user.id && data.role && data.role !== existing.role) {
       return NextResponse.json(
@@ -189,8 +256,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       updateData.name = data.name;
     }
 
-    // Phone change
-    if (data.phone !== undefined) {
+    // Phone change (direct or via phoneNumberId)
+    if (data.phoneNumberId) {
+      const phoneNumber = await prisma.phoneNumber.findUnique({
+        where: { id: data.phoneNumberId },
+        select: { number: true },
+      });
+      if (phoneNumber) {
+        updateData.phone = phoneNumber.number;
+      }
+    } else if (data.phone !== undefined) {
       updateData.phone = data.phone;
     }
 

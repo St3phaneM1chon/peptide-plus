@@ -78,7 +78,7 @@ export function InlineEdit({
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 min-w-0 border rounded px-1.5 py-0.5 text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+              className="flex-1 min-w-0 border rounded px-1.5 py-0.5 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             >
               <option value="">{emptyText}</option>
               {options.map(opt => (
@@ -93,7 +93,7 @@ export function InlineEdit({
               onChange={e => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className="flex-1 min-w-0 border rounded px-1.5 py-0.5 text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+              className="flex-1 min-w-0 border rounded px-1.5 py-0.5 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
           )}
           <button onClick={save} disabled={saving} className="p-0.5 text-green-600 hover:bg-green-50 rounded">
@@ -114,7 +114,7 @@ export function InlineEdit({
         <span className="text-sm text-gray-900">{value || emptyText}</span>
         <button
           onClick={startEdit}
-          className="p-0.5 text-gray-300 opacity-0 group-hover:opacity-100 hover:text-teal-600 transition-opacity"
+          className="p-0.5 text-gray-300 opacity-0 group-hover:opacity-100 hover:text-indigo-600 transition-opacity"
           aria-label={`Edit ${label}`}
         >
           <Pencil className="h-3 w-3" />

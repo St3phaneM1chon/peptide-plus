@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Globe } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { PlatformConnectionStatus } from '@/components/admin/PlatformConnectionStatus';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { addCSRFHeader } from '@/lib/csrf';
 import { toast } from 'sonner';
@@ -51,7 +52,7 @@ export default function MediaMetaPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -109,7 +110,7 @@ export default function MediaMetaPage() {
     a.download = `meta-config-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.media.exportSuccess') || 'Configuration exported');
+    toast.success(t('admin.media.exportSuccess'));
   }, [enabled, appId, pixelId, pageId, igAccountId, hasAccessToken, hasAppSecret, publicLink, webhookUrl, t]);
 
   useRibbonAction('configure', onConfigure);
@@ -120,25 +121,26 @@ export default function MediaMetaPage() {
   useRibbonAction('export', onExport);
 
   // --- media.ads ribbon actions ---
-  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint') || 'Create ad campaigns in Meta Ads Manager.'); }, [t]));
-  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint') || 'Manage and delete campaigns in Meta Ads Manager.'); }, [t]));
-  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint') || 'Pause campaigns directly in Meta Ads Manager.'); }, [t]));
-  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint') || 'Resume paused campaigns in Meta Ads Manager.'); }, [t]));
-  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint') || 'Adjust budgets in Meta Ads Manager.'); }, [t]));
-  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in Meta Business Suite.'); }, [t]));
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint')); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint')); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint')); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint')); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint')); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint')); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-6 max-w-3xl space-y-4">
+      <PlatformConnectionStatus platform="meta" usesOAuth={false} />
       <IntegrationCard
         // FIX: F35 - Use i18n for title and description instead of hardcoded English
-        title={t('admin.media.metaTitle') || 'Meta (Facebook + Instagram)'}
-        description={t('admin.media.metaDescription') || 'Connect Meta Marketing API, Instagram Graph API, Meta Pixel, and Conversions API.'}
+        title={t('admin.media.metaTitle')}
+        description={t('admin.media.metaDescription')}
         icon={<Globe className="w-6 h-6" />}
-        color="from-teal-600 to-indigo-600"
+        color="from-indigo-600 to-indigo-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy',
-  description: 'Understand how BioCycle Peptides uses cookies and similar tracking technologies on our website.',
+  title: 'Politique de cookies',
+  description: 'Comprenez comment BioCycle Peptides utilise les cookies et les technologies de suivi similaires sur notre site web.',
+  openGraph: {
+    title: 'Politique de cookies | BioCycle Peptides',
+    description: 'Comment BioCycle Peptides utilise les cookies et technologies de suivi.',
+    url: 'https://biocyclepeptides.com/mentions-legales/cookies',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function CookiesLayout({ children }: { children: React.ReactNode }) {

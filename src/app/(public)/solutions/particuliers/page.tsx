@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Solutions Particuliers | Formations Pro',
-  description: 'Formations accessibles pour booster votre carrière et acquérir de nouvelles compétences.',
+  title: 'Solutions particuliers',
+  description: 'Peptides de recherche pour les chercheurs individuels. Commandes en petites quantités, guides de reconstitution et support technique.',
+  openGraph: {
+    title: 'Solutions particuliers | BioCycle Peptides',
+    description: 'Peptides de recherche pour les chercheurs individuels.',
+    url: 'https://biocyclepeptides.com/solutions/particuliers',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const benefits = [

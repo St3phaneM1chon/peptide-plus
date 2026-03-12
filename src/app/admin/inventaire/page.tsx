@@ -148,7 +148,7 @@ function SuppliersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -173,37 +173,37 @@ function SuppliersTab() {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Name *</label>
               <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Supplier name" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Supplier name" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Contact Name</label>
               <input type="text" value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Contact person" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contact person" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
               <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="email@supplier.com" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="email@supplier.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
               <input type="text" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="+1 555 123 4567" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="+1 555 123 4567" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs font-medium text-slate-600 mb-1">Address</label>
               <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="123 Supplier St, City" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="123 Supplier St, City" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Website</label>
               <input type="url" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="https://supplier.com" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://supplier.com" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
               <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Internal notes" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Internal notes" />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -245,7 +245,7 @@ function SuppliersTab() {
                   <td className="px-4 py-3 text-slate-600 hidden md:table-cell">{s.contactName || '-'}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     {s.email ? (
-                      <a href={`mailto:${s.email}`} className="text-teal-600 hover:underline flex items-center gap-1">
+                      <a href={`mailto:${s.email}`} className="text-indigo-600 hover:underline flex items-center gap-1">
                         <Mail className="w-3 h-3" /> {s.email}
                       </a>
                     ) : '-'}
@@ -255,7 +255,7 @@ function SuppliersTab() {
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     {s.website ? (
-                      <a href={s.website} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline flex items-center gap-1">
+                      <a href={s.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1">
                         <Globe className="w-3 h-3" /> Visit
                       </a>
                     ) : '-'}
@@ -368,7 +368,7 @@ function PurchaseOrdersTab() {
   const poStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; text: string }> = {
       DRAFT: { bg: 'bg-slate-100', text: 'text-slate-700' },
-      ORDERED: { bg: 'bg-teal-100', text: 'text-teal-700' },
+      ORDERED: { bg: 'bg-indigo-100', text: 'text-indigo-700' },
       PARTIAL: { bg: 'bg-amber-100', text: 'text-amber-700' },
       RECEIVED: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
       CANCELLED: { bg: 'bg-red-100', text: 'text-red-700' },
@@ -380,7 +380,7 @@ function PurchaseOrdersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -405,7 +405,7 @@ function PurchaseOrdersTab() {
             onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
               statusFilter === s
-                ? 'bg-teal-50 text-teal-700 border-teal-200'
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
           >
@@ -425,7 +425,7 @@ function PurchaseOrdersTab() {
               <select
                 value={form.supplierId}
                 onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Select supplier</option>
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -434,12 +434,12 @@ function PurchaseOrdersTab() {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Expected Delivery</label>
               <input type="date" value={form.expectedDelivery} onChange={e => setForm(f => ({ ...f, expectedDelivery: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
               <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Internal notes" />
+                className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Internal notes" />
             </div>
           </div>
 
@@ -447,7 +447,7 @@ function PurchaseOrdersTab() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-slate-600">Line Items *</label>
-              <button onClick={addItem} className="text-xs text-teal-600 hover:text-teal-700 font-medium">+ Add Item</button>
+              <button onClick={addItem} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">+ Add Item</button>
             </div>
             <div className="space-y-2">
               {form.items.map((item, idx) => (
@@ -622,7 +622,7 @@ function ReconciliationTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -650,7 +650,7 @@ function ReconciliationTab() {
         <button
           onClick={() => setFilter('all')}
           className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-            filter === 'all' ? 'bg-teal-100 text-teal-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
+            filter === 'all' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-slate-500 hover:bg-slate-100'
           }`}
         >
           All ({data.totalProducts})
@@ -827,7 +827,7 @@ function reorderUrgency(item: ProductFormat): number {
 
 const ABC_BADGE: Record<string, { bg: string; text: string }> = {
   A: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  B: { bg: 'bg-teal-100', text: 'text-teal-800' },
+  B: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
   C: { bg: 'bg-slate-100', text: 'text-slate-600' },
 };
 
@@ -843,6 +843,10 @@ export default function InventairePage() {
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
+
+  // A7-P2-006: Pagination for large inventory lists
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -931,7 +935,7 @@ export default function InventairePage() {
     try {
       const res = await fetch('/api/admin/inventory/export');
       if (!res.ok) {
-        toast.error(t('admin.inventory.exportError') || 'Export failed');
+        toast.error(t('admin.inventory.exportError'));
         return;
       }
       const blob = await res.blob();
@@ -945,10 +949,10 @@ export default function InventairePage() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      toast.success(t('admin.inventory.exportSuccess') || 'Inventory exported successfully');
+      toast.success(t('admin.inventory.exportSuccess'));
     } catch (error) {
       console.error('Export error:', error);
-      toast.error(t('admin.inventory.exportError') || 'Export failed');
+      toast.error(t('admin.inventory.exportError'));
     } finally {
       setExporting(false);
     }
@@ -979,7 +983,7 @@ export default function InventairePage() {
         // Revert optimistic update
         setInventory(previousInventory);
       } else {
-        toast.success(t('admin.inventory.stockUpdated') || 'Stock updated');
+        toast.success(t('admin.inventory.stockUpdated'));
       }
     } catch (err) {
       console.error('Error updating stock:', err);
@@ -1003,7 +1007,7 @@ export default function InventairePage() {
       setEditingId(selectedItem.id);
       setEditValue(selectedItem.stockQuantity);
     } else {
-      toast.info(t('admin.inventory.selectItemFirst') || 'Select an item first');
+      toast.info(t('admin.inventory.selectItemFirst'));
     }
   }, [selectedItem, t]);
 
@@ -1012,7 +1016,7 @@ export default function InventairePage() {
       setEditingId(selectedItem.id);
       setEditValue(selectedItem.stockQuantity);
     } else {
-      toast.info(t('admin.inventory.selectItemFirst') || 'Select an item first');
+      toast.info(t('admin.inventory.selectItemFirst'));
     }
   }, [selectedItem, t]);
 
@@ -1024,7 +1028,7 @@ export default function InventairePage() {
     // Generate CSV of low-stock items that need reordering
     const lowStockItems = inventory.filter(i => i.stockQuantity <= i.lowStockThreshold);
     if (lowStockItems.length === 0) {
-      toast.info(t('admin.inventory.noLowStockItems') || 'No items need reordering');
+      toast.info(t('admin.inventory.noLowStockItems'));
       return;
     }
     const headers = ['Product', 'Format', 'SKU', 'Current Stock', 'Threshold', 'Price', 'Status'];
@@ -1048,7 +1052,7 @@ export default function InventairePage() {
     a.remove();
     window.URL.revokeObjectURL(url);
     toast.success(
-      (t('admin.inventory.renewalListExported') || 'Reorder list exported ({count} items)').replace('{count}', String(lowStockItems.length))
+      (t('admin.inventory.renewalListExported')).replace('{count}', String(lowStockItems.length))
     );
   }, [inventory, t]);
 
@@ -1060,7 +1064,7 @@ export default function InventairePage() {
     // Generate a CSV of out-of-stock items to order
     const outOfStock = inventory.filter(i => i.stockQuantity === 0);
     if (outOfStock.length === 0) {
-      toast.info(t('admin.inventory.noOutOfStockItems') || 'No out-of-stock items');
+      toast.info(t('admin.inventory.noOutOfStockItems'));
       return;
     }
     const headers = ['Product', 'Format', 'SKU', 'Price', 'Suggested Order Qty'];
@@ -1082,7 +1086,7 @@ export default function InventairePage() {
     a.remove();
     window.URL.revokeObjectURL(url);
     toast.success(
-      (t('admin.inventory.purchaseOrderExported') || 'Purchase order exported ({count} items)').replace('{count}', String(outOfStock.length))
+      (t('admin.inventory.purchaseOrderExported')).replace('{count}', String(outOfStock.length))
     );
   }, [inventory, t]);
 
@@ -1101,6 +1105,8 @@ export default function InventairePage() {
   // ─── Filtering ──────────────────────────────────────────────
 
   const filteredInventory = useMemo(() => {
+    // A7-P2-006: Reset to page 1 when filters change
+    setCurrentPage(1);
     return inventory.filter(item => {
       if (searchValue) {
         const search = searchValue.toLowerCase();
@@ -1152,8 +1158,15 @@ export default function InventairePage() {
     { key: 'OUT_OF_STOCK', label: t('admin.inventory.outOfStock'), count: stats.outOfStock },
   ], [t, stats]);
 
+  // A7-P2-006: Paginate the inventory list to avoid rendering hundreds of items
+  const totalPages = Math.max(1, Math.ceil(filteredInventory.length / ITEMS_PER_PAGE));
+  const paginatedInventory = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredInventory.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredInventory, currentPage]);
+
   const listItems: ContentListItem[] = useMemo(() => {
-    return filteredInventory.map((item) => ({
+    return paginatedInventory.map((item) => ({
       id: item.id,
       avatar: { text: item.productName.charAt(0) },
       title: item.productName,
@@ -1173,14 +1186,14 @@ export default function InventairePage() {
         },
       ],
     }));
-  }, [filteredInventory, t, formatCurrency]);
+  }, [paginatedInventory, t, formatCurrency]);
 
   // ─── Render ─────────────────────────────────────────────────
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -1208,7 +1221,7 @@ export default function InventairePage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 activeTab === tab.key
-                  ? 'border-teal-500 text-teal-700'
+                  ? 'border-indigo-500 text-indigo-700'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
@@ -1274,7 +1287,7 @@ export default function InventairePage() {
               size="sm"
               onClick={() => setShowMonthlyStats(true)}
             >
-              {t('admin.inventory.statsBtn') || 'Stats'}
+              {t('admin.inventory.statsBtn')}
             </Button>
             <Button
               variant="ghost"
@@ -1283,7 +1296,7 @@ export default function InventairePage() {
               onClick={() => setShowStockAlerts(true)}
               className={stats.outOfStock + stats.lowStock > 0 ? 'text-amber-600' : ''}
             >
-              {t('admin.inventory.alertsBtn') || 'Alerts'}
+              {t('admin.inventory.alertsBtn')}
               {(stats.outOfStock + stats.lowStock > 0) && (
                 <span className="ms-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
                   {stats.outOfStock + stats.lowStock}
@@ -1312,17 +1325,17 @@ export default function InventairePage() {
                     });
                     if (!res.ok) {
                       const data = await res.json().catch(() => ({}));
-                      toast.error(data.error || t('admin.inventory.importError') || 'Import failed');
+                      toast.error(data.error || t('admin.inventory.importError'));
                       return;
                     }
                     const result = await res.json();
                     toast.success(
-                      (t('admin.inventory.importSuccess') || 'Inventory imported successfully') +
+                      (t('admin.inventory.importSuccess')) +
                       (result.imported ? ` (${result.imported} items)` : '')
                     );
                     fetchInventory();
                   } catch {
-                    toast.error(t('admin.inventory.importError') || 'Import failed');
+                    toast.error(t('admin.inventory.importError'));
                   }
                   e.target.value = '';
                 }}
@@ -1354,21 +1367,46 @@ export default function InventairePage() {
           listWidth={400}
           showDetail={!!selectedItemId}
           list={
-            <ContentList
-              items={listItems}
-              selectedId={selectedItemId}
-              onSelect={handleSelectItem}
-              filterTabs={filterTabs}
-              activeFilter={stockFilter}
-              onFilterChange={setStockFilter}
-              searchValue={searchValue}
-              onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.inventory.searchPlaceholder')}
-              loading={loading}
-              emptyIcon={Package}
-              emptyTitle={t('admin.inventory.emptyTitle')}
-              emptyDescription={t('admin.inventory.emptyDescription')}
-            />
+            <div className="flex flex-col h-full">
+              <ContentList
+                items={listItems}
+                selectedId={selectedItemId}
+                onSelect={handleSelectItem}
+                filterTabs={filterTabs}
+                activeFilter={stockFilter}
+                onFilterChange={setStockFilter}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                searchPlaceholder={t('admin.inventory.searchPlaceholder')}
+                loading={loading}
+                emptyIcon={Package}
+                emptyTitle={t('admin.inventory.emptyTitle')}
+                emptyDescription={t('admin.inventory.emptyDescription')}
+              />
+              {/* A7-P2-006: Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 text-xs text-slate-500 flex-shrink-0">
+                  <span>{filteredInventory.length} items</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-2 py-1 rounded hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      &laquo; Prev
+                    </button>
+                    <span className="px-2">{currentPage} / {totalPages}</span>
+                    <button
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className="px-2 py-1 rounded hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Next &raquo;
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           }
           detail={
             selectedItem ? (
@@ -1426,23 +1464,23 @@ export default function InventairePage() {
                   </div>
 
                   {/* Lead Time Tracking */}
-                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-4 h-4 text-teal-600" />
-                      <h4 className="text-sm font-semibold text-teal-800">Delai d&apos;approvisionnement</h4>
+                      <Clock className="w-4 h-4 text-indigo-600" />
+                      <h4 className="text-sm font-semibold text-indigo-800">Delai d&apos;approvisionnement</h4>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="text-center p-2 bg-white rounded border border-teal-100">
-                        <p className="text-lg font-bold text-teal-700">5j</p>
-                        <p className="text-[10px] text-teal-600">Delai moyen</p>
+                      <div className="text-center p-2 bg-white rounded border border-indigo-100">
+                        <p className="text-lg font-bold text-indigo-700">5j</p>
+                        <p className="text-[10px] text-indigo-600">Delai moyen</p>
                       </div>
-                      <div className="text-center p-2 bg-white rounded border border-teal-100">
-                        <p className="text-lg font-bold text-teal-700">3j</p>
-                        <p className="text-[10px] text-teal-600">Dernier delai</p>
+                      <div className="text-center p-2 bg-white rounded border border-indigo-100">
+                        <p className="text-lg font-bold text-indigo-700">3j</p>
+                        <p className="text-[10px] text-indigo-600">Dernier delai</p>
                       </div>
-                      <div className="text-center p-2 bg-white rounded border border-teal-100">
-                        <p className="text-lg font-bold text-teal-700">10j</p>
-                        <p className="text-[10px] text-teal-600">Delai max</p>
+                      <div className="text-center p-2 bg-white rounded border border-indigo-100">
+                        <p className="text-lg font-bold text-indigo-700">10j</p>
+                        <p className="text-[10px] text-indigo-600">Delai max</p>
                       </div>
                     </div>
                   </div>
@@ -1493,7 +1531,7 @@ export default function InventairePage() {
                         <p className="text-xs text-slate-500 mb-1">{t('admin.inventory.colProduct')}</p>
                         <Link
                           href={`/admin/produits/${selectedItem.productId}`}
-                          className="text-teal-600 hover:underline font-medium"
+                          className="text-indigo-600 hover:underline font-medium"
                         >
                           {selectedItem.productName}
                         </Link>
@@ -1527,7 +1565,7 @@ export default function InventairePage() {
                             value={editValue}
                             onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
                             className="w-24 h-9 px-3 border border-slate-300 rounded-lg text-center text-sm
-                              focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             autoFocus
                           />
                         </div>
@@ -1552,7 +1590,7 @@ export default function InventairePage() {
                             }}
                             disabled={!adjustmentReason}
                           >
-                            {t('admin.inventory.edit') || 'Save'}
+                            {t('admin.inventory.edit')}
                           </Button>
                           <Button
                             size="sm"
@@ -1600,12 +1638,12 @@ export default function InventairePage() {
       >
         {historyLoading ? (
           <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
             <span className="sr-only">Loading...</span>
           </div>
         ) : historyData.length === 0 ? (
           <p className="text-sm text-slate-500 py-4 text-center">
-            {t('admin.inventory.noHistory') || 'No transaction history yet.'}
+            {t('admin.inventory.noHistory')}
           </p>
         ) : (
           <div className="space-y-3">
@@ -1636,8 +1674,8 @@ export default function InventairePage() {
       <Modal
         isOpen={showStockAlerts}
         onClose={() => setShowStockAlerts(false)}
-        title={t('admin.inventory.stockAlertsTitle') || 'Stock Alerts'}
-        subtitle={t('admin.inventory.stockAlertsSubtitle') || 'Items requiring attention'}
+        title={t('admin.inventory.stockAlertsTitle')}
+        subtitle={t('admin.inventory.stockAlertsSubtitle')}
         size="lg"
       >
         {(() => {
@@ -1649,10 +1687,10 @@ export default function InventairePage() {
               <div>
                 <h4 className="text-sm font-semibold text-red-700 flex items-center gap-2 mb-2">
                   <PackageX className="w-4 h-4" />
-                  {t('admin.inventory.outOfStock') || 'Out of Stock'} ({outOfStockItems.length})
+                  {t('admin.inventory.outOfStock')} ({outOfStockItems.length})
                 </h4>
                 {outOfStockItems.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noOutOfStockItems') || 'No out-of-stock items'}</p>
+                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noOutOfStockItems')}</p>
                 ) : (
                   <div className="border border-red-200 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
@@ -1683,10 +1721,10 @@ export default function InventairePage() {
               <div>
                 <h4 className="text-sm font-semibold text-amber-700 flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4" />
-                  {t('admin.inventory.lowStock') || 'Low Stock'} ({lowStockItems.length})
+                  {t('admin.inventory.lowStock')} ({lowStockItems.length})
                 </h4>
                 {lowStockItems.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noLowStockItems') || 'No low-stock items'}</p>
+                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noLowStockItems')}</p>
                 ) : (
                   <div className="border border-amber-200 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
@@ -1721,33 +1759,33 @@ export default function InventairePage() {
       <Modal
         isOpen={showMonthlyStats}
         onClose={() => setShowMonthlyStats(false)}
-        title={t('admin.inventory.monthlyStatsTitle') || 'Inventory Summary'}
-        subtitle={t('admin.inventory.monthlyStatsSubtitle') || 'Current stock overview'}
+        title={t('admin.inventory.monthlyStatsTitle')}
+        subtitle={t('admin.inventory.monthlyStatsSubtitle')}
         size="md"
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-              <p className="text-xs text-slate-500 mt-1">{t('admin.inventory.totalProducts') || 'Total Products'}</p>
+              <p className="text-xs text-slate-500 mt-1">{t('admin.inventory.totalProducts')}</p>
             </div>
             <div className="bg-emerald-50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-emerald-700">{stats.inStock}</p>
-              <p className="text-xs text-emerald-600 mt-1">{t('admin.inventory.inStock') || 'In Stock'}</p>
+              <p className="text-xs text-emerald-600 mt-1">{t('admin.inventory.inStock')}</p>
             </div>
             <div className="bg-amber-50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-amber-700">{stats.lowStock}</p>
-              <p className="text-xs text-amber-600 mt-1">{t('admin.inventory.lowStock') || 'Low Stock'}</p>
+              <p className="text-xs text-amber-600 mt-1">{t('admin.inventory.lowStock')}</p>
             </div>
             <div className="bg-red-50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-red-700">{stats.outOfStock}</p>
-              <p className="text-xs text-red-600 mt-1">{t('admin.inventory.outOfStock') || 'Out of Stock'}</p>
+              <p className="text-xs text-red-600 mt-1">{t('admin.inventory.outOfStock')}</p>
             </div>
           </div>
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-emerald-700">{t('admin.inventory.stockValue') || 'Total Stock Value'}</p>
+                <p className="text-sm text-emerald-700">{t('admin.inventory.stockValue')}</p>
                 <p className="text-2xl font-bold text-emerald-800">{formatCurrency(stats.totalValue)}</p>
               </div>
               <DollarSign className="w-8 h-8 text-emerald-400" />
@@ -1756,7 +1794,7 @@ export default function InventairePage() {
           {/* Stock health indicator */}
           <div className="bg-slate-50 rounded-lg p-4">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">
-              {t('admin.inventory.stockHealth') || 'Stock Health'}
+              {t('admin.inventory.stockHealth')}
             </h4>
             <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden flex">
               {stats.total > 0 && (
@@ -1764,25 +1802,25 @@ export default function InventairePage() {
                   <div
                     className="bg-emerald-500 h-full"
                     style={{ width: `${(stats.inStock / stats.total) * 100}%` }}
-                    title={`${t('admin.inventory.inStock') || 'In Stock'}: ${stats.inStock}`}
+                    title={`${t('admin.inventory.inStock')}: ${stats.inStock}`}
                   />
                   <div
                     className="bg-amber-500 h-full"
                     style={{ width: `${(stats.lowStock / stats.total) * 100}%` }}
-                    title={`${t('admin.inventory.lowStock') || 'Low Stock'}: ${stats.lowStock}`}
+                    title={`${t('admin.inventory.lowStock')}: ${stats.lowStock}`}
                   />
                   <div
                     className="bg-red-500 h-full"
                     style={{ width: `${(stats.outOfStock / stats.total) * 100}%` }}
-                    title={`${t('admin.inventory.outOfStock') || 'Out of Stock'}: ${stats.outOfStock}`}
+                    title={`${t('admin.inventory.outOfStock')}: ${stats.outOfStock}`}
                   />
                 </>
               )}
             </div>
             <div className="flex justify-between mt-2 text-xs text-slate-500">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" /> {t('admin.inventory.inStock') || 'In Stock'}</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-amber-500 rounded-full inline-block" /> {t('admin.inventory.lowStock') || 'Low Stock'}</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full inline-block" /> {t('admin.inventory.outOfStock') || 'Out of Stock'}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" /> {t('admin.inventory.inStock')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-amber-500 rounded-full inline-block" /> {t('admin.inventory.lowStock')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full inline-block" /> {t('admin.inventory.outOfStock')}</span>
             </div>
           </div>
         </div>
@@ -1844,7 +1882,7 @@ export default function InventairePage() {
                   </div>
 
                   <div className="text-center px-3">
-                    <div className="flex items-center gap-1 text-teal-600">
+                    <div className="flex items-center gap-1 text-indigo-600">
                       <Clock className="w-3 h-3" />
                       <span className="text-sm font-medium">{item.estimatedLeadDays}j</span>
                     </div>
@@ -1871,10 +1909,10 @@ export default function InventairePage() {
         size="md"
       >
         <div className="space-y-4">
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-center">
-            <ArrowRightLeft className="w-8 h-8 text-teal-400 mx-auto mb-2" />
-            <p className="text-sm text-teal-800 font-medium">Module de transfert inter-entrepots</p>
-            <p className="text-xs text-teal-600 mt-1">
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center">
+            <ArrowRightLeft className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
+            <p className="text-sm text-indigo-800 font-medium">Module de transfert inter-entrepots</p>
+            <p className="text-xs text-indigo-600 mt-1">
               Selectionnez un produit, la quantite a transferer et l&apos;emplacement de destination.
             </p>
           </div>

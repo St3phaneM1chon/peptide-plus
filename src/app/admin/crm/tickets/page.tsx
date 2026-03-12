@@ -36,13 +36,13 @@ const PRIORITY_COLORS: Record<string, string> = {
   CRITICAL: 'bg-red-100 text-red-700 border-red-300',
   URGENT: 'bg-orange-100 text-orange-700 border-orange-300',
   HIGH: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  MEDIUM: 'bg-teal-100 text-teal-700 border-teal-300',
+  MEDIUM: 'bg-indigo-100 text-indigo-700 border-indigo-300',
   LOW: 'bg-gray-100 text-gray-600 border-gray-300',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-teal-100 text-teal-700',
-  OPEN: 'bg-teal-100 text-teal-700',
+  NEW: 'bg-indigo-100 text-indigo-700',
+  OPEN: 'bg-indigo-100 text-indigo-700',
   IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
   WAITING_CUSTOMER: 'bg-yellow-100 text-yellow-700',
   WAITING_INTERNAL: 'bg-amber-100 text-amber-700',
@@ -115,7 +115,7 @@ export default function TicketsPage() {
 
   const handleCreate = async () => {
     if (!formSubject.trim()) {
-      toast.error(t('admin.tickets.subjectRequired') || 'Subject is required');
+      toast.error(t('admin.tickets.subjectRequired'));
       return;
     }
 
@@ -137,7 +137,7 @@ export default function TicketsPage() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success(t('admin.tickets.ticketCreated') || 'Ticket created');
+        toast.success(t('admin.tickets.ticketCreated'));
         setShowModal(false);
         resetForm();
         loadTickets();
@@ -169,19 +169,19 @@ export default function TicketsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Ticket className="w-7 h-7 text-teal-600" />
-            {t('admin.tickets.title') || 'Support Tickets'}
+            <Ticket className="w-7 h-7 text-indigo-600" />
+            {t('admin.tickets.title')}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            {t('admin.tickets.subtitle') || 'Manage customer support tickets'} ({total})
+            {t('admin.tickets.subtitle')} ({total})
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          {t('admin.tickets.newTicket') || 'New Ticket'}
+          {t('admin.tickets.newTicket')}
         </button>
       </div>
 
@@ -193,8 +193,8 @@ export default function TicketsPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.tickets.searchPlaceholder') || 'Search tickets...'}
-            className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            placeholder={t('admin.tickets.searchPlaceholder')}
+            className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
         <select
@@ -202,7 +202,7 @@ export default function TicketsPage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
         >
-          <option value="">{t('admin.tickets.allStatuses') || 'All statuses'}</option>
+          <option value="">{t('admin.tickets.allStatuses')}</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
           ))}
@@ -212,7 +212,7 @@ export default function TicketsPage() {
           onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
         >
-          <option value="">{t('admin.tickets.allPriorities') || 'All priorities'}</option>
+          <option value="">{t('admin.tickets.allPriorities')}</option>
           {PRIORITIES.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
@@ -222,7 +222,7 @@ export default function TicketsPage() {
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
         >
-          <option value="">{t('admin.tickets.allCategories') || 'All categories'}</option>
+          <option value="">{t('admin.tickets.allCategories')}</option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
           ))}
@@ -240,23 +240,23 @@ export default function TicketsPage() {
       {/* Tickets Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center text-slate-400">{t('common.loading') || 'Loading...'}</div>
+          <div className="p-12 text-center text-slate-400">{t('common.loading')}</div>
         ) : tickets.length === 0 ? (
           <div className="p-12 text-center">
             <Ticket className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">{t('admin.tickets.noTickets') || 'No tickets found'}</p>
+            <p className="text-slate-500">{t('admin.tickets.noTickets')}</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">#</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.subject') || 'Subject'}</th>
-                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.status') || 'Status'}</th>
-                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.priority') || 'Priority'}</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.category') || 'Category'}</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.contact') || 'Contact'}</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.created') || 'Created'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.subject')}</th>
+                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.status')}</th>
+                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.tickets.priority')}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.category')}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.contact')}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.created')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -307,7 +307,7 @@ export default function TicketsPage() {
               disabled={page <= 1}
               className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
-              {t('common.previous') || 'Previous'}
+              {t('common.previous')}
             </button>
             <span className="text-sm text-slate-500">{page} / {totalPages}</span>
             <button
@@ -315,7 +315,7 @@ export default function TicketsPage() {
               disabled={page >= totalPages}
               className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
-              {t('common.next') || 'Next'}
+              {t('common.next')}
             </button>
           </div>
         )}
@@ -327,7 +327,7 @@ export default function TicketsPage() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-slate-900">
-                {t('admin.tickets.createTicket') || 'Create Ticket'}
+                {t('admin.tickets.createTicket')}
               </h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -337,32 +337,32 @@ export default function TicketsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.tickets.subject') || 'Subject'} *
+                  {t('admin.tickets.subject')} *
                 </label>
                 <input
                   type="text"
                   value={formSubject}
                   onChange={(e) => setFormSubject(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.tickets.description') || 'Description'}
+                  {t('admin.tickets.description')}
                 </label>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.tickets.priority') || 'Priority'}
+                    {t('admin.tickets.priority')}
                   </label>
                   <select
                     value={formPriority}
@@ -376,7 +376,7 @@ export default function TicketsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.tickets.category') || 'Category'}
+                    {t('admin.tickets.category')}
                   </label>
                   <select
                     value={formCategory}
@@ -393,7 +393,7 @@ export default function TicketsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.tickets.contactName') || 'Contact Name'}
+                    {t('admin.tickets.contactName')}
                   </label>
                   <input
                     type="text"
@@ -404,7 +404,7 @@ export default function TicketsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.tickets.contactEmail') || 'Contact Email'}
+                    {t('admin.tickets.contactEmail')}
                   </label>
                   <input
                     type="email"
@@ -417,7 +417,7 @@ export default function TicketsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.tickets.tags') || 'Tags'} ({t('admin.tickets.commaSeparated') || 'comma separated'})
+                  {t('admin.tickets.tags')} ({t('admin.tickets.commaSeparated')})
                 </label>
                 <input
                   type="text"
@@ -434,15 +434,15 @@ export default function TicketsPage() {
                 onClick={() => { setShowModal(false); resetForm(); }}
                 className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? (t('common.saving') || 'Saving...') : (t('admin.tickets.create') || 'Create')}
+                {isSaving ? (t('common.saving')) : (t('admin.tickets.create'))}
               </button>
             </div>
           </div>

@@ -131,6 +131,7 @@ export default function ProductQA({ productId: _productId, productName }: Produc
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('qa.searchQuestions') || 'Search questions...'}
+          aria-label={t('qa.searchQuestions') || 'Search questions'}
           className="w-full ps-12 pe-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>

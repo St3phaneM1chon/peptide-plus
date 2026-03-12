@@ -7,9 +7,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
+
+const updateQuotaSchema = z.object({
+  target: z.number().min(0).optional(),
+  actual: z.number().min(0).optional(),
+}).refine((data) => data.target !== undefined || data.actual !== undefined, {
+  message: 'No valid fields to update. Provide target or actual.',
+});
 
 // ---------------------------------------------------------------------------
 // PATCH: Update quota
@@ -19,6 +27,15 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { params }: { p
   const { id } = params;
   const body = await request.json();
 
+  const parsed = updateQuotaSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError('Invalid data', 'VALIDATION_ERROR', {
+      status: 400,
+      details: parsed.error.errors,
+      request,
+    });
+  }
+
   const existing = await prisma.crmQuota.findUnique({ where: { id } });
   if (!existing) {
     return apiError('Quota not found', 'RESOURCE_NOT_FOUND', { status: 404, request });
@@ -27,18 +44,11 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { params }: { p
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: Record<string, any> = {};
 
-  if (body.target !== undefined) {
-    updateData.target = Number(body.target);
+  if (parsed.data.target !== undefined) {
+    updateData.target = parsed.data.target;
   }
-  if (body.actual !== undefined) {
-    updateData.actual = Number(body.actual);
-  }
-
-  if (Object.keys(updateData).length === 0) {
-    return apiError('No valid fields to update. Provide target or actual.', 'VALIDATION_ERROR', {
-      status: 400,
-      request,
-    });
+  if (parsed.data.actual !== undefined) {
+    updateData.actual = parsed.data.actual;
   }
 
   const updated = await prisma.crmQuota.update({

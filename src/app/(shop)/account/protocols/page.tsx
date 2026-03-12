@@ -670,7 +670,7 @@ function ProtocolDetailModal({
               <h2 id="protocol-detail-modal-title" className="text-xl font-bold text-gray-900">{protocol.name}</h2>
               <p className="text-sm text-gray-500 mt-1">{protocol.description}</p>
             </div>
-            <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
+            <button onClick={onClose} aria-label={t('common.close')} className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
             {protocol.peptides.map(p => (

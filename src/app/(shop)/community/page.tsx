@@ -472,7 +472,7 @@ export default function CommunityPage() {
 
             {/* Categories */}
             <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4 mb-6">
-              <h3 className="font-bold mb-3">{t('community.categories') || 'Categories'}</h3>
+              <h2 className="font-bold mb-3 text-base">{t('community.categories') || 'Categories'}</h2>
               {categoriesLoading ? (
                 <CategoriesSkeleton />
               ) : (
@@ -504,7 +504,7 @@ export default function CommunityPage() {
 
             {/* Popular Tags */}
             <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
-              <h3 className="font-bold mb-3">{t('community.popularTags') || 'Popular Tags'}</h3>
+              <h2 className="font-bold mb-3 text-base">{t('community.popularTags') || 'Popular Tags'}</h2>
               <div className="flex flex-wrap gap-2">
                 {/* F-039 FIX: Dynamic tags from posts, fallback to defaults */}
                 {(posts.length > 0
@@ -537,6 +537,7 @@ export default function CommunityPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('community.searchPlaceholder') || 'Search discussions...'}
+                  aria-label={t('community.searchPlaceholder') || 'Search discussions'}
                   className="w-full ps-12 pe-10 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 {/* FIX: F-095 - Add clear button when search has text */}
@@ -596,9 +597,9 @@ export default function CommunityPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-neutral-900">
+                  <h2 className="text-xl font-bold mb-2 text-neutral-900">
                     {t('community.emptyTitle') || 'No discussions yet'}
-                  </h3>
+                  </h2>
                   <p className="text-neutral-500 mb-6 max-w-md mx-auto">
                     {t('community.emptyDescription') || 'Be the first to start a conversation! Share your research experiences, ask questions, or help fellow community members.'}
                   </p>
@@ -624,7 +625,7 @@ export default function CommunityPage() {
               ) : !isLoading && !fetchError && posts.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center">
                   <span className="text-6xl mb-4 block">{'\u{1F50D}'}</span>
-                  <h3 className="text-lg font-bold mb-2">{t('community.noResults') || 'No discussions found'}</h3>
+                  <h2 className="text-lg font-bold mb-2">{t('community.noResults') || 'No discussions found'}</h2>
                   <p className="text-neutral-500">{t('community.tryDifferent') || 'Try a different search or start a new discussion!'}</p>
                 </div>
               ) : !isLoading && !fetchError && (
@@ -721,7 +722,7 @@ export default function CommunityPage() {
                                 <div className="flex items-center gap-2">
                                   {/* Small inline avatar */}
                                   {post.userAvatar ? (
-                                    <Image src={post.userAvatar} alt="" width={20} height={20} className="w-5 h-5 rounded-full" />
+                                    <Image src={post.userAvatar} alt={`${post.userName} avatar`} width={20} height={20} className="w-5 h-5 rounded-full" />
                                   ) : (
                                     <div className="w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center">
                                       <span className="text-purple-600 font-bold text-[10px]">{post.userName.charAt(0)}</span>
@@ -809,7 +810,7 @@ export default function CommunityPage() {
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
                 <h3 id="new-post-modal-title" className="text-xl font-bold">{t('community.createPost') || 'Start a Discussion'}</h3>
-                <button onClick={() => setShowNewPost(false)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
+                <button onClick={() => setShowNewPost(false)} aria-label={t('common.close')} className="p-2 hover:bg-neutral-100 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

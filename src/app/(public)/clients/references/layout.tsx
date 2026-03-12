@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Client References',
-  description: 'Discover the 500+ companies across 8 industries and 12 countries that trust BioCycle Peptides.',
+  title: 'Références clients',
+  description: 'Découvrez les entreprises de 8 industries et 12 pays qui font confiance à BioCycle Peptides pour leurs peptides de recherche.',
+  openGraph: {
+    title: 'Références clients | BioCycle Peptides',
+    description: 'Découvrez les entreprises qui font confiance à BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/clients/references',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function ReferencesLayout({ children }: { children: React.ReactNode }) {

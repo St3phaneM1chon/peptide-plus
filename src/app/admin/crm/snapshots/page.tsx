@@ -233,7 +233,7 @@ export default function SnapshotsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.crm.snapshots') || 'Historical Snapshots'}
+            {t('admin.crm.snapshots')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Capture and compare point-in-time views of your pipeline and metrics
@@ -249,7 +249,7 @@ export default function SnapshotsPage() {
           </button>
           <button
             onClick={() => setShowNewDialog(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
             Take Snapshot
@@ -304,7 +304,7 @@ export default function SnapshotsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
         </div>
       ) : (
         <>
@@ -356,7 +356,7 @@ export default function SnapshotsPage() {
                     {snap.entities.map((entity) => (
                       <span
                         key={entity}
-                        className="px-2 py-0.5 rounded-full text-xs bg-teal-50 text-teal-600"
+                        className="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-600"
                       >
                         {entity}
                       </span>
@@ -435,7 +435,7 @@ export default function SnapshotsPage() {
                     {diff.changes.map((change, i) => (
                       <tr key={i} className="hover:bg-gray-50">
                         <td className="px-6 py-3">
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-teal-50 text-teal-600">
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-600">
                             {change.entity}
                           </span>
                         </td>
@@ -512,7 +512,7 @@ export default function SnapshotsPage() {
                       }
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         selectedEntities.includes(opt.value)
-                          ? 'bg-teal-600 text-white border-teal-600'
+                          ? 'bg-indigo-600 text-white border-indigo-600'
                           : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -533,7 +533,7 @@ export default function SnapshotsPage() {
               <button
                 onClick={handleTakeSnapshot}
                 disabled={taking}
-                className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {taking && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Camera className="h-4 w-4" />

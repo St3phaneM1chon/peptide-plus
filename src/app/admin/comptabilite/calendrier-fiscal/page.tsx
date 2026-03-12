@@ -54,14 +54,14 @@ interface Stats {
 // ---------------------------------------------------------------------------
 
 const authorityColors: Record<string, string> = {
-  CRA: 'bg-teal-100 text-teal-800 border-teal-200',
+  CRA: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   RQ: 'bg-purple-100 text-purple-800 border-purple-200',
   BOTH: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   SERVICE_CANADA: 'bg-green-100 text-green-800 border-green-200',
 };
 
 const authorityBorderColors: Record<string, string> = {
-  CRA: 'border-s-teal-500',
+  CRA: 'border-s-indigo-500',
   RQ: 'border-s-purple-500',
   BOTH: 'border-s-indigo-500',
   SERVICE_CANADA: 'border-s-green-500',
@@ -303,16 +303,16 @@ export default function CalendrierFiscalPage() {
     window.location.href = '/admin/comptabilite/cloture';
   }, []);
   const handleRibbonReopen = useCallback(() => {
-    toast.info(t('admin.fiscalCalendar.reopenInfo') || 'Pour rouvrir une periode, accedez a la page de cloture.');
+    toast.info(t('admin.fiscalCalendar.reopenInfo'));
   }, [t]);
   const handleRibbonFiscalCalendar = useCallback(() => { fetchEvents(); }, [fetchEvents]);
   const handleRibbonTaxReturn = useCallback(() => {
     window.location.href = '/admin/comptabilite/declaration-tps-tvq';
   }, []);
   const handleRibbonExport = useCallback(() => {
-    if (events.length === 0) { toast.error(t('admin.fiscalCalendar.noEventsToExport') || 'Aucun evenement a exporter'); return; }
+    if (events.length === 0) { toast.error(t('admin.fiscalCalendar.noEventsToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.fiscalCalendar.colTitle') || 'Titre', t('admin.fiscalCalendar.colDueDate') || 'Echeance', t('admin.fiscalCalendar.colCategory') || 'Categorie', t('admin.fiscalCalendar.colAuthority') || 'Autorite', t('admin.fiscalCalendar.colStatus') || 'Statut', t('admin.fiscalCalendar.colAmount') || 'Montant'];
+    const headers = [t('admin.fiscalCalendar.colTitle'), t('admin.fiscalCalendar.colDueDate'), t('admin.fiscalCalendar.colCategory'), t('admin.fiscalCalendar.colAuthority'), t('admin.fiscalCalendar.colStatus'), t('admin.fiscalCalendar.colAmount')];
     const rows = events.map(e => [e.title, e.dueDate, e.category, e.authority || '', e.status, String(e.amount || 0)]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -627,7 +627,7 @@ export default function CalendrierFiscalPage() {
                 type="text"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder={t('admin.accounting.fiscal.detailsPlaceholder') || 'Details...'}
+                placeholder={t('admin.accounting.fiscal.detailsPlaceholder')}
               />
             </FormField>
             <FormField label={t('admin.accounting.fiscal.descriptionFr')}>

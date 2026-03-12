@@ -307,12 +307,12 @@ export default function PermissionsPage() {
 
   const handleRibbonDelete = useCallback(() => {
     if (groups.length === 0) {
-      toast.info(t('admin.permissions.noGroupsTitle') || 'No permission groups to delete');
+      toast.info(t('admin.permissions.noGroupsTitle'));
       return;
     }
     // Switch to groups tab so user can see and delete groups
     setActiveTab('groups');
-    toast.info(t('admin.permissions.selectGroupToDelete') || 'Select a group and use the delete button to remove it');
+    toast.info(t('admin.permissions.selectGroupToDelete'));
   }, [groups, t]);
 
   const handleRibbonModifyPermissions = useCallback(() => {
@@ -321,14 +321,14 @@ export default function PermissionsPage() {
 
   const handleRibbonDuplicateRole = useCallback(() => {
     if (groups.length === 0) {
-      toast.info(t('admin.permissions.noGroupsTitle') || 'No groups to duplicate');
+      toast.info(t('admin.permissions.noGroupsTitle'));
       return;
     }
     // Duplicate the first group as a template for a new one
     const sourceGroup = groups[0];
     setEditingGroup(null);
     setGroupForm({
-      name: `${sourceGroup.name} (${t('admin.permissions.copy') || 'Copy'})`,
+      name: `${sourceGroup.name} (${t('admin.permissions.copy')})`,
       description: sourceGroup.description || '',
       color: sourceGroup.color || '#0ea5e9',
       permissionCodes: sourceGroup.permissions.map(p => p.permission.code),
@@ -342,13 +342,13 @@ export default function PermissionsPage() {
     const totalGroups = groups.length;
     const totalUsersInGroups = groups.reduce((sum, g) => sum + g._count.users, 0);
     toast.info(
-      `${t('admin.permissions.auditSummary') || 'Audit'}: ${totalPerms} ${t('admin.permissions.permission') || 'permissions'}, ${totalGroups} ${t('admin.permissions.tabGroups') || 'groups'}, ${totalUsersInGroups} ${t('admin.permissions.usersInGroups') || 'users in groups'}`
+      `${t('admin.permissions.auditSummary')}: ${totalPerms} ${t('admin.permissions.permission')}, ${totalGroups} ${t('admin.permissions.tabGroups')}, ${totalUsersInGroups} ${t('admin.permissions.usersInGroups')}`
     );
   }, [permissions, groups, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (permissions.length === 0) {
-      toast.info(t('admin.permissions.noPermissions') || 'No permissions to export');
+      toast.info(t('admin.permissions.noPermissions'));
       return;
     }
     const BOM = '\uFEFF';
@@ -372,7 +372,7 @@ export default function PermissionsPage() {
     a.download = `permissions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [permissions, t]);
 
   useRibbonAction('newRole', handleRibbonNewRole);
@@ -458,7 +458,7 @@ export default function PermissionsPage() {
                                   ? 'bg-emerald-100 text-emerald-600'
                                   : 'bg-slate-100 text-slate-300'
                                 }
-                                ${field === 'defaultOwner' ? 'cursor-not-allowed opacity-60' : 'hover:ring-2 hover:ring-teal-300'}
+                                ${field === 'defaultOwner' ? 'cursor-not-allowed opacity-60' : 'hover:ring-2 hover:ring-indigo-300'}
                               `}
                             >
                               {(perm as unknown as Record<string, boolean>)[field] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
@@ -616,7 +616,7 @@ export default function PermissionsPage() {
                                   : f.permissionCodes.filter(c => c !== perm.code),
                               }));
                             }}
-                            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                           />
                           <div>
                             <p className="text-sm text-slate-700">{perm.name}</p>
@@ -772,10 +772,10 @@ export default function PermissionsPage() {
       {/* ─── DELETE GROUP CONFIRM DIALOG ────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmDeleteGroupId}
-        title={t('admin.permissions.deleteGroupTitle') || 'Delete Permission Group'}
-        message={t('admin.permissions.deleteGroupConfirm') || 'Are you sure you want to delete this permission group? Users assigned to this group will lose these permissions.'}
+        title={t('admin.permissions.deleteGroupTitle')}
+        message={t('admin.permissions.deleteGroupConfirm')}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmDeleteGroupId && deleteGroup(confirmDeleteGroupId)}
         onCancel={() => setConfirmDeleteGroupId(null)}
       />

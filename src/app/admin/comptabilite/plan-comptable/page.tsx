@@ -317,11 +317,11 @@ export default function PlanComptablePage() {
   const getChildren = (parentId: string) => filteredAccounts.filter(a => a.parentId === parentId);
 
   const typeColors: Record<string, string> = {
-    ASSET: 'bg-teal-100 text-teal-800',
+    ASSET: 'bg-indigo-100 text-indigo-800',
     LIABILITY: 'bg-red-100 text-red-800',
     EQUITY: 'bg-purple-100 text-purple-800',
     REVENUE: 'bg-green-100 text-green-800',
-    EXPENSE: 'bg-teal-100 text-teal-800',
+    EXPENSE: 'bg-indigo-100 text-indigo-800',
   };
 
   const totals = {
@@ -350,11 +350,11 @@ export default function PlanComptablePage() {
   ];
 
   const summaryCardColors: Record<string, { bg: string; border: string; text: string; value: string }> = {
-    blue: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', value: 'text-teal-900' },
+    blue: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', value: 'text-indigo-900' },
     red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600', value: 'text-red-900' },
     purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', value: 'text-purple-900' },
     green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600', value: 'text-green-900' },
-    sky: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', value: 'text-teal-900' },
+    sky: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', value: 'text-indigo-900' },
   };
 
   const theme = sectionThemes.accounts;
@@ -365,10 +365,10 @@ export default function PlanComptablePage() {
     // Toggle between all accounts and active only
     if (selectedType) {
       setSelectedType('');
-      toast.success(t('admin.chartOfAccounts.filterCleared') || 'Filtres reinitialises');
+      toast.success(t('admin.chartOfAccounts.filterCleared'));
     } else {
       setSelectedType('EXPENSE');
-      toast.success(t('admin.chartOfAccounts.filterApplied') || 'Filtre applique: Depenses');
+      toast.success(t('admin.chartOfAccounts.filterApplied'));
     }
   }, [selectedType, t]);
   const handleExportPdfAction = useCallback(() => { handleExportGifi(); }, []);
@@ -495,7 +495,7 @@ export default function PlanComptablePage() {
               {t('admin.chartOfAccounts.exportGifi')}
             </Button>
             <Button variant="secondary" icon={Download} onClick={() => {
-              if (filteredAccounts.length === 0) { toast.info(t('admin.chartOfAccounts.noDataToExport') || 'Aucun compte a exporter'); return; }
+              if (filteredAccounts.length === 0) { toast.info(t('admin.chartOfAccounts.noDataToExport')); return; }
               const headers = ['Code', 'Nom', 'Type', 'Categorie', 'GIFI', 'Solde', 'Actif'];
               const rows = filteredAccounts.map(a => [
                 a.code,
@@ -516,7 +516,7 @@ export default function PlanComptablePage() {
               anchor.click();
               document.body.removeChild(anchor);
               URL.revokeObjectURL(url);
-              toast.success(t('admin.chartOfAccounts.exportSuccess') || 'Export CSV telecharge');
+              toast.success(t('admin.chartOfAccounts.exportSuccess'));
             }}>
               {t('admin.chartOfAccounts.export')}
             </Button>
@@ -609,7 +609,7 @@ export default function PlanComptablePage() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                           title={t('admin.chartOfAccounts.viewTransactions')}
                           aria-label={t('admin.chartOfAccounts.viewTransactions')}
                         >
@@ -702,7 +702,7 @@ export default function PlanComptablePage() {
                 value={modalType}
                 onChange={(e) => setModalType(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                  focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="ASSET">{t('admin.chartOfAccounts.typeAsset')}</option>
                 <option value="LIABILITY">{t('admin.chartOfAccounts.typeLiability')}</option>
@@ -736,7 +736,7 @@ export default function PlanComptablePage() {
               value={modalParent}
               onChange={(e) => setModalParent(e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
             >
               <option value="">{t('admin.chartOfAccounts.noParent')}</option>
               {parentAccounts.map(a => (
@@ -831,7 +831,7 @@ export default function PlanComptablePage() {
                         value={modalCcaClass}
                         onChange={(e) => handleCcaClassChange(e.target.value)}
                         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                       >
                         <option value="">--</option>
                         {CCA_CLASSES.map((c) => (
@@ -858,7 +858,7 @@ export default function PlanComptablePage() {
                         value={modalDeductiblePercent}
                         onChange={(e) => setModalDeductiblePercent(e.target.value)}
                         className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
-                          focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
+                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                       >
                         <option value="">--</option>
                         <option value="100">100%</option>

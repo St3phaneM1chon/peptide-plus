@@ -632,7 +632,7 @@ export default function FacturesClientsPage() {
           {invoice.status === 'DRAFT' && (
             <button
               onClick={() => handleSendInvoice(invoice)}
-              className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
               title={t('admin.customerInvoices.sendInvoice')}
               aria-label={t('admin.customerInvoices.sendInvoice')}
             >
@@ -651,8 +651,8 @@ export default function FacturesClientsPage() {
   // -- Ribbon actions --
   const handleNewInvoice = useCallback(() => { openCreateModal(); }, []);
   const handleDeleteAction = useCallback(() => {
-    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst') || 'Selectionnez une facture'); return; }
-    if (selectedInvoice.status !== 'DRAFT') { toast.error(t('admin.customerInvoices.cannotDeleteNonDraft') || 'Seules les factures en brouillon peuvent etre supprimees'); return; }
+    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst')); return; }
+    if (selectedInvoice.status !== 'DRAFT') { toast.error(t('admin.customerInvoices.cannotDeleteNonDraft')); return; }
     // Void draft invoices rather than deleting
     setShowVoidConfirm(true);
   }, [selectedInvoice, t]);
@@ -663,7 +663,7 @@ export default function FacturesClientsPage() {
     if (selectedInvoice) openPaymentModal(selectedInvoice);
   }, [selectedInvoice]);
   const handleCreditNote = useCallback(() => {
-    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst') || 'Selectionnez une facture'); return; }
+    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst')); return; }
     // Pre-fill create form with negated amounts for credit note
     setEditingInvoice(null);
     setForm({
@@ -684,7 +684,7 @@ export default function FacturesClientsPage() {
     setFormErrors({});
     setShowDetailModal(false);
     setShowCreateModal(true);
-    toast.success(t('admin.customerInvoices.creditNoteCreated') || 'Note de credit preparee - verifiez et enregistrez');
+    toast.success(t('admin.customerInvoices.creditNoteCreated'));
   }, [selectedInvoice, t]);
   const handleExportPdf = useCallback(() => {
     if (selectedInvoice) handleDownloadPdf(selectedInvoice.id);
@@ -778,7 +778,7 @@ export default function FacturesClientsPage() {
         searchPlaceholder={t('admin.customerInvoices.searchPlaceholder')}
         actions={
           <Button variant="secondary" onClick={() => {
-            if (filteredInvoices.length === 0) { toast.info(t('admin.customerInvoices.noDataToExport') || 'Aucune facture a exporter'); return; }
+            if (filteredInvoices.length === 0) { toast.info(t('admin.customerInvoices.noDataToExport')); return; }
             const headers = ['Numero', 'Client', 'Email', 'Date', 'Echeance', 'Sous-total', 'TPS', 'TVQ', 'Total', 'Paye', 'Solde', 'Statut'];
             const rows = filteredInvoices.map(inv => [
               inv.invoiceNumber,
@@ -804,7 +804,7 @@ export default function FacturesClientsPage() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            toast.success(t('admin.customerInvoices.exportSuccess') || 'Export CSV telecharge');
+            toast.success(t('admin.customerInvoices.exportSuccess'));
           }}>
             {t('admin.customerInvoices.export')}
           </Button>
@@ -871,7 +871,7 @@ export default function FacturesClientsPage() {
                 value={form.customerName}
                 onChange={(e) => setForm(prev => ({ ...prev, customerName: e.target.value }))}
                 error={!!formErrors.customerName}
-                placeholder={t('admin.customerInvoices.customerNamePlaceholder') || 'BioCycle Peptides Inc.'}
+                placeholder={t('admin.customerInvoices.customerNamePlaceholder')}
               />
             </FormField>
             <FormField

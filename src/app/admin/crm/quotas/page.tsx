@@ -54,7 +54,7 @@ export default function QuotasPage() {
         setQuotas(json.data || []);
       }
     } catch {
-      toast.error(t('admin.crm.quotas.loadError') || 'Failed to load quotas');
+      toast.error(t('admin.crm.quotas.loadError'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function QuotasPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formAgentId || !formTarget) {
-      toast.error(t('admin.crm.quotas.fillRequired') || 'Please fill all required fields');
+      toast.error(t('admin.crm.quotas.fillRequired'));
       return;
     }
 
@@ -105,7 +105,7 @@ export default function QuotasPage() {
       if (!json.success) {
         throw new Error(json.error?.message || 'Failed to create quota');
       }
-      toast.success(t('admin.crm.quotas.created') || 'Quota created');
+      toast.success(t('admin.crm.quotas.created'));
       setShowForm(false);
       setFormAgentId('');
       setFormTarget('');
@@ -121,13 +121,13 @@ export default function QuotasPage() {
     try {
       const res = await fetch(`/api/admin/crm/quotas/${id}`, { method: 'DELETE' });
       if (res.status === 204 || res.ok) {
-        toast.success(t('admin.crm.quotas.deleted') || 'Quota deleted');
+        toast.success(t('admin.crm.quotas.deleted'));
         setQuotas((prev) => prev.filter((q) => q.id !== id));
       } else {
         throw new Error('Failed to delete');
       }
     } catch {
-      toast.error(t('admin.crm.quotas.deleteError') || 'Failed to delete quota');
+      toast.error(t('admin.crm.quotas.deleteError'));
     }
   };
 
@@ -169,19 +169,19 @@ export default function QuotasPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Target className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.quotas.title') || 'Quotas & Goals'}
+            <Target className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.quotas.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.quotas.subtitle') || 'Set and track agent performance targets'}
+            {t('admin.crm.quotas.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.quotas.new') || 'New Quota'}
+          {t('admin.crm.quotas.new')}
         </button>
       </div>
 
@@ -189,20 +189,20 @@ export default function QuotasPage() {
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
-            {t('admin.crm.quotas.createTitle') || 'Create New Quota'}
+            {t('admin.crm.quotas.createTitle')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.quotas.agent') || 'Agent'} *
+                {t('admin.crm.quotas.agent')} *
               </label>
               <select
                 value={formAgentId}
                 onChange={(e) => setFormAgentId(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               >
-                <option value="">{t('admin.crm.quotas.selectAgent') || 'Select agent...'}</option>
+                <option value="">{t('admin.crm.quotas.selectAgent')}</option>
                 {agents.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
@@ -210,12 +210,12 @@ export default function QuotasPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.quotas.period') || 'Period'}
+                {t('admin.crm.quotas.period')}
               </label>
               <select
                 value={formPeriod}
                 onChange={(e) => setFormPeriod(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
@@ -225,12 +225,12 @@ export default function QuotasPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.quotas.type') || 'Type'}
+                {t('admin.crm.quotas.type')}
               </label>
               <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="calls">Calls</option>
                 <option value="revenue">Revenue</option>
@@ -240,14 +240,14 @@ export default function QuotasPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.quotas.target') || 'Target'} *
+                {t('admin.crm.quotas.target')} *
               </label>
               <input
                 type="number"
                 min={1}
                 value={formTarget}
                 onChange={(e) => setFormTarget(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="100"
                 required
               />
@@ -259,14 +259,14 @@ export default function QuotasPage() {
               onClick={() => setShowForm(false)}
               className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
-              {saving ? (t('common.saving') || 'Saving...') : (t('admin.crm.quotas.create') || 'Create Quota')}
+              {saving ? (t('common.saving')) : (t('admin.crm.quotas.create'))}
             </button>
           </div>
         </form>
@@ -275,16 +275,16 @@ export default function QuotasPage() {
       {/* Quotas Table */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : quotas.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.quotas.empty') || 'No quotas configured'}
+            {t('admin.crm.quotas.empty')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.quotas.emptyDesc') || 'Create quotas to track agent performance targets'}
+            {t('admin.crm.quotas.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -294,25 +294,25 @@ export default function QuotasPage() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.agentColumn') || 'Agent'}
+                    {t('admin.crm.quotas.agentColumn')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.periodColumn') || 'Period'}
+                    {t('admin.crm.quotas.periodColumn')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.typeColumn') || 'Type'}
+                    {t('admin.crm.quotas.typeColumn')}
                   </th>
                   <th className="text-end px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.targetColumn') || 'Target'}
+                    {t('admin.crm.quotas.targetColumn')}
                   </th>
                   <th className="text-end px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.actualColumn') || 'Actual'}
+                    {t('admin.crm.quotas.actualColumn')}
                   </th>
                   <th className="px-4 py-3 font-medium text-gray-600 min-w-[160px]">
-                    {t('admin.crm.quotas.progressColumn') || 'Progress'}
+                    {t('admin.crm.quotas.progressColumn')}
                   </th>
                   <th className="px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotas.actions') || 'Actions'}
+                    {t('admin.crm.quotas.actions')}
                   </th>
                 </tr>
               </thead>
@@ -359,7 +359,7 @@ export default function QuotasPage() {
                           onClick={() => handleDelete(quota.id)}
                           className="text-xs text-red-500 hover:text-red-700 font-medium"
                         >
-                          {t('common.delete') || 'Delete'}
+                          {t('common.delete')}
                         </button>
                       </td>
                     </tr>

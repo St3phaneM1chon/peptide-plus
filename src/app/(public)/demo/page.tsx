@@ -19,13 +19,30 @@ export default function DemoPage() {
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
+  // FIX A10-P0-001: Wire form to CRM lead creation API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setSending(false);
-    setSent(true);
+    setError('');
+    try {
+      const res = await fetch('/api/demo-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Une erreur est survenue.');
+        return;
+      }
+      setSent(true);
+    } catch {
+      setError('Erreur réseau. Veuillez réessayer.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -218,6 +235,12 @@ export default function DemoPage() {
                       style={{ resize: 'vertical' }}
                     />
                   </div>
+
+                  {error && (
+                    <p style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>
+                      {error}
+                    </p>
+                  )}
 
                   <button
                     type="submit"

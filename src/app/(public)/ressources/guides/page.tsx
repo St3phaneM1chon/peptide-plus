@@ -109,7 +109,7 @@ export default function GuidesPage() {
               Inscrivez-vous pour recevoir nos guides et templates dès leur publication.
             </p>
             <form style={{ display: 'flex', gap: '12px' }}>
-              <input type="email" placeholder="Votre courriel" className="form-input" style={{ flex: 1 }} />
+              <input type="email" placeholder={t('common.emailPlaceholder')} className="form-input" style={{ flex: 1 }} />
               <button type="submit" className="btn btn-primary">S&apos;inscrire</button>
             </form>
           </div>
@@ -270,7 +270,7 @@ export default function GuidesPage() {
             Inscrivez-vous pour recevoir nos guides et templates dès leur publication.
           </p>
           <form style={{ display: 'flex', gap: '12px' }}>
-            <input type="email" placeholder="Votre courriel" className="form-input" style={{ flex: 1 }} />
+            <input type="email" placeholder={t('common.emailPlaceholder')} className="form-input" style={{ flex: 1 }} />
             <button type="submit" className="btn btn-primary">S&apos;inscrire</button>
           </form>
         </div>

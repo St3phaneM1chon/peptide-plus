@@ -2,7 +2,12 @@
 
 import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
-import DOMPurify from 'isomorphic-dompurify';
+import type DOMPurifyType from 'dompurify';
+
+// DOMPurify client-only — safe guard for SSR prerender
+const DOMPurify: typeof DOMPurifyType = typeof window !== 'undefined'
+  ? require('dompurify')
+  : { sanitize: (html: string) => html } as typeof DOMPurifyType;
 
 // Map article slugs to related product pages
 const articleProductMap: Record<string, { slug: string; name: string }[]> = {

@@ -65,7 +65,7 @@ function statusLabel(promo: Promotion, t: (key: string) => string): string {
   const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
   if (isExpired) return t('admin.promotions.expired');
   if (promo.isActive) return t('admin.promotions.statActive');
-  return t('admin.promotions.inactive') || 'Inactive';
+  return t('admin.promotions.inactive');
 }
 
 // ── Main Component ────────────────────────────────────────────
@@ -179,16 +179,16 @@ export default function PromotionsPage() {
     // UX FIX: Validate form fields with inline error messages
     const errors: Record<string, string> = {};
     if (!formName.trim()) {
-      errors.name = t('admin.promotions.nameRequired') || 'Promotion name is required';
+      errors.name = t('admin.promotions.nameRequired');
     }
     if (formValue <= 0) {
-      errors.value = t('admin.promotions.valueRequired') || 'Discount value must be greater than 0';
+      errors.value = t('admin.promotions.valueRequired');
     }
     if (formType === 'PERCENTAGE' && formValue > 100) {
-      errors.value = t('admin.promotions.percentageMax') || 'Percentage discount cannot exceed 100%';
+      errors.value = t('admin.promotions.percentageMax');
     }
     if (formEndDate && formStartDate && new Date(formEndDate) <= new Date(formStartDate)) {
-      errors.endDate = t('admin.promotions.endDateAfterStart') || 'End date must be after start date';
+      errors.endDate = t('admin.promotions.endDateAfterStart');
     }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -279,7 +279,7 @@ export default function PromotionsPage() {
         toast.error(data.error || t('common.deleteFailed'));
         return;
       }
-      toast.success(t('admin.promotions.deleted') || 'Promotion deleted');
+      toast.success(t('admin.promotions.deleted'));
     } catch {
       setPromotions(prev);
       toast.error(t('common.networkError'));
@@ -383,7 +383,7 @@ export default function PromotionsPage() {
 
   const onSchedule = useCallback(() => {
     if (!selectedPromo) {
-      toast.info(t('admin.promotions.selectFirst') || 'Select a promotion first');
+      toast.info(t('admin.promotions.selectFirst'));
       return;
     }
     // Pre-fill dates and open form for editing schedule
@@ -399,7 +399,7 @@ export default function PromotionsPage() {
     setFormGetQty(selectedPromo.getQuantity ?? 1);
     setFormMinQuantity(selectedPromo.minQuantity ?? 1);
     setShowForm(true);
-    toast.info(t('admin.promotions.editScheduleHint') || 'Modify start/end dates to schedule this promotion');
+    toast.info(t('admin.promotions.editScheduleHint'));
   }, [selectedPromo, t]);
 
   const onActivate = useCallback(() => {
@@ -436,27 +436,27 @@ export default function PromotionsPage() {
       return acc;
     }, {});
     const typeBreakdown = Object.entries(byType).map(([k, v]) => `${k}: ${v}`).join(', ');
-    toast.success(t('admin.promotions.performanceTitle') || 'Promotion Stats', {
-      description: `${t('admin.promotions.statTotal') || 'Total'}: ${promotions.length} | ${t('admin.promotions.statActive') || 'Active'}: ${active} | ${t('admin.promotions.expired') || 'Expired'}: ${expired}\n${typeBreakdown}`,
+    toast.success(t('admin.promotions.performanceTitle'), {
+      description: `${t('admin.promotions.statTotal')}: ${promotions.length} | ${t('admin.promotions.statActive')}: ${active} | ${t('admin.promotions.expired')}: ${expired}\n${typeBreakdown}`,
       duration: 8000,
     });
   }, [promotions, typeLabels, t]);
 
   const onExport = useCallback(() => {
     if (filteredPromotions.length === 0) {
-      toast.info(t('admin.promotions.emptyTitle') || 'No promotions to export');
+      toast.info(t('admin.promotions.emptyTitle'));
       return;
     }
     const bom = '\uFEFF';
     const headers = [
-      t('admin.promotions.formName') || 'Name',
-      t('admin.promotions.formType') || 'Type',
-      t('admin.promotions.discount') || 'Discount',
-      t('admin.promotions.formValue') || 'Value',
-      t('admin.promotions.statActive') || 'Active',
-      t('admin.promotions.formStartDate') || 'Start',
-      t('admin.promotions.formEndDate') || 'End',
-      t('admin.promotions.priority') || 'Priority',
+      t('admin.promotions.formName'),
+      t('admin.promotions.formType'),
+      t('admin.promotions.discount'),
+      t('admin.promotions.formValue'),
+      t('admin.promotions.statActive'),
+      t('admin.promotions.formStartDate'),
+      t('admin.promotions.formEndDate'),
+      t('admin.promotions.priority'),
     ];
     const rows = filteredPromotions.map(p => [
       p.name,
@@ -476,7 +476,7 @@ export default function PromotionsPage() {
     a.download = `promotions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [filteredPromotions, typeLabels, locale, t]);
 
   useRibbonAction('newPromotion', onNewPromotion);
@@ -493,7 +493,7 @@ export default function PromotionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -535,7 +535,7 @@ export default function PromotionsPage() {
               onFilterChange={setStatusFilter}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.promotions.searchPlaceholder') || 'Rechercher une promotion...'}
+              searchPlaceholder={t('admin.promotions.searchPlaceholder')}
               loading={loading}
               emptyIcon={Percent}
               emptyTitle={t('admin.promotions.emptyTitle')}
@@ -604,7 +604,7 @@ export default function PromotionsPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.discount')}</h3>
-                      <p className="text-2xl font-bold text-teal-600">
+                      <p className="text-2xl font-bold text-indigo-600">
                         {selectedPromo.discountType === 'PERCENTAGE'
                           ? `${selectedPromo.discountValue}%`
                           : formatCurrency(selectedPromo.discountValue)}
@@ -639,14 +639,14 @@ export default function PromotionsPage() {
                     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                       <h3 className="font-semibold text-emerald-800 mb-2">{typeLabels['BUNDLE']}</h3>
                       <p className="text-sm text-emerald-700">
-                        {selectedPromo.bundleProducts.length} {t('admin.promotions.productsIncluded') || 'products included'}
+                        {selectedPromo.bundleProducts.length} {t('admin.promotions.productsIncluded')}
                       </p>
                     </div>
                   )}
 
                   {selectedPromo.minQuantity && (
                     <div className="flex justify-between text-sm bg-slate-50 rounded-lg p-4">
-                      <span className="text-slate-600">{t('admin.promotions.minQuantity') || 'Minimum quantity'}</span>
+                      <span className="text-slate-600">{t('admin.promotions.minQuantity')}</span>
                       <span className="font-medium text-slate-900">{selectedPromo.minQuantity}</span>
                     </div>
                   )}
@@ -656,14 +656,14 @@ export default function PromotionsPage() {
                     <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.validity')}</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-600">{t('admin.promoCodes.fromDate') || 'From'}</span>
+                        <span className="text-slate-600">{t('admin.promoCodes.fromDate')}</span>
                         <span className="font-medium text-slate-900">
                           {new Date(selectedPromo.startsAt).toLocaleDateString(locale)}
                         </span>
                       </div>
                       {selectedPromo.endsAt && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">{t('admin.promoCodes.toDate') || 'To'}</span>
+                          <span className="text-slate-600">{t('admin.promoCodes.toDate')}</span>
                           <span className={`font-medium ${
                             new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-slate-900'
                           }`}>
@@ -677,14 +677,14 @@ export default function PromotionsPage() {
                   {/* Targets */}
                   {selectedPromo.targetProducts && selectedPromo.targetProducts.length > 0 && (
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetProducts') || 'Target Products'}</h3>
-                      <p className="text-sm text-slate-600">{selectedPromo.targetProducts.length} {t('admin.promotions.productsIncluded') || 'products'}</p>
+                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetProducts')}</h3>
+                      <p className="text-sm text-slate-600">{selectedPromo.targetProducts.length} {t('admin.promotions.productsIncluded')}</p>
                     </div>
                   )}
                   {selectedPromo.targetCategories && selectedPromo.targetCategories.length > 0 && (
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetCategories') || 'Target Categories'}</h3>
-                      <p className="text-sm text-slate-600">{selectedPromo.targetCategories.length} {t('admin.promotions.categoriesIncluded') || 'categories'}</p>
+                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetCategories')}</h3>
+                      <p className="text-sm text-slate-600">{selectedPromo.targetCategories.length} {t('admin.promotions.categoriesIncluded')}</p>
                     </div>
                   )}
 
@@ -712,10 +712,10 @@ export default function PromotionsPage() {
       {/* UX FIX: ConfirmDialog for delete action */}
       <ConfirmDialog
         isOpen={confirmDelete.isOpen}
-        title={t('admin.promotions.confirmDeleteTitle') || 'Delete promotion?'}
+        title={t('admin.promotions.confirmDeleteTitle')}
         message={t('admin.promotions.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.name}"? This action cannot be undone.`}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => {
           executeDeletePromotion(confirmDelete.id);
           setConfirmDelete({ isOpen: false, id: '', name: '' });
@@ -762,11 +762,11 @@ export default function PromotionsPage() {
           </FormField>
 
           {/* FIX F-019: Promotion kind selector - supports all 5 types */}
-          <FormField label={t('admin.promotions.formPromoKind') || 'Promotion type'} required>
+          <FormField label={t('admin.promotions.formPromoKind')} required>
             <select
               value={formPromoKind}
               onChange={(e) => setFormPromoKind(e.target.value as Promotion['type'])}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               <option value="PRODUCT_DISCOUNT">{typeLabels.PRODUCT_DISCOUNT}</option>
               <option value="CATEGORY_DISCOUNT">{typeLabels.CATEGORY_DISCOUNT}</option>
@@ -781,7 +781,7 @@ export default function PromotionsPage() {
               <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT')}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               >
                 <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
                 <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
@@ -805,7 +805,7 @@ export default function PromotionsPage() {
           {/* FIX F-019: BUY_X_GET_Y specific fields */}
           {formPromoKind === 'BUY_X_GET_Y' && (
             <div className="grid grid-cols-2 gap-4">
-              <FormField label={t('admin.promotions.formBuyQty') || 'Buy quantity'} required>
+              <FormField label={t('admin.promotions.formBuyQty')} required>
                 <Input
                   type="number"
                   min={1}
@@ -814,7 +814,7 @@ export default function PromotionsPage() {
                   onChange={(e) => setFormBuyQty(parseInt(e.target.value) || 1)}
                 />
               </FormField>
-              <FormField label={t('admin.promotions.formGetQty') || 'Get free quantity'} required>
+              <FormField label={t('admin.promotions.formGetQty')} required>
                 <Input
                   type="number"
                   min={1}
@@ -828,7 +828,7 @@ export default function PromotionsPage() {
 
           {/* FIX F-019: Min quantity for BUNDLE and BUY_X_GET_Y */}
           {(formPromoKind === 'BUNDLE' || formPromoKind === 'BUY_X_GET_Y') && (
-            <FormField label={t('admin.promotions.minQuantity') || 'Minimum quantity'}>
+            <FormField label={t('admin.promotions.minQuantity')}>
               <Input
                 type="number"
                 min={1}
@@ -864,7 +864,7 @@ export default function PromotionsPage() {
               checked={formAppliesToAll || formPromoKind === 'FLASH_SALE'}
               onChange={(e) => setFormAppliesToAll(e.target.checked)}
               disabled={formPromoKind === 'FLASH_SALE'}
-              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <span className="text-sm text-slate-700">{t('admin.promotions.formAppliesToAll')}</span>
           </label>

@@ -32,7 +32,7 @@ const CATEGORIES = ['general', 'email', 'sms', 'chat'] as const;
 
 const CATEGORY_COLORS: Record<string, string> = {
   general: 'bg-gray-100 text-gray-700',
-  email: 'bg-teal-100 text-teal-700',
+  email: 'bg-indigo-100 text-indigo-700',
   sms: 'bg-green-100 text-green-700',
   chat: 'bg-purple-100 text-purple-700',
 };
@@ -79,7 +79,7 @@ export default function SnippetsPage() {
         setSnippets(json.data || []);
       }
     } catch {
-      toast.error(t('admin.crm.snippets.loadError') || 'Failed to load snippets');
+      toast.error(t('admin.crm.snippets.loadError'));
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export default function SnippetsPage() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.content.trim()) {
-      toast.error(t('admin.crm.snippets.titleContentRequired') || 'Title and content are required');
+      toast.error(t('admin.crm.snippets.titleContentRequired'));
       return;
     }
 
@@ -148,8 +148,8 @@ export default function SnippetsPage() {
       if (json.success) {
         toast.success(
           editingId
-            ? (t('admin.crm.snippets.updated') || 'Snippet updated')
-            : (t('admin.crm.snippets.created') || 'Snippet created')
+            ? (t('admin.crm.snippets.updated'))
+            : (t('admin.crm.snippets.created'))
         );
         closeModal();
         fetchSnippets();
@@ -157,7 +157,7 @@ export default function SnippetsPage() {
         toast.error(json.error?.message || 'Failed to save snippet');
       }
     } catch {
-      toast.error(t('admin.crm.snippets.saveError') || 'Network error');
+      toast.error(t('admin.crm.snippets.saveError'));
     } finally {
       setSaving(false);
     }
@@ -175,14 +175,14 @@ export default function SnippetsPage() {
       });
 
       if (res.status === 204 || res.ok) {
-        toast.success(t('admin.crm.snippets.deleted') || 'Snippet deleted');
+        toast.success(t('admin.crm.snippets.deleted'));
         setSnippets((prev) => prev.filter((s) => s.id !== id));
       } else {
         const json = await res.json().catch(() => null);
         toast.error(json?.error?.message || 'Failed to delete snippet');
       }
     } catch {
-      toast.error(t('admin.crm.snippets.deleteError') || 'Failed to delete snippet');
+      toast.error(t('admin.crm.snippets.deleteError'));
     } finally {
       setDeletingId(null);
     }
@@ -194,7 +194,7 @@ export default function SnippetsPage() {
 
   const copyContent = (content: string) => {
     navigator.clipboard.writeText(content).then(
-      () => toast.success(t('admin.crm.snippets.copied') || 'Copied to clipboard'),
+      () => toast.success(t('admin.crm.snippets.copied')),
       () => toast.error('Failed to copy')
     );
   };
@@ -209,19 +209,19 @@ export default function SnippetsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.snippets') || 'Snippets'}
+            <FileText className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.snippets')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.snippets.subtitle') || 'Reusable text templates for quick responses'}
+            {t('admin.crm.snippets.subtitle')}
           </p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.snippets.new') || 'New Snippet'}
+          {t('admin.crm.snippets.new')}
         </button>
       </div>
 
@@ -233,16 +233,16 @@ export default function SnippetsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('admin.crm.snippets.searchPlaceholder') || 'Search snippets...'}
-            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder={t('admin.crm.snippets.searchPlaceholder')}
+            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
-          <option value="">{t('admin.crm.snippets.allCategories') || 'All Categories'}</option>
+          <option value="">{t('admin.crm.snippets.allCategories')}</option>
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -254,16 +254,16 @@ export default function SnippetsPage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : snippets.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.snippets.empty') || 'No snippets found'}
+            {t('admin.crm.snippets.empty')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.snippets.emptyDesc') || 'Create reusable text snippets for quick customer responses'}
+            {t('admin.crm.snippets.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -294,7 +294,7 @@ export default function SnippetsPage() {
                     )}
                     {!snippet.isActive && (
                       <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-xs font-medium">
-                        {t('admin.crm.snippets.inactive') || 'Inactive'}
+                        {t('admin.crm.snippets.inactive')}
                       </span>
                     )}
                   </div>
@@ -315,14 +315,14 @@ export default function SnippetsPage() {
                   <button
                     onClick={() => copyContent(snippet.content)}
                     className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                    title={t('admin.crm.snippets.copy') || 'Copy content'}
+                    title={t('admin.crm.snippets.copy')}
                   >
                     <Copy className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => openEdit(snippet)}
-                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-teal-600"
-                    title={t('common.edit') || 'Edit'}
+                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-indigo-600"
+                    title={t('common.edit')}
                   >
                     <Edit className="h-4 w-4" />
                   </button>
@@ -330,7 +330,7 @@ export default function SnippetsPage() {
                     onClick={() => handleDelete(snippet.id)}
                     disabled={deletingId === snippet.id}
                     className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-red-600 disabled:opacity-50"
-                    title={t('common.delete') || 'Delete'}
+                    title={t('common.delete')}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -349,8 +349,8 @@ export default function SnippetsPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingId
-                  ? (t('admin.crm.snippets.editTitle') || 'Edit Snippet')
-                  : (t('admin.crm.snippets.createTitle') || 'New Snippet')}
+                  ? (t('admin.crm.snippets.editTitle'))
+                  : (t('admin.crm.snippets.createTitle'))}
               </h2>
               <button
                 onClick={closeModal}
@@ -363,14 +363,14 @@ export default function SnippetsPage() {
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('admin.crm.snippets.titleLabel') || 'Title'} *
+                {t('admin.crm.snippets.titleLabel')} *
               </label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder={t('admin.crm.snippets.titlePlaceholder') || 'e.g. Greeting Template'}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder={t('admin.crm.snippets.titlePlaceholder')}
                 autoFocus
               />
             </div>
@@ -378,14 +378,14 @@ export default function SnippetsPage() {
             {/* Content */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('admin.crm.snippets.contentLabel') || 'Content'} *
+                {t('admin.crm.snippets.contentLabel')} *
               </label>
               <textarea
                 value={form.content}
                 onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={5}
-                placeholder={t('admin.crm.snippets.contentPlaceholder') || 'Write your snippet content here...'}
+                placeholder={t('admin.crm.snippets.contentPlaceholder')}
               />
               <p className="text-xs text-gray-400 mt-1 text-end">
                 {form.content.length}/5000
@@ -396,12 +396,12 @@ export default function SnippetsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('admin.crm.snippets.categoryLabel') || 'Category'}
+                  {t('admin.crm.snippets.categoryLabel')}
                 </label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -412,13 +412,13 @@ export default function SnippetsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('admin.crm.snippets.shortcutLabel') || 'Shortcut'}
+                  {t('admin.crm.snippets.shortcutLabel')}
                 </label>
                 <input
                   type="text"
                   value={form.shortcut}
                   onChange={(e) => setForm((f) => ({ ...f, shortcut: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="/greet"
                 />
               </div>
@@ -431,10 +431,10 @@ export default function SnippetsPage() {
                 id="snippetActive"
                 checked={form.isActive}
                 onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <label htmlFor="snippetActive" className="text-sm text-gray-700">
-                {t('admin.crm.snippets.activeLabel') || 'Active'}
+                {t('admin.crm.snippets.activeLabel')}
               </label>
             </div>
 
@@ -444,18 +444,18 @@ export default function SnippetsPage() {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
                 {saving
-                  ? (t('common.saving') || 'Saving...')
+                  ? (t('common.saving'))
                   : editingId
-                    ? (t('common.save') || 'Save')
-                    : (t('admin.crm.snippets.create') || 'Create')}
+                    ? (t('common.save'))
+                    : (t('admin.crm.snippets.create'))}
               </button>
             </div>
           </div>

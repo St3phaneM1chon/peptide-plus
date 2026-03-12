@@ -6,22 +6,26 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { bulkImportRecordings } from '@/lib/platform/recording-import';
 import { logger } from '@/lib/logger';
 
+const bulkImportSchema = z.object({
+  importIds: z.array(z.string().min(1)).min(1, 'No import IDs provided').max(20, 'Maximum 20 recordings per bulk import'),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { importIds } = body as { importIds: string[] };
-
-    if (!importIds?.length) {
-      return NextResponse.json({ error: 'No import IDs provided' }, { status: 400 });
+    const parsed = bulkImportSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
-
-    if (importIds.length > 20) {
-      return NextResponse.json({ error: 'Maximum 20 recordings per bulk import' }, { status: 400 });
-    }
+    const { importIds } = parsed.data;
 
     const result = await bulkImportRecordings(importIds);
 

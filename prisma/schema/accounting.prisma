@@ -310,6 +310,7 @@ model CustomerInvoice {
   @@index([status, dueDate]) // Phase 9: Composite for overdue invoice queries
   @@index([status, deletedAt]) // S10: Composite for active invoice queries (aging, alerts)
   @@index([customerId, status]) // Phase 9: Composite for customer invoice listing
+  @@index([orderId, status]) // A7-P2: Composite for order-linked invoice lookups with status filter
   @@index([createdAt])
   @@index([updatedAt])
 }
@@ -420,6 +421,9 @@ model JournalEntry {
   lines            JournalLine[]
   bankTransactions BankTransaction[] @relation("BankTransactionMatchedEntry")
 
+  // FIX A1-P0-002: Reverse relation for SupplierInvoice FK
+  supplierInvoices SupplierInvoice[] @relation("JournalEntrySupplierInvoices")
+
   @@index([date])
   @@index([orderId])
   @@index([status])
@@ -430,6 +434,7 @@ model JournalEntry {
   @@index([createdBy]) // S10: Index for audit trail lookups by creator
   @@index([type, deletedAt]) // S10: Composite for stripe-sync queries (find by type, exclude deleted)
   @@index([status, deletedAt]) // S10: Composite for active entry queries by status
+  @@index([type, status]) // A7-P2: Composite for accounting entries filtered by type + status together
   @@index([createdAt])
   @@index([updatedAt])
 }
@@ -478,6 +483,10 @@ model SupplierInvoice {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  supplier        Supplier?     @relation("SupplierInvoices", fields: [supplierId], references: [id], onDelete: SetNull)
+  journalEntry    JournalEntry? @relation("JournalEntrySupplierInvoices", fields: [journalEntryId], references: [id], onDelete: SetNull)
 
   @@index([dueDate])
   @@index([invoiceDate])
@@ -849,6 +858,9 @@ model Employee {
   payrollEntries PayrollEntry[]
   payStubs       PayStub[]
 
+  // FIX A1-P0-002: Reverse relation for TimeEntry FK
+  timeEntries    TimeEntry[] @relation("EmployeeTimeEntries")
+
   @@index([userId])
   @@index([email])
   @@index([status])
@@ -974,6 +986,10 @@ model TimeEntry {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  user           User?     @relation("UserTimeEntries", fields: [userId], references: [id], onDelete: SetNull)
+  employee       Employee? @relation("EmployeeTimeEntries", fields: [employeeId], references: [id], onDelete: SetNull)
 
   @@index([employeeId])
   @@index([userId])

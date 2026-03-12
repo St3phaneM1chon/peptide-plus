@@ -1,15 +1,20 @@
 /**
  * Centralized tax rate constants for Quebec (default business province).
  *
- * Rates sourced from the Canadian Tax Engine (canadian-tax-engine.ts).
+ * A8-P2-006 FIX: Derived from the canonical PROVINCIAL_TAX_RATES in
+ * canadian-tax-config.ts (single source of truth) instead of hardcoded values.
  * Use these constants instead of hardcoding 0.05 / 0.09975 in route files.
  */
 
-/** GST / TPS rate: 5% */
-export const GST_RATE = 0.05;
+import { getTaxRateForProvince } from '@/lib/accounting/canadian-tax-config';
 
-/** QST / TVQ rate: 9.975% */
-export const QST_RATE = 0.09975;
+const _qcRate = getTaxRateForProvince('QC');
+
+/** GST / TPS rate: 5% (derived from canonical source) */
+export const GST_RATE = _qcRate ? _qcRate.gstRate / 100 : 0.05;
+
+/** QST / TVQ rate: 9.975% (derived from canonical source) */
+export const QST_RATE = _qcRate ? _qcRate.pstRate / 100 : 0.09975;
 
 /** Combined GST + QST rate for Quebec */
 export const QC_COMBINED_RATE = GST_RATE + QST_RATE;

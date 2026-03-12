@@ -191,7 +191,7 @@ export const POST = withAdminGuard(
     // Delete DialerListEntry records linked to deleted leads
     if (leadIds.length > 0) {
       const dialerResult = await prisma.dialerListEntry.deleteMany({
-        where: { leadId: { in: leadIds } },
+        where: { crmLeadId: { in: leadIds } },
       });
       deleted.dialerEntries = dialerResult.count;
     }

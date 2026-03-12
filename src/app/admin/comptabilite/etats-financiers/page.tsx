@@ -182,10 +182,10 @@ export default function EtatsFinanciersPage() {
   // Ribbon actions
   const handleRibbonGenerateReport = useCallback(() => {
     fetchFinancialData();
-    toast.success(t('admin.financialStatements.reportRefreshed') || 'Etats financiers actualises');
+    toast.success(t('admin.financialStatements.reportRefreshed'));
   }, [fetchFinancialData, t]);
   const handleRibbonSchedule = useCallback(() => {
-    toast.info(t('admin.financialStatements.scheduleInfo') || 'La generation automatique des etats financiers sera disponible prochainement.');
+    toast.info(t('admin.financialStatements.scheduleInfo'));
   }, [t]);
   const handleRibbonComparePeriods = useCallback(() => {
     window.location.href = '/admin/comptabilite/rapports';
@@ -199,9 +199,9 @@ export default function EtatsFinanciersPage() {
       ...Object.entries(is.expenses).map(([n, a]) => ['Depenses', n, String(a)]),
       ...Object.entries(is.other).map(([n, a]) => ['Autres', n, String(a)]),
     ];
-    if (allEntries.length === 0) { toast.error(t('admin.financialStatements.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    if (allEntries.length === 0) { toast.error(t('admin.financialStatements.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.financialStatements.colSection') || 'Section', t('admin.financialStatements.colAccount') || 'Compte', t('admin.financialStatements.colAmount') || 'Montant'];
+    const headers = [t('admin.financialStatements.colSection'), t('admin.financialStatements.colAccount'), t('admin.financialStatements.colAmount')];
     const csv = bom + [headers.join(','), ...allEntries.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -273,7 +273,7 @@ export default function EtatsFinanciersPage() {
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="2026-01">{t('admin.financialStatements.january2026')}</option>
               <option value="2025-Q4">{t('admin.financialStatements.q42025')}</option>
@@ -400,9 +400,9 @@ export default function EtatsFinanciersPage() {
                 )}
 
                 {/* Bénéfice d'exploitation */}
-                <tr className="bg-teal-100">
-                  <td className="px-4 py-3 font-bold text-teal-900">{t('admin.financialStatements.operatingProfit')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-teal-700">{formatCurrency(operatingProfit)}</td>
+                <tr className="bg-indigo-100">
+                  <td className="px-4 py-3 font-bold text-indigo-900">{t('admin.financialStatements.operatingProfit')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-indigo-700">{formatCurrency(operatingProfit)}</td>
                 </tr>
 
                 {/* Autres */}
@@ -475,7 +475,7 @@ export default function EtatsFinanciersPage() {
                     </>
                   )}
 
-                  <tr className="bg-teal-100"><td className="px-4 py-3 font-bold text-teal-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-teal-700">{formatCurrency(totalAssets)}</td></tr>
+                  <tr className="bg-indigo-100"><td className="px-4 py-3 font-bold text-indigo-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-indigo-700">{formatCurrency(totalAssets)}</td></tr>
                 </tbody>
               </table>
               </div>
@@ -578,9 +578,9 @@ export default function EtatsFinanciersPage() {
               {Object.keys(cashFlow.financing).length === 0 && (
                 <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noFinancingActivities')}</td></tr>
               )}
-              <tr className="border-t border-slate-200 bg-teal-50">
-                <td className="px-4 py-3 font-semibold text-teal-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
-                <td className="px-4 py-3 text-end font-bold text-teal-700">{formatCurrency(financingCashFlow)}</td>
+              <tr className="border-t border-slate-200 bg-indigo-50">
+                <td className="px-4 py-3 font-semibold text-indigo-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
+                <td className="px-4 py-3 text-end font-bold text-indigo-700">{formatCurrency(financingCashFlow)}</td>
               </tr>
 
               <tr className="bg-violet-600 text-white">

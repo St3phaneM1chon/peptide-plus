@@ -29,17 +29,10 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     }
 
     // Fetch product details for all wishlist items
-    const productIds = wishlistItems.map((item) => item.productId);
+    const productIds = wishlistItems.map((item) => item.productId).filter((id): id is string => id != null);
     const products = await db.product.findMany({
       where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        imageUrl: true,
-        price: true,
-        purity: true,
-        isActive: true,
+      include: {
         images: {
           where: { isPrimary: true },
           take: 1,
@@ -63,6 +56,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     // Combine wishlist items with product details
     const items = wishlistItems
       .map((item) => {
+        if (!item.productId) return null;
         const product = productMap.get(item.productId);
         if (!product) return null;
 

@@ -92,7 +92,7 @@ const FlowEditor = dynamic(() => import('./flows/FlowEditor'), {
   ssr: false,
   loading: () => (
     <div className="h-[500px] flex items-center justify-center" role="status" aria-label="Loading">
-      <div className="animate-spin h-8 w-8 border-2 border-teal-700 border-t-transparent rounded-full" />
+      <div className="animate-spin h-8 w-8 border-2 border-indigo-700 border-t-transparent rounded-full" />
       <span className="sr-only">Loading...</span>
     </div>
   ),
@@ -102,7 +102,7 @@ const AnalyticsDashboard = dynamic(() => import('./analytics/AnalyticsDashboard'
   ssr: false,
   loading: () => (
     <div className="h-[400px] flex items-center justify-center" role="status" aria-label="Loading">
-      <div className="animate-spin h-8 w-8 border-2 border-teal-700 border-t-transparent rounded-full" />
+      <div className="animate-spin h-8 w-8 border-2 border-indigo-700 border-t-transparent rounded-full" />
       <span className="sr-only">Loading...</span>
     </div>
   ),
@@ -532,7 +532,7 @@ export default function EmailsPage() {
     try {
       const res = await fetch('/api/admin/emails/test', { method: 'POST', headers: addCSRFHeader() });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.testSent') || 'Test email sent');
+        toast.success(t('admin.emailConfig.testSent'));
       } else {
         const data = await res.json();
         toast.error(data.error || t('common.errorOccurred'));
@@ -556,7 +556,7 @@ export default function EmailsPage() {
         }),
       });
       if (res.ok) {
-        toast.success(t('common.saved') || 'Saved');
+        toast.success(t('common.saved'));
         setEditingTemplate(null);
         fetchData();
       } else {
@@ -586,7 +586,7 @@ export default function EmailsPage() {
   // ---- Helper: Export email logs as CSV ----
   const exportEmailLogs = useCallback(() => {
     if (logs.length === 0) {
-      toast.info(t('admin.emailConfig.noEmailsSent') || 'No emails sent');
+      toast.info(t('admin.emailConfig.noEmailsSent'));
       return;
     }
     const headers = ['Type', 'Recipient', 'Subject', 'Status', 'Date'];
@@ -598,7 +598,7 @@ export default function EmailsPage() {
       new Date(l.sentAt).toLocaleString(locale),
     ]);
     downloadCsv(`email-logs-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [logs, locale, t, downloadCsv]);
 
   // ---- Computed stats (needed by exportAnalyticsReport + UI) ----
@@ -622,7 +622,7 @@ export default function EmailsPage() {
       ['Period', analyticsPeriod],
     ];
     downloadCsv(`email-analytics-${analyticsPeriod}-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [stats, locale, analyticsPeriod, t, downloadCsv]);
 
   // ---- Helper: Export contacts/segments as CSV ----
@@ -636,7 +636,7 @@ export default function EmailsPage() {
       const data = await res.json();
       const subscribers = data.subscribers || [];
       if (subscribers.length === 0) {
-        toast.info(t('admin.newsletter.emptySubscribers') || 'No subscribers');
+        toast.info(t('admin.newsletter.emptySubscribers'));
         return;
       }
       const headers = ['Email', 'Locale', 'Source', 'Status', 'Subscribed At'];
@@ -644,7 +644,7 @@ export default function EmailsPage() {
         s.email, s.locale, s.source, s.status, new Date(s.subscribedAt).toLocaleDateString(locale),
       ]);
       downloadCsv(`contacts-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
-      toast.success(t('common.exported') || 'Exported successfully');
+      toast.success(t('common.exported'));
     } catch {
       toast.error(t('common.errorOccurred'));
     }
@@ -658,7 +658,7 @@ export default function EmailsPage() {
       const text = await importFile.text();
       const lines = text.split('\n').filter(l => l.trim());
       if (lines.length < 2) {
-        toast.error(t('admin.emailConfig.importNoData') || 'No data found in CSV');
+        toast.error(t('admin.emailConfig.importNoData'));
         setImporting(false);
         return;
       }
@@ -667,7 +667,7 @@ export default function EmailsPage() {
       const headers = headerLine.split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
       const emailIdx = headers.findIndex(h => h === 'email' || h === 'e-mail' || h === 'courriel');
       if (emailIdx === -1) {
-        toast.error(t('admin.emailConfig.importNoEmailColumn') || 'CSV must contain an Email column');
+        toast.error(t('admin.emailConfig.importNoEmailColumn'));
         setImporting(false);
         return;
       }
@@ -684,7 +684,7 @@ export default function EmailsPage() {
       }).filter(c => c.email && c.email.includes('@'));
 
       if (contacts.length === 0) {
-        toast.error(t('admin.emailConfig.importNoValidEmails') || 'No valid email addresses found');
+        toast.error(t('admin.emailConfig.importNoValidEmails'));
         setImporting(false);
         return;
       }
@@ -698,7 +698,7 @@ export default function EmailsPage() {
       if (res.ok) {
         const data = await res.json();
         toast.success(
-          (t('admin.emailConfig.importSuccess') || 'Imported {count} contacts')
+          (t('admin.emailConfig.importSuccess'))
             .replace('{count}', String(data.imported || contacts.length))
         );
         setShowImportModal(false);
@@ -717,7 +717,7 @@ export default function EmailsPage() {
   // ---- Helper: Add single contact ----
   const handleAddContactSubmit = useCallback(async () => {
     if (!newContactEmail || !newContactEmail.includes('@')) {
-      toast.error(t('admin.emailConfig.invalidEmail') || 'Please enter a valid email address');
+      toast.error(t('admin.emailConfig.invalidEmail'));
       return;
     }
     try {
@@ -731,7 +731,7 @@ export default function EmailsPage() {
         }),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.contactAdded') || 'Contact added');
+        toast.success(t('admin.emailConfig.contactAdded'));
         setShowAddContactModal(false);
         setNewContactEmail('');
       } else {
@@ -752,7 +752,7 @@ export default function EmailsPage() {
       if (res.ok) {
         const data = await res.json();
         toast.success(
-          (t('admin.emailConfig.bouncesCleanedCount') || 'Removed {count} bounced contacts')
+          (t('admin.emailConfig.bouncesCleanedCount'))
             .replace('{count}', String(data.removed || 0))
         );
       } else {
@@ -766,7 +766,7 @@ export default function EmailsPage() {
   // ---- Helper: Create new template ----
   const handleNewTemplateSubmit = useCallback(async () => {
     if (!newTemplateName.trim()) {
-      toast.error(t('admin.emailConfig.templateNameRequired') || 'Template name is required');
+      toast.error(t('admin.emailConfig.templateNameRequired'));
       return;
     }
     try {
@@ -780,7 +780,7 @@ export default function EmailsPage() {
         }),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.templateCreated') || 'Template created');
+        toast.success(t('admin.emailConfig.templateCreated'));
         setShowNewTemplateModal(false);
         setNewTemplateName('');
         setNewTemplateSubject('');
@@ -803,7 +803,7 @@ export default function EmailsPage() {
   }, []);
   const handleDelete = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     try {
@@ -812,7 +812,7 @@ export default function EmailsPage() {
         headers: addCSRFHeader(),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.conversationDeleted') || 'Conversation deleted');
+        toast.success(t('admin.emailConfig.conversationDeleted'));
         setSelectedConversation(null);
         fetchInboxCount();
       } else {
@@ -824,7 +824,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleArchive = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     try {
@@ -834,7 +834,7 @@ export default function EmailsPage() {
         body: JSON.stringify({ status: 'ARCHIVED' }),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.conversationArchived') || 'Conversation archived');
+        toast.success(t('admin.emailConfig.conversationArchived'));
         setSelectedConversation(null);
         fetchInboxCount();
       } else {
@@ -846,7 +846,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleReply = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     // Fetch conversation data to pre-fill the composer
@@ -873,7 +873,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleReplyAll = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     // Fetch conversation data to pre-fill the composer (same as reply for now)
@@ -899,7 +899,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleForward = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     // Fetch conversation data and open composer with forwarded content
@@ -925,7 +925,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleFlag = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     try {
@@ -935,7 +935,7 @@ export default function EmailsPage() {
         body: JSON.stringify({ isFlagged: true }),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.conversationFlagged') || 'Conversation flagged');
+        toast.success(t('admin.emailConfig.conversationFlagged'));
       } else {
         toast.error(t('common.errorOccurred'));
       }
@@ -945,7 +945,7 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleMarkRead = useCallback(async () => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
     try {
@@ -955,7 +955,7 @@ export default function EmailsPage() {
         body: JSON.stringify({ status: 'READ' }),
       });
       if (res.ok) {
-        toast.success(t('admin.emailConfig.markedAsRead') || 'Marked as read');
+        toast.success(t('admin.emailConfig.markedAsRead'));
         fetchInboxCount();
       } else {
         toast.error(t('common.errorOccurred'));
@@ -966,10 +966,10 @@ export default function EmailsPage() {
   }, [selectedConversation, t]);
   const handleMoveTo = useCallback(() => {
     if (!selectedConversation) {
-      toast.info(t('admin.emailConfig.selectConversationFirst') || 'Select a conversation first');
+      toast.info(t('admin.emailConfig.selectConversationFirst'));
       return;
     }
-    toast.info(t('admin.emailConfig.moveToFolder') || 'Folders not configured. Use archive or flag to organize conversations.');
+    toast.info(t('admin.emailConfig.moveToFolder'));
   }, [selectedConversation, t]);
 
   // Templates tab actions
@@ -982,15 +982,15 @@ export default function EmailsPage() {
     if (!editingTemplate && templates.length > 0) {
       // Duplicate the first template as a starting point
       const tmpl = templates[0];
-      setNewTemplateName(`${tmpl.name} (${t('admin.emailConfig.copy') || 'Copy'})`);
+      setNewTemplateName(`${tmpl.name} (${t('admin.emailConfig.copy')})`);
       setNewTemplateSubject(tmpl.subject);
       setShowNewTemplateModal(true);
     } else if (editingTemplate) {
-      setNewTemplateName(`${editingTemplate.name} (${t('admin.emailConfig.copy') || 'Copy'})`);
+      setNewTemplateName(`${editingTemplate.name} (${t('admin.emailConfig.copy')})`);
       setNewTemplateSubject(editingTemplate.subject);
       setShowNewTemplateModal(true);
     } else {
-      toast.info(t('admin.emailConfig.noTemplates') || 'No templates to duplicate');
+      toast.info(t('admin.emailConfig.noTemplates'));
     }
   }, [editingTemplate, templates, t]);
   const handlePreview = useCallback(() => {
@@ -1015,7 +1015,7 @@ export default function EmailsPage() {
       const blobUrl = URL.createObjectURL(blob);
       window.open(blobUrl, '_blank');
     } else {
-      toast.info(t('admin.emailConfig.noTemplates') || 'No templates to preview');
+      toast.info(t('admin.emailConfig.noTemplates'));
     }
   }, [editingTemplate, templates, t]);
   const handleTestSend = useCallback(() => { sendTestEmail(); }, []);
@@ -1040,7 +1040,7 @@ export default function EmailsPage() {
   const handleSendNow = useCallback(() => {
     // Switch to campaigns tab where user can use the Send button
     setActiveTab('campaigns');
-    toast.info(t('admin.emailConfig.selectCampaignToSend') || 'Select a campaign and use the Send button');
+    toast.info(t('admin.emailConfig.selectCampaignToSend'));
   }, [t]);
   const handleAbTest = useCallback(() => {
     setAbTestSubjectA('');
@@ -1064,7 +1064,7 @@ export default function EmailsPage() {
           body: JSON.stringify({ isActive: true }),
         });
         if (res.ok) {
-          toast.success(t('admin.emailConfig.flowActivated') || 'Workflow activated');
+          toast.success(t('admin.emailConfig.flowActivated'));
         } else {
           toast.error(t('common.errorOccurred'));
         }
@@ -1072,7 +1072,7 @@ export default function EmailsPage() {
         toast.error(t('common.errorOccurred'));
       }
     } else {
-      toast.info(t('admin.emailConfig.selectFlowFirst') || 'Select a workflow first');
+      toast.info(t('admin.emailConfig.selectFlowFirst'));
     }
   }, [editingFlowId, t]);
   const handleDeactivate = useCallback(async () => {
@@ -1084,7 +1084,7 @@ export default function EmailsPage() {
           body: JSON.stringify({ isActive: false }),
         });
         if (res.ok) {
-          toast.success(t('admin.emailConfig.flowDeactivated') || 'Workflow deactivated');
+          toast.success(t('admin.emailConfig.flowDeactivated'));
         } else {
           toast.error(t('common.errorOccurred'));
         }
@@ -1092,7 +1092,7 @@ export default function EmailsPage() {
         toast.error(t('common.errorOccurred'));
       }
     } else {
-      toast.info(t('admin.emailConfig.selectFlowFirst') || 'Select a workflow first');
+      toast.info(t('admin.emailConfig.selectFlowFirst'));
     }
   }, [editingFlowId, t]);
   const handleTriggerStats = useCallback(() => {
@@ -1113,7 +1113,7 @@ export default function EmailsPage() {
     const nextIdx = (currentIdx + 1) % periods.length;
     setAnalyticsPeriod(periods[nextIdx]);
     toast.info(
-      (t('admin.emailConfig.switchedToPeriod') || 'Switched to {period} view')
+      (t('admin.emailConfig.switchedToPeriod'))
         .replace('{period}', periods[nextIdx])
     );
   }, [analyticsPeriod, t]);
@@ -1127,12 +1127,12 @@ export default function EmailsPage() {
   // Segments tab actions
   const handleNewSegment = useCallback(() => {
     // Segments are auto-generated via RFM, inform user
-    toast.info(t('admin.emailConfig.segmentsAutoGenerated') || 'Segments are automatically generated based on customer behavior (RFM analysis)');
+    toast.info(t('admin.emailConfig.segmentsAutoGenerated'));
   }, [t]);
   const handleRefreshCount = useCallback(async () => {
     // Re-fetch segments to refresh counts
     setActiveTab('segments');
-    toast.success(t('admin.emailConfig.countsRefreshed') || 'Segment counts refreshed');
+    toast.success(t('admin.emailConfig.countsRefreshed'));
   }, [t]);
   const handleExportContacts = useCallback(() => {
     exportContacts();
@@ -1153,7 +1153,7 @@ export default function EmailsPage() {
     handleCleanBouncesAction();
   }, [handleCleanBouncesAction]);
   const handleUnsubscribe = useCallback(() => {
-    toast.info(t('admin.emailConfig.useSubscriberDetailToUnsubscribe') || 'Use the subscriber detail view to unsubscribe individual contacts');
+    toast.info(t('admin.emailConfig.useSubscriberDetailToUnsubscribe'));
   }, [t]);
 
   // Register all ribbon actions
@@ -1247,7 +1247,7 @@ export default function EmailsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -1255,8 +1255,8 @@ export default function EmailsPage() {
 
   return (
     <EmailErrorBoundary
-      fallbackTitle={t('admin.emailConfig.errorBoundaryTitle') || 'Email admin error'}
-      fallbackDescription={t('admin.emailConfig.errorBoundaryDescription') || 'An unexpected error occurred in the email administration panel. Please try refreshing.'}
+      fallbackTitle={t('admin.emailConfig.errorBoundaryTitle')}
+      fallbackDescription={t('admin.emailConfig.errorBoundaryDescription')}
     >
     <div className="space-y-3">
       {/* Compact header bar — stats + actions inline */}
@@ -1314,7 +1314,7 @@ export default function EmailsPage() {
             {showCampaignCalendar ? 'Fermer' : 'Calendrier'}
           </Button>
           <Button variant="primary" icon={Plus} onClick={handleNewMessage} className="!text-xs !py-1.5">
-            {t('admin.emailConfig.newMessage') || 'Nouveau message'}
+            {t('admin.emailConfig.newMessage')}
           </Button>
           <Button variant="secondary" icon={SendHorizontal} onClick={sendTestEmail} className="!text-xs !py-1.5">
             {t('admin.emailConfig.sendTest')}
@@ -1357,7 +1357,7 @@ export default function EmailsPage() {
                 }}
                 className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'border-teal-500 text-teal-600'
+                    ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -1386,14 +1386,14 @@ export default function EmailsPage() {
             {/* Folder header */}
             <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
               <span className="text-sm font-semibold text-slate-700">
-                {folderParam === 'inbox' && (t('admin.nav.emailInbox') || 'Boîte de réception')}
-                {folderParam === 'sent' && (t('admin.nav.emailSent') || 'Envoyés')}
-                {folderParam === 'drafts' && (t('admin.nav.emailDrafts') || 'Brouillons')}
-                {folderParam === 'deleted' && (t('admin.nav.emailDeleted') || 'Éléments supprimés')}
-                {folderParam === 'junk' && (t('admin.nav.emailJunk') || 'Courrier indésirable')}
-                {folderParam === 'notes' && (t('admin.nav.emailNotes') || 'Notes')}
-                {folderParam === 'archive' && (t('admin.nav.emailArchive') || 'Archive')}
-                {folderParam === 'search' && (t('admin.nav.emailSearchFolders') || 'Recherche')}
+                {folderParam === 'inbox' && (t('admin.nav.emailInbox'))}
+                {folderParam === 'sent' && (t('admin.nav.emailSent'))}
+                {folderParam === 'drafts' && (t('admin.nav.emailDrafts'))}
+                {folderParam === 'deleted' && (t('admin.nav.emailDeleted'))}
+                {folderParam === 'junk' && (t('admin.nav.emailJunk'))}
+                {folderParam === 'notes' && (t('admin.nav.emailNotes'))}
+                {folderParam === 'archive' && (t('admin.nav.emailArchive'))}
+                {folderParam === 'search' && (t('admin.nav.emailSearchFolders'))}
               </span>
             </div>
 
@@ -1407,12 +1407,12 @@ export default function EmailsPage() {
               ) : folderParam === 'sent' ? (
                 sentLoading ? (
                   <div className="flex items-center justify-center h-32">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
                   </div>
                 ) : sentEmails.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-48 text-slate-400">
                     <SendHorizontal className="h-10 w-10 mb-2" />
-                    <p className="text-sm">{t('admin.emailConfig.noEmailsSent') || 'Aucun email envoyé'}</p>
+                    <p className="text-sm">{t('admin.emailConfig.noEmailsSent')}</p>
                   </div>
                 ) : (
                   sentEmails.map((email) => (
@@ -1420,7 +1420,7 @@ export default function EmailsPage() {
                       key={email.id}
                       onClick={() => { setSelectedSentEmail(email); setSelectedConversation(null); }}
                       className={`w-full text-start p-3 border-b border-slate-100 transition-colors ${
-                        selectedSentEmail?.id === email.id ? 'bg-teal-50' : 'hover:bg-slate-50'
+                        selectedSentEmail?.id === email.id ? 'bg-indigo-50' : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -1433,7 +1433,7 @@ export default function EmailsPage() {
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-medium ${
                           ['sent', 'delivered'].includes(email.status.toLowerCase()) ? 'bg-green-100 text-green-700' :
-                          ['opened', 'clicked'].includes(email.status.toLowerCase()) ? 'bg-teal-100 text-teal-700' :
+                          ['opened', 'clicked'].includes(email.status.toLowerCase()) ? 'bg-indigo-100 text-indigo-700' :
                           ['failed', 'bounced'].includes(email.status.toLowerCase()) ? 'bg-red-100 text-red-700' :
                           'bg-yellow-100 text-yellow-700'
                         }`}>{email.status}</span>
@@ -1459,7 +1459,7 @@ export default function EmailsPage() {
 
           {/* RESIZE HANDLE */}
           <div
-            className="w-1 cursor-col-resize bg-slate-200 hover:bg-teal-400 active:bg-teal-500 transition-colors flex-shrink-0"
+            className="w-1 cursor-col-resize bg-slate-200 hover:bg-indigo-400 active:bg-indigo-500 transition-colors flex-shrink-0"
             onMouseDown={handleSplitMouseDown}
             role="separator"
             aria-orientation="vertical"
@@ -1477,18 +1477,18 @@ export default function EmailsPage() {
               <div className="p-6 space-y-4">
                 <div className="flex items-center gap-2 text-slate-400 text-sm">
                   <button onClick={() => setSelectedSentEmail(null)} className="hover:text-slate-700">
-                    &larr; {t('common.back') || 'Retour'}
+                    &larr; {t('common.back')}
                   </button>
                 </div>
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold text-slate-900">{selectedSentEmail.subject}</h2>
                   <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
-                    <span><strong>{t('admin.emailConfig.from') || 'De'}:</strong> {emailSettings['email.senderEmail'] || 'noreply@biocyclepeptides.com'}</span>
-                    <span><strong>{t('admin.emailConfig.recipient') || 'À'}:</strong> {selectedSentEmail.to}</span>
+                    <span><strong>{t('admin.emailConfig.from')}:</strong> {emailSettings['email.senderEmail'] || 'noreply@biocyclepeptides.com'}</span>
+                    <span><strong>{t('admin.emailConfig.recipient')}:</strong> {selectedSentEmail.to}</span>
                     <span>{new Date(selectedSentEmail.sentAt).toLocaleString(locale)}</span>
                     <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
                       ['sent', 'delivered'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-green-100 text-green-700' :
-                      ['opened', 'clicked'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-teal-100 text-teal-700' :
+                      ['opened', 'clicked'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-indigo-100 text-indigo-700' :
                       ['failed', 'bounced'].includes(selectedSentEmail.status.toLowerCase()) ? 'bg-red-100 text-red-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>{selectedSentEmail.status}</span>
@@ -1501,7 +1501,7 @@ export default function EmailsPage() {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-400">
                 <Mail className="h-16 w-16 mb-4 opacity-30" />
-                <p className="text-sm">{t('admin.emails.inbox.selectConversation') || 'Sélectionnez un message pour le lire'}</p>
+                <p className="text-sm">{t('admin.emails.inbox.selectConversation')}</p>
               </div>
             )}
           </div>
@@ -1613,7 +1613,7 @@ export default function EmailsPage() {
             <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.smtpConfig')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label={t('admin.emailConfig.provider')}>
-                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} aria-label="Email service provider" className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} aria-label="Email service provider" className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                   <option value="Resend">Resend</option>
                   <option value="SendGrid">SendGrid</option>
                   <option value="SMTP">{t('admin.emailConfig.customSmtp')}</option>
@@ -1653,19 +1653,19 @@ export default function EmailsPage() {
             <div className="space-y-3">
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.abandonedCartEmail')}</span>
-                <input type="checkbox" defaultChecked={emailSettings['automation.abandonedCart'] === 'true'} data-field="autoAbandonedCart" aria-label="Enable abandoned cart email automation" className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.abandonedCart'] === 'true'} data-field="autoAbandonedCart" aria-label="Enable abandoned cart email automation" className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.reviewRequest')}</span>
-                <input type="checkbox" defaultChecked={emailSettings['automation.reviewRequest'] !== 'false'} data-field="autoReviewRequest" aria-label="Enable review request email automation" className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.reviewRequest'] !== 'false'} data-field="autoReviewRequest" aria-label="Enable review request email automation" className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.birthdayEmail')}</span>
-                <input type="checkbox" defaultChecked={emailSettings['automation.birthdayEmail'] !== 'false'} data-field="autoBirthday" aria-label="Enable birthday email automation" className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.birthdayEmail'] !== 'false'} data-field="autoBirthday" aria-label="Enable birthday email automation" className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.autoResponder')}</span>
-                <input type="checkbox" defaultChecked={emailSettings['automation.autoResponder'] === 'true'} data-field="autoAutoResponder" aria-label="Enable auto-responder email automation" className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500" />
+                <input type="checkbox" defaultChecked={emailSettings['automation.autoResponder'] === 'true'} data-field="autoAutoResponder" aria-label="Enable auto-responder email automation" className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500" />
               </label>
             </div>
           </div>
@@ -1729,7 +1729,7 @@ export default function EmailsPage() {
                   }),
                 });
                 if (res.ok) {
-                  toast.success(t('common.saved') || 'Saved');
+                  toast.success(t('common.saved'));
                   setSettingsLoaded(false); // Reload settings
                 } else {
                   toast.error(t('common.errorOccurred'));
@@ -1743,13 +1743,13 @@ export default function EmailsPage() {
             <Button variant="secondary" icon={SendHorizontal} onClick={async () => {
               try {
                 const res = await fetch('/api/admin/emails/test', { method: 'POST', headers: addCSRFHeader() });
-                if (res.ok) toast.success(t('admin.emailConfig.testEmailSent') || 'Test email sent!');
-                else toast.error(t('admin.emailConfig.testEmailFailed') || 'Test email failed');
+                if (res.ok) toast.success(t('admin.emailConfig.testEmailSent'));
+                else toast.error(t('admin.emailConfig.testEmailFailed'));
               } catch {
-                toast.error(t('admin.emailConfig.testEmailFailed') || 'Test email failed');
+                toast.error(t('admin.emailConfig.testEmailFailed'));
               }
             }}>
-              {t('admin.emailConfig.testConnection') || 'Test Connection'}
+              {t('admin.emailConfig.testConnection')}
             </Button>
           </div>
 
@@ -1778,7 +1778,7 @@ export default function EmailsPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-slate-900">{acc.name}</span>
                           {acc.isDefault && (
-                            <span className="px-1.5 py-0.5 text-[10px] bg-teal-100 text-teal-700 rounded-full font-medium">Par défaut</span>
+                            <span className="px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded-full font-medium">Par défaut</span>
                           )}
                           {!acc.isActive && (
                             <span className="px-1.5 py-0.5 text-[10px] bg-red-100 text-red-700 rounded-full font-medium">Désactivé</span>
@@ -1794,7 +1794,7 @@ export default function EmailsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openAccountModal(acc)}
-                        className="px-3 py-1.5 text-xs text-slate-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                       >
                         Modifier
                       </button>
@@ -1824,7 +1824,7 @@ export default function EmailsPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowAccountModal(false)}>
-              {t('common.cancel') || 'Annuler'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" icon={Save} onClick={saveAccount}>
               {editingAccount ? 'Mettre à jour' : 'Créer le compte'}
@@ -1967,47 +1967,47 @@ export default function EmailsPage() {
       <Modal
         isOpen={showAbTestModal}
         onClose={() => setShowAbTestModal(false)}
-        title={t('admin.emailConfig.abTestTitle') || 'A/B Test Configuration'}
+        title={t('admin.emailConfig.abTestTitle')}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowAbTestModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" icon={FlaskConical} onClick={() => {
               if (!abTestSubjectA.trim() || !abTestSubjectB.trim()) {
-                toast.error(t('admin.emailConfig.abTestBothRequired') || 'Both subject lines are required');
+                toast.error(t('admin.emailConfig.abTestBothRequired'));
                 return;
               }
-              toast.success(t('admin.emailConfig.abTestConfigured') || 'A/B test configured');
+              toast.success(t('admin.emailConfig.abTestConfigured'));
               setShowAbTestModal(false);
             }}>
-              {t('admin.emailConfig.abTestSave') || 'Save A/B Test'}
+              {t('admin.emailConfig.abTestSave')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            {t('admin.emailConfig.abTestDescription') || 'Test two different subject lines to see which performs better. Your audience will be randomly split.'}
+            {t('admin.emailConfig.abTestDescription')}
           </p>
-          <FormField label={t('admin.emailConfig.abTestSubjectA') || 'Subject Line A'}>
+          <FormField label={t('admin.emailConfig.abTestSubjectA')}>
             <Input
               type="text"
               value={abTestSubjectA}
               onChange={(e) => setAbTestSubjectA(e.target.value)}
-              placeholder={t('admin.emailConfig.abTestSubjectAPlaceholder') || 'e.g. New products just arrived!'}
+              placeholder={t('admin.emailConfig.abTestSubjectAPlaceholder')}
             />
           </FormField>
-          <FormField label={t('admin.emailConfig.abTestSubjectB') || 'Subject Line B'}>
+          <FormField label={t('admin.emailConfig.abTestSubjectB')}>
             <Input
               type="text"
               value={abTestSubjectB}
               onChange={(e) => setAbTestSubjectB(e.target.value)}
-              placeholder={t('admin.emailConfig.abTestSubjectBPlaceholder') || 'e.g. Check out what\'s new'}
+              placeholder={t('admin.emailConfig.abTestSubjectBPlaceholder')}
             />
           </FormField>
-          <FormField label={t('admin.emailConfig.abTestSplit') || 'Traffic Split (%)'}>
+          <FormField label={t('admin.emailConfig.abTestSplit')}>
             <div className="flex items-center gap-3">
               <input
                 type="range"
@@ -2024,8 +2024,8 @@ export default function EmailsPage() {
               </span>
             </div>
           </FormField>
-          <div className="bg-teal-50 rounded-lg p-3 text-xs text-teal-700">
-            {t('admin.emailConfig.abTestHint') || 'The winning subject line (highest open rate after 4 hours) will be sent to the remaining audience.'}
+          <div className="bg-indigo-50 rounded-lg p-3 text-xs text-indigo-700">
+            {t('admin.emailConfig.abTestHint')}
           </div>
         </div>
       </Modal>
@@ -2034,36 +2034,36 @@ export default function EmailsPage() {
       <Modal
         isOpen={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
-        title={t('admin.emailConfig.scheduleTitle') || 'Schedule Campaign'}
+        title={t('admin.emailConfig.scheduleTitle')}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" icon={Calendar} onClick={() => {
               if (!scheduleDate) {
-                toast.error(t('admin.emailConfig.scheduleDateRequired') || 'Please select a date');
+                toast.error(t('admin.emailConfig.scheduleDateRequired'));
                 return;
               }
               const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`);
               if (scheduledAt <= new Date()) {
-                toast.error(t('admin.emailConfig.scheduleFuture') || 'Scheduled date must be in the future');
+                toast.error(t('admin.emailConfig.scheduleFuture'));
                 return;
               }
               toast.success(
-                (t('admin.emailConfig.scheduleConfirmed') || 'Campaign scheduled for {date}')
+                (t('admin.emailConfig.scheduleConfirmed'))
                   .replace('{date}', scheduledAt.toLocaleString(locale))
               );
               setShowScheduleModal(false);
             }}>
-              {t('admin.emailConfig.scheduleConfirm') || 'Schedule'}
+              {t('admin.emailConfig.scheduleConfirm')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <FormField label={t('admin.emailConfig.scheduleDate') || 'Date'}>
+          <FormField label={t('admin.emailConfig.scheduleDate')}>
             <Input
               type="date"
               value={scheduleDate}
@@ -2071,7 +2071,7 @@ export default function EmailsPage() {
               min={new Date().toISOString().slice(0, 10)}
             />
           </FormField>
-          <FormField label={t('admin.emailConfig.scheduleTime') || 'Time'}>
+          <FormField label={t('admin.emailConfig.scheduleTime')}>
             <Input
               type="time"
               value={scheduleTime}
@@ -2079,7 +2079,7 @@ export default function EmailsPage() {
             />
           </FormField>
           <div className="bg-amber-50 rounded-lg p-3 text-xs text-amber-700">
-            {t('admin.emailConfig.scheduleTimezoneHint') || 'Time is in your local timezone. The campaign will be sent at the specified time.'}
+            {t('admin.emailConfig.scheduleTimezoneHint')}
           </div>
         </div>
       </Modal>
@@ -2088,12 +2088,12 @@ export default function EmailsPage() {
       <Modal
         isOpen={showImportModal}
         onClose={() => { setShowImportModal(false); setImportFile(null); }}
-        title={t('admin.emailConfig.importTitle') || 'Import Subscribers from CSV'}
+        title={t('admin.emailConfig.importTitle')}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => { setShowImportModal(false); setImportFile(null); }}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -2102,17 +2102,17 @@ export default function EmailsPage() {
               disabled={!importFile || importing}
               loading={importing}
             >
-              {t('admin.emailConfig.importButton') || 'Import'}
+              {t('admin.emailConfig.importButton')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            {t('admin.emailConfig.importDescription') || 'Upload a CSV file with subscriber data. The file must contain at least an Email column.'}
+            {t('admin.emailConfig.importDescription')}
           </p>
           <div
-            className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-teal-400 transition-colors"
+            className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors"
             onClick={() => fileInputRef.current?.click()}
             role="button"
             tabIndex={0}
@@ -2126,7 +2126,7 @@ export default function EmailsPage() {
               </div>
             ) : (
               <p className="text-sm text-slate-500">
-                {t('admin.emailConfig.importDropzone') || 'Click to select a CSV file'}
+                {t('admin.emailConfig.importDropzone')}
               </p>
             )}
             <input
@@ -2142,7 +2142,7 @@ export default function EmailsPage() {
           </div>
           <div className="bg-slate-50 rounded-lg p-3">
             <h4 className="text-xs font-semibold text-slate-700 mb-1">
-              {t('admin.emailConfig.importFormat') || 'Expected CSV format:'}
+              {t('admin.emailConfig.importFormat')}
             </h4>
             <code className="text-[10px] text-slate-600 block">
               Email,Locale,Source<br />
@@ -2157,21 +2157,21 @@ export default function EmailsPage() {
       <Modal
         isOpen={showAddContactModal}
         onClose={() => setShowAddContactModal(false)}
-        title={t('admin.emailConfig.addContactTitle') || 'Add Contact'}
+        title={t('admin.emailConfig.addContactTitle')}
         size="sm"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowAddContactModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" icon={UserPlus} onClick={handleAddContactSubmit}>
-              {t('admin.emailConfig.addContactButton') || 'Add Contact'}
+              {t('admin.emailConfig.addContactButton')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <FormField label={t('admin.emailConfig.contactEmail') || 'Email'} required>
+          <FormField label={t('admin.emailConfig.contactEmail')} required>
             <Input
               type="email"
               value={newContactEmail}
@@ -2179,11 +2179,11 @@ export default function EmailsPage() {
               placeholder="john@example.com"
             />
           </FormField>
-          <FormField label={t('admin.emailConfig.contactLocale') || 'Language'}>
+          <FormField label={t('admin.emailConfig.contactLocale')}>
             <select
               value={newContactLocale}
               onChange={(e) => setNewContactLocale(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label="Contact language"
             >
               <option value="en">English</option>
@@ -2195,18 +2195,18 @@ export default function EmailsPage() {
               <option value="ar">Arabic</option>
             </select>
           </FormField>
-          <FormField label={t('admin.emailConfig.contactSource') || 'Source'}>
+          <FormField label={t('admin.emailConfig.contactSource')}>
             <select
               value={newContactSource}
               onChange={(e) => setNewContactSource(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label="Contact source"
             >
-              <option value="manual">{t('admin.emailConfig.sourceManual') || 'Manual'}</option>
-              <option value="import">{t('admin.emailConfig.sourceImport') || 'Import'}</option>
-              <option value="popup">{t('admin.emailConfig.sourcePopup') || 'Popup'}</option>
-              <option value="footer">{t('admin.emailConfig.sourceFooter') || 'Footer'}</option>
-              <option value="checkout">{t('admin.emailConfig.sourceCheckout') || 'Checkout'}</option>
+              <option value="manual">{t('admin.emailConfig.sourceManual')}</option>
+              <option value="import">{t('admin.emailConfig.sourceImport')}</option>
+              <option value="popup">{t('admin.emailConfig.sourcePopup')}</option>
+              <option value="footer">{t('admin.emailConfig.sourceFooter')}</option>
+              <option value="checkout">{t('admin.emailConfig.sourceCheckout')}</option>
             </select>
           </FormField>
         </div>
@@ -2216,44 +2216,44 @@ export default function EmailsPage() {
       <Modal
         isOpen={showVariablesModal}
         onClose={() => setShowVariablesModal(false)}
-        title={t('admin.emailConfig.variablesTitle') || 'Available Template Variables'}
+        title={t('admin.emailConfig.variablesTitle')}
         size="md"
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-600 mb-4">
-            {t('admin.emailConfig.variablesDescription') || 'Use these variables in your email templates. They will be replaced with actual values when the email is sent.'}
+            {t('admin.emailConfig.variablesDescription')}
           </p>
           {[
-            { var: '{{customerName}}', desc: t('admin.emailConfig.varCustomerName') || 'Customer full name' },
-            { var: '{{prenom}}', desc: t('admin.emailConfig.varFirstName') || 'Customer first name' },
-            { var: '{{email}}', desc: t('admin.emailConfig.varEmail') || 'Customer email address' },
-            { var: '{{orderNumber}}', desc: t('admin.emailConfig.varOrderNumber') || 'Order number' },
-            { var: '{{orderTotal}}', desc: t('admin.emailConfig.varOrderTotal') || 'Order total amount' },
-            { var: '{{trackingUrl}}', desc: t('admin.emailConfig.varTrackingUrl') || 'Shipment tracking URL' },
-            { var: '{{trackingNumber}}', desc: t('admin.emailConfig.varTrackingNumber') || 'Shipment tracking number' },
-            { var: '{{resetLink}}', desc: t('admin.emailConfig.varResetLink') || 'Password reset link' },
-            { var: '{{unsubscribeUrl}}', desc: t('admin.emailConfig.varUnsubscribeUrl') || 'Unsubscribe link' },
-            { var: '{{companyName}}', desc: t('admin.emailConfig.varCompanyName') || 'Company name (BioCycle Peptides)' },
-            { var: '{{currentYear}}', desc: t('admin.emailConfig.varCurrentYear') || 'Current year' },
+            { var: '{{customerName}}', desc: t('admin.emailConfig.varCustomerName') },
+            { var: '{{prenom}}', desc: t('admin.emailConfig.varFirstName') },
+            { var: '{{email}}', desc: t('admin.emailConfig.varEmail') },
+            { var: '{{orderNumber}}', desc: t('admin.emailConfig.varOrderNumber') },
+            { var: '{{orderTotal}}', desc: t('admin.emailConfig.varOrderTotal') },
+            { var: '{{trackingUrl}}', desc: t('admin.emailConfig.varTrackingUrl') },
+            { var: '{{trackingNumber}}', desc: t('admin.emailConfig.varTrackingNumber') },
+            { var: '{{resetLink}}', desc: t('admin.emailConfig.varResetLink') },
+            { var: '{{unsubscribeUrl}}', desc: t('admin.emailConfig.varUnsubscribeUrl') },
+            { var: '{{companyName}}', desc: t('admin.emailConfig.varCompanyName') },
+            { var: '{{currentYear}}', desc: t('admin.emailConfig.varCurrentYear') },
           ].map(item => (
             <div
               key={item.var}
               className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
               onClick={() => {
                 navigator.clipboard.writeText(item.var);
-                toast.success((t('admin.emailConfig.variableCopied') || 'Copied: {var}').replace('{var}', item.var));
+                toast.success((t('admin.emailConfig.variableCopied')).replace('{var}', item.var));
               }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   navigator.clipboard.writeText(item.var);
-                  toast.success((t('admin.emailConfig.variableCopied') || 'Copied: {var}').replace('{var}', item.var));
+                  toast.success((t('admin.emailConfig.variableCopied')).replace('{var}', item.var));
                 }
               }}
             >
               <div className="flex items-center gap-2">
-                <code className="text-xs font-mono bg-white px-2 py-1 rounded border border-slate-200 text-teal-700">
+                <code className="text-xs font-mono bg-white px-2 py-1 rounded border border-slate-200 text-indigo-700">
                   {item.var}
                 </code>
                 <span className="text-sm text-slate-600">{item.desc}</span>
@@ -2268,26 +2268,26 @@ export default function EmailsPage() {
       <Modal
         isOpen={showNewTemplateModal}
         onClose={() => setShowNewTemplateModal(false)}
-        title={t('admin.emailConfig.newTemplateTitle') || 'Create New Template'}
+        title={t('admin.emailConfig.newTemplateTitle')}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowNewTemplateModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" icon={Plus} onClick={handleNewTemplateSubmit}>
-              {t('admin.emailConfig.createTemplate') || 'Create Template'}
+              {t('admin.emailConfig.createTemplate')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <FormField label={t('admin.emailConfig.templateName') || 'Template Name'} required>
+          <FormField label={t('admin.emailConfig.templateName')} required>
             <Input
               type="text"
               value={newTemplateName}
               onChange={(e) => setNewTemplateName(e.target.value)}
-              placeholder={t('admin.emailConfig.templateNamePlaceholder') || 'e.g. Welcome Email V2'}
+              placeholder={t('admin.emailConfig.templateNamePlaceholder')}
             />
           </FormField>
           <FormField label={t('admin.emailConfig.subject')} hint={t('admin.emailConfig.subjectHint')}>
@@ -2295,7 +2295,7 @@ export default function EmailsPage() {
               type="text"
               value={newTemplateSubject}
               onChange={(e) => setNewTemplateSubject(e.target.value)}
-              placeholder={t('admin.emailConfig.templateSubjectPlaceholder') || 'e.g. Welcome to BioCycle Peptides!'}
+              placeholder={t('admin.emailConfig.templateSubjectPlaceholder')}
             />
           </FormField>
         </div>

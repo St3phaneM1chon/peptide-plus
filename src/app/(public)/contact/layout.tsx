@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with BioCycle Peptides. Montreal-based Canadian supplier of research peptides. Bilingual support available.',
+  title: 'Contactez-nous',
+  description: 'Communiquez avec BioCycle Peptides. Fournisseur canadien de peptides de recherche basé à Montréal. Support bilingue disponible.',
+  openGraph: {
+    title: 'Contactez-nous | BioCycle Peptides',
+    description: 'Communiquez avec BioCycle Peptides. Support bilingue disponible.',
+    url: 'https://biocyclepeptides.com/contact',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

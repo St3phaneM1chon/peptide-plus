@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Solutions Entreprises | Formations Pro',
-  description: 'Programmes de formation sur mesure pour développer les compétences de vos équipes.',
+  title: 'Solutions entreprises',
+  description: 'Solutions peptidiques sur mesure pour les entreprises. Approvisionnement en volume, comptes dédiés et support technique spécialisé.',
+  openGraph: {
+    title: 'Solutions entreprises | BioCycle Peptides',
+    description: 'Solutions peptidiques sur mesure pour les entreprises.',
+    url: 'https://biocyclepeptides.com/solutions/entreprises',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const benefits = [

@@ -30,6 +30,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     const activeStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'PRE_ORDER'];
 
     // Step 1: Get all products with stock tracking enabled and low/zero stock
+    // A7-P2-003: Add take limit to prevent unbounded result sets
     const lowStockProducts = await prisma.product.findMany({
       where: {
         trackInventory: true,
@@ -42,6 +43,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         sku: true,
         stockQuantity: true,
       },
+      take: 1000,
     });
 
     const lowStockProductIds = lowStockProducts.map((p) => p.id);
@@ -60,6 +62,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
     // Step 2: Find orders with items referencing these products
     // Use a two-step approach for better performance
+    // A7-P2-003: Add take limit to prevent unbounded result sets on large order volumes
     const backorderedOrderItems = await prisma.orderItem.findMany({
       where: {
         productId: { in: lowStockProductIds },
@@ -76,6 +79,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         quantity: true,
         unitPrice: true,
       },
+      take: 5000,
     });
 
     // Group by orderId

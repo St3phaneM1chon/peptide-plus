@@ -92,6 +92,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
         <div className="flex items-center justify-center gap-2 mb-1">
           <button
             onClick={decrease}
+            aria-label={`Decrease ${label}`}
             className={`w-7 h-7 rounded-full ${colors[color].button} ${buttonTextColor} font-bold text-base flex items-center justify-center transition-all active:scale-95 shadow-lg`}
           >
             −
@@ -102,6 +103,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
           </div>
           <button
             onClick={increase}
+            aria-label={`Increase ${label}`}
             className={`w-7 h-7 rounded-full ${colors[color].button} ${buttonTextColor} font-bold text-base flex items-center justify-center transition-all active:scale-95 shadow-lg`}
           >
             +
@@ -117,6 +119,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
             step={step}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
+            aria-label={label}
             className="w-full h-1 appearance-none cursor-pointer rounded-full bg-neutral-700/50
               [&::-webkit-slider-thumb]:appearance-none 
               [&::-webkit-slider-thumb]:w-3 

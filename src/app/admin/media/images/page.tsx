@@ -236,7 +236,7 @@ export default function MediaImagesPage() {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB - matches server limit
     for (let i = 0; i < files.length; i++) {
       if (files[i].size > MAX_FILE_SIZE) {
-        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge') || 'File exceeds maximum size of 10MB'}`);
+        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge')}`);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
@@ -252,15 +252,15 @@ export default function MediaImagesPage() {
       const res = await fetch('/api/admin/medias', { headers: addCSRFHeader(), method: 'POST', body: formData });
       if (res.ok) {
         loadImages();
-        toast.success(t('admin.media.uploadSuccess') || 'Upload successful');
+        toast.success(t('admin.media.uploadSuccess'));
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
+        toast.error(data.error || t('admin.media.uploadFailed'));
       }
     } catch (err) {
       // FIX: F28 - Show toast error on upload failure instead of just console.error
       console.error('Upload failed:', err);
-      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
+      toast.error(t('admin.media.uploadFailed'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -309,24 +309,24 @@ export default function MediaImagesPage() {
     setShowDeleteConfirm(false);
     setSelectedIds(new Set());
     if (successCount > 0) {
-      toast.success(`${successCount} ${t('admin.media.imagesTitle') || 'image(s)'} ${t('common.deleted') || 'deleted'}`);
+      toast.success(`${successCount} ${t('admin.media.imagesTitle')} ${t('common.deleted')}`);
       loadImages();
     }
     if (failCount > 0) {
-      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed to delete'}`);
+      toast.error(`${failCount} ${t('admin.media.deleteFailed')}`);
     }
   }, [selectedIds, t, loadImages]);
 
   // ---- Rename (update alt text) ----
   const handleRenameImage = useCallback(async () => {
     if (selectedIds.size !== 1) {
-      toast.info(t('admin.media.selectOneToRename') || 'Select exactly one image to rename');
+      toast.info(t('admin.media.selectOneToRename'));
       return;
     }
     const id = Array.from(selectedIds)[0];
     const img = images.find(i => i.id === id);
     if (!img) return;
-    const newAlt = window.prompt(t('admin.media.enterAltText') || 'Enter new alt text:', img.alt || img.originalName);
+    const newAlt = window.prompt(t('admin.media.enterAltText'), img.alt || img.originalName);
     if (newAlt === null) return;
     try {
       const res = await fetchWithCSRF(`/api/admin/medias/${id}`, {
@@ -335,24 +335,24 @@ export default function MediaImagesPage() {
         body: JSON.stringify({ alt: newAlt }),
       });
       if (res.ok) {
-        toast.success(t('common.saved') || 'Saved');
+        toast.success(t('common.saved'));
         loadImages();
       } else {
-        toast.error(t('common.error') || 'Error');
+        toast.error(t('common.error'));
       }
     } catch {
-      toast.error(t('common.error') || 'Error');
+      toast.error(t('common.error'));
     }
   }, [selectedIds, images, t, loadImages]);
 
   // ---- Organize (move to folder) ----
   const handleOrganizeImage = useCallback(async () => {
     if (selectedIds.size === 0) {
-      toast.info(t('admin.media.selectToOrganize') || 'Select images to organize');
+      toast.info(t('admin.media.selectToOrganize'));
       return;
     }
     const folder = window.prompt(
-      t('admin.media.enterFolder') || 'Enter folder name (e.g., products, blog, general):',
+      t('admin.media.enterFolder'),
       'images'
     );
     if (!folder) return;
@@ -368,7 +368,7 @@ export default function MediaImagesPage() {
       } catch { /* skip */ }
     }
     if (successCount > 0) {
-      toast.success(`${successCount} ${t('admin.media.movedToFolder') || 'moved to'} "${folder}"`);
+      toast.success(`${successCount} ${t('admin.media.movedToFolder')} "${folder}"`);
       loadImages();
     }
     setSelectedIds(new Set());
@@ -377,7 +377,7 @@ export default function MediaImagesPage() {
   // ---- Export CSV ----
   const handleExportCsv = useCallback(() => {
     if (images.length === 0) {
-      toast.info(t('admin.media.noDataToExport') || 'No images to export');
+      toast.info(t('admin.media.noDataToExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -397,18 +397,18 @@ export default function MediaImagesPage() {
     a.download = `images-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.media.exportSuccess') || 'CSV exported');
+    toast.success(t('admin.media.exportSuccess'));
   }, [images, t]);
 
   // ---- Ribbon action handlers (media.management) ----
   const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
   const handleDeleteRibbon = useCallback(() => {
-    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete') || 'Select images to delete'); return; }
+    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete')); return; }
     setShowDeleteConfirm(true);
   }, [selectedIds, t]);
   const handleRenameRibbon = useCallback(() => { handleRenameImage(); }, [handleRenameImage]);
   const handleOrganizeRibbon = useCallback(() => { handleOrganizeImage(); }, [handleOrganizeImage]);
-  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint') || 'Image optimization requires server-side processing. Coming soon.'), [t]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint')), [t]);
   const handleExportRibbon = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
 
   useRibbonAction('upload', handleUploadRibbon);
@@ -422,40 +422,40 @@ export default function MediaImagesPage() {
     <div className="p-6 max-w-5xl space-y-4">
       {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <Link href="/admin" className="hover:text-indigo-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-indigo-600 transition-colors">{t('admin.nav.media')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-slate-700 font-medium">{t('admin.media.imagesTitle') || 'Images'}</span>
+        <span className="text-slate-700 font-medium">{t('admin.media.imagesTitle')}</span>
       </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.imagesTitle')}</h1>
         <div>
-          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload images'} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} aria-label={t('admin.media.upload')} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F37 - Use i18n instead of hardcoded "Upload" */}
-            {t('admin.media.upload') || 'Upload'}
+            {t('admin.media.upload')}
           </button>
         </div>
       </div>
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-2 bg-teal-50 border border-teal-200 rounded-lg text-sm">
-          <span className="text-teal-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+        <div className="flex items-center gap-3 p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
+          <span className="text-indigo-700 font-medium">{selectedIds.size} {t('common.selected')}</span>
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
-            <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
+            <Trash2 className="w-3 h-3" /> {t('common.delete')}
           </button>
           <button onClick={handleOrganizeImage} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
-            {t('admin.media.moveToFolder') || 'Move to folder'}
+            {t('admin.media.moveToFolder')}
           </button>
           <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
-            {t('common.clearSelection') || 'Clear'}
+            {t('common.clearSelection')}
           </button>
         </div>
       )}
@@ -477,7 +477,7 @@ export default function MediaImagesPage() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
-          isDragOver ? 'border-teal-400 bg-teal-50' : 'border-slate-300 bg-slate-50 hover:border-teal-300 hover:bg-teal-50/50'
+          isDragOver ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
         }`}
         onClick={() => bulkInputRef.current?.click()}
       >
@@ -490,7 +490,7 @@ export default function MediaImagesPage() {
           className="hidden"
           aria-label="Sélectionner des images pour envoi groupé"
         />
-        <UploadCloud className={`w-10 h-10 mx-auto mb-2 ${isDragOver ? 'text-teal-500' : 'text-slate-400'}`} />
+        <UploadCloud className={`w-10 h-10 mx-auto mb-2 ${isDragOver ? 'text-indigo-500' : 'text-slate-400'}`} />
         <p className="text-sm font-medium text-slate-700">
           Glissez-déposez vos images ici ou cliquez pour sélectionner
         </p>
@@ -511,7 +511,7 @@ export default function MediaImagesPage() {
               {bulkFiles.some(f => f.status === 'pending') && (
                 <button
                   onClick={startBulkUpload}
-                  className="px-3 py-1 bg-teal-600 text-white rounded text-xs hover:bg-teal-700"
+                  className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700"
                 >
                   Démarrer l&apos;envoi
                 </button>
@@ -534,7 +534,7 @@ export default function MediaImagesPage() {
                     className={`h-2 rounded-full transition-all duration-300 ${
                       bf.status === 'done' ? 'bg-green-500' :
                       bf.status === 'error' ? 'bg-red-500' :
-                      bf.status === 'uploading' ? 'bg-teal-500' : 'bg-slate-300'
+                      bf.status === 'uploading' ? 'bg-indigo-500' : 'bg-slate-300'
                     }`}
                     style={{ width: `${bf.progress}%` }}
                   />
@@ -542,7 +542,7 @@ export default function MediaImagesPage() {
                 <span className="text-xs w-16 text-end">
                   {bf.status === 'done' && <span className="text-green-600">Terminé</span>}
                   {bf.status === 'error' && <span className="text-red-600">Erreur</span>}
-                  {bf.status === 'uploading' && <span className="text-teal-600">En cours...</span>}
+                  {bf.status === 'uploading' && <span className="text-indigo-600">En cours...</span>}
                   {bf.status === 'pending' && <span className="text-slate-400">En attente</span>}
                 </span>
               </div>
@@ -575,12 +575,12 @@ export default function MediaImagesPage() {
         <div className="flex items-center gap-2 mb-2">
           <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
             <input type="checkbox" checked={selectedIds.size === images.length && images.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300" aria-label="Select all images" />
-            {t('common.selectAll') || 'Select all'}
+            {t('common.selectAll')}
           </label>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {images.map(img => (
-            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(img.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
+            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(img.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}>
               {/* Selection checkbox */}
               <div className="absolute top-2 start-2 z-10">
                 <input
@@ -594,7 +594,7 @@ export default function MediaImagesPage() {
               {/* A86 FIX: "New" badge for images uploaded less than 24 hours ago */}
               {(Date.now() - new Date(img.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
                 <span className="absolute top-2 start-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
-                  {t('common.new') || 'New'}
+                  {t('common.new')}
                 </span>
               )}
               {/* FIX: F3 - Use NextImage instead of native <img> */}
@@ -663,7 +663,7 @@ export default function MediaImagesPage() {
                     <button
                       key={preset.id}
                       onClick={() => handleCropPreset(img.id, preset)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-teal-50 rounded transition-colors text-start"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-indigo-50 rounded transition-colors text-start"
                     >
                       <ScissorsIcon className="w-3 h-3 text-slate-400" />
                       <div className="flex-1 min-w-0">
@@ -730,7 +730,7 @@ export default function MediaImagesPage() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>
-                <button onClick={() => copyUrl(preview)} className="text-teal-600 hover:text-teal-700" aria-label="Copier l'URL">
+                <button onClick={() => copyUrl(preview)} className="text-indigo-600 hover:text-indigo-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
@@ -783,7 +783,7 @@ export default function MediaImagesPage() {
                     <button
                       key={preset.id}
                       onClick={() => handleCropPreset(preview.id, preset)}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded hover:bg-teal-100 hover:text-teal-700 transition-colors"
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
                     >
                       <ScissorsIcon className="w-3 h-3" />
                       {preset.nameFr} ({preset.aspectRatio})
@@ -799,9 +799,9 @@ export default function MediaImagesPage() {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title={t('admin.media.deleteConfirmTitle') || 'Delete Images'}
-        message={`${t('admin.media.deleteConfirmMessage') || 'Are you sure you want to delete'} ${selectedIds.size} ${t('admin.media.imagesTitle') || 'image(s)'}? ${t('admin.media.deleteIrreversible') || 'This action cannot be undone.'}`}
-        confirmLabel={deleting ? '...' : (t('common.delete') || 'Delete')}
+        title={t('admin.media.deleteConfirmTitle')}
+        message={`${t('admin.media.deleteConfirmMessage')} ${selectedIds.size} ${t('admin.media.imagesTitle')}? ${t('admin.media.deleteIrreversible')}`}
+        confirmLabel={deleting ? '...' : (t('common.delete'))}
         onConfirm={handleDeleteSelected}
         onCancel={() => setShowDeleteConfirm(false)}
         variant="danger"

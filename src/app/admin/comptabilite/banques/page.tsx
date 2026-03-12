@@ -202,7 +202,7 @@ export default function BanquesPage() {
   const getAccountIconColor = (type: BankAccount['type']) => {
     switch (type) {
       case 'PAYMENT_PROCESSOR': return 'text-purple-600';
-      case 'SAVINGS': return 'text-teal-600';
+      case 'SAVINGS': return 'text-indigo-600';
       default: return 'text-emerald-600';
     }
   };
@@ -210,7 +210,7 @@ export default function BanquesPage() {
   const getAccountIconBg = (type: BankAccount['type']) => {
     switch (type) {
       case 'PAYMENT_PROCESSOR': return 'bg-purple-100';
-      case 'SAVINGS': return 'bg-teal-100';
+      case 'SAVINGS': return 'bg-indigo-100';
       default: return 'bg-emerald-100';
     }
   };
@@ -222,11 +222,11 @@ export default function BanquesPage() {
     try {
       const res = await fetch('/api/accounting/bank-sync', { method: 'POST', headers: addCSRFHeader() });
       if (!res.ok) throw new Error();
-      toast.success(t('admin.banking.syncSuccess') || 'Synchronisation bancaire lancee');
+      toast.success(t('admin.banking.syncSuccess'));
       fetchBankAccounts();
       fetchRecentTransactions();
     } catch {
-      toast.error(t('admin.banking.syncError') || 'Erreur de synchronisation. Verifiez les connexions bancaires.');
+      toast.error(t('admin.banking.syncError'));
     }
   }, [fetchBankAccounts, fetchRecentTransactions, t]);
   const handleRibbonImportStatement = useCallback(() => {
@@ -242,9 +242,9 @@ export default function BanquesPage() {
     window.location.href = '/admin/comptabilite/regles-bancaires';
   }, []);
   const handleRibbonExport = useCallback(() => {
-    if (recentTransactions.length === 0) { toast.error(t('admin.banking.noTransactionsToExport') || 'Aucune transaction a exporter'); return; }
+    if (recentTransactions.length === 0) { toast.error(t('admin.banking.noTransactionsToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.banking.colDate') || 'Date', t('admin.banking.colDescription') || 'Description', t('admin.banking.colAmount') || 'Montant', t('admin.banking.colType') || 'Type', t('admin.banking.colReconciled') || 'Rapproche'];
+    const headers = [t('admin.banking.colDate'), t('admin.banking.colDescription'), t('admin.banking.colAmount'), t('admin.banking.colType'), t('admin.banking.colReconciled')];
     const rows = recentTransactions.map(tx => [tx.date, tx.description, String(tx.amount), tx.type || '', tx.reconciled ? 'Oui' : 'Non']);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -325,7 +325,7 @@ export default function BanquesPage() {
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                   account.currency === 'USD' ? 'bg-green-100 text-green-800' :
-                  account.currency === 'EUR' ? 'bg-teal-100 text-teal-800' :
+                  account.currency === 'EUR' ? 'bg-indigo-100 text-indigo-800' :
                   'bg-slate-100 text-slate-800'
                 }`}>
                   {account.currency}
@@ -348,7 +348,7 @@ export default function BanquesPage() {
         theme={theme}
         noPadding
         headerAction={
-          <a href="/admin/comptabilite/rapprochement" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+          <a href="/admin/comptabilite/rapprochement" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
             {t('admin.bankAccounts.viewAll')} &rarr;
           </a>
         }
@@ -416,9 +416,9 @@ export default function BanquesPage() {
             <p className="text-xl font-bold text-red-700">-{formatCurrency(expectedOutflows)}</p>
             <p className="text-xs text-red-600 mt-1">{t('admin.bankAccounts.invoicesAndRecurring')}</p>
           </div>
-          <div className="p-4 bg-teal-50 rounded-lg">
-            <p className="text-sm text-teal-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
-            <p className="text-xl font-bold text-teal-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
+          <div className="p-4 bg-indigo-50 rounded-lg">
+            <p className="text-sm text-indigo-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
+            <p className="text-xl font-bold text-indigo-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
           </div>
         </div>
       </SectionCard>

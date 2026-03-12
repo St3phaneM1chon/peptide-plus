@@ -183,7 +183,7 @@ export default function RapprochementPage() {
   }, []);
   const handleRibbonReconcile = useCallback(() => {
     const unmatched = bankTransactions.filter(tx => !tx.matchedEntryId);
-    if (unmatched.length === 0) { toast.success(t('admin.reconciliation.allReconciled') || 'Toutes les transactions sont rapprochees!'); return; }
+    if (unmatched.length === 0) { toast.success(t('admin.reconciliation.allReconciled')); return; }
     toast.info(t('admin.reconciliation.unmatchedCount') || `${unmatched.length} transactions non rapprochees restantes.`);
   }, [bankTransactions, t]);
   const handleRibbonAutoMatch = useCallback(() => { handleAutoReconcile(); }, [handleAutoReconcile]);
@@ -191,9 +191,9 @@ export default function RapprochementPage() {
     window.location.href = '/admin/comptabilite/regles-bancaires';
   }, []);
   const handleRibbonExport = useCallback(() => {
-    if (bankTransactions.length === 0) { toast.error(t('admin.reconciliation.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    if (bankTransactions.length === 0) { toast.error(t('admin.reconciliation.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.reconciliation.colDate') || 'Date', t('admin.reconciliation.colDescription') || 'Description', t('admin.reconciliation.colAmount') || 'Montant', t('admin.reconciliation.colMatched') || 'Rapproche'];
+    const headers = [t('admin.reconciliation.colDate'), t('admin.reconciliation.colDescription'), t('admin.reconciliation.colAmount'), t('admin.reconciliation.colMatched')];
     const rows = bankTransactions.map(tx => [tx.date, tx.description, String(tx.amount), tx.matchedEntryId ? 'Oui' : 'Non']);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -258,7 +258,7 @@ export default function RapprochementPage() {
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
               className="h-9 px-4 border border-slate-300 rounded-lg bg-white text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {bankAccounts.map(acc => (
                 <option key={acc.id} value={acc.id}>
@@ -274,7 +274,7 @@ export default function RapprochementPage() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="h-9 px-4 border border-slate-300 rounded-lg text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
         </div>
@@ -297,9 +297,9 @@ export default function RapprochementPage() {
           </p>
         </div>
         <div className={`rounded-xl p-4 border ${theme.borderLight} ${theme.surfaceLight}`}>
-          <p className="text-sm text-teal-600">{t('admin.reconciliation.progress')}</p>
-          <p className="text-2xl font-bold text-teal-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
-          <p className="text-xs text-teal-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
+          <p className="text-sm text-indigo-600">{t('admin.reconciliation.progress')}</p>
+          <p className="text-2xl font-bold text-indigo-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
+          <p className="text-xs text-indigo-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
         </div>
       </div>
 
@@ -337,7 +337,7 @@ export default function RapprochementPage() {
                       ) : (
                         <button
                           onClick={() => handleMatch(tx)}
-                          className={`px-2 py-1 ${theme.surfaceLight} text-teal-700 rounded text-xs hover:bg-teal-100`}
+                          className={`px-2 py-1 ${theme.surfaceLight} text-indigo-700 rounded text-xs hover:bg-indigo-100`}
                         >
                           {t('admin.reconciliation.reconcileBtn')}
                         </button>
@@ -436,10 +436,10 @@ export default function RapprochementPage() {
       >
         {selectedBankTx && (
           <div className="space-y-4">
-            <div className="bg-teal-50 rounded-lg p-4">
-              <p className="text-sm text-teal-600">{t('admin.reconciliation.bankTransaction')}</p>
-              <p className="font-medium text-teal-900">{selectedBankTx.description}</p>
-              <p className="text-lg font-bold text-teal-900">
+            <div className="bg-indigo-50 rounded-lg p-4">
+              <p className="text-sm text-indigo-600">{t('admin.reconciliation.bankTransaction')}</p>
+              <p className="font-medium text-indigo-900">{selectedBankTx.description}</p>
+              <p className="text-lg font-bold text-indigo-900">
                 {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(selectedBankTx.amount)}
               </p>
             </div>

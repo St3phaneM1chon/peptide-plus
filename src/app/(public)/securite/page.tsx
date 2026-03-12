@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Sécurité | Formations Pro',
-  description: 'Découvrez comment nous protégeons vos données et assurons la sécurité de notre plateforme.',
+  title: 'Sécurité',
+  description: 'Découvrez comment BioCycle Peptides protège vos données et assure la sécurité de sa plateforme. Chiffrement, authentification et conformité.',
+  openGraph: {
+    title: 'Sécurité | BioCycle Peptides',
+    description: 'Comment BioCycle Peptides protège vos données et assure la sécurité de sa plateforme.',
+    url: 'https://biocyclepeptides.com/securite',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const securityFeatures = [

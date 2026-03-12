@@ -3,8 +3,15 @@ import { prisma } from '@/lib/db';
 import LabResultsClient from './LabResultsClient';
 
 export const metadata: Metadata = {
-  title: 'Lab Results & Certificates of Analysis',
-  description: 'View third-party lab test results and Certificates of Analysis (COA) for all BioCycle Peptides research compounds. 99%+ purity verified.',
+  title: 'Résultats de laboratoire et certificats d\'analyse',
+  description: 'Consultez les résultats de tests de laboratoires tiers et les certificats d\'analyse (COA) pour tous les peptides BioCycle. Pureté vérifiée à 99 %+.',
+  openGraph: {
+    title: 'Résultats de laboratoire | BioCycle Peptides',
+    description: 'Résultats de tests tiers et certificats d\'analyse (COA). Pureté vérifiée à 99 %+.',
+    url: 'https://biocyclepeptides.com/lab-results',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 // BUG-060 FIX: Reduce ISR cache to 5 min for fresher data

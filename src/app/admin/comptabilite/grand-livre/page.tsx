@@ -162,10 +162,10 @@ export default function GrandLivrePage() {
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     setDateFrom(firstDay.toISOString().split('T')[0]);
     setDateTo(lastDay.toISOString().split('T')[0]);
-    toast.success(t('admin.generalLedger.periodFiltered') || 'Periode filtree au mois courant');
+    toast.success(t('admin.generalLedger.periodFiltered'));
   }, [t]);
   const handleExportPdf = useCallback(() => {
-    if (filteredTransactions.length === 0) { toast.info(t('admin.generalLedger.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    if (filteredTransactions.length === 0) { toast.info(t('admin.generalLedger.noDataToExport')); return; }
     const accountLabel = currentAccount ? `${currentAccount.code} - ${currentAccount.name}` : selectedAccount;
     const headers = ['Date', 'Ecriture', 'Description', 'Reference', 'Debit', 'Credit', 'Solde'];
     const rows = filteredTransactions.map(tr => [
@@ -195,7 +195,7 @@ export default function GrandLivrePage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(t('admin.generalLedger.exportSuccess') || 'Export CSV telecharge');
+    toast.success(t('admin.generalLedger.exportSuccess'));
   }, [filteredTransactions, currentAccount, selectedAccount, dateFrom, dateTo, totalDebit, totalCredit, formatDate, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
   const handleNewAccount = useCallback(() => {
@@ -342,7 +342,7 @@ export default function GrandLivrePage() {
                     {formatDate(transaction.date)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-mono text-sm text-teal-600 hover:underline cursor-pointer">
+                    <span className="font-mono text-sm text-indigo-600 hover:underline cursor-pointer">
                       {transaction.journalEntry}
                     </span>
                   </td>

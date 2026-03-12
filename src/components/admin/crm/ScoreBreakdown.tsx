@@ -71,7 +71,7 @@ export function ScoreBreakdown({
           <button
             onClick={onRecalculate}
             disabled={recalculating}
-            className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 disabled:opacity-50"
+            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${recalculating ? 'animate-spin' : ''}`} />
             {t('admin.crm.recalculate') || 'Recalculate'}

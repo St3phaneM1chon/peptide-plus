@@ -1,13 +1,11 @@
-// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
-// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
-// See: https://nextjs.org/docs/messages/app-static-to-dynamic-error
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes (uses getStaticLocale to avoid cookies/headers)
+export const revalidate = 300;
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import ProductPageClient from './ProductPageClient';
 import { prisma } from '@/lib/db';
-import { getServerLocale, createServerTranslator } from '@/i18n/server';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
 import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { productSchema, breadcrumbSchema } from '@/lib/structured-data';
@@ -96,7 +94,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Apply translations for metadata
-  const locale = await getServerLocale();
+  const locale = getStaticLocale();
   let name = product.name;
   let subtitle = product.subtitle || '';
   let description = product.shortDescription || product.description?.substring(0, 160) || '';
@@ -236,25 +234,39 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   // Apply translations to product and its category
-  const locale = await getServerLocale();
-  let translatedProduct = product;
-  if (locale !== DB_SOURCE_LOCALE) {
-    translatedProduct = await withTranslation(product, 'Product', locale) as typeof product;
-    // Also translate the category name
-    if (translatedProduct.category) {
-      const catTrans = await getTranslatedFields('Category', translatedProduct.category.id, locale);
-      if (catTrans?.name) {
-        translatedProduct = {
-          ...translatedProduct,
-          category: { ...translatedProduct.category, name: catTrans.name },
-        } as typeof product;
+  const locale = getStaticLocale();
+
+  // Parallelize all independent async operations:
+  // - translations (product + category)
+  // - related products
+  // - active promotion
+  // - review aggregate stats (for JSON-LD)
+  const translationPromise = (async () => {
+    let tp = product;
+    if (locale !== DB_SOURCE_LOCALE) {
+      tp = await withTranslation(product, 'Product', locale) as typeof product;
+      if (tp.category) {
+        const catTrans = await getTranslatedFields('Category', tp.category.id, locale);
+        if (catTrans?.name) {
+          tp = {
+            ...tp,
+            category: { ...tp.category, name: catTrans.name },
+          } as typeof product;
+        }
       }
     }
-  }
+    return tp;
+  })();
 
-  const [relatedProducts, promotion] = await Promise.all([
+  const [translatedProduct, relatedProducts, promotion, reviewStats] = await Promise.all([
+    translationPromise,
     getRelatedProductsFromDB(product.categoryId, product.id),
     getActivePromotionForProduct(product.id),
+    prisma.review.aggregate({
+      where: { productId: product.id, isApproved: true, isPublished: true },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
   ]);
   const transformedProduct = transformProductForClient(translatedProduct, relatedProducts, promotion);
 
@@ -264,13 +276,6 @@ export default async function ProductPage({ params }: PageProps) {
     ? Math.min(...product.formats.map(f => Number(f.price)))
     : Number(product.price);
   const hasStock = product.formats.some(f => f.inStock);
-
-  // Fetch aggregate review stats for JSON-LD aggregateRating
-  const reviewStats = await prisma.review.aggregate({
-    where: { productId: product.id, isApproved: true, isPublished: true },
-    _avg: { rating: true },
-    _count: { rating: true },
-  });
 
   const productJsonLd = productSchema({
     name: translatedProduct.name,

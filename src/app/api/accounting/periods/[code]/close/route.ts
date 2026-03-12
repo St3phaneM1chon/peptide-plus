@@ -33,7 +33,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
     logger.error('Error running checklist', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'accounting.periods.close' });
 
 export const POST = withAdminGuard(async (_request, { session, params }) => {
   try {
@@ -64,4 +64,4 @@ export const POST = withAdminGuard(async (_request, { session, params }) => {
       { status: isValidationError ? 400 : 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.periods.close', requireMfa: true });

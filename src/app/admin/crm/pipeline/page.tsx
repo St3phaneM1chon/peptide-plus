@@ -98,13 +98,13 @@ export default function PipelinePage() {
           <button
             onClick={() => router.push('/admin/crm/deals')}
             className="flex items-center gap-1 px-2.5 py-1.5 text-sm text-gray-500 hover:bg-gray-50 border-r border-gray-300"
-            title={t('admin.crm.listView') || 'List View'}
+            title={t('admin.crm.listView')}
           >
             <List className="h-4 w-4" />
           </button>
           <button
-            className="flex items-center gap-1 px-2.5 py-1.5 text-sm bg-teal-50 text-teal-700"
-            title={t('admin.crm.kanbanView') || 'Kanban View'}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-sm bg-indigo-50 text-indigo-700"
+            title={t('admin.crm.kanbanView')}
           >
             <LayoutGrid className="h-4 w-4" />
           </button>
@@ -117,55 +117,55 @@ export default function PipelinePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">{t('admin.crm.newDeal') || 'New Deal'}</h2>
+              <h2 className="text-lg font-semibold">{t('admin.crm.newDeal')}</h2>
               <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-gray-100 rounded">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.dealTitle') || 'Title'}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.dealTitle')}</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="e.g. Enterprise Contract - Acme Inc"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.dealValue') || 'Value (CAD)'}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.dealValue')}</label>
                 <input
                   type="number"
                   value={formData.value}
                   onChange={(e) => setFormData((prev) => ({ ...prev, value: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="0.00"
                   min="0"
                   step="0.01"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.assignedTo') || 'Assigned To'}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.assignedTo')}</label>
                 <select
                   value={formData.assignedToId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, assignedToId: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="">{t('common.select') || 'Select...'}</option>
+                  <option value="">{t('common.select')}</option>
                   {agents.map((a) => (
                     <option key={a.id} value={a.id}>{a.name || a.email}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.expectedCloseDate') || 'Expected Close Date'}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crm.expectedCloseDate')}</label>
                 <input
                   type="date"
                   value={formData.expectedCloseDate}
                   onChange={(e) => setFormData((prev) => ({ ...prev, expectedCloseDate: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -174,14 +174,14 @@ export default function PipelinePage() {
                 onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={submitCreate}
                 disabled={creating}
-                className="px-4 py-2 text-sm text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
               >
-                {creating ? '...' : t('common.create') || 'Create'}
+                {creating ? '...' : t('common.create')}
               </button>
             </div>
           </div>

@@ -48,7 +48,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   });
 
   // Fetch user details separately (CrmDealTeam has no relation to User in schema)
-  const userIds = members.map((m) => m.userId);
+  const userIds = members.map((m) => m.userId).filter((id): id is string => id != null);
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
     select: { id: true, name: true, email: true, image: true },
@@ -58,7 +58,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
   const enriched = members.map((m) => ({
     ...m,
-    user: userMap.get(m.userId) || { id: m.userId, name: null, email: null, image: null },
+    user: m.userId ? (userMap.get(m.userId) || { id: m.userId, name: null, email: null, image: null }) : { id: null, name: null, email: null, image: null },
   }));
 
   return apiSuccess(enriched, { request });

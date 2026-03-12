@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, Pencil, Users, UserCheck, Crown, Shield } from 'lucide-react';
+import { Plus, Pencil, Users, UserCheck, Crown, Shield, Send, Phone } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
@@ -27,7 +27,15 @@ interface Employee {
   permissions: string[];
   lastLogin?: string;
   isActive: boolean;
+  hasPassword?: boolean;
   createdAt: string;
+}
+
+interface AvailablePhone {
+  id: string;
+  number: string;
+  displayName: string | null;
+  isAssigned: boolean;
 }
 
 const permissionKeys = [
@@ -94,8 +102,11 @@ export default function EmployesPage() {
     name: '',
     role: 'EMPLOYEE' as 'EMPLOYEE' | 'OWNER',
     permissions: [] as string[],
+    phoneNumberId: '',
   });
   const [saving, setSaving] = useState(false);
+  const [availablePhones, setAvailablePhones] = useState<AvailablePhone[]>([]);
+  const [resending, setResending] = useState<string | null>(null);
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -114,6 +125,39 @@ export default function EmployesPage() {
       setEmployees([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailablePhones = async () => {
+    try {
+      const res = await fetch('/api/admin/voip/phone-numbers/available');
+      if (res.ok) {
+        const data = await res.json();
+        setAvailablePhones(data.phoneNumbers || []);
+      }
+    } catch {
+      // Non-critical, phone dropdown will just be empty
+    }
+  };
+
+  const resendInvite = async (employeeId: string) => {
+    setResending(employeeId);
+    try {
+      const res = await fetch(`/api/admin/employees/${employeeId}`, {
+        method: 'PATCH',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ action: 'resend-invite' }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.employees.inviteResent'));
+      } else {
+        const data = await res.json();
+        toast.error(data.error || t('common.error'));
+      }
+    } catch {
+      toast.error(t('common.error'));
+    } finally {
+      setResending(null);
     }
   };
 
@@ -145,7 +189,7 @@ export default function EmployesPage() {
 
   const handleSubmit = async () => {
     if (!formData.email || !formData.name) {
-      toast.error(t('admin.employees.emailAndNameRequired') || 'Email and name are required');
+      toast.error(t('admin.employees.emailAndNameRequired'));
       return;
     }
 
@@ -159,6 +203,7 @@ export default function EmployesPage() {
             name: formData.name,
             role: formData.role,
             permissions: formData.role === 'EMPLOYEE' ? formData.permissions : undefined,
+            phoneNumberId: formData.phoneNumberId || undefined,
           }),
         });
         if (!res.ok) {
@@ -166,7 +211,7 @@ export default function EmployesPage() {
           toast.error(data.error || t('common.updateFailed'));
           return;
         }
-        toast.success(t('admin.employees.employeeUpdated') || 'Employee updated');
+        toast.success(t('admin.employees.employeeUpdated'));
       } else {
         const res = await fetch('/api/admin/employees', {
           method: 'POST',
@@ -176,6 +221,7 @@ export default function EmployesPage() {
             name: formData.name,
             role: formData.role,
             permissions: formData.role === 'EMPLOYEE' ? formData.permissions : undefined,
+            phoneNumberId: formData.phoneNumberId || undefined,
           }),
         });
         if (!res.ok) {
@@ -183,7 +229,7 @@ export default function EmployesPage() {
           toast.error(data.error || t('common.saveFailed'));
           return;
         }
-        toast.success(t('admin.employees.employeeInvited') || 'Employee invited');
+        toast.success(t('admin.employees.employeeInvited'));
       }
 
       resetForm();
@@ -197,15 +243,16 @@ export default function EmployesPage() {
   };
 
   const resetForm = () => {
-    setFormData({ email: '', name: '', role: 'EMPLOYEE', permissions: [] });
+    setFormData({ email: '', name: '', role: 'EMPLOYEE', permissions: [], phoneNumberId: '' });
     setEditingEmployee(null);
     setShowForm(false);
   };
 
   const startEdit = (emp: Employee) => {
-    setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions });
+    setFormData({ email: emp.email, name: emp.name, role: emp.role, permissions: emp.permissions, phoneNumberId: '' });
     setEditingEmployee(emp);
     setShowForm(true);
+    fetchAvailablePhones();
   };
 
   const togglePermission = (key: string) => {
@@ -293,6 +340,7 @@ export default function EmployesPage() {
   const handleRibbonNewRole = useCallback(() => {
     resetForm();
     setShowForm(true);
+    fetchAvailablePhones();
   }, []);
 
   const handleRibbonSave = useCallback(() => {
@@ -301,15 +349,15 @@ export default function EmployesPage() {
 
   const handleRibbonDelete = useCallback(() => {
     if (!selectedEmployee) {
-      toast.warning(t('admin.employees.selectFirst') || 'Selectionnez un employe d\'abord');
+      toast.warning(t('admin.employees.selectFirst'));
       return;
     }
     if (selectedEmployee.role === 'OWNER') {
-      toast.error(t('admin.employees.cannotDeleteOwner') || 'Impossible de supprimer un proprietaire');
+      toast.error(t('admin.employees.cannotDeleteOwner'));
       return;
     }
     const confirmed = window.confirm(
-      (t('admin.employees.confirmDelete') || 'Voulez-vous vraiment desactiver cet employe?') + `\n\n${selectedEmployee.name} (${selectedEmployee.email})`
+      (t('admin.employees.confirmDelete')) + `\n\n${selectedEmployee.name} (${selectedEmployee.email})`
     );
     if (confirmed) {
       toggleActive(selectedEmployee.id);
@@ -318,24 +366,24 @@ export default function EmployesPage() {
 
   const handleRibbonExport = useCallback(() => {
     if (employees.length === 0) {
-      toast.warning(t('admin.employees.emptyTitle') || 'Aucun employe a exporter');
+      toast.warning(t('admin.employees.emptyTitle'));
       return;
     }
     const headers = [
-      t('admin.employees.nameLabel') || 'Nom',
-      t('admin.employees.emailLabel') || 'Courriel',
-      t('admin.employees.roleCol') || 'Role',
-      t('admin.employees.statusCol') || 'Statut',
-      t('admin.employees.permissionsCol') || 'Permissions',
-      t('admin.employees.lastLogin') || 'Derniere connexion',
+      t('admin.employees.nameLabel'),
+      t('admin.employees.emailLabel'),
+      t('admin.employees.roleCol'),
+      t('admin.employees.statusCol'),
+      t('admin.employees.permissionsCol'),
+      t('admin.employees.lastLogin'),
     ];
     const rows = employees.map(emp => [
       emp.name,
       emp.email,
       emp.role,
-      emp.isActive ? (t('admin.employees.active') || 'Actif') : 'Inactif',
-      emp.role === 'OWNER' ? (t('admin.employees.allPermissions') || 'Toutes') : emp.permissions.join('; '),
-      emp.lastLogin ? new Date(emp.lastLogin).toLocaleDateString(locale) : (t('admin.employees.never') || 'Jamais'),
+      emp.isActive ? (t('admin.employees.active')) : 'Inactif',
+      emp.role === 'OWNER' ? (t('admin.employees.allPermissions')) : emp.permissions.join('; '),
+      emp.lastLogin ? new Date(emp.lastLogin).toLocaleDateString(locale) : (t('admin.employees.never')),
     ]);
     const bom = '\uFEFF';
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -343,7 +391,7 @@ export default function EmployesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `employes-${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exporte avec succes');
+    toast.success(t('common.exported'));
   }, [employees, locale, t]);
 
   useRibbonAction('newRole', handleRibbonNewRole);
@@ -356,7 +404,7 @@ export default function EmployesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -371,7 +419,7 @@ export default function EmployesPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.employees.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.employees.subtitle')}</p>
           </div>
-          <Button variant="primary" icon={Plus} onClick={() => { resetForm(); setShowForm(true); }}>
+          <Button variant="primary" icon={Plus} onClick={() => { resetForm(); setShowForm(true); fetchAvailablePhones(); }}>
             {t('admin.employees.inviteEmployee')}
           </Button>
         </div>
@@ -397,11 +445,11 @@ export default function EmployesPage() {
               onFilterChange={setRoleFilter}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.employees.searchPlaceholder') || 'Rechercher un employe...'}
+              searchPlaceholder={t('admin.employees.searchPlaceholder')}
               loading={loading}
               emptyIcon={Users}
-              emptyTitle={t('admin.employees.emptyTitle') || 'Aucun employe'}
-              emptyDescription={t('admin.employees.emptyDescription') || 'Aucun employe trouve.'}
+              emptyTitle={t('admin.employees.emptyTitle')}
+              emptyDescription={t('admin.employees.emptyDescription')}
             />
           }
           detail={
@@ -415,6 +463,18 @@ export default function EmployesPage() {
                   backLabel: t('admin.employees.title'),
                   actions: (
                     <div className="flex items-center gap-2">
+                      {!selectedEmployee.hasPassword && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Send}
+                          onClick={() => resendInvite(selectedEmployee.id)}
+                          loading={resending === selectedEmployee.id}
+                          disabled={resending === selectedEmployee.id}
+                        >
+                          {t('admin.employees.resendInvite')}
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(selectedEmployee)}>
                         {t('admin.employees.editBtn')}
                       </Button>
@@ -429,7 +489,7 @@ export default function EmployesPage() {
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                         selectedEmployee.role === 'OWNER'
                           ? 'bg-amber-100 text-amber-800'
-                          : 'bg-teal-100 text-teal-800'
+                          : 'bg-indigo-100 text-indigo-800'
                       }`}>
                         {selectedEmployee.role === 'OWNER' ? <Crown className="w-4 h-4 me-1.5" /> : <Shield className="w-4 h-4 me-1.5" />}
                         {selectedEmployee.role}
@@ -520,8 +580,8 @@ export default function EmployesPage() {
               <DetailPane
                 isEmpty
                 emptyIcon={Users}
-                emptyTitle={t('admin.employees.emptyTitle') || 'Selectionnez un employe'}
-                emptyDescription={t('admin.employees.emptyDescription') || 'Selectionnez un employe pour voir ses details.'}
+                emptyTitle={t('admin.employees.emptyTitle')}
+                emptyDescription={t('admin.employees.emptyDescription')}
               />
             )
           }
@@ -554,7 +614,7 @@ export default function EmployesPage() {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'OWNER' | 'EMPLOYEE' })}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="EMPLOYEE">{t('admin.employees.roleEmployee')}</option>
               <option value="OWNER">{t('admin.employees.roleOwner')}</option>
@@ -570,11 +630,32 @@ export default function EmployesPage() {
                       type="checkbox"
                       checked={formData.permissions.includes(key)}
                       onChange={() => togglePermission(key)}
-                      className="w-4 h-4 rounded border-slate-300 text-teal-500"
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-500"
                     />
                     <span className="text-sm text-slate-700">{t(permissionI18nMap[key])}</span>
                   </label>
                 ))}
+              </div>
+            </FormField>
+          )}
+
+          {/* Phone number assignment */}
+          {availablePhones.length > 0 && (
+            <FormField label={t('admin.employees.phoneLabel')}>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  value={formData.phoneNumberId}
+                  onChange={(e) => setFormData({ ...formData, phoneNumberId: e.target.value })}
+                  className="w-full h-9 ps-9 pe-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">{t('admin.employees.noPhoneAssigned')}</option>
+                  {availablePhones.filter(p => !p.isAssigned).map((phone) => (
+                    <option key={phone.id} value={phone.id}>
+                      {phone.number} {phone.displayName ? `(${phone.displayName})` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
             </FormField>
           )}

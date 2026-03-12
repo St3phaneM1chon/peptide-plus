@@ -572,7 +572,7 @@ export default function MultiEntityPage() {
           )}
           <button
             onClick={() => openEditEntity(e)}
-            className="p-1 hover:bg-teal-50 rounded text-teal-600"
+            className="p-1 hover:bg-indigo-50 rounded text-indigo-600"
             title={t('admin.multiEntity.edit')}
           >
             <Pencil className="h-4 w-4" />
@@ -826,7 +826,7 @@ export default function MultiEntityPage() {
                         <td className="py-2 text-end text-amber-600">
                           {formatCurrency(b.pendingAmount)}
                         </td>
-                        <td className="py-2 text-end text-teal-600">
+                        <td className="py-2 text-end text-indigo-600">
                           {formatCurrency(b.postedAmount)}
                         </td>
                         <td className="py-2 text-end text-green-600">

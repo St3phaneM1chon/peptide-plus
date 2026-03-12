@@ -21,7 +21,7 @@ const WEBHOOK_BASE_URL = process.env.NEXTAUTH_URL || 'https://biocyclepeptides.c
 /**
  * POST - Initiate an outbound call via Telnyx Call Control.
  */
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const raw = await request.json();
     const parsed = z.object({
@@ -80,7 +80,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 /**
  * GET - List recent calls with optional filters.
  */
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const direction = searchParams.get('direction');

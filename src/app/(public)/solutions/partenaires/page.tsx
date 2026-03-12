@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Programme Partenaires | Formations Pro',
-  description: 'Rejoignez notre réseau de partenaires et proposez nos formations à vos clients.',
+  title: 'Programme partenaires',
+  description: 'Rejoignez le réseau de partenaires BioCycle Peptides. Affiliés, revendeurs et distributeurs dans le domaine de la recherche peptidique.',
+  openGraph: {
+    title: 'Programme partenaires | BioCycle Peptides',
+    description: 'Rejoignez le réseau de partenaires BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/solutions/partenaires',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const partnerTypes = [

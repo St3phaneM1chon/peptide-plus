@@ -150,7 +150,7 @@ export default function BannieresPage() {
           const data = await res.json();
           const existing = (data.slides || []).find((s: HeroSlide) => s.slug === form.slug);
           if (existing && (!editingSlide || existing.id !== editingSlide.id)) {
-            setFormErrors(prev => ({ ...prev, slug: t('admin.banners.slugAlreadyExists') || 'This slug is already in use' }));
+            setFormErrors(prev => ({ ...prev, slug: t('admin.banners.slugAlreadyExists') }));
           } else {
             setFormErrors(prev => { const n = { ...prev }; delete n.slug; return n; });
           }
@@ -196,20 +196,20 @@ export default function BannieresPage() {
     // UX FIX: Validate required fields with inline error messages
     const errors: Record<string, string> = {};
     if (!form.slug.trim()) {
-      errors.slug = t('admin.banners.slugRequired') || 'Slug is required';
+      errors.slug = t('admin.banners.slugRequired');
     }
     if (!form.title.trim()) {
-      errors.title = t('admin.banners.titleRequired') || 'Title is required';
+      errors.title = t('admin.banners.titleRequired');
     }
     if (!form.backgroundUrl.trim()) {
-      errors.backgroundUrl = t('admin.banners.backgroundRequired') || 'Background image is required';
+      errors.backgroundUrl = t('admin.banners.backgroundRequired');
     }
     // F53 FIX: Validate statsJson is valid JSON before saving
     if (form.statsJson && form.statsJson.trim()) {
       try {
         JSON.parse(form.statsJson);
       } catch {
-        errors.statsJson = t('admin.banners.invalidStatsJson') || 'Stats JSON is not valid JSON. Please check the format.';
+        errors.statsJson = t('admin.banners.invalidStatsJson');
       }
     }
     setFormErrors(errors);
@@ -253,12 +253,12 @@ export default function BannieresPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.banners.errorToggle') || 'Failed to update slide');
+        toast.error(data.error || t('admin.banners.errorToggle'));
         return;
       }
       toast.success(slide.isActive
-        ? (t('admin.banners.slideDeactivated') || 'Slide deactivated')
-        : (t('admin.banners.slideActivated') || 'Slide activated'));
+        ? (t('admin.banners.slideDeactivated'))
+        : (t('admin.banners.slideActivated')));
       fetchSlides();
     } catch {
       toast.error('Network error');
@@ -311,7 +311,7 @@ export default function BannieresPage() {
       if (!res2.ok) throw new Error('Failed to update slide order');
       fetchSlides();
     } catch {
-      toast.error(t('admin.banners.moveError') || 'Failed to reorder slides');
+      toast.error(t('admin.banners.moveError'));
       fetchSlides(); // Refresh to get consistent state
     }
   };
@@ -344,7 +344,7 @@ export default function BannieresPage() {
     setTranslations(trMap);
     setActiveTab('general');
     setShowForm(true);
-    toast.info(t('admin.banners.duplicated') || 'Banner duplicated. Edit and save to create the copy.');
+    toast.info(t('admin.banners.duplicated'));
   };
 
   const updateTranslation = (locale: string, field: string, value: string) => {
@@ -362,11 +362,11 @@ export default function BannieresPage() {
 
   const onDeleteRibbon = useCallback(() => {
     if (slides.length === 0) {
-      toast.info(t('admin.banners.emptyTitle') || 'No banners to delete');
+      toast.info(t('admin.banners.emptyTitle'));
       return;
     }
     // Delete the last slide or prompt user to pick one
-    toast.info(t('admin.banners.useDeleteButton') || 'Use the delete button next to each banner to remove it');
+    toast.info(t('admin.banners.useDeleteButton'));
   }, [slides, t]);
 
   const onUploadImage = useCallback(() => {
@@ -379,7 +379,7 @@ export default function BannieresPage() {
   const onActivate = useCallback(() => {
     const inactiveSlides = slides.filter(s => !s.isActive);
     if (inactiveSlides.length === 0) {
-      toast.info(t('admin.banners.allActive') || 'All banners are already active');
+      toast.info(t('admin.banners.allActive'));
       return;
     }
     // Activate the first inactive slide
@@ -389,7 +389,7 @@ export default function BannieresPage() {
   const onDeactivate = useCallback(() => {
     const activeSlides = slides.filter(s => s.isActive);
     if (activeSlides.length === 0) {
-      toast.info(t('admin.banners.noneActive') || 'No active banners to deactivate');
+      toast.info(t('admin.banners.noneActive'));
       return;
     }
     // Deactivate the last active slide
@@ -398,16 +398,16 @@ export default function BannieresPage() {
 
   const onReorganize = useCallback(() => {
     if (slides.length < 2) {
-      toast.info(t('admin.banners.needMultipleBanners') || 'Need at least 2 banners to reorganize');
+      toast.info(t('admin.banners.needMultipleBanners'));
       return;
     }
-    toast.info(t('admin.banners.useArrows') || 'Use the up/down arrows next to each banner to reorder');
+    toast.info(t('admin.banners.useArrows'));
   }, [slides, t]);
 
   const onPreview = useCallback(() => {
     const activeSlides = slides.filter(s => s.isActive);
     if (activeSlides.length === 0) {
-      toast.info(t('admin.banners.noActiveSlides') || 'No active banners to preview');
+      toast.info(t('admin.banners.noActiveSlides'));
       return;
     }
     // Open the shop homepage where banners are shown
@@ -425,7 +425,7 @@ export default function BannieresPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -435,7 +435,7 @@ export default function BannieresPage() {
   const tabCls = (key: string, hasContent?: boolean) =>
     `px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
       activeTab === key
-        ? 'border-teal-500 text-teal-700'
+        ? 'border-indigo-500 text-indigo-700'
         : hasContent
           ? 'border-transparent text-green-600 hover:text-green-700'
           : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -489,7 +489,7 @@ export default function BannieresPage() {
           label={t('admin.banners.translations')}
           value={slides.reduce((acc, s) => acc + s.translations.length, 0)}
           icon={Languages}
-          className="bg-teal-50 border-teal-200"
+          className="bg-indigo-50 border-indigo-200"
         />
       </div>
 
@@ -549,12 +549,12 @@ export default function BannieresPage() {
                     {/* IMP-067: Schedule-aware status indicators */}
                     {slide.startDate && new Date(slide.startDate) > new Date() && (
                       <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-medium">
-                        {t('admin.banners.scheduled') || 'Scheduled'}: {new Date(slide.startDate).toLocaleDateString(locale)}
+                        {t('admin.banners.scheduled')}: {new Date(slide.startDate).toLocaleDateString(locale)}
                       </span>
                     )}
                     {slide.endDate && new Date(slide.endDate) < new Date() && (
                       <span className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-500 rounded text-[10px] font-medium">
-                        {t('admin.banners.expired') || 'Expired'}: {new Date(slide.endDate).toLocaleDateString(locale)}
+                        {t('admin.banners.expired')}: {new Date(slide.endDate).toLocaleDateString(locale)}
                       </span>
                     )}
                   </div>
@@ -579,7 +579,7 @@ export default function BannieresPage() {
                   </Button>
                   {/* IMP-049: Duplicate banner button */}
                   <Button size="sm" variant="secondary" icon={Copy} onClick={() => duplicateSlide(slide)}>
-                    {t('admin.banners.duplicateSlide') || 'Copy'}
+                    {t('admin.banners.duplicateSlide')}
                   </Button>
                   <Button size="sm" variant="danger" icon={Trash2} disabled={deletingId === slide.id} onClick={() => deleteSlide(slide.id)}>
                     {t('admin.banners.deleteSlide')}
@@ -605,10 +605,10 @@ export default function BannieresPage() {
       {/* UX FIX: ConfirmDialog for delete action */}
       <ConfirmDialog
         isOpen={confirmDelete.isOpen}
-        title={t('admin.banners.confirmDeleteTitle') || 'Delete banner?'}
+        title={t('admin.banners.confirmDeleteTitle')}
         message={t('admin.banners.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.slideTitle}"? This action cannot be undone.`}
         variant="danger"
-        confirmLabel={t('admin.banners.deleteSlide') || 'Delete'}
+        confirmLabel={t('admin.banners.deleteSlide')}
         onConfirm={() => {
           executeDeleteSlide(confirmDelete.slideId);
           setConfirmDelete({ isOpen: false, slideId: '', slideTitle: '' });
@@ -675,7 +675,7 @@ export default function BannieresPage() {
                   />
                   {/* F82 FIX: Show spinner while checking slug uniqueness */}
                   {slugChecking && (
-                    <span className="absolute end-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">{t('common.checking') || 'Checking...'}</span>
+                    <span className="absolute end-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">{t('common.checking')}</span>
                   )}
                 </div>
                 {formErrors.slug && (
@@ -697,7 +697,7 @@ export default function BannieresPage() {
               />
               {/* A82 FIX: Character counter to help avoid truncation on the live site */}
               <p className={`mt-1 text-xs ${form.title.length > 60 ? 'text-amber-500' : 'text-slate-400'}`}>
-                {form.title.length}/60 {t('common.characters') || 'characters'}{form.title.length > 60 ? ` - ${t('admin.banners.titleMayTruncate') || 'may be truncated on display'}` : ''}
+                {form.title.length}/60 {t('common.characters')}{form.title.length > 60 ? ` - ${t('admin.banners.titleMayTruncate')}` : ''}
               </p>
               {formErrors.title && (
                 <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.title}</p>
@@ -711,7 +711,7 @@ export default function BannieresPage() {
               />
               {/* A82 FIX: Character counter for subtitle field */}
               <p className={`mt-1 text-xs ${(form.subtitle?.length || 0) > 120 ? 'text-amber-500' : 'text-slate-400'}`}>
-                {form.subtitle?.length || 0}/120 {t('common.characters') || 'characters'}{(form.subtitle?.length || 0) > 120 ? ` - ${t('admin.banners.subtitleMayTruncate') || 'may be truncated on display'}` : ''}
+                {form.subtitle?.length || 0}/120 {t('common.characters')}{(form.subtitle?.length || 0) > 120 ? ` - ${t('admin.banners.subtitleMayTruncate')}` : ''}
               </p>
             </FormField>
             <FormField label={t('admin.banners.badge')}>
@@ -726,7 +726,7 @@ export default function BannieresPage() {
                 type="checkbox"
                 checked={form.isActive}
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                className="rounded border-slate-300 text-teal-500 focus:ring-teal-500"
+                className="rounded border-slate-300 text-indigo-500 focus:ring-indigo-500"
               />
               <label className="text-sm text-slate-700">{t('admin.banners.isActive')}</label>
             </div>
@@ -740,7 +740,7 @@ export default function BannieresPage() {
               <select
                 value={form.mediaType}
                 onChange={(e) => setForm({ ...form, mediaType: e.target.value })}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="IMAGE">{t('admin.banners.imageOption')}</option>
                 <option value="VIDEO">{t('admin.banners.videoOption')}</option>
@@ -811,7 +811,7 @@ export default function BannieresPage() {
                   <select
                     value={form.ctaStyle}
                     onChange={(e) => setForm({ ...form, ctaStyle: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>
@@ -839,7 +839,7 @@ export default function BannieresPage() {
                   <select
                     value={form.cta2Style}
                     onChange={(e) => setForm({ ...form, cta2Style: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>

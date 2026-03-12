@@ -194,6 +194,7 @@ export default function Footer() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('footer.placeholder.email')}
+                    aria-label={t('footer.placeholder.email') || 'Email address for newsletter'}
                     required
                     className="flex-1 px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
                   />
@@ -230,9 +231,12 @@ export default function Footer() {
 
           {/* Payment Methods */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p className="text-sm text-neutral-500">
-              © {new Date().getFullYear()} BioCycle Peptides. {t('footer.copyright') || 'All rights reserved.'}
-            </p>
+            <div className="flex items-center gap-3">
+              <img src="/images/suite-koraline.png" alt="Suite Koraline" className="h-6 w-auto" />
+              <p className="text-sm text-neutral-500">
+                © {new Date().getFullYear()} BioCycle Peptides. {t('footer.copyright') || 'All rights reserved.'}
+              </p>
+            </div>
             <div className="flex items-center gap-3 text-neutral-400">
               <span className="text-xs">{t('footer.securePayments')}:</span>
               <span title={t('footer.paymentVisa')}>💳</span>

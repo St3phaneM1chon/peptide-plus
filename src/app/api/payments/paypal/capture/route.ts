@@ -363,10 +363,22 @@ export async function POST(request: NextRequest) {
         });
 
         // Consume inventory reservations
-        if (cartId) {
-          const reservations = await tx.inventoryReservation.findMany({
-            where: { cartId, status: 'RESERVED' },
-          });
+        // A8-P2-003 FIX: Try client-provided cartId first, then fall back to
+        // the paypal:{orderId} cartId set by create-order. This ensures stock
+        // is always decremented regardless of which cartId convention was used.
+        {
+          let reservations = cartId
+            ? await tx.inventoryReservation.findMany({
+                where: { cartId, status: 'RESERVED' },
+              })
+            : [];
+
+          // Fallback: try paypal:{orderId} convention from create-order flow
+          if (reservations.length === 0) {
+            reservations = await tx.inventoryReservation.findMany({
+              where: { cartId: `paypal:${paypalOrderId}`, status: 'RESERVED' },
+            });
+          }
 
           for (const reservation of reservations) {
             await tx.inventoryReservation.update({
@@ -385,6 +397,19 @@ export async function POST(request: NextRequest) {
               `;
               if (rowsAffected === 0) {
                 logger.warn(`[PayPal capture] Insufficient stock for format ${reservation.formatId}`, { wanted: reservation.quantity });
+              }
+            } else {
+              // A8-P2-003 + E-07 FIX: Also decrement stock for base products (no formatId)
+              const rowsAffected: number = await tx.$executeRaw`
+                UPDATE "Product"
+                SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+                    "updatedAt" = NOW()
+                WHERE id = ${reservation.productId}
+                  AND "trackInventory" = true
+                  AND "stockQuantity" >= ${reservation.quantity}
+              `;
+              if (rowsAffected === 0) {
+                logger.warn(`[PayPal capture] Insufficient stock for base product ${reservation.productId}`, { wanted: reservation.quantity });
               }
             }
 

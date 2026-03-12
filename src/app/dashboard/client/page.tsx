@@ -12,63 +12,101 @@ import { UserRole } from '@/types';
 import { getApiTranslator } from '@/i18n/server';
 
 async function getClientData(userId: string) {
-  // Récupérer la compagnie
+  // Query 1: company basics
   const company = await prisma.company.findUnique({
     where: { ownerId: userId },
-    include: {
-      customers: {
-        include: {
-          user: {
-            include: {
-              courseAccesses: {
-                include: { product: true },
-              },
-            },
-          },
-        },
-        orderBy: { addedAt: 'desc' },
-      },
-      purchases: {
-        include: { product: true },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      contactEmail: true,
+      phone: true,
+      isActive: true,
+      createdAt: true,
     },
   });
 
   if (!company) return null;
 
-  type CompanyCustomer = (typeof company.customers)[number];
-  type CourseAccess = CompanyCustomer['user']['courseAccesses'][number];
+  // Query 2: customers (flat — no deep nesting)
+  const customers = await prisma.companyCustomer.findMany({
+    where: { companyId: company.id },
+    select: {
+      id: true,
+      customerId: true,
+      addedAt: true,
+      user: {
+        select: { id: true, name: true, email: true },
+      },
+    },
+    orderBy: { addedAt: 'desc' },
+  });
 
-  // Calculer les stats
-  const totalStudents = company.customers.length;
-  const activeStudents = company.customers.filter(
-    (c: CompanyCustomer) => c.user.courseAccesses.some((a: CourseAccess) => !a.completedAt)
-  ).length;
+  // Query 3: course accesses for those customers
+  const customerIds = customers.map((c) => c.customerId);
+  const courseAccesses = await prisma.courseAccess.findMany({
+    where: { userId: { in: customerIds } },
+    select: { userId: true, completedAt: true, product: { select: { id: true, name: true } } },
+  });
 
-  const completedCourses = company.customers.reduce(
-    (acc: number, c: CompanyCustomer) => acc + c.user.courseAccesses.filter((a: CourseAccess) => a.completedAt).length,
-    0
-  );
-  const totalCourses = company.customers.reduce(
-    (acc: number, c: CompanyCustomer) => acc + c.user.courseAccesses.length,
-    0
-  );
+  // Query 4: recent purchases
+  const purchases = await prisma.purchase.findMany({
+    where: { companyId: company.id },
+    select: {
+      id: true,
+      amount: true,
+      status: true,
+      createdAt: true,
+      product: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  });
 
+  // Query 5: total spent aggregate
   const totalSpent = await prisma.purchase.aggregate({
     where: { companyId: company.id, status: 'COMPLETED' },
     _sum: { amount: true },
   });
 
+  // Build a lookup: userId -> courseAccesses
+  const accessesByUser = new Map<string, typeof courseAccesses>();
+  for (const a of courseAccesses) {
+    const list = accessesByUser.get(a.userId) ?? [];
+    list.push(a);
+    accessesByUser.set(a.userId, list);
+  }
+
+  // Merge customers + their accesses for the template
+  const customersWithAccesses = customers.map((c) => ({
+    ...c,
+    user: {
+      ...c.user,
+      courseAccesses: accessesByUser.get(c.customerId) ?? [],
+    },
+  }));
+
+  // Compute stats
+  const totalStudents = customers.length;
+  const activeStudents = customersWithAccesses.filter(
+    (c) => c.user.courseAccesses.some((a) => !a.completedAt)
+  ).length;
+
+  const completedCourses = courseAccesses.filter((a) => a.completedAt).length;
+  const totalCoursesCount = courseAccesses.length;
+
   return {
-    company,
+    company: {
+      ...company,
+      customers: customersWithAccesses,
+      purchases,
+    },
     stats: {
       totalStudents,
       activeStudents,
       completedCourses,
-      totalCourses,
-      completionRate: totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0,
+      totalCourses: totalCoursesCount,
+      completionRate: totalCoursesCount > 0 ? Math.round((completedCourses / totalCoursesCount) * 100) : 0,
       totalSpent: totalSpent._sum.amount || 0,
     },
   };

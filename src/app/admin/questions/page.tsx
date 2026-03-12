@@ -110,7 +110,7 @@ export default function QuestionsPage() {
       } : q));
       setShowAnswerModal(false);
       setAnswerText('');
-      toast.success(t('admin.questions.answerPublished') || 'Answer published');
+      toast.success(t('admin.questions.answerPublished'));
     } catch (err) {
       console.error('Error submitting answer:', err);
       toast.error(t('common.networkError'));
@@ -157,7 +157,7 @@ export default function QuestionsPage() {
       if (selectedQuestionId === id) {
         setSelectedQuestionId(null);
       }
-      toast.success(t('admin.questions.deleted') || 'Question deleted');
+      toast.success(t('admin.questions.deleted'));
     } catch (err) {
       console.error('Error deleting question:', err);
       toast.error(t('common.networkError'));
@@ -254,32 +254,32 @@ export default function QuestionsPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
-    if (!selectedQuestion) { toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first'); return; }
+    if (!selectedQuestion) { toast.info(t('admin.questions.selectQuestionFirst')); return; }
     setAnswerText(selectedQuestion.answer || '');
     setShowAnswerModal(true);
   }, [selectedQuestion, t]);
 
   const handleRibbonMarkResolved = useCallback(() => {
     if (!selectedQuestion) {
-      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      toast.info(t('admin.questions.selectQuestionFirst'));
       return;
     }
     if (!selectedQuestion.answer) {
-      toast.info(t('admin.questions.answerBeforeResolving') || 'Please answer the question before marking it as resolved');
+      toast.info(t('admin.questions.answerBeforeResolving'));
       return;
     }
     // Mark as public (resolved = answered + public)
     if (!selectedQuestion.isPublic) {
       togglePublic(selectedQuestion.id, selectedQuestion.isPublic);
-      toast.success(t('admin.questions.markedResolved') || 'Question marked as resolved and made public');
+      toast.success(t('admin.questions.markedResolved'));
     } else {
-      toast.info(t('admin.questions.alreadyResolved') || 'This question is already answered and public');
+      toast.info(t('admin.questions.alreadyResolved'));
     }
   }, [selectedQuestion, t]);
 
   const handleRibbonArchive = useCallback(() => {
     if (!selectedQuestion) {
-      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      toast.info(t('admin.questions.selectQuestionFirst'));
       return;
     }
     // Archive = delete the question
@@ -288,36 +288,36 @@ export default function QuestionsPage() {
 
   const handleRibbonReportContent = useCallback(() => {
     if (!selectedQuestion) {
-      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      toast.info(t('admin.questions.selectQuestionFirst'));
       return;
     }
     // Make question private if it contains inappropriate content
     if (selectedQuestion.isPublic) {
       togglePublic(selectedQuestion.id, selectedQuestion.isPublic);
-      toast.success(t('admin.questions.contentReported') || 'Question hidden from public view');
+      toast.success(t('admin.questions.contentReported'));
     } else {
-      toast.info(t('admin.questions.alreadyPrivate') || 'This question is already private');
+      toast.info(t('admin.questions.alreadyPrivate'));
     }
   }, [selectedQuestion, t]);
 
   const handleRibbonConvertFaq = useCallback(() => {
     if (!selectedQuestion) {
-      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      toast.info(t('admin.questions.selectQuestionFirst'));
       return;
     }
     if (!selectedQuestion.answer) {
-      toast.info(t('admin.questions.answerFirstForFaq') || 'Answer the question before converting to FAQ');
+      toast.info(t('admin.questions.answerFirstForFaq'));
       return;
     }
     // Copy Q&A to clipboard for easy pasting into FAQ section
     const faqText = `Q: ${selectedQuestion.question}\nA: ${selectedQuestion.answer}`;
     navigator.clipboard.writeText(faqText);
-    toast.success(t('admin.questions.faqCopied') || 'Q&A copied to clipboard. Paste it into your FAQ section.');
+    toast.success(t('admin.questions.faqCopied'));
   }, [selectedQuestion, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (questions.length === 0) {
-      toast.info(t('admin.questions.noQuestionsToExport') || 'No questions to export');
+      toast.info(t('admin.questions.noQuestionsToExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -341,7 +341,7 @@ export default function QuestionsPage() {
     a.download = `questions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [questions, locale, t]);
 
   useRibbonAction('respond', handleRibbonRespond);
@@ -356,7 +356,7 @@ export default function QuestionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -467,7 +467,7 @@ export default function QuestionsPage() {
                   {/* Question */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <p className="font-medium text-slate-900 flex items-start gap-2">
-                      <span className="text-teal-500 flex-shrink-0">Q:</span>
+                      <span className="text-indigo-500 flex-shrink-0">Q:</span>
                       <span>{selectedQuestion.question}</span>
                     </p>
                     <p className="text-xs text-slate-500 mt-2">
@@ -561,7 +561,7 @@ export default function QuestionsPage() {
               placeholder={t('admin.questions.answerPlaceholder')}
             />
             {/* A-057: Keyboard shortcut hint */}
-            <p className="text-xs text-slate-400 mt-1">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit') || 'to submit'}</p>
+            <p className="text-xs text-slate-400 mt-1">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit')}</p>
           </FormField>
         </div>
       </Modal>
@@ -569,10 +569,10 @@ export default function QuestionsPage() {
       {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!deleteConfirmId}
-        title={t('admin.questions.deleteTitle') || 'Delete Question'}
-        message={t('admin.questions.deleteMessage') || 'Are you sure you want to delete this question? This action cannot be undone.'}
+        title={t('admin.questions.deleteTitle')}
+        message={t('admin.questions.deleteMessage')}
         variant="danger"
-        confirmLabel={t('admin.questions.delete') || 'Delete'}
+        confirmLabel={t('admin.questions.delete')}
         onConfirm={() => deleteConfirmId && deleteQuestion(deleteConfirmId)}
         onCancel={() => setDeleteConfirmId(null)}
       />

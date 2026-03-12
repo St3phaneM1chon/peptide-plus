@@ -12,8 +12,7 @@ export default function ClientsPage() {
 
   const ribbonNewClient = useCallback(() => {
     toast.info(
-      t('admin.clients.newClientGuidance') ||
-      'Les clients sont crees automatiquement lors de leur inscription sur la boutique. Pour inviter un client, utilisez la section Emails.'
+      t('admin.clients.newClientGuidance')
     );
   }, [t]);
 
@@ -28,10 +27,10 @@ export default function ClientsPage() {
       const avgBasket = users.length > 0 ? totalRevenue / users.length : 0;
       const fmt = new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' });
       toast.success(
-        `${t('admin.clients.salesStats') || 'Ventes clients'}: ${fmt.format(totalRevenue)} | ${totalPurchases} ${t('admin.clients.purchases') || 'achats'} | ${t('admin.clients.avgBasket') || 'Panier moyen'}: ${fmt.format(avgBasket)}`
+        `${t('admin.clients.salesStats')}: ${fmt.format(totalRevenue)} | ${totalPurchases} ${t('admin.clients.purchases')} | ${t('admin.clients.avgBasket')}: ${fmt.format(avgBasket)}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement des statistiques');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -50,10 +49,10 @@ export default function ClientsPage() {
         .map(([role, count]) => `${role}: ${count}`)
         .join(' | ');
       toast.success(
-        `${t('admin.clients.roleDistribution') || 'Repartition par role'}: ${breakdown}`
+        `${t('admin.clients.roleDistribution')}: ${breakdown}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -73,10 +72,10 @@ export default function ClientsPage() {
         .map(([tier, count]) => `${tier}: ${count}`)
         .join(' | ');
       toast.success(
-        `${t('admin.clients.tierDistribution') || 'Repartition par tier'}: ${breakdown}`
+        `${t('admin.clients.tierDistribution')}: ${breakdown}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -89,10 +88,10 @@ export default function ClientsPage() {
       const withReferral = users.filter((u: { referralCode?: string }) => !!u.referralCode).length;
       const totalPoints = users.reduce((sum: number, u: { loyaltyPoints?: number }) => sum + (u.loyaltyPoints || 0), 0);
       toast.success(
-        `${t('admin.clients.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.clients.withReferralCode') || 'avec code parrainage'} | ${totalPoints.toLocaleString(locale)} ${t('admin.clients.totalPoints') || 'points au total'}`
+        `${t('admin.clients.ambassadorStats')}: ${withReferral}/${users.length} ${t('admin.clients.withReferralCode')} | ${totalPoints.toLocaleString(locale)} ${t('admin.clients.totalPoints')}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -103,7 +102,7 @@ export default function ClientsPage() {
       const data = await res.json();
       const users = data.users || [];
       if (users.length === 0) {
-        toast.info(t('admin.clients.noDataToExport') || 'Aucune donnee a exporter');
+        toast.info(t('admin.clients.noDataToExport'));
         return;
       }
       const headers = ['Name', 'Email', 'Role', 'Phone', 'Loyalty Tier', 'Loyalty Points', 'Lifetime Points', 'Total Spent', 'Purchases', 'Referral Code', 'Registered'];
@@ -134,7 +133,7 @@ export default function ClientsPage() {
       URL.revokeObjectURL(url);
       toast.success(t('admin.clients.exportSuccess') || `${users.length} clients exportes`);
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors de l\'export');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 

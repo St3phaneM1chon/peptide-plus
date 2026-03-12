@@ -79,7 +79,8 @@ model Conversation {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   assignedTo    User?              @relation("Conversation_assignedToIdToUser", fields: [assignedToId], references: [id])
-  user          User               @relation("Conversation_userIdToUser", fields: [userId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-005: Preserve conversation history when user is deleted
+  user          User               @relation("Conversation_userIdToUser", fields: [userId], references: [id], onDelete: Restrict)
   messages      Message[]
 
   @@index([assignedToId])
@@ -110,6 +111,9 @@ model EmailLog {
   // Bridge #33/#44: FK to EmailCampaign for Marketing↔Email bridges
   campaignId String?
   campaign   EmailCampaign? @relation("CampaignEmailLogs", fields: [campaignId], references: [id], onDelete: SetNull)
+
+  // FIX A1-P0-002: Reverse relation for EmailEngagement FK
+  engagements EmailEngagement[] @relation("EmailLogEngagements")
 
   @@index([sentAt])
   @@index([templateId])
@@ -401,7 +405,10 @@ model EmailCampaign {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   // Bridge #33/#44: Emails sent by this campaign
-  emailLogs    EmailLog[] @relation("CampaignEmailLogs")
+  emailLogs    EmailLog[]          @relation("CampaignEmailLogs")
+
+  // FIX A1-P0-002: Reverse relation for EmailEngagement FK
+  engagements  EmailEngagement[]   @relation("CampaignEngagements")
 
   @@index([status])
   @@index([scheduledAt])
@@ -424,7 +431,10 @@ model ConsentRecord {
   ipAddress      String?
   userAgent      String?   // DB-009: Browser/device info at consent time
   lawfulBasis    String?   // DB-009: CONSENT, LEGITIMATE_INTEREST, CONTRACT
-  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  // FIX A1-P0-001: Restrict deletion to preserve GDPR consent audit trail
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([email])
   @@index([userId])
@@ -433,6 +443,7 @@ model ConsentRecord {
   @@index([purpose])
   @@index([grantedAt])
   @@index([revokedAt])
+  @@index([createdAt])
 }
 
 // ── Email Settings & Segments ────────────────────────────────────
@@ -544,25 +555,30 @@ model MailingListPreference {
 
 // DB-007: Email engagement tracking
 model EmailEngagement {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   emailLogId      String?
   campaignId      String?
   recipientEmail  String
   recipientUserId String?
   subject         String?
   openedAt        DateTime?
-  openCount       Int       @default(0)
+  openCount       Int            @default(0)
   clickedAt       DateTime?
-  clickCount      Int       @default(0)
-  clickedLinks    Json?     // Array of {url, clickedAt}
+  clickCount      Int            @default(0)
+  clickedLinks    Json?          // Array of {url, clickedAt}
   unsubscribedAt  DateTime?
   bouncedAt       DateTime?
-  bounceType      String?   // HARD, SOFT
+  bounceType      String?        // HARD, SOFT
   complainedAt    DateTime?
   deliveredAt     DateTime?
-  sentAt          DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  sentAt          DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // FIX A1-P0-002: Add @relation directives for FK fields
+  emailLog        EmailLog?      @relation("EmailLogEngagements", fields: [emailLogId], references: [id], onDelete: SetNull)
+  campaign        EmailCampaign? @relation("CampaignEngagements", fields: [campaignId], references: [id], onDelete: SetNull)
+  recipientUser   User?          @relation("UserEmailEngagements", fields: [recipientUserId], references: [id], onDelete: SetNull)
 
   @@index([emailLogId])
   @@index([recipientEmail])

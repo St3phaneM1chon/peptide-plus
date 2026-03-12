@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Testimonials',
-  description: 'Read and watch testimonials from our clients about their experience with BioCycle Peptides.',
+  title: 'Témoignages',
+  description: 'Lisez et visionnez les témoignages de nos clients sur leur expérience avec BioCycle Peptides.',
+  openGraph: {
+    title: 'Témoignages | BioCycle Peptides',
+    description: 'Témoignages de nos clients sur leur expérience avec BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/clients/temoignages',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function TestimonialsLayout({ children }: { children: React.ReactNode }) {

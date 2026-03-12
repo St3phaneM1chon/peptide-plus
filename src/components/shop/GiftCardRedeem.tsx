@@ -97,6 +97,7 @@ export default function GiftCardRedeem() {
               setCode(formatted);
             }}
             placeholder={t('shop.giftCard.placeholderCode')}
+            aria-label={t('shop.giftCard.placeholderCode') || 'Gift card code'}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase font-mono"
             maxLength={19}
           />

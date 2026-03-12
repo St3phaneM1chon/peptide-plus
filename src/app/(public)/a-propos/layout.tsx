@@ -3,8 +3,15 @@ export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About BioCycle Peptides',
-  description: "Canada's trusted source for high-purity research peptides. Founded in Montreal, BioCycle Peptides delivers third-party tested compounds with full COA documentation.",
+  title: 'À propos de BioCycle Peptides',
+  description: 'Source canadienne de confiance pour les peptides de recherche de haute pureté. Fondée à Montréal, BioCycle Peptides livre des composés testés par des tiers avec documentation COA complète.',
+  openGraph: {
+    title: 'À propos de BioCycle Peptides',
+    description: 'Source canadienne de confiance pour les peptides de recherche de haute pureté. Fondée à Montréal.',
+    url: 'https://biocyclepeptides.com/a-propos',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function AboutLayout({ children }: { children: React.ReactNode }) {

@@ -9,9 +9,15 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+
+const updateSubscriberSchema = z.object({
+  isActive: z.boolean().optional(),
+  locale: z.string().min(2).max(10).optional(),
+});
 
 export const DELETE = withAdminGuard(
   async (
@@ -46,11 +52,18 @@ export const PUT = withAdminGuard(
     try {
       const { id } = await params;
       const body = await request.json();
+      const parsed = updateSubscriberSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation error', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
 
       const data: Record<string, unknown> = {};
-      if (body.isActive !== undefined) data.isActive = body.isActive;
-      if (body.locale) data.locale = body.locale;
-      if (body.isActive === false) data.unsubscribedAt = new Date();
+      if (parsed.data.isActive !== undefined) data.isActive = parsed.data.isActive;
+      if (parsed.data.locale) data.locale = parsed.data.locale;
+      if (parsed.data.isActive === false) data.unsubscribedAt = new Date();
 
       const updated = await prisma.newsletterSubscriber.update({
         where: { id },

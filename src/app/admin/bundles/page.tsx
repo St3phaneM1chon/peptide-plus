@@ -43,8 +43,8 @@ export default function AdminBundlesPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <PageHeader
-        title={t('admin.bundles.title') || 'Gestion des Bundles'}
-        subtitle={t('admin.bundles.subtitle') || 'Creer et gerer les ensembles de produits'}
+        title={t('admin.bundles.title')}
+        subtitle={t('admin.bundles.subtitle')}
         actions={
           <Link
             href="/admin/bundles/new"

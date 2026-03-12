@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 import {
   processFacebookMessage,
   processInstagramMessage,
@@ -115,6 +116,35 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parsed.data;
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    // Meta doesn't provide a single event ID header, so derive one from the payload
+    const metaEntryIds = (payload.entry as Array<Record<string, unknown>>)
+      ?.map(e => e.id)
+      .filter(Boolean)
+      .join(',');
+    const metaEventId = metaEntryIds
+      ? `${payload.object}_${metaEntryIds}_${createHmac('sha256', 'meta-dedup').update(rawBody).digest('hex').slice(0, 16)}`
+      : null;
+    if (metaEventId) {
+      try {
+        const redis = await getRedisClient();
+        if (redis) {
+          const idempotencyKey = `webhook:meta:${metaEventId}`;
+          const alreadyProcessed = await redis.get(idempotencyKey);
+          if (alreadyProcessed) {
+            logger.info('[Meta Webhook] Duplicate event skipped', { eventId: metaEventId });
+            return NextResponse.json({ success: true });
+          }
+          await redis.set(idempotencyKey, '1', 'EX', 86400);
+        }
+      } catch (redisErr) {
+        // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+        logger.debug('[Meta Webhook] Redis idempotency check unavailable, proceeding', {
+          error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+        });
+      }
+    }
 
     // Determine the source: Facebook Messenger or Instagram
     const objectType = payload.object;

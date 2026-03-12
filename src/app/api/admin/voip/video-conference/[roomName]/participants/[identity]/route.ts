@@ -7,9 +7,15 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { removeParticipant, muteParticipantTrack, getParticipant } from '@/lib/voip/livekit-service';
 import { logger } from '@/lib/logger';
+
+const muteParticipantSchema = z.object({
+  trackSid: z.string().optional(),
+  muted: z.boolean().optional(),
+});
 
 export const DELETE = withAdminGuard(async (
   _request: NextRequest,
@@ -36,7 +42,14 @@ export const PUT = withAdminGuard(async (
 
   try {
     const body = await request.json();
-    const { trackSid, muted } = body;
+    const parsed = muteParticipantSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const { trackSid, muted } = parsed.data;
 
     if (!trackSid) {
       // If no specific track, mute all audio tracks

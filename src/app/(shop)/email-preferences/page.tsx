@@ -22,9 +22,15 @@ import type { EmailPreferences } from './PreferenceForm';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Email Preferences - BioCycle Peptides',
-  description: 'Manage your email communication preferences for BioCycle Peptides.',
+  title: 'Préférences courriel',
+  description: 'Gérez vos préférences de communication par courriel avec BioCycle Peptides.',
   robots: { index: false, follow: false },
+  openGraph: {
+    title: 'Préférences courriel | BioCycle Peptides',
+    description: 'Gérez vos préférences de communication par courriel.',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 // ---------------------------------------------------------------------------

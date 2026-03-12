@@ -93,18 +93,20 @@ export default function AccountContentPage() {
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder={t('common.search') !== 'common.search' ? t('common.search') : 'Search videos...'}
+            aria-label={t('common.search') || 'Search videos'}
             className="w-full ps-10 pe-4 py-2.5 border rounded-lg text-sm"
           />
         </div>
-        <button onClick={handleSearch} className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm">
-          <Search className="h-4 w-4" />
+        <button onClick={handleSearch} className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm" aria-label={t('common.search') || 'Search'}>
+          <Search className="h-4 w-4" aria-hidden="true" />
         </button>
         {search && (
           <button
             onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}
             className="px-3 py-2.5 text-gray-500 hover:text-gray-700 text-sm"
+            aria-label={t('common.clearSearch') || 'Clear search'}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>

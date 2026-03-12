@@ -53,6 +53,7 @@ export default function MailingListSignup() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('mailingList.namePlaceholder')}
+          aria-label={t('mailingList.namePlaceholder') || 'Your name'}
           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
         />
         <input
@@ -61,6 +62,7 @@ export default function MailingListSignup() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('mailingList.emailPlaceholder')}
+          aria-label={t('mailingList.emailPlaceholder') || 'Your email'}
           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
         />
 

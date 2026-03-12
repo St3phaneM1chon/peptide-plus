@@ -234,10 +234,10 @@ export default function ParametresComptablesPage() {
       quickMethodProvince: 'QC',
       blockDeletionDuringRetention: true,
     });
-    toast.success(t('admin.accountingSettings.resetDone') || 'Parametres reinitialises aux valeurs par defaut. Sauvegardez pour appliquer.');
+    toast.success(t('admin.accountingSettings.resetDone'));
   }, [t]);
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('admin.accountingSettings.importInfo') || 'L\'importation de configuration est disponible via les fonctions de restauration de sauvegarde.');
+    toast.info(t('admin.accountingSettings.importInfo'));
   }, [t]);
   const handleRibbonExportConfig = useCallback(() => {
     const configData = JSON.stringify(settings, null, 2);
@@ -245,16 +245,16 @@ export default function ParametresComptablesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `parametres-comptabilite-${new Date().toISOString().split('T')[0]}.json`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.accountingSettings.exportSuccess') || 'Configuration exportee en JSON');
+    toast.success(t('admin.accountingSettings.exportSuccess'));
   }, [settings, t]);
   const handleRibbonTest = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/settings');
       if (!res.ok) throw new Error();
-      const data = await res.json();
-      toast.success(t('admin.accountingSettings.testSuccess') || `Connexion OK - Parametres charges: ${data.settings?.companyName || 'N/A'}`);
+      await res.json();
+      toast.success(t('admin.accountingSettings.testSuccess'));
     } catch {
-      toast.error(t('admin.accountingSettings.testError') || 'Erreur de connexion a l\'API des parametres');
+      toast.error(t('admin.accountingSettings.testError'));
     }
   }, [t]);
 
@@ -344,7 +344,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={fiscalYearDisplay}
                   onChange={(e) => handleFiscalYearChange(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="12-31">{t('admin.accountingSettings.december31')}</option>
                   <option value="03-31">{t('admin.accountingSettings.march31')}</option>
@@ -356,7 +356,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.accountingMethod}
                   onChange={(e) => setSettings({ ...settings, accountingMethod: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="ACCRUAL">{t('admin.accountingSettings.accrualAccounting')}</option>
                   <option value="CASH">{t('admin.accountingSettings.cashAccounting')}</option>
@@ -366,7 +366,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.defaultCurrency}
                   onChange={(e) => setSettings({ ...settings, defaultCurrency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="CAD">{t('admin.accountingSettings.cadLabel')}</option>
                   <option value="USD">{t('admin.accountingSettings.usdLabel')}</option>
@@ -655,12 +655,12 @@ export default function ParametresComptablesPage() {
             </div>
           </SectionCard>
 
-          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <span className="text-teal-500">&#8505;&#65039;</span>
+              <span className="text-indigo-500">&#8505;&#65039;</span>
               <div>
-                <p className="font-medium text-teal-900">{t('admin.accountingSettings.autoRateUpdate')}</p>
-                <p className="text-sm text-teal-700">{t('admin.accountingSettings.autoRateUpdateDesc')}</p>
+                <p className="font-medium text-indigo-900">{t('admin.accountingSettings.autoRateUpdate')}</p>
+                <p className="text-sm text-indigo-700">{t('admin.accountingSettings.autoRateUpdateDesc')}</p>
               </div>
             </div>
           </div>
@@ -693,7 +693,7 @@ export default function ParametresComptablesPage() {
                     <div className="mt-3">
                       {integration.status === 'connected' ? (
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" icon={RefreshCw} className="text-teal-700 hover:bg-teal-50">
+                          <Button variant="ghost" size="sm" icon={RefreshCw} className="text-indigo-700 hover:bg-indigo-50">
                             {t('admin.accountingSettings.syncBtn')}
                           </Button>
                           <Button variant="ghost" size="sm" icon={Settings}>

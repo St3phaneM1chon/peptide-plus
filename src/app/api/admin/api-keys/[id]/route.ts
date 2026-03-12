@@ -38,4 +38,4 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { params }) =
   });
 
   return NextResponse.json({ success: true, message: 'API key revoked successfully' });
-});
+}, { requiredPermission: 'admin.settings', requireMfa: true });

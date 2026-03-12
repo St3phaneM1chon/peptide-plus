@@ -214,6 +214,9 @@ export function useVoip(): UseVoipReturn {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const uaRef = useRef<any>(null);
 
+  // SIP credentials ref for TURN server authentication
+  const sipCredsRef = useRef<{ username: string; password: string } | null>(null);
+
   /**
    * Map of JsSIP session objects keyed by call id.
    * Using a ref to a Map so we can manage multiple simultaneous sessions.
@@ -252,6 +255,24 @@ export function useVoip(): UseVoipReturn {
 
   /** Last call quality history */
   const lastQualityHistoryRef = useRef<QualityHistory | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // ICE servers (STUN + TURN for NAT traversal)
+  // ---------------------------------------------------------------------------
+
+  const getIceServers = useCallback((): RTCIceServer[] => {
+    const servers: RTCIceServer[] = [
+      { urls: 'stun:stun.telnyx.com:3478' },
+      { urls: 'stun:stun.l.google.com:19302' },
+    ];
+    if (sipCredsRef.current) {
+      servers.push(
+        { urls: 'turn:turn.telnyx.com:3478', username: sipCredsRef.current.username, credential: sipCredsRef.current.password },
+        { urls: 'turn:turn.telnyx.com:443?transport=tcp', username: sipCredsRef.current.username, credential: sipCredsRef.current.password },
+      );
+    }
+    return servers;
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Derived: currentCall (backward compat)
@@ -671,6 +692,9 @@ export function useVoip(): UseVoipReturn {
         sipDomain: creds.sipDomain || 'sip.telnyx.com',
       });
 
+      // Store SIP credentials for TURN server authentication
+      sipCredsRef.current = { username: creds.sipUsername, password: creds.sipPassword };
+
       // Dynamic import JsSIP (only loaded when needed)
       const JsSIP = await import('jssip');
 
@@ -751,6 +775,7 @@ export function useVoip(): UseVoipReturn {
       uaRef.current.stop();
       uaRef.current = null;
     }
+    sipCredsRef.current = null;
     setStatus('disconnected');
     setCalls([]);
     setFocusedCallId(null);
@@ -842,10 +867,7 @@ export function useVoip(): UseVoipReturn {
       const options = {
         mediaConstraints: { audio: true, video: isVideoEnabled },
         pcConfig: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-          ],
+          iceServers: getIceServers(),
         },
       };
 
@@ -870,10 +892,7 @@ export function useVoip(): UseVoipReturn {
         session.answer({
           mediaConstraints: { audio: true, video: isVideoEnabled },
           pcConfig: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:stun1.l.google.com:19302' },
-            ],
+            iceServers: getIceServers(),
           },
         });
       }
@@ -1094,10 +1113,7 @@ export function useVoip(): UseVoipReturn {
         const options = {
           mediaConstraints: { audio: true, video: isVideoEnabled },
           pcConfig: {
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' },
-              { urls: 'stun:stun1.l.google.com:19302' },
-            ],
+            iceServers: getIceServers(),
           },
         };
 

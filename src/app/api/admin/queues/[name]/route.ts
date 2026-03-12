@@ -11,10 +11,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createQueue, getQueueStats, addJob, QUEUE_NAMES } from '@/lib/queue';
 import { queueProcessors } from '@/lib/queue-registry';
 import { logger } from '@/lib/logger';
+
+const triggerJobSchema = z.record(z.string(), z.unknown()).optional().default({});
 
 // Validate that the queue name is one we know about
 const validQueueNames = new Set(Object.values(QUEUE_NAMES));
@@ -150,8 +153,9 @@ export const POST = withAdminGuard(async (
     let data: Record<string, unknown> = {};
     try {
       const body = await request.json();
-      if (body && typeof body === 'object') {
-        data = body;
+      const parsed = triggerJobSchema.safeParse(body);
+      if (parsed.success && parsed.data) {
+        data = parsed.data;
       }
     } catch {
       // No body or invalid JSON — use empty data

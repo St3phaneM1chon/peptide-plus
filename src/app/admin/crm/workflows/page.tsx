@@ -514,7 +514,7 @@ export default function WorkflowsPage() {
       });
       const json = await res.json();
       if (json.success) {
-        toast.success(t('admin.crm.workflowSaved') || 'Workflow created');
+        toast.success(t('admin.crm.workflowSaved'));
         setShowCreate(false);
         setForm(DEFAULT_FORM);
         fetchWorkflows();
@@ -540,8 +540,8 @@ export default function WorkflowsPage() {
       if (json.success) {
         toast.success(
           newStatus === 'ACTIVE'
-            ? (t('admin.crm.workflowActivated') || 'Workflow activated')
-            : (t('admin.crm.workflowPaused') || 'Workflow paused')
+            ? (t('admin.crm.workflowActivated'))
+            : (t('admin.crm.workflowPaused'))
         );
         fetchWorkflows();
       } else {
@@ -553,12 +553,12 @@ export default function WorkflowsPage() {
   };
 
   const deleteWorkflow = async (id: string) => {
-    if (!window.confirm(t('admin.crm.confirmDeleteWorkflow') || 'Delete this workflow?')) return;
+    if (!window.confirm(t('admin.crm.confirmDeleteWorkflow'))) return;
     try {
       const res = await fetch(`/api/admin/crm/workflows/${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (json.success || res.status === 204) {
-        toast.success(t('admin.crm.workflowDeleted') || 'Workflow deleted');
+        toast.success(t('admin.crm.workflowDeleted'));
         fetchWorkflows();
       } else {
         toast.error(json.error?.message || 'Failed to delete workflow');
@@ -604,10 +604,10 @@ export default function WorkflowsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {t('admin.crm.workflows') || 'Workflow Automation'}
+              {t('admin.crm.workflows')}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {t('admin.crm.workflowsDesc') || 'Automate lead and deal actions based on triggers'}
+              {t('admin.crm.workflowsDesc')}
             </p>
           </div>
         </div>
@@ -628,7 +628,7 @@ export default function WorkflowsPage() {
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            {t('admin.crm.newWorkflow') || 'New Workflow'}
+            {t('admin.crm.newWorkflow')}
           </button>
         </div>
       </div>
@@ -660,12 +660,12 @@ export default function WorkflowsPage() {
       ) : workflows.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-200">
           <Workflow className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">{t('admin.crm.noWorkflows') || 'No workflows yet'}</p>
+          <p className="text-gray-500">{t('admin.crm.noWorkflows')}</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-3 text-sm text-purple-600 hover:underline"
           >
-            {t('admin.crm.newWorkflow') || 'Create your first workflow'}
+            {t('admin.crm.newWorkflow')}
           </button>
         </div>
       ) : (
@@ -690,7 +690,7 @@ export default function WorkflowsPage() {
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {t('admin.crm.newWorkflow') || 'New Workflow'}
+                  {t('admin.crm.newWorkflow')}
                 </h2>
               </div>
               <button
@@ -707,7 +707,7 @@ export default function WorkflowsPage() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.workflowName') || 'Workflow Name'} *
+                    {t('admin.crm.workflowName')} *
                   </label>
                   <input
                     type="text"
@@ -720,7 +720,7 @@ export default function WorkflowsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.workflowDescription') || 'Description (optional)'}
+                    {t('admin.crm.workflowDescription')}
                   </label>
                   <textarea
                     value={form.description}
@@ -735,7 +735,7 @@ export default function WorkflowsPage() {
               {/* Trigger */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('admin.crm.triggerType') || 'Trigger Type'}
+                  {t('admin.crm.triggerType')}
                 </label>
                 <select
                   value={form.triggerType}
@@ -758,7 +758,7 @@ export default function WorkflowsPage() {
                 {triggerConfigFields.length > 0 && (
                   <div className="mt-3 space-y-2 ps-3 border-s-2 border-purple-100">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      {t('admin.crm.triggerConfig') || 'Trigger Configuration'}
+                      {t('admin.crm.triggerConfig')}
                     </p>
                     {triggerConfigFields.map(field => (
                       <div key={field.key}>
@@ -786,7 +786,7 @@ export default function WorkflowsPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-medium text-gray-700">
-                    {t('admin.crm.steps') || 'Steps'} ({form.steps.length})
+                    {t('admin.crm.steps')} ({form.steps.length})
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center bg-gray-100 rounded-md p-0.5">
@@ -822,7 +822,7 @@ export default function WorkflowsPage() {
                         className="flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-800 transition-colors"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        {t('admin.crm.addStep') || 'Add Step'}
+                        {t('admin.crm.addStep')}
                       </button>
                     )}
                   </div>
@@ -894,7 +894,7 @@ export default function WorkflowsPage() {
                 disabled={creating || !form.name.trim()}
                 className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {creating ? 'Creating...' : (t('admin.crm.newWorkflow') || 'Create Workflow')}
+                {creating ? 'Creating...' : (t('admin.crm.newWorkflow'))}
               </button>
             </div>
           </div>

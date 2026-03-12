@@ -248,7 +248,7 @@ export default function VideoPlayer({
         <button
           onClick={handleFullscreen}
           className="absolute bottom-3 end-3 z-10 rounded-md bg-black/60 p-1.5 text-white/80 transition-colors hover:bg-black/80 hover:text-white"
-          aria-label="Fullscreen"
+          aria-label={t('video.fullscreen')}
         >
           <Maximize className="h-4 w-4" />
         </button>

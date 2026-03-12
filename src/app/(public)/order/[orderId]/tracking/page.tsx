@@ -19,9 +19,15 @@ export async function generateMetadata({ params }: TrackingPageProps): Promise<M
   const { orderId } = await params;
 
   return {
-    title: `Order Tracking - ${orderId}`,
-    description: 'Track the status and delivery of your BioCycle Peptides order.',
+    title: `Suivi de commande - ${orderId}`,
+    description: 'Suivez le statut et la livraison de votre commande BioCycle Peptides.',
     robots: { index: false, follow: false },
+    openGraph: {
+      title: 'Suivi de commande | BioCycle Peptides',
+      description: 'Suivez le statut et la livraison de votre commande.',
+      siteName: 'BioCycle Peptides',
+      type: 'website',
+    },
   };
 }
 

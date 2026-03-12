@@ -1,12 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 /**
+ * @deprecated A9-P1-001: Use /api/cron/fx-rate-sync instead (Bank of Canada official rates).
+ * This route is a duplicate that uses the less authoritative open.er-api.com.
+ * Kept temporarily for backward compatibility with existing cron schedules.
+ * TODO: Remove after verifying all cron schedules point to fx-rate-sync.
+ *
  * CRON Job - Mise a jour des taux de change
  * Recupere les taux en direct depuis open.er-api.com (gratuit, sans cle API)
  * Base: CAD
- *
- * Configuration Vercel (vercel.json):
- * Schedule: every 6 hours (0 star/6 * * *)
  */
 
 import { NextRequest, NextResponse } from 'next/server';

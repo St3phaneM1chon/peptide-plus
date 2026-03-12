@@ -32,13 +32,65 @@ const fallbackCurrencies: Currency[] = [
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 const CURRENCY_STORAGE_KEY = 'biocycle-currency';
+const CURRENCIES_CACHE_KEY = 'biocycle-currencies-cache';
+const CURRENCIES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CurrenciesCache {
+  currencies: Currency[];
+  timestamp: number;
+}
+
+/** Read cached currencies from localStorage. Returns null if expired or absent. */
+function getCachedCurrencies(): Currency[] | null {
+  try {
+    const raw = localStorage.getItem(CURRENCIES_CACHE_KEY);
+    if (!raw) return null;
+    const cache: CurrenciesCache = JSON.parse(raw);
+    if (Date.now() - cache.timestamp > CURRENCIES_CACHE_TTL_MS) return null;
+    if (!Array.isArray(cache.currencies) || cache.currencies.length === 0) return null;
+    return cache.currencies;
+  } catch {
+    return null;
+  }
+}
+
+/** Write currencies to localStorage cache. */
+function setCachedCurrencies(currencies: Currency[]) {
+  try {
+    const cache: CurrenciesCache = { currencies, timestamp: Date.now() };
+    localStorage.setItem(CURRENCIES_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Storage full or unavailable - ignore
+  }
+}
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>(fallbackCurrencies[0]);
   const [currencies, setCurrencies] = useState<Currency[]>(fallbackCurrencies);
 
-  // Load currencies from DB + apply user preference or SiteSettings default
+  // Apply user currency preference given a list of available currencies
+  const applyUserPreference = useCallback((availableCurrencies: Currency[]) => {
+    const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
+    if (stored) {
+      const found = availableCurrencies.find((c) => c.code === stored);
+      if (found) { setCurrencyState(found); return; }
+    }
+    // Use the DB-configured default (from SiteSettings via isDefault flag)
+    const dbDefault = availableCurrencies.find((c) => c.isDefault);
+    if (dbDefault) setCurrencyState(dbDefault);
+  }, []);
+
+  // Load currencies from cache first, then fetch if cache expired
   useEffect(() => {
+    // 1. Try cache first (avoids network request on most page loads)
+    const cached = getCachedCurrencies();
+    if (cached) {
+      setCurrencies(cached);
+      applyUserPreference(cached);
+      return; // Cache hit -- no fetch needed
+    }
+
+    // 2. Cache miss or expired -- fetch from API
     fetch('/api/currencies')
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
@@ -52,16 +104,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             isDefault: c.isDefault,
           }));
           setCurrencies(dbCurrencies);
-
-          // Priority: 1) user stored preference, 2) DB default currency, 3) first currency
-          const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
-          if (stored) {
-            const found = dbCurrencies.find((c) => c.code === stored);
-            if (found) { setCurrencyState(found); return; }
-          }
-          // Use the DB-configured default (from SiteSettings via isDefault flag)
-          const dbDefault = dbCurrencies.find((c) => c.isDefault);
-          if (dbDefault) setCurrencyState(dbDefault);
+          setCachedCurrencies(dbCurrencies);
+          applyUserPreference(dbCurrencies);
         } else {
           const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
           if (stored) {
@@ -77,7 +121,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           if (found) setCurrencyState(found);
         }
       });
-  }, []);
+  }, [applyUserPreference]);
 
   const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);

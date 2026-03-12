@@ -33,6 +33,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
 
+    // A7-P2-003: Add take limit to prevent OOM on large inventory exports
     const formats = await prisma.productFormat.findMany({
       where: {
         trackInventory: true, // Keep trackInventory filter (non-tracked items have no stock to report)
@@ -53,6 +54,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         { product: { name: 'asc' } },
         { sortOrder: 'asc' },
       ],
+      take: 10000, // Safety limit for export operations
     });
 
     // CSV Header

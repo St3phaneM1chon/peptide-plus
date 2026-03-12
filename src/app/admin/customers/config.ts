@@ -99,7 +99,7 @@ export const customerConfig: ContactListPageConfig = {
           : 0;
         return fmtCurrency(avg);
       },
-      className: 'bg-teal-50 border-teal-200',
+      className: 'bg-indigo-50 border-indigo-200',
     },
     {
       labelKey: 'admin.customers.vipGoldPlus',

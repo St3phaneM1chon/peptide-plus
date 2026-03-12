@@ -370,6 +370,7 @@ model Testimonial {
   translations  TestimonialTranslation[]
 
   @@index([isPublished])
+  @@index([isPublished, isFeatured, sortOrder])
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
@@ -491,18 +492,41 @@ model TranslationFeedback {
 // F-005 (Communauté CRITICAL): Forum community backend
 // =============================================
 model ForumCategory {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  description String?
-  icon        String?
-  sortOrder   Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  posts       ForumPost[]
+  id           String                      @id @default(cuid())
+  name         String
+  slug         String                      @unique
+  description  String?
+  icon         String?
+  sortOrder    Int                         @default(0)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  posts        ForumPost[]
+  translations ForumCategoryTranslation[]
 
   @@index([slug])
   @@index([sortOrder])
+}
+
+// FIX A1-P2-005: Forum category translation model for i18n support
+model ForumCategoryTranslation {
+  id              String             @id @default(cuid())
+  forumCategoryId String
+  locale          String
+  name            String?
+  description     String?
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  qualityLevel    TranslationQuality @default(draft)
+  forumCategory   ForumCategory      @relation(fields: [forumCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([forumCategoryId, locale])
+  @@index([forumCategoryId])
+  @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ForumPost {
@@ -510,7 +534,7 @@ model ForumPost {
   title        String
   content      String
   authorId     String
-  categoryId   String
+  categoryId   String?
   upvotes      Int            @default(0)
   downvotes    Int            @default(0)
   viewCount    Int            @default(0)
@@ -519,8 +543,10 @@ model ForumPost {
   deletedAt    DateTime?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  author       User           @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  category     ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-004: Preserve forum content when user/category is deleted
+  author       User           @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  // FIX A1-P2-002: Preserve posts when category is deleted (SetNull instead of Cascade/Restrict)
+  category     ForumCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   replies      ForumReply[]
   votes        ForumVote[]    @relation("PostVotes")
 
@@ -542,7 +568,8 @@ model ForumReply {
   deletedAt     DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  author        User         @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-004: Preserve forum replies when user is deleted
+  author        User         @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   post          ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
   parentReply   ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
   childReplies  ForumReply[] @relation("ReplyToReply")
@@ -562,6 +589,7 @@ model ForumVote {
   replyId   String?
   value     Int         // +1 or -1
   createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      ForumPost?  @relation("PostVotes", fields: [postId], references: [id], onDelete: Cascade)
   reply     ForumReply? @relation("ReplyVotes", fields: [replyId], references: [id], onDelete: Cascade)
@@ -586,6 +614,7 @@ model ContactMessage {
   isRead    Boolean   @default(false)
   readAt    DateTime?
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   user      User?     @relation("ContactMessageUser", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([email])

@@ -22,7 +22,7 @@ const updateLeadSchema = z.object({
   companyName: z.string().max(200).trim().nullable().optional(),
   email: z.string().email().max(320).nullable().optional(),
   phone: z.string().max(50).trim().nullable().optional(),
-  source: z.enum(['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER']).optional(),
+  source: z.enum(['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER', 'EMAIL', 'SOCIAL', 'CHATBOT']).optional(),
   status: z.enum(['NEW', 'CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'CONVERTED', 'LOST']).optional(),
   score: z.number().int().min(0).max(100).optional(),
   temperature: z.enum(['HOT', 'WARM', 'COLD']).optional(),

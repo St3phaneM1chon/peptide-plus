@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslations } from '@/hooks/useTranslations';
 import {
   Search,
@@ -14,7 +15,16 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import MapSelector from '@/components/admin/scraper/MapSelector';
+
+// A7-P2-005: Dynamic import — MapSelector loads Google Maps API (~200KB)
+const MapSelector = dynamic(() => import('@/components/admin/scraper/MapSelector'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200">
+      <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+    </div>
+  ),
+});
 
 interface ScrapedPlace {
   name: string;
@@ -210,7 +220,7 @@ export default function ScraperPage() {
         {/* Map Selector */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-zinc-300">
-            {t('admin.scraper.mapSelectorLabel') || 'Ou sélectionner une zone sur la carte'}
+            {t('admin.scraper.mapSelectorLabel')}
           </label>
           <MapSelector
             apiKey={googleMapsApiKey || undefined}
@@ -223,7 +233,7 @@ export default function ScraperPage() {
           />
           {mapSelection && (
             <p className="text-xs text-blue-400">
-              {t('admin.scraper.mapSearchArea') || 'Recherche par zone'}: {mapSelection.label} — rayon {
+              {t('admin.scraper.mapSearchArea')}: {mapSelection.label} — rayon {
                 mapSelection.radius >= 1000
                   ? `${(mapSelection.radius / 1000).toFixed(mapSelection.radius % 1000 === 0 ? 0 : 1)} km`
                   : `${mapSelection.radius} m`
@@ -312,7 +322,7 @@ export default function ScraperPage() {
             ) : (
               <FileSpreadsheet className="h-4 w-4" />
             )}
-            {t('admin.scraper.exportExcelButton') || 'Export Excel'}
+            {t('admin.scraper.exportExcelButton')}
           </button>
         </div>
       </div>

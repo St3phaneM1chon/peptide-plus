@@ -87,7 +87,7 @@ export default function CallLogClient() {
 
   const directionIcon = (dir: string) => {
     switch (dir) {
-      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-teal-600" />;
+      case 'INBOUND': return <PhoneIncoming className="w-4 h-4 text-indigo-600" />;
       case 'OUTBOUND': return <PhoneOutgoing className="w-4 h-4 text-emerald-600" />;
       default: return <Phone className="w-4 h-4 text-gray-400" />;
     }
@@ -97,7 +97,7 @@ export default function CallLogClient() {
     COMPLETED: 'bg-emerald-100 text-emerald-700',
     MISSED: 'bg-red-100 text-red-700',
     VOICEMAIL: 'bg-orange-100 text-orange-700',
-    IN_PROGRESS: 'bg-teal-100 text-teal-700',
+    IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
     FAILED: 'bg-gray-100 text-gray-600',
     TRANSFERRED: 'bg-purple-100 text-purple-700',
     RINGING: 'bg-yellow-100 text-yellow-700',
@@ -128,7 +128,7 @@ export default function CallLogClient() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder={t('voip.callLog.searchPlaceholder')}
-              className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function CallLogClient() {
         <select
           value={direction}
           onChange={(e) => { setDirection(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">{t('voip.callLog.allDirections')}</option>
           <option value="INBOUND">{t('voip.callLog.inbound')}</option>
@@ -147,7 +147,7 @@ export default function CallLogClient() {
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">{t('voip.callLog.allStatuses')}</option>
           <option value="COMPLETED">{t('voip.status.call.completed')}</option>
@@ -160,13 +160,13 @@ export default function CallLogClient() {
           type="date"
           value={dateFrom}
           onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <input
           type="date"
           value={dateTo}
           onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
@@ -272,14 +272,14 @@ export default function CallLogClient() {
                                 <div className="flex-1 min-w-[200px]">
                                   <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
                                     <Briefcase className="w-3 h-3" />
-                                    {t('admin.telephony.crmDeals') || 'CRM Deals'}
+                                    {t('admin.telephony.crmDeals')}
                                   </span>
                                   <div className="space-y-1">
                                     {callBridgeData[call.id].crmDeals!.map((deal) => (
                                       <Link
                                         key={deal.id}
                                         href={`/admin/crm/deals/${deal.id}`}
-                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-teal-50 border border-gray-100"
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-indigo-50 border border-gray-100"
                                       >
                                         <span className="text-gray-800 truncate">{deal.title}</span>
                                         <span className="text-gray-500 ms-2 shrink-0">{deal.stageName}</span>
@@ -300,7 +300,7 @@ export default function CallLogClient() {
                                       <Link
                                         key={order.id}
                                         href={`/admin/commandes?orderId=${order.id}`}
-                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-teal-50 border border-gray-100"
+                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white hover:bg-indigo-50 border border-gray-100"
                                       >
                                         <span className="text-gray-800">#{order.orderNumber}</span>
                                         <span className="text-gray-500 ms-2 shrink-0">${order.total.toFixed(2)}</span>
@@ -314,7 +314,7 @@ export default function CallLogClient() {
                                 <div className="flex-1 min-w-[150px]">
                                   <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
                                     <Star className="w-3 h-3" />
-                                    {t('admin.bridges.loyaltyInfo') || 'Loyalty'}
+                                    {t('admin.bridges.loyaltyInfo')}
                                   </span>
                                   <div className="text-xs p-1.5 rounded bg-white border border-gray-100">
                                     <span className="text-purple-700 font-medium">{callBridgeData[call.id].loyaltyInfo!.currentTier}</span>
@@ -327,7 +327,7 @@ export default function CallLogClient() {
                                 <div className="flex-1 min-w-[200px]">
                                   <span className="text-xs font-medium text-gray-500 block mb-1 flex items-center gap-1">
                                     <Mail className="w-3 h-3" />
-                                    {t('admin.bridges.recentEmails') || 'Recent Emails'}
+                                    {t('admin.bridges.recentEmails')}
                                   </span>
                                   <div className="space-y-1">
                                     {callBridgeData[call.id].recentEmails!.slice(0, 3).map((email) => (

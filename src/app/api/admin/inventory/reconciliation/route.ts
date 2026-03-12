@@ -22,6 +22,7 @@ import { logger } from '@/lib/logger';
 export const GET = withAdminGuard(async (_request: NextRequest) => {
   try {
     // ── 1. Fetch all active formats with their recorded stock ──────────
+    // A7-P2-003: Add take limit to prevent unbounded result sets
     const formats = await prisma.productFormat.findMany({
       where: { isActive: true, trackInventory: true },
       select: {
@@ -32,6 +33,7 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
         product: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { product: { name: 'asc' } },
+      take: 10000,
     });
 
     // ── 2. Compute calculated stock per (productId, formatId) ──────────
@@ -84,9 +86,11 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
     });
 
     // ── 5. Also check base products (no format) that track inventory ───
+    // A7-P2-003: Add take limit to prevent unbounded result sets
     const baseProducts = await prisma.product.findMany({
       where: { isActive: true, trackInventory: true },
       select: { id: true, name: true, stockQuantity: true },
+      take: 10000,
     });
 
     for (const product of baseProducts) {

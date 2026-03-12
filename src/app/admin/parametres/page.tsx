@@ -212,7 +212,7 @@ export default function ParametresPage() {
       toast.success(t('admin.settingsPage.settingsSaved'));
     } catch (err) {
       console.error('Error saving settings:', err);
-      toast.error(t('admin.settingsPage.settingsError') || 'Error saving settings');
+      toast.error(t('admin.settingsPage.settingsError'));
     }
     setSaving(false);
   };
@@ -256,7 +256,7 @@ export default function ParametresPage() {
       sessionTimeout: 30,
       maxLoginAttempts: 5,
     });
-    toast.success(t('admin.settingsPage.resetDefaults') || 'Settings reset to defaults (not yet saved)');
+    toast.success(t('admin.settingsPage.resetDefaults'));
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
@@ -270,9 +270,9 @@ export default function ParametresPage() {
         const text = await file.text();
         const imported = JSON.parse(text);
         setSettings(prev => ({ ...prev, ...imported }));
-        toast.success(t('admin.settingsPage.configImported') || 'Configuration imported (not yet saved)');
+        toast.success(t('admin.settingsPage.configImported'));
       } catch {
-        toast.error(t('admin.settingsPage.settingsError') || 'Invalid JSON file');
+        toast.error(t('admin.settingsPage.settingsError'));
       }
     };
     input.click();
@@ -284,7 +284,7 @@ export default function ParametresPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `site-settings-${new Date().toISOString().slice(0, 10)}.json`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [settings, t]);
 
   const handleRibbonTest = useCallback(() => {
@@ -293,12 +293,12 @@ export default function ParametresPage() {
       try {
         const res = await fetch('/api/admin/settings');
         if (res.ok) {
-          toast.success(t('admin.settingsPage.connectionOk') || 'API connection OK - Settings loaded successfully');
+          toast.success(t('admin.settingsPage.connectionOk'));
         } else {
-          toast.error(t('admin.settingsPage.settingsError') || 'API connection failed');
+          toast.error(t('admin.settingsPage.settingsError'));
         }
       } catch {
-        toast.error(t('admin.settingsPage.settingsError') || 'API connection failed');
+        toast.error(t('admin.settingsPage.settingsError'));
       }
     })();
   }, [t]);
@@ -312,7 +312,7 @@ export default function ParametresPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -337,7 +337,7 @@ export default function ParametresPage() {
     `absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${active ? 'end-1' : 'start-1'}`;
 
   return (
-    <div className="flex flex-col md:flex-row gap-6" role="main" aria-label={t('admin.settingsPage.sidebarTitle') || 'Parametres'}>
+    <div className="flex flex-col md:flex-row gap-6" role="main" aria-label={t('admin.settingsPage.sidebarTitle')}>
       {/* Sidebar */}
       <div className="w-full md:w-64 flex-shrink-0">
         <div className="bg-white rounded-xl border border-slate-200 p-4 sticky top-4">
@@ -351,7 +351,7 @@ export default function ParametresPage() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-start transition-colors ${
                     activeSection === section.id
-                      ? 'bg-teal-100 text-teal-900'
+                      ? 'bg-indigo-100 text-indigo-900'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -410,12 +410,12 @@ export default function ParametresPage() {
                 <select
                   value={settings.timezone}
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="America/Toronto">{t('admin.settingsPage.timezoneToronto') || 'Toronto (EST)'}</option>
-                  <option value="America/Montreal">{t('admin.settingsPage.timezoneMontreal') || 'Montreal (EST)'}</option>
-                  <option value="America/Vancouver">{t('admin.settingsPage.timezoneVancouver') || 'Vancouver (PST)'}</option>
-                  <option value="America/Edmonton">{t('admin.settingsPage.timezoneEdmonton') || 'Edmonton (MST)'}</option>
+                  <option value="America/Toronto">{t('admin.settingsPage.timezoneToronto')}</option>
+                  <option value="America/Montreal">{t('admin.settingsPage.timezoneMontreal')}</option>
+                  <option value="America/Vancouver">{t('admin.settingsPage.timezoneVancouver')}</option>
+                  <option value="America/Edmonton">{t('admin.settingsPage.timezoneEdmonton')}</option>
                 </select>
               </FormField>
             </div>
@@ -430,7 +430,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.currency}
                   onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="CAD">{t('admin.settingsPage.cadOption')}</option>
                   <option value="USD">{t('admin.settingsPage.usdOption')}</option>
@@ -448,7 +448,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.weightUnit}
                   onChange={(e) => setSettings({ ...settings, weightUnit: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="g">{t('admin.settingsPage.gramsOption')}</option>
                   <option value="kg">{t('admin.settingsPage.kilogramsOption')}</option>
@@ -460,7 +460,7 @@ export default function ParametresPage() {
                 <select
                   value={settings.dimensionUnit}
                   onChange={(e) => setSettings({ ...settings, dimensionUnit: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="cm">{t('admin.settingsPage.centimetersOption')}</option>
                   <option value="in">{t('admin.settingsPage.inchesOption')}</option>
@@ -501,7 +501,7 @@ export default function ParametresPage() {
                     type="checkbox"
                     checked={settings.guestCheckout}
                     onChange={(e) => setSettings({ ...settings, guestCheckout: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-teal-500"
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-500"
                   />
                   <span className="text-slate-700">{t('admin.settingsPage.guestCheckout')}</span>
                 </label>
@@ -599,8 +599,8 @@ export default function ParametresPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <span className="text-teal-600 font-bold">S</span>
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <span className="text-indigo-600 font-bold">S</span>
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">Stripe</p>
@@ -612,15 +612,15 @@ export default function ParametresPage() {
 
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <span className="text-teal-800 font-bold">P</span>
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <span className="text-indigo-800 font-bold">P</span>
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">PayPal</p>
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.paypalPayments')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700 bg-teal-100 hover:bg-teal-200" onClick={() => {
+                <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 bg-indigo-100 hover:bg-indigo-200" onClick={() => {
                   // TODO: Create PayPal integration settings modal/page
                   toast.info('PayPal ' + t('admin.settingsPage.configure') + ' - Coming soon');
                 }}>
@@ -638,7 +638,7 @@ export default function ParametresPage() {
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.trafficStats')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-teal-600 hover:text-teal-700 bg-teal-100 hover:bg-teal-200" onClick={() => {
+                <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 bg-indigo-100 hover:bg-indigo-200" onClick={() => {
                   // TODO: Create Google Analytics integration settings modal/page
                   toast.info('Google Analytics ' + t('admin.settingsPage.configure') + ' - Coming soon');
                 }}>

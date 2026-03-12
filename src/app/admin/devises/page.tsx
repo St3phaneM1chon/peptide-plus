@@ -101,11 +101,11 @@ export default function DevisesPage() {
         body: JSON.stringify({ isActive: newActive }),
       });
       if (!res.ok) {
-        toast.error(t('admin.currencies.updateError') || 'Failed to update currency');
+        toast.error(t('admin.currencies.updateError'));
         setCurrencies(currencies.map((c) => (c.id === id ? { ...c, isActive: !newActive } : c)));
       }
     } catch {
-      toast.error(t('admin.currencies.updateError') || 'Failed to update currency');
+      toast.error(t('admin.currencies.updateError'));
       setCurrencies(currencies.map((c) => (c.id === id ? { ...c, isActive: !newActive } : c)));
     }
   };
@@ -127,18 +127,18 @@ export default function DevisesPage() {
         body: JSON.stringify({ isDefault: true }),
       });
       if (!res.ok) {
-        toast.error(t('admin.currencies.updateError') || 'Failed to set default');
+        toast.error(t('admin.currencies.updateError'));
         setCurrencies(prev);
       }
     } catch {
-      toast.error(t('admin.currencies.updateError') || 'Failed to set default');
+      toast.error(t('admin.currencies.updateError'));
       setCurrencies(prev);
     }
   };
 
   const handleAddCurrency = async () => {
     if (!form.code || !form.name || !form.symbol) {
-      toast.error(t('admin.currencies.fillRequired') || 'Please fill in all required fields');
+      toast.error(t('admin.currencies.fillRequired'));
       return;
     }
     setSaving(true);
@@ -154,7 +154,7 @@ export default function DevisesPage() {
         }),
       });
       if (res.ok) {
-        toast.success(t('admin.currencies.addSuccess') || 'Currency added');
+        toast.success(t('admin.currencies.addSuccess'));
         setShowAddCurrency(false);
         setForm(emptyCurrencyForm);
         await fetchCurrencies();
@@ -183,7 +183,7 @@ export default function DevisesPage() {
         }),
       });
       if (res.ok) {
-        toast.success(t('admin.currencies.updateSuccess') || 'Currency updated');
+        toast.success(t('admin.currencies.updateSuccess'));
         setEditingCurrency(null);
         setForm(emptyCurrencyForm);
         await fetchCurrencies();
@@ -240,14 +240,14 @@ export default function DevisesPage() {
   const handleRibbonSave = useCallback(() => {
     // Save current auto-update setting
     handleAutoUpdateToggle();
-    toast.success(t('admin.currencies.settingsSaved') || 'Currency settings saved');
+    toast.success(t('admin.currencies.settingsSaved'));
   }, [handleAutoUpdateToggle, t]);
 
   const handleRibbonResetDefaults = useCallback(() => {
     // Reload currencies from server
     setLoading(true);
     fetchCurrencies();
-    toast.success(t('admin.currencies.ratesReloaded') || 'Currency data reloaded from server');
+    toast.success(t('admin.currencies.ratesReloaded'));
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
@@ -261,7 +261,7 @@ export default function DevisesPage() {
         const text = await file.text();
         const imported = JSON.parse(text);
         if (!Array.isArray(imported.currencies)) {
-          toast.error(t('admin.currencies.importError') || 'Invalid format: expected { currencies: [...] }');
+          toast.error(t('admin.currencies.importError'));
           return;
         }
         let added = 0;
@@ -277,9 +277,9 @@ export default function DevisesPage() {
           } catch { /* skip */ }
         }
         await fetchCurrencies();
-        toast.success(`${added} ${t('admin.currencies.totalCurrencies') || 'currencies'} ${t('admin.currencies.addSuccess') || 'imported'}`);
+        toast.success(`${added} ${t('admin.currencies.totalCurrencies')} ${t('admin.currencies.addSuccess')}`);
       } catch {
-        toast.error(t('admin.currencies.importError') || 'Invalid JSON file');
+        toast.error(t('admin.currencies.importError'));
       }
     };
     input.click();
@@ -287,17 +287,17 @@ export default function DevisesPage() {
 
   const handleRibbonExportConfig = useCallback(() => {
     if (currencies.length === 0) {
-      toast.info(t('admin.currencies.totalCurrencies') || 'No currencies to export');
+      toast.info(t('admin.currencies.totalCurrencies'));
       return;
     }
     const headers = [
-      t('admin.currencies.currency') || 'Code',
+      t('admin.currencies.currency'),
       'Name',
-      t('admin.currencies.symbol') || 'Symbol',
-      t('admin.currencies.rateVsCAD') || 'Exchange Rate',
-      t('admin.currencies.defaultCol') || 'Default',
-      t('admin.currencies.activeCol') || 'Active',
-      t('admin.currencies.lastUpdate') || 'Last Updated',
+      t('admin.currencies.symbol'),
+      t('admin.currencies.rateVsCAD'),
+      t('admin.currencies.defaultCol'),
+      t('admin.currencies.activeCol'),
+      t('admin.currencies.lastUpdate'),
     ];
     const rows = currencies.map(c => [
       c.code, c.name, c.symbol, c.exchangeRate,
@@ -310,7 +310,7 @@ export default function DevisesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `currencies-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [currencies, t, locale]);
 
   const handleRibbonTest = useCallback(() => {
@@ -326,7 +326,7 @@ export default function DevisesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -343,7 +343,7 @@ export default function DevisesPage() {
               {refreshing ? (
                 <span className="flex items-center gap-2">
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  {t('admin.currencies.refreshing') || 'Refreshing...'}
+                  {t('admin.currencies.refreshing')}
                 </span>
               ) : (
                 t('admin.currencies.refreshRates')
@@ -378,7 +378,7 @@ export default function DevisesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <MiniStat icon={Coins} label={t('admin.currencies.totalCurrencies')} value={currencies.length} bg="bg-slate-100 text-slate-600" />
         <MiniStat icon={CheckCircle} label={t('admin.currencies.activeCurrencies')} value={currencies.filter((c) => c.isActive).length} bg="bg-emerald-100 text-emerald-600" />
-        <MiniStat icon={Star} label={t('admin.currencies.defaultCurrency')} value={currencies.find((c) => c.isDefault)?.code || 'CAD'} bg="bg-teal-100 text-teal-600" />
+        <MiniStat icon={Star} label={t('admin.currencies.defaultCurrency')} value={currencies.find((c) => c.isDefault)?.code || 'CAD'} bg="bg-indigo-100 text-indigo-600" />
       </div>
 
       {/* Table */}
@@ -441,7 +441,7 @@ export default function DevisesPage() {
                     checked={currency.isDefault}
                     onChange={() => setDefault(currency.id)}
                     aria-label={`Set ${currency.code} as default currency`}
-                    className="w-4 h-4 text-teal-500 focus:ring-teal-500"
+                    className="w-4 h-4 text-indigo-500 focus:ring-indigo-500"
                   />
                 </td>
                 <td className="px-4 py-4 text-center">
@@ -489,24 +489,24 @@ export default function DevisesPage() {
       <Modal isOpen={showAddCurrency} onClose={() => { setShowAddCurrency(false); setForm(emptyCurrencyForm); }} title={t('admin.currencies.addCurrencyTitle')}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel') || 'Code (ISO 4217)'}</label>
-            <input type="text" maxLength={3} value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="USD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel')}</label>
+            <input type="text" maxLength={3} value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="USD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel') || 'Name'}</label>
-            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="US Dollar" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel')}</label>
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="US Dollar" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel') || 'Symbol'}</label>
-            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} placeholder="$" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel')}</label>
+            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} placeholder="$" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
-            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel')}</label>
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => { setShowAddCurrency(false); setForm(emptyCurrencyForm); }}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleAddCurrency} loading={saving}>
               {t('admin.currencies.addCurrency')}
@@ -519,27 +519,27 @@ export default function DevisesPage() {
       <Modal isOpen={!!editingCurrency} onClose={() => { setEditingCurrency(null); setForm(emptyCurrencyForm); }} title={`${t('admin.currencies.edit')} ${editingCurrency?.code || ''}`}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel') || 'Code'}</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel')}</label>
             <input type="text" value={form.code} disabled aria-label="Currency code" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel') || 'Name'}</label>
-            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} aria-label="Currency name" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel')}</label>
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} aria-label="Currency name" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel') || 'Symbol'}</label>
-            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} aria-label="Currency symbol" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel')}</label>
+            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} aria-label="Currency symbol" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
-            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Edit exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel')}</label>
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Edit exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => { setEditingCurrency(null); setForm(emptyCurrencyForm); }}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleEditCurrency} loading={saving}>
-              {t('common.save') || 'Save'}
+              {t('common.save')}
             </Button>
           </div>
         </div>

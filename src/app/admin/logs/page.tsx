@@ -276,10 +276,10 @@ export default function LogsPage() {
   ], [t, stats]);
 
   const dateLabels = useMemo(() => ({
-    today: t('admin.logs.today') || 'Today',
-    yesterday: t('admin.logs.yesterday') || 'Yesterday',
-    thisWeek: t('admin.logs.thisWeek') || 'This Week',
-    older: t('admin.logs.older') || 'Older',
+    today: t('admin.logs.today'),
+    yesterday: t('admin.logs.yesterday'),
+    thisWeek: t('admin.logs.thisWeek'),
+    older: t('admin.logs.older'),
   }), [t]);
 
   const logGroups = useMemo(() => groupLogsByDate(filteredLogs, actionLabels, dateLabels), [filteredLogs, actionLabels, dateLabels]);
@@ -293,8 +293,8 @@ export default function LogsPage() {
     setAutoRefresh((prev) => !prev);
     toast.success(
       autoRefresh
-        ? (t('admin.logs.autoRefreshDisabled') || 'Auto-refresh disabled')
-        : (t('admin.logs.autoRefreshEnabled') || 'Auto-refresh enabled')
+        ? (t('admin.logs.autoRefreshDisabled'))
+        : (t('admin.logs.autoRefreshEnabled'))
     );
   }, [autoRefresh, t]);
 
@@ -308,7 +308,7 @@ export default function LogsPage() {
 
   const handleRibbonPurge = useCallback(async () => {
     if (logs.length === 0) {
-      toast.info(t('admin.logs.emptyTitle') || 'No logs to purge');
+      toast.info(t('admin.logs.emptyTitle'));
       return;
     }
     try {
@@ -329,13 +329,13 @@ export default function LogsPage() {
   const handleRibbonSettings = useCallback(() => {
     const errorRate = stats.total > 0 ? ((stats.errors / stats.total) * 100).toFixed(1) : '0';
     const warningRate = stats.total > 0 ? ((stats.warnings / stats.total) * 100).toFixed(1) : '0';
-    toast.success(t('admin.logs.statsTitle') || 'Log Statistics', {
+    toast.success(t('admin.logs.statsTitle'), {
       description: [
-        `${t('admin.logs.total24h') || 'Total'}: ${stats.total}`,
-        `${t('admin.logs.errors') || 'Errors'}: ${stats.errors} (${errorRate}%)`,
-        `${t('admin.logs.warnings') || 'Warnings'}: ${stats.warnings} (${warningRate}%)`,
-        `${t('admin.logs.info') || 'Info'}: ${stats.info}`,
-        `${t('admin.logs.autoRefresh') || 'Auto-refresh'}: ${autoRefresh ? 'ON' : 'OFF'}`,
+        `${t('admin.logs.total24h')}: ${stats.total}`,
+        `${t('admin.logs.errors')}: ${stats.errors} (${errorRate}%)`,
+        `${t('admin.logs.warnings')}: ${stats.warnings} (${warningRate}%)`,
+        `${t('admin.logs.info')}: ${stats.info}`,
+        `${t('admin.logs.autoRefresh')}: ${autoRefresh ? 'ON' : 'OFF'}`,
       ].join('\n'),
       duration: 8000,
     });
@@ -352,7 +352,7 @@ export default function LogsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
       </div>
     );
   }
@@ -372,7 +372,7 @@ export default function LogsPage() {
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-teal-500 focus:ring-teal-500"
+                className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500"
               />
               {t('admin.logs.autoRefresh')}
             </label>
@@ -384,7 +384,7 @@ export default function LogsPage() {
             </Button>
             {lastUpdated && (
               <span className="text-xs text-slate-400 whitespace-nowrap">
-                {t('admin.logs.lastUpdated') || 'Last updated'}: {lastUpdated.toLocaleTimeString(locale)}
+                {t('admin.logs.lastUpdated')}: {lastUpdated.toLocaleTimeString(locale)}
               </span>
             )}
           </div>
@@ -436,7 +436,7 @@ export default function LogsPage() {
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       selectedLog.level === 'ERROR' ? 'bg-red-100 text-red-800' :
                       selectedLog.level === 'WARNING' ? 'bg-amber-100 text-amber-800' :
-                      selectedLog.level === 'INFO' ? 'bg-teal-100 text-teal-800' :
+                      selectedLog.level === 'INFO' ? 'bg-indigo-100 text-indigo-800' :
                       'bg-slate-100 text-slate-700'
                     }`}>
                       {selectedLog.level}
@@ -448,7 +448,7 @@ export default function LogsPage() {
 
                   {/* Metadata */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.colDetails') || 'Metadata'}</h3>
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.colDetails')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.logs.colUser')}</p>
@@ -487,7 +487,7 @@ export default function LogsPage() {
 
                   {/* Full raw log */}
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.view') || 'Raw Log'}</h3>
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.view')}</h3>
                     <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto">
                       {JSON.stringify(selectedLog, null, 2)}
                     </pre>

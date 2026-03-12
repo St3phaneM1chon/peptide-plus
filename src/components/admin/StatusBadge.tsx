@@ -15,18 +15,18 @@ const variants: Record<BadgeVariant, string> = {
   success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   warning: 'bg-amber-50 text-amber-700 border-amber-200',
   error: 'bg-red-50 text-red-700 border-red-200',
-  info: 'bg-teal-50 text-teal-700 border-teal-200',
+  info: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   neutral: 'bg-slate-50 text-slate-600 border-slate-200',
-  primary: 'bg-teal-50 text-teal-700 border-teal-200',
+  primary: 'bg-indigo-50 text-indigo-700 border-indigo-200',
 };
 
 const dotColors: Record<BadgeVariant, string> = {
   success: 'bg-emerald-500',
   warning: 'bg-amber-500',
   error: 'bg-red-500',
-  info: 'bg-teal-500',
+  info: 'bg-indigo-500',
   neutral: 'bg-slate-400',
-  primary: 'bg-teal-500',
+  primary: 'bg-indigo-500',
 };
 
 export function StatusBadge({ children, variant = 'neutral', dot = false, className = '' }: StatusBadgeProps) {

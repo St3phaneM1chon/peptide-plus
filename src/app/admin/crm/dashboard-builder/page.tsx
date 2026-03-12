@@ -142,10 +142,10 @@ export default function DashboardBuilderPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.crm.dashboardBuilder') || 'Dashboard Builder'}
+            {t('admin.crm.dashboardBuilder')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.dashboardBuilderDesc') || 'Create custom dashboards with drag-and-drop widgets'}
+            {t('admin.crm.dashboardBuilderDesc')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ export default function DashboardBuilderPage() {
             placeholder="Dashboard name"
           />
           <button onClick={saveDashboard} disabled={saving}
-            className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50">
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50">
             <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -254,7 +254,7 @@ export default function DashboardBuilderPage() {
                 <div
                   key={w.id}
                   className={`bg-white rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md
-                    ${editingWidget === w.id ? 'ring-2 ring-teal-500' : ''}
+                    ${editingWidget === w.id ? 'ring-2 ring-indigo-500' : ''}
                     ${draggedWidget === w.id ? 'opacity-50' : ''}`}
                   style={{ gridColumn: `span ${Math.min(w.position.w, 12)}`, gridRow: `span ${w.position.h}` }}
                   onClick={() => setEditingWidget(w.id === editingWidget ? null : w.id)}

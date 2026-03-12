@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Webinaires | Formations Pro',
-  description: 'Webinaires live et replays sur la formation professionnelle.',
+  title: 'Webinaires',
+  description: 'Webinaires en direct et rediffusions sur la recherche peptidique, les protocoles et les meilleures pratiques par BioCycle Peptides.',
+  openGraph: {
+    title: 'Webinaires | BioCycle Peptides',
+    description: 'Webinaires sur la recherche peptidique et les meilleures pratiques.',
+    url: 'https://biocyclepeptides.com/ressources/webinaires',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const upcomingWebinars = [

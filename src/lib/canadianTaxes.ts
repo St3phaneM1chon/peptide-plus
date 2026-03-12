@@ -618,7 +618,15 @@ export function calculateTaxes(subtotal: number, regionCode: string, country: st
   const isExport = country !== 'CA';
   
   if (country === 'CA') {
-    province = CANADIAN_PROVINCES[regionCode.toUpperCase()] || CANADIAN_PROVINCES.QC;
+    province = CANADIAN_PROVINCES[regionCode.toUpperCase()];
+    // A8-P2-001 FIX: Unknown provinces get GST-only (5%) instead of QC rates
+    if (!province) {
+      console.warn(`[canadianTaxes] Unknown Canadian province code "${regionCode}" — using GST-only fallback`);
+      province = {
+        code: regionCode.toUpperCase(), name: regionCode, nameFr: regionCode,
+        country: 'CA', taxType: 'GST_ONLY', gst: 0.05, totalRate: 0.05,
+      };
+    }
   } else {
     // Try to find the region in all international regions
     province = ALL_REGIONS[regionCode.toUpperCase()] || 

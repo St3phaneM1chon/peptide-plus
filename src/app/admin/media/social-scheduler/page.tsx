@@ -9,6 +9,8 @@ import {
 import { useI18n } from '@/i18n/client';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { toast } from 'sonner';
+// Bridge #41: Media → Marketing
+import { MediaMarketingBridgeCard } from '@/components/admin/bridges';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,10 +43,10 @@ const platformConfig: Record<Platform, {
   maxChars: number;
 }> = {
   instagram: { icon: Instagram, color: 'text-pink-600 bg-pink-100', label: 'Instagram', maxChars: 2200 },
-  facebook: { icon: Facebook, color: 'text-teal-600 bg-teal-100', label: 'Facebook', maxChars: 63206 },
-  twitter: { icon: Twitter, color: 'text-teal-500 bg-teal-100', label: 'X / Twitter', maxChars: 280 },
+  facebook: { icon: Facebook, color: 'text-indigo-600 bg-indigo-100', label: 'Facebook', maxChars: 63206 },
+  twitter: { icon: Twitter, color: 'text-indigo-500 bg-indigo-100', label: 'X / Twitter', maxChars: 280 },
   tiktok: { icon: Send, color: 'text-slate-800 bg-slate-100', label: 'TikTok', maxChars: 2200 },
-  linkedin: { icon: Send, color: 'text-teal-700 bg-teal-100', label: 'LinkedIn', maxChars: 3000 },
+  linkedin: { icon: Send, color: 'text-indigo-700 bg-indigo-100', label: 'LinkedIn', maxChars: 3000 },
 };
 
 const PLATFORMS = Object.keys(platformConfig) as Platform[];
@@ -54,7 +56,7 @@ const PLATFORMS = Object.keys(platformConfig) as Platform[];
 // ---------------------------------------------------------------------------
 
 export default function SocialSchedulerPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   // Data state
   const [posts, setPosts] = useState<SocialPost[]>([]);
@@ -105,7 +107,7 @@ export default function SocialSchedulerPage() {
       setTotalPages(data.pagination?.pages || 1);
     } catch (err) {
       console.error('Failed to load social posts:', err);
-      toast.error(t('admin.media.socialScheduler.loadFailed') || 'Failed to load posts');
+      toast.error(t('admin.media.socialScheduler.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ export default function SocialSchedulerPage() {
 
   const createPost = async () => {
     if (!newPost.content || !newPost.scheduledAt) {
-      toast.error(t('admin.media.socialScheduler.contentDateRequired') || 'Content and date required');
+      toast.error(t('admin.media.socialScheduler.contentDateRequired'));
       return;
     }
     setCreating(true);
@@ -164,7 +166,7 @@ export default function SocialSchedulerPage() {
         const err = await res.json();
         throw new Error(err.error || 'Failed to create post');
       }
-      toast.success(t('admin.media.socialScheduler.postScheduled') || 'Post scheduled!');
+      toast.success(t('admin.media.socialScheduler.postScheduled'));
       setNewPost({ platform: 'instagram', content: '', imageUrl: '', scheduledAt: '', status: 'scheduled' });
       setShowComposer(false);
       loadPosts();
@@ -180,7 +182,7 @@ export default function SocialSchedulerPage() {
     try {
       const res = await fetchWithCSRF(`/api/admin/social-posts/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
-      toast.success(t('admin.media.socialScheduler.postDeleted') || 'Post deleted');
+      toast.success(t('admin.media.socialScheduler.postDeleted'));
       loadPosts();
       loadStats();
     } catch {
@@ -195,7 +197,7 @@ export default function SocialSchedulerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t('admin.media.socialScheduler.postPublished') || 'Post published!');
+        toast.success(t('admin.media.socialScheduler.postPublished'));
       } else {
         toast.error(data.error || t('admin.media.socialScheduler.publishFailed'));
       }
@@ -213,7 +215,7 @@ export default function SocialSchedulerPage() {
       '💎 Livraison gratuite sur les commandes de 150$+! Profitez de nos peptides certifiés avec analyse HPLC. biocyclepeptides.com #research #peptides',
     ];
     setNewPost(prev => ({ ...prev, content: captions[Math.floor(Math.random() * captions.length)] }));
-    toast.success(t('admin.media.socialScheduler.aiCaptionGenerated') || 'AI caption generated');
+    toast.success(t('admin.media.socialScheduler.aiCaptionGenerated'));
   };
 
   // -----------------------------------------------------------------------
@@ -226,7 +228,7 @@ export default function SocialSchedulerPage() {
   const statusBadge = (s: string) => {
     switch (s) {
       case 'published': return 'bg-green-100 text-green-700';
-      case 'scheduled': return 'bg-teal-100 text-teal-700';
+      case 'scheduled': return 'bg-indigo-100 text-indigo-700';
       case 'publishing': return 'bg-amber-100 text-amber-700';
       case 'failed': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-600';
@@ -235,11 +237,11 @@ export default function SocialSchedulerPage() {
 
   const statusLabel = (s: string) => {
     switch (s) {
-      case 'published': return t('admin.media.socialScheduler.statusPublished') || 'Published';
-      case 'scheduled': return t('admin.media.socialScheduler.statusScheduled') || 'Scheduled';
-      case 'publishing': return t('admin.media.socialScheduler.statusPublishing') || 'Publishing...';
-      case 'failed': return t('admin.media.socialScheduler.statusFailed') || 'Failed';
-      default: return t('admin.media.socialScheduler.statusDraft') || 'Draft';
+      case 'published': return t('admin.media.socialScheduler.statusPublished');
+      case 'scheduled': return t('admin.media.socialScheduler.statusScheduled');
+      case 'publishing': return t('admin.media.socialScheduler.statusPublishing');
+      case 'failed': return t('admin.media.socialScheduler.statusFailed');
+      default: return t('admin.media.socialScheduler.statusDraft');
     }
   };
 
@@ -271,7 +273,7 @@ export default function SocialSchedulerPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -283,9 +285,9 @@ export default function SocialSchedulerPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Calendar className="w-6 h-6 text-purple-600" />
-            {t('admin.media.socialScheduler.title') || 'Social Scheduler'}
+            {t('admin.media.socialScheduler.title')}
           </h1>
-          <p className="text-slate-500">{t('admin.media.socialScheduler.subtitle') || 'Schedule your social media posts'}</p>
+          <p className="text-slate-500">{t('admin.media.socialScheduler.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -294,8 +296,8 @@ export default function SocialSchedulerPage() {
           >
             {viewMode === 'list' ? <Calendar className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {viewMode === 'list'
-              ? (t('admin.media.socialScheduler.calendarView') || 'Calendar')
-              : (t('admin.media.socialScheduler.listView') || 'List')}
+              ? (t('admin.media.socialScheduler.calendarView'))
+              : (t('admin.media.socialScheduler.listView'))}
           </button>
           <button
             onClick={() => { loadPosts(); loadStats(); }}
@@ -306,9 +308,9 @@ export default function SocialSchedulerPage() {
           </button>
           <button
             onClick={() => setShowComposer(!showComposer)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
-            <Plus className="w-4 h-4" /> {t('admin.media.socialScheduler.newPost') || 'New Post'}
+            <Plus className="w-4 h-4" /> {t('admin.media.socialScheduler.newPost')}
           </button>
         </div>
       </div>
@@ -316,10 +318,10 @@ export default function SocialSchedulerPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: t('admin.media.socialScheduler.statsScheduled') || 'Scheduled', count: stats.scheduled, color: 'text-teal-600' },
-          { label: t('admin.media.socialScheduler.statsDraft') || 'Drafts', count: stats.draft, color: 'text-slate-600' },
-          { label: t('admin.media.socialScheduler.statsPublished') || 'Published', count: stats.published, color: 'text-green-600' },
-          { label: t('admin.media.socialScheduler.statsFailed') || 'Failed', count: stats.failed, color: 'text-red-600' },
+          { label: t('admin.media.socialScheduler.statsScheduled'), count: stats.scheduled, color: 'text-indigo-600' },
+          { label: t('admin.media.socialScheduler.statsDraft'), count: stats.draft, color: 'text-slate-600' },
+          { label: t('admin.media.socialScheduler.statsPublished'), count: stats.published, color: 'text-green-600' },
+          { label: t('admin.media.socialScheduler.statsFailed'), count: stats.failed, color: 'text-red-600' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 text-center">
             <div className={`text-2xl font-bold ${s.color}`}>{s.count}</div>
@@ -328,14 +330,17 @@ export default function SocialSchedulerPage() {
         ))}
       </div>
 
+      {/* Bridge #41: Media → Marketing (Social posts + campaigns correlation) */}
+      <MediaMarketingBridgeCard t={t} locale={locale} />
+
       {/* Filters */}
       <div className="flex items-center gap-3">
         <select
           value={filterPlatform}
           onChange={e => { setFilterPlatform(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
         >
-          <option value="">{t('admin.media.socialScheduler.allPlatforms') || 'All Platforms'}</option>
+          <option value="">{t('admin.media.socialScheduler.allPlatforms')}</option>
           {PLATFORMS.map(p => (
             <option key={p} value={p}>{platformConfig[p].label}</option>
           ))}
@@ -343,20 +348,20 @@ export default function SocialSchedulerPage() {
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
         >
-          <option value="">{t('admin.media.socialScheduler.allStatuses') || 'All Statuses'}</option>
-          <option value="draft">{t('admin.media.socialScheduler.statusDraft') || 'Draft'}</option>
-          <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled') || 'Scheduled'}</option>
-          <option value="published">{t('admin.media.socialScheduler.statusPublished') || 'Published'}</option>
-          <option value="failed">{t('admin.media.socialScheduler.statusFailed') || 'Failed'}</option>
+          <option value="">{t('admin.media.socialScheduler.allStatuses')}</option>
+          <option value="draft">{t('admin.media.socialScheduler.statusDraft')}</option>
+          <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled')}</option>
+          <option value="published">{t('admin.media.socialScheduler.statusPublished')}</option>
+          <option value="failed">{t('admin.media.socialScheduler.statusFailed')}</option>
         </select>
       </div>
 
       {/* Composer */}
       {showComposer && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">{t('admin.media.socialScheduler.composer') || 'New Post'}</h3>
+          <h3 className="font-semibold text-slate-800 mb-4">{t('admin.media.socialScheduler.composer')}</h3>
           <div className="space-y-4">
             {/* Platform selector */}
             <div className="flex gap-2 flex-wrap">
@@ -368,7 +373,7 @@ export default function SocialSchedulerPage() {
                     key={key}
                     onClick={() => setNewPost(prev => ({ ...prev, platform: key }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                      newPost.platform === key ? 'border-teal-400 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      newPost.platform === key ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -383,10 +388,10 @@ export default function SocialSchedulerPage() {
               <textarea
                 value={newPost.content}
                 onChange={e => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-                placeholder={t('admin.media.socialScheduler.writePlaceholder') || 'Write your post...'}
+                placeholder={t('admin.media.socialScheduler.writePlaceholder')}
                 rows={4}
                 maxLength={platformConfig[newPost.platform].maxChars}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 text-sm resize-none"
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-sm resize-none"
               />
               <div className="absolute bottom-2 end-2 text-xs text-slate-400">
                 {newPost.content.length}/{platformConfig[newPost.platform].maxChars}
@@ -400,8 +405,8 @@ export default function SocialSchedulerPage() {
                 type="url"
                 value={newPost.imageUrl}
                 onChange={e => setNewPost(prev => ({ ...prev, imageUrl: e.target.value }))}
-                placeholder={t('admin.media.socialScheduler.imageUrlPlaceholder') || 'Image URL (optional)'}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
+                placeholder={t('admin.media.socialScheduler.imageUrlPlaceholder')}
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               />
             </div>
 
@@ -411,30 +416,30 @@ export default function SocialSchedulerPage() {
                 type="datetime-local"
                 value={newPost.scheduledAt}
                 onChange={e => setNewPost(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               />
               <select
                 value={newPost.status}
                 onChange={e => setNewPost(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-400"
+                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               >
-                <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled') || 'Scheduled'}</option>
-                <option value="draft">{t('admin.media.socialScheduler.statusDraft') || 'Draft'}</option>
+                <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled')}</option>
+                <option value="draft">{t('admin.media.socialScheduler.statusDraft')}</option>
               </select>
               <button onClick={generateCaption} className="flex items-center gap-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 text-sm font-medium">
-                <Sparkles className="w-4 h-4" /> {t('admin.media.socialScheduler.aiCaption') || 'AI Caption'}
+                <Sparkles className="w-4 h-4" /> {t('admin.media.socialScheduler.aiCaption')}
               </button>
               <div className="flex-1" />
               <button onClick={() => setShowComposer(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm">
-                {t('admin.media.socialScheduler.cancel') || 'Cancel'}
+                {t('admin.media.socialScheduler.cancel')}
               </button>
               <button
                 onClick={createPost}
                 disabled={creating}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
-                {t('admin.media.socialScheduler.schedule') || 'Schedule'}
+                {t('admin.media.socialScheduler.schedule')}
               </button>
             </div>
           </div>
@@ -489,7 +494,7 @@ export default function SocialSchedulerPage() {
           {posts.length === 0 ? (
             <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
               <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm text-slate-500">{t('admin.media.socialScheduler.noPosts') || 'No posts yet. Create your first post!'}</p>
+              <p className="text-sm text-slate-500">{t('admin.media.socialScheduler.noPosts')}</p>
             </div>
           ) : (
             posts.map(post => {
@@ -509,7 +514,7 @@ export default function SocialSchedulerPage() {
                     </div>
                     <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3">{post.content}</p>
                     {post.imageUrl && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-teal-600">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-indigo-600">
                         <ImageIcon className="w-3 h-3" />
                         <span className="truncate max-w-[200px]">{post.imageUrl}</span>
                       </div>
@@ -520,9 +525,9 @@ export default function SocialSchedulerPage() {
                         {formatDate(post.scheduledAt)}
                       </div>
                       {post.externalUrl && (
-                        <a href={post.externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-teal-600 hover:underline">
+                        <a href={post.externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-600 hover:underline">
                           <ExternalLink className="w-3 h-3" />
-                          {t('admin.media.socialScheduler.viewExternal') || 'View post'}
+                          {t('admin.media.socialScheduler.viewExternal')}
                         </a>
                       )}
                     </div>
@@ -535,11 +540,11 @@ export default function SocialSchedulerPage() {
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {['draft', 'scheduled', 'failed'].includes(post.status) && (
-                      <button onClick={() => publishNow(post.id)} className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg" title={t('admin.media.socialScheduler.publishNow') || 'Publish now'}>
+                      <button onClick={() => publishNow(post.id)} className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg" title={t('admin.media.socialScheduler.publishNow')}>
                         <Send className="w-4 h-4" />
                       </button>
                     )}
-                    <button onClick={() => deletePost(post.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title={t('admin.media.socialScheduler.deletePost') || 'Delete'}>
+                    <button onClick={() => deletePost(post.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title={t('admin.media.socialScheduler.deletePost')}>
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

@@ -223,19 +223,19 @@ export default function UatPage() {
 
   const handleRibbonExport = useCallback(() => {
     if (runs.length === 0) {
-      toast.info(t('admin.uat.noRuns') || 'No test runs to export');
+      toast.info(t('admin.uat.noRuns'));
       return;
     }
     const headers = [
       '#',
-      t('admin.uat.dateCol') || 'Date',
-      t('admin.uat.statusCol') || 'Status',
-      t('admin.uat.scopeCol') || 'Scope',
-      t('admin.uat.scenariosCol') || 'Scenarios',
-      t('admin.uat.passedCol') || 'Passed',
-      t('admin.uat.failedCol') || 'Failed',
+      t('admin.uat.dateCol'),
+      t('admin.uat.statusCol'),
+      t('admin.uat.scopeCol'),
+      t('admin.uat.scenariosCol'),
+      t('admin.uat.passedCol'),
+      t('admin.uat.failedCol'),
       'Skipped',
-      t('admin.uat.durationCol') || 'Duration (s)',
+      t('admin.uat.durationCol'),
       'Cleaned Up',
     ];
     const rows = runs.map(r => [
@@ -253,14 +253,14 @@ export default function UatPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `uat-runs-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [runs, t, locale]);
 
   const handleRibbonPurge = useCallback(() => {
     // Clean up all completed, non-running runs
     const completedRuns = runs.filter(r => r.status !== 'RUNNING' && !r.cleanedUp);
     if (completedRuns.length === 0) {
-      toast.info(t('admin.uat.cleanedUp') || 'No runs to clean up');
+      toast.info(t('admin.uat.cleanedUp'));
       return;
     }
     (async () => {
@@ -272,7 +272,7 @@ export default function UatPage() {
         } catch { /* skip */ }
       }
       fetchRuns();
-      toast.success(`${cleaned}/${completedRuns.length} ${t('admin.uat.cleanupDone') || 'runs cleaned up'}`);
+      toast.success(`${cleaned}/${completedRuns.length} ${t('admin.uat.cleanupDone')}`);
     })();
   }, [runs, fetchRuns, t]);
 
@@ -288,9 +288,9 @@ export default function UatPage() {
       ? (runs.filter(r => r.durationMs).reduce((s, r) => s + (r.durationMs || 0), 0) / runs.filter(r => r.durationMs).length / 1000).toFixed(1)
       : '0';
     toast.success(
-      `${t('admin.uat.runHistory') || 'Runs'}: ${total} (${completed} ${t('admin.uat.passedCol') || 'passed'}, ${failed} ${t('admin.uat.failedCol') || 'failed'}) | ` +
-      `${t('admin.uat.passedLabel') || 'Avg passed'}: ${avgPass} | ` +
-      `${t('admin.uat.durationCol') || 'Avg duration'}: ${avgDuration}s`,
+      `${t('admin.uat.runHistory')}: ${total} (${completed} ${t('admin.uat.passedCol')}, ${failed} ${t('admin.uat.failedCol')}) | ` +
+      `${t('admin.uat.passedLabel')}: ${avgPass} | ` +
+      `${t('admin.uat.durationCol')}: ${avgDuration}s`,
       { duration: 8000 }
     );
   }, [runs, t]);
@@ -482,10 +482,10 @@ export default function UatPage() {
       {/* ─── CLEANUP CONFIRM DIALOG ────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmCleanupId}
-        title={t('admin.uat.cleanupTitle') || 'Clean Up Test Data'}
-        message={t('admin.uat.cleanupConfirm') || 'Are you sure you want to clean up all test data for this run? This will delete test orders, payments, and related records.'}
+        title={t('admin.uat.cleanupTitle')}
+        message={t('admin.uat.cleanupConfirm')}
         variant="warning"
-        confirmLabel={t('admin.uat.cleanData') || 'Clean Up'}
+        confirmLabel={t('admin.uat.cleanData')}
         onConfirm={() => confirmCleanupId && handleCleanup(confirmCleanupId)}
         onCancel={() => setConfirmCleanupId(null)}
       />
@@ -499,7 +499,7 @@ export default function UatPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; icon: React.ReactNode }> = {
-    RUNNING: { color: 'bg-teal-100 text-teal-700', icon: <Loader2 className="w-3 h-3 animate-spin" /> },
+    RUNNING: { color: 'bg-indigo-100 text-indigo-700', icon: <Loader2 className="w-3 h-3 animate-spin" /> },
     COMPLETED: { color: 'bg-green-100 text-green-700', icon: <CheckCircle2 className="w-3 h-3" /> },
     FAILED: { color: 'bg-red-100 text-red-700', icon: <XCircle className="w-3 h-3" /> },
     CANCELLED: { color: 'bg-slate-100 text-slate-600', icon: <Clock className="w-3 h-3" /> },
@@ -853,13 +853,13 @@ function ErrorCard({
   const severityColor = {
     ERROR: 'border-red-200 bg-red-50',
     WARNING: 'border-amber-200 bg-amber-50',
-    INFO: 'border-teal-200 bg-teal-50',
+    INFO: 'border-indigo-200 bg-indigo-50',
   }[error.severity] || 'border-slate-200 bg-slate-50';
 
   const severityIcon = {
     ERROR: <XCircle className="w-3.5 h-3.5 text-red-500" />,
     WARNING: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />,
-    INFO: <Info className="w-3.5 h-3.5 text-teal-500" />,
+    INFO: <Info className="w-3.5 h-3.5 text-indigo-500" />,
   }[error.severity];
 
   return (

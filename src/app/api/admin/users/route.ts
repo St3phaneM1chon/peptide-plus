@@ -132,4 +132,4 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
     // SEC-33: Return 500 status on error instead of 200
     return NextResponse.json({ error: 'Internal server error', users: [] }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.view' });

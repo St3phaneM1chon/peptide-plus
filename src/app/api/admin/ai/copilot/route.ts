@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 import {
@@ -24,17 +25,35 @@ import {
   getChurnAlerts,
   nliSearch,
   type CopilotAction,
-  type CopilotRequest,
 } from '@/lib/ai/copilot-service';
+
+const copilotSchema = z.object({
+  action: z.enum([
+    'summarize_customer', 'dashboard_insights', 'draft_email',
+    'next_best_action', 'seo_suggestions', 'summarize_notes',
+    'morning_briefing', 'generate_report', 'generate_variants',
+    'extract_invoice', 'predict_stock', 'churn_alerts',
+    'nli_search', 'explain_anomaly', 'chat',
+  ]),
+  context: z.object({
+    entityId: z.string().max(200).optional(),
+    entityType: z.string().max(100).optional(),
+  }).passthrough().optional(),
+  message: z.string().max(10000).optional(),
+  locale: z.string().max(10).default('en'),
+});
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json() as CopilotRequest;
-    const { action, context, message, locale = 'en' } = body;
-
-    if (!action) {
-      return NextResponse.json({ error: 'Missing action' }, { status: 400 });
+    const body = await request.json();
+    const parsed = copilotSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { action, context, message, locale } = parsed.data;
 
     let result;
 

@@ -9,6 +9,7 @@
  * - Compliance check: verify all required event types are being logged
  */
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -172,37 +173,29 @@ export class AuditLogger {
     const limit = filters.limit ?? 50;
     const offset = filters.offset ?? 0;
 
-    // Build WHERE conditions dynamically
-    const conditions: string[] = ['1=1'];
-    const params: unknown[] = [];
-    let paramIndex = 1;
+    // FIX A4-P1-001: Replaced $queryRawUnsafe with Prisma.sql tagged templates
+    // to eliminate SQL injection risk. All values are safely parameterized.
+    let whereClause = Prisma.sql`1=1`;
 
     if (filters.userId) {
-      conditions.push(`"userId" = $${paramIndex++}`);
-      params.push(filters.userId);
+      whereClause = Prisma.sql`${whereClause} AND "userId" = ${filters.userId}`;
     }
     if (filters.action) {
-      conditions.push(`"action" = $${paramIndex++}`);
-      params.push(filters.action);
+      whereClause = Prisma.sql`${whereClause} AND "action" = ${filters.action}`;
     }
     if (filters.resource) {
-      conditions.push(`"resource" = $${paramIndex++}`);
-      params.push(filters.resource);
+      whereClause = Prisma.sql`${whereClause} AND "resource" = ${filters.resource}`;
     }
     if (filters.startDate) {
-      conditions.push(`"timestamp" >= $${paramIndex++}`);
-      params.push(filters.startDate.toISOString());
+      whereClause = Prisma.sql`${whereClause} AND "timestamp" >= ${filters.startDate}`;
     }
     if (filters.endDate) {
-      conditions.push(`"timestamp" <= $${paramIndex++}`);
-      params.push(filters.endDate.toISOString());
+      whereClause = Prisma.sql`${whereClause} AND "timestamp" <= ${filters.endDate}`;
     }
-
-    const whereClause = conditions.join(' AND ');
 
     try {
       const [rows, countResult] = await Promise.all([
-        prisma.$queryRawUnsafe<Array<{
+        prisma.$queryRaw<Array<{
           id: string;
           timestamp: Date;
           userId: string;
@@ -215,13 +208,11 @@ export class AuditLogger {
           userAgent: string | null;
           result: string;
         }>>(
-          `SELECT * FROM "VoipAuditLog" WHERE ${whereClause}
-           ORDER BY "timestamp" DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-          ...params, Number(limit), Number(offset)
+          Prisma.sql`SELECT * FROM "VoipAuditLog" WHERE ${whereClause}
+           ORDER BY "timestamp" DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
         ),
-        prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-          `SELECT COUNT(*) as count FROM "VoipAuditLog" WHERE ${whereClause}`,
-          ...params
+        prisma.$queryRaw<Array<{ count: bigint }>>(
+          Prisma.sql`SELECT COUNT(*) as count FROM "VoipAuditLog" WHERE ${whereClause}`
         ),
       ]);
 

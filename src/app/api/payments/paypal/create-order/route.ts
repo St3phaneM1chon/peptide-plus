@@ -373,7 +373,25 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       logger.error('PayPal order creation error', { order });
+      // Release reservations if PayPal order creation failed
+      if (reservationIds.length > 0) {
+        await prisma.inventoryReservation.updateMany({
+          where: { id: { in: reservationIds } },
+          data: { status: 'RELEASED', releasedAt: new Date() },
+        });
+      }
       return NextResponse.json({ error: 'Erreur lors de la création de la commande PayPal' }, { status: 500 });
+    }
+
+    // A8-P2-003 FIX: Link reservations to the PayPal order ID so the webhook
+    // can find and consume them. Without this, consumeReservation(orderId) in
+    // the webhook finds zero reservations because they have no cartId or orderId
+    // set, and stock is never decremented.
+    if (reservationIds.length > 0 && order.id) {
+      await prisma.inventoryReservation.updateMany({
+        where: { id: { in: reservationIds } },
+        data: { cartId: `paypal:${order.id}` },
+      });
     }
 
     return NextResponse.json({

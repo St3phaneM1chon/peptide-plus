@@ -154,7 +154,6 @@ export async function GET(request: NextRequest) {
 
   // Check 6: Email provider configuration
   const emailProvider = process.env.EMAIL_PROVIDER;
-  const smtpFrom = process.env.SMTP_FROM;
   const hasResendKey = !!process.env.RESEND_API_KEY;
   const hasSendGridKey = !!process.env.SENDGRID_API_KEY;
   const hasSmtpHost = !!process.env.SMTP_HOST;

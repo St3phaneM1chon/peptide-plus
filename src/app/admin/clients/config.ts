@@ -107,7 +107,7 @@ export const clientConfig: ContactListPageConfig = {
                 toast.error(data.error || 'Failed to send email');
                 return;
               }
-              toast.success(t('admin.clients.emailSent') || 'Email sent successfully');
+              toast.success(t('admin.clients.emailSent'));
             } catch {
               toast.error('Failed to send email');
             }
@@ -125,7 +125,7 @@ export const clientConfig: ContactListPageConfig = {
                 toast.error(data.error || 'Failed to reset password');
                 return;
               }
-              toast.success(t('admin.clients.passwordResetSent') || 'Password reset email sent');
+              toast.success(t('admin.clients.passwordResetSent'));
             } catch {
               toast.error('Failed to send password reset email');
             }
@@ -148,7 +148,7 @@ export const clientConfig: ContactListPageConfig = {
                 toast.error(data.error || 'Failed to suspend user');
                 return;
               }
-              toast.success(t('admin.clients.userSuspended') || 'User suspended');
+              toast.success(t('admin.clients.userSuspended'));
             } catch {
               toast.error('Failed to suspend user');
             }

@@ -405,27 +405,27 @@ export default function DepensesPage() {
   // -- Ribbon actions --
   const handleNewExpense = useCallback(() => { openCreateForm(); }, []);
   const handleDeleteAction = useCallback(() => {
-    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
-    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotDeleteNonDraft') || 'Seules les depenses en brouillon peuvent etre supprimees'); return; }
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst')); return; }
+    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotDeleteNonDraft')); return; }
     setConfirmDeleteExpenseId(selectedExpense.id);
   }, [selectedExpense, t]);
   const handleCategorize = useCallback(() => {
-    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
-    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotEditNonDraft') || 'Seules les depenses en brouillon peuvent etre modifiees'); return; }
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst')); return; }
+    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotEditNonDraft')); return; }
     openEditForm(selectedExpense);
   }, [selectedExpense, t]);
   const handleApprove = useCallback(() => {
-    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst')); return; }
     if (selectedExpense.status === 'SUBMITTED') {
       handleStatusChange(selectedExpense.id, 'APPROVED');
     } else if (selectedExpense.status === 'DRAFT') {
       handleStatusChange(selectedExpense.id, 'SUBMITTED');
     } else {
-      toast.info(t('admin.expenses.cannotApprove') || 'Cette depense ne peut pas etre approuvee dans son etat actuel');
+      toast.info(t('admin.expenses.cannotApprove'));
     }
   }, [selectedExpense, t]);
   const handleExport = useCallback(() => {
-    if (expenses.length === 0) { toast.info(t('admin.expenses.noDataToExport') || 'Aucune depense a exporter'); return; }
+    if (expenses.length === 0) { toast.info(t('admin.expenses.noDataToExport')); return; }
     const headers = ['Numero', 'Date', 'Description', 'Categorie', 'Fournisseur', 'Sous-total', 'TPS', 'TVQ', 'Total', 'Deductible %', 'Statut', 'Paiement'];
     const rows = expenses.map(exp => [
       exp.expenseNumber,
@@ -451,7 +451,7 @@ export default function DepensesPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(t('admin.expenses.exportSuccess') || 'Export CSV telecharge');
+    toast.success(t('admin.expenses.exportSuccess'));
   }, [expenses, locale, getCategoryLabel, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
 
@@ -504,7 +504,7 @@ export default function DepensesPage() {
       render: (exp) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedExpense(exp); setShowDetailModal(true); }}
-          className="font-mono text-sm text-teal-600 hover:underline"
+          className="font-mono text-sm text-indigo-600 hover:underline"
         >
           {exp.expenseNumber}
         </button>
@@ -580,7 +580,7 @@ export default function DepensesPage() {
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); openEditForm(exp); }}
-                className="p-1.5 text-slate-400 hover:text-teal-600 rounded-lg hover:bg-teal-50"
+                className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50"
                 title={t('common.edit')}
                 aria-label="Modifier la depense"
               >
@@ -1013,11 +1013,11 @@ export default function DepensesPage() {
 
             {/* Mileage */}
             {selectedExpense.mileageKm && (
-              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200">
-                <p className="text-sm font-medium text-teal-700 mb-1 flex items-center gap-1.5">
+              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                <p className="text-sm font-medium text-indigo-700 mb-1 flex items-center gap-1.5">
                   <Car className="w-4 h-4" /> {t('admin.expenses.mileageSection')}
                 </p>
-                <div className="text-sm text-teal-600 space-y-1">
+                <div className="text-sm text-indigo-600 space-y-1">
                   <p>{t('admin.expenses.mileageKm')}: {selectedExpense.mileageKm} km</p>
                   <p>{t('admin.expenses.mileageRate')}: ${selectedExpense.mileageRate}/km</p>
                   <p className="font-medium">{t('admin.expenses.mileageTotal')}: {formatCAD((selectedExpense.mileageKm || 0) * (selectedExpense.mileageRate || 0))}</p>
@@ -1029,7 +1029,7 @@ export default function DepensesPage() {
             <div>
               <p className="text-sm font-medium text-slate-500 mb-1">{t('admin.expenses.receiptUpload')}</p>
               {selectedExpense.receiptUrl ? (
-                <a href={selectedExpense.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline flex items-center gap-1.5">
+                <a href={selectedExpense.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline flex items-center gap-1.5">
                   <Eye className="w-4 h-4" /> {t('admin.expenses.receiptPreview')}
                 </a>
               ) : (
@@ -1094,7 +1094,7 @@ export default function DepensesPage() {
                 </>
               )}
               {selectedExpense.status === 'APPROVED' && (
-                <Button onClick={() => handleStatusChange(selectedExpense.id, 'REIMBURSED')} className="bg-teal-600 hover:bg-teal-700 text-white">
+                <Button onClick={() => handleStatusChange(selectedExpense.id, 'REIMBURSED')} className="bg-indigo-600 hover:bg-indigo-700 text-white">
                   <DollarSign className="w-4 h-4 me-1.5" /> {t('admin.expenses.markReimbursed')}
                 </Button>
               )}
@@ -1144,10 +1144,10 @@ export default function DepensesPage() {
       {/* ─── DELETE EXPENSE CONFIRM DIALOG ──────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmDeleteExpenseId}
-        title={t('admin.expenses.deleteTitle') || 'Delete Expense'}
-        message={t('admin.expenses.confirmDelete') || 'Are you sure you want to delete this expense? This action cannot be undone.'}
+        title={t('admin.expenses.deleteTitle')}
+        message={t('admin.expenses.confirmDelete')}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmDeleteExpenseId && handleDelete(confirmDeleteExpenseId)}
         onCancel={() => setConfirmDeleteExpenseId(null)}
       />

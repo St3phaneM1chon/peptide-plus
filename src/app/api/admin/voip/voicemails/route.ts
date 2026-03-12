@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { markVoicemailRead, archiveVoicemail } from '@/lib/voip/voicemail-engine';
@@ -57,13 +58,21 @@ export const GET = withAdminGuard(async (request) => {
   });
 }, { skipCsrf: true });
 
+const voicemailActionSchema = z.object({
+  ids: z.array(z.string().max(200)).min(1).max(100),
+  action: z.enum(['markRead', 'markUnread', 'archive']),
+});
+
 export const PUT = withAdminGuard(async (request) => {
   const body = await request.json();
-  const { ids, action } = body;
-
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return NextResponse.json({ error: 'ids required' }, { status: 400 });
+  const parsed = voicemailActionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
+  const { ids, action } = parsed.data;
 
   switch (action) {
     case 'markRead':

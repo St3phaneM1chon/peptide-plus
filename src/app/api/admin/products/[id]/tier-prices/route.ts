@@ -56,24 +56,41 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       orderBy: { tier: { priority: 'asc' } },
     });
 
+    const basePriceNum = Number(product.price);
+
     return NextResponse.json({
       product: {
         id: product.id,
         name: product.name,
-        basePrice: Number(product.price),
+        basePrice: basePriceNum,
       },
-      tierPrices: tierPrices.map(tp => ({
-        id: tp.id,
-        tierName: tp.tierName,
-        price: Number(tp.price),
-        active: tp.active,
-        startDate: tp.startDate.toISOString(),
-        endDate: tp.endDate?.toISOString() ?? null,
-        tierDiscountPercent: Number(tp.tier.discountPercent),
-        tierPriority: tp.tier.priority,
-        createdAt: tp.createdAt.toISOString(),
-        updatedAt: tp.updatedAt.toISOString(),
-      })),
+      // A8-P2-002: Clarify that tier prices are absolute values, not percentage discounts.
+      // Each entry includes computed savings vs. base price for admin clarity.
+      priceType: 'absolute',
+      tierPrices: tierPrices.map(tp => {
+        const tpNum = Number(tp.price);
+        const savingsAmt = basePriceNum - tpNum;
+        const savingsPct = basePriceNum > 0 ? ((savingsAmt / basePriceNum) * 100) : 0;
+
+        return {
+          id: tp.id,
+          tierName: tp.tierName,
+          price: tpNum,
+          priceType: 'absolute',                                        // A8-P2-002: explicit label
+          savingsAmount: Math.max(0, Number(savingsAmt.toFixed(2))),     // A8-P2-002: computed savings
+          savingsPercent: Math.max(0, Number(savingsPct.toFixed(2))),    // A8-P2-002: computed discount %
+          active: tp.active,
+          startDate: tp.startDate.toISOString(),
+          endDate: tp.endDate?.toISOString() ?? null,
+          tierDefaultDiscountPercent: Number(tp.tier.discountPercent),   // renamed for clarity
+          tierPriority: tp.tier.priority,
+          warning: tpNum >= basePriceNum
+            ? 'Tier price is >= base price — customers see no savings'
+            : undefined,
+          createdAt: tp.createdAt.toISOString(),
+          updatedAt: tp.updatedAt.toISOString(),
+        };
+      }),
     });
   } catch (error) {
     logger.error('Admin product tier-prices GET error', {
@@ -104,10 +121,10 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       );
     }
 
-    // Verify product exists
+    // Verify product exists (include price for tier-price validation — A8-P2-002)
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, price: true },
     });
 
     if (!product) {
@@ -124,6 +141,15 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         { error: `Tier config '${parsed.data.tierName}' not found. Create it first.` },
         { status: 400 }
       );
+    }
+
+    // A8-P2-002: Warn (but allow) when tier price >= base price — likely a data-entry error
+    const basePrice = product.price ? Number(product.price) : null;
+    let warning: string | undefined;
+    if (basePrice !== null && parsed.data.price >= basePrice) {
+      warning =
+        `Tier price (${parsed.data.price}) is >= base product price (${basePrice}). ` +
+        `Tier prices are absolute prices, not discounts. Customers in this tier will see no savings.`;
     }
 
     const tierPrice = await prisma.productTierPrice.upsert({
@@ -173,17 +199,28 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       })
     );
 
+    // A8-P2-002: Include pricing context so admins understand the relationship
+    const tierPriceNum = Number(tierPrice.price);
+    const basePriceNum = basePrice ?? 0;
+    const savingsAmount = basePriceNum - tierPriceNum;
+    const savingsPercent = basePriceNum > 0 ? ((savingsAmount / basePriceNum) * 100) : 0;
+
     return NextResponse.json(
       {
         tierPrice: {
           id: tierPrice.id,
           productId: tierPrice.productId,
           tierName: tierPrice.tierName,
-          price: Number(tierPrice.price),
+          price: tierPriceNum,
+          priceType: 'absolute',          // A8-P2-002: Clarify this is an absolute price, not a discount
+          basePrice: basePriceNum,         // A8-P2-002: Include base price for comparison
+          savingsAmount: Math.max(0, Number(savingsAmount.toFixed(2))),
+          savingsPercent: Math.max(0, Number(savingsPercent.toFixed(2))),
           active: tierPrice.active,
           startDate: tierPrice.startDate.toISOString(),
           endDate: tierPrice.endDate?.toISOString() ?? null,
         },
+        ...(warning && { warning }),      // A8-P2-002: Surface warning if tier price >= base price
       },
       { status: 201 }
     );

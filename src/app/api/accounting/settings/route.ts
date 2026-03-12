@@ -55,7 +55,7 @@ export const GET = withAdminGuard(async () => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.settings.edit' });
 
 /**
  * PUT /api/accounting/settings
@@ -128,4 +128,4 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.settings.edit', requireMfa: true });

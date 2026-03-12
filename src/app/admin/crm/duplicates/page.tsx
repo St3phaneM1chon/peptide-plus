@@ -32,7 +32,7 @@ interface DuplicatePair {
 
 const MATCH_TYPE_CONFIG: Record<MatchType, { label: string; color: string }> = {
   email_exact: { label: 'Email Match', color: 'bg-green-100 text-green-700' },
-  phone_exact: { label: 'Phone Match', color: 'bg-teal-100 text-teal-700' },
+  phone_exact: { label: 'Phone Match', color: 'bg-indigo-100 text-indigo-700' },
   name_fuzzy: { label: 'Name Fuzzy', color: 'bg-yellow-100 text-yellow-700' },
   name_company_fuzzy: { label: 'Name + Company', color: 'bg-orange-100 text-orange-700' },
 };
@@ -54,7 +54,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
 
   const handleMerge = async () => {
     if (!selectedSurvivor) {
-      toast.error(t('admin.crm.duplicates.selectSurvivor') || 'Please select which lead to keep');
+      toast.error(t('admin.crm.duplicates.selectSurvivor'));
       return;
     }
 
@@ -74,7 +74,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
         throw new Error(json.error?.message || 'Merge failed');
       }
 
-      toast.success(t('admin.crm.duplicates.mergeSuccess') || 'Leads merged successfully');
+      toast.success(t('admin.crm.duplicates.mergeSuccess'));
       onMerged();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Merge failed');
@@ -86,7 +86,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
   const leadCardCls = (side: 'A' | 'B') =>
     `flex-1 p-4 rounded-xl border-2 cursor-pointer transition-all ${
       selectedSurvivor === side
-        ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-200'
+        ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
         : 'border-gray-200 hover:border-gray-300 bg-white'
     }`;
 
@@ -98,7 +98,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
           <div className="flex items-center gap-2">
             <GitMerge className="h-5 w-5 text-purple-600" />
             <h2 className="text-lg font-semibold text-gray-900">
-              {t('admin.crm.duplicates.mergeTitle') || 'Merge Leads'}
+              {t('admin.crm.duplicates.mergeTitle')}
             </h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -109,8 +109,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
         {/* Body */}
         <div className="p-6">
           <p className="text-sm text-gray-500 mb-4">
-            {t('admin.crm.duplicates.mergeDescription') ||
-              'Select which lead to keep as the primary record. The other lead will be merged into it.'}
+            {t('admin.crm.duplicates.mergeDescription')}
           </p>
 
           <div className="flex gap-4">
@@ -121,8 +120,8 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {selectedSurvivor === 'A' && (
-                  <span className="text-xs font-bold text-teal-600 uppercase">
-                    {t('admin.crm.duplicates.keeper') || 'Keep'}
+                  <span className="text-xs font-bold text-indigo-600 uppercase">
+                    {t('admin.crm.duplicates.keeper')}
                   </span>
                 )}
               </div>
@@ -150,8 +149,8 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {selectedSurvivor === 'B' && (
-                  <span className="text-xs font-bold text-teal-600 uppercase">
-                    {t('admin.crm.duplicates.keeper') || 'Keep'}
+                  <span className="text-xs font-bold text-indigo-600 uppercase">
+                    {t('admin.crm.duplicates.keeper')}
                   </span>
                 )}
               </div>
@@ -176,7 +175,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleMerge}
@@ -185,8 +184,8 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
           >
             <GitMerge className="h-4 w-4" />
             {merging
-              ? (t('admin.crm.duplicates.merging') || 'Merging...')
-              : (t('admin.crm.duplicates.merge') || 'Merge')}
+              ? (t('admin.crm.duplicates.merging'))
+              : (t('admin.crm.duplicates.merge'))}
           </button>
         </div>
       </div>
@@ -240,7 +239,7 @@ function DuplicateCard({ pair, onMerge }: DuplicateCardProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors mt-1"
           >
             <GitMerge className="h-3.5 w-3.5" />
-            {t('admin.crm.duplicates.merge') || 'Merge'}
+            {t('admin.crm.duplicates.merge')}
           </button>
         </div>
 
@@ -282,7 +281,7 @@ export default function DuplicatesPage() {
         setDuplicates(json.data || []);
       }
     } catch {
-      toast.error(t('admin.crm.duplicates.loadError') || 'Failed to load duplicates');
+      toast.error(t('admin.crm.duplicates.loadError'));
     } finally {
       setLoading(false);
     }
@@ -304,11 +303,10 @@ export default function DuplicatesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Users className="h-6 w-6 text-purple-600" />
-            {t('admin.crm.duplicates.title') || 'Duplicate Detection'}
+            {t('admin.crm.duplicates.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.duplicates.subtitle') ||
-              'Find and merge duplicate leads to keep your CRM clean'}
+            {t('admin.crm.duplicates.subtitle')}
           </p>
         </div>
         <button
@@ -317,7 +315,7 @@ export default function DuplicatesPage() {
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
         >
           <Search className="h-4 w-4" />
-          {t('admin.crm.duplicates.rescan') || 'Rescan'}
+          {t('admin.crm.duplicates.rescan')}
         </button>
       </div>
 
@@ -330,11 +328,10 @@ export default function DuplicatesPage() {
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.duplicates.empty') || 'No duplicates found'}
+            {t('admin.crm.duplicates.empty')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.duplicates.emptyDesc') ||
-              'Your lead database looks clean. No potential duplicates were detected.'}
+            {t('admin.crm.duplicates.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -343,9 +340,9 @@ export default function DuplicatesPage() {
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-purple-600 flex-shrink-0" />
             <p className="text-sm text-purple-700">
-              {t('admin.crm.duplicates.found') || 'Found'}{' '}
+              {t('admin.crm.duplicates.found')}{' '}
               <span className="font-bold">{duplicates.length}</span>{' '}
-              {t('admin.crm.duplicates.potentialDuplicates') || 'potential duplicate pairs'}
+              {t('admin.crm.duplicates.potentialDuplicates')}
             </p>
           </div>
 

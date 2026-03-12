@@ -17,7 +17,7 @@ import {
   Phone, PhoneCall, Voicemail, Headphones, BarChart3, GitBranch,
   Workflow, ClipboardList, Mic, ArrowRightLeft, PhoneForwarded,
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
-  ToggleRight,
+  ToggleRight, Bot, Building2, Palette, Boxes,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -95,6 +95,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: RefreshCw },
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
+          { href: '/admin/paiements/reconciliation', labelKey: 'admin.nav.paymentReconciliation', icon: Scale },
         ],
         defaultOpen: true,
       },
@@ -109,6 +110,7 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/produits', labelKey: 'admin.nav.products', icon: Package },
           { href: '/admin/categories', labelKey: 'admin.nav.categories', icon: FolderOpen },
+          { href: '/admin/bundles', labelKey: 'admin.nav.bundles', icon: Boxes },
         ],
         defaultOpen: true,
       },
@@ -128,6 +130,17 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/upsell', labelKey: 'admin.nav.upsell', icon: TrendingUp },
         ],
         defaultOpen: true,
+      },
+      {
+        // FIX A3-P2: Add missing blog and analytics pages to nav
+        labelKey: 'admin.nav.contentMarketing',
+        items: [
+          { href: '/admin/blog', labelKey: 'admin.nav.blog', icon: PenLine },
+          { href: '/admin/blog/analytics', labelKey: 'admin.nav.blogAnalytics', icon: BarChart2 },
+          { href: '/admin/rapports', labelKey: 'admin.nav.reports', icon: FileBarChart },
+        ],
+        collapsible: true,
+        defaultOpen: false,
       },
     ],
   },
@@ -167,6 +180,13 @@ export const folderSections: Record<string, NavFolderSection> = {
     title: 'admin.nav.mediaSection',
     groups: [
       {
+        items: [
+          { href: '/admin/media', labelKey: 'admin.nav.mediaDashboard', icon: Layout },
+          { href: '/admin/media/analytics', labelKey: 'admin.nav.mediaAnalytics', icon: BarChart3 },
+        ],
+        defaultOpen: true,
+      },
+      {
         labelKey: 'admin.nav.mediaPlatforms',
         items: [
           { href: '/admin/media/launch-teams', labelKey: 'admin.nav.launchTeams', icon: TeamsIcon as unknown as LucideIcon, image: '/images/platforms/teams.png' },
@@ -199,6 +219,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/media/api-webex', labelKey: 'admin.nav.apiWebex', icon: Settings },
           { href: '/admin/media/api-google-meet', labelKey: 'admin.nav.apiGoogleMeet', icon: Settings },
           { href: '/admin/media/api-youtube', labelKey: 'admin.nav.apiYouTube', icon: Settings },
+          { href: '/admin/media/api-vimeo', labelKey: 'admin.nav.apiVimeo', icon: Settings },
           { href: '/admin/media/api-x', labelKey: 'admin.nav.apiX', icon: Settings },
           { href: '/admin/media/api-tiktok', labelKey: 'admin.nav.apiTikTok', icon: Settings },
           { href: '/admin/media/api-google-ads', labelKey: 'admin.nav.apiGoogleAds', icon: Settings },
@@ -221,6 +242,8 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/media/consent-templates', labelKey: 'admin.nav.consentTemplates', icon: ClipboardCheck },
           { href: '/admin/media/images', labelKey: 'admin.nav.mediaImages', icon: ImageIcon },
           { href: '/admin/media/library', labelKey: 'admin.nav.mediaLibrary', icon: Play },
+          { href: '/admin/media/brand-kit', labelKey: 'admin.nav.brandKit', icon: Palette },
+          { href: '/admin/media/social-scheduler', labelKey: 'admin.nav.socialScheduler', icon: Calendar },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -284,6 +307,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/telephonie/enregistrements', labelKey: 'admin.nav.voipRecordings', icon: Headphones },
           { href: '/admin/telephonie/messagerie', labelKey: 'admin.nav.voipVoicemail', icon: Voicemail },
           { href: '/admin/telephonie/wallboard', labelKey: 'admin.nav.voipWallboard', icon: Monitor },
+          { href: '/admin/telephonie/conference', labelKey: 'admin.nav.voipConference', icon: Video },
         ],
         defaultOpen: true,
       },
@@ -305,6 +329,10 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/telephonie/ivr-builder', labelKey: 'admin.nav.voipIvrBuilder', icon: Workflow },
           { href: '/admin/telephonie/webhooks', labelKey: 'admin.nav.voipWebhooks', icon: ArrowRightLeft },
           { href: '/admin/telephonie/analytics', labelKey: 'admin.nav.voipAnalytics', icon: BarChart3 },
+          { href: '/admin/telephonie/analytics/appels', labelKey: 'admin.nav.voipCallAnalytics', icon: PhoneCall },
+          { href: '/admin/telephonie/analytics/agents', labelKey: 'admin.nav.voipAgentAnalytics', icon: UserCheck },
+          { href: '/admin/telephonie/analytics/queues', labelKey: 'admin.nav.voipQueueAnalytics', icon: ListChecks },
+          { href: '/admin/telephonie/analytics/speech', labelKey: 'admin.nav.voipSpeechAnalytics', icon: Mic },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -331,6 +359,7 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/crm', labelKey: 'admin.nav.crmDashboard', icon: LayoutDashboard },
           { href: '/admin/crm/pipeline', labelKey: 'admin.nav.crmPipeline', icon: Filter },
+          { href: '/admin/crm/pipelines', labelKey: 'admin.nav.crmPipelines', icon: GitBranch },
           { href: '/admin/crm/leads', labelKey: 'admin.nav.crmLeads', icon: Target },
           { href: '/admin/crm/lists', labelKey: 'admin.nav.crmLists', icon: ListChecks },
           { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
@@ -438,6 +467,8 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/comptabilite/recurrentes', labelKey: 'admin.nav.recurring', icon: RefreshCw },
           { href: '/admin/comptabilite/ocr', labelKey: 'admin.nav.ocr', icon: FileCheck },
           { href: '/admin/comptabilite/depenses', labelKey: 'admin.nav.expenses', icon: Receipt },
+          { href: '/admin/comptabilite/devis', labelKey: 'admin.nav.quotes', icon: FileText },
+          { href: '/admin/comptabilite/temps', labelKey: 'admin.nav.timeTracking', icon: Clock },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -452,6 +483,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/comptabilite/notes-credit', labelKey: 'admin.nav.creditNotes', icon: CreditCard },
           { href: '/admin/comptabilite/aging', labelKey: 'admin.nav.aging', icon: Clock },
           { href: '/admin/comptabilite/immobilisations', labelKey: 'admin.nav.fixedAssets', icon: Landmark },
+          { href: '/admin/comptabilite/inventaire', labelKey: 'admin.nav.accountingInventory', icon: Package },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -475,6 +507,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/comptabilite/previsions', labelKey: 'admin.nav.forecasts', icon: BarChart2 },
           { href: '/admin/comptabilite/budget', labelKey: 'admin.nav.budget', icon: FileBarChart },
           { href: '/admin/comptabilite/rapports', labelKey: 'admin.nav.reports', icon: FileText },
+          { href: '/admin/comptabilite/rapports-personnalises', labelKey: 'admin.nav.customReports', icon: FileBarChart },
           { href: '/admin/comptabilite/exports', labelKey: 'admin.nav.exports', icon: FileSpreadsheet },
         ],
         collapsible: true,
@@ -497,6 +530,27 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/comptabilite/declaration-tps-tvq', labelKey: 'admin.nav.fiscalTaxes', icon: Briefcase },
           { href: '/admin/comptabilite/rapports', labelKey: 'admin.nav.reports', icon: BarChart2 },
+          { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalManagement', icon: Scale },
+          { href: '/admin/fiscal/reports', labelKey: 'admin.nav.fiscalReports', icon: FileSpreadsheet },
+          { href: '/admin/fiscal/tasks', labelKey: 'admin.nav.fiscalTasks', icon: ClipboardList },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        // FIX A3-P2: Add missing advanced accounting pages
+        labelKey: 'admin.nav.accountingAdvanced',
+        items: [
+          { href: '/admin/comptabilite/rsde', labelKey: 'admin.nav.rsDe', icon: FlaskConical },
+          { href: '/admin/comptabilite/paie', labelKey: 'admin.nav.payroll', icon: DollarSign },
+          { href: '/admin/comptabilite/projets-couts', labelKey: 'admin.nav.projectCosts', icon: Briefcase },
+          { href: '/admin/comptabilite/workflows', labelKey: 'admin.nav.accountingWorkflows', icon: Workflow },
+          { href: '/admin/comptabilite/bons-commande', labelKey: 'admin.nav.purchaseOrders', icon: FileText },
+          { href: '/admin/comptabilite/operations-lot', labelKey: 'admin.nav.batchOperations', icon: Zap },
+          { href: '/admin/comptabilite/ai-assistant', labelKey: 'admin.nav.aiAssistant', icon: Bot },
+          { href: '/admin/comptabilite/api-publique', labelKey: 'admin.nav.publicApi', icon: Globe },
+          { href: '/admin/comptabilite/multi-entite', labelKey: 'admin.nav.multiEntity', icon: Building2 },
+          { href: '/admin/comptabilite/portail-client', labelKey: 'admin.nav.clientPortal', icon: Users },
         ],
         collapsible: true,
         defaultOpen: false,
@@ -525,15 +579,23 @@ export const folderSections: Record<string, NavFolderSection> = {
         items: [
           { href: '/admin/mots-magiques', labelKey: 'admin.nav.magicWords', icon: Sparkles },
           { href: '/admin/audits', labelKey: 'admin.nav.codeAudits', icon: ClipboardCheck },
+          { href: '/admin/audits/catalog', labelKey: 'admin.nav.auditCatalog', icon: Package },
+          { href: '/admin/audits/security', labelKey: 'admin.nav.auditSecurity', icon: Shield },
           { href: '/admin/backups', labelKey: 'admin.nav.backups', icon: Database },
         ],
         collapsible: true,
         defaultOpen: true,
       },
       {
+        // FIX A3-P2: Add missing monitoring and webhooks to nav
         labelKey: 'admin.nav.tools',
         items: [
           { href: '/admin/scraper', labelKey: 'admin.nav.scraper', icon: Search },
+          { href: '/admin/monitoring', labelKey: 'admin.nav.monitoring', icon: Monitor },
+          { href: '/admin/webhooks', labelKey: 'admin.nav.webhooks', icon: ArrowRightLeft },
+          { href: '/admin/analytics', labelKey: 'admin.nav.analytics', icon: BarChart3 },
+          { href: '/admin/analytics/cross-module', labelKey: 'admin.nav.crossModuleAnalytics', icon: BarChart2 },
+          { href: '/admin/securite', labelKey: 'admin.nav.security', icon: Shield },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -561,14 +623,14 @@ export const folderSections: Record<string, NavFolderSection> = {
 export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
-  if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories')) return 'catalog';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements')) return 'commerce';
+  if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles')) return 'catalog';
   if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell')) return 'marketing';
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
-  if (pathname.startsWith('/admin/crm')) return 'crm';
-  if (pathname.startsWith('/admin/scraper') || pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics')) return 'system';
+  if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper')) return 'crm';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/analytics') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite')) return 'system';
   return 'dashboard';
 }

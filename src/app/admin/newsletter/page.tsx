@@ -200,10 +200,10 @@ export default function NewsletterPage() {
     // UX FIX: Validate with inline error messages instead of just toast
     const errors: Record<string, string> = {};
     if (!newCampaign.subject.trim()) {
-      errors.subject = t('admin.newsletter.subjectRequired') || 'Subject is required';
+      errors.subject = t('admin.newsletter.subjectRequired');
     }
     if (!newCampaign.content.trim()) {
-      errors.content = t('admin.newsletter.contentRequired') || 'Content is required';
+      errors.content = t('admin.newsletter.contentRequired');
     }
     setComposerErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -245,9 +245,9 @@ export default function NewsletterPage() {
       }
 
       const statusMessages: Record<string, string> = {
-        DRAFT: t('admin.newsletter.draftSaved') || 'Draft saved',
-        SCHEDULED: t('admin.newsletter.campaignScheduled') || 'Campaign scheduled',
-        SENT: t('admin.newsletter.campaignSent') || 'Campaign sent',
+        DRAFT: t('admin.newsletter.draftSaved'),
+        SCHEDULED: t('admin.newsletter.campaignScheduled'),
+        SENT: t('admin.newsletter.campaignSent'),
       };
       toast.success(statusMessages[status]);
       setShowComposer(false);
@@ -318,10 +318,10 @@ export default function NewsletterPage() {
   // ─── ContentList data for Subscribers ─────────────────────────
 
   const subscriberFilterTabs = useMemo(() => [
-    { key: 'all', label: t('admin.newsletter.filterAll') || 'All', count: subscribers.length },
+    { key: 'all', label: t('admin.newsletter.filterAll'), count: subscribers.length },
     { key: 'ACTIVE', label: t('admin.newsletter.activeSubscribers'), count: stats.totalSubscribers },
     { key: 'UNSUBSCRIBED', label: t('admin.newsletter.unsubscribed'), count: stats.unsubscribed },
-    { key: 'BOUNCED', label: t('admin.newsletter.bounced') || 'Bounced', count: stats.bounced },
+    { key: 'BOUNCED', label: t('admin.newsletter.bounced'), count: stats.bounced },
   ], [t, subscribers.length, stats]);
 
   const filteredSubscribers = useMemo(() => {
@@ -353,9 +353,9 @@ export default function NewsletterPage() {
   // ─── ContentList data for Campaigns ──────────────────────────
 
   const campaignFilterTabs = useMemo(() => [
-    { key: 'all', label: t('admin.newsletter.filterAll') || 'All', count: campaigns.length },
-    { key: 'DRAFT', label: t('admin.newsletter.statusDraft') || 'Draft', count: stats.draftCampaigns },
-    { key: 'SENT', label: t('admin.newsletter.statusSent') || 'Sent', count: stats.sentCampaigns },
+    { key: 'all', label: t('admin.newsletter.filterAll'), count: campaigns.length },
+    { key: 'DRAFT', label: t('admin.newsletter.statusDraft'), count: stats.draftCampaigns },
+    { key: 'SENT', label: t('admin.newsletter.statusSent'), count: stats.sentCampaigns },
   ], [t, campaigns.length, stats]);
 
   const filteredCampaigns = useMemo(() => {
@@ -419,7 +419,7 @@ export default function NewsletterPage() {
       // UX FIX: Replaced native confirm() with ConfirmDialog
       setConfirmAction({
         isOpen: true,
-        title: t('admin.newsletter.deleteSubscriberTitle') || 'Remove subscriber?',
+        title: t('admin.newsletter.deleteSubscriberTitle'),
         message: t('admin.newsletter.deleteSubscriberConfirm') || `Are you sure you want to remove ${selectedSubscriber.email}?`,
         variant: 'danger',
         onConfirm: () => {
@@ -437,7 +437,7 @@ export default function NewsletterPage() {
               }
               setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
               setSelectedId(null);
-              toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+              toast.success(t('admin.newsletter.subscriberDeleted'));
             })
             .catch(() => toast.error(t('common.networkError')))
             .finally(() => setDeletingId(null));
@@ -453,13 +453,13 @@ export default function NewsletterPage() {
 
   const onSendNow = useCallback(() => {
     if (!selectedCampaign || selectedCampaign.status !== 'DRAFT') {
-      toast.info(t('admin.newsletter.selectDraftToSend') || 'Select a draft campaign to send');
+      toast.info(t('admin.newsletter.selectDraftToSend'));
       return;
     }
     // UX FIX: Replaced native confirm() with ConfirmDialog
     setConfirmAction({
       isOpen: true,
-      title: t('admin.newsletter.sendConfirmTitle') || 'Send campaign?',
+      title: t('admin.newsletter.sendConfirmTitle'),
       message: t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers? This action cannot be undone.`,
       variant: 'warning',
       onConfirm: () => {
@@ -475,7 +475,7 @@ export default function NewsletterPage() {
               toast.error(t('common.saveFailed'));
               return;
             }
-            toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+            toast.success(t('admin.newsletter.campaignSent'));
             fetchData();
           })
           .catch(() => toast.error(t('common.networkError')));
@@ -487,24 +487,24 @@ export default function NewsletterPage() {
     if (selectedCampaign) {
       // Open a preview window with the campaign content
       const rawContent = selectedCampaign.content || '';
-      const wrapper = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('admin.newsletter.preview') || 'Preview'}: ${selectedCampaign.subject}</title><style>body{margin:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:20px auto;line-height:1.6;color:#333;}</style></head><body><h1 style="border-bottom:1px solid #ddd;padding-bottom:8px;">${selectedCampaign.subject}</h1><div style="white-space:pre-wrap;">${rawContent}</div></body></html>`;
+      const wrapper = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('admin.newsletter.preview')}: ${selectedCampaign.subject}</title><style>body{margin:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:20px auto;line-height:1.6;color:#333;}</style></head><body><h1 style="border-bottom:1px solid #ddd;padding-bottom:8px;">${selectedCampaign.subject}</h1><div style="white-space:pre-wrap;">${rawContent}</div></body></html>`;
       const blob = new Blob([wrapper], { type: 'text/html' });
       const blobUrl = URL.createObjectURL(blob);
       const preview = window.open('', '_blank');
       if (preview) {
-        preview.document.write(`<!DOCTYPE html><html><head><title>${t('admin.newsletter.preview') || 'Preview'}</title></head><body style="margin:0;">
+        preview.document.write(`<!DOCTYPE html><html><head><title>${t('admin.newsletter.preview')}</title></head><body style="margin:0;">
           <iframe sandbox="allow-same-origin" style="width:100%;height:100vh;border:none;" src="${blobUrl}"></iframe>
         </body></html>`);
         preview.document.close();
       }
     } else {
-      toast.info(t('admin.newsletter.selectCampaignFirst') || 'Select a campaign to preview');
+      toast.info(t('admin.newsletter.selectCampaignFirst'));
     }
   }, [selectedCampaign, t]);
 
   const onOpenClickStats = useCallback(() => {
     if (!selectedCampaign || selectedCampaign.status !== 'SENT') {
-      toast.info(t('admin.newsletter.selectSentForStats') || 'Select a sent campaign to view statistics');
+      toast.info(t('admin.newsletter.selectSentForStats'));
       return;
     }
     setStatsLoading(true);
@@ -540,7 +540,7 @@ export default function NewsletterPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -575,7 +575,7 @@ export default function NewsletterPage() {
               a.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
               a.click();
               URL.revokeObjectURL(url);
-              toast.success(t('admin.newsletter.exportSuccess') || 'Subscribers exported');
+              toast.success(t('admin.newsletter.exportSuccess'));
             }}>
               {t('admin.newsletter.exportCSV')}
             </Button>
@@ -707,7 +707,7 @@ export default function NewsletterPage() {
           {/* Résultats A/B Test */}
           <div className="bg-white rounded-lg p-4 border border-slate-200">
             <div className="flex items-center gap-2 mb-3">
-              <FlaskConical className="h-5 w-5 text-teal-600" />
+              <FlaskConical className="h-5 w-5 text-indigo-600" />
               <h3 className="text-sm font-semibold text-slate-900">Résultats des tests A/B</h3>
             </div>
             {campaigns.filter(c => c.abTestResult).length > 0 ? (
@@ -794,7 +794,7 @@ export default function NewsletterPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`py-3 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab
-                    ? 'border-teal-500 text-teal-600'
+                    ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -826,8 +826,8 @@ export default function NewsletterPage() {
                 searchPlaceholder={t('admin.newsletter.searchEmail')}
                 loading={loading}
                 emptyIcon={Users}
-                emptyTitle={t('admin.newsletter.emptySubscribers') || 'No subscribers'}
-                emptyDescription={t('admin.newsletter.emptySubscribersDesc') || 'No subscribers yet.'}
+                emptyTitle={t('admin.newsletter.emptySubscribers')}
+                emptyDescription={t('admin.newsletter.emptySubscribersDesc')}
               />
             }
             detail={
@@ -850,7 +850,7 @@ export default function NewsletterPage() {
                           // UX FIX: Replaced native confirm() with ConfirmDialog
                           setConfirmAction({
                             isOpen: true,
-                            title: t('admin.newsletter.deleteSubscriberTitle') || 'Remove subscriber?',
+                            title: t('admin.newsletter.deleteSubscriberTitle'),
                             message: t('admin.newsletter.deleteSubscriberConfirm') || `Are you sure you want to remove ${selectedSubscriber.email}?`,
                             variant: 'danger',
                             onConfirm: async () => {
@@ -869,7 +869,7 @@ export default function NewsletterPage() {
                                 }
                                 setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
                                 setSelectedId(null);
-                                toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+                                toast.success(t('admin.newsletter.subscriberDeleted'));
                               } catch {
                                 toast.error(t('common.networkError'));
                               } finally {
@@ -912,7 +912,7 @@ export default function NewsletterPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-600">{t('admin.newsletter.colSource')}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          selectedSubscriber.source === 'popup' ? 'bg-teal-50 text-teal-700'
+                          selectedSubscriber.source === 'popup' ? 'bg-indigo-50 text-indigo-700'
                           : selectedSubscriber.source === 'footer' ? 'bg-slate-100 text-slate-600'
                           : 'bg-amber-50 text-amber-700'
                         }`}>
@@ -925,7 +925,7 @@ export default function NewsletterPage() {
                       </div>
                       {selectedSubscriber.unsubscribedAt && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">{t('admin.newsletter.unsubscribedAt') || 'Unsubscribed at'}</span>
+                          <span className="text-slate-600">{t('admin.newsletter.unsubscribedAt')}</span>
                           <span className="font-medium text-red-600">{formatDate(selectedSubscriber.unsubscribedAt)}</span>
                         </div>
                       )}
@@ -941,8 +941,8 @@ export default function NewsletterPage() {
                 <DetailPane
                   isEmpty
                   emptyIcon={Users}
-                  emptyTitle={t('admin.newsletter.selectSubscriber') || 'Select a subscriber'}
-                  emptyDescription={t('admin.newsletter.selectSubscriberDesc') || 'Select a subscriber to see details.'}
+                  emptyTitle={t('admin.newsletter.selectSubscriber')}
+                  emptyDescription={t('admin.newsletter.selectSubscriberDesc')}
                 />
               )
             }
@@ -961,11 +961,11 @@ export default function NewsletterPage() {
                 onFilterChange={setStatusFilter}
                 searchValue={searchValue}
                 onSearchChange={setSearchValue}
-                searchPlaceholder={t('admin.newsletter.searchCampaign') || 'Search campaigns...'}
+                searchPlaceholder={t('admin.newsletter.searchCampaign')}
                 loading={loading}
                 emptyIcon={Mail}
-                emptyTitle={t('admin.newsletter.emptyCampaigns') || 'No campaigns'}
-                emptyDescription={t('admin.newsletter.emptyCampaignsDesc') || 'No campaigns yet.'}
+                emptyTitle={t('admin.newsletter.emptyCampaigns')}
+                emptyDescription={t('admin.newsletter.emptyCampaignsDesc')}
               />
             }
             detail={
@@ -995,7 +995,7 @@ export default function NewsletterPage() {
                               // UX FIX: Replaced native confirm() with ConfirmDialog
                               setConfirmAction({
                                 isOpen: true,
-                                title: t('admin.newsletter.sendConfirmTitle') || 'Send campaign?',
+                                title: t('admin.newsletter.sendConfirmTitle'),
                                 message: t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers? This action cannot be undone.`,
                                 variant: 'warning',
                                 onConfirm: async () => {
@@ -1012,7 +1012,7 @@ export default function NewsletterPage() {
                                       toast.error(data.error || t('common.saveFailed'));
                                       return;
                                     }
-                                    toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+                                    toast.success(t('admin.newsletter.campaignSent'));
                                     await fetchData();
                                   } catch {
                                     toast.error(t('common.networkError'));
@@ -1029,8 +1029,8 @@ export default function NewsletterPage() {
                             // UX FIX: Replaced native confirm() with ConfirmDialog
                             setConfirmAction({
                               isOpen: true,
-                              title: t('admin.newsletter.cancelConfirmTitle') || 'Cancel campaign?',
-                              message: t('admin.newsletter.cancelConfirm') || 'Cancel this scheduled campaign? It will be reverted to draft.',
+                              title: t('admin.newsletter.cancelConfirmTitle'),
+                              message: t('admin.newsletter.cancelConfirm'),
                               variant: 'danger',
                               onConfirm: async () => {
                                 setConfirmAction(prev => ({ ...prev, isOpen: false }));
@@ -1046,7 +1046,7 @@ export default function NewsletterPage() {
                                     toast.error(data.error || t('common.updateFailed'));
                                     return;
                                   }
-                                  toast.success(t('admin.newsletter.campaignCancelled') || 'Campaign cancelled');
+                                  toast.success(t('admin.newsletter.campaignCancelled'));
                                   await fetchData();
                                 } catch {
                                   toast.error(t('common.networkError'));
@@ -1093,7 +1093,7 @@ export default function NewsletterPage() {
                           selectedCampaign.status === 'SENT'
                             ? 'bg-emerald-100 text-emerald-700'
                             : selectedCampaign.status === 'SCHEDULED'
-                              ? 'bg-teal-100 text-teal-700'
+                              ? 'bg-indigo-100 text-indigo-700'
                               : 'bg-slate-100 text-slate-600'
                         }`}>
                           {selectedCampaign.status}
@@ -1116,9 +1116,9 @@ export default function NewsletterPage() {
                           </div>
                         )}
                         {selectedCampaign.clickRate !== undefined && (
-                          <div className="bg-teal-50 rounded-lg p-4 text-center">
-                            <p className="text-2xl font-bold text-teal-700">{selectedCampaign.clickRate}%</p>
-                            <p className="text-xs text-teal-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
+                          <div className="bg-indigo-50 rounded-lg p-4 text-center">
+                            <p className="text-2xl font-bold text-indigo-700">{selectedCampaign.clickRate}%</p>
+                            <p className="text-xs text-indigo-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
                           </div>
                         )}
                       </div>
@@ -1141,7 +1141,7 @@ export default function NewsletterPage() {
                             <p className="text-[10px] text-slate-500">Delivered</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-teal-700">{emailBridge.stats.openRate}%</p>
+                            <p className="text-lg font-bold text-indigo-700">{emailBridge.stats.openRate}%</p>
                             <p className="text-[10px] text-slate-500">{t('admin.bridges.openRate')}</p>
                           </div>
                           <div className="text-center">
@@ -1188,8 +1188,8 @@ export default function NewsletterPage() {
                 <DetailPane
                   isEmpty
                   emptyIcon={Mail}
-                  emptyTitle={t('admin.newsletter.selectCampaign') || 'Select a campaign'}
-                  emptyDescription={t('admin.newsletter.selectCampaignDesc') || 'Select a campaign to see details.'}
+                  emptyTitle={t('admin.newsletter.selectCampaign')}
+                  emptyDescription={t('admin.newsletter.selectCampaignDesc')}
                 />
               )
             }
@@ -1241,11 +1241,11 @@ export default function NewsletterPage() {
                 type="checkbox"
                 checked={abTestEnabled}
                 onChange={(e) => setAbTestEnabled(e.target.checked)}
-                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <FlaskConical className="h-4 w-4 text-teal-600" />
+              <FlaskConical className="h-4 w-4 text-indigo-600" />
               <span className="text-sm font-medium text-slate-700">
-                {t('admin.newsletter.enableABTest') || 'Enable A/B Test'}
+                {t('admin.newsletter.enableABTest')}
               </span>
             </label>
 
@@ -1254,7 +1254,7 @@ export default function NewsletterPage() {
                 {/* Test type */}
                 <div>
                   <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                    {t('admin.newsletter.abTestType') || 'Test Type'}
+                    {t('admin.newsletter.abTestType')}
                   </label>
                   <div className="flex gap-2">
                     <button
@@ -1262,43 +1262,43 @@ export default function NewsletterPage() {
                       onClick={() => setAbTestType('subject')}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'subject'
-                          ? 'bg-teal-50 border-teal-300 text-teal-700 font-medium'
+                          ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                       }`}
                     >
-                      {t('admin.newsletter.abTestSubject') || 'Subject Line'}
+                      {t('admin.newsletter.abTestSubject')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setAbTestType('content')}
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'content'
-                          ? 'bg-teal-50 border-teal-300 text-teal-700 font-medium'
+                          ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                       }`}
                     >
-                      {t('admin.newsletter.abTestContent') || 'Content'}
+                      {t('admin.newsletter.abTestContent')}
                     </button>
                   </div>
                 </div>
 
                 {/* Variant B input */}
                 {abTestType === 'subject' ? (
-                  <FormField label={t('admin.newsletter.abVariantBSubject') || 'Variant B Subject'} required>
+                  <FormField label={t('admin.newsletter.abVariantBSubject')} required>
                     <Input
                       type="text"
                       value={abVariantBSubject}
                       onChange={(e) => setAbVariantBSubject(e.target.value)}
-                      placeholder={t('admin.newsletter.abVariantBSubjectPlaceholder') || 'Alternative subject line...'}
+                      placeholder={t('admin.newsletter.abVariantBSubjectPlaceholder')}
                     />
                   </FormField>
                 ) : (
-                  <FormField label={t('admin.newsletter.abVariantBContent') || 'Variant B Content'} required>
+                  <FormField label={t('admin.newsletter.abVariantBContent')} required>
                     <Textarea
                       rows={6}
                       value={abVariantBContent}
                       onChange={(e) => setAbVariantBContent(e.target.value)}
-                      placeholder={t('admin.newsletter.abVariantBContentPlaceholder') || 'Alternative email content...'}
+                      placeholder={t('admin.newsletter.abVariantBContentPlaceholder')}
                       className="font-mono text-sm"
                     />
                   </FormField>
@@ -1308,7 +1308,7 @@ export default function NewsletterPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                      {t('admin.newsletter.abSplitPct') || 'Test Pool %'}
+                      {t('admin.newsletter.abSplitPct')}
                     </label>
                     <select
                       value={abSplitPercentage}
@@ -1327,7 +1327,7 @@ export default function NewsletterPage() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                      {t('admin.newsletter.abWaitTime') || 'Wait Time'}
+                      {t('admin.newsletter.abWaitTime')}
                     </label>
                     <select
                       value={abWaitMinutes}
@@ -1344,15 +1344,15 @@ export default function NewsletterPage() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                      {t('admin.newsletter.abWinMetric') || 'Win Metric'}
+                      {t('admin.newsletter.abWinMetric')}
                     </label>
                     <select
                       value={abWinningMetric}
                       onChange={(e) => setAbWinningMetric(e.target.value as 'open_rate' | 'click_rate')}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                     >
-                      <option value="open_rate">{t('admin.newsletter.abMetricOpens') || 'Open Rate'}</option>
-                      <option value="click_rate">{t('admin.newsletter.abMetricClicks') || 'Click Rate'}</option>
+                      <option value="open_rate">{t('admin.newsletter.abMetricOpens')}</option>
+                      <option value="click_rate">{t('admin.newsletter.abMetricClicks')}</option>
                     </select>
                   </div>
                 </div>
@@ -1387,7 +1387,7 @@ export default function NewsletterPage() {
       >
         {statsLoading ? (
           <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
             <span className="sr-only">Loading...</span>
           </div>
         ) : statsData ? (
@@ -1404,42 +1404,42 @@ export default function NewsletterPage() {
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-teal-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-teal-700">{statsData.stats.sentCount}</p>
-                <p className="text-xs text-teal-600 mt-1">{t('admin.newsletter.statsSent') || 'Sent'}</p>
+              <div className="bg-indigo-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-indigo-700">{statsData.stats.sentCount}</p>
+                <p className="text-xs text-indigo-600 mt-1">{t('admin.newsletter.statsSent')}</p>
               </div>
               <div className="bg-emerald-50 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-emerald-700">{statsData.stats.openRate}%</p>
-                <p className="text-xs text-emerald-600 mt-1">{t('admin.newsletter.statsOpenRate') || 'Open Rate'}</p>
+                <p className="text-xs text-emerald-600 mt-1">{t('admin.newsletter.statsOpenRate')}</p>
               </div>
               <div className="bg-violet-50 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-violet-700">{statsData.stats.clickRate}%</p>
-                <p className="text-xs text-violet-600 mt-1">{t('admin.newsletter.statsClickRate') || 'Click Rate'}</p>
+                <p className="text-xs text-violet-600 mt-1">{t('admin.newsletter.statsClickRate')}</p>
               </div>
               <div className="bg-amber-50 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-amber-700">{statsData.stats.bounceRate}%</p>
-                <p className="text-xs text-amber-600 mt-1">{t('admin.newsletter.statsBounceRate') || 'Bounce Rate'}</p>
+                <p className="text-xs text-amber-600 mt-1">{t('admin.newsletter.statsBounceRate')}</p>
               </div>
             </div>
 
             {/* Detailed counts */}
             <div className="bg-slate-50 rounded-lg p-4">
-              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.statsDetails') || 'Details'}</h3>
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.statsDetails')}</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">{t('admin.newsletter.statsOpened') || 'Opened'}</span>
+                  <span className="text-slate-600">{t('admin.newsletter.statsOpened')}</span>
                   <span className="font-medium text-slate-900">{statsData.stats.openCount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">{t('admin.newsletter.statsClicked') || 'Clicked'}</span>
+                  <span className="text-slate-600">{t('admin.newsletter.statsClicked')}</span>
                   <span className="font-medium text-slate-900">{statsData.stats.clickCount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">{t('admin.newsletter.statsBounced') || 'Bounced'}</span>
+                  <span className="text-slate-600">{t('admin.newsletter.statsBounced')}</span>
                   <span className="font-medium text-slate-900">{statsData.stats.bounceCount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">{t('admin.newsletter.statsUnsubscribed') || 'Unsubscribed'}</span>
+                  <span className="text-slate-600">{t('admin.newsletter.statsUnsubscribed')}</span>
                   <span className="font-medium text-slate-900">{statsData.stats.unsubscribeCount}</span>
                 </div>
               </div>
@@ -1447,7 +1447,7 @@ export default function NewsletterPage() {
 
             {/* Subscriber context */}
             <div className="bg-slate-50 rounded-lg p-4">
-              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.subscriberContext') || 'Subscriber Context'}</h3>
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.subscriberContext')}</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">{t('admin.newsletter.activeSubscribers')}</span>
@@ -1462,7 +1462,7 @@ export default function NewsletterPage() {
           </div>
         ) : (
           <p className="text-sm text-slate-500 py-4 text-center">
-            {t('admin.newsletter.noStats') || 'No stats available.'}
+            {t('admin.newsletter.noStats')}
           </p>
         )}
       </Modal>
@@ -1489,7 +1489,7 @@ function SourceCard({
   // FLAW-016 FIX: amber color was using teal classes instead of amber
   const colors = {
     violet: 'bg-violet-50 border-violet-200 text-violet-700',
-    sky: 'bg-teal-50 border-teal-200 text-teal-700',
+    sky: 'bg-indigo-50 border-indigo-200 text-indigo-700',
     amber: 'bg-amber-50 border-amber-200 text-amber-700',
   };
   return (

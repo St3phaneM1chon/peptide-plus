@@ -1,15 +1,14 @@
 // BUG-072 FIX: Added take: 100 limit to category product query
 // TODO: BUG-091 - Audit CSS classes for RTL support: use start/end instead of left/right
 // BUG-100 FIX: Translations are applied via withTranslations() on products, categories, children, and parent (see lines below)
-// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
-// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes (uses getStaticLocale to avoid cookies/headers)
+export const revalidate = 300;
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import { withTranslation, withTranslations } from '@/lib/translation';
-import { getServerLocale } from '@/i18n/server';
+import { getStaticLocale } from '@/i18n/server';
 import CategoryPageClient from './CategoryPageClient';
 
 interface PageProps {
@@ -41,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Catégorie non trouvée' };
   }
 
-  const locale = await getServerLocale();
+  const locale = getStaticLocale();
   const translated = await withTranslation(category, 'Category', locale);
 
   const title = category.parent
@@ -134,19 +133,16 @@ export default async function CategoryPage({ params }: PageProps) {
     take: 100,
   });
 
-  // Apply translations for current locale
-  const locale = await getServerLocale();
-  const translatedCategory = await withTranslation(category, 'Category', locale);
-  const translatedProducts = await withTranslations(dbProducts, 'Product', locale);
-
-  // Translate children categories
-  const translatedChildren = await withTranslations(category.children, 'Category', locale);
-
-  // Translate parent if exists
-  let translatedParent = category.parent;
-  if (category.parent) {
-    translatedParent = await withTranslation(category.parent, 'Category', locale);
-  }
+  // Apply translations for current locale (all 4 calls run in parallel)
+  const locale = getStaticLocale();
+  const [translatedCategory, translatedProducts, translatedChildren, translatedParent] = await Promise.all([
+    withTranslation(category, 'Category', locale),
+    withTranslations(dbProducts, 'Product', locale),
+    withTranslations(category.children, 'Category', locale),
+    category.parent
+      ? withTranslation(category.parent, 'Category', locale)
+      : Promise.resolve(category.parent),
+  ]);
 
   // Map products
   const products = translatedProducts.map((p) => ({

@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 import {
   processWhatsAppWebhook,
   createWhatsAppConversation,
@@ -82,6 +83,25 @@ export async function POST(request: NextRequest) {
     if (!messageSid) {
       // Could be a status callback, acknowledge it
       return NextResponse.json({ success: true });
+    }
+
+    // Idempotency check: skip if this message was already processed (Redis-based, TTL 24h)
+    try {
+      const redis = await getRedisClient();
+      if (redis) {
+        const idempotencyKey = `webhook:whatsapp:${messageSid}`;
+        const alreadyProcessed = await redis.get(idempotencyKey);
+        if (alreadyProcessed) {
+          logger.info('[WhatsApp Webhook] Duplicate message skipped', { messageSid });
+          return NextResponse.json({ success: true });
+        }
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
+    } catch (redisErr) {
+      // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+      logger.debug('[WhatsApp Webhook] Redis idempotency check unavailable, proceeding', {
+        error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+      });
     }
 
     // Process the webhook

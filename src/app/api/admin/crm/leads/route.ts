@@ -21,7 +21,7 @@ const createLeadSchema = z.object({
   companyName: z.string().max(200).trim().optional(),
   email: z.string().email().max(320).optional(),
   phone: z.string().max(50).trim().optional(),
-  source: z.enum(['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER']).optional(),
+  source: z.enum(['WEB', 'REFERRAL', 'IMPORT', 'CAMPAIGN', 'MANUAL', 'PARTNER', 'EMAIL', 'SOCIAL', 'CHATBOT']).optional(),
   assignedToId: z.string().cuid().optional(),
   tags: z.array(z.string().max(100)).max(50).optional(),
   customFields: z.record(z.unknown()).optional(),

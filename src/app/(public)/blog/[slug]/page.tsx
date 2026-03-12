@@ -10,15 +10,13 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
 import { prisma } from '@/lib/db';
-import { getServerLocale } from '@/i18n/server';
+import { getStaticLocale } from '@/i18n/server';
 import { getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import BlogComments from '@/components/blog/BlogComments';
 
-// ISR: revalidate every 5 minutes
-// FIX: force-dynamic because getServerLocale() calls cookies()/headers()
-// which is incompatible with ISR (revalidate) in Next.js 15 production builds.
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes (uses getStaticLocale to avoid cookies/headers)
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -83,7 +81,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Article not found' };
   }
 
-  const locale = await getServerLocale();
+  const locale = getStaticLocale();
   let title = post.metaTitle || post.title;
   let description =
     post.metaDescription || post.excerpt || post.content?.substring(0, 160) || '';
@@ -240,7 +238,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   }
 
   // Apply translations
-  const locale = await getServerLocale();
+  const locale = getStaticLocale();
   let title = post.title;
   let excerpt = post.excerpt;
   let content = post.content;

@@ -81,7 +81,7 @@ export const GET = withAdminGuard(
       }
 
       // ── 2. Fetch user details for matched metrics ────────────────────────
-      const userIds = atRiskMetrics.map((m) => m.userId);
+      const userIds = atRiskMetrics.map((m) => m.userId).filter((id): id is string => id != null);
 
       const users = await prisma.user.findMany({
         where: { id: { in: userIds } },
@@ -97,6 +97,7 @@ export const GET = withAdminGuard(
       // ── 3. Build response, preserving order from metrics query ───────────
       const customers = atRiskMetrics
         .map((metrics) => {
+          if (!metrics.userId) return null;
           const user = userMap.get(metrics.userId);
           if (!user) return null;
 

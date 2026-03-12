@@ -48,13 +48,13 @@ export default function BrandKitPage() {
         body: JSON.stringify(brandKit),
       });
       if (res.ok) {
-        toast.success(t('admin.media.brandKit.saved') || 'Brand kit saved');
+        toast.success(t('admin.media.brandKit.saved'));
         setEditing(false);
       } else {
-        toast.error(t('admin.media.brandKit.saveError') || 'Failed to save');
+        toast.error(t('admin.media.brandKit.saveError'));
       }
     } catch {
-      toast.error(t('admin.media.brandKit.saveError') || 'Failed to save');
+      toast.error(t('admin.media.brandKit.saveError'));
     } finally {
       setSaving(false);
     }
@@ -103,15 +103,15 @@ export default function BrandKitPage() {
                 onClick={() => setEditing(false)}
                 className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={saveBrandKit}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {t('common.save') || 'Save'}
+                {t('common.save')}
               </button>
             </>
           ) : (
@@ -120,7 +120,7 @@ export default function BrandKitPage() {
               className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 flex items-center gap-2"
             >
               <Edit2 className="w-4 h-4" />
-              {t('common.edit') || 'Edit'}
+              {t('common.edit')}
             </button>
           )}
         </div>
@@ -128,10 +128,10 @@ export default function BrandKitPage() {
 
       {/* Brand Name Editor (Chantier 4.3) */}
       {editing && brandKit && (
-        <div className="bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-800 p-4 space-y-4">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800 p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.brandName') || 'Brand Name'}</label>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.brandName')}</label>
               <input
                 type="text"
                 value={brandKit.name}
@@ -140,7 +140,7 @@ export default function BrandKitPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.primaryColor') || 'Primary Color'}</label>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.primaryColor')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -158,7 +158,7 @@ export default function BrandKitPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.accentColor') || 'Accent Color'}</label>
+              <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.accentColor')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -177,13 +177,13 @@ export default function BrandKitPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.guidelines') || 'Brand Guidelines'}</label>
+            <label className="block text-sm font-medium mb-1">{t('admin.media.brandKit.guidelines')}</label>
             <textarea
               value={brandKit.guidelines || ''}
               onChange={(e) => setBrandKit({ ...brandKit, guidelines: e.target.value })}
               rows={3}
               className="w-full border rounded-lg px-3 py-2 text-sm"
-              placeholder={t('admin.media.brandKit.guidelinesPlaceholder') || 'Brand usage guidelines, tone of voice, dos & donts...'}
+              placeholder={t('admin.media.brandKit.guidelinesPlaceholder')}
             />
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function BrandKitPage() {
               <div key={color.nameKey} className="group">
                 <button
                   onClick={() => copyToClipboard(color.hex, name)}
-                  className="w-full aspect-square rounded-xl shadow-sm border border-slate-200 hover:ring-2 hover:ring-teal-400 transition-all relative overflow-hidden"
+                  className="w-full aspect-square rounded-xl shadow-sm border border-slate-200 hover:ring-2 hover:ring-indigo-400 transition-all relative overflow-hidden"
                   style={{ backgroundColor: color.hex }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity">

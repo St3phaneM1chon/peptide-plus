@@ -41,19 +41,19 @@ export default function CrossModuleAnalyticsPage() {
   );
 
   const tabs: TabDef[] = [
-    { id: 'funnel', label: t('admin.analytics.salesFunnel') || 'Sales Funnel', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'clv', label: t('admin.analytics.clv') || 'Customer LTV', icon: <Users className="w-4 h-4" /> },
-    { id: 'attribution', label: t('admin.analytics.attribution') || 'Marketing Attribution', icon: <Tag className="w-4 h-4" /> },
-    { id: 'support', label: t('admin.analytics.supportImpact') || 'Support Impact', icon: <Headphones className="w-4 h-4" /> },
-    { id: 'products', label: t('admin.analytics.productPerformance') || 'Product 360', icon: <Package className="w-4 h-4" /> },
-    { id: 'engagement', label: t('admin.analytics.engagement') || 'Engagement', icon: <Activity className="w-4 h-4" /> },
+    { id: 'funnel', label: t('admin.analytics.salesFunnel'), icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'clv', label: t('admin.analytics.clv'), icon: <Users className="w-4 h-4" /> },
+    { id: 'attribution', label: t('admin.analytics.attribution'), icon: <Tag className="w-4 h-4" /> },
+    { id: 'support', label: t('admin.analytics.supportImpact'), icon: <Headphones className="w-4 h-4" /> },
+    { id: 'products', label: t('admin.analytics.productPerformance'), icon: <Package className="w-4 h-4" /> },
+    { id: 'engagement', label: t('admin.analytics.engagement'), icon: <Activity className="w-4 h-4" /> },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <PageHeader
-        title={t('admin.analytics.crossModuleTitle') || 'Cross-Module Analytics'}
-        subtitle={t('admin.analytics.crossModuleDesc') || 'Unified performance insights across all modules'}
+        title={t('admin.analytics.crossModuleTitle')}
+        subtitle={t('admin.analytics.crossModuleDesc')}
       />
 
       {/* Period selector */}
@@ -63,7 +63,7 @@ export default function CrossModuleAnalyticsPage() {
             key={d}
             onClick={() => setDays(d)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              days === d ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              days === d ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {d === 365 ? '1Y' : `${d}D`}
@@ -79,7 +79,7 @@ export default function CrossModuleAnalyticsPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               activeTab === tab.id
-                ? 'border-teal-600 text-teal-600'
+                ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -153,7 +153,7 @@ function SalesFunnelTab({ days, fmt }: { days: number; fmt: (n: number) => strin
               <div className="flex-1 flex items-center gap-2">
                 <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
                   <div
-                    className="h-full bg-teal-500 rounded-full flex items-center justify-end pe-2 text-white text-xs font-medium transition-all"
+                    className="h-full bg-indigo-500 rounded-full flex items-center justify-end pe-2 text-white text-xs font-medium transition-all"
                     style={{ width: `${Math.max((step.count / maxCount) * 100, 8)}%` }}
                   >
                     {step.count}
@@ -174,7 +174,7 @@ function SalesFunnelTab({ days, fmt }: { days: number; fmt: (n: number) => strin
       {/* Conversion rates */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-lg border p-4 text-center">
-          <div className="text-2xl font-bold text-teal-600">{summary.leadToDeadRate}%</div>
+          <div className="text-2xl font-bold text-indigo-600">{summary.leadToDeadRate}%</div>
           <div className="text-sm text-gray-500">Lead → Deal</div>
         </div>
         <div className="bg-white rounded-lg border p-4 text-center">
@@ -239,7 +239,7 @@ function ClvTab({ fmt }: { fmt: (n: number) => string }) {
             <div key={bucket.label} className="flex-1 flex flex-col items-center gap-1">
               <span className="text-xs text-gray-600 font-medium">{bucket.count}</span>
               <div
-                className="w-full bg-teal-500 rounded-t"
+                className="w-full bg-indigo-500 rounded-t"
                 style={{ height: `${Math.max((bucket.count / maxBucket) * 100, 4)}%` }}
               />
               <span className="text-xs text-gray-500">{bucket.label}</span>
@@ -332,9 +332,9 @@ function AttributionTab({ days, fmt }: { days: number; fmt: (n: number) => strin
       <div className="bg-white rounded-lg border p-6">
         <h3 className="font-semibold text-gray-900 mb-3">Order Source</h3>
         <div className="flex gap-4">
-          <div className="flex-1 bg-teal-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-teal-700">{summary.promoOrders}</div>
-            <div className="text-sm text-teal-600">Promo Orders</div>
+          <div className="flex-1 bg-indigo-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-indigo-700">{summary.promoOrders}</div>
+            <div className="text-sm text-indigo-600">Promo Orders</div>
           </div>
           <div className="flex-1 bg-green-50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-green-700">{summary.organicOrders}</div>
@@ -423,7 +423,7 @@ function SupportImpactTab({ days, fmt }: { days: number; fmt: (n: number) => str
         {/* Phone */}
         <div className="bg-white rounded-lg border p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Phone className="w-5 h-5 text-teal-600" />
+            <Phone className="w-5 h-5 text-indigo-600" />
             <h3 className="font-semibold text-gray-900">Phone Support</h3>
           </div>
           <div className="space-y-3">
@@ -571,14 +571,14 @@ function EngagementTab({ days }: { days: number }) {
   const maxActivity = Math.max(...activityShare.map((a) => a.activity), 1);
 
   const moduleColors: Record<string, string> = {
-    commerce: 'bg-teal-500',
+    commerce: 'bg-indigo-500',
     crm: 'bg-green-500',
     accounting: 'bg-yellow-500',
     loyalty: 'bg-purple-500',
     marketing: 'bg-pink-500',
     telephony: 'bg-orange-500',
     email: 'bg-indigo-500',
-    community: 'bg-teal-500',
+    community: 'bg-indigo-500',
     media: 'bg-red-500',
   };
 

@@ -57,7 +57,7 @@ function StatusBadge({ status }: { status: Approval['status'] }) {
 
 function EntityTypeBadge({ entityType }: { entityType: string }) {
   const colorMap: Record<string, string> = {
-    deal: 'bg-teal-100 text-teal-700',
+    deal: 'bg-indigo-100 text-indigo-700',
     quote: 'bg-purple-100 text-purple-700',
     discount: 'bg-orange-100 text-orange-700',
   };
@@ -103,8 +103,8 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
 
       toast.success(
         action === 'approve'
-          ? (t('admin.crm.approvals.approvedSuccess') || 'Approval granted')
-          : (t('admin.crm.approvals.rejectedSuccess') || 'Approval rejected')
+          ? (t('admin.crm.approvals.approvedSuccess'))
+          : (t('admin.crm.approvals.rejectedSuccess'))
       );
       onComplete();
     } catch (err) {
@@ -129,8 +129,8 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
             )}
             <h2 className="text-lg font-semibold text-gray-900">
               {isApprove
-                ? (t('admin.crm.approvals.confirmApprove') || 'Confirm Approval')
-                : (t('admin.crm.approvals.confirmReject') || 'Confirm Rejection')}
+                ? (t('admin.crm.approvals.confirmApprove'))
+                : (t('admin.crm.approvals.confirmReject'))}
             </h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -143,8 +143,8 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
           <div className="mb-4">
             <p className="text-sm text-gray-600">
               {isApprove
-                ? (t('admin.crm.approvals.approveMessage') || 'Are you sure you want to approve this request?')
-                : (t('admin.crm.approvals.rejectMessage') || 'Are you sure you want to reject this request?')}
+                ? (t('admin.crm.approvals.approveMessage'))
+                : (t('admin.crm.approvals.rejectMessage'))}
             </p>
             <div className="mt-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
@@ -155,25 +155,25 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
                 <p className="text-sm text-gray-700 mt-1">{approval.reason}</p>
               )}
               <p className="text-xs text-gray-400 mt-1">
-                {t('admin.crm.approvals.requestedBy') || 'Requested by'}: {approval.requestedBy.name || approval.requestedBy.email}
+                {t('admin.crm.approvals.requestedBy')}: {approval.requestedBy.name || approval.requestedBy.email}
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.approvals.note') || 'Note'} ({t('common.optional') || 'optional'})
+              {t('admin.crm.approvals.note')} ({t('common.optional')})
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               maxLength={2000}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               placeholder={
                 isApprove
-                  ? (t('admin.crm.approvals.approveNotePlaceholder') || 'Add an optional note...')
-                  : (t('admin.crm.approvals.rejectNotePlaceholder') || 'Reason for rejection...')
+                  ? (t('admin.crm.approvals.approveNotePlaceholder'))
+                  : (t('admin.crm.approvals.rejectNotePlaceholder'))
               }
             />
           </div>
@@ -186,7 +186,7 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -203,10 +203,10 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
               <XCircle className="h-4 w-4" />
             )}
             {processing
-              ? (t('common.processing') || 'Processing...')
+              ? (t('common.processing'))
               : isApprove
-                ? (t('admin.crm.approvals.approve') || 'Approve')
-                : (t('admin.crm.approvals.reject') || 'Reject')}
+                ? (t('admin.crm.approvals.approve'))
+                : (t('admin.crm.approvals.reject'))}
           </button>
         </div>
       </div>
@@ -246,7 +246,7 @@ function ApprovalCard({
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
             <span>
-              {t('admin.crm.approvals.requestedBy') || 'Requested by'}:{' '}
+              {t('admin.crm.approvals.requestedBy')}:{' '}
               <span className="font-medium text-gray-700">
                 {approval.requestedBy.name || approval.requestedBy.email || 'Unknown'}
               </span>
@@ -263,8 +263,8 @@ function ApprovalCard({
             {approval.approver && (
               <span>
                 {approval.status === 'APPROVED'
-                  ? (t('admin.crm.approvals.approvedBy') || 'Approved by')
-                  : (t('admin.crm.approvals.rejectedBy') || 'Rejected by')}:{' '}
+                  ? (t('admin.crm.approvals.approvedBy'))
+                  : (t('admin.crm.approvals.rejectedBy'))}:{' '}
                 <span className="font-medium text-gray-700">
                   {approval.approver.name || approval.approver.email || 'Unknown'}
                 </span>
@@ -276,7 +276,7 @@ function ApprovalCard({
           {approval.rejectionNote && (
             <div className="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
               <p className="text-xs text-red-700">
-                <span className="font-medium">{t('admin.crm.approvals.rejectionReason') || 'Rejection reason'}:</span>{' '}
+                <span className="font-medium">{t('admin.crm.approvals.rejectionReason')}:</span>{' '}
                 {approval.rejectionNote}
               </p>
             </div>
@@ -291,14 +291,14 @@ function ApprovalCard({
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <CheckCircle className="h-3.5 w-3.5" />
-              {t('admin.crm.approvals.approve') || 'Approve'}
+              {t('admin.crm.approvals.approve')}
             </button>
             <button
               onClick={() => onAction(approval, 'reject')}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               <XCircle className="h-3.5 w-3.5" />
-              {t('admin.crm.approvals.reject') || 'Reject'}
+              {t('admin.crm.approvals.reject')}
             </button>
           </div>
         )}
@@ -338,7 +338,7 @@ export default function ApprovalsPage() {
         }
       }
     } catch {
-      toast.error(t('admin.crm.approvals.loadError') || 'Failed to load approvals');
+      toast.error(t('admin.crm.approvals.loadError'));
     } finally {
       setLoading(false);
     }
@@ -365,11 +365,11 @@ export default function ApprovalsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.approvals.title') || 'Approvals'}
+            <Shield className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.approvals.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.approvals.subtitle') || 'Review and manage approval requests for deals, quotes, and discounts'}
+            {t('admin.crm.approvals.subtitle')}
           </p>
         </div>
       </div>
@@ -385,7 +385,7 @@ export default function ApprovalsPage() {
           }`}
         >
           <Clock className="h-4 w-4" />
-          {t('admin.crm.approvals.pendingTab') || 'Pending'}
+          {t('admin.crm.approvals.pendingTab')}
           {activeTab === 'pending' && pendingCount > 0 && (
             <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
               {pendingCount}
@@ -401,14 +401,14 @@ export default function ApprovalsPage() {
           }`}
         >
           <FileText className="h-4 w-4" />
-          {t('admin.crm.approvals.historyTab') || 'History'}
+          {t('admin.crm.approvals.historyTab')}
         </button>
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         </div>
       ) : approvals.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
@@ -416,20 +416,20 @@ export default function ApprovalsPage() {
             <>
               <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">
-                {t('admin.crm.approvals.noPending') || 'No pending approvals'}
+                {t('admin.crm.approvals.noPending')}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {t('admin.crm.approvals.noPendingDesc') || 'All approval requests have been processed'}
+                {t('admin.crm.approvals.noPendingDesc')}
               </p>
             </>
           ) : (
             <>
               <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">
-                {t('admin.crm.approvals.noHistory') || 'No approval history'}
+                {t('admin.crm.approvals.noHistory')}
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {t('admin.crm.approvals.noHistoryDesc') || 'Processed approvals will appear here'}
+                {t('admin.crm.approvals.noHistoryDesc')}
               </p>
             </>
           )}

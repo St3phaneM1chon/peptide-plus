@@ -394,6 +394,7 @@ export default function RewardsPage() {
                       type="text"
                       readOnly
                       value={`https://peptideplus.ca/ref/${referralCode}`}
+                      aria-label={t('rewards.yourReferralLink') || 'Your referral link'}
                       className="flex-1 px-3 py-2 bg-white/20 rounded-lg text-white text-sm"
                     />
                     <button

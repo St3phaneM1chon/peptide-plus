@@ -216,7 +216,7 @@ export default function NewProductClient({ categories }: Props) {
 
     // BUG-079 FIX: Prevent submission if slug is already taken
     if (slugStatus === 'taken') {
-      toast.error(t('admin.productForm.slugTaken') || 'This slug is already in use. Please choose a different one.');
+      toast.error(t('admin.productForm.slugTaken'));
       return;
     }
 
@@ -225,8 +225,7 @@ export default function NewProductClient({ categories }: Props) {
       const invalidFormat = formats.find(f => !f.name.trim() || f.price < 0);
       if (invalidFormat) {
         toast.error(
-          t('admin.productForm.formatValidationError') ||
-          'Each format must have a name and a price >= 0.'
+          t('admin.productForm.formatValidationError')
         );
         return;
       }
@@ -291,7 +290,7 @@ export default function NewProductClient({ categories }: Props) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 font-medium"
+            className="px-6 py-2.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 font-medium"
           >
             {saving ? t('admin.productForm.creating') : t('admin.productForm.createProduct')}
           </button>
@@ -312,7 +311,7 @@ export default function NewProductClient({ categories }: Props) {
               {tab.icon}
               {tab.label}
               {tab.count !== null && tab.count > 0 && (
-                <span className="px-1.5 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">{tab.count}</span>
+                <span className="px-1.5 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">{tab.count}</span>
               )}
             </button>
           ))}
@@ -330,15 +329,15 @@ export default function NewProductClient({ categories }: Props) {
                   {/* FIX: BUG-048 - Show error if no categories available */}
                   {categories.length === 0 ? (
                     <p className="text-sm text-red-600 py-2.5">
-                      {t('admin.productForm.noCategoriesAvailable') || 'No categories available. Please create a category first.'}
+                      {t('admin.productForm.noCategoriesAvailable')}
                     </p>
                   ) : (
                     <select
                       value={formData.categoryId}
                       onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="">{t('admin.productForm.selectCategory') || '-- Select a category --'}</option>
+                      <option value="">{t('admin.productForm.selectCategory')}</option>
                       {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
@@ -351,7 +350,7 @@ export default function NewProductClient({ categories }: Props) {
                   <select
                     value={formData.productType}
                     onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     {PRODUCT_TYPES.map(type => (
                       <option key={type.value} value={type.value}>{type.label}</option>
@@ -366,7 +365,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     placeholder={t('admin.productForm.placeholderProductName')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -378,7 +377,7 @@ export default function NewProductClient({ categories }: Props) {
                       value={formData.slug}
                       onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                       placeholder={t('admin.productForm.placeholderSlug')}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono text-sm ${
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm ${
                         slugStatus === 'taken' ? 'border-red-400 bg-red-50' :
                         slugStatus === 'available' ? 'border-green-400 bg-green-50' :
                         'border-neutral-200'
@@ -397,7 +396,7 @@ export default function NewProductClient({ categories }: Props) {
                   </div>
                   {slugStatus === 'taken' && (
                     <p className="text-xs text-red-600 mt-1">
-                      {t('admin.productForm.slugTaken') || 'This slug is already in use. Please choose a different one.'}
+                      {t('admin.productForm.slugTaken')}
                     </p>
                   )}
                 </div>
@@ -409,7 +408,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.subtitle}
                     onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                     placeholder={t('admin.productForm.placeholderSubtitle')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -421,7 +420,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.shortDescription}
                     onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
                     placeholder={t('admin.productForm.placeholderShortDescription')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <p className="text-xs text-neutral-400 mt-1">{(formData.shortDescription || '').length}/300 {t('admin.productForm.characters')}</p>
                 </div>
@@ -445,7 +444,7 @@ export default function NewProductClient({ categories }: Props) {
                       max="100"
                       value={formData.purity}
                       onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <span className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
                   </div>
@@ -458,7 +457,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.casNumber}
                     onChange={(e) => setFormData({ ...formData, casNumber: e.target.value })}
                     placeholder="137525-51-0"
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -470,7 +469,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.molecularWeight}
                     onChange={(e) => setFormData({ ...formData, molecularWeight: e.target.value })}
                     placeholder="1419.53"
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -481,7 +480,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.molecularFormula}
                     onChange={(e) => setFormData({ ...formData, molecularFormula: e.target.value })}
                     placeholder="C62H98N16O22"
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                   />
                 </div>
 
@@ -492,7 +491,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.storageConditions}
                     onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
                     placeholder={t('admin.productForm.placeholderStorageConditions')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -504,7 +503,7 @@ export default function NewProductClient({ categories }: Props) {
                     value={formData.price || ''}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                     placeholder="49.99"
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -554,15 +553,15 @@ export default function NewProductClient({ categories }: Props) {
                     </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded focus:ring-teal-500" />
+                    <input type="checkbox" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-indigo-500 border-neutral-300 rounded focus:ring-indigo-500" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.featured')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded focus:ring-teal-500" />
+                    <input type="checkbox" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-indigo-500 border-neutral-300 rounded focus:ring-indigo-500" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.new')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-teal-500 border-neutral-300 rounded focus:ring-teal-500" />
+                    <input type="checkbox" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-indigo-500 border-neutral-300 rounded focus:ring-indigo-500" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.bestseller')}</span>
                   </label>
                 </div>
@@ -581,7 +580,7 @@ export default function NewProductClient({ categories }: Props) {
               </div>
               <button
                 onClick={addProductText}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {t('admin.productForm.addText')}
@@ -592,7 +591,7 @@ export default function NewProductClient({ categories }: Props) {
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noProductTexts')}</p>
-                <button onClick={addProductText} className="text-teal-600 hover:text-teal-700 font-medium">
+                <button onClick={addProductText} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   {t('admin.productForm.addFirstText')}
                 </button>
               </div>
@@ -615,7 +614,7 @@ export default function NewProductClient({ categories }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                       {pt.pdfUrl && <FileText className="w-4 h-4 text-red-400" />}
-                      {pt.imageUrl && <ImageIcon className="w-4 h-4 text-teal-400" />}
+                      {pt.imageUrl && <ImageIcon className="w-4 h-4 text-indigo-400" />}
                       {pt.videoUrl && <Video className="w-4 h-4 text-purple-400" />}
                       {pt.externalLink && <ExternalLink className="w-4 h-4 text-green-400" />}
                       <button
@@ -639,7 +638,7 @@ export default function NewProductClient({ categories }: Props) {
                             value={pt.name}
                             onChange={(e) => updateProductText(pt.id, 'name', e.target.value)}
                             placeholder={t('admin.productForm.placeholderTextName')}
-                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div>
@@ -649,7 +648,7 @@ export default function NewProductClient({ categories }: Props) {
                             value={pt.title}
                             onChange={(e) => updateProductText(pt.id, 'title', e.target.value)}
                             placeholder={t('admin.productForm.placeholderTitle')}
-                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div>
@@ -659,7 +658,7 @@ export default function NewProductClient({ categories }: Props) {
                             value={pt.subtitle}
                             onChange={(e) => updateProductText(pt.id, 'subtitle', e.target.value)}
                             placeholder={t('admin.productForm.placeholderSubtitleText')}
-                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div>
@@ -669,7 +668,7 @@ export default function NewProductClient({ categories }: Props) {
                             value={pt.summary}
                             onChange={(e) => updateProductText(pt.id, 'summary', e.target.value)}
                             placeholder={t('admin.productForm.placeholderSummary')}
-                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                       </div>
@@ -681,7 +680,7 @@ export default function NewProductClient({ categories }: Props) {
                           value={pt.intro}
                           onChange={(e) => updateProductText(pt.id, 'intro', e.target.value)}
                           placeholder={t('admin.productForm.placeholderIntro')}
-                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
 
@@ -692,7 +691,7 @@ export default function NewProductClient({ categories }: Props) {
                           value={pt.text}
                           onChange={(e) => updateProductText(pt.id, 'text', e.target.value)}
                           placeholder={t('admin.productForm.placeholderFullText')}
-                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                         />
                       </div>
 
@@ -736,7 +735,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.externalLink}
                               onChange={(e) => updateProductText(pt.id, 'externalLink', e.target.value)}
                               placeholder="https://..."
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           </div>
                           <div>
@@ -748,7 +747,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.internalLink}
                               onChange={(e) => updateProductText(pt.id, 'internalLink', e.target.value)}
                               placeholder="/product/bpc-157"
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           </div>
                           <div>
@@ -760,7 +759,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.references}
                               onChange={(e) => updateProductText(pt.id, 'references', e.target.value)}
                               placeholder={t('admin.productForm.placeholderReferences')}
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           </div>
                         </div>
@@ -783,7 +782,7 @@ export default function NewProductClient({ categories }: Props) {
               </div>
               <button
                 onClick={addFormat}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {t('admin.productForm.addFormat')}
@@ -793,7 +792,7 @@ export default function NewProductClient({ categories }: Props) {
             {formats.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormats')}</p>
-                <button onClick={addFormat} className="text-teal-600 hover:text-teal-700 font-medium">
+                <button onClick={addFormat} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   {t('admin.productForm.addFirstFormat')}
                 </button>
               </div>
@@ -843,7 +842,7 @@ function FormatCard({
     <div className={`bg-white rounded-xl border ${
       format.stockQuantity === 0 ? 'border-red-200' :
       format.stockQuantity <= format.lowStockThreshold ? 'border-amber-200' :
-      format.isDefault ? 'border-teal-200' :
+      format.isDefault ? 'border-indigo-200' :
       'border-neutral-200'
     } overflow-hidden`}>
       {/* Header */}
@@ -859,7 +858,7 @@ function FormatCard({
                 {format.name || t('admin.productForm.formatNumber', { number: index + 1 })}
               </p>
               {format.isDefault && (
-                <span className="px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">{t('admin.productForm.default')}</span>
+                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">{t('admin.productForm.default')}</span>
               )}
             </div>
             <p className="text-sm text-neutral-500">
@@ -898,7 +897,7 @@ function FormatCard({
               <select
                 value={format.formatType}
                 onChange={(e) => onUpdate({ formatType: e.target.value })}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {FORMAT_TYPES.map(type => (
                   <option key={type.value} value={type.value}>{type.icon} {type.label}</option>
@@ -912,7 +911,7 @@ function FormatCard({
                 value={format.name}
                 onChange={(e) => onUpdate({ name: e.target.value })}
                 placeholder={t('admin.productForm.placeholderFormatName')}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -920,7 +919,7 @@ function FormatCard({
               <select
                 value={format.volumeMl || ''}
                 onChange={(e) => onUpdate({ volumeMl: e.target.value ? parseFloat(e.target.value) : null })}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">{t('admin.productForm.select')}</option>
                 {VOLUME_OPTIONS.map(v => (
@@ -936,7 +935,7 @@ function FormatCard({
                 value={format.dosageMg || ''}
                 onChange={(e) => onUpdate({ dosageMg: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="5"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -952,7 +951,7 @@ function FormatCard({
                 value={format.costPrice || ''}
                 onChange={(e) => onUpdate({ costPrice: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="15.00"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -964,7 +963,7 @@ function FormatCard({
                 value={format.price || ''}
                 onChange={(e) => onUpdate({ price: parseFloat(e.target.value) || 0 })}
                 placeholder="49.99"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -976,7 +975,7 @@ function FormatCard({
                 value={format.comparePrice || ''}
                 onChange={(e) => onUpdate({ comparePrice: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="69.99"
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             {margin && (
@@ -1001,7 +1000,7 @@ function FormatCard({
                   const availability = qty === 0 ? 'OUT_OF_STOCK' : qty <= format.lowStockThreshold ? 'LIMITED' : 'IN_STOCK';
                   onUpdate({ stockQuantity: qty, availability });
                 }}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -1011,7 +1010,7 @@ function FormatCard({
                 min="0"
                 value={format.lowStockThreshold}
                 onChange={(e) => onUpdate({ lowStockThreshold: parseInt(e.target.value) || 5 })}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -1021,7 +1020,7 @@ function FormatCard({
                 value={format.sku}
                 onChange={(e) => onUpdate({ sku: e.target.value })}
                 placeholder={t('admin.productForm.placeholderSku')}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -1029,7 +1028,7 @@ function FormatCard({
               <select
                 value={format.availability}
                 onChange={(e) => onUpdate({ availability: e.target.value })}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {AVAILABILITY_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1055,7 +1054,7 @@ function FormatCard({
                   type="checkbox"
                   checked={format.isDefault}
                   onChange={(e) => onUpdate({ isDefault: e.target.checked })}
-                  className="w-4 h-4 text-teal-500 border-neutral-300 rounded focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-500 border-neutral-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-neutral-700">{t('admin.productForm.default')}</span>
               </label>
@@ -1064,7 +1063,7 @@ function FormatCard({
                   type="checkbox"
                   checked={format.isActive}
                   onChange={(e) => onUpdate({ isActive: e.target.checked })}
-                  className="w-4 h-4 text-teal-500 border-neutral-300 rounded focus:ring-teal-500"
+                  className="w-4 h-4 text-indigo-500 border-neutral-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-neutral-700">{t('admin.productForm.active')}</span>
               </label>

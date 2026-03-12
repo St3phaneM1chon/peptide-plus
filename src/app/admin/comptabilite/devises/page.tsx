@@ -173,7 +173,7 @@ export default function CurrencyPage() {
       }
     } catch (err) {
       console.error('Error refreshing rates:', err);
-      toast.error(t('admin.multiCurrency.syncError') || 'Erreur lors de la synchronisation');
+      toast.error(t('admin.multiCurrency.syncError'));
     } finally {
       setRefreshing(false);
     }
@@ -233,22 +233,22 @@ export default function CurrencyPage() {
         body: JSON.stringify({ currencies: currencies.map(c => ({ code: c.code, exchangeRate: c.rate, isActive: true })) }),
       });
       if (!res.ok) throw new Error();
-      toast.success(t('admin.multiCurrency.saveSuccess') || 'Configuration des devises sauvegardee');
+      toast.success(t('admin.multiCurrency.saveSuccess'));
     } catch {
-      toast.error(t('admin.multiCurrency.saveError') || 'Erreur lors de la sauvegarde');
+      toast.error(t('admin.multiCurrency.saveError'));
     }
   }, [currencies, t]);
   const handleRibbonResetDefaults = useCallback(() => {
     loadData();
-    toast.success(t('admin.multiCurrency.resetDone') || 'Taux recharges depuis le serveur');
+    toast.success(t('admin.multiCurrency.resetDone'));
   }, [t]);
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('admin.multiCurrency.importInfo') || 'Pour importer une configuration de devises, utilisez un fichier CSV avec les colonnes: Code, Taux.');
+    toast.info(t('admin.multiCurrency.importInfo'));
   }, [t]);
   const handleRibbonExportConfig = useCallback(() => {
-    if (currencies.length === 0) { toast.error(t('admin.multiCurrency.noDataToExport') || 'Aucune devise a exporter'); return; }
+    if (currencies.length === 0) { toast.error(t('admin.multiCurrency.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.multiCurrency.colCode') || 'Code', t('admin.multiCurrency.colName') || 'Nom', t('admin.multiCurrency.colSymbol') || 'Symbole', t('admin.multiCurrency.colRate') || 'Taux', t('admin.multiCurrency.colTrend') || 'Tendance', t('admin.multiCurrency.colChange24h') || 'Variation 24h'];
+    const headers = [t('admin.multiCurrency.colCode'), t('admin.multiCurrency.colName'), t('admin.multiCurrency.colSymbol'), t('admin.multiCurrency.colRate'), t('admin.multiCurrency.colTrend'), t('admin.multiCurrency.colChange24h')];
     const rows = currencies.map(c => [c.code, c.name, c.symbol, String(c.rate), c.trend, String(c.change24h)]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -264,7 +264,7 @@ export default function CurrencyPage() {
       const data = await res.json();
       toast.success(t('admin.multiCurrency.testSuccess') || `Connexion API OK - ${data.currencies?.length || 0} devises configurees`);
     } catch {
-      toast.error(t('admin.multiCurrency.testError') || 'Erreur de connexion a l\'API des devises');
+      toast.error(t('admin.multiCurrency.testError'));
     }
   }, [t]);
 
@@ -277,7 +277,7 @@ export default function CurrencyPage() {
   const theme = sectionThemes.bank;
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64" role="status" aria-label="Loading"><div className="animate-spin h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full"></div><span className="sr-only">Loading...</span></div>;
+    return <div className="flex items-center justify-center h-64" role="status" aria-label="Loading"><div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div><span className="sr-only">Loading...</span></div>;
   }
 
   return (
@@ -308,7 +308,7 @@ export default function CurrencyPage() {
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.multiCurrency.activeCurrencies')}</p>
-          <p className="text-2xl font-bold text-teal-600 mt-1">{currencies.length}</p>
+          <p className="text-2xl font-bold text-indigo-600 mt-1">{currencies.length}</p>
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.multiCurrency.foreignHoldings')}</p>
@@ -346,7 +346,7 @@ export default function CurrencyPage() {
             <SectionCard
               key={currency.code}
               theme={theme}
-              className="hover:border-teal-300 cursor-pointer transition-colors"
+              className="hover:border-indigo-300 cursor-pointer transition-colors"
             >
               <div>
                 <div className="flex justify-between items-start">
@@ -420,7 +420,7 @@ export default function CurrencyPage() {
                     <td className="px-4 py-3 text-end font-mono text-slate-900">
                       {account.balance.toLocaleString(locale, { minimumFractionDigits: 2 })} {account.currency}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-teal-600">
+                    <td className="px-4 py-3 text-end font-mono text-indigo-600">
                       {formatCurrency(account.cadEquivalent)}
                     </td>
                     <td className="px-4 py-3 text-end font-mono text-slate-500">
@@ -438,7 +438,7 @@ export default function CurrencyPage() {
               <tfoot className="bg-slate-50">
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-end font-medium text-slate-600">{t('admin.supplierInvoices.total')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-teal-600">
+                  <td className="px-4 py-3 text-end font-bold text-indigo-600">
                     {formatCurrency(totalForeignCAD)}
                   </td>
                   <td colSpan={2}></td>
@@ -472,13 +472,13 @@ export default function CurrencyPage() {
                 value={historyCurrency}
                 onChange={(e) => setHistoryCurrency(e.target.value)}
                 aria-label="Select currency for history"
-                className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 {currencies.map(c => (
                   <option key={c.code} value={c.code}>{c.code} / CAD</option>
                 ))}
               </select>
-              <select aria-label="Select time range for history" className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+              <select aria-label="Select time range for history" className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="7">{t('admin.multiCurrency.last7Days')}</option>
                 <option value="30">{t('admin.multiCurrency.last30Days')}</option>
                 <option value="90">{t('admin.multiCurrency.last90Days')}</option>
@@ -495,7 +495,7 @@ export default function CurrencyPage() {
               {selectedRate != null && (
                 <div>
                   <p className="text-xs text-slate-400 mb-1">{t('admin.multiCurrency.currentRate')}</p>
-                  <p className="text-3xl font-bold text-teal-600">
+                  <p className="text-3xl font-bold text-indigo-600">
                     {selectedRate.toFixed(4)} <span className="text-sm text-slate-500">CAD</span>
                   </p>
                 </div>
@@ -540,14 +540,14 @@ export default function CurrencyPage() {
               value={converterAmount}
               onChange={(e) => setConverterAmount(Number(e.target.value) || 0)}
               aria-label="Amount to convert"
-              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <select
             value={selectedConverterCurrency}
             onChange={(e) => setConverterCurrency(e.target.value)}
             aria-label="Select currency to convert"
-            className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+            className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>
@@ -555,7 +555,7 @@ export default function CurrencyPage() {
           </select>
           <span className="text-2xl text-slate-400">&rarr;</span>
           <div className={`flex-1 px-4 py-2 ${theme.surfaceLight} rounded-lg`}>
-            <p className="text-2xl font-bold text-teal-600">
+            <p className="text-2xl font-bold text-indigo-600">
               {formatCurrency(convertedAmount)}
             </p>
             <p className="text-xs text-slate-400">{t('admin.multiCurrency.rate', { rate: converterRate.toFixed(4) })}</p>

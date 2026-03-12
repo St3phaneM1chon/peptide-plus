@@ -57,10 +57,10 @@ function promoStatusBadgeVariant(
 function promoStatusLabel(promo: PromoCode, t: (key: string) => string): string {
   const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
   const usageFull = promo.usageLimit && promo.usageCount >= promo.usageLimit;
-  if (isExpired) return t('admin.promoCodes.expired') || 'Expired';
-  if (usageFull) return t('admin.promoCodes.usageFull') || 'Full';
+  if (isExpired) return t('admin.promoCodes.expired');
+  if (usageFull) return t('admin.promoCodes.usageFull');
   if (promo.isActive) return t('admin.promoCodes.active');
-  return t('admin.promoCodes.inactive') || 'Inactive';
+  return t('admin.promoCodes.inactive');
 }
 
 // ── Main Component ────────────────────────────────────────────
@@ -182,16 +182,16 @@ export default function PromoCodesPage() {
     // UX FIX: Validate form fields with inline error messages
     const errors: Record<string, string> = {};
     if (!formData.code.trim()) {
-      errors.code = t('admin.promoCodes.codeRequired') || 'Promo code is required';
+      errors.code = t('admin.promoCodes.codeRequired');
     }
     if (formData.value <= 0) {
-      errors.value = t('admin.promoCodes.valueRequired') || 'Discount value must be greater than 0';
+      errors.value = t('admin.promoCodes.valueRequired');
     }
     if (formData.type === 'PERCENTAGE' && formData.value > 100) {
-      errors.value = t('admin.promoCodes.percentageMax') || 'Percentage discount cannot exceed 100%';
+      errors.value = t('admin.promoCodes.percentageMax');
     }
     if (formData.endsAt && formData.startsAt && new Date(formData.endsAt) <= new Date(formData.startsAt)) {
-      errors.endsAt = t('admin.promoCodes.endDateAfterStart') || 'End date must be after start date';
+      errors.endsAt = t('admin.promoCodes.endDateAfterStart');
     }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -223,8 +223,8 @@ export default function PromoCodesPage() {
       }
 
       toast.success(editingCode
-        ? (t('admin.promoCodes.updated') || 'Promo code updated')
-        : (t('admin.promoCodes.created') || 'Promo code created'));
+        ? (t('admin.promoCodes.updated'))
+        : (t('admin.promoCodes.created')));
       await fetchPromoCodes();
       resetForm();
     } catch (err) {
@@ -273,7 +273,7 @@ export default function PromoCodesPage() {
       if (selectedId === id) {
         setSelectedId(null);
       }
-      toast.success(t('admin.promoCodes.deleted') || 'Promo code deleted');
+      toast.success(t('admin.promoCodes.deleted'));
     } catch (err) {
       console.error('Error deleting:', err);
       toast.error(t('common.networkError'));
@@ -368,10 +368,10 @@ export default function PromoCodesPage() {
   // ─── ContentList data ────────────────────────────────────────
 
   const filterTabs = useMemo(() => [
-    { key: 'all', label: t('admin.promoCodes.filterAll') || 'All', count: stats.total },
+    { key: 'all', label: t('admin.promoCodes.filterAll'), count: stats.total },
     { key: 'active', label: t('admin.promoCodes.active'), count: stats.active },
-    { key: 'inactive', label: t('admin.promoCodes.inactive') || 'Inactive', count: stats.inactive },
-    { key: 'expired', label: t('admin.promoCodes.expired') || 'Expired', count: stats.expired },
+    { key: 'inactive', label: t('admin.promoCodes.inactive'), count: stats.inactive },
+    { key: 'expired', label: t('admin.promoCodes.expired'), count: stats.expired },
   ], [t, stats]);
 
   const listItems: ContentListItem[] = useMemo(() => {
@@ -453,12 +453,12 @@ export default function PromoCodesPage() {
     const mostUsed = [...promoCodes].sort((a, b) => b.usageCount - a.usageCount).slice(0, 3);
     const expired = promoCodes.filter(p => p.endsAt && new Date(p.endsAt) < new Date()).length;
     const firstOrderCodes = promoCodes.filter(p => p.firstOrderOnly).length;
-    toast.success(t('admin.promoCodes.usageStatsTitle') || 'Promo Code Usage Stats', {
+    toast.success(t('admin.promoCodes.usageStatsTitle'), {
       description: [
-        `${t('admin.promoCodes.totalUsage') || 'Total usage'}: ${totalUsage}`,
-        `${t('admin.promoCodes.active') || 'Active'}: ${stats.active} | ${t('admin.promoCodes.expired') || 'Expired'}: ${expired}`,
-        `${t('admin.promoCodes.firstOrderOnly') || '1st order only'}: ${firstOrderCodes}`,
-        mostUsed.length > 0 ? `${t('admin.promoCodes.topUsed') || 'Top used'}: ${mostUsed.map(p => `${p.code} (${p.usageCount})`).join(', ')}` : '',
+        `${t('admin.promoCodes.totalUsage')}: ${totalUsage}`,
+        `${t('admin.promoCodes.active')}: ${stats.active} | ${t('admin.promoCodes.expired')}: ${expired}`,
+        `${t('admin.promoCodes.firstOrderOnly')}: ${firstOrderCodes}`,
+        mostUsed.length > 0 ? `${t('admin.promoCodes.topUsed')}: ${mostUsed.map(p => `${p.code} (${p.usageCount})`).join(', ')}` : '',
       ].filter(Boolean).join('\n'),
       duration: 8000,
     });
@@ -466,21 +466,21 @@ export default function PromoCodesPage() {
 
   const onExport = useCallback(() => {
     if (filteredPromoCodes.length === 0) {
-      toast.info(t('admin.promoCodes.emptyTitle') || 'No promo codes to export');
+      toast.info(t('admin.promoCodes.emptyTitle'));
       return;
     }
     const bom = '\uFEFF';
     const headers = [
-      t('admin.promoCodes.colCode') || 'Code',
-      t('admin.promoCodes.labelDescription') || 'Description',
-      t('admin.promoCodes.labelType') || 'Type',
-      t('admin.promoCodes.labelValue') || 'Value',
-      t('admin.promoCodes.colUsage') || 'Usage',
-      t('admin.promoCodes.labelTotalLimit') || 'Limit',
-      t('admin.promoCodes.colStatus') || 'Status',
-      t('admin.promoCodes.labelStartDate') || 'Start',
-      t('admin.promoCodes.labelEndDate') || 'End',
-      t('admin.promoCodes.firstOrderOnlyCheckbox') || 'First Order Only',
+      t('admin.promoCodes.colCode'),
+      t('admin.promoCodes.labelDescription'),
+      t('admin.promoCodes.labelType'),
+      t('admin.promoCodes.labelValue'),
+      t('admin.promoCodes.colUsage'),
+      t('admin.promoCodes.labelTotalLimit'),
+      t('admin.promoCodes.colStatus'),
+      t('admin.promoCodes.labelStartDate'),
+      t('admin.promoCodes.labelEndDate'),
+      t('admin.promoCodes.firstOrderOnlyCheckbox'),
     ];
     const rows = filteredPromoCodes.map(p => [
       p.code,
@@ -488,7 +488,7 @@ export default function PromoCodesPage() {
       p.type === 'PERCENTAGE' ? t('admin.promoCodes.typePercentage') : t('admin.promoCodes.typeFixedAmount'),
       p.value.toString(),
       p.usageCount.toString(),
-      p.usageLimit?.toString() || t('admin.promoCodes.unlimited') || 'Unlimited',
+      p.usageLimit?.toString() || t('admin.promoCodes.unlimited'),
       promoStatusLabel(p, t),
       p.startsAt ? new Date(p.startsAt).toLocaleDateString(locale) : '',
       p.endsAt ? new Date(p.endsAt).toLocaleDateString(locale) : '',
@@ -502,7 +502,7 @@ export default function PromoCodesPage() {
     a.download = `promo-codes-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [filteredPromoCodes, locale, t]);
 
   useRibbonAction('newPromo', onNewPromo);
@@ -518,7 +518,7 @@ export default function PromoCodesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -567,7 +567,7 @@ export default function PromoCodesPage() {
               onFilterChange={setStatusFilter}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.promoCodes.searchPlaceholder') || 'Rechercher un code...'}
+              searchPlaceholder={t('admin.promoCodes.searchPlaceholder')}
               loading={loading}
               emptyIcon={Tag}
               emptyTitle={t('admin.promoCodes.emptyTitle')}
@@ -631,7 +631,7 @@ export default function PromoCodesPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colDiscount')}</h3>
-                      <p className="text-2xl font-bold text-teal-600">
+                      <p className="text-2xl font-bold text-indigo-600">
                         {selectedPromo.type === 'PERCENTAGE'
                           ? `${selectedPromo.value}%`
                           : formatCurrency(selectedPromo.value)}
@@ -689,29 +689,29 @@ export default function PromoCodesPage() {
                       <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
                     </div>
                   ) : revenueData && revenueData.orderCount > 0 ? (
-                    <div className="bg-teal-50 rounded-lg p-4">
+                    <div className="bg-indigo-50 rounded-lg p-4">
                       <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
-                        <ShoppingCart className="w-4 h-4 text-teal-600" />
-                        {t('admin.bridges.commerceImpact') || 'Commerce Impact'}
+                        <ShoppingCart className="w-4 h-4 text-indigo-600" />
+                        {t('admin.bridges.commerceImpact')}
                       </h3>
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
-                          <p className="text-2xl font-bold text-teal-600">{formatCurrency(revenueData.totalRevenue)}</p>
-                          <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue') || 'Revenue generated'}</p>
+                          <p className="text-2xl font-bold text-indigo-600">{formatCurrency(revenueData.totalRevenue)}</p>
+                          <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue')}</p>
                         </div>
                         <div>
                           <p className="text-2xl font-bold text-slate-900">{revenueData.orderCount}</p>
-                          <p className="text-xs text-slate-500">{t('admin.bridges.ordersWithPromo') || 'Orders with this code'}</p>
+                          <p className="text-xs text-slate-500">{t('admin.bridges.ordersWithPromo')}</p>
                         </div>
                       </div>
                       {revenueData.topProducts.length > 0 && (
                         <>
-                          <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.bridges.topProducts') || 'Top products'}</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.bridges.topProducts')}</p>
                           <div className="space-y-1">
                             {revenueData.topProducts.slice(0, 3).map((p) => (
                               <div key={p.id} className="flex items-center justify-between text-xs">
                                 <span className="text-slate-700 truncate">{p.name}</span>
-                                <span className="text-slate-500 ms-2 shrink-0">{p.quantity} {t('common.units') || 'units'}</span>
+                                <span className="text-slate-500 ms-2 shrink-0">{p.quantity} {t('common.units')}</span>
                               </div>
                             ))}
                           </div>
@@ -725,9 +725,9 @@ export default function PromoCodesPage() {
                     <div className="bg-purple-50 rounded-lg p-4">
                       <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
                         <Briefcase className="w-4 h-4 text-purple-600" />
-                        {t('admin.bridges.marketingCrm') || 'CRM Attribution'}
+                        {t('admin.bridges.marketingCrm')}
                       </h3>
-                      <p className="text-sm text-purple-700 mb-2">{crmData.uniqueUsers} {t('common.users') || 'users'}</p>
+                      <p className="text-sm text-purple-700 mb-2">{crmData.uniqueUsers} {t('common.users')}</p>
                       <div className="space-y-1">
                         {crmData.deals.slice(0, 3).map((d) => (
                           <div key={d.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-purple-100/50">
@@ -747,7 +747,7 @@ export default function PromoCodesPage() {
                     <div className="bg-amber-50 rounded-lg p-4">
                       <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
                         <Package className="w-4 h-4 text-amber-600" />
-                        {t('admin.bridges.promoProducts') || 'Promo Products'}
+                        {t('admin.bridges.promoProducts')}
                       </h3>
                       {productsData.products.length > 0 && (
                         <div className="space-y-1 mb-2">
@@ -824,10 +824,10 @@ export default function PromoCodesPage() {
       {/* UX FIX: ConfirmDialog for delete action */}
       <ConfirmDialog
         isOpen={confirmDelete.isOpen}
-        title={t('admin.promoCodes.confirmDeleteTitle') || 'Delete promo code?'}
+        title={t('admin.promoCodes.confirmDeleteTitle')}
         message={t('admin.promoCodes.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.code}"? This action cannot be undone.`}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => {
           executeDeletePromoCode(confirmDelete.id);
           setConfirmDelete({ isOpen: false, id: '', code: '' });
@@ -878,7 +878,7 @@ export default function PromoCodesPage() {
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT' })}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
                 <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
@@ -966,7 +966,7 @@ export default function PromoCodesPage() {
               type="checkbox"
               checked={formData.firstOrderOnly}
               onChange={(e) => setFormData({ ...formData, firstOrderOnly: e.target.checked })}
-              className="w-4 h-4 rounded border-slate-300 text-teal-500"
+              className="w-4 h-4 rounded border-slate-300 text-indigo-500"
             />
             <span className="text-sm text-slate-700">{t('admin.promoCodes.firstOrderOnlyCheckbox')}</span>
           </label>

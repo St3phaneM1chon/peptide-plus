@@ -70,7 +70,7 @@ const CONTENT_TYPE_COLORS: Record<string, string> = {
   WEBINAR_RECORDING: 'bg-indigo-100 text-indigo-700',
   TESTIMONIAL: 'bg-pink-100 text-pink-700',
   PODCAST: 'bg-orange-100 text-orange-700',
-  FAQ_VIDEO: 'bg-teal-100 text-teal-700',
+  FAQ_VIDEO: 'bg-indigo-100 text-indigo-700',
   BRAND_STORY: 'bg-rose-100 text-rose-700',
   LIVE_STREAM: 'bg-red-100 text-red-700',
   OTHER: 'bg-slate-100 text-slate-700',
@@ -161,7 +161,7 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-6 w-6 border-2 border-teal-600 border-t-transparent rounded-full" />
+        <div className="animate-spin h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -204,7 +204,7 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('admin.customerVideos.searchPlaceholder') || 'Search videos...'}
-            className="w-full ps-9 pe-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full ps-9 pe-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
@@ -227,7 +227,7 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
             <div className="absolute end-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20">
               <button
                 onClick={() => { setSelectedContentType(''); setFilterOpen(false); }}
-                className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${!selectedContentType ? 'font-medium text-teal-600' : 'text-slate-600'}`}
+                className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${!selectedContentType ? 'font-medium text-indigo-600' : 'text-slate-600'}`}
               >
                 {t('admin.customerVideos.allCategories')}
               </button>
@@ -235,7 +235,7 @@ export default function CustomerVideos({ clientId }: { clientId: string }) {
                 <button
                   key={ct}
                   onClick={() => { setSelectedContentType(ct); setFilterOpen(false); }}
-                  className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${selectedContentType === ct ? 'font-medium text-teal-600' : 'text-slate-600'}`}
+                  className={`w-full text-start px-3 py-2 text-sm hover:bg-slate-50 ${selectedContentType === ct ? 'font-medium text-indigo-600' : 'text-slate-600'}`}
                 >
                   {t(`admin.customerVideos.${ct}`)}
                 </button>
@@ -389,7 +389,7 @@ function VideoCard({
               href={item.videoUrl!}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 font-medium"
+              className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
             >
               <ExternalLink className="w-3 h-3" />
               {t('admin.customerVideos.viewRecording')}

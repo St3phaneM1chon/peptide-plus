@@ -267,7 +267,8 @@ model SiteConsent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  client       User                 @relation("ConsentClient", fields: [clientId], references: [id], onDelete: Cascade)
+  // FIX A1-P0-001: Preserve media consent records (GDPR audit trail)
+  client       User                 @relation("ConsentClient", fields: [clientId], references: [id], onDelete: Restrict)
   video        Video?               @relation(fields: [videoId], references: [id], onDelete: SetNull)
   formTemplate ConsentFormTemplate?  @relation(fields: [formTemplateId], references: [id], onDelete: SetNull)
   requestedBy  User?                @relation("ConsentRequester", fields: [requestedById], references: [id], onDelete: SetNull)
@@ -459,7 +460,8 @@ model VideoSession {
   updatedAt DateTime @updatedAt
 
   client          User?             @relation("VideoSessionClient", fields: [clientId], references: [id], onDelete: SetNull)
-  createdBy       User              @relation("VideoSessionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  // FIX A1-P0-007: Preserve video session records when user is deleted
+  createdBy       User              @relation("VideoSessionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   recordingImport RecordingImport?  @relation(fields: [recordingImportId], references: [id], onDelete: SetNull)
   video           Video?            @relation(fields: [videoId], references: [id], onDelete: SetNull)
 

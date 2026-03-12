@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Cas d\'usage | Formations Pro',
-  description: 'Découvrez comment nos formations répondent à vos défis spécifiques.',
+  title: 'Cas d\'usage',
+  description: 'Découvrez comment les peptides de recherche BioCycle Peptides répondent à vos défis scientifiques spécifiques.',
+  openGraph: {
+    title: 'Cas d\'usage | BioCycle Peptides',
+    description: 'Comment les peptides BioCycle Peptides répondent à vos défis scientifiques.',
+    url: 'https://biocyclepeptides.com/solutions/cas-usage',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const useCases = [

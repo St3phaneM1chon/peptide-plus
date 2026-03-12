@@ -58,7 +58,7 @@ function getFileIcon(mimeType: string) {
     return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
   // A76: Word/document formats (DOC, DOCX, ODT)
   if (mimeType.includes('wordprocessing') || mimeType.includes('msword'))
-    return <FileType className="w-5 h-5 text-teal-600" />;
+    return <FileType className="w-5 h-5 text-indigo-600" />;
   // A76: Archive formats (ZIP, RAR, TAR, GZ)
   if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar') || mimeType.includes('gzip') || mimeType.includes('compressed'))
     return <FileArchive className="w-5 h-5 text-amber-600" />;
@@ -111,7 +111,7 @@ export default function MediaLibraryPage() {
     } catch (err) {
       console.error('Failed to load media:', err);
       // FIX: F30 - Show error toast on search/load failure
-      toast.error(t('admin.media.loadFailed') || 'Failed to load media');
+      toast.error(t('admin.media.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export default function MediaLibraryPage() {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB - matches server limit
     for (let i = 0; i < files.length; i++) {
       if (files[i].size > MAX_FILE_SIZE) {
-        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge') || 'File exceeds maximum size of 10MB'}`);
+        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge')}`);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
@@ -185,15 +185,15 @@ export default function MediaLibraryPage() {
       const res = await fetch('/api/admin/medias', { headers: addCSRFHeader(), method: 'POST', body: formData });
       if (res.ok) {
         loadItems();
-        toast.success(t('admin.media.uploadSuccess') || 'Upload successful');
+        toast.success(t('admin.media.uploadSuccess'));
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
+        toast.error(data.error || t('admin.media.uploadFailed'));
       }
     } catch (err) {
       // FIX: F29 - Show toast error on upload failure instead of just console.error
       console.error('Upload failed:', err);
-      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
+      toast.error(t('admin.media.uploadFailed'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -244,24 +244,24 @@ export default function MediaLibraryPage() {
     setShowDeleteConfirm(false);
     setSelectedIds(new Set());
     if (successCount > 0) {
-      toast.success(`${successCount} ${t('admin.media.filesDeleted') || 'file(s) deleted'}`);
+      toast.success(`${successCount} ${t('admin.media.filesDeleted')}`);
       loadItems();
     }
     if (failCount > 0) {
-      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed to delete'}`);
+      toast.error(`${failCount} ${t('admin.media.deleteFailed')}`);
     }
   }, [selectedIds, t, loadItems]);
 
   // ---- Rename (update alt text) ----
   const handleRenameFile = useCallback(async () => {
     if (selectedIds.size !== 1) {
-      toast.info(t('admin.media.selectOneToRename') || 'Select exactly one file to rename');
+      toast.info(t('admin.media.selectOneToRename'));
       return;
     }
     const id = Array.from(selectedIds)[0];
     const item = items.find(i => i.id === id);
     if (!item) return;
-    const newAlt = window.prompt(t('admin.media.enterAltText') || 'Enter new alt text:', item.alt || item.originalName);
+    const newAlt = window.prompt(t('admin.media.enterAltText'), item.alt || item.originalName);
     if (newAlt === null) return;
     try {
       const res = await fetchWithCSRF(`/api/admin/medias/${id}`, {
@@ -270,24 +270,24 @@ export default function MediaLibraryPage() {
         body: JSON.stringify({ alt: newAlt }),
       });
       if (res.ok) {
-        toast.success(t('common.saved') || 'Saved');
+        toast.success(t('common.saved'));
         loadItems();
       } else {
-        toast.error(t('common.error') || 'Error');
+        toast.error(t('common.error'));
       }
     } catch {
-      toast.error(t('common.error') || 'Error');
+      toast.error(t('common.error'));
     }
   }, [selectedIds, items, t, loadItems]);
 
   // ---- Organize (move to folder) ----
   const handleOrganizeFiles = useCallback(async () => {
     if (selectedIds.size === 0) {
-      toast.info(t('admin.media.selectToOrganize') || 'Select files to organize');
+      toast.info(t('admin.media.selectToOrganize'));
       return;
     }
     const folder = window.prompt(
-      t('admin.media.enterFolder') || 'Enter folder name (e.g., products, blog, general):',
+      t('admin.media.enterFolder'),
       folderFilter || 'general'
     );
     if (!folder) return;
@@ -303,7 +303,7 @@ export default function MediaLibraryPage() {
       } catch { /* skip */ }
     }
     if (successCount > 0) {
-      toast.success(`${successCount} ${t('admin.media.movedToFolder') || 'moved to'} "${folder}"`);
+      toast.success(`${successCount} ${t('admin.media.movedToFolder')} "${folder}"`);
       loadItems();
     }
     setSelectedIds(new Set());
@@ -312,7 +312,7 @@ export default function MediaLibraryPage() {
   // ---- Export CSV ----
   const handleExportCsv = useCallback(() => {
     if (items.length === 0) {
-      toast.info(t('admin.media.noDataToExport') || 'No files to export');
+      toast.info(t('admin.media.noDataToExport'));
       return;
     }
     const BOM = '\uFEFF';
@@ -332,18 +332,18 @@ export default function MediaLibraryPage() {
     a.download = `media-library-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.media.exportSuccess') || 'CSV exported');
+    toast.success(t('admin.media.exportSuccess'));
   }, [items, t]);
 
   // ---- Ribbon action handlers (media.management) ----
   const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
   const handleDeleteRibbon = useCallback(() => {
-    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete') || 'Select files to delete'); return; }
+    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete')); return; }
     setShowDeleteConfirm(true);
   }, [selectedIds, t]);
   const handleRenameRibbon = useCallback(() => { handleRenameFile(); }, [handleRenameFile]);
   const handleOrganizeRibbon = useCallback(() => { handleOrganizeFiles(); }, [handleOrganizeFiles]);
-  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint') || 'File optimization requires server-side processing. Coming soon.'), [t]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint')), [t]);
   const handleExportRibbon = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
 
   useRibbonAction('upload', handleUploadRibbon);
@@ -357,45 +357,45 @@ export default function MediaLibraryPage() {
     <div className="p-6 max-w-6xl space-y-4">
       {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/admin" className="hover:text-teal-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <Link href="/admin" className="hover:text-indigo-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/admin/media" className="hover:text-teal-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <Link href="/admin/media" className="hover:text-indigo-600 transition-colors">{t('admin.nav.media')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-slate-700 font-medium">{t('admin.media.libraryTitle') || 'Library'}</span>
+        <span className="text-slate-700 font-medium">{t('admin.media.libraryTitle')}</span>
       </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.libraryTitle')}</h1>
         <div className="flex items-center gap-2">
           <div className="flex border border-slate-300 rounded-lg overflow-hidden">
             {/* FIX: F88 - Added aria-label for accessibility */}
-            <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-teal-50 text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-teal-50 text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
           </div>
-          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload files'} className="hidden" />
+          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload')} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F36 - Use i18n instead of hardcoded "Upload" */}
-            {t('admin.media.upload') || 'Upload'}
+            {t('admin.media.upload')}
           </button>
         </div>
       </div>
 
       {/* Selection toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-2 bg-teal-50 border border-teal-200 rounded-lg text-sm">
-          <span className="text-teal-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+        <div className="flex items-center gap-3 p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
+          <span className="text-indigo-700 font-medium">{selectedIds.size} {t('common.selected')}</span>
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
-            <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
+            <Trash2 className="w-3 h-3" /> {t('common.delete')}
           </button>
           <button onClick={handleOrganizeFiles} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
-            {t('admin.media.moveToFolder') || 'Move to folder'}
+            {t('admin.media.moveToFolder')}
           </button>
           <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
-            {t('common.clearSelection') || 'Clear'}
+            {t('common.clearSelection')}
           </button>
         </div>
       )}
@@ -412,26 +412,26 @@ export default function MediaLibraryPage() {
           />
         </div>
         {/* FIX: F38 - Use i18n for filter labels instead of hardcoded English */}
-        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allTypes') || 'Filter by file type'}>
-          <option value="">{t('admin.media.allTypes') || 'All types'}</option>
-          <option value="image">{t('admin.media.imagesTitle') || 'Images'}</option>
-          <option value="video">{t('admin.media.videosTitle') || 'Videos'}</option>
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allTypes')}>
+          <option value="">{t('admin.media.allTypes')}</option>
+          <option value="image">{t('admin.media.imagesTitle')}</option>
+          <option value="video">{t('admin.media.videosTitle')}</option>
           <option value="application/pdf">PDF</option>
         </select>
         {/* FIX: F81 - TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoding */}
-        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allFolders') || 'Filter by folder'}>
-          <option value="">{t('admin.media.allFolders') || 'All folders'}</option>
-          <option value="general">{t('admin.media.folderGeneral') || 'General'}</option>
-          <option value="images">{t('admin.media.imagesTitle') || 'Images'}</option>
-          <option value="products">{t('admin.media.folderProducts') || 'Products'}</option>
-          <option value="blog">{t('admin.media.folderBlog') || 'Blog'}</option>
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allFolders')}>
+          <option value="">{t('admin.media.allFolders')}</option>
+          <option value="general">{t('admin.media.folderGeneral')}</option>
+          <option value="images">{t('admin.media.imagesTitle')}</option>
+          <option value="products">{t('admin.media.folderProducts')}</option>
+          <option value="blog">{t('admin.media.folderBlog')}</option>
         </select>
         {/* IMP-031: Sort controls for flexible ordering */}
-        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1); }} aria-label={t('admin.media.sortBy') || 'Sort by'}>
-          <option value="createdAt">{t('admin.media.sortDate') || 'Date'}</option>
-          <option value="originalName">{t('admin.media.sortName') || 'Name'}</option>
-          <option value="size">{t('admin.media.sortSize') || 'Size'}</option>
-          <option value="mimeType">{t('admin.media.sortType') || 'Type'}</option>
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1); }} aria-label={t('admin.media.sortBy')}>
+          <option value="createdAt">{t('admin.media.sortDate')}</option>
+          <option value="originalName">{t('admin.media.sortName')}</option>
+          <option value="size">{t('admin.media.sortSize')}</option>
+          <option value="mimeType">{t('admin.media.sortType')}</option>
         </select>
         <button
           onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
@@ -468,13 +468,13 @@ export default function MediaLibraryPage() {
           <div className="flex items-center gap-2 mb-2">
             <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
               <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300" aria-label="Select all files" />
-              {t('common.selectAll') || 'Select all'}
+              {t('common.selectAll')}
             </label>
           </div>
           {/* A100 FIX: Animate-in on view switch with fade transition */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 animate-in fade-in duration-200">
             {items.map(item => (
-              <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-teal-300 transition-colors ${selectedIds.has(item.id) ? 'border-teal-400 ring-2 ring-teal-200' : 'border-slate-200'}`}>
+              <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(item.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}>
                 {/* Selection checkbox */}
                 <div className="absolute top-2 start-2 z-10">
                   <input
@@ -488,7 +488,7 @@ export default function MediaLibraryPage() {
                 {/* A86 FIX: "New" badge for media uploaded less than 24 hours ago */}
                 {(Date.now() - new Date(item.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
                   <span className="absolute top-2 start-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
-                    {t('common.new') || 'New'}
+                    {t('common.new')}
                   </span>
                 )}
                 {/* A79 FIX: Slight zoom on hover for image preview */}
@@ -525,10 +525,10 @@ export default function MediaLibraryPage() {
         <div className="bg-white rounded-lg border border-slate-200 divide-y animate-in fade-in duration-200">
           <div className="flex items-center gap-3 p-2 bg-slate-50 text-xs text-slate-600 font-medium border-b">
             <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 ms-1" aria-label="Select all files" />
-            <span>{t('common.selectAll') || 'Select all'}</span>
+            <span>{t('common.selectAll')}</span>
           </div>
           {items.map(item => (
-            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${selectedIds.has(item.id) ? 'bg-teal-50' : ''}`}>
+            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${selectedIds.has(item.id) ? 'bg-indigo-50' : ''}`}>
               <input
                 type="checkbox"
                 checked={selectedIds.has(item.id)}
@@ -625,7 +625,7 @@ export default function MediaLibraryPage() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>
-                <button onClick={() => copyUrl(preview)} className="text-teal-600 hover:text-teal-700" aria-label="Copier l'URL">
+                <button onClick={() => copyUrl(preview)} className="text-indigo-600 hover:text-indigo-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
@@ -637,9 +637,9 @@ export default function MediaLibraryPage() {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title={t('admin.media.deleteConfirmTitle') || 'Delete Files'}
-        message={`${t('admin.media.deleteConfirmMessage') || 'Are you sure you want to delete'} ${selectedIds.size} ${t('admin.media.filesLabel') || 'file(s)'}? ${t('admin.media.deleteIrreversible') || 'This action cannot be undone.'}`}
-        confirmLabel={deleting ? '...' : (t('common.delete') || 'Delete')}
+        title={t('admin.media.deleteConfirmTitle')}
+        message={`${t('admin.media.deleteConfirmMessage')} ${selectedIds.size} ${t('admin.media.filesLabel')}? ${t('admin.media.deleteIrreversible')}`}
+        confirmLabel={deleting ? '...' : (t('common.delete'))}
         onConfirm={handleDeleteSelected}
         onCancel={() => setShowDeleteConfirm(false)}
         variant="danger"

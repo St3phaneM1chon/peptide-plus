@@ -1,12 +1,24 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 
+const testEmailSchema = z.object({
+  testEmail: z.string().email().max(320).optional(),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest, { session }: { session: { user?: { email?: string | null } } }) => {
   const body = await request.json().catch(() => ({}));
-  const testEmail = body.testEmail || session.user?.email;
+  const parsed = testEmailSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const testEmail = parsed.data.testEmail || session.user?.email;
 
   if (!testEmail) {
     return NextResponse.json({ error: 'No email address available' }, { status: 400 });

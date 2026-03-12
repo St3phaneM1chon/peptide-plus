@@ -164,7 +164,7 @@ export default function DeclarationTpsTvqPage() {
 
   // Ribbon actions
   const handleRibbonVerifyBalances = useCallback(() => {
-    if (!declaration) { toast.info(t('admin.taxDeclaration.noData') || 'Aucune declaration chargee'); return; }
+    if (!declaration) { toast.info(t('admin.taxDeclaration.noData')); return; }
     const netTps = declaration.gst.net;
     const netTvq = declaration.qst.net;
     toast.success(t('admin.taxDeclaration.balanceCheck') || `TPS net: ${netTps.toFixed(2)} CAD | TVQ net: ${netTvq.toFixed(2)} CAD | Total a remettre: ${declaration.totalRemittance.toFixed(2)} CAD`);
@@ -176,7 +176,7 @@ export default function DeclarationTpsTvqPage() {
     window.location.href = '/admin/comptabilite/cloture';
   }, []);
   const handleRibbonReopen = useCallback(() => {
-    toast.info(t('admin.taxDeclaration.reopenInfo') || 'Pour rouvrir une periode, accedez a la page de cloture des periodes.');
+    toast.info(t('admin.taxDeclaration.reopenInfo'));
   }, [t]);
   const handleRibbonFiscalCalendar = useCallback(() => {
     window.location.href = '/admin/comptabilite/calendrier-fiscal';

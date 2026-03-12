@@ -74,7 +74,7 @@ export const CacheTTL = {
   CURRENCIES: 300, // 5 minutes for currency data
   CATEGORIES: 600, // 10 minutes for categories
   PRODUCTS: 300, // 5 minutes for products
-  SEARCH: 60, // 1 minute for search results
+  SEARCH: 300, // 5 minutes for search/product listings (invalidated on mutation via cacheInvalidateTag)
   SUGGESTIONS: 300, // 5 minutes for suggestions
   SITE_SETTINGS: 30, // 30 seconds for site settings
   STATS: 600, // 10 minutes for statistics
@@ -107,7 +107,9 @@ export const CacheKeys = {
     byId: (id: string) => `categories:${id}`,
   },
   products: {
+    list: (hash: string) => `products:list:${hash}`,
     byId: (id: string) => `products:${id}`,
+    bySlug: (slug: string) => `products:slug:${slug}`,
     related: (id: string) => `products:${id}:related`,
     search: (query: string) => `products:search:${query}`,
   },

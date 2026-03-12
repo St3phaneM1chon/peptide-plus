@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createPlatformMeeting } from '@/lib/platform/meeting-creation';
@@ -15,15 +16,33 @@ import { type Platform } from '@/lib/platform/oauth';
 import { VideoSessionStatus } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
-const VIDEO_PLATFORMS = ['zoom', 'teams', 'google-meet', 'webex'];
+const VIDEO_PLATFORMS = ['zoom', 'teams', 'google-meet', 'webex'] as const;
 
 // ---------------------------------------------------------------------------
 // POST - Create Video Session
 // ---------------------------------------------------------------------------
 
+const createSessionSchema = z.object({
+  platform: z.enum(VIDEO_PLATFORMS),
+  topic: z.string().min(1).max(500).trim(),
+  contentType: z.string().max(50).optional(),
+  clientId: z.string().max(200).optional(),
+  scheduledAt: z.string().datetime().optional(),
+  duration: z.number().int().min(5).max(480).optional(),
+  notes: z.string().max(5000).optional(),
+  startNow: z.boolean().optional(),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
+    const parsed = createSessionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       platform,
       topic,
@@ -33,30 +52,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       duration,
       notes,
       startNow,
-    } = body as {
-      platform?: string;
-      topic?: string;
-      contentType?: string;
-      clientId?: string;
-      scheduledAt?: string;
-      duration?: number;
-      notes?: string;
-      startNow?: boolean;
-    };
-
-    if (!platform || !topic) {
-      return NextResponse.json(
-        { error: 'Missing required fields: platform, topic' },
-        { status: 400 },
-      );
-    }
-
-    if (!VIDEO_PLATFORMS.includes(platform)) {
-      return NextResponse.json(
-        { error: `Invalid platform. Supported: ${VIDEO_PLATFORMS.join(', ')}` },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const startTime = startNow
       ? new Date().toISOString()

@@ -45,11 +45,20 @@ export async function GET() {
     return NextResponse.json({ items: [] });
   }
 
-  // Enrich with product names for display
+  // Enrich with product names for display (batch query, select only needed fields)
   const productIds = [...new Set(cart.items.map(i => i.productId))];
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    select: { id: true, name: true, images: true },
+    select: {
+      id: true,
+      name: true,
+      imageUrl: true,
+      images: {
+        take: 1,
+        orderBy: { sortOrder: 'asc' },
+        select: { url: true },
+      },
+    },
   });
   const productMap = new Map(products.map(p => [p.id, p]));
 
@@ -61,7 +70,7 @@ export async function GET() {
       quantity: item.quantity,
       price: Number(item.priceAtAdd),
       name: product?.name || 'Unknown Product',
-      image: Array.isArray(product?.images) && product.images.length > 0 ? ((product.images[0] as Record<string, unknown>)?.url as string ?? undefined) : undefined,
+      image: product?.images?.[0]?.url || product?.imageUrl || undefined,
     };
   });
 

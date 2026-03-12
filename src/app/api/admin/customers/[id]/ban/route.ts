@@ -1,11 +1,16 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // I-CRM-12: Customer ban/suspend API
+
+const banSchema = z.object({
+  reason: z.string().min(1, 'Reason is required').max(500).trim(),
+});
 
 // POST: Ban a customer
 export const POST = withAdminGuard(async (
@@ -13,7 +18,15 @@ export const POST = withAdminGuard(async (
   { params, session }: { params: Promise<{ id: string }>; session: { user: { id: string } } }
 ) => {
   const { id } = await params;
-  const { reason } = await request.json();
+  const body = await request.json();
+  const parsed = banSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const { reason } = parsed.data;
 
   const user = await prisma.user.update({
     where: { id },

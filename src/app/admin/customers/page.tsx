@@ -66,8 +66,7 @@ export default function CustomersPage() {
 
   const ribbonNewCustomer = useCallback(() => {
     toast.info(
-      t('admin.customers.newCustomerGuidance') ||
-      'Les clients sont crees automatiquement lors de leur premier achat sur la boutique. Pour inviter un prospect, utilisez la section Emails.'
+      t('admin.customers.newCustomerGuidance')
     );
   }, [t]);
 
@@ -82,10 +81,10 @@ export default function CustomersPage() {
       const avgBasket = users.length > 0 ? totalRevenue / users.length : 0;
       const fmt = new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' });
       toast.success(
-        `${t('admin.customers.revenueStats') || 'Revenus clients'}: ${fmt.format(totalRevenue)} | ${totalPurchases} ${t('admin.customers.purchases') || 'achats'} | ${t('admin.customers.avgBasket') || 'Panier moyen'}: ${fmt.format(avgBasket)}`
+        `${t('admin.customers.revenueStats')}: ${fmt.format(totalRevenue)} | ${totalPurchases} ${t('admin.customers.purchases')} | ${t('admin.customers.avgBasket')}: ${fmt.format(avgBasket)}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement des statistiques');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -106,10 +105,10 @@ export default function CustomersPage() {
         .map(tier => `${tier}: ${tiers[tier]}`)
         .join(' | ');
       toast.success(
-        `${t('admin.customers.tierDistribution') || 'Repartition par tier'}: ${breakdown}`
+        `${t('admin.customers.tierDistribution')}: ${breakdown}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -123,17 +122,17 @@ export default function CustomersPage() {
       const top3 = sorted.slice(0, 3);
       const fmt = new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' });
       if (top3.length === 0) {
-        toast.info(t('admin.customers.noCustomers') || 'Aucun client trouve');
+        toast.info(t('admin.customers.noCustomers'));
         return;
       }
       const topList = top3.map((u: { name?: string; email: string; totalSpent?: number }, i: number) =>
         `${i + 1}. ${u.name || u.email}: ${fmt.format(u.totalSpent || 0)}`
       ).join(' | ');
       toast.success(
-        `${t('admin.customers.topSpenders') || 'Top clients'}: ${topList}`
+        `${t('admin.customers.topSpenders')}: ${topList}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -149,10 +148,10 @@ export default function CustomersPage() {
         u.loyaltyTier === 'GOLD' || u.loyaltyTier === 'PLATINUM' || u.loyaltyTier === 'DIAMOND'
       ).length;
       toast.success(
-        `${t('admin.customers.ambassadorStats') || 'Ambassadeurs'}: ${withReferral}/${users.length} ${t('admin.customers.withReferralCode') || 'avec code parrainage'} | ${vipCount} VIP (Gold+) | ${totalPoints.toLocaleString(locale)} ${t('admin.customers.totalPoints') || 'points au total'}`
+        `${t('admin.customers.ambassadorStats')}: ${withReferral}/${users.length} ${t('admin.customers.withReferralCode')} | ${vipCount} VIP (Gold+) | ${totalPoints.toLocaleString(locale)} ${t('admin.customers.totalPoints')}`
       );
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors du chargement');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 
@@ -163,7 +162,7 @@ export default function CustomersPage() {
       const data = await res.json();
       const users = data.users || [];
       if (users.length === 0) {
-        toast.info(t('admin.customers.noDataToExport') || 'Aucune donnee a exporter');
+        toast.info(t('admin.customers.noDataToExport'));
         return;
       }
       const headers = ['Name', 'Email', 'Phone', 'Loyalty Tier', 'Loyalty Points', 'Lifetime Points', 'Total Spent', 'Purchases', 'Referral Code', 'Registered'];
@@ -193,7 +192,7 @@ export default function CustomersPage() {
       URL.revokeObjectURL(url);
       toast.success(t('admin.customers.exportSuccess') || `${users.length} clients exportes`);
     } catch {
-      toast.error(t('common.errorLoading') || 'Erreur lors de l\'export');
+      toast.error(t('common.errorLoading'));
     }
   }, [t]);
 

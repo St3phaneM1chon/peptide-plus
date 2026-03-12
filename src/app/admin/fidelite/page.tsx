@@ -18,6 +18,8 @@ import { POINTS_RULES, LOYALTY_TIERS } from '@/lib/loyalty/points-engine';
 import { DEFAULT_EXPIRATION } from '@/lib/loyalty/expiration-manager';
 // FIX F-006: Import canonical reward catalog from single source of truth
 import { LOYALTY_REWARDS_CATALOG } from '@/lib/constants';
+// Bridge cards: #37 Loyalty→Marketing, #38 Loyalty→Community
+import { LoyaltyPromosBridgeCard, LoyaltyCommunityBridgeCard } from '@/components/admin/bridges';
 
 interface LoyaltyTier {
   name: string;
@@ -199,11 +201,11 @@ export default function FidelitePage() {
         toast.success(t('admin.loyalty.configSaved'));
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.loyalty.configSaveError') || 'Error saving configuration');
+        toast.error(data.error || t('admin.loyalty.configSaveError'));
       }
     } catch (err) {
       console.error('Error saving config:', err);
-      toast.error(t('admin.loyalty.configSaveError') || 'Error saving configuration');
+      toast.error(t('admin.loyalty.configSaveError'));
     }
     setSaving(false);
   };
@@ -235,10 +237,10 @@ export default function FidelitePage() {
     // UX FIX: Validate tier form fields with inline error messages
     const errors: Record<string, string> = {};
     if (!tierFormName.trim()) {
-      errors.name = t('admin.loyalty.tierNameRequired') || 'Tier name is required';
+      errors.name = t('admin.loyalty.tierNameRequired');
     }
     if (tierFormMultiplier < 0.1 || tierFormMultiplier > 10) {
-      errors.multiplier = t('admin.loyalty.multiplierRange') || 'Multiplier must be between 0.1 and 10';
+      errors.multiplier = t('admin.loyalty.multiplierRange');
     }
     setTierFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -248,7 +250,7 @@ export default function FidelitePage() {
     // FIX: FLAW-086 - Use index-based identification to handle renames correctly
     const nameConflict = config.tiers.some((tier, idx) => idx !== editingTierIndex && tier.name === newName);
     if (nameConflict) {
-      setTierFormErrors({ name: t('admin.loyalty.tierNameExists') || 'A tier with this name already exists' });
+      setTierFormErrors({ name: t('admin.loyalty.tierNameExists') });
       return;
     }
     const updatedTiers = config.tiers.map((tier, idx) => {
@@ -264,7 +266,7 @@ export default function FidelitePage() {
       return tier;
     });
     setConfig({ ...config, tiers: updatedTiers });
-    toast.info(t('admin.loyalty.tierUpdatedClickSave') || 'Tier updated locally - click Save to persist changes');
+    toast.info(t('admin.loyalty.tierUpdatedClickSave'));
     setEditingTier(null);
     setEditingTierIndex(null);
   };
@@ -344,7 +346,7 @@ export default function FidelitePage() {
     orange: 'bg-orange-100 text-orange-800 border-orange-300',
     gray: 'bg-slate-200 text-slate-700 border-slate-400',
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-400',
-    blue: 'bg-teal-100 text-teal-800 border-teal-400',
+    blue: 'bg-indigo-100 text-indigo-800 border-indigo-400',
     purple: 'bg-purple-100 text-purple-800 border-purple-400',
   };
 
@@ -355,7 +357,7 @@ export default function FidelitePage() {
 
   const handleRibbonDelete = useCallback(() => {
     if (!config || config.tiers.length === 0) {
-      toast.info(t('admin.loyalty.noTiersToDelete') || 'No tiers to delete');
+      toast.info(t('admin.loyalty.noTiersToDelete'));
       return;
     }
     // Open the last tier's editor so user can delete from there
@@ -365,10 +367,10 @@ export default function FidelitePage() {
 
   const handleRibbonAdjustPoints = useCallback(() => {
     // Scroll to the simulation section where users can simulate point adjustments
-    const simSection = document.querySelector('.bg-teal-50');
+    const simSection = document.querySelector('.bg-indigo-50');
     if (simSection) {
       simSection.scrollIntoView({ behavior: 'smooth' });
-      toast.info(t('admin.loyalty.useSimulator') || 'Use the simulator below to calculate point adjustments');
+      toast.info(t('admin.loyalty.useSimulator'));
     }
   }, [t]);
 
@@ -377,7 +379,7 @@ export default function FidelitePage() {
     const settingsSection = document.querySelector('.bg-white.rounded-xl');
     if (settingsSection) {
       settingsSection.scrollIntoView({ behavior: 'smooth' });
-      toast.info(t('admin.loyalty.editEarningRules') || 'Edit earning rules in Basic Settings above');
+      toast.info(t('admin.loyalty.editEarningRules'));
     }
   }, [t]);
 
@@ -389,14 +391,14 @@ export default function FidelitePage() {
         const data = await res.json();
         const count = data.total || data.history?.length || 0;
         toast.info(
-          (t('admin.loyalty.exchangeHistoryCount') || '{count} point exchange(s) recorded')
+          (t('admin.loyalty.exchangeHistoryCount'))
             .replace('{count}', String(count))
         );
       } else {
-        toast.info(t('admin.loyalty.noExchangeHistory') || 'No exchange history available yet');
+        toast.info(t('admin.loyalty.noExchangeHistory'));
       }
     } catch {
-      toast.info(t('admin.loyalty.noExchangeHistory') || 'No exchange history available yet');
+      toast.info(t('admin.loyalty.noExchangeHistory'));
     }
   }, [t]);
 
@@ -404,7 +406,7 @@ export default function FidelitePage() {
     if (!config) return;
     const tierSummary = config.tiers.map(tier => `${tier.name}: ${tier.multiplier}x`).join(', ');
     toast.info(
-      `${config.tiers.length} ${t('admin.loyalty.loyaltyTiers') || 'tiers'} (${tierSummary})`
+      `${config.tiers.length} ${t('admin.loyalty.loyaltyTiers')} (${tierSummary})`
     );
   }, [config, t]);
 
@@ -429,7 +431,7 @@ export default function FidelitePage() {
     a.download = `loyalty-config-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported successfully');
+    toast.success(t('common.exported'));
   }, [config, t]);
 
   useRibbonAction('newTier', handleRibbonNewTier);
@@ -443,7 +445,7 @@ export default function FidelitePage() {
   if (loading || !config) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -551,7 +553,7 @@ export default function FidelitePage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-900">{t('admin.loyalty.loyaltyTiers')}</h3>
-          <Button variant="ghost" size="sm" icon={Plus} className="text-teal-600 hover:text-teal-700" onClick={addNewTier}>
+          <Button variant="ghost" size="sm" icon={Plus} className="text-indigo-600 hover:text-indigo-700" onClick={addNewTier}>
             {t('admin.loyalty.addTier')}
           </Button>
         </div>
@@ -601,22 +603,22 @@ export default function FidelitePage() {
       </div>
 
       {/* Simulation */}
-      <div className="bg-teal-50 rounded-xl border border-teal-200 p-6">
-        <h3 className="font-semibold text-teal-900 mb-4">{t('admin.loyalty.simulation')}</h3>
+      <div className="bg-indigo-50 rounded-xl border border-indigo-200 p-6">
+        <h3 className="font-semibold text-indigo-900 mb-4">{t('admin.loyalty.simulation')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <FormField label={t('admin.loyalty.purchaseAmount')}>
             <Input
               type="number"
               value={simAmount}
               onChange={(e) => setSimAmount(parseFloat(e.target.value) || 0)}
-              className="border-teal-300 bg-white"
+              className="border-indigo-300 bg-white"
             />
           </FormField>
           <FormField label={t('admin.loyalty.customerLevel')}>
             <select
               value={simTier || config.tiers[0]?.name || ''}
               onChange={(e) => setSimTier(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-teal-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-indigo-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {config.tiers.map((tier, idx) => (
                 <option key={`${idx}-${tier.name}`} value={tier.name}>{tier.name}</option>
@@ -624,9 +626,9 @@ export default function FidelitePage() {
             </select>
           </FormField>
           <div className="bg-white rounded-lg p-4 text-center">
-            <p className="text-sm text-teal-600">{t('admin.loyalty.pointsEarned')}</p>
-            <p className="text-3xl font-bold text-teal-900">{simResult.points.toLocaleString(locale)}</p>
-            <p className="text-xs text-teal-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
+            <p className="text-sm text-indigo-600">{t('admin.loyalty.pointsEarned')}</p>
+            <p className="text-3xl font-bold text-indigo-900">{simResult.points.toLocaleString(locale)}</p>
+            <p className="text-xs text-indigo-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
           </div>
         </div>
       </div>
@@ -634,40 +636,40 @@ export default function FidelitePage() {
       {/* A-027: Loyalty Statistics Overview */}
       {(txnStats || loyaltyStats) && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.loyalty.statsTitle') || 'Program Statistics'}</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.loyalty.statsTitle')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-              <p className="text-xs text-green-600 font-medium">{t('admin.loyalty.totalEarned') || 'Total Earned'}</p>
+              <p className="text-xs text-green-600 font-medium">{t('admin.loyalty.totalEarned')}</p>
               <p className="text-2xl font-bold text-green-700">{(txnStats?.totalEarned || 0).toLocaleString(locale)}</p>
               <p className="text-[10px] text-green-500">{t('admin.loyalty.pts')}</p>
             </div>
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
-              <p className="text-xs text-orange-600 font-medium">{t('admin.loyalty.totalRedeemed') || 'Total Redeemed'}</p>
+              <p className="text-xs text-orange-600 font-medium">{t('admin.loyalty.totalRedeemed')}</p>
               <p className="text-2xl font-bold text-orange-700">{(txnStats?.totalRedeemed || 0).toLocaleString(locale)}</p>
               <p className="text-[10px] text-orange-500">{t('admin.loyalty.pts')}</p>
             </div>
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-center">
-              <p className="text-xs text-teal-600 font-medium">{t('admin.loyalty.netCirculation') || 'Net in Circulation'}</p>
-              <p className="text-2xl font-bold text-teal-700">{(txnStats?.netPoints || 0).toLocaleString(locale)}</p>
-              <p className="text-[10px] text-teal-500">{t('admin.loyalty.pts')}</p>
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-indigo-600 font-medium">{t('admin.loyalty.netCirculation')}</p>
+              <p className="text-2xl font-bold text-indigo-700">{(txnStats?.netPoints || 0).toLocaleString(locale)}</p>
+              <p className="text-[10px] text-indigo-500">{t('admin.loyalty.pts')}</p>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-              <p className="text-xs text-purple-600 font-medium">{t('admin.loyalty.totalMembers') || 'Total Members'}</p>
+              <p className="text-xs text-purple-600 font-medium">{t('admin.loyalty.totalMembers')}</p>
               <p className="text-2xl font-bold text-purple-700">{(loyaltyStats?.totalMembers || 0).toLocaleString(locale)}</p>
-              <p className="text-[10px] text-purple-500">{t('admin.loyalty.members') || 'members'}</p>
+              <p className="text-[10px] text-purple-500">{t('admin.loyalty.members')}</p>
             </div>
           </div>
           {/* A-027: Members by tier distribution */}
           {loyaltyStats && Object.keys(loyaltyStats.membersByTier).length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">{t('admin.loyalty.membersByTier') || 'Members by Tier'}</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">{t('admin.loyalty.membersByTier')}</h4>
               <div className="space-y-2">
                 {Object.entries(loyaltyStats.membersByTier).map(([tier, count]) => (
                   <div key={tier} className="flex items-center gap-3">
                     <span className="text-sm font-medium text-slate-600 w-20">{tier}</span>
                     <div className="flex-1 bg-slate-100 rounded-full h-4">
                       <div
-                        className="bg-teal-500 rounded-full h-4 transition-all duration-500"
+                        className="bg-indigo-500 rounded-full h-4 transition-all duration-500"
                         style={{ width: `${loyaltyStats.totalMembers > 0 ? Math.max(2, (count / loyaltyStats.totalMembers) * 100) : 0}%` }}
                       />
                     </div>
@@ -683,30 +685,30 @@ export default function FidelitePage() {
       {/* A-026: Recent Transactions */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.recentTransactions') || 'Recent Transactions'}</h3>
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.recentTransactions')}</h3>
           <Link
             href="/admin/clients"
-            className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
           >
-            {t('admin.loyalty.viewAll') || 'View All'} →
+            {t('admin.loyalty.viewAll')} →
           </Link>
         </div>
         {txnsLoading ? (
           <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
           </div>
         ) : recentTxns.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-8">{t('admin.loyalty.noTransactions') || 'No transactions yet'}</p>
+          <p className="text-sm text-slate-500 text-center py-8">{t('admin.loyalty.noTransactions')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.user') || 'User'}</th>
-                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.type') || 'Type'}</th>
-                  <th className="text-end py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsLabel') || 'Points'}</th>
-                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.description') || 'Description'}</th>
-                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.date') || 'Date'}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.user')}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.type')}</th>
+                  <th className="text-end py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsLabel')}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.description')}</th>
+                  <th className="text-start py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.date')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -769,7 +771,7 @@ export default function FidelitePage() {
         {/* Active Challenges */}
         <div className="mb-6">
           <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-teal-500" />
+            <Target className="w-4 h-4 text-indigo-500" />
             {t('admin.loyalty.activeChallenges')}
           </h4>
           <div className="space-y-2">
@@ -814,7 +816,7 @@ export default function FidelitePage() {
       {/* ─── Points Engine Config ─────────────────────────────── */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-1">
-          <Star className="w-5 h-5 text-teal-600" />
+          <Star className="w-5 h-5 text-indigo-600" />
           <h3 className="font-semibold text-slate-900">{t('admin.loyalty.pointsRulesTitle')}</h3>
         </div>
         <p className="text-sm text-slate-500 mb-5">{t('admin.loyalty.pointsRulesSubtitle')}</p>
@@ -837,7 +839,7 @@ export default function FidelitePage() {
                     <p className="text-[10px] text-slate-400 font-mono">{rule.action}</p>
                   </td>
                   <td className="py-2.5 px-3">
-                    <span className="font-semibold text-teal-700">
+                    <span className="font-semibold text-indigo-700">
                       {typeof rule.points === 'function' ? '1 pt/$' : `${rule.points} ${t('admin.loyalty.pts')}`}
                     </span>
                   </td>
@@ -885,7 +887,7 @@ export default function FidelitePage() {
               : reward.type === 'bonus' ? t('admin.loyalty.rewardExclusive')
               : t('admin.loyalty.rewardExclusive');
             const typeColor = reward.type === 'discount' ? 'bg-green-100 text-green-700'
-              : reward.type === 'shipping' ? 'bg-teal-100 text-teal-700'
+              : reward.type === 'shipping' ? 'bg-indigo-100 text-indigo-700'
               : reward.type === 'bonus' ? 'bg-purple-100 text-purple-700'
               : 'bg-amber-100 text-amber-700';
             return (
@@ -897,6 +899,14 @@ export default function FidelitePage() {
             );
           })}
         </div>
+      </div>
+
+      {/* ─── Cross-Module Bridges ──────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bridge #37: Loyalty → Marketing (Promo usage by loyalty members) */}
+        <LoyaltyPromosBridgeCard t={t} locale={locale} />
+        {/* Bridge #38: Loyalty → Community (Review points summary) */}
+        <LoyaltyCommunityBridgeCard t={t} locale={locale} />
       </div>
 
       {/* ─── Points Expiration Widget ─────────────────────────── */}
@@ -917,7 +927,7 @@ export default function FidelitePage() {
             <p className="text-xs text-slate-500">{t('admin.loyalty.reminderSchedule')}</p>
             <div className="text-xs text-slate-700 mt-1">
               {DEFAULT_EXPIRATION.reminderDaysBefore.map((days) => (
-                <span key={days} className="inline-block bg-teal-100 text-teal-700 rounded-full px-1.5 py-0.5 text-[10px] font-medium me-1 mb-0.5">
+                <span key={days} className="inline-block bg-indigo-100 text-indigo-700 rounded-full px-1.5 py-0.5 text-[10px] font-medium me-1 mb-0.5">
                   {t('admin.loyalty.reminderDays').replace('{days}', String(days))}
                 </span>
               ))}
@@ -941,10 +951,10 @@ export default function FidelitePage() {
             <p className="text-2xl font-bold text-amber-700">{expirationSummary.expiring30.toLocaleString(locale)}</p>
             <p className="text-[10px] text-amber-500">{t('admin.loyalty.pts')}</p>
           </div>
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 text-center">
-            <p className="text-xs text-teal-600 font-medium">{t('admin.loyalty.expiring90')}</p>
-            <p className="text-2xl font-bold text-teal-700">{expirationSummary.expiring90.toLocaleString(locale)}</p>
-            <p className="text-[10px] text-teal-500">{t('admin.loyalty.pts')}</p>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-indigo-600 font-medium">{t('admin.loyalty.expiring90')}</p>
+            <p className="text-2xl font-bold text-indigo-700">{expirationSummary.expiring90.toLocaleString(locale)}</p>
+            <p className="text-[10px] text-indigo-500">{t('admin.loyalty.pts')}</p>
           </div>
         </div>
       </div>
@@ -952,14 +962,14 @@ export default function FidelitePage() {
       {/* UX FIX: ConfirmDialog for tier delete action */}
       <ConfirmDialog
         isOpen={confirmDeleteTier.isOpen}
-        title={t('admin.loyalty.confirmDeleteTierTitle') || 'Delete tier?'}
+        title={t('admin.loyalty.confirmDeleteTierTitle')}
         message={
           confirmDeleteTier.userCount > 0
             ? (t('admin.loyalty.tierHasUsersMessage') || `This tier has ${confirmDeleteTier.userCount} user(s). They will be moved to the default tier. Are you sure you want to delete "${confirmDeleteTier.tierName}"?`)
             : (t('admin.loyalty.confirmDeleteTierMessage') || `Are you sure you want to delete the "${confirmDeleteTier.tierName}" tier? Remember to save the configuration after.`)
         }
         variant={confirmDeleteTier.userCount > 0 ? 'warning' : 'danger'}
-        confirmLabel={t('admin.loyalty.deleteTier') || 'Delete Tier'}
+        confirmLabel={t('admin.loyalty.deleteTier')}
         onConfirm={() => {
           executeDeleteTier(confirmDeleteTier.tierName);
           setConfirmDeleteTier({ isOpen: false, tierName: '', userCount: 0 });
@@ -1032,21 +1042,21 @@ export default function FidelitePage() {
               rows={4}
               value={tierFormPerks}
               onChange={(e) => setTierFormPerks(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 transition-shadow resize-y focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 transition-shadow resize-y focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             />
           </FormField>
           <FormField label={t('admin.loyalty.tierColor')}>
             <select
               value={tierFormColor}
               onChange={(e) => setTierFormColor(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-teal-700"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               {/* FIX: F-064/F-086 - Clarify that value is color key; label shows color + tier name */}
-              <option value="orange">{t('admin.loyalty.colorOrange') || 'Orange (Bronze)'}</option>
-              <option value="gray">{t('admin.loyalty.colorGray') || 'Gray (Silver)'}</option>
-              <option value="yellow">{t('admin.loyalty.colorYellow') || 'Yellow (Gold)'}</option>
-              <option value="blue">{t('admin.loyalty.colorBlue') || 'Blue (Platinum)'}</option>
-              <option value="purple">{t('admin.loyalty.colorPurple') || 'Purple (Diamond)'}</option>
+              <option value="orange">{t('admin.loyalty.colorOrange')}</option>
+              <option value="gray">{t('admin.loyalty.colorGray')}</option>
+              <option value="yellow">{t('admin.loyalty.colorYellow')}</option>
+              <option value="blue">{t('admin.loyalty.colorBlue')}</option>
+              <option value="purple">{t('admin.loyalty.colorPurple')}</option>
             </select>
           </FormField>
         </div>

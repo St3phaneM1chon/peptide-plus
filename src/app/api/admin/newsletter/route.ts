@@ -29,6 +29,16 @@ export const GET = withAdminGuard(async (request) => {
         take: limit,
         skip,
         orderBy: { subscribedAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          locale: true,
+          source: true,
+          isActive: true,
+          subscribedAt: true,
+          unsubscribedAt: true,
+        },
       }),
       prisma.newsletterSubscriber.count({ where }),
     ]);
@@ -38,4 +48,4 @@ export const GET = withAdminGuard(async (request) => {
     logger.error('Admin newsletter GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'marketing.newsletter.manage' });

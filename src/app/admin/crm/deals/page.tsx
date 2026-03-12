@@ -143,31 +143,31 @@ export default function DealsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.deals') || 'Deals'}</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} {t('admin.crm.deals') || 'deals'}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.deals')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{total} {t('admin.crm.deals')}</p>
         </div>
         <div className="flex items-center gap-2">
           {/* View toggle */}
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
             <button
-              className="flex items-center gap-1 px-2.5 py-2 text-sm bg-teal-50 text-teal-700 border-r border-gray-300"
-              title={t('admin.crm.listView') || 'List View'}
+              className="flex items-center gap-1 px-2.5 py-2 text-sm bg-indigo-50 text-indigo-700 border-r border-gray-300"
+              title={t('admin.crm.listView')}
             >
               <List className="h-4 w-4" />
             </button>
             <button
               onClick={() => router.push('/admin/crm/pipeline')}
               className="flex items-center gap-1 px-2.5 py-2 text-sm text-gray-500 hover:bg-gray-50"
-              title={t('admin.crm.kanbanView') || 'Kanban View'}
+              title={t('admin.crm.kanbanView')}
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
           </div>
           <button
             onClick={() => router.push('/admin/crm/pipeline')}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           >
-            <Plus className="h-4 w-4" /> {t('admin.crm.newDeal') || 'New Deal'}
+            <Plus className="h-4 w-4" /> {t('admin.crm.newDeal')}
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@ export default function DealsPage() {
           <div className="bg-white rounded-lg border px-4 py-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <DollarSign className="h-3.5 w-3.5" />
-              {t('admin.crm.totalValue') || 'Total Value'}
+              {t('admin.crm.totalValue')}
             </div>
             <p className="text-lg font-bold text-gray-900">
               {new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(stats.totalValue)}
@@ -187,16 +187,16 @@ export default function DealsPage() {
           <div className="bg-white rounded-lg border px-4 py-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <TrendingUp className="h-3.5 w-3.5" />
-              {t('admin.crm.weightedValue') || 'Weighted'}
+              {t('admin.crm.weightedValue')}
             </div>
-            <p className="text-lg font-bold text-teal-700">
+            <p className="text-lg font-bold text-indigo-700">
               {new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(stats.weightedValue)}
             </p>
           </div>
           <div className="bg-white rounded-lg border px-4 py-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <Target className="h-3.5 w-3.5" />
-              {t('admin.crm.winRate') || 'Win Rate'}
+              {t('admin.crm.winRate')}
             </div>
             <p className="text-lg font-bold text-gray-900">
               {Math.round(stats.winRate * 100)}%
@@ -210,10 +210,10 @@ export default function DealsPage() {
           <div className="bg-white rounded-lg border px-4 py-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <Clock className="h-3.5 w-3.5" />
-              {t('admin.crm.openDeals') || 'Open Deals'}
+              {t('admin.crm.openDeals')}
             </div>
             <p className="text-lg font-bold text-gray-900">{stats.openCount}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{stats.totalDeals} {t('common.total') || 'total'}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{stats.totalDeals} {t('common.total')}</p>
           </div>
         </div>
       )}
@@ -224,7 +224,7 @@ export default function DealsPage() {
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder={t('admin.crm.searchDeals') || 'Search deals...'}
+            placeholder={t('admin.crm.searchDeals')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="w-full ps-9 pe-3 py-2 text-sm border border-gray-300 rounded-md"
@@ -235,7 +235,7 @@ export default function DealsPage() {
           onChange={(e) => { setPipelineId(e.target.value); setStageId(''); setPage(1); }}
           className="text-sm border border-gray-300 rounded-md px-3 py-2"
         >
-          <option value="">{t('admin.crm.allPipelines') || 'All Pipelines'}</option>
+          <option value="">{t('admin.crm.allPipelines')}</option>
           {pipelines.map(p => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -246,7 +246,7 @@ export default function DealsPage() {
             onChange={(e) => { setStageId(e.target.value); setPage(1); }}
             className="text-sm border border-gray-300 rounded-md px-3 py-2"
           >
-            <option value="">{t('admin.crm.allStages') || 'All Stages'}</option>
+            <option value="">{t('admin.crm.allStages')}</option>
             {stages.map(s => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -256,20 +256,20 @@ export default function DealsPage() {
 
       {/* Bulk Action Bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-teal-50 border border-teal-200 rounded-lg">
-          <span className="text-sm font-medium text-teal-800">
-            {selected.size} {t('common.selected') || 'selected'}
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <span className="text-sm font-medium text-indigo-800">
+            {selected.size} {t('common.selected')}
           </span>
           <div className="flex-1" />
           <button
             onClick={bulkDelete}
             className="flex items-center gap-1 px-2.5 py-1 text-xs text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50"
           >
-            <Trash2 className="h-3 w-3" /> {t('common.delete') || 'Delete'}
+            <Trash2 className="h-3 w-3" /> {t('common.delete')}
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="p-1 text-teal-500 hover:bg-teal-100 rounded"
+            className="p-1 text-indigo-500 hover:bg-indigo-100 rounded"
           >
             <X className="h-4 w-4" />
           </button>
@@ -285,22 +285,24 @@ export default function DealsPage() {
                 <th className="px-4 py-3 text-start">
                   <input type="checkbox" onChange={selectAll} checked={selected.size === deals.length && deals.length > 0} className="rounded" />
                 </th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealTitle') || 'Title'}</th>
-                <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealValue') || 'Value'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status') || 'Stage'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.contact') || 'Contact'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo') || 'Assigned'}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.expectedCloseDate') || 'Expected Close'}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealTitle')}</th>
+                <th className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase">{t('admin.crm.dealValue')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.status')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.contact')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.assignedTo')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.crm.expectedCloseDate')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mx-auto" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto" />
                 </td></tr>
               ) : deals.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  {t('admin.crm.noDeals') || 'No deals found'}
+                <tr><td colSpan={7} className="px-4 py-16 text-center">
+                  <DollarSign className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-500">{t('admin.crm.noDeals')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('admin.crm.noDealsDescription')}</p>
                 </td></tr>
               ) : deals.map((deal) => (
                 <tr
@@ -375,14 +377,14 @@ export default function DealsPage() {
                 disabled={page === 1}
                 className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 hover:bg-gray-100"
               >
-                {t('common.previous') || 'Prev'}
+                {t('common.previous')}
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 hover:bg-gray-100"
               >
-                {t('common.next') || 'Next'}
+                {t('common.next')}
               </button>
             </div>
           </div>

@@ -88,7 +88,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     ]);
 
     // Enrich with user info
-    const userIdSet = [...new Set(rawSubscriptions.map((s) => s.userId))];
+    const userIdSet = [...new Set(rawSubscriptions.map((s) => s.userId).filter((id): id is string => id != null))];
     const users = await prisma.user.findMany({
       where: { id: { in: userIdSet } },
       select: { id: true, name: true, email: true },
@@ -96,7 +96,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     const subscriptions = rawSubscriptions.map((sub) => {
-      const user = userMap.get(sub.userId);
+      const user = sub.userId ? userMap.get(sub.userId) : null;
       return {
         id: sub.id,
         userId: sub.userId,

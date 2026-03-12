@@ -1,112 +1,264 @@
 'use client';
 
-import { useState } from 'react';
-import { Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, FileSearch } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Loader2,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldX,
+  ExternalLink,
+  FileSearch,
+} from 'lucide-react';
+import { StatCard, Button } from '@/components/admin';
+import { toast } from 'sonner';
 
-interface SecurityCheck {
-  id: string;
-  name: string;
-  nameFr: string;
-  category: string;
-  status: 'pass' | 'fail' | 'warning' | 'info';
-  description: string;
-  lastChecked: Date;
+// ── Types ─────────────────────────────────────────────────────
+
+interface HeaderCheck {
+  header: string;
+  status: 'pass' | 'fail' | 'warn';
+  value: string | null;
+  recommendation: string | null;
 }
 
+interface AuditReport {
+  timestamp: string;
+  url: string;
+  totalChecks: number;
+  passed: number;
+  failed: number;
+  warnings: number;
+  grade: string;
+  checks: HeaderCheck[];
+}
+
+// ── Grade styling ─────────────────────────────────────────────
+
+const gradeColors: Record<string, { bg: string; text: string; border: string }> = {
+  'A+': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  'A': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  'B': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  'C': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  'D': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+  'F': { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+};
+
+function getGradeIcon(grade: string) {
+  if (grade === 'A+' || grade === 'A') return ShieldCheck;
+  if (grade === 'B' || grade === 'C') return ShieldAlert;
+  return ShieldX;
+}
+
+function statusIcon(s: string) {
+  switch (s) {
+    case 'pass':
+      return <CheckCircle className="w-5 h-5 text-green-500" />;
+    case 'fail':
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    case 'warn':
+      return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+    default:
+      return null;
+  }
+}
+
+function statusBadge(s: string) {
+  switch (s) {
+    case 'pass':
+      return <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">OK</span>;
+    case 'fail':
+      return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">Echec</span>;
+    case 'warn':
+      return <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Attention</span>;
+    default:
+      return null;
+  }
+}
+
+// ── Main Component ────────────────────────────────────────────
+
 export default function SecurityAuditPage() {
-  const [checks] = useState<SecurityCheck[]>([
-    { id: '1', name: 'HTTPS Enforcement', nameFr: 'HTTPS obligatoire', category: 'Transport', status: 'pass', description: 'HSTS activé avec preload', lastChecked: new Date() },
-    { id: '2', name: 'CSP Headers', nameFr: 'En-têtes CSP', category: 'Headers', status: 'pass', description: 'Content-Security-Policy configuré', lastChecked: new Date() },
-    { id: '3', name: 'CSRF Protection', nameFr: 'Protection CSRF', category: 'Auth', status: 'pass', description: 'Token CSRF vérifié sur mutations', lastChecked: new Date() },
-    { id: '4', name: 'SQL Injection', nameFr: 'Injection SQL', category: 'Input', status: 'pass', description: 'Prisma ORM paramétrise toutes les requêtes', lastChecked: new Date() },
-    { id: '5', name: 'XSS Protection', nameFr: 'Protection XSS', category: 'Output', status: 'pass', description: 'React échappe par défaut + DOMPurify', lastChecked: new Date() },
-    { id: '6', name: 'Rate Limiting', nameFr: 'Limitation de débit', category: 'API', status: 'pass', description: 'Rate limiter actif sur routes sensibles', lastChecked: new Date() },
-    { id: '7', name: 'Auth Secret', nameFr: 'Secret Auth', category: 'Auth', status: 'pass', description: 'AUTH_SECRET configuré et fort', lastChecked: new Date() },
-    { id: '8', name: 'MFA for Admins', nameFr: 'MFA pour admins', category: 'Auth', status: 'pass', description: 'MFA obligatoire pour OWNER/EMPLOYEE', lastChecked: new Date() },
-    { id: '9', name: 'File Upload Validation', nameFr: 'Validation uploads', category: 'Input', status: 'pass', description: 'Types MIME et tailles vérifiés', lastChecked: new Date() },
-    { id: '10', name: 'Dependency Audit', nameFr: 'Audit dépendances', category: 'Supply Chain', status: 'warning', description: 'Vérification npm audit recommandée', lastChecked: new Date() },
-    { id: '11', name: 'Error Handling', nameFr: 'Gestion erreurs', category: 'Output', status: 'pass', description: 'Pas de stack traces en production', lastChecked: new Date() },
-    { id: '12', name: 'Cookie Security', nameFr: 'Sécurité cookies', category: 'Auth', status: 'pass', description: 'HttpOnly, SameSite=Lax', lastChecked: new Date() },
-  ]);
+  const [report, setReport] = useState<AuditReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const passCount = checks.filter(c => c.status === 'pass').length;
-  const failCount = checks.filter(c => c.status === 'fail').length;
-  const warnCount = checks.filter(c => c.status === 'warning').length;
-  const score = Math.round((passCount / checks.length) * 100);
-
-  const statusIcon = (s: string) => {
-    switch (s) {
-      case 'pass': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'fail': return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      default: return <Eye className="w-5 h-5 text-teal-500" />;
+  const runAudit = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/security/headers-audit');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const json = await res.json();
+      setReport(json.data);
+      toast.success('Audit de securite termine');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(msg);
+      toast.error(`Echec de l'audit: ${msg}`);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
+
+  const gradeStyle = report ? (gradeColors[report.grade] || gradeColors['F']) : null;
+  const GradeIcon = report ? getGradeIcon(report.grade) : Shield;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Shield className="w-6 h-6 text-green-600" />
-            Audit de sécurité
+            Audit de securite
           </h1>
-          <p className="text-slate-500">Rapport de sécurité de l'application</p>
+          <p className="text-slate-500">
+            Analyse les en-tetes HTTP de securite en temps reel via /api/admin/security/headers-audit
+          </p>
         </div>
-        <div className="text-center">
-          <div className={`text-3xl font-bold ${score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-            {score}%
-          </div>
-          <div className="text-xs text-slate-500">Score sécurité</div>
-        </div>
+        <Button
+          icon={loading ? Loader2 : RefreshCw}
+          onClick={runAudit}
+          disabled={loading}
+          className={loading ? '[&_svg]:animate-spin' : ''}
+        >
+          {loading ? 'Analyse en cours...' : 'Lancer l\'audit'}
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-green-50 rounded-xl p-4 text-center">
-          <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-green-700">{passCount}</div>
-          <div className="text-xs text-green-600">Réussis</div>
+      {/* Error State */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-center gap-2">
+          <XCircle className="w-5 h-5 flex-shrink-0" />
+          <span>Erreur: {error}</span>
         </div>
-        <div className="bg-yellow-50 rounded-xl p-4 text-center">
-          <AlertTriangle className="w-6 h-6 text-yellow-600 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-yellow-700">{warnCount}</div>
-          <div className="text-xs text-yellow-600">Avertissements</div>
-        </div>
-        <div className="bg-red-50 rounded-xl p-4 text-center">
-          <XCircle className="w-6 h-6 text-red-600 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-red-700">{failCount}</div>
-          <div className="text-xs text-red-600">Échecs</div>
-        </div>
-      </div>
+      )}
 
-      {/* Checks List */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-            <FileSearch className="w-5 h-5 text-slate-500" />
-            Vérifications ({checks.length})
-          </h2>
+      {/* Empty State (before first run) */}
+      {!report && !loading && !error && (
+        <div className="rounded-xl border-2 border-dashed border-slate-200 p-12 text-center">
+          <Shield className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-500">Aucun audit lance</h3>
+          <p className="text-sm text-slate-400 mt-2">
+            Cliquez sur &quot;Lancer l&apos;audit&quot; pour analyser les en-tetes de securite HTTP.
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            L&apos;audit verifie HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy et plus.
+          </p>
         </div>
-        <div className="divide-y divide-slate-50">
-          {checks.map(check => (
-            <div key={check.id} className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50">
-              {statusIcon(check.status)}
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm text-slate-800">{check.nameFr}</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-medium">{check.category}</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">{check.description}</p>
+      )}
+
+      {/* Loading State */}
+      {loading && !report && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-8 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
+          <p className="text-indigo-700 font-medium">Analyse en cours...</p>
+          <p className="text-indigo-500 text-sm mt-1">Verification des en-tetes HTTP de securite</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {report && (
+        <>
+          {/* Grade Card */}
+          <div className={`rounded-xl ${gradeStyle?.bg} border ${gradeStyle?.border} p-6 flex items-center justify-between`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${gradeStyle?.bg}`}>
+                <GradeIcon className={`w-10 h-10 ${gradeStyle?.text}`} />
               </div>
-              <div className="text-xs text-slate-400 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {new Intl.DateTimeFormat('fr-CA', { dateStyle: 'short', timeStyle: 'short' }).format(check.lastChecked)}
+              <div>
+                <div className={`text-4xl font-black ${gradeStyle?.text}`}>{report.grade}</div>
+                <p className="text-sm text-slate-600 mt-1">
+                  Score de securite des en-tetes HTTP
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="text-end">
+              <p className="text-xs text-slate-500">
+                {new Date(report.timestamp).toLocaleString('fr-CA')}
+              </p>
+              <p className="text-xs text-slate-400 mt-1 flex items-center gap-1 justify-end">
+                <ExternalLink className="w-3 h-3" />
+                {report.url}
+              </p>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-4">
+            <StatCard
+              label="Reussis"
+              value={report.passed}
+              icon={CheckCircle}
+              className="bg-green-50 border-green-200"
+            />
+            <StatCard
+              label="Avertissements"
+              value={report.warnings}
+              icon={AlertTriangle}
+              className={report.warnings > 0 ? 'bg-yellow-50 border-yellow-200' : ''}
+            />
+            <StatCard
+              label="Echecs"
+              value={report.failed}
+              icon={XCircle}
+              className={report.failed > 0 ? 'bg-red-50 border-red-200' : ''}
+            />
+          </div>
+
+          {/* Checks List */}
+          <div className="bg-white rounded-xl border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100">
+              <h2 className="font-semibold text-slate-800 flex items-center gap-2">
+                <FileSearch className="w-5 h-5 text-slate-500" />
+                Verifications ({report.totalChecks})
+              </h2>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {report.checks.map((check) => (
+                <div key={check.header} className="px-6 py-4 hover:bg-slate-50">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {statusIcon(check.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm text-slate-800">
+                          {check.header}
+                        </span>
+                        {statusBadge(check.status)}
+                      </div>
+                      {check.value && (
+                        <p className="text-xs text-slate-500 mt-1 font-mono truncate" title={check.value}>
+                          {check.value}
+                        </p>
+                      )}
+                      {check.recommendation && (
+                        <p className="text-xs text-amber-600 mt-1.5 flex items-start gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          {check.recommendation}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Re-run button */}
+          <div className="flex justify-center">
+            <Button variant="secondary" icon={RefreshCw} onClick={runAudit} disabled={loading}>
+              Relancer l&apos;audit
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

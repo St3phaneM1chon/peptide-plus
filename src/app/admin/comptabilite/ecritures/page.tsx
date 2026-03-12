@@ -78,15 +78,15 @@ export default function EcrituresPage() {
   const typeConfig: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'neutral' | 'primary' | 'error' }> = {
     MANUAL: { label: t('admin.entries.typeManual'), variant: 'info' },
     AUTO_SALE: { label: t('admin.entries.typeAutoSale'), variant: 'success' },
-    AUTO_REFUND: { label: t('admin.entries.typeAutoRefund') || 'Remboursement auto', variant: 'error' },
-    AUTO_STRIPE_FEE: { label: t('admin.entries.typeAutoStripeFee') || 'Frais Stripe', variant: 'warning' },
-    AUTO_PAYPAL_FEE: { label: t('admin.entries.typeAutoPaypalFee') || 'Frais PayPal', variant: 'warning' },
-    AUTO_SHIPPING: { label: t('admin.entries.typeAutoShipping') || 'Livraison auto', variant: 'primary' },
+    AUTO_REFUND: { label: t('admin.entries.typeAutoRefund'), variant: 'error' },
+    AUTO_STRIPE_FEE: { label: t('admin.entries.typeAutoStripeFee'), variant: 'warning' },
+    AUTO_PAYPAL_FEE: { label: t('admin.entries.typeAutoPaypalFee'), variant: 'warning' },
+    AUTO_SHIPPING: { label: t('admin.entries.typeAutoShipping'), variant: 'primary' },
     AUTO_PURCHASE: { label: t('admin.entries.typeAutoPurchase'), variant: 'warning' },
     AUTO_PAYMENT: { label: t('admin.entries.typeAutoPayment'), variant: 'primary' },
     RECURRING: { label: t('admin.entries.typeRecurring'), variant: 'neutral' },
-    ADJUSTMENT: { label: t('admin.entries.typeAdjustment') || 'Ajustement', variant: 'info' },
-    CLOSING: { label: t('admin.entries.typeClosing') || 'Clôture', variant: 'neutral' },
+    ADJUSTMENT: { label: t('admin.entries.typeAdjustment'), variant: 'info' },
+    CLOSING: { label: t('admin.entries.typeClosing'), variant: 'neutral' },
   };
   const defaultTypeConfig = { label: 'Autre', variant: 'neutral' as const };
 
@@ -322,7 +322,7 @@ export default function EcrituresPage() {
       render: (entry) => (
         <button
           onClick={(e) => { e.stopPropagation(); openDetail(entry); }}
-          className="font-mono text-sm text-teal-600 hover:underline"
+          className="font-mono text-sm text-indigo-600 hover:underline"
         >
           {entry.entryNumber}
         </button>
@@ -390,7 +390,7 @@ export default function EcrituresPage() {
         <div className="flex items-center justify-center gap-1">
           <button
             onClick={(e) => { e.stopPropagation(); openDetail(entry); }}
-            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
             title={t('admin.entries.viewDetails')}
             aria-label={t('admin.entries.viewDetails')}
           >
@@ -447,7 +447,7 @@ export default function EcrituresPage() {
             );
             setShowDetailModal(false);
             setShowNewEntryModal(true);
-            toast.success(t('admin.entries.reversalCreated') || 'Contrepassation preparee - verifiez et enregistrez');
+            toast.success(t('admin.entries.reversalCreated'));
           }}
         >
           {t('admin.entries.reverseEntry')}
@@ -484,16 +484,16 @@ export default function EcrituresPage() {
   // -- Ribbon actions --
   const handleNewEntry = useCallback(() => { setShowNewEntryModal(true); }, []);
   const handleDelete = useCallback(() => {
-    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst') || 'Selectionnez une ecriture'); return; }
-    if (selectedEntry.status === 'POSTED') { toast.error(t('admin.entries.cannotDeletePosted') || 'Impossible de supprimer une ecriture comptabilisee'); return; }
-    toast.info(t('admin.entries.deleteNotAvailable') || 'La suppression est reservee aux ecritures en brouillon via le detail');
+    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst')); return; }
+    if (selectedEntry.status === 'POSTED') { toast.error(t('admin.entries.cannotDeletePosted')); return; }
+    toast.info(t('admin.entries.deleteNotAvailable'));
   }, [selectedEntry, t]);
   const handleValidate = useCallback(() => {
     if (selectedEntry && selectedEntry.status === 'DRAFT') handlePostEntry(selectedEntry.id);
   }, [selectedEntry]);
   const handleCancel = useCallback(() => { setShowNewEntryModal(false); setShowDetailModal(false); }, []);
   const handleDuplicate = useCallback(() => {
-    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst') || 'Selectionnez une ecriture'); return; }
+    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst')); return; }
     // Pre-fill the new entry form with data from the selected entry
     setNewEntryDate(new Date().toISOString().split('T')[0]);
     setNewEntryDescription(selectedEntry.description + ' (copie)');
@@ -508,11 +508,11 @@ export default function EcrituresPage() {
     );
     setShowDetailModal(false);
     setShowNewEntryModal(true);
-    toast.success(t('admin.entries.duplicated') || 'Ecriture dupliquee - modifiez et enregistrez');
+    toast.success(t('admin.entries.duplicated'));
   }, [selectedEntry, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
   const handleExport = useCallback(() => {
-    if (filteredEntries.length === 0) { toast.info(t('admin.entries.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    if (filteredEntries.length === 0) { toast.info(t('admin.entries.noDataToExport')); return; }
     const headers = ['Numero', 'Date', 'Description', 'Type', 'Statut', 'Debit', 'Credit', 'Reference'];
     const rows = filteredEntries.map(e => [
       e.entryNumber,
@@ -534,7 +534,7 @@ export default function EcrituresPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(t('admin.entries.exportSuccess') || 'Export CSV telecharge');
+    toast.success(t('admin.entries.exportSuccess'));
   }, [filteredEntries, locale, t]);
 
   useRibbonAction('newEntry', handleNewEntry);
@@ -737,14 +737,14 @@ export default function EcrituresPage() {
 
             {/* Bridge #4: Comptabilité → Commerce (source order) */}
             {selectedEntry.sourceOrder && (
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-teal-800 mb-2 flex items-center gap-1.5">
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-indigo-800 mb-2 flex items-center gap-1.5">
                   <ShoppingCart className="w-4 h-4" />
-                  {t('admin.accounting.sourceOrder') || 'Source Order'}
+                  {t('admin.accounting.sourceOrder')}
                 </h4>
                 <div className="flex items-center justify-between text-sm">
                   <div>
-                    <span className="font-mono text-teal-700">{selectedEntry.sourceOrder.orderNumber}</span>
+                    <span className="font-mono text-indigo-700">{selectedEntry.sourceOrder.orderNumber}</span>
                     <span className={`ms-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                       selectedEntry.sourceOrder.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
                       selectedEntry.sourceOrder.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
@@ -753,12 +753,12 @@ export default function EcrituresPage() {
                   </div>
                   <Link
                     href={`/admin/commandes?order=${selectedEntry.sourceOrder.id}`}
-                    className="text-xs text-teal-600 hover:text-teal-800 font-medium"
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                   >
-                    {t('admin.accounting.viewOrder') || 'View Order'} →
+                    {t('admin.accounting.viewOrder')} →
                   </Link>
                 </div>
-                <p className="text-xs text-teal-600 mt-1">
+                <p className="text-xs text-indigo-600 mt-1">
                   {t('common.total')}: {formatCurrency(selectedEntry.sourceOrder.total)}
                 </p>
               </div>
@@ -769,7 +769,7 @@ export default function EcrituresPage() {
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-purple-800 mb-2 flex items-center gap-1.5">
                   <Briefcase className="w-4 h-4" />
-                  {t('admin.bridges.accountingCrm') || 'Linked CRM Deal'}
+                  {t('admin.bridges.accountingCrm')}
                 </h4>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-purple-700">{crmDealBridge.deal.title}</span>
@@ -777,7 +777,7 @@ export default function EcrituresPage() {
                     href={`/admin/crm/deals/${crmDealBridge.deal.id}`}
                     className="text-xs text-purple-600 hover:text-purple-800 font-medium"
                   >
-                    {t('admin.bridges.viewAll') || 'View'} →
+                    {t('admin.bridges.viewAll')} →
                   </Link>
                 </div>
                 <div className="flex items-center justify-between text-xs mt-1">
@@ -835,7 +835,7 @@ export default function EcrituresPage() {
                     <tr key={`entry-line-${idx}-${line.accountCode}`}>
                       <td className="px-4 py-2">
                         <select
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           value={line.accountCode}
                           onChange={(e) => updateNewLine(idx, 'accountCode', e.target.value)}
                         >
@@ -848,7 +848,7 @@ export default function EcrituresPage() {
                       <td className="px-4 py-2">
                         <input
                           type="text"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder={t('admin.entries.descriptionLinePlaceholder')}
                           value={line.description}
                           onChange={(e) => updateNewLine(idx, 'description', e.target.value)}
@@ -858,7 +858,7 @@ export default function EcrituresPage() {
                         <input
                           type="number"
                           step="0.01"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="0.00"
                           value={line.debit}
                           onChange={(e) => updateNewLine(idx, 'debit', e.target.value)}
@@ -868,7 +868,7 @@ export default function EcrituresPage() {
                         <input
                           type="number"
                           step="0.01"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           placeholder="0.00"
                           value={line.credit}
                           onChange={(e) => updateNewLine(idx, 'credit', e.target.value)}

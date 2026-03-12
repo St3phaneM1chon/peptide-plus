@@ -6,6 +6,11 @@
  *   1. ProductTierPrice (product-specific override per tier)
  *   2. LoyaltyTierConfig.discountPercent (general tier-wide discount)
  *   3. Base product price (no discount)
+ *
+ * A8-P2-002 NOTE: All prices are ABSOLUTE values (e.g. $45.00), never percentages.
+ * ProductTierPrice.price replaces the base price entirely for a given tier.
+ * LoyaltyTierConfig.discountPercent is a % off the base price (computed into an absolute).
+ * The `effectivePrice` returned is always the final dollar amount the customer pays.
  */
 
 import { prisma } from '@/lib/db';

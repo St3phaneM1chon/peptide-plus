@@ -183,7 +183,7 @@ export default function ContenuPage() {
         toast.error(data.error || t('common.deleteFailed'));
         return;
       }
-      toast.success(t('admin.content.pageDeleted') || 'Page deleted');
+      toast.success(t('admin.content.pageDeleted'));
       fetchPages();
     } catch {
       toast.error(t('common.networkError'));
@@ -262,7 +262,7 @@ export default function ContenuPage() {
         toast.error(data.error || t('common.deleteFailed'));
         return;
       }
-      toast.success(t('admin.content.faqDeleted') || 'FAQ deleted');
+      toast.success(t('admin.content.faqDeleted'));
       fetchFaqs();
     } catch {
       toast.error(t('common.networkError'));
@@ -284,8 +284,8 @@ export default function ContenuPage() {
         return;
       }
       toast.success(faq.isPublished
-        ? (t('admin.content.faqUnpublished') || 'FAQ unpublished')
-        : (t('admin.content.faqPublished') || 'FAQ published'));
+        ? (t('admin.content.faqUnpublished'))
+        : (t('admin.content.faqPublished')));
       fetchFaqs();
     } catch {
       toast.error(t('common.networkError'));
@@ -346,7 +346,7 @@ export default function ContenuPage() {
     // Reload all content from server
     setLoading(true);
     Promise.all([fetchPages(), fetchFaqs()]).finally(() => setLoading(false));
-    toast.success(t('admin.content.contentReloaded') || 'Content reloaded from server');
+    toast.success(t('admin.content.contentReloaded'));
   }, [fetchPages, fetchFaqs, t]);
 
   const handleRibbonImportConfig = useCallback(() => {
@@ -372,7 +372,7 @@ export default function ContenuPage() {
             } catch { /* skip */ }
           }
           fetchPages();
-          toast.success(`${created} ${t('admin.content.tabPages') || 'pages'} ${t('admin.content.imported') || 'imported'}`);
+          toast.success(`${created} ${t('admin.content.tabPages')} ${t('admin.content.imported')}`);
         } else if (activeTab === 'faq' && Array.isArray(imported.faqs)) {
           for (const f of imported.faqs) {
             try {
@@ -385,12 +385,12 @@ export default function ContenuPage() {
             } catch { /* skip */ }
           }
           fetchFaqs();
-          toast.success(`${created} ${t('admin.content.tabFaq') || 'FAQs'} ${t('admin.content.imported') || 'imported'}`);
+          toast.success(`${created} ${t('admin.content.tabFaq')} ${t('admin.content.imported')}`);
         } else {
-          toast.error(t('admin.content.importError') || 'Invalid format');
+          toast.error(t('admin.content.importError'));
         }
       } catch {
-        toast.error(t('admin.content.importError') || 'Invalid JSON file');
+        toast.error(t('admin.content.importError'));
       }
     };
     input.click();
@@ -399,16 +399,16 @@ export default function ContenuPage() {
   const handleRibbonExportConfig = useCallback(() => {
     if (activeTab === 'pages') {
       if (pages.length === 0) {
-        toast.info(t('admin.content.noPagesTitle') || 'No pages to export');
+        toast.info(t('admin.content.noPagesTitle'));
         return;
       }
       const headers = [
-        t('admin.content.colPage') || 'Title',
-        t('admin.content.colUrl') || 'Slug',
-        t('admin.content.fieldExcerpt') || 'Excerpt',
-        t('admin.content.fieldTemplate') || 'Template',
-        t('admin.content.colStatus') || 'Status',
-        t('admin.content.colUpdated') || 'Updated',
+        t('admin.content.colPage'),
+        t('admin.content.colUrl'),
+        t('admin.content.fieldExcerpt'),
+        t('admin.content.fieldTemplate'),
+        t('admin.content.colStatus'),
+        t('admin.content.colUpdated'),
       ];
       const rows = pages.map(p => [
         p.title, `/${p.slug}`, p.excerpt || '', p.template,
@@ -423,15 +423,15 @@ export default function ContenuPage() {
       URL.revokeObjectURL(url);
     } else {
       if (faqs.length === 0) {
-        toast.info(t('admin.content.noFaqsTitle') || 'No FAQs to export');
+        toast.info(t('admin.content.noFaqsTitle'));
         return;
       }
       const headers = [
-        t('admin.content.fieldCategory') || 'Category',
-        t('admin.content.fieldQuestion') || 'Question',
-        t('admin.content.fieldAnswer') || 'Answer',
-        t('admin.content.fieldSortOrder') || 'Order',
-        t('admin.content.colStatus') || 'Status',
+        t('admin.content.fieldCategory'),
+        t('admin.content.fieldQuestion'),
+        t('admin.content.fieldAnswer'),
+        t('admin.content.fieldSortOrder'),
+        t('admin.content.colStatus'),
       ];
       const rows = faqs.map(f => [
         f.category, f.question, f.answer, f.sortOrder,
@@ -444,7 +444,7 @@ export default function ContenuPage() {
       const a = document.createElement('a'); a.href = url; a.download = `faqs-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
       URL.revokeObjectURL(url);
     }
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [activeTab, pages, faqs, t, locale]);
 
   const handleRibbonTest = useCallback(() => {
@@ -453,8 +453,8 @@ export default function ContenuPage() {
     const publishedFaqs = faqs.filter(f => f.isPublished).length;
     const categories = [...new Set(faqs.map(f => f.category))].length;
     toast.success(
-      `${t('admin.content.tabPages') || 'Pages'}: ${publishedPages}/${pages.length} ${t('admin.content.published') || 'published'} | ` +
-      `${t('admin.content.tabFaq') || 'FAQs'}: ${publishedFaqs}/${faqs.length} ${t('admin.content.published') || 'published'} (${categories} ${t('admin.content.fieldCategory') || 'categories'})`,
+      `${t('admin.content.tabPages')}: ${publishedPages}/${pages.length} ${t('admin.content.published')} | ` +
+      `${t('admin.content.tabFaq')}: ${publishedFaqs}/${faqs.length} ${t('admin.content.published')} (${categories} ${t('admin.content.fieldCategory')})`,
       { duration: 6000 }
     );
   }, [pages, faqs, t]);
@@ -566,7 +566,7 @@ export default function ContenuPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
           <span className="sr-only">Loading...</span>
         </div>
       ) : activeTab === 'pages' ? (
@@ -636,7 +636,7 @@ export default function ContenuPage() {
                                   idx <= currentIdx ? (
                                     step.key === 'published' ? 'bg-emerald-500' :
                                     step.key === 'scheduled' ? 'bg-amber-500' :
-                                    step.key === 'review' ? 'bg-teal-500' : 'bg-slate-400'
+                                    step.key === 'review' ? 'bg-indigo-500' : 'bg-slate-400'
                                   ) : 'bg-slate-200'
                                 }`} title={step.label} />
                                 {idx < steps.length - 1 && (
@@ -670,7 +670,7 @@ export default function ContenuPage() {
                         </button>
                         <button
                           onClick={() => setPreviewPageId(previewPageId === page.id ? null : page.id)}
-                          className={`p-1.5 rounded hover:bg-teal-50 transition-colors ${previewPageId === page.id ? 'text-teal-600' : 'text-slate-400 hover:text-teal-600'}`}
+                          className={`p-1.5 rounded hover:bg-indigo-50 transition-colors ${previewPageId === page.id ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}
                           title="Aperçu enrichi"
                         >
                           <FileSearch className="w-4 h-4" />
@@ -800,7 +800,7 @@ export default function ContenuPage() {
               <select
                 value={pageForm.template}
                 onChange={e => setPageForm(f => ({ ...f, template: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="default">{t('admin.content.templateDefault')}</option>
                 <option value="full-width">{t('admin.content.templateFullWidth')}</option>
@@ -820,7 +820,7 @@ export default function ContenuPage() {
               type="checkbox"
               checked={pageForm.isPublished}
               onChange={e => setPageForm(f => ({ ...f, isPublished: e.target.checked }))}
-              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <span className="text-sm text-slate-700">{t('admin.content.publishImmediately')}</span>
           </label>
@@ -846,7 +846,7 @@ export default function ContenuPage() {
               <select
                 value={faqForm.category}
                 onChange={e => setFaqForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {getFaqCategories(t).map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -881,7 +881,7 @@ export default function ContenuPage() {
               type="checkbox"
               checked={faqForm.isPublished}
               onChange={e => setFaqForm(f => ({ ...f, isPublished: e.target.checked }))}
-              className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <span className="text-sm text-slate-700">{t('admin.content.publishedCheckbox')}</span>
           </label>
@@ -898,7 +898,7 @@ export default function ContenuPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                <FileSearch className="w-4 h-4 text-teal-500" />
+                <FileSearch className="w-4 h-4 text-indigo-500" />
                 Aperçu enrichi: {p.title}
               </h3>
               <button onClick={() => setPreviewPageId(null)} className="text-slate-400 hover:text-slate-600 text-xs">
@@ -915,10 +915,10 @@ export default function ContenuPage() {
                 return (
                   <div key={step} className="flex items-center gap-2">
                     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                      isActive ? 'bg-teal-100 text-teal-700 ring-1 ring-teal-200' :
+                      isActive ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200' :
                       isPast ? 'bg-emerald-50 text-emerald-600' : 'bg-white text-slate-400'
                     }`}>
-                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-teal-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-indigo-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                       {labels[step]}
                     </div>
                     {idx < 3 && <ArrowRight className={`w-3 h-3 ${isPast ? 'text-slate-400' : 'text-slate-200'}`} />}
@@ -983,7 +983,7 @@ export default function ContenuPage() {
             <select
               value={scheduleForm.action}
               onChange={e => setScheduleForm(f => ({ ...f, action: e.target.value as 'publish' | 'unpublish' }))}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="publish">Publier</option>
               <option value="unpublish">Dépublier</option>
@@ -998,8 +998,8 @@ export default function ContenuPage() {
             />
           </FormField>
           {scheduleForm.scheduledAt && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-              <p className="text-sm text-teal-800">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <p className="text-sm text-indigo-800">
                 <Calendar className="w-4 h-4 inline me-1" />
                 &laquo;{scheduleTarget?.title}&raquo; sera {scheduleForm.action === 'publish' ? 'publié' : 'dépublié'} le{' '}
                 <strong>{new Date(scheduleForm.scheduledAt).toLocaleDateString(locale)}</strong> à{' '}
@@ -1014,13 +1014,13 @@ export default function ContenuPage() {
       <ConfirmDialog
         isOpen={!!confirmDelete}
         title={confirmDelete?.type === 'faq'
-          ? (t('admin.content.deleteFaqTitle') || 'Delete FAQ')
-          : (t('admin.content.deletePageTitle') || 'Delete Page')}
+          ? (t('admin.content.deleteFaqTitle'))
+          : (t('admin.content.deletePageTitle'))}
         message={confirmDelete?.type === 'faq'
-          ? (t('admin.content.deleteFaqConfirm') || 'Are you sure you want to delete this FAQ entry? This action cannot be undone.')
-          : (t('admin.content.deletePageConfirm') || 'Are you sure you want to delete this page? This action cannot be undone.')}
+          ? (t('admin.content.deleteFaqConfirm'))
+          : (t('admin.content.deletePageConfirm'))}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => {
           if (confirmDelete) {
             if (confirmDelete.type === 'page') deletePage(confirmDelete.id);

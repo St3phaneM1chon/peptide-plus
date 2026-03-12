@@ -103,7 +103,7 @@ function StageEditor({
           className="flex items-center gap-2 text-sm font-medium text-gray-700"
         >
           {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          {stage.stageId || (t('admin.crm.playbooks.unnamedStage') || 'Unnamed Stage')}
+          {stage.stageId || (t('admin.crm.playbooks.unnamedStage'))}
         </button>
         <button onClick={onRemove} className="text-red-400 hover:text-red-600">
           <Trash2 className="h-4 w-4" />
@@ -115,33 +115,33 @@ function StageEditor({
           {/* Stage ID */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.playbooks.stageId') || 'Stage ID'}
+              {t('admin.crm.playbooks.stageId')}
             </label>
             <input
               type="text"
               value={stage.stageId}
               onChange={(e) => onChange({ ...stage, stageId: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
           {/* Guidance */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.playbooks.guidance') || 'Guidance'}
+              {t('admin.crm.playbooks.guidance')}
             </label>
             <textarea
               value={stage.guidance}
               onChange={(e) => onChange({ ...stage, guidance: e.target.value })}
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
           </div>
 
           {/* Checklist */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.playbooks.checklist') || 'Checklist'}
+              {t('admin.crm.playbooks.checklist')}
             </label>
             {stage.checklist.map((item, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
@@ -150,8 +150,8 @@ function StageEditor({
                   type="text"
                   value={item}
                   onChange={(e) => updateChecklist(i, e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder={t('admin.crm.playbooks.checklistItem') || 'Checklist item...'}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={t('admin.crm.playbooks.checklistItem')}
                 />
                 <button onClick={() => removeChecklistItem(i)} className="text-red-400 hover:text-red-600">
                   <XCircle className="h-4 w-4" />
@@ -160,17 +160,17 @@ function StageEditor({
             ))}
             <button
               onClick={addChecklistItem}
-              className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+              className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
             >
               <Plus className="h-3 w-3" />
-              {t('admin.crm.playbooks.addItem') || 'Add item'}
+              {t('admin.crm.playbooks.addItem')}
             </button>
           </div>
 
           {/* Resources */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.playbooks.resources') || 'Resources'}
+              {t('admin.crm.playbooks.resources')}
             </label>
             {stage.resources.map((res, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
@@ -183,8 +183,8 @@ function StageEditor({
                     updated[i] = { ...updated[i], title: e.target.value };
                     onChange({ ...stage, resources: updated });
                   }}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder={t('admin.crm.playbooks.resourceTitle') || 'Title'}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={t('admin.crm.playbooks.resourceTitle')}
                 />
                 <input
                   type="text"
@@ -194,7 +194,7 @@ function StageEditor({
                     updated[i] = { ...updated[i], url: e.target.value };
                     onChange({ ...stage, resources: updated });
                   }}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="URL"
                 />
                 <button
@@ -207,10 +207,10 @@ function StageEditor({
             ))}
             <button
               onClick={() => onChange({ ...stage, resources: [...stage.resources, { title: '', url: '' }] })}
-              className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+              className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
             >
               <Plus className="h-3 w-3" />
-              {t('admin.crm.playbooks.addResource') || 'Add resource'}
+              {t('admin.crm.playbooks.addResource')}
             </button>
           </div>
         </div>
@@ -241,7 +241,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error(t('admin.crm.playbooks.nameRequired') || 'Name is required');
+      toast.error(t('admin.crm.playbooks.nameRequired'));
       return;
     }
 
@@ -270,8 +270,8 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
 
       toast.success(
         playbook
-          ? (t('admin.crm.playbooks.updated') || 'Playbook updated')
-          : (t('admin.crm.playbooks.created') || 'Playbook created')
+          ? (t('admin.crm.playbooks.updated'))
+          : (t('admin.crm.playbooks.created'))
       );
       onSave();
     } catch (err) {
@@ -301,10 +301,10 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-teal-600" />
+            <BookOpen className="h-5 w-5 text-indigo-600" />
             {playbook
-              ? (t('admin.crm.playbooks.editPlaybook') || 'Edit Playbook')
-              : (t('admin.crm.playbooks.createPlaybook') || 'Create Playbook')}
+              ? (t('admin.crm.playbooks.editPlaybook'))
+              : (t('admin.crm.playbooks.createPlaybook'))}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XCircle className="h-5 w-5" />
@@ -315,38 +315,38 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
         <div className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('common.name') || 'Name'} *
+              {t('common.name')} *
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder={t('admin.crm.playbooks.namePlaceholder') || 'Sales Playbook...'}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder={t('admin.crm.playbooks.namePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('common.description') || 'Description'}
+              {t('common.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('common.status') || 'Status'}
+                {t('common.status')}
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Playbook['status'])}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="ACTIVE">Active</option>
@@ -355,14 +355,14 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                {t('admin.crm.playbooks.pipeline') || 'Pipeline'}
+                {t('admin.crm.playbooks.pipeline')}
               </label>
               <select
                 value={targetPipeline}
                 onChange={(e) => setTargetPipeline(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">{t('admin.crm.playbooks.allPipelines') || 'All Pipelines'}</option>
+                <option value="">{t('admin.crm.playbooks.allPipelines')}</option>
                 {pipelines.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -374,14 +374,14 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-gray-700">
-                {t('admin.crm.playbooks.stageGuidance') || 'Stage Guidance'}
+                {t('admin.crm.playbooks.stageGuidance')}
               </label>
               <button
                 onClick={addStage}
-                className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
               >
                 <Plus className="h-3 w-3" />
-                {t('admin.crm.playbooks.addStage') || 'Add Stage'}
+                {t('admin.crm.playbooks.addStage')}
               </button>
             </div>
 
@@ -396,7 +396,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
               ))}
               {stages.length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  {t('admin.crm.playbooks.noStages') || 'No stages configured. Add stages to define the playbook flow.'}
+                  {t('admin.crm.playbooks.noStages')}
                 </p>
               )}
             </div>
@@ -409,17 +409,17 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             {saving
-              ? (t('common.saving') || 'Saving...')
-              : (t('common.save') || 'Save')}
+              ? (t('common.saving'))
+              : (t('common.save'))}
           </button>
         </div>
       </div>
@@ -447,7 +447,7 @@ export default function PlaybooksPage() {
         setPlaybooks(json.data || json.items || []);
       }
     } catch {
-      toast.error(t('admin.crm.playbooks.loadError') || 'Failed to load playbooks');
+      toast.error(t('admin.crm.playbooks.loadError'));
     } finally {
       setLoading(false);
     }
@@ -476,35 +476,35 @@ export default function PlaybooksPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.playbooks.title') || 'Sales Playbooks'}
+            <BookOpen className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.playbooks.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.playbooks.subtitle') || 'Stage-by-stage guidance for your sales process'}
+            {t('admin.crm.playbooks.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setModal({ playbook: null })}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.playbooks.create') || 'Create Playbook'}
+          {t('admin.crm.playbooks.create')}
         </button>
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         </div>
       ) : playbooks.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.playbooks.noPlaybooks') || 'No playbooks yet'}
+            {t('admin.crm.playbooks.noPlaybooks')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.playbooks.noPlaybooksDesc') || 'Create your first playbook to guide your sales team'}
+            {t('admin.crm.playbooks.noPlaybooksDesc')}
           </p>
         </div>
       ) : (
@@ -528,7 +528,7 @@ export default function PlaybooksPage() {
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <FileText className="h-3.5 w-3.5" />
-                  {pb.stages.length} {t('admin.crm.playbooks.stages') || 'stages'}
+                  {pb.stages.length} {t('admin.crm.playbooks.stages')}
                 </span>
                 <span>
                   {new Date(pb.updatedAt).toLocaleDateString(undefined, {

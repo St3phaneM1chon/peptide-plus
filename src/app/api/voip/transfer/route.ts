@@ -36,7 +36,7 @@ const transferSchema = z.object({
   conferenceName: z.string().optional(),
 });
 
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const raw = await request.json();
     const parsed = transferSchema.safeParse(raw);

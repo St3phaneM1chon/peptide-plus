@@ -74,12 +74,12 @@ interface TrainingSession {
 // ---------------------------------------------------------------------------
 
 const SHIFT_CONFIG: Record<ShiftType, { label: string; color: string; defaultStart: string; defaultEnd: string }> = {
-  MORNING:   { label: 'Morning',   color: 'bg-teal-100 text-teal-700 border-teal-200',     defaultStart: '09:00', defaultEnd: '17:00' },
+  MORNING:   { label: 'Morning',   color: 'bg-indigo-100 text-indigo-700 border-indigo-200',     defaultStart: '09:00', defaultEnd: '17:00' },
   AFTERNOON: { label: 'Afternoon', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', defaultStart: '13:00', defaultEnd: '21:00' },
   EVENING:   { label: 'Evening',   color: 'bg-purple-100 text-purple-700 border-purple-200', defaultStart: '17:00', defaultEnd: '01:00' },
   NIGHT:     { label: 'Night',     color: 'bg-gray-100 text-gray-700 border-gray-200',       defaultStart: '21:00', defaultEnd: '05:00' },
   SPLIT:     { label: 'Split',     color: 'bg-orange-100 text-orange-700 border-orange-200', defaultStart: '09:00', defaultEnd: '21:00' },
-  CUSTOM:    { label: 'Custom',    color: 'bg-teal-100 text-teal-700 border-teal-200',       defaultStart: '09:00', defaultEnd: '17:00' },
+  CUSTOM:    { label: 'Custom',    color: 'bg-indigo-100 text-indigo-700 border-indigo-200',       defaultStart: '09:00', defaultEnd: '17:00' },
 };
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -169,7 +169,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
         throw new Error(json.error?.message || 'Failed to save schedule');
       }
 
-      toast.success(t('admin.crm.scheduling.saved') || 'Schedule saved');
+      toast.success(t('admin.crm.scheduling.saved'));
       onSaved(json.data);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save schedule');
@@ -178,7 +178,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
     }
   };
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -186,8 +186,8 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">
             {data.existing
-              ? (t('admin.crm.scheduling.editSchedule') || 'Edit Schedule')
-              : (t('admin.crm.scheduling.addSchedule') || 'Add Schedule')}
+              ? (t('admin.crm.scheduling.editSchedule'))
+              : (t('admin.crm.scheduling.addSchedule'))}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -210,7 +210,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
               className="rounded border-gray-300"
             />
             <span className="text-sm text-gray-700">
-              {t('admin.crm.scheduling.dayOff') || 'Day Off / Vacation'}
+              {t('admin.crm.scheduling.dayOff')}
             </span>
           </label>
 
@@ -219,7 +219,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
               {/* Shift Type */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
-                  {t('admin.crm.scheduling.shiftType') || 'Shift Type'}
+                  {t('admin.crm.scheduling.shiftType')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {(Object.keys(SHIFT_CONFIG) as ShiftType[]).map((key) => (
@@ -229,7 +229,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
                       onClick={() => handleShiftChange(key)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                         form.shiftType === key
-                          ? SHIFT_CONFIG[key].color + ' ring-2 ring-offset-1 ring-teal-400'
+                          ? SHIFT_CONFIG[key].color + ' ring-2 ring-offset-1 ring-indigo-400'
                           : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -243,7 +243,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                    {t('admin.crm.scheduling.startTime') || 'Start Time'}
+                    {t('admin.crm.scheduling.startTime')}
                   </label>
                   <input
                     type="time"
@@ -254,7 +254,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                    {t('admin.crm.scheduling.endTime') || 'End Time'}
+                    {t('admin.crm.scheduling.endTime')}
                   </label>
                   <input
                     type="time"
@@ -270,14 +270,14 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
           {/* Notes */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              {t('admin.crm.scheduling.notes') || 'Notes'}
+              {t('admin.crm.scheduling.notes')}
             </label>
             <textarea
               value={form.notes}
               onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
               className={inputCls + ' resize-none'}
               rows={2}
-              placeholder={t('admin.crm.scheduling.notesPlaceholder') || 'Optional notes...'}
+              placeholder={t('admin.crm.scheduling.notesPlaceholder')}
             />
           </div>
 
@@ -288,17 +288,17 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
               onClick={onClose}
               className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               {saving
-                ? (t('common.saving') || 'Saving...')
-                : (t('common.save') || 'Save')}
+                ? (t('common.saving'))
+                : (t('common.save'))}
             </button>
           </div>
         </form>
@@ -511,7 +511,7 @@ export default function SchedulingPage() {
     ? displayAgents.filter(a => (agentSkills[a.id] ?? []).some(s => s.name === filterSkill))
     : displayAgents;
 
-  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500';
+  const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -519,11 +519,11 @@ export default function SchedulingPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Calendar className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.scheduling.title') || 'Agent Scheduling'}
+            <Calendar className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.scheduling.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.scheduling.subtitle') || 'Manage agent shifts and schedules'}
+            {t('admin.crm.scheduling.subtitle')}
           </p>
         </div>
       </div>
@@ -531,10 +531,10 @@ export default function SchedulingPage() {
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6 w-fit">
         {([
-          { key: 'schedule' as const, icon: Calendar, label: t('admin.crm.scheduling.scheduleTab') || 'Schedule' },
-          { key: 'bidding' as const, icon: ArrowUpDown, label: t('admin.crm.scheduling.biddingTab') || 'Shift Bidding' },
-          { key: 'skills' as const, icon: Zap, label: t('admin.crm.scheduling.skillsTab') || 'Multi-Skill' },
-          { key: 'training' as const, icon: GraduationCap, label: t('admin.crm.scheduling.trainingTab') || 'Training' },
+          { key: 'schedule' as const, icon: Calendar, label: t('admin.crm.scheduling.scheduleTab') },
+          { key: 'bidding' as const, icon: ArrowUpDown, label: t('admin.crm.scheduling.biddingTab') },
+          { key: 'skills' as const, icon: Zap, label: t('admin.crm.scheduling.skillsTab') },
+          { key: 'training' as const, icon: GraduationCap, label: t('admin.crm.scheduling.trainingTab') },
         ]).map(({ key, icon: Icon, label }) => (
           <button
             key={key}
@@ -562,8 +562,8 @@ export default function SchedulingPage() {
               <button onClick={goToPrevWeek} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <button onClick={goToThisWeek} className="px-3 py-1.5 text-sm font-medium text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100">
-                {t('admin.crm.scheduling.today') || 'Today'}
+              <button onClick={goToThisWeek} className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+                {t('admin.crm.scheduling.today')}
               </button>
               <button onClick={goToNextWeek} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
                 <ChevronRight className="h-5 w-5" />
@@ -578,9 +578,9 @@ export default function SchedulingPage() {
               <select
                 value={filterAgent}
                 onChange={(e) => setFilterAgent(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">{t('admin.crm.scheduling.allAgents') || 'All Agents'}</option>
+                <option value="">{t('admin.crm.scheduling.allAgents')}</option>
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name || agent.email || 'Unknown'}
@@ -593,16 +593,16 @@ export default function SchedulingPage() {
           {/* Schedule Grid */}
           {loading ? (
             <div className="flex items-center justify-center h-64 text-gray-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : displayAgents.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
-                {t('admin.crm.scheduling.noSchedules') || 'No schedules found'}
+                {t('admin.crm.scheduling.noSchedules')}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                {t('admin.crm.scheduling.noSchedulesDesc') || 'Click on a cell to add a schedule for an agent.'}
+                {t('admin.crm.scheduling.noSchedulesDesc')}
               </p>
             </div>
           ) : (
@@ -611,17 +611,17 @@ export default function SchedulingPage() {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
-                      {t('admin.crm.scheduling.agent') || 'Agent'}
+                      {t('admin.crm.scheduling.agent')}
                     </th>
                     {weekDates.map((date, idx) => (
                       <th
                         key={idx}
                         className={`text-center px-2 py-3 text-xs font-semibold uppercase tracking-wider ${
-                          isToday(date) ? 'text-teal-600 bg-teal-50/50' : 'text-gray-500'
+                          isToday(date) ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'
                         }`}
                       >
                         <div>{DAYS_OF_WEEK[idx]}</div>
-                        <div className={`text-lg font-bold mt-0.5 ${isToday(date) ? 'text-teal-600' : 'text-gray-900'}`}>
+                        <div className={`text-lg font-bold mt-0.5 ${isToday(date) ? 'text-indigo-600' : 'text-gray-900'}`}>
                           {date.getDate()}
                         </div>
                       </th>
@@ -651,7 +651,7 @@ export default function SchedulingPage() {
                           <td
                             key={idx}
                             className={`px-1 py-2 text-center cursor-pointer transition-colors ${
-                              isToday(date) ? 'bg-teal-50/30' : ''
+                              isToday(date) ? 'bg-indigo-50/30' : ''
                             } hover:bg-gray-100`}
                             onClick={() => setModal({
                               agentId: agent.id,
@@ -662,7 +662,7 @@ export default function SchedulingPage() {
                             {schedule ? (
                               schedule.isOff ? (
                                 <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 text-red-600 border border-red-100 text-xs font-medium">
-                                  {t('admin.crm.scheduling.off') || 'OFF'}
+                                  {t('admin.crm.scheduling.off')}
                                 </div>
                               ) : (
                                 <div className={`inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg border text-xs font-medium ${SHIFT_CONFIG[schedule.shiftType].color}`}>
@@ -674,7 +674,7 @@ export default function SchedulingPage() {
                                 </div>
                               )
                             ) : (
-                              <button className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-300 hover:text-teal-500 hover:bg-teal-50 transition-colors">
+                              <button className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 transition-colors">
                                 <Plus className="h-4 w-4" />
                               </button>
                             )}
@@ -698,13 +698,13 @@ export default function SchedulingPage() {
           {/* Submit a Bid */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <ArrowUpDown className="h-4 w-4 text-teal-600" />
-              {t('admin.crm.scheduling.submitBid') || 'Submit Shift Preference'}
+              <ArrowUpDown className="h-4 w-4 text-indigo-600" />
+              {t('admin.crm.scheduling.submitBid')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  {t('admin.crm.scheduling.agent') || 'Agent'}
+                  {t('admin.crm.scheduling.agent')}
                 </label>
                 <select
                   value={newBidAgent}
@@ -719,7 +719,7 @@ export default function SchedulingPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  {t('admin.crm.scheduling.preferredShift') || 'Preferred Shift'}
+                  {t('admin.crm.scheduling.preferredShift')}
                 </label>
                 <select
                   value={newBidShift}
@@ -733,7 +733,7 @@ export default function SchedulingPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  {t('admin.crm.scheduling.bidDate') || 'Date'}
+                  {t('admin.crm.scheduling.bidDate')}
                 </label>
                 <input
                   type="date"
@@ -745,10 +745,10 @@ export default function SchedulingPage() {
               <div className="flex items-end">
                 <button
                   onClick={handleAddBid}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 w-full justify-center"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 w-full justify-center"
                 >
                   <Plus className="h-4 w-4" />
-                  {t('admin.crm.scheduling.addBid') || 'Add Bid'}
+                  {t('admin.crm.scheduling.addBid')}
                 </button>
               </div>
             </div>
@@ -758,12 +758,12 @@ export default function SchedulingPage() {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900">
-                {t('admin.crm.scheduling.pendingBids') || 'Shift Bids'} ({bids.length})
+                {t('admin.crm.scheduling.pendingBids')} ({bids.length})
               </h3>
             </div>
             {bids.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-500">
-                {t('admin.crm.scheduling.noBids') || 'No shift bids submitted yet.'}
+                {t('admin.crm.scheduling.noBids')}
               </div>
             ) : (
               <table className="w-full">
@@ -843,22 +843,22 @@ export default function SchedulingPage() {
             <select
               value={filterSkill}
               onChange={(e) => setFilterSkill(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">{t('admin.crm.scheduling.allSkills') || 'All Skills'}</option>
+              <option value="">{t('admin.crm.scheduling.allSkills')}</option>
               {allSkillNames.map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
             <span className="text-xs text-gray-500">
-              {t('admin.crm.scheduling.filterBySkill') || 'Filter agents by skill to optimize scheduling'}
+              {t('admin.crm.scheduling.filterBySkill')}
             </span>
           </div>
 
           {/* Schedule Grid with Skills */}
           {loading ? (
             <div className="flex items-center justify-center h-48 text-gray-400">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -866,20 +866,20 @@ export default function SchedulingPage() {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">
-                      {t('admin.crm.scheduling.agent') || 'Agent'}
+                      {t('admin.crm.scheduling.agent')}
                     </th>
                     <th className="text-start px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">
-                      {t('admin.crm.scheduling.skills') || 'Skills'}
+                      {t('admin.crm.scheduling.skills')}
                     </th>
                     {weekDates.map((date, idx) => (
                       <th
                         key={idx}
                         className={`text-center px-2 py-3 text-xs font-semibold uppercase tracking-wider ${
-                          isToday(date) ? 'text-teal-600 bg-teal-50/50' : 'text-gray-500'
+                          isToday(date) ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'
                         }`}
                       >
                         <div>{DAYS_OF_WEEK[idx]}</div>
-                        <div className={`text-lg font-bold mt-0.5 ${isToday(date) ? 'text-teal-600' : 'text-gray-900'}`}>
+                        <div className={`text-lg font-bold mt-0.5 ${isToday(date) ? 'text-indigo-600' : 'text-gray-900'}`}>
                           {date.getDate()}
                         </div>
                       </th>
@@ -922,7 +922,7 @@ export default function SchedulingPage() {
                         {weekDates.map((date, idx) => {
                           const schedule = getSchedule(agent.id, date);
                           return (
-                            <td key={idx} className={`px-1 py-2 text-center ${isToday(date) ? 'bg-teal-50/30' : ''}`}>
+                            <td key={idx} className={`px-1 py-2 text-center ${isToday(date) ? 'bg-indigo-50/30' : ''}`}>
                               {schedule ? (
                                 schedule.isOff ? (
                                   <span className="text-xs text-red-500 font-medium">OFF</span>
@@ -949,7 +949,7 @@ export default function SchedulingPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
               <Zap className="h-10 w-10 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-gray-500">
-                {t('admin.crm.scheduling.noAgentsWithSkill') || 'No agents found with the selected skill.'}
+                {t('admin.crm.scheduling.noAgentsWithSkill')}
               </p>
             </div>
           )}
@@ -968,7 +968,7 @@ export default function SchedulingPage() {
               className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
             >
               <Plus className="h-4 w-4" />
-              {t('admin.crm.scheduling.scheduleTraining') || 'Schedule Training'}
+              {t('admin.crm.scheduling.scheduleTraining')}
             </button>
           </div>
 
@@ -977,10 +977,10 @@ export default function SchedulingPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
-                {t('admin.crm.scheduling.noTraining') || 'No training sessions scheduled'}
+                {t('admin.crm.scheduling.noTraining')}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                {t('admin.crm.scheduling.noTrainingDesc') || 'Schedule training and coaching blocks for your agents.'}
+                {t('admin.crm.scheduling.noTrainingDesc')}
               </p>
             </div>
           ) : (
@@ -990,13 +990,13 @@ export default function SchedulingPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <GraduationCap className={`h-5 w-5 ${
-                        session.type === 'training' ? 'text-teal-500' :
+                        session.type === 'training' ? 'text-indigo-500' :
                         session.type === 'coaching' ? 'text-green-500' : 'text-purple-500'
                       }`} />
                       <h4 className="font-medium text-gray-900 text-sm">{session.title}</h4>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      session.status === 'scheduled' ? 'bg-teal-100 text-teal-700' :
+                      session.status === 'scheduled' ? 'bg-indigo-100 text-indigo-700' :
                       session.status === 'completed' ? 'bg-green-100 text-green-700' :
                       'bg-gray-100 text-gray-500'
                     }`}>
@@ -1019,7 +1019,7 @@ export default function SchedulingPage() {
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      session.type === 'training' ? 'bg-teal-50 text-teal-600' :
+                      session.type === 'training' ? 'bg-indigo-50 text-indigo-600' :
                       session.type === 'coaching' ? 'bg-green-50 text-green-600' :
                       'bg-purple-50 text-purple-600'
                     }`}>
@@ -1038,7 +1038,7 @@ export default function SchedulingPage() {
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-green-600" />
-                    {t('admin.crm.scheduling.newTraining') || 'Schedule Training Session'}
+                    {t('admin.crm.scheduling.newTraining')}
                   </h3>
                   <button onClick={() => setShowTrainingModal(false)} className="text-gray-400 hover:text-gray-600">
                     <X className="h-5 w-5" />
@@ -1115,14 +1115,14 @@ export default function SchedulingPage() {
                       onClick={() => setShowTrainingModal(false)}
                       className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
                     >
-                      {t('common.cancel') || 'Cancel'}
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={handleAddTraining}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
                     >
                       <Save className="h-4 w-4" />
-                      {t('admin.crm.scheduling.saveTraining') || 'Schedule'}
+                      {t('admin.crm.scheduling.saveTraining')}
                     </button>
                   </div>
                 </div>

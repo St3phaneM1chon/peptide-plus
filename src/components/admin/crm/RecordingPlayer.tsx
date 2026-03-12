@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from '@/hooks/useTranslations';
 import {
   Play,
   Pause,
@@ -70,7 +70,7 @@ export default function RecordingPlayer({
   compact = false,
   className = '',
 }: RecordingPlayerProps) {
-  const t = useTranslations('voip.recordings');
+  const { t } = useTranslations();
 
   // ─── State ──────────────────────────────────────────────────────────
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -203,7 +203,7 @@ export default function RecordingPlayer({
 
         <button
           onClick={togglePlay}
-          className="p-1.5 rounded-full bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+          className="p-1.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -221,7 +221,7 @@ export default function RecordingPlayer({
           tabIndex={0}
         >
           <div
-            className="h-full bg-teal-600 rounded-full transition-all"
+            className="h-full bg-indigo-600 rounded-full transition-all"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -282,10 +282,10 @@ export default function RecordingPlayer({
         {isDualChannel && isExpanded && (
           <div className="flex justify-between text-xs text-gray-500 mb-1">
             <span className="flex items-center gap-1">
-              <Headphones className="w-3 h-3" /> {t('agent') ?? 'Agent'}
+              <Headphones className="w-3 h-3" /> {t('voip.recordings.agent') ?? 'Agent'}
             </span>
             <span className="flex items-center gap-1">
-              <User className="w-3 h-3" /> {t('client') ?? 'Client'}
+              <User className="w-3 h-3" /> {t('voip.recordings.client') ?? 'Client'}
             </span>
           </div>
         )}
@@ -317,7 +317,7 @@ export default function RecordingPlayer({
                   key={i}
                   className={`w-[1px] rounded-full transition-colors ${
                     played
-                      ? 'bg-teal-600 dark:bg-teal-500'
+                      ? 'bg-indigo-600 dark:bg-indigo-500'
                       : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                   style={{ height: `${height}%` }}
@@ -328,7 +328,7 @@ export default function RecordingPlayer({
 
           {/* Playhead */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-teal-600 shadow-sm"
+            className="absolute top-0 bottom-0 w-0.5 bg-indigo-600 shadow-sm"
             style={{ left: `${progressPct}%` }}
           />
 
@@ -363,7 +363,7 @@ export default function RecordingPlayer({
             step="0.05"
             value={isMuted ? 0 : volume}
             onChange={(e) => changeVolume(parseFloat(e.target.value))}
-            className="w-16 h-1 accent-teal-600"
+            className="w-16 h-1 accent-indigo-600"
             aria-label="Volume"
           />
         </div>
@@ -379,7 +379,7 @@ export default function RecordingPlayer({
           </button>
           <button
             onClick={togglePlay}
-            className="p-2.5 rounded-full bg-teal-600 text-white hover:bg-teal-700 transition-colors shadow-sm"
+            className="p-2.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
@@ -412,7 +412,7 @@ export default function RecordingPlayer({
                   onClick={() => changeSpeed(speed)}
                   className={`w-full px-3 py-1 text-xs text-start hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                     playbackSpeed === speed
-                      ? 'text-teal-600 font-medium'
+                      ? 'text-indigo-600 font-medium'
                       : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
@@ -434,7 +434,7 @@ export default function RecordingPlayer({
                 onClick={() => seek(seg.startTime)}
                 className={`w-full text-start flex gap-2 p-2 rounded-lg transition-colors ${
                   idx === activeTranscriptIndex
-                    ? 'bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >

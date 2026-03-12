@@ -44,15 +44,16 @@ const PLATFORM_LAUNCHERS = [
 
 // F60 FIX: Move platformDefs outside component to avoid recreating on every render
 const PLATFORM_DEFS = [
-  { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-teal-500', IconComp: Video },
+  { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-indigo-500', IconComp: Video },
   { key: 'whatsapp', label: 'WhatsApp', href: '/admin/media/api-whatsapp', color: 'bg-green-500', IconComp: MessageCircle },
   { key: 'teams', label: 'Teams', href: '/admin/media/api-teams', color: 'bg-purple-500', IconComp: Users },
   { key: 'youtube', label: 'YouTube', href: '/admin/media/ads-youtube', color: 'bg-red-500', IconComp: Video },
-  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/ads-meta', color: 'bg-teal-600', IconComp: Globe },
+  { key: 'vimeo', label: 'Vimeo', href: '/admin/media/api-vimeo', color: 'bg-sky-500', IconComp: Video },
+  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/ads-meta', color: 'bg-indigo-600', IconComp: Globe },
   { key: 'x', label: 'X (Twitter)', href: '/admin/media/ads-x', color: 'bg-slate-800', IconComp: MessageCircle },
   { key: 'tiktok', label: 'TikTok', href: '/admin/media/ads-tiktok', color: 'bg-pink-500', IconComp: Activity },
   { key: 'google', label: 'Google Ads', href: '/admin/media/ads-google', color: 'bg-yellow-500', IconComp: Search },
-  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/ads-linkedin', color: 'bg-teal-700', IconComp: Briefcase },
+  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/ads-linkedin', color: 'bg-indigo-700', IconComp: Briefcase },
 ];
 
 export default function MediaDashboardPage() {
@@ -117,16 +118,16 @@ export default function MediaDashboardPage() {
       const res = await fetch('/api/admin/medias', { method: 'POST', headers: addCSRFHeader(), body: formData });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`${data.count || 1} ${t('admin.media.uploadSuccess') || 'file(s) uploaded'}`);
+        toast.success(`${data.count || 1} ${t('admin.media.uploadSuccess')}`);
         // Refresh stats
         const mediaRes = await fetch('/api/admin/medias?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } }));
         setStats(prev => prev ? { ...prev, totalMedia: mediaRes.pagination?.total || prev.totalMedia } : prev);
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
+        toast.error(data.error || t('admin.media.uploadFailed'));
       }
     } catch {
-      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
+      toast.error(t('admin.media.uploadFailed'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -135,9 +136,9 @@ export default function MediaDashboardPage() {
 
   // ---- Ribbon action handlers (media section-level: upload, delete, play, export) ----
   const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.deleteHint') || 'Navigate to Images, Videos, or Library to select and delete files.'), [t]);
-  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.playHint') || 'Navigate to Videos to play a video.'), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.exportHint') || 'Navigate to Images, Videos, or Library to export data as CSV.'), [t]);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.deleteHint')), [t]);
+  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.playHint')), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.exportHint')), [t]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);
@@ -147,7 +148,7 @@ export default function MediaDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
@@ -160,21 +161,21 @@ export default function MediaDashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.dashboardTitle')}</h1>
         <div>
-          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload files'} className="hidden" />
+          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload')} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {t('admin.media.upload') || 'Upload'}
+            {t('admin.media.upload')}
           </button>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<FolderOpen className="w-5 h-5" />} label={t('admin.media.libraryTitle')} value={stats?.totalMedia || 0} color="text-teal-600" />
+        <StatCard icon={<FolderOpen className="w-5 h-5" />} label={t('admin.media.libraryTitle')} value={stats?.totalMedia || 0} color="text-indigo-600" />
         <StatCard icon={<Video className="w-5 h-5" />} label={t('admin.media.videosTitle')} value={stats?.totalVideos || 0} color="text-red-600" />
         <StatCard icon={<ImageIcon className="w-5 h-5" />} label={t('admin.media.imagesTitle')} value={stats?.imageCount || 0} color="text-emerald-600" />
         <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label={t('admin.integrations.connected')} value={`${enabledCount}/${configuredCount}`} color="text-green-600" />
@@ -207,7 +208,7 @@ export default function MediaDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {platforms.map((p) => (
             <Link key={p.key} href={p.href} className="group">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
                 <div className={`w-10 h-10 rounded-lg ${p.color} flex items-center justify-center text-white`}>
                   {p.icon}
                 </div>
@@ -256,8 +257,8 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
 function QuickLink({ href, icon, label, desc }: { href: string; icon: React.ReactNode; label: string; desc: string }) {
   return (
     <Link href={href}>
-      <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
-        <div className="text-teal-600 mt-0.5">{icon}</div>
+      <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
+        <div className="text-indigo-600 mt-0.5">{icon}</div>
         <div>
           <p className="font-medium text-slate-900">{label}</p>
           <p className="text-xs text-slate-500">{desc}</p>

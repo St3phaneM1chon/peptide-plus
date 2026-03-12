@@ -96,7 +96,7 @@ export default function KnowledgeBasePage() {
 
   const handleCreate = async () => {
     if (!formTitle.trim() || !formContent.trim()) {
-      toast.error(t('admin.kb.titleContentRequired') || 'Title and content are required');
+      toast.error(t('admin.kb.titleContentRequired'));
       return;
     }
 
@@ -117,7 +117,7 @@ export default function KnowledgeBasePage() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success(t('admin.kb.articleCreated') || 'Article created');
+        toast.success(t('admin.kb.articleCreated'));
         setShowModal(false);
         resetForm();
         loadArticles();
@@ -147,10 +147,10 @@ export default function KnowledgeBasePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <BookOpen className="w-7 h-7 text-purple-600" />
-            {t('admin.kb.title') || 'Knowledge Base'}
+            {t('admin.kb.title')}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            {t('admin.kb.subtitle') || 'Manage help articles for agents and customers'}
+            {t('admin.kb.subtitle')}
           </p>
         </div>
         <button
@@ -158,7 +158,7 @@ export default function KnowledgeBasePage() {
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          {t('admin.kb.newArticle') || 'New Article'}
+          {t('admin.kb.newArticle')}
         </button>
       </div>
 
@@ -170,7 +170,7 @@ export default function KnowledgeBasePage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('admin.kb.searchPlaceholder') || 'Search articles...'}
+            placeholder={t('admin.kb.searchPlaceholder')}
             className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
@@ -179,17 +179,17 @@ export default function KnowledgeBasePage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
         >
-          <option value="">{t('admin.kb.allStatuses') || 'All statuses'}</option>
-          <option value="DRAFT">{t('admin.kb.draft') || 'Draft'}</option>
-          <option value="PUBLISHED">{t('admin.kb.published') || 'Published'}</option>
-          <option value="ARCHIVED">{t('admin.kb.archived') || 'Archived'}</option>
+          <option value="">{t('admin.kb.allStatuses')}</option>
+          <option value="DRAFT">{t('admin.kb.draft')}</option>
+          <option value="PUBLISHED">{t('admin.kb.published')}</option>
+          <option value="ARCHIVED">{t('admin.kb.archived')}</option>
         </select>
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
         >
-          <option value="">{t('admin.kb.allCategories') || 'All categories'}</option>
+          <option value="">{t('admin.kb.allCategories')}</option>
           {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
@@ -207,23 +207,23 @@ export default function KnowledgeBasePage() {
       {/* Articles Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center text-slate-400">{t('common.loading') || 'Loading...'}</div>
+          <div className="p-12 text-center text-slate-400">{t('common.loading')}</div>
         ) : articles.length === 0 ? (
           <div className="p-12 text-center">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">{t('admin.kb.noArticles') || 'No articles found'}</p>
+            <p className="text-slate-500">{t('admin.kb.noArticles')}</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.articleTitle') || 'Title'}</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.category') || 'Category'}</th>
-                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.kb.status') || 'Status'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.articleTitle')}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.category')}</th>
+                <th className="px-4 py-3 text-center font-medium text-slate-600">{t('admin.kb.status')}</th>
                 <th className="px-4 py-3 text-center font-medium text-slate-600"><Eye className="w-4 h-4 inline" /></th>
                 <th className="px-4 py-3 text-center font-medium text-slate-600"><ThumbsUp className="w-4 h-4 inline" /></th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.tags') || 'Tags'}</th>
-                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.updated') || 'Updated'}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.tags')}</th>
+                <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.updated')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -274,7 +274,7 @@ export default function KnowledgeBasePage() {
               disabled={page <= 1}
               className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
-              {t('common.previous') || 'Previous'}
+              {t('common.previous')}
             </button>
             <span className="text-sm text-slate-500">
               {page} / {totalPages}
@@ -284,7 +284,7 @@ export default function KnowledgeBasePage() {
               disabled={page >= totalPages}
               className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
-              {t('common.next') || 'Next'}
+              {t('common.next')}
             </button>
           </div>
         )}
@@ -296,7 +296,7 @@ export default function KnowledgeBasePage() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-slate-900">
-                {t('admin.kb.createArticle') || 'Create Article'}
+                {t('admin.kb.createArticle')}
               </h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1 hover:bg-slate-100 rounded">
                 <X className="w-5 h-5" />
@@ -306,54 +306,54 @@ export default function KnowledgeBasePage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.kb.articleTitle') || 'Title'} *
+                  {t('admin.kb.articleTitle')} *
                 </label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                  placeholder={t('admin.kb.titlePlaceholder') || 'Article title...'}
+                  placeholder={t('admin.kb.titlePlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.kb.content') || 'Content'} * ({t('admin.kb.markdown') || 'Markdown supported'})
+                  {t('admin.kb.content')} * ({t('admin.kb.markdown')})
                 </label>
                 <textarea
                   value={formContent}
                   onChange={(e) => setFormContent(e.target.value)}
                   rows={12}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500"
-                  placeholder={t('admin.kb.contentPlaceholder') || 'Write article content in Markdown...'}
+                  placeholder={t('admin.kb.contentPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.kb.excerpt') || 'Excerpt'}
+                  {t('admin.kb.excerpt')}
                 </label>
                 <input
                   type="text"
                   value={formExcerpt}
                   onChange={(e) => setFormExcerpt(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                  placeholder={t('admin.kb.excerptPlaceholder') || 'Short description...'}
+                  placeholder={t('admin.kb.excerptPlaceholder')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.kb.category') || 'Category'}
+                    {t('admin.kb.category')}
                   </label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                   >
-                    <option value="">{t('admin.kb.noCategory') || 'No category'}</option>
+                    <option value="">{t('admin.kb.noCategory')}</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
@@ -361,22 +361,22 @@ export default function KnowledgeBasePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    {t('admin.kb.status') || 'Status'}
+                    {t('admin.kb.status')}
                   </label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                   >
-                    <option value="DRAFT">{t('admin.kb.draft') || 'Draft'}</option>
-                    <option value="PUBLISHED">{t('admin.kb.published') || 'Published'}</option>
+                    <option value="DRAFT">{t('admin.kb.draft')}</option>
+                    <option value="PUBLISHED">{t('admin.kb.published')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('admin.kb.tags') || 'Tags'} ({t('admin.kb.commaSeparated') || 'comma separated'})
+                  {t('admin.kb.tags')} ({t('admin.kb.commaSeparated')})
                 </label>
                 <input
                   type="text"
@@ -393,7 +393,7 @@ export default function KnowledgeBasePage() {
                 onClick={() => { setShowModal(false); resetForm(); }}
                 className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreate}
@@ -401,7 +401,7 @@ export default function KnowledgeBasePage() {
                 className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? (t('common.saving') || 'Saving...') : (t('admin.kb.create') || 'Create')}
+                {isSaving ? (t('common.saving')) : (t('admin.kb.create'))}
               </button>
             </div>
           </div>

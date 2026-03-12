@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { recordBounce, updateDeliveryStatus } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 // Basic in-memory rate limiting: max 100 events per second per provider
 // NOTE: This state lives in the Node.js process memory and is NOT distributed.
@@ -135,6 +136,27 @@ export async function POST(request: NextRequest) {
       body = JSON.parse(rawBody);
     } catch {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    // Use svix-id for Resend webhooks, or generate a hash for other providers
+    const bounceEventId = svixId || `bounce_${Date.now()}_${rawBody.length}`;
+    try {
+      const redis = await getRedisClient();
+      if (redis) {
+        const idempotencyKey = `webhook:email-bounce:${bounceEventId}`;
+        const alreadyProcessed = await redis.get(idempotencyKey);
+        if (alreadyProcessed) {
+          logger.info('[email-bounce-webhook] Duplicate event skipped', { eventId: bounceEventId });
+          return NextResponse.json({ received: true, status: 'already_processed' });
+        }
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
+    } catch (redisErr) {
+      // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+      logger.debug('[email-bounce-webhook] Redis idempotency check unavailable, proceeding', {
+        error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+      });
     }
 
     // Faille #39 - Polymorphic payload documentation:

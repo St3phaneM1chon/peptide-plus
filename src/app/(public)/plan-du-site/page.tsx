@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Plan du site | Formations Pro',
-  description: 'Navigation complète de notre site web.',
+  title: 'Plan du site',
+  description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages produits, ressources et informations.',
+  openGraph: {
+    title: 'Plan du site | BioCycle Peptides',
+    description: 'Navigation complète du site BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/plan-du-site',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const siteStructure = [

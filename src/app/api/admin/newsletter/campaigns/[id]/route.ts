@@ -10,9 +10,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+
+const updateCampaignSchema = z.object({
+  subject: z.string().min(1).max(500).optional(),
+  content: z.string().max(500000).optional(),
+  status: z.enum(['DRAFT', 'SCHEDULED', 'SENT', 'PAUSED', 'CANCELLED']).optional(),
+  scheduledFor: z.string().datetime().optional(),
+});
 
 export const GET = withAdminGuard(
   async (
@@ -49,21 +57,29 @@ export const PATCH = withAdminGuard(
       const { id } = await params;
       const body = await request.json();
 
-      const data: Record<string, unknown> = {};
-      if (body.subject !== undefined) {
-        data.subject = body.subject;
-        data.name = body.subject;
+      const parsed = updateCampaignSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid data', details: parsed.error.errors },
+          { status: 400 }
+        );
       }
-      if (body.content !== undefined) data.htmlContent = body.content;
-      if (body.status !== undefined) {
-        if (body.status === 'SENT') {
+
+      const data: Record<string, unknown> = {};
+      if (parsed.data.subject !== undefined) {
+        data.subject = parsed.data.subject;
+        data.name = parsed.data.subject;
+      }
+      if (parsed.data.content !== undefined) data.htmlContent = parsed.data.content;
+      if (parsed.data.status !== undefined) {
+        if (parsed.data.status === 'SENT') {
           data.status = 'SCHEDULED';
           data.scheduledAt = new Date();
         } else {
-          data.status = body.status;
+          data.status = parsed.data.status;
         }
       }
-      if (body.scheduledFor !== undefined) data.scheduledAt = new Date(body.scheduledFor);
+      if (parsed.data.scheduledFor !== undefined) data.scheduledAt = new Date(parsed.data.scheduledFor);
 
       const updated = await prisma.emailCampaign.update({
         where: { id },

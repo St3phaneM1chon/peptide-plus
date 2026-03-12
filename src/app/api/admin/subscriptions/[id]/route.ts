@@ -36,18 +36,18 @@ export const GET = withAdminGuard(async (_request, { params }) => {
     }
 
     // Get user info
-    const user = await prisma.user.findUnique({
+    const user = subscription.userId ? await prisma.user.findUnique({
       where: { id: subscription.userId },
       select: { id: true, name: true, email: true, phone: true, image: true },
-    });
+    }) : null;
 
     // Get product info if product still exists
     let product = null;
     try {
-      product = await prisma.product.findUnique({
+      product = subscription.productId ? await prisma.product.findUnique({
         where: { id: subscription.productId },
         select: { id: true, name: true, slug: true, imageUrl: true },
-      });
+      }) : null;
     } catch (error) {
       logger.error('[AdminSubscriptions] Failed to fetch product (may have been deleted)', { productId: subscription.productId, error: error instanceof Error ? error.message : String(error) });
     }

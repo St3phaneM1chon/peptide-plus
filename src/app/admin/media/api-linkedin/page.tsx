@@ -47,7 +47,7 @@ export default function MediaLinkedInPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -103,7 +103,7 @@ export default function MediaLinkedInPage() {
     a.download = `linkedin-config-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.media.exportSuccess') || 'Configuration exported');
+    toast.success(t('admin.media.exportSuccess'));
   }, [enabled, companyId, appId, hasClientSecret, hasAccessToken, publicLink, webhookUrl, t]);
 
   useRibbonAction('configure', onConfigure);
@@ -114,25 +114,25 @@ export default function MediaLinkedInPage() {
   useRibbonAction('export', onExport);
 
   // --- media.ads ribbon actions ---
-  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint') || 'Create ad campaigns in LinkedIn Campaign Manager.'); }, [t]));
-  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint') || 'Manage and delete campaigns in LinkedIn Campaign Manager.'); }, [t]));
-  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint') || 'Pause campaigns directly in LinkedIn Campaign Manager.'); }, [t]));
-  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint') || 'Resume paused campaigns in LinkedIn Campaign Manager.'); }, [t]));
-  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint') || 'Adjust budgets in LinkedIn Campaign Manager.'); }, [t]));
-  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in LinkedIn Analytics dashboard.'); }, [t]));
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint')); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint')); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint')); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint')); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint')); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint')); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (
     <div className="p-6 max-w-3xl">
       <IntegrationCard
         // FIX: F35 - Use i18n for title and description instead of hardcoded English
-        title={t('admin.media.linkedinTitle') || 'LinkedIn Marketing'}
-        description={t('admin.media.linkedinDescription') || 'Connect LinkedIn Marketing API for B2B campaigns targeting researchers, lab directors, and biotech professionals.'}
+        title={t('admin.media.linkedinTitle')}
+        description={t('admin.media.linkedinDescription')}
         icon={<Briefcase className="w-6 h-6" />}
-        color="from-teal-700 to-teal-800"
+        color="from-indigo-700 to-indigo-800"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

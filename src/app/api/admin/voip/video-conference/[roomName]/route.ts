@@ -13,7 +13,7 @@ import { deleteRoom, listParticipants, getRoom } from '@/lib/voip/livekit-servic
 import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }
 ) => {
   const roomName = params!.roomName;

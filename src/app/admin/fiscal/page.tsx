@@ -261,15 +261,15 @@ export default function FiscalPage() {
   const exportReport = (report: TaxReport, format: 'PDF' | 'CSV' | 'EXCEL') => {
     if (format === 'CSV' || format === 'EXCEL') {
       const headers = [
-        t('admin.fiscal.columns.region') || 'Region', 'Code',
-        t('admin.fiscal.columns.period') || 'Period',
-        t('admin.fiscal.columns.sales') || 'Total Sales',
-        t('admin.fiscal.columns.taxableAmount') || 'Taxable Amount',
-        t('admin.fiscal.columns.rate') || 'Tax Rate %',
-        t('admin.fiscal.columns.taxCollected') || 'Tax Collected',
-        t('admin.fiscal.columns.orders') || 'Orders',
-        t('admin.fiscal.columns.status') || 'Status',
-        t('admin.fiscal.columns.dueDate') || 'Due Date',
+        t('admin.fiscal.columns.region'), 'Code',
+        t('admin.fiscal.columns.period'),
+        t('admin.fiscal.columns.sales'),
+        t('admin.fiscal.columns.taxableAmount'),
+        t('admin.fiscal.columns.rate'),
+        t('admin.fiscal.columns.taxCollected'),
+        t('admin.fiscal.columns.orders'),
+        t('admin.fiscal.columns.status'),
+        t('admin.fiscal.columns.dueDate'),
       ];
       const rows = [[
         report.region, report.regionCode, report.period,
@@ -283,11 +283,11 @@ export default function FiscalPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `tax-report-${report.regionCode}-${report.period}.csv`; a.click();
       URL.revokeObjectURL(url);
-      toast.success(t('common.exported') || 'Exported');
+      toast.success(t('common.exported'));
     } else {
       // PDF - generate a printable view
       const w = window.open('', '_blank');
-      if (!w) { toast.error(t('admin.fiscal.exportError') || 'Popup blocked'); return; }
+      if (!w) { toast.error(t('admin.fiscal.exportError')); return; }
       w.document.write(`<!DOCTYPE html><html><head><title>${t('admin.fiscal.modal.title').replace('{region}', report.region)} - ${report.period}</title>
         <style>body{font-family:Arial,sans-serif;padding:40px;max-width:800px;margin:auto}
         h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:20px}
@@ -295,18 +295,18 @@ export default function FiscalPage() {
         .right{text-align:right}.footer{margin-top:30px;font-size:12px;color:#888}</style></head><body>
         <h1>${report.region} (${report.regionCode}) - ${report.period}</h1>
         <table>
-          <tr><th>${t('admin.fiscal.modal.totalSales') || 'Total Sales'}</th><td class="right">${formatCurrency(report.totalSales)}</td></tr>
-          <tr><th>${t('admin.fiscal.modal.taxableAmount') || 'Taxable Amount'}</th><td class="right">${formatCurrency(report.taxableAmount)}</td></tr>
-          <tr><th>${t('admin.fiscal.modal.taxRate') || 'Tax Rate'}</th><td class="right">${report.taxRate}%</td></tr>
-          <tr><th>${t('admin.fiscal.modal.taxCollected') || 'Tax Collected'}</th><td class="right">${formatCurrency(report.taxCollected)}</td></tr>
-          <tr><th>${t('admin.fiscal.modal.orders') || 'Orders'}</th><td class="right">${report.orderCount}</td></tr>
-          <tr><th>${t('admin.fiscal.modal.currentStatus') || 'Status'}</th><td>${report.status}</td></tr>
-          <tr><th>${t('admin.fiscal.modal.dueDate') || 'Due Date'}</th><td>${new Date(report.dueDate).toLocaleDateString(locale)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.totalSales')}</th><td class="right">${formatCurrency(report.totalSales)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxableAmount')}</th><td class="right">${formatCurrency(report.taxableAmount)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxRate')}</th><td class="right">${report.taxRate}%</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxCollected')}</th><td class="right">${formatCurrency(report.taxCollected)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.orders')}</th><td class="right">${report.orderCount}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.currentStatus')}</th><td>${report.status}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.dueDate')}</th><td>${new Date(report.dueDate).toLocaleDateString(locale)}</td></tr>
         </table>
-        <p class="footer">${t('admin.fiscal.title') || 'Tax Report'} - ${new Date().toLocaleString(locale)}</p>
+        <p class="footer">${t('admin.fiscal.title')} - ${new Date().toLocaleString(locale)}</p>
         <script>window.print();</script></body></html>`);
       w.document.close();
-      toast.success(t('admin.fiscal.exportPdf') || 'PDF generated');
+      toast.success(t('admin.fiscal.exportPdf'));
     }
   };
 
@@ -594,8 +594,8 @@ export default function FiscalPage() {
     const pending = reports.filter(r => r.status === 'GENERATED' || r.status === 'DRAFT').length;
     toast.success(
       `${t('admin.fiscal.stats.totalSales').replace('{year}', String(selectedYear))}: ${formatCurrency(totalSalesAmt)} | ` +
-      `${t('admin.fiscal.stats.taxCollected') || 'Tax Collected'}: ${formatCurrency(totalCollected)} | ` +
-      `${t('admin.fiscal.tabs.reports') || 'Reports'}: ${reports.length} (${filed} ${t('admin.fiscal.annualTasks.statusCompleted') || 'filed'}, ${pending} ${t('admin.fiscal.stats.toDeclare') || 'pending'})`,
+      `${t('admin.fiscal.stats.taxCollected')}: ${formatCurrency(totalCollected)} | ` +
+      `${t('admin.fiscal.tabs.reports')}: ${reports.length} (${filed} ${t('admin.fiscal.annualTasks.statusCompleted')}, ${pending} ${t('admin.fiscal.stats.toDeclare')})`,
       { duration: 8000 }
     );
   }, [reports, monthlyReports, taxSummary, selectedYear, t, formatCurrency]);
@@ -607,7 +607,7 @@ export default function FiscalPage() {
   const handleRibbonClosePeriod = useCallback(() => {
     const generatedReports = reports.filter(r => r.status === 'GENERATED');
     if (generatedReports.length === 0) {
-      toast.info(t('admin.fiscal.stats.toDeclare') || 'No reports to file');
+      toast.info(t('admin.fiscal.stats.toDeclare'));
       return;
     }
     (async () => {
@@ -616,7 +616,7 @@ export default function FiscalPage() {
         await markAsFiled(r.id);
         filed++;
       }
-      toast.success(`${filed} ${t('admin.fiscal.tabs.reports') || 'reports'} ${t('admin.fiscal.columns.declare') || 'filed'}`, { duration: 5000 });
+      toast.success(`${filed} ${t('admin.fiscal.tabs.reports')} ${t('admin.fiscal.columns.declare')}`, { duration: 5000 });
     })();
   }, [reports, t]);
 
@@ -641,9 +641,9 @@ export default function FiscalPage() {
           r.id === selectedReport.id ? { ...r, status: 'GENERATED' as const } : r
         ));
         setSelectedReport({ ...selectedReport, status: 'GENERATED' });
-        toast.success(t('admin.fiscal.columns.status') || 'Report reopened to GENERATED');
+        toast.success(t('admin.fiscal.columns.status'));
       } catch {
-        toast.error(t('admin.fiscal.errorUpdatingStatus') || 'Failed to reopen report');
+        toast.error(t('admin.fiscal.errorUpdatingStatus'));
       }
     })();
   }, [selectedReport, t]);
@@ -656,30 +656,30 @@ export default function FiscalPage() {
     // Open the tax return generation: generate all reports for the current year, then switch to tasks tab
     if (reports.length === 0) {
       generateAllReports();
-      toast.info(t('admin.fiscal.generating') || 'Generating tax reports...');
+      toast.info(t('admin.fiscal.generating'));
     } else {
       setActiveTab('tasks');
-      toast.info(t('admin.fiscal.deadlines.title') || 'Showing tax deadlines and tasks');
+      toast.info(t('admin.fiscal.deadlines.title'));
     }
   }, [reports, t]);
 
   const handleRibbonExport = useCallback(() => {
     if (filteredReports.length === 0) {
-      toast.info(t('admin.fiscal.monthlyReports.emptyTitle') || 'No reports to export');
+      toast.info(t('admin.fiscal.monthlyReports.emptyTitle'));
       return;
     }
     const headers = [
-      t('admin.fiscal.columns.region') || 'Region',
+      t('admin.fiscal.columns.region'),
       'Code',
-      t('admin.fiscal.columns.period') || 'Period',
-      t('admin.fiscal.columns.type') || 'Type',
-      t('admin.fiscal.columns.sales') || 'Total Sales',
-      t('admin.fiscal.columns.taxableAmount') || 'Taxable Amount',
-      t('admin.fiscal.columns.rate') || 'Tax Rate %',
-      t('admin.fiscal.columns.taxCollected') || 'Tax Collected',
-      t('admin.fiscal.columns.orders') || 'Orders',
-      t('admin.fiscal.columns.status') || 'Status',
-      t('admin.fiscal.columns.dueDate') || 'Due Date',
+      t('admin.fiscal.columns.period'),
+      t('admin.fiscal.columns.type'),
+      t('admin.fiscal.columns.sales'),
+      t('admin.fiscal.columns.taxableAmount'),
+      t('admin.fiscal.columns.rate'),
+      t('admin.fiscal.columns.taxCollected'),
+      t('admin.fiscal.columns.orders'),
+      t('admin.fiscal.columns.status'),
+      t('admin.fiscal.columns.dueDate'),
     ];
     const rows = filteredReports.map(r => [
       r.region, r.regionCode, r.period, r.periodType,
@@ -692,7 +692,7 @@ export default function FiscalPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `fiscal-reports-${selectedYear}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [filteredReports, selectedYear, t, locale]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
@@ -740,7 +740,7 @@ export default function FiscalPage() {
           label={t('admin.fiscal.stats.reportsGenerated')}
           value={reports.length}
           icon={FileText}
-          className="bg-teal-50 border-teal-200"
+          className="bg-indigo-50 border-indigo-200"
         />
         <StatCard
           label={t('admin.fiscal.stats.toDeclare')}
@@ -759,7 +759,7 @@ export default function FiscalPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`py-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.key
-                  ? 'border-teal-500 text-teal-600'
+                  ? 'border-indigo-500 text-indigo-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -801,9 +801,9 @@ export default function FiscalPage() {
 
           {/* Annual Reports */}
           <div>
-            <div className="px-4 py-3 bg-teal-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
-              <FileBarChart className="w-5 h-5 text-teal-700" />
-              <h3 className="font-semibold text-teal-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
+            <div className="px-4 py-3 bg-indigo-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+              <FileBarChart className="w-5 h-5 text-indigo-700" />
+              <h3 className="font-semibold text-indigo-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <DataTable
               columns={annualColumns}
@@ -813,20 +813,20 @@ export default function FiscalPage() {
               emptyDescription={t('admin.fiscal.annualReports.emptyDescription')}
             />
             {annualReports.length > 0 && (
-              <div className="bg-teal-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
+              <div className="bg-indigo-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
                 <div className="flex items-center text-sm">
-                  <span className="font-bold text-teal-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
-                  <span className="font-bold text-teal-900 flex-1 text-end">
+                  <span className="font-bold text-indigo-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
+                  <span className="font-bold text-indigo-900 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.totalSales, 0))}
                   </span>
-                  <span className="font-bold text-teal-900 flex-1 text-end">
+                  <span className="font-bold text-indigo-900 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.taxableAmount, 0))}
                   </span>
                   <span className="flex-1" />
                   <span className="font-bold text-green-700 flex-1 text-end">
                     {formatCurrency(annualReports.reduce((s, r) => s + r.taxCollected, 0))}
                   </span>
-                  <span className="font-bold text-teal-900 flex-1 text-center">
+                  <span className="font-bold text-indigo-900 flex-1 text-center">
                     {annualReports.reduce((s, r) => s + r.orderCount, 0)}
                   </span>
                   <span className="flex-1" />
@@ -838,9 +838,9 @@ export default function FiscalPage() {
 
           {/* Monthly Reports */}
           <div>
-            <div className="px-4 py-3 bg-teal-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-teal-700" />
-              <h3 className="font-semibold text-teal-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
+            <div className="px-4 py-3 bg-indigo-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-indigo-700" />
+              <h3 className="font-semibold text-indigo-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <div className="max-h-[600px] overflow-y-auto">
               <DataTable
@@ -1081,9 +1081,9 @@ export default function FiscalPage() {
                 <p className="text-sm text-green-600">{t('admin.fiscal.modal.taxCollected')}</p>
                 <p className="text-xl font-bold text-green-700">{formatCurrency(selectedReport.taxCollected)}</p>
               </div>
-              <div className="p-4 bg-teal-50 rounded-lg text-center">
-                <p className="text-sm text-teal-600">{t('admin.fiscal.modal.orders')}</p>
-                <p className="text-xl font-bold text-teal-700">{selectedReport.orderCount}</p>
+              <div className="p-4 bg-indigo-50 rounded-lg text-center">
+                <p className="text-sm text-indigo-600">{t('admin.fiscal.modal.orders')}</p>
+                <p className="text-xl font-bold text-indigo-700">{selectedReport.orderCount}</p>
               </div>
             </div>
 

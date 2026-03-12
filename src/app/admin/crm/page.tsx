@@ -50,12 +50,12 @@ const ACTIVITY_ICONS: Record<string, typeof Phone> = {
 
 const ACTIVITY_COLORS: Record<string, string> = {
   CALL: 'text-green-600 bg-green-100',
-  EMAIL: 'text-teal-600 bg-teal-100',
+  EMAIL: 'text-indigo-600 bg-indigo-100',
   SMS: 'text-purple-600 bg-purple-100',
   MEETING: 'text-indigo-600 bg-indigo-100',
   NOTE: 'text-amber-600 bg-amber-100',
   STATUS_CHANGE: 'text-gray-600 bg-gray-200',
-  DEAL_CREATED: 'text-teal-600 bg-teal-100',
+  DEAL_CREATED: 'text-indigo-600 bg-indigo-100',
   DEAL_WON: 'text-green-600 bg-green-100',
   DEAL_LOST: 'text-red-600 bg-red-100',
 };
@@ -148,7 +148,7 @@ export default function CRMDashboardPage() {
     const diffMin = Math.floor(diffMs / 60000);
     const diffHrs = Math.floor(diffMin / 60);
     const diffDays = Math.floor(diffHrs / 24);
-    if (diffMin < 1) return t('common.justNow') || 'Just now';
+    if (diffMin < 1) return t('common.justNow');
     if (diffMin < 60) return `${diffMin}m`;
     if (diffHrs < 24) return `${diffHrs}h`;
     if (diffDays < 7) return `${diffDays}d`;
@@ -175,22 +175,22 @@ export default function CRMDashboardPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.dashboardTitle') || 'CRM Dashboard'}</h1>
-        <p className="text-sm text-gray-500 mt-1">{t('admin.crm.dashboardDesc') || 'Manage leads and sales pipeline'}</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.crm.dashboardTitle')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('admin.crm.dashboardDesc')}</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <button
           onClick={() => router.push('/admin/crm/leads')}
-          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-indigo-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
-            <Users className="h-5 w-5 text-teal-600" />
-            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-teal-500 transition-colors" />
+            <Users className="h-5 w-5 text-indigo-600" />
+            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{d?.leads.total || 0}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.totalLeads') || 'Total Leads'}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.totalLeads')}</p>
           {d && (d.leads.hotCount > 0 || d.leads.warmCount > 0) && (
             <div className="flex items-center gap-2 mt-2 text-[10px]">
               {d.leads.hotCount > 0 && <span className="text-red-500">{d.leads.hotCount} HOT</span>}
@@ -202,42 +202,42 @@ export default function CRMDashboardPage() {
 
         <button
           onClick={() => router.push('/admin/crm/deals')}
-          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-indigo-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <Handshake className="h-5 w-5 text-indigo-600" />
-            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-teal-500 transition-colors" />
+            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{d?.deals.openCount || 0}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.openDeals') || 'Open Deals'}</p>
-          <p className="text-[10px] text-gray-400 mt-1">{d?.deals.total || 0} {t('common.total') || 'total'}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.openDeals')}</p>
+          <p className="text-[10px] text-gray-400 mt-1">{d?.deals.total || 0} {t('common.total')}</p>
         </button>
 
         <button
           onClick={() => router.push('/admin/crm/pipeline')}
-          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-indigo-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
-            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-teal-500 transition-colors" />
+            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(d?.deals.totalValue || 0)}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.totalValue') || 'Pipeline Value'}</p>
-          <p className="text-[10px] text-teal-600 mt-1">
-            {formatCurrency(d?.deals.weightedValue || 0)} {t('admin.crm.weightedValue') || 'weighted'}
+          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.totalValue')}</p>
+          <p className="text-[10px] text-indigo-600 mt-1">
+            {formatCurrency(d?.deals.weightedValue || 0)} {t('admin.crm.weightedValue')}
           </p>
         </button>
 
         <button
           onClick={() => router.push('/admin/crm/forecast')}
-          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
+          className="bg-white rounded-lg border px-4 py-4 text-start hover:border-indigo-300 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-2">
             <Target className="h-5 w-5 text-amber-600" />
-            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-teal-500 transition-colors" />
+            <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{Math.round((d?.deals.winRate || 0) * 100)}%</p>
-          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.winRate') || 'Win Rate'}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('admin.crm.winRate')}</p>
           <div className="flex items-center gap-2 mt-1 text-[10px]">
             <span className="text-green-600">{d?.deals.wonCount || 0}W</span>
             <span className="text-red-500">{d?.deals.lostCount || 0}L</span>
@@ -249,12 +249,12 @@ export default function CRMDashboardPage() {
         {/* Pipeline Funnel */}
         <div className="lg:col-span-2 bg-white rounded-lg border">
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.pipelineStages') || 'Pipeline'}</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.pipelineStages')}</h3>
             <button
               onClick={() => router.push('/admin/crm/pipeline')}
-              className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1"
+              className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
             >
-              {t('admin.crm.viewKanban') || 'View Kanban'} <ArrowRight className="h-3 w-3" />
+              {t('admin.crm.viewKanban')} <ArrowRight className="h-3 w-3" />
             </button>
           </div>
           <div className="p-4">
@@ -287,7 +287,7 @@ export default function CRMDashboardPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-6">{t('admin.crm.noPipelineData') || 'No pipeline data'}</p>
+              <p className="text-sm text-gray-400 text-center py-6">{t('admin.crm.noPipelineData')}</p>
             )}
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function CRMDashboardPage() {
         {/* Recent Activity */}
         <div className="bg-white rounded-lg border">
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.recentActivity') || 'Recent Activity'}</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.recentActivity')}</h3>
           </div>
           <div className="p-3">
             {d?.recentActivities && d.recentActivities.length > 0 ? (
@@ -318,7 +318,7 @@ export default function CRMDashboardPage() {
                           {activity.lead && (
                             <button
                               onClick={() => router.push(`/admin/crm/leads/${activity.lead!.id}`)}
-                              className="text-[10px] text-teal-600 hover:underline truncate max-w-[100px]"
+                              className="text-[10px] text-indigo-600 hover:underline truncate max-w-[100px]"
                             >
                               {activity.lead.contactName}
                             </button>
@@ -339,7 +339,7 @@ export default function CRMDashboardPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-6">{t('admin.crm.noActivities') || 'No activities yet'}</p>
+              <p className="text-sm text-gray-400 text-center py-6">{t('admin.crm.noActivities')}</p>
             )}
           </div>
         </div>
@@ -347,15 +347,15 @@ export default function CRMDashboardPage() {
 
       {/* Quick Navigation */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.quickNav') || 'Quick Access'}</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.quickNav')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {NAV_ITEMS.map(({ href, icon: Icon, labelKey, fallback, desc }) => (
             <button
               key={href}
               onClick={() => router.push(href)}
-              className="bg-white rounded-lg border px-4 py-3 text-start hover:border-teal-300 hover:shadow-sm transition-all group"
+              className="bg-white rounded-lg border px-4 py-3 text-start hover:border-indigo-300 hover:shadow-sm transition-all group"
             >
-              <Icon className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition-colors mb-2" />
+              <Icon className="h-5 w-5 text-gray-400 group-hover:text-indigo-600 transition-colors mb-2" />
               <p className="text-sm font-medium text-gray-900">{t(labelKey) || fallback}</p>
               <p className="text-[10px] text-gray-400 mt-0.5">{t(desc) || ''}</p>
             </button>

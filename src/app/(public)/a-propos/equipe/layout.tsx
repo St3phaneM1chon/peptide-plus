@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Our Team | BioCycle Peptides',
-  description: 'Meet the expert team behind BioCycle Peptides, dedicated to delivering high-purity research peptides across Canada.',
+  title: 'Notre équipe',
+  description: 'Découvrez l\'équipe d\'experts derrière BioCycle Peptides, dédiée à livrer des peptides de recherche de haute pureté au Canada.',
   openGraph: {
-    title: 'Our Team | BioCycle Peptides',
-    description: 'Meet the expert team behind BioCycle Peptides, dedicated to delivering high-purity research peptides across Canada.',
+    title: 'Notre équipe | BioCycle Peptides',
+    description: 'L\'équipe d\'experts derrière BioCycle Peptides.',
+    url: 'https://biocyclepeptides.com/a-propos/equipe',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
   },
 };
 

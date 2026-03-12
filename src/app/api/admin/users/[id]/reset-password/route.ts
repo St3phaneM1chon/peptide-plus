@@ -81,4 +81,4 @@ export const POST = withAdminGuard(async (_request: NextRequest, { params, sessi
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.edit' });

@@ -244,9 +244,12 @@ export function FooterCorporate() {
             gap: '16px',
           }}
         >
-          <p style={{ fontSize: '13px', opacity: 0.7 }}>
-            © {currentYear} {process.env.NEXT_PUBLIC_SITE_NAME || 'Formations Pro'}. {t('footer.allRightsReserved')}.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/images/suite-koraline.png" alt="Suite Koraline" style={{ height: '24px', width: 'auto' }} />
+            <p style={{ fontSize: '13px', opacity: 0.7 }}>
+              © {currentYear} {process.env.NEXT_PUBLIC_SITE_NAME || 'Formations Pro'}. {t('footer.allRightsReserved')}.
+            </p>
+          </div>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
             {legalLinks.map((link) => (

@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { revokeConnection, type Platform, SUPPORTED_PLATFORMS } from '@/lib/platform/oauth';
@@ -72,15 +73,37 @@ export const PUT = withAdminGuard(async (request: NextRequest, context: RoutePar
     return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
 
+  const updateConnectionSchema = z.object({
+    autoImport: z.boolean().optional(),
+    defaultCategoryId: z.string().max(200).nullable().optional(),
+    defaultVisibility: z.enum(['PUBLIC', 'CUSTOMERS_ONLY', 'CLIENTS_ONLY', 'EMPLOYEES_ONLY', 'PRIVATE']).optional(),
+    defaultContentType: z.enum(['PODCAST', 'TRAINING', 'PERSONAL_SESSION', 'PRODUCT_DEMO', 'TESTIMONIAL', 'FAQ_VIDEO', 'WEBINAR_RECORDING', 'TUTORIAL']).optional(),
+    isEnabled: z.boolean().optional(),
+  });
+
   try {
     const body = await request.json();
+    const parsed = updateConnectionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       autoImport,
       defaultCategoryId,
       defaultVisibility,
       defaultContentType,
       isEnabled,
-    } = body;
+    } = parsed.data;
+
+    const updateData: Record<string, unknown> = {};
+    if (autoImport !== undefined) updateData.autoImport = autoImport;
+    if (defaultCategoryId !== undefined) updateData.defaultCategoryId = defaultCategoryId || null;
+    if (defaultVisibility !== undefined) updateData.defaultVisibility = defaultVisibility;
+    if (defaultContentType !== undefined) updateData.defaultContentType = defaultContentType;
+    if (isEnabled !== undefined) updateData.isEnabled = isEnabled;
 
     const connection = await prisma.platformConnection.upsert({
       where: { platform },
@@ -89,16 +112,10 @@ export const PUT = withAdminGuard(async (request: NextRequest, context: RoutePar
         autoImport: autoImport ?? false,
         defaultCategoryId: defaultCategoryId ?? null,
         defaultVisibility: defaultVisibility ?? 'PRIVATE',
-        defaultContentType: defaultContentType ?? 'OTHER',
+        defaultContentType: defaultContentType ?? 'TRAINING',
         isEnabled: isEnabled ?? false,
       },
-      update: {
-        ...(autoImport !== undefined ? { autoImport } : {}),
-        ...(defaultCategoryId !== undefined ? { defaultCategoryId: defaultCategoryId || null } : {}),
-        ...(defaultVisibility !== undefined ? { defaultVisibility } : {}),
-        ...(defaultContentType !== undefined ? { defaultContentType } : {}),
-        ...(isEnabled !== undefined ? { isEnabled } : {}),
-      },
+      update: updateData,
       include: {
         defaultCategory: { select: { id: true, name: true, slug: true } },
       },

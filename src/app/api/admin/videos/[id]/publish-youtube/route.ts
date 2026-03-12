@@ -6,9 +6,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { publishToYouTube } from '@/lib/platform/youtube-publish';
 import { logger } from '@/lib/logger';
+
+const publishYouTubeSchema = z.object({
+  privacyStatus: z.enum(['public', 'unlisted', 'private']).optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -17,12 +25,15 @@ export const POST = withAdminGuard(async (request: NextRequest, context: RoutePa
 
   try {
     const body = await request.json().catch(() => ({}));
-    const { privacyStatus, title, description, tags } = body as {
-      privacyStatus?: 'public' | 'unlisted' | 'private';
-      title?: string;
-      description?: string;
-      tags?: string[];
-    };
+    const parsed = publishYouTubeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { privacyStatus, title, description, tags } = parsed.data;
 
     const result = await publishToYouTube(id, {
       privacyStatus,

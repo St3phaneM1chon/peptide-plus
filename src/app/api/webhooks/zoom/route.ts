@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateZoomSignature, handleZoomWebhook } from '@/lib/platform/webhook-handlers';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,33 @@ export async function POST(request: NextRequest) {
       if (!plainToken || typeof plainToken !== 'string' || plainToken.length > 256) {
         logger.warn('[Webhook] Zoom url_validation: invalid plainToken');
         return NextResponse.json({ error: 'Invalid plainToken' }, { status: 400 });
+      }
+    }
+
+    // Idempotency check: skip if this event was already processed (Redis-based, TTL 24h)
+    // Skip for url_validation challenges which must always be answered
+    if (body.event !== 'endpoint.url_validation') {
+      const zoomEventId = body.payload?.object?.id
+        ? `${body.event}_${body.payload.object.id}_${body.event_ts || ''}`
+        : null;
+      if (zoomEventId) {
+        try {
+          const redis = await getRedisClient();
+          if (redis) {
+            const idempotencyKey = `webhook:zoom:${zoomEventId}`;
+            const alreadyProcessed = await redis.get(idempotencyKey);
+            if (alreadyProcessed) {
+              logger.info('[Webhook] Zoom duplicate event skipped', { eventId: zoomEventId });
+              return NextResponse.json({ status: 'already_processed' });
+            }
+            await redis.set(idempotencyKey, '1', 'EX', 86400);
+          }
+        } catch (redisErr) {
+          // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+          logger.debug('[Webhook] Zoom Redis idempotency check unavailable, proceeding', {
+            error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+          });
+        }
       }
     }
 

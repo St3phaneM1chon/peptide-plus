@@ -20,6 +20,8 @@ import { ErrorCode } from '@/lib/error-codes';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { createProductSchema } from '@/lib/validations/product';
+import { cacheGetOrSet, cacheInvalidateTag, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
+import { createHash } from 'crypto';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
@@ -144,163 +146,182 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // CATALOGUE-ITEM-1: Run count in parallel with findMany for proper server-side pagination
-    const [productsRaw, totalCount] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        select: {
-          // P-03 FIX: Minimal fields for product listing/grid view (~50-100 KB instead of 1-2 MB)
-          id: true,
-          name: true,
-          slug: true,
-          price: true,
-          compareAtPrice: true,
-          imageUrl: true,
-          isActive: true,
-          isFeatured: true,
-          isNew: true,
-          isBestseller: true,
-          averageRating: true,
-          reviewCount: true,
-          productType: true,
-          category: {
-            select: {
-              id: true, name: true, slug: true, parentId: true,
-              parent: { select: { id: true, name: true, slug: true } },
-            },
-          },
-          // PERF 89: For list view, only fetch the primary image
-          images: {
-            orderBy: { sortOrder: 'asc' },
-            take: 1,
-            select: { url: true, alt: true },
-          },
-          // Include active formats with minimal fields for price/stock display in shop grid
-          formats: {
-            where: { isActive: true },
-            orderBy: { sortOrder: 'asc' },
-            select: {
-              id: true,
-              name: true,
-              formatType: true,
-              price: true,
-              comparePrice: true,
-              isActive: true,
-              stockQuantity: true,
-              imageUrl: true,
-            },
-          },
-          _count: {
-            select: { formats: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.product.count({ where }),
-    ]);
-    let products = productsRaw;
+    // A7-P0-002: Redis cache for product listings
+    // Generate cache key from all query params (skip caching for admin includeInactive requests)
+    const cacheKeyData = JSON.stringify({
+      category, featured, productType, slugs, page, limit, locale,
+      minPrice, maxPrice, minRating, inStock, categoryIds: categoryIds || null, tags, withFacets,
+    });
+    const cacheHash = createHash('md5').update(cacheKeyData).digest('hex');
+    const cacheKey = CacheKeys.products.list(cacheHash);
 
-    // Apply translations if locale is not default
-    if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
-      products = await withTranslations(products, 'Product', locale);
+    // Only use Redis cache for public requests (non-admin)
+    const shouldCache = !includeInactive;
 
-      // Also translate nested category names (batch query instead of N+1)
-      const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
-      const categoryTranslations = new Map<string, Record<string, string>>();
-      if (categoryIds.length > 0) {
-        const batchResult = await getTranslatedFieldsBatch('Category', categoryIds, locale);
-        for (const [catId, trans] of batchResult) {
-          if (trans) categoryTranslations.set(catId, trans);
-        }
-      }
-
-      // Apply category translations to each product
-      products = products.map(p => {
-        const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
-        if (product.category && categoryTranslations.has(product.category.id)) {
-          const catTrans = categoryTranslations.get(product.category.id)!;
-          return {
-            ...p,
-            category: {
-              ...product.category,
-              name: catTrans.name || product.category.name,
-            },
-          };
-        }
-        return p;
-      }) as typeof products;
-    }
-
-    // #58: Compute facets if requested
-    let facets: Record<string, unknown> | undefined;
-    if (withFacets) {
-      const [facetCategories, priceAgg, ratingGroups] = await Promise.all([
-        // Category facets with counts
-        prisma.category.findMany({
-          where: { isActive: true },
+    const fetchProductData = async () => {
+      // CATALOGUE-ITEM-1: Run count in parallel with findMany for proper server-side pagination
+      const [productsRaw, totalCount] = await Promise.all([
+        prisma.product.findMany({
+          where,
           select: {
+            // P-03 FIX: Minimal fields for product listing/grid view (~50-100 KB instead of 1-2 MB)
             id: true,
             name: true,
             slug: true,
-            parentId: true,
-            _count: { select: { products: { where: { isActive: true } } } },
+            price: true,
+            compareAtPrice: true,
+            imageUrl: true,
+            isActive: true,
+            isFeatured: true,
+            isNew: true,
+            isBestseller: true,
+            averageRating: true,
+            reviewCount: true,
+            productType: true,
+            category: {
+              select: {
+                id: true, name: true, slug: true, parentId: true,
+                parent: { select: { id: true, name: true, slug: true } },
+              },
+            },
+            // PERF 89: For list view, only fetch the primary image
+            images: {
+              orderBy: { sortOrder: 'asc' },
+              take: 1,
+              select: { url: true, alt: true },
+            },
+            // Include active formats with minimal fields for price/stock display in shop grid
+            formats: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+              select: {
+                id: true,
+                name: true,
+                formatType: true,
+                price: true,
+                comparePrice: true,
+                isActive: true,
+                stockQuantity: true,
+                imageUrl: true,
+              },
+            },
+            _count: {
+              select: { formats: true },
+            },
           },
-          orderBy: { sortOrder: 'asc' },
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
         }),
-        // Price range
-        prisma.product.aggregate({
-          where: { isActive: true },
-          _min: { price: true },
-          _max: { price: true },
-        }),
-        // Rating distribution
-        prisma.product.groupBy({
-          by: ['averageRating'],
-          where: { isActive: true, averageRating: { not: null } },
-          _count: true,
-        }),
+        prisma.product.count({ where }),
       ]);
+      let products = productsRaw;
 
-      // Build rating distribution (1-5 stars)
-      const ratings: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-      for (const g of ratingGroups) {
-        const r = Math.round(Number(g.averageRating ?? 0));
-        if (r >= 1 && r <= 5) ratings[r] += g._count;
+      // Apply translations if locale is not default
+      if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
+        products = await withTranslations(products, 'Product', locale);
+
+        // Also translate nested category names (batch query instead of N+1)
+        const catIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
+        const categoryTranslations = new Map<string, Record<string, string>>();
+        if (catIds.length > 0) {
+          const batchResult = await getTranslatedFieldsBatch('Category', catIds, locale);
+          for (const [catId, trans] of batchResult) {
+            if (trans) categoryTranslations.set(catId, trans);
+          }
+        }
+
+        // Apply category translations to each product
+        products = products.map(p => {
+          const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
+          if (product.category && categoryTranslations.has(product.category.id)) {
+            const catTrans = categoryTranslations.get(product.category.id)!;
+            return {
+              ...p,
+              category: {
+                ...product.category,
+                name: catTrans.name || product.category.name,
+              },
+            };
+          }
+          return p;
+        }) as typeof products;
       }
 
-      facets = {
-        categories: facetCategories.map(c => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          parentId: c.parentId,
-          count: c._count.products,
-        })),
-        priceRange: {
-          min: Number(priceAgg._min.price ?? 0),
-          max: Number(priceAgg._max.price ?? 0),
-        },
-        ratings,
-      };
-    }
+      // #58: Compute facets if requested
+      let facets: Record<string, unknown> | undefined;
+      if (withFacets) {
+        const [facetCategories, priceAgg, ratingGroups] = await Promise.all([
+          // Category facets with counts
+          prisma.category.findMany({
+            where: { isActive: true },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              parentId: true,
+              _count: { select: { products: { where: { isActive: true } } } },
+            },
+            orderBy: { sortOrder: 'asc' },
+          }),
+          // Price range
+          prisma.product.aggregate({
+            where: { isActive: true },
+            _min: { price: true },
+            _max: { price: true },
+          }),
+          // Rating distribution
+          prisma.product.groupBy({
+            by: ['averageRating'],
+            where: { isActive: true, averageRating: { not: null } },
+            _count: true,
+          }),
+        ]);
 
-    // CATALOGUE-ITEM-1: Include pagination metadata so the client can render page controls
-    const totalPages = Math.ceil(totalCount / limit);
-    const pagination = {
-      page,
-      pageSize: limit,
-      total: totalCount,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+        // Build rating distribution (1-5 stars)
+        const ratings: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        for (const g of ratingGroups) {
+          const r = Math.round(Number(g.averageRating ?? 0));
+          if (r >= 1 && r <= 5) ratings[r] += g._count;
+        }
+
+        facets = {
+          categories: facetCategories.map(c => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            parentId: c.parentId,
+            count: c._count.products,
+          })),
+          priceRange: {
+            min: Number(priceAgg._min.price ?? 0),
+            max: Number(priceAgg._max.price ?? 0),
+          },
+          ratings,
+        };
+      }
+
+      // CATALOGUE-ITEM-1: Include pagination metadata so the client can render page controls
+      const totalPages = Math.ceil(totalCount / limit);
+      const pagination = {
+        page,
+        pageSize: limit,
+        total: totalCount,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      };
+
+      return facets
+        ? { products, facets, pagination }
+        : { products, pagination };
     };
 
+    const responseBody = shouldCache
+      ? await cacheGetOrSet(cacheKey, fetchProductData, { ttl: CacheTTL.SEARCH, tags: [CacheTags.PRODUCTS] })
+      : await fetchProductData();
+
     // Item 3: ETag support for caching
-    const responseBody = facets
-      ? { products, facets, pagination }
-      : { products, pagination };
     return withETag(responseBody, request, {
       cacheControl: 'public, s-maxage=300, stale-while-revalidate=600',
     });
@@ -522,6 +543,9 @@ export async function POST(request: NextRequest) {
 
     // Enqueue automatic translation to all locales
     enqueue.product(product.id);
+
+    // A7-P0-002: Invalidate product cache after creation
+    cacheInvalidateTag(CacheTags.PRODUCTS);
 
     // Revalidate cached pages after product creation
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }

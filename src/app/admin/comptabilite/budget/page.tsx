@@ -166,7 +166,7 @@ export default function BudgetPage() {
     window.location.href = '/admin/comptabilite/saisie-rapide';
   }, []);
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('admin.budget.selectLineToDelete') || 'Selectionnez une ligne budgetaire dans le tableau pour la supprimer.');
+    toast.info(t('admin.budget.selectLineToDelete'));
   }, [t]);
   const handleRibbonValidate = useCallback(() => {
     const totalBudgetRev = revenueBudget.reduce((s, l) => s + l.budget, 0);
@@ -177,7 +177,7 @@ export default function BudgetPage() {
   }, [revenueBudget, expenseBudget, t]);
   const handleRibbonCancel = useCallback(() => {
     fetchBudgets();
-    toast.info(t('admin.budget.resetDone') || 'Donnees budgetaires rechargees.');
+    toast.info(t('admin.budget.resetDone'));
   }, [fetchBudgets, t]);
   const handleRibbonDuplicate = useCallback(() => {
     const nextYear = parseInt(selectedYear) + 1;
@@ -186,9 +186,9 @@ export default function BudgetPage() {
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
   const handleRibbonExport = useCallback(() => {
     const allLines = [...revenueBudget, ...expenseBudget];
-    if (allLines.length === 0) { toast.error(t('admin.budget.noDataToExport') || 'Aucune donnee budgetaire a exporter'); return; }
+    if (allLines.length === 0) { toast.error(t('admin.budget.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.budget.colCategory') || 'Categorie', t('admin.budget.colAccountCode') || 'Code compte', t('admin.budget.colType') || 'Type', t('admin.budget.colBudget') || 'Budget', t('admin.budget.colActual') || 'Reel', t('admin.budget.colVariance') || 'Ecart', t('admin.budget.colPercentUsed') || '% utilise'];
+    const headers = [t('admin.budget.colCategory'), t('admin.budget.colAccountCode'), t('admin.budget.colType'), t('admin.budget.colBudget'), t('admin.budget.colActual'), t('admin.budget.colVariance'), t('admin.budget.colPercentUsed')];
     const rows = allLines.map(l => [l.category, l.accountCode, l.type || '', String(l.budget), String(l.actual), String(l.variance), String(l.percentUsed)]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -228,7 +228,7 @@ export default function BudgetPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="2026">2026</option>
               <option value="2025">2025</option>

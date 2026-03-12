@@ -39,12 +39,12 @@ const STATUS_BADGES: Record<string, { bg: string; text: string; key: string }> =
 };
 
 const BAR_COLORS = [
-  'bg-teal-500',
+  'bg-indigo-500',
   'bg-emerald-500',
   'bg-violet-500',
   'bg-amber-500',
   'bg-rose-500',
-  'bg-teal-500',
+  'bg-indigo-500',
   'bg-indigo-500',
   'bg-orange-500',
 ];
@@ -76,7 +76,7 @@ export default function ContentHubPage() {
         setStats(data);
       } catch (err) {
         console.error('Failed to load content hub stats:', err);
-        toast.error(t('admin.contentHub.loadError') || 'Failed to load content hub statistics');
+        toast.error(t('admin.contentHub.loadError'));
       } finally {
         setLoading(false);
       }
@@ -87,21 +87,21 @@ export default function ContentHubPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   const kpiCards = [
-    { label: t('admin.contentHub.totalVideos') || 'Total Videos', value: stats?.totalVideos ?? 0, icon: <Video className="w-5 h-5" />, color: 'text-teal-600' },
-    { label: t('admin.contentHub.published') || 'Published', value: stats?.published ?? 0, icon: <FileCheck className="w-5 h-5" />, color: 'text-green-600' },
-    { label: t('admin.contentHub.draft') || 'Draft', value: stats?.draft ?? 0, icon: <Clock className="w-5 h-5" />, color: 'text-gray-600' },
-    { label: t('admin.contentHub.inReview') || 'In Review', value: stats?.inReview ?? 0, icon: <Eye className="w-5 h-5" />, color: 'text-yellow-600' },
-    { label: t('admin.contentHub.archived') || 'Archived', value: stats?.archived ?? 0, icon: <Layout className="w-5 h-5" />, color: 'text-red-600' },
-    { label: t('admin.contentHub.totalViews') || 'Total Views', value: formatNumber(stats?.totalViews ?? 0), icon: <TrendingUp className="w-5 h-5" />, color: 'text-violet-600' },
-    { label: t('admin.contentHub.activeCategories') || 'Active Categories', value: stats?.activeCategories ?? 0, icon: <FolderOpen className="w-5 h-5" />, color: 'text-amber-600' },
-    { label: t('admin.contentHub.activePlacements') || 'Active Placements', value: stats?.activePlacements ?? 0, icon: <ExternalLink className="w-5 h-5" />, color: 'text-teal-600' },
-    { label: t('admin.contentHub.pendingConsents') || 'Pending Consents', value: stats?.pendingConsents ?? 0, icon: <FileCheck className="w-5 h-5" />, color: 'text-rose-600' },
+    { label: t('admin.contentHub.totalVideos'), value: stats?.totalVideos ?? 0, icon: <Video className="w-5 h-5" />, color: 'text-indigo-600' },
+    { label: t('admin.contentHub.published'), value: stats?.published ?? 0, icon: <FileCheck className="w-5 h-5" />, color: 'text-green-600' },
+    { label: t('admin.contentHub.draft'), value: stats?.draft ?? 0, icon: <Clock className="w-5 h-5" />, color: 'text-gray-600' },
+    { label: t('admin.contentHub.inReview'), value: stats?.inReview ?? 0, icon: <Eye className="w-5 h-5" />, color: 'text-yellow-600' },
+    { label: t('admin.contentHub.archived'), value: stats?.archived ?? 0, icon: <Layout className="w-5 h-5" />, color: 'text-red-600' },
+    { label: t('admin.contentHub.totalViews'), value: formatNumber(stats?.totalViews ?? 0), icon: <TrendingUp className="w-5 h-5" />, color: 'text-violet-600' },
+    { label: t('admin.contentHub.activeCategories'), value: stats?.activeCategories ?? 0, icon: <FolderOpen className="w-5 h-5" />, color: 'text-amber-600' },
+    { label: t('admin.contentHub.activePlacements'), value: stats?.activePlacements ?? 0, icon: <ExternalLink className="w-5 h-5" />, color: 'text-indigo-600' },
+    { label: t('admin.contentHub.pendingConsents'), value: stats?.pendingConsents ?? 0, icon: <FileCheck className="w-5 h-5" />, color: 'text-rose-600' },
   ];
 
   const byContentType = stats?.byContentType ?? [];
@@ -116,9 +116,9 @@ export default function ContentHubPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Layout className="w-6 h-6 text-teal-600" />
+          <Layout className="w-6 h-6 text-indigo-600" />
           <h1 className="text-2xl font-bold text-slate-900">
-            {t('admin.contentHub.title') || 'Content Hub'}
+            {t('admin.contentHub.title')}
           </h1>
         </div>
       </div>
@@ -141,11 +141,11 @@ export default function ContentHubPage() {
         {/* By Content Type */}
         <div className="bg-white rounded-lg border border-slate-200 p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-4">
-            {t('admin.contentHub.byContentType') || 'By Content Type'}
+            {t('admin.contentHub.byContentType')}
           </h2>
           {byContentType.length === 0 ? (
             <p className="text-sm text-slate-400 py-4 text-center">
-              {t('admin.contentHub.noData') || 'No data available'}
+              {t('admin.contentHub.noData')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -170,11 +170,11 @@ export default function ContentHubPage() {
         {/* By Source */}
         <div className="bg-white rounded-lg border border-slate-200 p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-4">
-            {t('admin.contentHub.bySource') || 'By Source'}
+            {t('admin.contentHub.bySource')}
           </h2>
           {bySource.length === 0 ? (
             <p className="text-sm text-slate-400 py-4 text-center">
-              {t('admin.contentHub.noData') || 'No data available'}
+              {t('admin.contentHub.noData')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -200,11 +200,11 @@ export default function ContentHubPage() {
       {/* Recent Videos */}
       <div className="bg-white rounded-lg border border-slate-200 p-5">
         <h2 className="text-sm font-semibold text-slate-700 mb-4">
-          {t('admin.contentHub.recentVideos') || 'Recent Videos'}
+          {t('admin.contentHub.recentVideos')}
         </h2>
         {recentVideos.length === 0 ? (
           <p className="text-sm text-slate-400 py-4 text-center">
-            {t('admin.contentHub.noVideos') || 'No videos yet'}
+            {t('admin.contentHub.noVideos')}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -212,19 +212,19 @@ export default function ContentHubPage() {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="text-start py-2 pe-4 font-medium text-slate-500">
-                    {t('admin.contentHub.videoTitle') || 'Title'}
+                    {t('admin.contentHub.videoTitle')}
                   </th>
                   <th className="text-start py-2 pe-4 font-medium text-slate-500">
-                    {t('admin.contentHub.status') || 'Status'}
+                    {t('admin.contentHub.status')}
                   </th>
                   <th className="text-start py-2 pe-4 font-medium text-slate-500">
-                    {t('admin.contentHub.type') || 'Type'}
+                    {t('admin.contentHub.type')}
                   </th>
                   <th className="text-end py-2 pe-4 font-medium text-slate-500">
-                    {t('admin.contentHub.views') || 'Views'}
+                    {t('admin.contentHub.views')}
                   </th>
                   <th className="text-end py-2 font-medium text-slate-500">
-                    {t('admin.contentHub.date') || 'Date'}
+                    {t('admin.contentHub.date')}
                   </th>
                 </tr>
               </thead>
@@ -244,7 +244,7 @@ export default function ContentHubPage() {
                         </span>
                       </td>
                       <td className="py-2.5 pe-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 capitalize">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 capitalize">
                           {video.contentType}
                         </span>
                       </td>
@@ -266,46 +266,46 @@ export default function ContentHubPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/admin/media/videos">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
-            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
               <Plus className="w-5 h-5" />
             </div>
             <div>
               <p className="font-medium text-slate-900">
-                {t('admin.contentHub.createVideo') || 'Create Video'}
+                {t('admin.contentHub.createVideo')}
               </p>
               <p className="text-xs text-slate-500">
-                {t('admin.contentHub.createVideoDesc') || 'Add a new video to the library'}
+                {t('admin.contentHub.createVideoDesc')}
               </p>
             </div>
           </div>
         </Link>
         <Link href="/admin/media/video-categories">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
               <p className="font-medium text-slate-900">
-                {t('admin.contentHub.manageCategories') || 'Manage Categories'}
+                {t('admin.contentHub.manageCategories')}
               </p>
               <p className="text-xs text-slate-500">
-                {t('admin.contentHub.manageCategoriesDesc') || 'Organize video categories'}
+                {t('admin.contentHub.manageCategoriesDesc')}
               </p>
             </div>
           </div>
         </Link>
         <Link href="/admin/media/consents">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-teal-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
               <FileCheck className="w-5 h-5" />
             </div>
             <div>
               <p className="font-medium text-slate-900">
-                {t('admin.contentHub.viewConsents') || 'View Consents'}
+                {t('admin.contentHub.viewConsents')}
               </p>
               <p className="text-xs text-slate-500">
-                {t('admin.contentHub.viewConsentsDesc') || 'Review pending consent requests'}
+                {t('admin.contentHub.viewConsentsDesc')}
               </p>
             </div>
           </div>

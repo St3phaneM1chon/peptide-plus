@@ -41,22 +41,22 @@ export default function LabResultsClient({ coaData }: LabResultsClientProps) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center p-6">
               <div className="text-4xl mb-3">🔬</div>
-              <h3 className="font-bold text-lg mb-1">{t('labResults.thirdParty') || 'Tests Tiers'}</h3>
+              <h2 className="font-bold text-lg mb-1">{t('labResults.thirdParty') || 'Tests Tiers'}</h2>
               <p className="text-sm text-gray-600">{t('labResults.thirdPartyDesc') || 'Laboratoires indépendants accrédités'}</p>
             </div>
             <div className="text-center p-6">
               <div className="text-4xl mb-3">✅</div>
-              <h3 className="font-bold text-lg mb-1">{t('labResults.purity') || 'Pureté 99%+'}</h3>
+              <h2 className="font-bold text-lg mb-1">{t('labResults.purity') || 'Pureté 99%+'}</h2>
               <p className="text-sm text-gray-600">{t('labResults.purityDesc') || 'Garantie sur tous nos peptides'}</p>
             </div>
             <div className="text-center p-6">
               <div className="text-4xl mb-3">📄</div>
-              <h3 className="font-bold text-lg mb-1">{t('labResults.coa') || 'COA Disponible'}</h3>
+              <h2 className="font-bold text-lg mb-1">{t('labResults.coa') || 'COA Disponible'}</h2>
               <p className="text-sm text-gray-600">{t('labResults.coaDesc') || 'Certificat d\'analyse pour chaque lot'}</p>
             </div>
             <div className="text-center p-6">
               <div className="text-4xl mb-3">🏆</div>
-              <h3 className="font-bold text-lg mb-1">{t('labResults.hplc') || 'HPLC & MS'}</h3>
+              <h2 className="font-bold text-lg mb-1">{t('labResults.hplc') || 'HPLC & MS'}</h2>
               <p className="text-sm text-gray-600">{t('labResults.hplcDesc') || 'Tests chromatographiques avancés'}</p>
             </div>
           </div>

@@ -47,7 +47,7 @@ export default function MediaXPage() {
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError') || 'Save failed');
+      toast.error(err instanceof Error ? err.message : t('admin.media.saveFailedError'));
       throw err;
     }
   };
@@ -103,7 +103,7 @@ export default function MediaXPage() {
     a.download = `x-twitter-config-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('admin.media.exportSuccess') || 'Configuration exported');
+    toast.success(t('admin.media.exportSuccess'));
   }, [enabled, username, apiKeyId, hasApiKeySecret, hasAccessToken, publicLink, webhookUrl, t]);
 
   useRibbonAction('configure', onConfigure);
@@ -114,15 +114,15 @@ export default function MediaXPage() {
   useRibbonAction('export', onExport);
 
   // --- media.ads ribbon actions ---
-  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint') || 'Create ad campaigns in X Ads Manager.'); }, [t]));
-  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint') || 'Manage and delete campaigns in X Ads Manager.'); }, [t]));
-  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint') || 'Pause campaigns directly in X Ads Manager.'); }, [t]));
-  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint') || 'Resume paused campaigns in X Ads Manager.'); }, [t]));
-  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint') || 'Adjust budgets in X Ads Manager.'); }, [t]));
-  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in X Analytics dashboard.'); }, [t]));
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint')); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint')); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint')); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint')); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint')); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint')); }, [t]));
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (
@@ -130,7 +130,7 @@ export default function MediaXPage() {
       <IntegrationCard
         title={t('admin.media.xTitle')}
         // FIX: F35 - Use i18n for description instead of hardcoded English
-        description={t('admin.media.xDescription') || 'Connect X (Twitter) API v2 for post scheduling, analytics, and ad campaigns.'}
+        description={t('admin.media.xDescription')}
         icon={<MessageCircle className="w-6 h-6" />}
         color="from-slate-800 to-slate-900"
         enabled={enabled}

@@ -173,26 +173,8 @@ export async function middleware(request: NextRequest) {
       return preflightResponse;
     }
 
-    // P1-8: Defense-in-depth auth logging for /api/admin/* routes.
-    // The actual auth enforcement is handled by withAdminGuard() in each route handler.
-    // We only LOG suspicious unauthenticated admin API requests here — blocking is left
-    // to the per-route guard to avoid breaking the site if middleware token resolution
-    // differs from the route-level auth (e.g. different cookie names on Azure).
-    if (pathname.startsWith('/api/admin')) {
-      try {
-        const adminToken = await getToken({
-          req: request,
-          secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-          secureCookie: false,
-          cookieName: 'authjs.session-token',
-        });
-        if (!adminToken) {
-          console.warn(JSON.stringify({ event: 'middleware_admin_api_no_token', pathname, method: request.method }));
-        }
-      } catch {
-        // Token resolution failed — don't block, just log
-      }
-    }
+    // Auth for /api/admin/* is enforced by withAdminGuard() in each route handler.
+    // No middleware JWT decode needed here — saves 5-15ms per admin API request.
 
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);

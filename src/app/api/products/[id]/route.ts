@@ -16,6 +16,7 @@ import { apiSuccess, apiError, apiNoContent, withETag, validateContentType } fro
 import { ErrorCode } from '@/lib/error-codes';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { cacheGetOrSet, cacheInvalidateTag, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
 
 const updateProductSchema = z.object({
   name: z.string().min(1).max(300).optional(),
@@ -84,25 +85,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const locale = request.nextUrl.searchParams.get('locale') || defaultLocale;
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true, parentId: true, imageUrl: true },
+
+    // A7-P0-002: Redis cache for product detail (keyed by id + locale)
+    const cacheKey = `${CacheKeys.products.byId(id)}:locale=${locale}`;
+
+    const product = await cacheGetOrSet(cacheKey, async () => {
+      return prisma.product.findUnique({
+        where: { id },
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true, parentId: true, imageUrl: true },
+          },
+          modules: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          images: {
+            orderBy: { sortOrder: 'asc' },
+            select: { id: true, url: true, alt: true, caption: true, sortOrder: true, isPrimary: true },
+          },
+          formats: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+          },
         },
-        modules: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        images: {
-          orderBy: { sortOrder: 'asc' },
-          select: { id: true, url: true, alt: true, caption: true, sortOrder: true, isPrimary: true },
-        },
-        formats: {
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' },
-        },
-      },
-    });
+      });
+    }, { ttl: CacheTTL.PRODUCTS, tags: [CacheTags.PRODUCTS] });
 
     if (!product) {
       return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
@@ -384,6 +391,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Re-translate product in all locales (force overwrite existing translations)
     enqueue.productUrgent(product.id);
 
+    // A7-P0-002: Invalidate product cache after update
+    cacheInvalidateTag(CacheTags.PRODUCTS);
+
     // Revalidate cached pages after product update
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
     try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
@@ -427,6 +437,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       data: { isActive: false },
       select: { slug: true },
     });
+
+    // A7-P0-002: Invalidate product cache after deletion
+    cacheInvalidateTag(CacheTags.PRODUCTS);
 
     // Revalidate cached pages after product deletion
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }

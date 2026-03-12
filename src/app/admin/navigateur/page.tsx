@@ -101,7 +101,7 @@ export default function NavigateurPage() {
     try {
       const res = await fetch(endpoint, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
-        toast.success(t('common.deleted') || 'Deleted');
+        toast.success(t('common.deleted'));
         if (mode === 'section') { setSelectedSection(null); setSelectedSubSection(null); }
         if (mode === 'subsection') setSelectedSubSection(null);
         await fetchSections();
@@ -132,7 +132,7 @@ export default function NavigateurPage() {
 
   const handleRibbonExport = useCallback(() => {
     if (sections.length === 0) {
-      toast.info(t('admin.webNavigator.noSections') || 'No sections to export');
+      toast.info(t('admin.webNavigator.noSections'));
       return;
     }
     const exportData = JSON.stringify(sections, null, 2);
@@ -143,13 +143,13 @@ export default function NavigateurPage() {
     a.download = `navigation-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [sections, t]);
 
   const handleRibbonPurge = useCallback(async () => {
     const inactiveSections = sections.filter(s => !s.isActive);
     if (inactiveSections.length === 0) {
-      toast.info(t('admin.webNavigator.noInactiveSections') || 'No inactive sections to purge');
+      toast.info(t('admin.webNavigator.noInactiveSections'));
       return;
     }
     try {
@@ -170,8 +170,8 @@ export default function NavigateurPage() {
     const totalSubSections = sections.reduce((sum, s) => sum + s.subSections.length, 0);
     const totalPages = sections.reduce((sum, s) => sum + s.subSections.reduce((ss, sub) => ss + sub.pages.length, 0), 0);
     const activeSections = sections.filter(s => s.isActive).length;
-    toast.success(t('admin.webNavigator.statsTitle') || 'Navigation Stats', {
-      description: `${t('admin.webNavigator.sections') || 'Sections'}: ${totalSections} (${activeSections} ${t('admin.promotions.statActive') || 'active'}) | ${t('admin.webNavigator.subSections') || 'Sub-sections'}: ${totalSubSections} | ${t('admin.webNavigator.pages') || 'Pages'}: ${totalPages}`,
+    toast.success(t('admin.webNavigator.statsTitle'), {
+      description: `${t('admin.webNavigator.sections')}: ${totalSections} (${activeSections} ${t('admin.promotions.statActive')}) | ${t('admin.webNavigator.subSections')}: ${totalSubSections} | ${t('admin.webNavigator.pages')}: ${totalPages}`,
       duration: 6000,
     });
   }, [sections, t]);
@@ -183,7 +183,7 @@ export default function NavigateurPage() {
   useRibbonAction('settings', handleRibbonSettings);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>;
   }
 
   return (
@@ -207,7 +207,7 @@ export default function NavigateurPage() {
                 key={sec.id}
                 onClick={() => { setSelectedSection(sec); setSelectedSubSection(null); }}
                 className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
-                  selectedSection?.id === sec.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
+                  selectedSection?.id === sec.id ? 'bg-indigo-50 border-s-[3px] border-s-indigo-600' : ''
                 }`}
               >
                 <span className="text-sm text-slate-900 truncate">{sec.title}</span>
@@ -240,7 +240,7 @@ export default function NavigateurPage() {
                 key={sub.id}
                 onClick={() => setSelectedSubSection(sub)}
                 className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
-                  selectedSubSection?.id === sub.id ? 'bg-teal-50 border-s-[3px] border-s-teal-600' : ''
+                  selectedSubSection?.id === sub.id ? 'bg-indigo-50 border-s-[3px] border-s-indigo-600' : ''
                 }`}
               >
                 <span className="text-sm text-slate-900 truncate">{sub.title}</span>

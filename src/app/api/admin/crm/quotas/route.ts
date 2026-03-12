@@ -7,9 +7,25 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
+
+const createQuotaSchema = z.object({
+  agentId: z.string().min(1),
+  period: z.enum(['daily', 'weekly', 'monthly', 'quarterly'], {
+    errorMap: () => ({ message: 'Invalid period. Use: daily, weekly, monthly, quarterly' }),
+  }),
+  type: z.enum(['calls', 'revenue', 'deals', 'conversions'], {
+    errorMap: () => ({ message: 'Invalid type. Use: calls, revenue, deals, conversions' }),
+  }),
+  target: z.number().min(0),
+}).transform((data) => ({
+  ...data,
+  period: data.period.toLowerCase() as 'daily' | 'weekly' | 'monthly' | 'quarterly',
+  type: data.type.toLowerCase() as 'calls' | 'revenue' | 'deals' | 'conversions',
+}));
 
 // ---------------------------------------------------------------------------
 // GET: List quotas
@@ -46,34 +62,15 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   const body = await request.json();
-  const { agentId, period, type, target } = body;
-
-  if (!agentId || !period || !type || target === undefined) {
-    return apiError('Missing required fields: agentId, period, type, target', 'VALIDATION_ERROR', {
+  const parsed = createQuotaSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError('Invalid data', 'VALIDATION_ERROR', {
       status: 400,
+      details: parsed.error.errors,
       request,
     });
   }
-
-  // Validate period
-  const validPeriods = ['daily', 'weekly', 'monthly', 'quarterly'];
-  const normalizedPeriod = String(period).toLowerCase();
-  if (!validPeriods.includes(normalizedPeriod)) {
-    return apiError(`Invalid period. Use: ${validPeriods.join(', ')}`, 'VALIDATION_ERROR', {
-      status: 400,
-      request,
-    });
-  }
-
-  // Validate type
-  const validTypes = ['calls', 'revenue', 'deals', 'conversions'];
-  const normalizedType = String(type).toLowerCase();
-  if (!validTypes.includes(normalizedType)) {
-    return apiError(`Invalid type. Use: ${validTypes.join(', ')}`, 'VALIDATION_ERROR', {
-      status: 400,
-      request,
-    });
-  }
+  const { agentId, period: normalizedPeriod, type: normalizedType, target } = parsed.data;
 
   // Validate agent exists
   const agent = await prisma.user.findUnique({

@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
@@ -107,20 +108,38 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
   }
 });
 
+const surveyQuestionSchema = z.object({
+  text: z.string().min(1).max(500).trim(),
+  type: z.enum(['rating', 'yes_no', 'open_text', 'dtmf']),
+});
+
+const createSurveySchema = z.object({
+  name: z.string().min(1).max(200).trim(),
+  questions: z.array(surveyQuestionSchema).min(1).max(20),
+  isActive: z.boolean().optional(),
+});
+
+const updateSurveySchema = z.object({
+  id: z.string().min(1).max(200),
+  name: z.string().min(1).max(200).trim().optional(),
+  questions: z.array(surveyQuestionSchema).min(1).max(20).optional(),
+  isActive: z.boolean().optional(),
+});
+
 /**
  * POST - Create a new survey configuration.
  */
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { name, questions, isActive } = body;
-
-    if (!name || !Array.isArray(questions) || questions.length === 0) {
+    const parsed = createSurveySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, questions (non-empty array)' },
+        { error: 'Validation error', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+    const { name, questions, isActive } = parsed.data;
 
     // Validate questions using post-call-survey lib
     const validationErrors = validateSurveyQuestions(questions as PostCallSurveyQuestion[]);
@@ -155,14 +174,14 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { id, name, questions, isActive } = body;
-
-    if (!id) {
+    const parsed = updateSurveySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required field: id' },
+        { error: 'Validation error', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+    const { id, name, questions, isActive } = parsed.data;
 
     const configs = await loadSurveyConfigs();
     const idx = configs.findIndex((c) => c.id === id);

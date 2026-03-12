@@ -2,8 +2,15 @@ import { Metadata } from 'next';
 import CalculatorPageClient from './CalculatorPageClient';
 
 export const metadata: Metadata = {
-  title: 'Peptide Injection Calculator | BioCycle Peptides',
-  description: 'Calculate your precise peptide dosage with our free injection calculator. Determine concentration, injection volume, and U100 units.',
+  title: 'Calculateur de dosage peptidique',
+  description: 'Calculez votre dosage peptidique précis avec notre calculateur d\'injection gratuit. Déterminez la concentration, le volume d\'injection et les unités U100.',
+  openGraph: {
+    title: 'Calculateur de dosage peptidique | BioCycle Peptides',
+    description: 'Calculateur d\'injection peptidique gratuit. Concentration, volume et unités U100.',
+    url: 'https://biocyclepeptides.com/calculator',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 export default function CalculatorPage() {

@@ -12,36 +12,53 @@ export async function GET(request: NextRequest) {
 
     const [bundles, total] = await Promise.all([
       prisma.bundle.findMany({
-      where: { isActive: true },
-      include: {
-        items: {
-          include: {
-            product: {
-              include: {
-                // PERF 90: Only include active formats and select needed fields
-                formats: {
-                  where: { isActive: true },
-                  select: {
-                    id: true,
-                    name: true,
-                    price: true,
-                    comparePrice: true,
-                    imageUrl: true,
-                    formatType: true,
-                    sortOrder: true,
-                    inStock: true,
-                    stockQuantity: true,
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          image: true,
+          discount: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          items: {
+            select: {
+              id: true,
+              quantity: true,
+              formatId: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  price: true,
+                  compareAtPrice: true,
+                  imageUrl: true,
+                  formats: {
+                    where: { isActive: true },
+                    select: {
+                      id: true,
+                      name: true,
+                      price: true,
+                      comparePrice: true,
+                      imageUrl: true,
+                      formatType: true,
+                      sortOrder: true,
+                      inStock: true,
+                      stockQuantity: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
       prisma.bundle.count({ where: { isActive: true } }),
     ]);
 

@@ -239,6 +239,7 @@ export default function VideosPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('videos.searchPlaceholder') || 'Search videos...'}
+                aria-label={t('videos.searchPlaceholder') || 'Search videos'}
                 className="w-full ps-12 pe-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>

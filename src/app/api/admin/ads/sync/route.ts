@@ -10,9 +10,14 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { syncAds } from '@/lib/ads/ads-sync';
 import { logger } from '@/lib/logger';
+
+const adsSyncSchema = z.object({
+  platform: z.string().optional(),
+});
 
 // V-025 FIX: Add CRON_SECRET validation for automated calls
 function validateCronSecret(request: NextRequest): boolean {
@@ -25,9 +30,15 @@ function validateCronSecret(request: NextRequest): boolean {
 // Admin-authenticated handler
 export const POST = withAdminGuard(async (request: NextRequest) => {
   const body = await request.json().catch(() => ({}));
-  const platform = (body as { platform?: string }).platform;
+  const parsed = adsSyncSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Invalid data', details: parsed.error.errors },
+      { status: 400 }
+    );
+  }
 
-  const results = await syncAds(platform || undefined);
+  const results = await syncAds(parsed.data.platform || undefined);
 
   return NextResponse.json({ results });
 });

@@ -143,10 +143,10 @@ export default function HeatmapsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('admin.crm.heatmaps') || 'Call Time Heatmap'}
+            {t('admin.crm.heatmaps')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.heatmapsDesc') || 'Best calling times based on answer rates by day and hour'}
+            {t('admin.crm.heatmapsDesc')}
           </p>
         </div>
         <button onClick={fetchData} className="p-2 rounded-lg hover:bg-gray-100" title="Refresh">
@@ -202,7 +202,7 @@ export default function HeatmapsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
         </div>
       ) : (
         <>
@@ -245,7 +245,7 @@ export default function HeatmapsPage() {
                     return (
                       <div
                         key={h}
-                        className={`flex-1 h-8 rounded-sm ${color} flex items-center justify-center cursor-pointer transition-all hover:ring-2 hover:ring-teal-400 hover:z-10`}
+                        className={`flex-1 h-8 rounded-sm ${color} flex items-center justify-center cursor-pointer transition-all hover:ring-2 hover:ring-indigo-400 hover:z-10`}
                         style={{ minWidth: 20 }}
                         onMouseEnter={() => cell && setHoveredCell(cell)}
                         onMouseLeave={() => setHoveredCell(null)}

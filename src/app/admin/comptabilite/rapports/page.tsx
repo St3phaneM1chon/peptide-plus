@@ -176,16 +176,16 @@ export default function RapportsComptablesPage() {
   // Ribbon actions
   const handleRibbonGenerateReport = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
   const handleRibbonSchedule = useCallback(() => {
-    toast.info(t('admin.reports.scheduleInfo') || 'La planification automatique des rapports sera disponible prochainement.');
+    toast.info(t('admin.reports.scheduleInfo'));
   }, [t]);
   const handleRibbonComparePeriods = useCallback(() => {
     window.location.href = '/admin/comptabilite/etats-financiers';
   }, []);
   const handleRibbonExportPdf = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
   const handleRibbonExportExcel = useCallback(() => {
-    if (taxReports.length === 0) { toast.error(t('admin.reports.noDataToExport') || 'Aucun rapport fiscal a exporter'); return; }
+    if (taxReports.length === 0) { toast.error(t('admin.reports.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.reports.colPeriod') || 'Periode', t('admin.reports.colRegion') || 'Region', t('admin.reports.colTpsCollected') || 'TPS percue', t('admin.reports.colTvqCollected') || 'TVQ percue', t('admin.reports.colCtiRti') || 'CTI/RTI', t('admin.reports.colNetTotal') || 'Total net', t('admin.reports.colDueDate') || 'Echeance', t('admin.reports.colStatus') || 'Statut'];
+    const headers = [t('admin.reports.colPeriod'), t('admin.reports.colRegion'), t('admin.reports.colTpsCollected'), t('admin.reports.colTvqCollected'), t('admin.reports.colCtiRti'), t('admin.reports.colNetTotal'), t('admin.reports.colDueDate'), t('admin.reports.colStatus')];
     const rows = taxReports.map(r => [r.period, r.region, String(r.tpsCollected), String(r.tvqCollected), String(r.tpsPaid + r.tvqPaid), String(r.netTotal), r.dueDate, r.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -321,7 +321,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label={t('admin.reports.filterYear')}
             >
               <option value="2026">2026</option>
@@ -331,7 +331,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label={t('admin.reports.filterRegion')}
             >
               {REGION_OPTIONS.map((opt) => (
@@ -420,11 +420,11 @@ export default function RapportsComptablesPage() {
       {/* Annual Reports */}
       <SectionCard title={t('admin.reports.annualReports')} theme={theme}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-teal-50 rounded-lg border border-teal-200">
-            <p className="text-sm text-teal-600">{t('admin.reports.federalDeclaration')}</p>
-            <p className="font-bold text-teal-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-teal-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
-            <button className="mt-3 text-sm text-teal-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <p className="text-sm text-indigo-600">{t('admin.reports.federalDeclaration')}</p>
+            <p className="font-bold text-indigo-900 mt-1">{parseInt(selectedYear) - 1}</p>
+            <p className="text-xs text-indigo-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
+            <button className="mt-3 text-sm text-indigo-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <p className="text-sm text-purple-600">{t('admin.reports.quebecDeclaration')}</p>
@@ -443,11 +443,11 @@ export default function RapportsComptablesPage() {
               {t('admin.reports.generate')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="p-4 bg-teal-50 rounded-lg border border-teal-200">
-            <p className="text-sm text-teal-600">{t('admin.reports.auditReport')}</p>
-            <p className="font-bold text-teal-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-teal-600 mt-2">{t('admin.reports.optional')}</p>
-            <button className="mt-3 text-sm text-teal-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <p className="text-sm text-indigo-600">{t('admin.reports.auditReport')}</p>
+            <p className="font-bold text-indigo-900 mt-1">{parseInt(selectedYear) - 1}</p>
+            <p className="text-xs text-indigo-600 mt-2">{t('admin.reports.optional')}</p>
+            <button className="mt-3 text-sm text-indigo-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
         </div>
       </SectionCard>

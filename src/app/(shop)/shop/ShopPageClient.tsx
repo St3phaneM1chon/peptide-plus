@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { ProductCard } from '@/components/shop';
+import ProductCard from '@/components/shop/ProductCard';
 import RecentlyViewed from '@/components/shop/RecentlyViewed';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useI18n } from '@/i18n/client';
@@ -407,14 +407,16 @@ export default function ShopPage() {
                       value={priceRange[0]}
                       onChange={(e) => { const v = Number(e.target.value); setPriceRange([v, priceRange[1]]); updateUrlParams({ minPrice: String(v) }); }}
                       className="w-20 px-2 py-1 border rounded text-sm"
+                      aria-label={t('shop.minPrice') || 'Minimum price'}
                       min={0}
                     />
-                    <span>-</span>
+                    <span aria-hidden="true">-</span>
                     <input
                       type="number"
                       value={priceRange[1]}
                       onChange={(e) => { const v = Number(e.target.value); setPriceRange([priceRange[0], v]); updateUrlParams({ maxPrice: String(v) }); }}
                       className="w-20 px-2 py-1 border rounded text-sm"
+                      aria-label={t('shop.maxPrice') || 'Maximum price'}
                       min={0}
                     />
                   </div>
@@ -424,6 +426,7 @@ export default function ShopPage() {
                     max={maxPrice}
                     value={priceRange[1]}
                     onChange={(e) => { const v = Number(e.target.value); setPriceRange([priceRange[0], v]); updateUrlParams({ maxPrice: String(v) }); }}
+                    aria-label={t('shop.maxPrice') || 'Maximum price range'}
                     className="w-full accent-orange-500"
                   />
                   <p className="text-sm text-neutral-500">

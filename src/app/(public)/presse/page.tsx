@@ -5,8 +5,15 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Presse | Formations Pro',
-  description: 'Espace presse: communiqués, ressources médias et contact.',
+  title: 'Presse',
+  description: 'Espace presse BioCycle Peptides : communiqués de presse, ressources médias et contact pour les journalistes.',
+  openGraph: {
+    title: 'Presse | BioCycle Peptides',
+    description: 'Communiqués de presse, ressources médias et contact pour les journalistes.',
+    url: 'https://biocyclepeptides.com/presse',
+    siteName: 'BioCycle Peptides',
+    type: 'website',
+  },
 };
 
 const pressReleases = [

@@ -44,6 +44,14 @@ export interface AdminGuardOptions {
   rateLimit?: number;
   /** If set, check that the user has this specific permission (via hasPermission from permissions.ts) */
   requiredPermission?: PermissionCode;
+  /**
+   * A4-P2-002: Soft MFA enforcement.
+   * If true, OWNER users who have not enabled MFA will receive a 403
+   * with a `mfaRequired` flag and a message prompting them to enable MFA.
+   * This is a soft gate (warning/flag) — it does NOT block non-OWNER roles.
+   * Intended for the most sensitive admin operations (user mgmt, settings, accounting).
+   */
+  requireMfa?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -167,6 +175,31 @@ export function withAdminGuard(
             path: new URL(request.url).pathname,
           });
           return jsonError('Insufficient permissions', 403);
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // 2c. Soft MFA enforcement (A4-P2-002)
+      // Only blocks OWNER users who haven't enabled MFA on sensitive routes.
+      // Non-OWNER roles are not affected (their access is controlled by permissions).
+      // ---------------------------------------------------------------
+      if (options?.requireMfa && userRole === 'OWNER') {
+        const mfaEnabled = (session.user as Record<string, unknown>).mfaEnabled === true;
+        if (!mfaEnabled) {
+          logger.warn('MFA not enabled for OWNER on sensitive route', {
+            event: 'mfa_soft_enforcement',
+            userId: session.user.id,
+            path: new URL(request.url).pathname,
+            method: request.method,
+          });
+          return NextResponse.json(
+            {
+              error: 'MFA is required for this operation. Please enable two-factor authentication in your account settings.',
+              mfaRequired: true,
+              status: 403,
+            },
+            { status: 403 }
+          );
         }
       }
 

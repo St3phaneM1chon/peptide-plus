@@ -1,11 +1,13 @@
 /**
  * Shared Canadian province tax rates
- * Single source of truth for GST/HST/PST/QST/RST rates used across payment routes.
+ * A8-P2-006 FIX: Derives rates from the canonical PROVINCIAL_TAX_RATES in
+ * canadian-tax-config.ts instead of maintaining a separate hardcoded table.
  *
  * All calculations use Decimal.js for financial precision.
  */
 
 import { applyRate, add } from '@/lib/decimal-calculator';
+import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
 
 export interface ProvinceTaxRates {
   gst: number;
@@ -15,23 +17,48 @@ export interface ProvinceTaxRates {
   rst?: number;
 }
 
-const TAX_RATES: Record<string, ProvinceTaxRates> = {
-  'AB': { gst: 0.05 }, 'BC': { gst: 0.05, pst: 0.07 }, 'MB': { gst: 0.05, rst: 0.07 },
-  'NB': { gst: 0, hst: 0.15 }, 'NL': { gst: 0, hst: 0.15 }, 'NS': { gst: 0, hst: 0.14 },
-  'NT': { gst: 0.05 }, 'NU': { gst: 0.05 }, 'ON': { gst: 0, hst: 0.13 },
-  'PE': { gst: 0, hst: 0.15 }, 'QC': { gst: 0.05, qst: 0.09975 },
-  'SK': { gst: 0.05, pst: 0.06 }, 'YT': { gst: 0.05 },
-};
-
-const DEFAULT_PROVINCE = 'QC';
+/**
+ * A8-P2-006 FIX: Derive TAX_RATES from the canonical PROVINCIAL_TAX_RATES
+ * (single source of truth in canadian-tax-config.ts). Rates are converted
+ * from percentages to decimal fractions (e.g. 5 -> 0.05).
+ */
+const TAX_RATES: Record<string, ProvinceTaxRates> = (() => {
+  const rates: Record<string, ProvinceTaxRates> = {};
+  // Deduplicate by province code (take latest effective date)
+  const seen = new Set<string>();
+  for (let i = PROVINCIAL_TAX_RATES.length - 1; i >= 0; i--) {
+    const p = PROVINCIAL_TAX_RATES[i];
+    if (seen.has(p.provinceCode)) continue;
+    seen.add(p.provinceCode);
+    const entry: ProvinceTaxRates = { gst: p.gstRate / 100 };
+    if (p.hstRate > 0) {
+      entry.gst = 0;
+      entry.hst = p.hstRate / 100;
+    } else if (p.pstName === 'QST') {
+      entry.qst = p.pstRate / 100;
+    } else if (p.pstName === 'RST') {
+      entry.rst = p.pstRate / 100;
+    } else if (p.pstRate > 0) {
+      entry.pst = p.pstRate / 100;
+    }
+    rates[p.provinceCode] = entry;
+  }
+  return rates;
+})();
 
 /**
  * Get tax rates for a Canadian province.
- * Falls back to QC rates if province is unknown.
+ * A8-P2-001 FIX: Returns 0% provincial tax for unknown provinces instead of
+ * defaulting to QC (9.975% QST). Only federal GST (5%) applies as a safe default.
  */
 export function getProvinceTaxRates(province: string): ProvinceTaxRates {
   const key = province.toUpperCase();
-  return TAX_RATES[key] || TAX_RATES[DEFAULT_PROVINCE];
+  const rates = TAX_RATES[key];
+  if (!rates) {
+    console.warn(`[tax-rates] Unknown province code "${province}" — using 0% provincial tax (GST-only fallback)`);
+    return { gst: 0.05 }; // Federal GST only, no provincial tax
+  }
+  return rates;
 }
 
 /**
@@ -42,7 +69,7 @@ export function getProvinceTaxRates(province: string): ProvinceTaxRates {
  *   province-specific GST/HST/PST/QST/RST rates.
  * - For international orders (`country` is anything other than "CA"):
  *   returns 0 (taxes are handled by customs/import duties).
- * - If `province` is unknown, falls back to Quebec rates (most customers are local).
+ * - If `province` is unknown, applies GST-only (5%) with 0% provincial tax.
  */
 export function calculateTaxAmount(subtotal: number, province: string, country?: string): number {
   // International orders: 0% tax (customs/import duties apply separately)

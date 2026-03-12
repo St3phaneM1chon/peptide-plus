@@ -132,14 +132,14 @@ export default function FacturesFournisseursPage() {
       });
       if (!res.ok) throw new Error();
       await fetchInvoices();
-      toast.success(t('admin.supplierInvoices.created') || 'Facture fournisseur creee en attente');
+      toast.success(t('admin.supplierInvoices.created'));
     } catch {
-      toast.error(t('admin.supplierInvoices.createError') || 'Erreur lors de la creation de la facture');
+      toast.error(t('admin.supplierInvoices.createError'));
     }
   }, [fetchInvoices, t]);
   const handleDeleteAction = useCallback(() => {
-    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToDelete') || 'Selectionnez une facture fournisseur dans le tableau.'); return; }
-    if (selectedInvoice.status === 'PAID') { toast.error(t('admin.supplierInvoices.cannotDeletePaid') || 'Impossible de supprimer une facture deja payee.'); return; }
+    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToDelete')); return; }
+    if (selectedInvoice.status === 'PAID') { toast.error(t('admin.supplierInvoices.cannotDeletePaid')); return; }
     toast.info(t('admin.supplierInvoices.deleteConfirm') || `Suppression de ${selectedInvoice.invoiceNumber} - fonctionnalite en cours d'integration.`);
   }, [selectedInvoice, t]);
   const handleApproveAction = useCallback(() => {
@@ -149,13 +149,13 @@ export default function FacturesFournisseursPage() {
     if (selectedInvoice) { handleMarkAsPaid(selectedInvoice.id); setSelectedInvoice(null); }
   }, [selectedInvoice]);
   const handleSchedulePay = useCallback(() => {
-    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToSchedule') || 'Selectionnez une facture pour planifier le paiement.'); return; }
+    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToSchedule')); return; }
     toast.info(t('admin.supplierInvoices.scheduleInfo') || `Paiement planifie pour ${selectedInvoice.invoiceNumber} - echeance ${new Date(selectedInvoice.dueDate).toLocaleDateString(locale)}`);
   }, [selectedInvoice, locale, t]);
   const handleExport = useCallback(() => {
-    if (invoices.length === 0) { toast.error(t('admin.supplierInvoices.noDataToExport') || 'Aucune facture a exporter'); return; }
+    if (invoices.length === 0) { toast.error(t('admin.supplierInvoices.noDataToExport')); return; }
     const bom = '\uFEFF';
-    const headers = [t('admin.supplierInvoices.colInvoiceNumber') || 'Numero', t('admin.supplierInvoices.colSupplier') || 'Fournisseur', t('admin.supplierInvoices.colCategory') || 'Categorie', t('admin.supplierInvoices.colDate') || 'Date', t('admin.supplierInvoices.colDueDate') || 'Echeance', t('admin.supplierInvoices.colSubtotal') || 'Sous-total', t('admin.supplierInvoices.colTaxes') || 'Taxes', t('admin.supplierInvoices.colTotal') || 'Total', t('admin.supplierInvoices.colStatus') || 'Statut'];
+    const headers = [t('admin.supplierInvoices.colInvoiceNumber'), t('admin.supplierInvoices.colSupplier'), t('admin.supplierInvoices.colCategory'), t('admin.supplierInvoices.colDate'), t('admin.supplierInvoices.colDueDate'), t('admin.supplierInvoices.colSubtotal'), t('admin.supplierInvoices.colTaxes'), t('admin.supplierInvoices.colTotal'), t('admin.supplierInvoices.colStatus')];
     const rows = invoices.map(inv => [inv.invoiceNumber, inv.supplier.name, inv.category, inv.date, inv.dueDate, String(inv.subtotal), String(inv.taxes), String(inv.total), inv.status]);
     const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -203,7 +203,7 @@ export default function FacturesFournisseursPage() {
       render: (invoice) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); }}
-          className="font-mono text-sm text-teal-600 hover:underline"
+          className="font-mono text-sm text-indigo-600 hover:underline"
         >
           {invoice.invoiceNumber}
         </button>
@@ -260,7 +260,7 @@ export default function FacturesFournisseursPage() {
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedInvoice(invoice)}
-            className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
             title={t('admin.supplierInvoices.view')}
             aria-label={t('admin.supplierInvoices.view')}
           >

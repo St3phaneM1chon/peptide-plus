@@ -502,9 +502,9 @@ export default function ChatWidget() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  Powered by BioCycle Peptides
-                </p>
+                <div className="flex items-center justify-center gap-1.5 mt-2">
+                  <img src="/images/suite-koraline.png" alt="Suite Koraline" className="h-4 w-auto" />
+                </div>
               </div>
             </>
           )}

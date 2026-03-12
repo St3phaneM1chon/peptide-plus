@@ -36,6 +36,16 @@ const allMessages: Partial<Record<Locale, Record<string, unknown>>> = {
 };
 
 /**
+ * Returns the default locale without calling cookies()/headers().
+ * Use this in pages that need ISR (revalidate) instead of force-dynamic.
+ * Static/ISR pages are revalidated periodically so they always serve the
+ * default locale; the client-side locale switcher handles personalisation.
+ */
+export function getStaticLocale(): Locale {
+  return defaultLocale;
+}
+
+/**
  * Récupère la locale courante côté serveur
  */
 export async function getServerLocale(): Promise<Locale> {

@@ -6,26 +6,29 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendTextMessage } from '@/lib/integrations/whatsapp';
 import { logger } from '@/lib/logger';
 
+const notifyWhatsAppSchema = z.object({
+  phoneNumber: z.string().min(1).max(20).regex(/^\+?[0-9\s\-()]+$/, 'Invalid phone number format'),
+  videoTitle: z.string().max(500).trim().optional(),
+  videoUrl: z.string().url().max(2000),
+  clientName: z.string().max(200).trim().optional(),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { phoneNumber, videoTitle, videoUrl, clientName } = body as {
-      phoneNumber?: string;
-      videoTitle?: string;
-      videoUrl?: string;
-      clientName?: string;
-    };
-
-    if (!phoneNumber || !videoUrl) {
+    const parsed = notifyWhatsAppSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: phoneNumber, videoUrl' },
-        { status: 400 },
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
       );
     }
+    const { phoneNumber, videoTitle, videoUrl, clientName } = parsed.data;
 
     const message = [
       `Hello${clientName ? ` ${clientName}` : ''},`,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'dompurify';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -36,9 +36,9 @@ const typeLabelsKeys: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  ENTRY: 'bg-teal-100 text-teal-700',
+  ENTRY: 'bg-indigo-100 text-indigo-700',
   INVOICE: 'bg-green-100 text-green-700',
-  SUPPLIER: 'bg-teal-100 text-teal-700',
+  SUPPLIER: 'bg-indigo-100 text-indigo-700',
   TRANSACTION: 'bg-purple-100 text-purple-700',
 };
 
@@ -159,16 +159,16 @@ export default function SearchPage() {
   const handleRibbonFilterPeriod = useCallback(() => { setShowFilters(prev => !prev); }, []);
   const handleRibbonExportPdf = useCallback(() => {
     if (results.length === 0) {
-      toast.warning(t('admin.search.noResults') || 'Aucun resultat a exporter');
+      toast.warning(t('admin.search.noResults'));
       return;
     }
     const headers = [
-      t('admin.search.documentType') || 'Type',
-      t('admin.search.titleCol') || 'Titre',
-      t('admin.search.referenceCol') || 'Reference',
-      t('admin.search.amountCol') || 'Montant',
-      t('admin.search.dateCol') || 'Date',
-      t('admin.search.statusLabel') || 'Statut',
+      t('admin.search.documentType'),
+      t('admin.search.titleCol'),
+      t('admin.search.referenceCol'),
+      t('admin.search.amountCol'),
+      t('admin.search.dateCol'),
+      t('admin.search.statusLabel'),
     ];
     const rows = results.map(r => [
       typeLabels[r.type] || r.type,
@@ -184,7 +184,7 @@ export default function SearchPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `recherche-comptabilite-${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exporte avec succes');
+    toast.success(t('common.exported'));
   }, [results, typeLabels, formatDate, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
   const handleRibbonNewAccount = useCallback(() => {
@@ -217,14 +217,14 @@ export default function SearchPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.search.searchPlaceholder')}
               aria-label="Search accounting records"
-              className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-teal-500 focus:outline-none"
+              className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-indigo-500 focus:outline-none"
               autoFocus
             />
             <span className="absolute start-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
             
             {loading && (
               <div className="absolute end-4 top-1/2 -translate-y-1/2" role="status" aria-label="Loading">
-                <div className="animate-spin h-5 w-5 border-2 border-teal-500 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
                 <span className="sr-only">Loading...</span>
               </div>
             )}
@@ -233,7 +233,7 @@ export default function SearchPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-xl border ${
-              showFilters ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-slate-200 text-slate-600'
+              showFilters ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-600'
             }`}
             aria-label={t('admin.search.filters')}
             aria-expanded={showFilters}
@@ -280,7 +280,7 @@ export default function SearchPage() {
                     onClick={() => toggleType(type)}
                     className={`px-3 py-1 rounded-full text-sm ${
                       filters.types.includes(type)
-                        ? 'bg-teal-600 text-white'
+                        ? 'bg-indigo-600 text-white'
                         : 'bg-slate-100 text-slate-500'
                     }`}
                   >
@@ -427,7 +427,7 @@ export default function SearchPage() {
                     )}
                     {result.highlights && (
                       <p
-                        className="text-sm text-slate-600 mt-2 [&_mark]:bg-teal-100 [&_mark]:text-teal-700"
+                        className="text-sm text-slate-600 mt-2 [&_mark]:bg-indigo-100 [&_mark]:text-indigo-700"
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.highlights, { ALLOWED_TAGS: ['mark'] }) }}
                       />
                     )}

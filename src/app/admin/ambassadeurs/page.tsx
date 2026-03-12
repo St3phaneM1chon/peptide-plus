@@ -74,7 +74,7 @@ const tierConfig: Record<string, { color: string; commission: number; minSales: 
   BRONZE: { color: 'bg-amber-100 text-amber-800', commission: 5, minSales: 0 },
   SILVER: { color: 'bg-slate-200 text-slate-700', commission: 8, minSales: 1000 },
   GOLD: { color: 'bg-yellow-100 text-yellow-800', commission: 10, minSales: 5000 },
-  PLATINUM: { color: 'bg-teal-100 text-teal-800', commission: 15, minSales: 15000 },
+  PLATINUM: { color: 'bg-indigo-100 text-indigo-800', commission: 15, minSales: 15000 },
 };
 
 function tierBadgeVariant(tier: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
@@ -194,16 +194,16 @@ export default function AmbassadeursPage() {
         // Revert on failure
         setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, status: previous.status } : a));
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t('admin.ambassadors.updateError') || 'Failed to update status');
+        toast.error(data.error || t('admin.ambassadors.updateError'));
         return;
       }
       toast.success(status === 'ACTIVE'
-        ? (t('admin.ambassadors.activated') || 'Ambassador activated')
-        : (t('admin.ambassadors.suspended') || 'Ambassador suspended'));
+        ? (t('admin.ambassadors.activated'))
+        : (t('admin.ambassadors.suspended')));
     } catch {
       // Revert on failure
       setAmbassadors(prev => prev.map(a => a.id === id ? { ...a, status: previous.status } : a));
-      toast.error(t('admin.ambassadors.updateError') || 'Network error');
+      toast.error(t('admin.ambassadors.updateError'));
     }
   };
 
@@ -255,7 +255,7 @@ export default function AmbassadeursPage() {
     setCommissionError('');
     const rate = parseFloat(editCommissionRate);
     if (isNaN(rate) || rate < 0 || rate > 100) {
-      setCommissionError(t('admin.ambassadors.commissionError') || 'Commission must be between 0 and 100');
+      setCommissionError(t('admin.ambassadors.commissionError'));
       return;
     }
 
@@ -317,13 +317,13 @@ export default function AmbassadeursPage() {
     const minPayout = parseFloat(configMinPayout);
     const cookieDays = parseInt(configCookieDays);
     if (isNaN(commission) || commission < 0 || commission > 100) {
-      errors.commission = t('admin.ambassadors.commissionError') || 'Commission must be between 0 and 100';
+      errors.commission = t('admin.ambassadors.commissionError');
     }
     if (isNaN(minPayout) || minPayout < 0) {
-      errors.minPayout = t('admin.ambassadors.minPayoutError') || 'Minimum payout must be 0 or greater';
+      errors.minPayout = t('admin.ambassadors.minPayoutError');
     }
     if (isNaN(cookieDays) || cookieDays < 1 || cookieDays > 365) {
-      errors.cookieDays = t('admin.ambassadors.cookieDaysError') || 'Cookie duration must be between 1 and 365 days';
+      errors.cookieDays = t('admin.ambassadors.cookieDaysError');
     }
     setConfigErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -407,7 +407,7 @@ export default function AmbassadeursPage() {
     { key: 'PENDING', label: t('admin.ambassadors.statusPending'), count: stats.pending },
     { key: 'SUSPENDED', label: t('admin.ambassadors.statusSuspended'), count: stats.suspended },
     // FIX: F-055 - Added INACTIVE filter tab so admins can see inactive ambassadors
-    { key: 'INACTIVE', label: t('admin.ambassadors.statusInactive') || 'Inactive', count: stats.inactive },
+    { key: 'INACTIVE', label: t('admin.ambassadors.statusInactive'), count: stats.inactive },
   ], [t, ambassadors.length, stats]);
 
   const listItems: ContentListItem[] = useMemo(() => {
@@ -416,13 +416,13 @@ export default function AmbassadeursPage() {
       avatar: { text: amb.userName || 'A' },
       title: amb.userName,
       // FIX: F-063 - Show placeholder when ambassador email is empty instead of blank string
-      subtitle: amb.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided'),
+      subtitle: amb.userEmail || (t('admin.ambassadors.noEmail')),
       preview: `${amb.referralCode} - ${formatCurrency(amb.totalSales)} ${t('admin.ambassadors.salesLabel')}`,
       timestamp: amb.joinedAt,
       badges: [
         { text: amb.tier, variant: tierBadgeVariant(amb.tier) },
         // FIX: F-055 - Include INACTIVE status label in badge
-        { text: amb.status === 'ACTIVE' ? t('admin.ambassadors.statusActive') : amb.status === 'PENDING' ? t('admin.ambassadors.statusPending') : amb.status === 'INACTIVE' ? (t('admin.ambassadors.statusInactive') || 'Inactive') : t('admin.ambassadors.statusSuspended'), variant: statusBadgeVariant(amb.status) },
+        { text: amb.status === 'ACTIVE' ? t('admin.ambassadors.statusActive') : amb.status === 'PENDING' ? t('admin.ambassadors.statusPending') : amb.status === 'INACTIVE' ? (t('admin.ambassadors.statusInactive')) : t('admin.ambassadors.statusSuspended'), variant: statusBadgeVariant(amb.status) },
         ...(amb.pendingPayout > 0
           ? [{ text: formatCurrency(amb.pendingPayout), variant: 'info' as const }]
           : []),
@@ -476,19 +476,19 @@ export default function AmbassadeursPage() {
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewAmbassador = useCallback(() => {
     setShowApplicationsModal(true);
-    toast.info(t('admin.ambassadors.applicationsTitle') || 'Review pending applications or invite a new ambassador');
+    toast.info(t('admin.ambassadors.applicationsTitle'));
   }, [t]);
 
   const handleRibbonApproveCandidacy = useCallback(() => {
-    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle')); return; }
     updateStatus(selectedAmbassador.id, 'ACTIVE');
   }, [selectedAmbassador, t]);
 
   const handleRibbonDelete = useCallback(() => {
-    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle')); return; }
     setConfirmAction({
       isOpen: true,
-      title: t('admin.ambassadors.confirmSuspendTitle') || 'Suspend ambassador?',
+      title: t('admin.ambassadors.confirmSuspendTitle'),
       message: t('admin.ambassadors.confirmSuspendMessage') || `Are you sure you want to suspend ${selectedAmbassador.userName}? They will no longer earn commissions.`,
       variant: 'danger',
       onConfirm: () => {
@@ -499,7 +499,7 @@ export default function AmbassadeursPage() {
   }, [selectedAmbassador, t]);
 
   const handleRibbonManageCommission = useCallback(() => {
-    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle')); return; }
     openEditCommission(selectedAmbassador);
   }, [selectedAmbassador, t]);
 
@@ -512,29 +512,29 @@ export default function AmbassadeursPage() {
       ? (ambassadors.reduce((s, a) => s + a.commissionRate, 0) / ambassadors.length).toFixed(1)
       : '0';
     toast.success(
-      `${t('admin.ambassadors.activeAmbassadors') || 'Active'}: ${active} | ` +
-      `${t('admin.ambassadors.generatedSales') || 'Sales'}: ${formatCurrency(totalSales)} | ` +
-      `${t('admin.ambassadors.commissionsPaid') || 'Commissions'}: ${formatCurrency(totalEarnings)} | ` +
-      `${t('admin.ambassadors.pendingPayouts') || 'Pending'}: ${formatCurrency(pendingPayout)} | ` +
-      `${t('admin.ambassadors.commissionLabel') || 'Avg rate'}: ${avgCommission}%`,
+      `${t('admin.ambassadors.activeAmbassadors')}: ${active} | ` +
+      `${t('admin.ambassadors.generatedSales')}: ${formatCurrency(totalSales)} | ` +
+      `${t('admin.ambassadors.commissionsPaid')}: ${formatCurrency(totalEarnings)} | ` +
+      `${t('admin.ambassadors.pendingPayouts')}: ${formatCurrency(pendingPayout)} | ` +
+      `${t('admin.ambassadors.commissionLabel')}: ${avgCommission}%`,
       { duration: 8000 }
     );
   }, [ambassadors, t, formatCurrency]);
 
   const handleRibbonExport = useCallback(() => {
     if (ambassadors.length === 0) {
-      toast.info(t('admin.ambassadors.emptyTitle') || 'No ambassadors to export');
+      toast.info(t('admin.ambassadors.emptyTitle'));
       return;
     }
     const headers = [
-      t('admin.ambassadors.referralCode') || 'Referral Code',
+      t('admin.ambassadors.referralCode'),
       'Name', 'Email', 'Tier', 'Status',
-      t('admin.ambassadors.commissionLabel') || 'Commission %',
-      t('admin.ambassadors.referralsLabel') || 'Referrals',
-      t('admin.ambassadors.generatedSalesLabel') || 'Total Sales',
-      t('admin.ambassadors.totalEarningsLabel') || 'Total Earnings',
-      t('admin.ambassadors.pendingPayoutLabel') || 'Pending Payout',
-      t('admin.ambassadors.joinedAt') || 'Joined At',
+      t('admin.ambassadors.commissionLabel'),
+      t('admin.ambassadors.referralsLabel'),
+      t('admin.ambassadors.generatedSalesLabel'),
+      t('admin.ambassadors.totalEarningsLabel'),
+      t('admin.ambassadors.pendingPayoutLabel'),
+      t('admin.ambassadors.joinedAt'),
     ];
     const rows = ambassadors.map(a => [
       a.referralCode, a.userName, a.userEmail, a.tier, a.status,
@@ -547,7 +547,7 @@ export default function AmbassadeursPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `ambassadors-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [ambassadors, t, locale]);
 
   useRibbonAction('newAmbassador', handleRibbonNewAmbassador);
@@ -562,7 +562,7 @@ export default function AmbassadeursPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -607,7 +607,7 @@ export default function AmbassadeursPage() {
             label={t('admin.ambassadors.commissionsPaid')}
             value={formatCurrency(stats.totalCommissions)}
             icon={DollarSign}
-            className="bg-teal-50 border-teal-200"
+            className="bg-indigo-50 border-indigo-200"
           />
           <StatCard
             label={t('admin.ambassadors.pendingPayouts')}
@@ -665,7 +665,7 @@ export default function AmbassadeursPage() {
                         <tr key={amb.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="py-2 px-3 text-slate-900 font-medium">{amb.userName}</td>
                           <td className="py-2 px-3">
-                            <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-teal-700">{amb.referralCode}</code>
+                            <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-indigo-700">{amb.referralCode}</code>
                           </td>
                           <td className="py-2 px-3 text-end text-slate-900">{formatCurrency(amb.totalSales)}</td>
                           <td className="py-2 px-3 text-end text-red-600">{formatCurrency(amb.totalEarnings)}</td>
@@ -697,7 +697,7 @@ export default function AmbassadeursPage() {
           {/* Calcul ROI par ambassadeur */}
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <ArrowUpRight className="h-5 w-5 text-teal-600" />
+              <ArrowUpRight className="h-5 w-5 text-indigo-600" />
               <h3 className="font-semibold text-slate-900">ROI par ambassadeur</h3>
             </div>
             <div className="space-y-2">
@@ -725,7 +725,7 @@ export default function AmbassadeursPage() {
                         </p>
                       </div>
                       <div className="text-end ms-3">
-                        <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-teal-700' : 'text-red-600'}`}>
+                        <p className={`text-lg font-bold ${roi >= 100 ? 'text-emerald-700' : roi >= 0 ? 'text-indigo-700' : 'text-red-600'}`}>
                           {roi.toFixed(0)}%
                         </p>
                         <p className="text-[10px] text-slate-500">ROI</p>
@@ -761,11 +761,11 @@ export default function AmbassadeursPage() {
                   <p className="text-xl font-bold text-emerald-700">{stats.total}</p>
                   <p className="text-xs text-emerald-600 mt-0.5">Ambassadeurs actifs</p>
                 </div>
-                <div className="bg-teal-50 rounded-lg p-3 text-center">
-                  <p className="text-xl font-bold text-teal-700">
+                <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-indigo-700">
                     {ambassadors.reduce((sum, a) => sum + a.totalReferrals, 0)}
                   </p>
-                  <p className="text-xs text-teal-600 mt-0.5">Références totales</p>
+                  <p className="text-xs text-indigo-600 mt-0.5">Références totales</p>
                 </div>
                 <div className="bg-violet-50 rounded-lg p-3 text-center">
                   <p className="text-xl font-bold text-violet-700">
@@ -838,7 +838,7 @@ export default function AmbassadeursPage() {
                 header={{
                   title: selectedAmbassador.userName,
                   // FIX: F-063 - Show placeholder when ambassador email is empty
-                  subtitle: selectedAmbassador.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided'),
+                  subtitle: selectedAmbassador.userEmail || (t('admin.ambassadors.noEmail')),
                   avatar: { text: selectedAmbassador.userName || 'A' },
                   onBack: () => setSelectedAmbassadorId(null),
                   backLabel: t('admin.ambassadors.title'),
@@ -859,7 +859,7 @@ export default function AmbassadeursPage() {
                           variant="danger"
                           onClick={() => setConfirmAction({
                             isOpen: true,
-                            title: t('admin.ambassadors.confirmSuspendTitle') || 'Suspend ambassador?',
+                            title: t('admin.ambassadors.confirmSuspendTitle'),
                             message: t('admin.ambassadors.confirmSuspendMessage') || `Are you sure you want to suspend ${selectedAmbassador.userName}? They will no longer earn commissions.`,
                             variant: 'danger',
                             onConfirm: () => {
@@ -877,7 +877,7 @@ export default function AmbassadeursPage() {
                           variant="primary"
                           onClick={() => setConfirmAction({
                             isOpen: true,
-                            title: t('admin.ambassadors.confirmActivateTitle') || 'Reactivate ambassador?',
+                            title: t('admin.ambassadors.confirmActivateTitle'),
                             message: t('admin.ambassadors.confirmActivateMessage') || `Are you sure you want to reactivate ${selectedAmbassador.userName}?`,
                             variant: 'info',
                             onConfirm: () => {
@@ -917,7 +917,7 @@ export default function AmbassadeursPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.referralCode')}</p>
-                      <code className="font-mono font-bold text-lg text-teal-600">{selectedAmbassador.referralCode}</code>
+                      <code className="font-mono font-bold text-lg text-indigo-600">{selectedAmbassador.referralCode}</code>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.commissionLabel')}</p>
@@ -952,7 +952,7 @@ export default function AmbassadeursPage() {
                               className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {processingPayoutId === selectedAmbassador.id
-                                ? (t('admin.ambassadors.processingPayout') || 'Processing...')
+                                ? (t('admin.ambassadors.processingPayout'))
                                 : t('admin.ambassadors.processPayoutNow')}
                             </button>
                           </div>
@@ -976,13 +976,13 @@ export default function AmbassadeursPage() {
 
                   {/* FIX: F-072 - Commission history */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionHistory') || 'Commission History'}</h4>
+                    <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionHistory')}</h4>
                     {loadingHistory ? (
                       <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-500" />
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-500" />
                       </div>
                     ) : commissionHistory.length === 0 ? (
-                      <p className="text-sm text-slate-400">{t('admin.ambassadors.noCommissions') || 'No commissions yet'}</p>
+                      <p className="text-sm text-slate-400">{t('admin.ambassadors.noCommissions')}</p>
                     ) : (
                       <div className="space-y-2">
                         {commissionHistory.map((c) => (
@@ -996,7 +996,7 @@ export default function AmbassadeursPage() {
                             <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                               c.paidOut ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                             }`}>
-                              {c.paidOut ? (t('admin.ambassadors.paid') || 'Paid') : (t('admin.ambassadors.pending') || 'Pending')}
+                              {c.paidOut ? (t('admin.ambassadors.paid')) : (t('admin.ambassadors.pending'))}
                             </span>
                           </div>
                         ))}
@@ -1006,7 +1006,7 @@ export default function AmbassadeursPage() {
 
                   {/* Joined date */}
                   <div className="text-sm text-slate-500">
-                    {t('admin.ambassadors.joinedAt') || 'Membre depuis'}: {new Date(selectedAmbassador.joinedAt).toLocaleDateString(locale)}
+                    {t('admin.ambassadors.joinedAt')}: {new Date(selectedAmbassador.joinedAt).toLocaleDateString(locale)}
                   </div>
                 </div>
               </DetailPane>
@@ -1044,9 +1044,9 @@ export default function AmbassadeursPage() {
                 <div>
                   <p className="font-medium text-slate-900">{amb.userName}</p>
                   {/* FIX: F-063 - Show placeholder when ambassador email is empty */}
-                  <p className="text-sm text-slate-500">{amb.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided')}</p>
+                  <p className="text-sm text-slate-500">{amb.userEmail || (t('admin.ambassadors.noEmail'))}</p>
                   <p className="text-xs text-slate-400 mt-1">
-                    {t('admin.ambassadors.referralCode')}: <code className="font-mono text-teal-600">{amb.referralCode}</code>
+                    {t('admin.ambassadors.referralCode')}: <code className="font-mono text-indigo-600">{amb.referralCode}</code>
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -1093,10 +1093,10 @@ export default function AmbassadeursPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowConfigModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSaveConfig} loading={savingConfig}>
-              {t('common.save') || 'Save'}
+              {t('common.save')}
             </Button>
           </>
         }
@@ -1143,7 +1143,7 @@ export default function AmbassadeursPage() {
             <span className="text-sm text-slate-700">{t('admin.ambassadors.autoApprove')}</span>
             <button
               onClick={() => setConfigAutoApprove(!configAutoApprove)}
-              className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-teal-500' : 'bg-slate-300'}`}
+              className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-indigo-500' : 'bg-slate-300'}`}
             >
               <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configAutoApprove ? 'end-1' : 'start-1'}`} />
             </button>
@@ -1180,10 +1180,10 @@ export default function AmbassadeursPage() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowEditCommissionModal(false)}>
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" onClick={handleSaveCommission} loading={savingCommission}>
-              {t('common.save') || 'Save'}
+              {t('common.save')}
             </Button>
           </>
         }
@@ -1209,9 +1209,9 @@ export default function AmbassadeursPage() {
             )}
           </FormField>
           {/* Tier reference */}
-          <div className="bg-teal-50 rounded-lg p-3">
-            <p className="text-xs text-teal-700 font-medium mb-1">{t('admin.ambassadors.commissionLevels')}</p>
-            <div className="flex gap-3 text-xs text-teal-600">
+          <div className="bg-indigo-50 rounded-lg p-3">
+            <p className="text-xs text-indigo-700 font-medium mb-1">{t('admin.ambassadors.commissionLevels')}</p>
+            <div className="flex gap-3 text-xs text-indigo-600">
               {Object.entries(tierConfig).map(([tier, config]) => (
                 <span key={tier}>{tier}: {config.commission}%</span>
               ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import {
@@ -125,7 +126,7 @@ const EVENT_ICONS: Record<string, typeof Phone> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  stage_change: 'bg-teal-100 text-teal-600 border-teal-200',
+  stage_change: 'bg-indigo-100 text-indigo-600 border-indigo-200',
   call: 'bg-green-100 text-green-600 border-green-200',
   email: 'bg-purple-100 text-purple-600 border-purple-200',
   meeting: 'bg-orange-100 text-orange-600 border-orange-200',
@@ -143,6 +144,7 @@ type EventFilter = 'all' | 'stage_change' | 'call' | 'email' | 'meeting' | 'task
 
 export default function DealJourneyPage() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
 
   // State: search & selection
   const [searchQuery, setSearchQuery] = useState('');
@@ -227,6 +229,14 @@ export default function DealJourneyPage() {
     finally { setLoadingJourney(false); }
   }, []);
 
+  // Auto-load journey from URL query param (e.g. ?deal=xxx from deal detail page)
+  useEffect(() => {
+    const dealParam = searchParams.get('deal');
+    if (dealParam && !journey) {
+      loadJourney(dealParam);
+    }
+  }, [searchParams, journey, loadJourney]);
+
   // Load analytics
   const loadAnalytics = useCallback(async () => {
     if (!selectedPipelineId) return;
@@ -284,10 +294,10 @@ export default function DealJourneyPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {t('admin.crm.dealJourney') || 'Deal Journey Analytics'}
+              {t('admin.crm.dealJourney')}
             </h1>
             <p className="text-sm text-gray-500">
-              {t('admin.crm.dealJourneyDesc') || 'Visualize the complete journey of deals from creation to close'}
+              {t('admin.crm.dealJourneyDesc')}
             </p>
           </div>
         </div>
@@ -299,7 +309,7 @@ export default function DealJourneyPage() {
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder={t('admin.crm.searchDeal') || 'Search deals by name...'}
+            placeholder={t('admin.crm.searchDeal')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full ps-10 pe-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -327,7 +337,7 @@ export default function DealJourneyPage() {
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   deal.isWon ? 'bg-green-100 text-green-700' :
                   deal.isLost ? 'bg-red-100 text-red-700' :
-                  'bg-teal-100 text-teal-700'
+                  'bg-indigo-100 text-indigo-700'
                 }`}>
                   {deal.stageName}
                 </span>
@@ -352,9 +362,9 @@ export default function DealJourneyPage() {
             {tab === 'journey' && <GitBranch className="inline h-4 w-4 me-1.5" />}
             {tab === 'analytics' && <BarChart3 className="inline h-4 w-4 me-1.5" />}
             {tab === 'patterns' && <Target className="inline h-4 w-4 me-1.5" />}
-            {tab === 'journey' ? (t('admin.crm.timeline') || 'Timeline') :
-             tab === 'analytics' ? (t('admin.crm.analytics') || 'Analytics') :
-             (t('admin.crm.patterns') || 'Patterns')}
+            {tab === 'journey' ? (t('admin.crm.timeline')) :
+             tab === 'analytics' ? (t('admin.crm.analytics')) :
+             (t('admin.crm.patterns'))}
           </button>
         ))}
       </div>
@@ -369,7 +379,7 @@ export default function DealJourneyPage() {
           ) : !journey ? (
             <div className="text-center py-20 text-gray-400">
               <Route className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p className="text-lg">{t('admin.crm.selectDeal') || 'Search and select a deal to view its journey'}</p>
+              <p className="text-lg">{t('admin.crm.selectDeal')}</p>
             </div>
           ) : (
             <>
@@ -379,8 +389,8 @@ export default function DealJourneyPage() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{journey.dealTitle}</h2>
                     <p className="text-gray-500 text-sm mt-1">
-                      {t('common.createdAt') || 'Created'}: {formatDate(journey.createdAt)}
-                      {journey.closedAt && <> | {t('common.closedAt') || 'Closed'}: {formatDate(journey.closedAt)}</>}
+                      {t('common.createdAt')}: {formatDate(journey.createdAt)}
+                      {journey.closedAt && <> | {t('common.closedAt')}: {formatDate(journey.closedAt)}</>}
                     </p>
                   </div>
                   <div className="text-end">
@@ -388,7 +398,7 @@ export default function DealJourneyPage() {
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       journey.isWon ? 'bg-green-100 text-green-700' :
                       journey.isLost ? 'bg-red-100 text-red-700' :
-                      'bg-teal-100 text-teal-700'
+                      'bg-indigo-100 text-indigo-700'
                     }`}>
                       {journey.isWon ? 'Won' : journey.isLost ? 'Lost' : journey.currentStage}
                     </span>
@@ -399,15 +409,15 @@ export default function DealJourneyPage() {
                 <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">{journey.totalDurationDays}</p>
-                    <p className="text-xs text-gray-500">{t('common.days') || 'Days'}</p>
+                    <p className="text-xs text-gray-500">{t('common.days')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">{journey.touchpointCount}</p>
-                    <p className="text-xs text-gray-500">{t('admin.crm.touchpoints') || 'Touchpoints'}</p>
+                    <p className="text-xs text-gray-500">{t('admin.crm.touchpoints')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900">{journey.stageTimeline.length}</p>
-                    <p className="text-xs text-gray-500">{t('admin.crm.stages') || 'Stages'}</p>
+                    <p className="text-xs text-gray-500">{t('admin.crm.stages')}</p>
                   </div>
                 </div>
               </div>
@@ -417,7 +427,7 @@ export default function DealJourneyPage() {
                 <div className="bg-white rounded-xl border p-5 mb-6">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Layers className="h-4 w-4" />
-                    {t('admin.crm.stageProgression') || 'Stage Progression'}
+                    {t('admin.crm.stageProgression')}
                   </h3>
                   <div className="flex gap-1">
                     {journey.stageTimeline.map((stage, idx) => (
@@ -485,7 +495,7 @@ export default function DealJourneyPage() {
                 {filteredEvents.length === 0 && (
                   <div className="text-center py-10 text-gray-400">
                     <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>{t('admin.crm.noEvents') || 'No events matching filter'}</p>
+                    <p>{t('admin.crm.noEvents')}</p>
                   </div>
                 )}
               </div>
@@ -500,7 +510,7 @@ export default function DealJourneyPage() {
           {/* Pipeline Selector */}
           <div className="flex items-center gap-3 mb-6">
             <label className="text-sm font-medium text-gray-700">
-              {t('admin.crm.pipeline') || 'Pipeline'}:
+              {t('admin.crm.pipeline')}:
             </label>
             <select
               value={selectedPipelineId}
@@ -512,7 +522,7 @@ export default function DealJourneyPage() {
               ))}
             </select>
             <button onClick={loadAnalytics} className="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-md hover:bg-gray-50">
-              <RefreshCcw className="h-4 w-4" /> {t('common.refresh') || 'Refresh'}
+              <RefreshCcw className="h-4 w-4" /> {t('common.refresh')}
             </button>
           </div>
 
@@ -523,7 +533,7 @@ export default function DealJourneyPage() {
           ) : !analytics ? (
             <div className="text-center py-20 text-gray-400">
               <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>{t('admin.crm.noAnalytics') || 'No analytics data available'}</p>
+              <p>{t('admin.crm.noAnalytics')}</p>
             </div>
           ) : (
             <>
@@ -533,7 +543,7 @@ export default function DealJourneyPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4 text-indigo-600" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
-                      {t('admin.crm.avgDaysToClose') || 'Avg Days to Close'}
+                      {t('admin.crm.avgDaysToClose')}
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{analytics.avgDaysToClose}</p>
@@ -542,7 +552,7 @@ export default function DealJourneyPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="h-4 w-4 text-yellow-500" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
-                      {t('admin.crm.avgTouchpoints') || 'Avg Touchpoints'}
+                      {t('admin.crm.avgTouchpoints')}
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{analytics.avgTouchpoints}</p>
@@ -551,7 +561,7 @@ export default function DealJourneyPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <Layers className="h-4 w-4 text-green-500" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
-                      {t('admin.crm.avgStageChanges') || 'Avg Stage Changes'}
+                      {t('admin.crm.avgStageChanges')}
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{analytics.avgStageChanges}</p>
@@ -561,7 +571,7 @@ export default function DealJourneyPage() {
               {/* Stage Metrics Table */}
               <div className="bg-white rounded-xl border mb-6">
                 <div className="p-4 border-b">
-                  <h3 className="font-semibold text-gray-900">{t('admin.crm.stageMetrics') || 'Stage Metrics'}</h3>
+                  <h3 className="font-semibold text-gray-900">{t('admin.crm.stageMetrics')}</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -599,7 +609,7 @@ export default function DealJourneyPage() {
               {analytics.commonPaths.length > 0 && (
                 <div className="bg-white rounded-xl border mb-6">
                   <div className="p-4 border-b">
-                    <h3 className="font-semibold text-gray-900">{t('admin.crm.commonPaths') || 'Common Deal Paths'}</h3>
+                    <h3 className="font-semibold text-gray-900">{t('admin.crm.commonPaths')}</h3>
                   </div>
                   <div className="p-4 space-y-3">
                     {analytics.commonPaths.slice(0, 5).map((cp, idx) => (
@@ -632,7 +642,7 @@ export default function DealJourneyPage() {
           {/* Pipeline Selector */}
           <div className="flex items-center gap-3 mb-6">
             <label className="text-sm font-medium text-gray-700">
-              {t('admin.crm.pipeline') || 'Pipeline'}:
+              {t('admin.crm.pipeline')}:
             </label>
             <select
               value={selectedPipelineId}
@@ -655,7 +665,7 @@ export default function DealJourneyPage() {
               <div className="bg-white rounded-xl border">
                 <div className="p-4 border-b flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-green-600" />
-                  <h3 className="font-semibold text-gray-900">{t('admin.crm.winningPatterns') || 'Winning Patterns'}</h3>
+                  <h3 className="font-semibold text-gray-900">{t('admin.crm.winningPatterns')}</h3>
                 </div>
                 {!winPatterns ? (
                   <div className="p-8 text-center text-gray-400">No data</div>
@@ -663,11 +673,11 @@ export default function DealJourneyPage() {
                   <div className="p-4">
                     <div className="flex gap-4 mb-4 text-sm">
                       <div>
-                        <span className="text-gray-500">{t('admin.crm.avgDays') || 'Avg days'}:</span>{' '}
+                        <span className="text-gray-500">{t('admin.crm.avgDays')}:</span>{' '}
                         <span className="font-bold">{winPatterns.avgDaysToClose}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t('admin.crm.avgTouchpoints') || 'Touchpoints'}:</span>{' '}
+                        <span className="text-gray-500">{t('admin.crm.avgTouchpoints')}:</span>{' '}
                         <span className="font-bold">{winPatterns.avgTouchpoints}</span>
                       </div>
                     </div>
@@ -684,7 +694,7 @@ export default function DealJourneyPage() {
                     {winPatterns.topActivities.length > 0 && (
                       <div className="mt-4">
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                          {t('admin.crm.topActivities') || 'Top Activities'}
+                          {t('admin.crm.topActivities')}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {winPatterns.topActivities.map((a) => (
@@ -703,7 +713,7 @@ export default function DealJourneyPage() {
               <div className="bg-white rounded-xl border">
                 <div className="p-4 border-b flex items-center gap-2">
                   <TrendingDown className="h-5 w-5 text-red-600" />
-                  <h3 className="font-semibold text-gray-900">{t('admin.crm.losingPatterns') || 'Losing Patterns'}</h3>
+                  <h3 className="font-semibold text-gray-900">{t('admin.crm.losingPatterns')}</h3>
                 </div>
                 {!losePatterns ? (
                   <div className="p-8 text-center text-gray-400">No data</div>
@@ -711,11 +721,11 @@ export default function DealJourneyPage() {
                   <div className="p-4">
                     <div className="flex gap-4 mb-4 text-sm">
                       <div>
-                        <span className="text-gray-500">{t('admin.crm.avgDays') || 'Avg days'}:</span>{' '}
+                        <span className="text-gray-500">{t('admin.crm.avgDays')}:</span>{' '}
                         <span className="font-bold">{losePatterns.avgDaysToClose}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t('admin.crm.avgTouchpoints') || 'Touchpoints'}:</span>{' '}
+                        <span className="text-gray-500">{t('admin.crm.avgTouchpoints')}:</span>{' '}
                         <span className="font-bold">{losePatterns.avgTouchpoints}</span>
                       </div>
                     </div>
@@ -732,7 +742,7 @@ export default function DealJourneyPage() {
                     {losePatterns.topActivities.length > 0 && (
                       <div className="mt-4">
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                          {t('admin.crm.topActivities') || 'Top Activities'}
+                          {t('admin.crm.topActivities')}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {losePatterns.topActivities.map((a) => (

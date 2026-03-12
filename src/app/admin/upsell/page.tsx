@@ -278,7 +278,7 @@ export default function UpsellAdminPage() {
   // ─── ContentList data ─────────────────────────────────────────
 
   const filterTabs = useMemo(() => [
-    { key: 'all', label: t('admin.upsell.filterAll') || 'All', count: configs.length },
+    { key: 'all', label: t('admin.upsell.filterAll'), count: configs.length },
     { key: 'enabled', label: t('admin.upsell.enabled'), count: stats.activeConfigs },
     { key: 'global', label: t('admin.upsell.globalConfig'), count: globalConfig ? 1 : 0 },
     { key: 'product', label: t('admin.upsell.productOverrides'), count: stats.productOverrides },
@@ -360,11 +360,11 @@ export default function UpsellAdminPage() {
     const withQty = configs.filter(c => c.showQuantityDiscount).length;
     const withSub = configs.filter(c => c.showSubscription).length;
     const productOverrideCount = configs.filter(c => c.productId).length;
-    toast.success(t('admin.upsell.conversionStatsTitle') || 'Upsell Configuration Stats', {
+    toast.success(t('admin.upsell.conversionStatsTitle'), {
       description: [
-        `${t('admin.upsell.enabled') || 'Enabled'}: ${enabled} | ${t('admin.upsell.disabled') || 'Disabled'}: ${disabled}`,
-        `${t('admin.upsell.showQuantityDiscount') || 'Qty discount'}: ${withQty} | ${t('admin.upsell.showSubscription') || 'Subscription'}: ${withSub}`,
-        `${t('admin.upsell.globalConfig') || 'Global'}: ${globalConfig ? '1' : '0'} | ${t('admin.upsell.productOverrides') || 'Overrides'}: ${productOverrideCount}`,
+        `${t('admin.upsell.enabled')}: ${enabled} | ${t('admin.upsell.disabled')}: ${disabled}`,
+        `${t('admin.upsell.showQuantityDiscount')}: ${withQty} | ${t('admin.upsell.showSubscription')}: ${withSub}`,
+        `${t('admin.upsell.globalConfig')}: ${globalConfig ? '1' : '0'} | ${t('admin.upsell.productOverrides')}: ${productOverrideCount}`,
       ].join('\n'),
       duration: 8000,
     });
@@ -372,22 +372,22 @@ export default function UpsellAdminPage() {
 
   const onExport = useCallback(() => {
     if (filteredConfigs.length === 0) {
-      toast.info(t('admin.upsell.noConfig') || 'No configurations to export');
+      toast.info(t('admin.upsell.noConfig'));
       return;
     }
     const bom = '\uFEFF';
     const headers = [
-      t('admin.upsell.productId') || 'Product',
-      t('admin.upsell.enabled') || 'Enabled',
-      t('admin.upsell.showQuantityDiscount') || 'Qty Discount',
-      t('admin.upsell.showSubscription') || 'Subscription',
-      t('admin.upsell.displayRule') || 'Display Rule',
-      t('admin.upsell.suggestedQuantity') || 'Suggested Qty',
-      t('admin.upsell.suggestedFrequency') || 'Suggested Freq',
-      t('admin.upsell.updated') || 'Updated',
+      t('admin.upsell.productId'),
+      t('admin.upsell.enabled'),
+      t('admin.upsell.showQuantityDiscount'),
+      t('admin.upsell.showSubscription'),
+      t('admin.upsell.displayRule'),
+      t('admin.upsell.suggestedQuantity'),
+      t('admin.upsell.suggestedFrequency'),
+      t('admin.upsell.updated'),
     ];
     const rows = filteredConfigs.map(c => [
-      c.productName || t('admin.upsell.globalLabel') || 'Global',
+      c.productName || t('admin.upsell.globalLabel'),
       c.isEnabled ? 'Yes' : 'No',
       c.showQuantityDiscount ? 'Yes' : 'No',
       c.showSubscription ? 'Yes' : 'No',
@@ -404,7 +404,7 @@ export default function UpsellAdminPage() {
     a.download = `upsell-configs-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('common.exported') || 'Exported');
+    toast.success(t('common.exported'));
   }, [filteredConfigs, locale, t]);
 
   useRibbonAction('newRule', onNewRule);
@@ -420,7 +420,7 @@ export default function UpsellAdminPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -465,7 +465,7 @@ export default function UpsellAdminPage() {
               onFilterChange={setStatusFilter}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
-              searchPlaceholder={t('admin.upsell.searchPlaceholder') || 'Rechercher...'}
+              searchPlaceholder={t('admin.upsell.searchPlaceholder')}
               loading={loading}
               emptyIcon={Zap}
               emptyTitle={t('admin.upsell.noConfig')}
@@ -486,7 +486,7 @@ export default function UpsellAdminPage() {
                   actions: (
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" icon={Pencil} onClick={() => openForm(selectedConfig)}>
-                        {t('common.edit') || 'Edit'}
+                        {t('common.edit')}
                       </Button>
                       {selectedConfig.productId && (
                         <Button
@@ -539,14 +539,14 @@ export default function UpsellAdminPage() {
                   {/* Display rule */}
                   <div className="bg-slate-50 rounded-lg p-4">
                     <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.displayRule')}</h3>
-                    <p className="text-sm font-medium text-teal-700 bg-teal-50 inline-block px-3 py-1 rounded-full">
+                    <p className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block px-3 py-1 rounded-full">
                       {selectedConfig.displayRule}
                     </p>
                   </div>
 
                   {/* Custom titles */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-slate-900">{t('admin.upsell.customTitles') || 'Custom Titles'}</h3>
+                    <h3 className="font-semibold text-slate-900">{t('admin.upsell.customTitles')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.quantityTitle')}</p>
@@ -569,7 +569,7 @@ export default function UpsellAdminPage() {
 
                   {/* Suggested values */}
                   <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.suggestedValues') || 'Suggested Values'}</h3>
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.suggestedValues')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.suggestedQuantity')}</p>
@@ -585,7 +585,7 @@ export default function UpsellAdminPage() {
                   {/* Product image if available */}
                   {selectedConfig.productImage && (
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.productImage') || 'Product Image'}</h3>
+                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.productImage')}</h3>
                       {/* FIX: FLAW-050 - Use Next.js Image for automatic optimization, WebP, lazy loading */}
                       <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden relative">
                         <Image
@@ -638,7 +638,7 @@ export default function UpsellAdminPage() {
               {/* FIX: FLAW-049 - Search input for product autocomplete */}
               <Input
                 type="text"
-                placeholder={t('admin.upsell.searchProduct') || 'Search products...'}
+                placeholder={t('admin.upsell.searchProduct')}
                 value={productSearchQuery}
                 onChange={(e) => setProductSearchQuery(e.target.value)}
                 className="mb-2"
@@ -646,7 +646,7 @@ export default function UpsellAdminPage() {
               <select
                 value={formProductId}
                 onChange={(e) => setFormProductId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">{t('admin.upsell.globalLabel')}</option>
                 {products.map((p) => (
@@ -667,7 +667,7 @@ export default function UpsellAdminPage() {
                 onChange={(e) => setFormEnabled(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
             </label>
             <span className="text-sm font-medium text-slate-700">{t('admin.upsell.enabled')}</span>
           </div>
@@ -682,7 +682,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowQty(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showQuantityDiscount')}</span>
             </div>
@@ -694,7 +694,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowSub(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showSubscription')}</span>
             </div>
@@ -705,7 +705,7 @@ export default function UpsellAdminPage() {
             <select
               value={formDisplayRule}
               onChange={(e) => setFormDisplayRule(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {DISPLAY_RULES.map((rule) => (
                 <option key={rule} value={rule}>
@@ -765,7 +765,7 @@ export default function UpsellAdminPage() {
               <select
                 value={formSuggestedFreq}
                 onChange={(e) => setFormSuggestedFreq(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">---</option>
                 {FREQUENCIES.map((f) => (
@@ -787,10 +787,10 @@ export default function UpsellAdminPage() {
               resetForm();
             }}
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
-            {saving ? (t('common.saving') || 'Saving...') : (t('common.save') || 'Save')}
+            {saving ? (t('common.saving')) : (t('common.save'))}
           </Button>
         </div>
       </Modal>
@@ -798,10 +798,10 @@ export default function UpsellAdminPage() {
       {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
       <ConfirmDialog
         isOpen={!!confirmDeleteId}
-        title={t('admin.upsell.deleteTitle') || 'Delete Configuration'}
-        message={t('admin.upsell.confirmDelete') || 'Are you sure you want to delete this upsell configuration?'}
+        title={t('admin.upsell.deleteTitle')}
+        message={t('admin.upsell.confirmDelete')}
         variant="danger"
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
         onCancel={() => setConfirmDeleteId(null)}
       />

@@ -51,7 +51,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  zoom: 'bg-teal-100 text-teal-700',
+  zoom: 'bg-indigo-100 text-indigo-700',
   teams: 'bg-purple-100 text-purple-700',
   'google-meet': 'bg-green-100 text-green-700',
   webex: 'bg-cyan-100 text-cyan-700',
@@ -59,7 +59,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, { icon: React.ReactNode; classes: string }> = {
   SCHEDULED: { icon: <Clock className="h-3 w-3" />, classes: 'bg-amber-100 text-amber-700' },
-  IN_PROGRESS: { icon: <Play className="h-3 w-3" />, classes: 'bg-teal-100 text-teal-700' },
+  IN_PROGRESS: { icon: <Play className="h-3 w-3" />, classes: 'bg-indigo-100 text-indigo-700' },
   COMPLETED: { icon: <CheckCircle2 className="h-3 w-3" />, classes: 'bg-green-100 text-green-700' },
   CANCELLED: { icon: <XCircle className="h-3 w-3" />, classes: 'bg-gray-100 text-gray-500' },
 };
@@ -103,7 +103,7 @@ export default function VideoSessionsPage() {
       setTotal(data.pagination?.total || 0);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch {
-      toast.error(t('admin.videoSessions.createError') || 'Failed to load sessions');
+      toast.error(t('admin.videoSessions.createError'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export default function VideoSessionsPage() {
         body: JSON.stringify({ status: 'CANCELLED' }),
       });
       if (!res.ok) throw new Error();
-      toast.success(t('admin.videoSessions.cancelSuccess') || 'Session cancelled');
+      toast.success(t('admin.videoSessions.cancelSuccess'));
       loadSessions();
     } catch {
       toast.error('Failed to cancel session');
@@ -143,14 +143,14 @@ export default function VideoSessionsPage() {
 
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url);
-    toast.success(t('admin.videoSessions.linkCopied') || 'Link copied');
+    toast.success(t('admin.videoSessions.linkCopied'));
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader
-        title={t('admin.videoSessions.title') || 'Video Sessions'}
-        subtitle={t('admin.videoSessions.subtitle') || 'Manage video sessions with clients'}
+        title={t('admin.videoSessions.title')}
+        subtitle={t('admin.videoSessions.subtitle')}
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -165,7 +165,7 @@ export default function VideoSessionsPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
-              {t('admin.videoSessions.newSession') || 'New Session'}
+              {t('admin.videoSessions.newSession')}
             </button>
           </div>
         }
@@ -181,7 +181,7 @@ export default function VideoSessionsPage() {
           onChange={(e) => { setFilterPlatform(e.target.value); setPage(1); }}
           className="text-sm border border-gray-300 rounded-lg px-3 py-1.5"
         >
-          <option value="">{t('admin.videoSessions.platform') || 'Platform'}</option>
+          <option value="">{t('admin.videoSessions.platform')}</option>
           {Object.entries(PLATFORM_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
@@ -202,7 +202,7 @@ export default function VideoSessionsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            placeholder={t('admin.videoSessions.selectClient') || 'Search...'}
+            placeholder={t('admin.videoSessions.selectClient')}
             className="w-full ps-9 pe-3 py-1.5 text-sm border border-gray-300 rounded-lg"
           />
         </div>
@@ -217,7 +217,7 @@ export default function VideoSessionsPage() {
       ) : sessions.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
           <Video className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">{t('admin.videoSessions.noSessions') || 'No video sessions yet'}</p>
+          <p className="text-gray-500 font-medium">{t('admin.videoSessions.noSessions')}</p>
           <p className="text-gray-400 text-sm mt-1">{t('admin.videoSessions.noSessionsDesc')}</p>
         </div>
       ) : (
@@ -226,11 +226,11 @@ export default function VideoSessionsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-start text-xs text-gray-500 uppercase tracking-wider">
-                  <th className="px-4 py-3">{t('admin.videoSessions.scheduledAt') || 'Date'}</th>
-                  <th className="px-4 py-3">{t('admin.videoSessions.platform') || 'Platform'}</th>
-                  <th className="px-4 py-3">{t('admin.videoSessions.topic') || 'Subject'}</th>
-                  <th className="px-4 py-3">{t('admin.videoSessions.client') || 'Client'}</th>
-                  <th className="px-4 py-3">{t('admin.videoSessions.contentType') || 'Type'}</th>
+                  <th className="px-4 py-3">{t('admin.videoSessions.scheduledAt')}</th>
+                  <th className="px-4 py-3">{t('admin.videoSessions.platform')}</th>
+                  <th className="px-4 py-3">{t('admin.videoSessions.topic')}</th>
+                  <th className="px-4 py-3">{t('admin.videoSessions.client')}</th>
+                  <th className="px-4 py-3">{t('admin.videoSessions.contentType')}</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-end">Actions</th>
                 </tr>
@@ -282,7 +282,7 @@ export default function VideoSessionsPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded"
-                              title={t('admin.videoSessions.join') || 'Join'}
+                              title={t('admin.videoSessions.join')}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>
@@ -291,7 +291,7 @@ export default function VideoSessionsPage() {
                             <button
                               onClick={() => copyToClipboard(s.clientJoinUrl!)}
                               className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
-                              title={t('admin.videoSessions.copyLink') || 'Copy client link'}
+                              title={t('admin.videoSessions.copyLink')}
                             >
                               <Copy className="w-4 h-4" />
                             </button>
@@ -300,7 +300,7 @@ export default function VideoSessionsPage() {
                             <a
                               href={`/admin/media/videos/${s.video.slug}`}
                               className="p-1.5 text-green-600 hover:bg-green-50 rounded"
-                              title={t('admin.videoSessions.viewRecording') || 'View Recording'}
+                              title={t('admin.videoSessions.viewRecording')}
                             >
                               <Video className="w-4 h-4" />
                             </a>
@@ -309,7 +309,7 @@ export default function VideoSessionsPage() {
                             <button
                               onClick={() => handleCancel(s.id)}
                               className="p-1.5 text-red-500 hover:bg-red-50 rounded"
-                              title={t('admin.videoSessions.cancel') || 'Cancel'}
+                              title={t('admin.videoSessions.cancel')}
                             >
                               <XCircle className="w-4 h-4" />
                             </button>
@@ -439,7 +439,7 @@ function CreateSessionModal({
         throw new Error(err.error || 'Failed to create session');
       }
 
-      toast.success(t('admin.videoSessions.createSuccess') || 'Session created successfully');
+      toast.success(t('admin.videoSessions.createSuccess'));
       onCreated();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create session');
@@ -453,7 +453,7 @@ function CreateSessionModal({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            {t('admin.videoSessions.newSession') || 'New Session'}
+            {t('admin.videoSessions.newSession')}
           </h2>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded">
             <X className="w-5 h-5 text-gray-500" />
@@ -464,14 +464,14 @@ function CreateSessionModal({
           {/* Platform */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.platform') || 'Platform'} *
+              {t('admin.videoSessions.platform')} *
             </label>
             <select
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             >
-              <option value="">{t('admin.videoSessions.selectPlatform') || 'Select a platform'}</option>
+              <option value="">{t('admin.videoSessions.selectPlatform')}</option>
               {(connectedPlatforms.length > 0 ? connectedPlatforms : Object.keys(PLATFORM_LABELS)).map((p) => (
                 <option key={p} value={p}>{PLATFORM_LABELS[p] || p}</option>
               ))}
@@ -484,7 +484,7 @@ function CreateSessionModal({
           {/* Client Search */}
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.client') || 'Client'}
+              {t('admin.videoSessions.client')}
             </label>
             {selectedClient ? (
               <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50">
@@ -502,7 +502,7 @@ function CreateSessionModal({
                 value={clientSearch}
                 onChange={(e) => setClientSearch(e.target.value)}
                 onFocus={() => clientResults.length > 0 && setShowClientDropdown(true)}
-                placeholder={t('admin.videoSessions.selectClient') || 'Search for a client'}
+                placeholder={t('admin.videoSessions.selectClient')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               />
             )}
@@ -530,7 +530,7 @@ function CreateSessionModal({
           {/* Topic */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.topic') || 'Subject'} *
+              {t('admin.videoSessions.topic')} *
             </label>
             <input
               type="text"
@@ -544,7 +544,7 @@ function CreateSessionModal({
           {/* Content Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.contentType') || 'Content Type'}
+              {t('admin.videoSessions.contentType')}
             </label>
             <select
               value={contentType}
@@ -560,7 +560,7 @@ function CreateSessionModal({
           {/* Duration */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.duration') || 'Duration'} ({t('admin.videoSessions.minutes') || 'minutes'})
+              {t('admin.videoSessions.duration')} ({t('admin.videoSessions.minutes')})
             </label>
             <input
               type="number"
@@ -581,14 +581,14 @@ function CreateSessionModal({
                 onChange={(e) => setStartNow(e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600"
               />
-              {t('admin.videoSessions.startNow') || 'Start Now'}
+              {t('admin.videoSessions.startNow')}
             </label>
           </div>
 
           {!startNow && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('admin.videoSessions.scheduledAt') || 'Scheduled At'}
+                {t('admin.videoSessions.scheduledAt')}
               </label>
               <input
                 type="datetime-local"
@@ -602,7 +602,7 @@ function CreateSessionModal({
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('admin.videoSessions.notes') || 'Notes'}
+              {t('admin.videoSessions.notes')}
             </label>
             <textarea
               value={notes}
@@ -619,7 +619,7 @@ function CreateSessionModal({
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100"
           >
-            {t('admin.videoSessions.cancel') || 'Cancel'}
+            {t('admin.videoSessions.cancel')}
           </button>
           <button
             onClick={handleSubmit}
@@ -627,7 +627,7 @@ function CreateSessionModal({
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            {t('admin.videoSessions.newSession') || 'Create Session'}
+            {t('admin.videoSessions.newSession')}
           </button>
         </div>
       </div>

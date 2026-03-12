@@ -465,12 +465,12 @@ export default function AdminClientPortalPage() {
       </div>
 
       {/* Info Box */}
-      <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
         <div className="flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-teal-800">{t('admin.clientPortal.infoTitle')}</p>
-            <p className="text-xs text-teal-600 mt-1">
+            <p className="text-sm font-medium text-indigo-800">{t('admin.clientPortal.infoTitle')}</p>
+            <p className="text-xs text-indigo-600 mt-1">
               {t('admin.clientPortal.infoDescription')}
             </p>
           </div>

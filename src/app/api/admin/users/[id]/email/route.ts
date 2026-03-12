@@ -1,10 +1,16 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const sendEmailSchema = z.object({
+  subject: z.string().min(1, 'subject is required').max(500),
+  body: z.string().min(1, 'body is required').max(50000),
+});
 
 /**
  * POST /api/admin/users/[id]/email
@@ -16,26 +22,24 @@ export const POST = withAdminGuard(async (request: NextRequest, { params }) => {
     const id = params!.id as string;
 
     // Parse and validate request body
-    let subject: string;
-    let body: string;
+    let rawBody: unknown;
     try {
-      const data = await request.json();
-      subject = (data.subject ?? '').trim();
-      body = (data.body ?? '').trim();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    if (!subject) {
-      return NextResponse.json({ error: 'subject is required' }, { status: 400 });
-    }
-    if (!body) {
-      return NextResponse.json({ error: 'body is required' }, { status: 400 });
+    const parsed = sendEmailSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
 
     // SECURITY: Sanitize subject and body to prevent HTML injection in emails
-    subject = stripControlChars(stripHtml(subject));
-    body = stripControlChars(stripHtml(body));
+    let subject = stripControlChars(stripHtml(parsed.data.subject.trim()));
+    let body = stripControlChars(stripHtml(parsed.data.body.trim()));
 
     // Look up the user
     const user = await prisma.user.findUnique({
@@ -76,4 +80,4 @@ export const POST = withAdminGuard(async (request: NextRequest, { params }) => {
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}, { requiredPermission: 'users.edit' });

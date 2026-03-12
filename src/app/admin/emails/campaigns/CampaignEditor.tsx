@@ -165,7 +165,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         <span className="sr-only">Loading...</span>
       </div>
     );
@@ -205,7 +205,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-500 rounded-lg hover:bg-teal-600 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 disabled:opacity-50"
               >
                 <Save className="h-3.5 w-3.5" /> {saving ? t('admin.emails.flows.saving') : t('admin.emails.flows.save')}
               </button>
@@ -263,7 +263,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               editorRef={editorRef}
               trailing={
                 <div className="relative group">
-                  <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-teal-600 hover:bg-teal-50 rounded" aria-label="Inserer une variable">
+                  <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-indigo-600 hover:bg-indigo-50 rounded" aria-label="Inserer une variable">
                     <Variable className="h-3 w-3" /> Variables
                   </button>
                   <div className="absolute end-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
@@ -316,13 +316,13 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
                 </div>
                 <button
                   onClick={() => setMode('visual')}
-                  className="text-xs text-teal-600 hover:underline"
+                  className="text-xs text-indigo-600 hover:underline"
                 >
                   {t('admin.emails.inbox.cancel')}
                 </button>
               </div>
               {availableVars.length > 0 && (
-                <div className="bg-teal-50 px-3 py-1.5 text-[10px] text-teal-700 border-x border-teal-100">
+                <div className="bg-indigo-50 px-3 py-1.5 text-[10px] text-indigo-700 border-x border-indigo-100">
                   Variables: {availableVars.map(v => `{{${v}}}`).join(', ')}
                 </div>
               )}
@@ -350,7 +350,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              className="w-full mt-2 p-2 text-xs border border-slate-200 rounded bg-white resize-none focus:ring-1 focus:ring-teal-400"
+              className="w-full mt-2 p-2 text-xs border border-slate-200 rounded bg-white resize-none focus:ring-1 focus:ring-indigo-400"
               rows={4}
               placeholder={t('admin.emails.campaigns.textVersionPlaceholder')}
             />
@@ -379,7 +379,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               <div className="text-[10px] text-slate-500">Bounced</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-teal-700">{deliveryStats.openRate}%</div>
+              <div className="text-sm font-bold text-indigo-700">{deliveryStats.openRate}%</div>
               <div className="text-[10px] text-slate-500">{t('admin.bridges.openRate')}</div>
             </div>
             <div>
@@ -393,9 +393,9 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
       {/* Send campaign ConfirmDialog (replaces native confirm()) */}
       <ConfirmDialog
         isOpen={showSendConfirm}
-        title={t('admin.emails.campaigns.sendTitle') || 'Send Campaign'}
+        title={t('admin.emails.campaigns.sendTitle')}
         message={t('admin.emails.campaigns.confirmSend')}
-        confirmLabel={t('admin.emails.campaigns.send') || 'Send'}
+        confirmLabel={t('admin.emails.campaigns.send')}
         cancelLabel={t('common.cancel')}
         onConfirm={handleSend}
         onCancel={() => setShowSendConfirm(false)}

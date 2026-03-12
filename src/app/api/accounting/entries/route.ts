@@ -130,7 +130,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.view' });
 
 /**
  * POST /api/accounting/entries
@@ -299,7 +299,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.journal.create' });
 
 /**
  * PUT /api/accounting/entries
@@ -513,7 +513,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.journal.create' });
 
 /**
  * DELETE /api/accounting/entries
@@ -689,7 +689,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.journal.void' });
 
 /**
  * PATCH /api/accounting/entries
@@ -802,4 +802,4 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       { status: 500 }
     );
   }
-});
+}, { requiredPermission: 'accounting.journal.post' });

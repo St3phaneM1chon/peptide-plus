@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getRedisClient } from '@/lib/redis';
 
 const emailInboundSchema = z.object({
   from: z.union([z.string(), z.object({ address: z.string(), name: z.string().optional() })]).optional(),
@@ -90,6 +91,25 @@ export async function POST(request: NextRequest) {
       body['Message-ID'] ||
       `email_${Date.now()}`;
 
+    // Idempotency check: skip if this email was already processed (Redis-based, TTL 24h)
+    try {
+      const redis = await getRedisClient();
+      if (redis) {
+        const idempotencyKey = `webhook:email-inbound:${messageId}`;
+        const alreadyProcessed = await redis.get(idempotencyKey);
+        if (alreadyProcessed) {
+          logger.info('[EmailToLead] Duplicate email skipped', { messageId });
+          return NextResponse.json({ success: true, status: 'already_processed' });
+        }
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
+    } catch (redisErr) {
+      // Redis unavailable — proceed without idempotency (prefer processing over skipping)
+      logger.debug('[EmailToLead] Redis idempotency check unavailable, proceeding', {
+        error: redisErr instanceof Error ? redisErr.message : String(redisErr),
+      });
+    }
+
     if (!senderEmail) {
       logger.warn('[EmailToLead] No sender email found in payload');
       return NextResponse.json(
@@ -146,27 +166,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create CRM activity for the inbound email
-    await prisma.crmActivity.create({
-      data: {
-        type: 'EMAIL',
-        title: subject
-          ? `Inbound email: ${subject.slice(0, 200)}`
-          : 'Inbound email received',
-        description: emailBody.slice(0, 1000),
+    // A9-P2-002: Dedup check — skip CrmActivity if one already exists for this messageId
+    const existingActivity = await prisma.crmActivity.findFirst({
+      where: {
         leadId: lead.id,
-        performedById: lead.assignedToId,
+        type: 'EMAIL',
         metadata: {
-          direction: 'inbound',
-          from: senderEmail,
-          fromName: senderName,
-          subject,
-          messageId,
-          isNewLead,
-          source: 'email-to-lead-webhook',
+          path: ['messageId'],
+          equals: messageId,
         },
       },
+      select: { id: true },
     });
+
+    if (!existingActivity) {
+      // Create CRM activity for the inbound email
+      await prisma.crmActivity.create({
+        data: {
+          type: 'EMAIL',
+          title: subject
+            ? `Inbound email: ${subject.slice(0, 200)}`
+            : 'Inbound email received',
+          description: emailBody.slice(0, 1000),
+          leadId: lead.id,
+          performedById: lead.assignedToId,
+          metadata: {
+            direction: 'inbound',
+            from: senderEmail,
+            fromName: senderName,
+            subject,
+            messageId,
+            isNewLead,
+            source: 'email-to-lead-webhook',
+          },
+        },
+      });
+    }
 
     // Create an InboxConversation if one doesn't already exist for this lead + email thread
     let conversation = await prisma.inboxConversation.findFirst({

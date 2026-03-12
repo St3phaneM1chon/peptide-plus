@@ -80,7 +80,7 @@ interface NewLineItem {
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   DRAFT: { label: 'Draft', bg: 'bg-gray-100', text: 'text-gray-700' },
-  SENT: { label: 'Sent', bg: 'bg-teal-100', text: 'text-teal-700' },
+  SENT: { label: 'Sent', bg: 'bg-indigo-100', text: 'text-indigo-700' },
   VIEWED: { label: 'Viewed', bg: 'bg-purple-100', text: 'text-purple-700' },
   ACCEPTED: { label: 'Accepted', bg: 'bg-green-100', text: 'text-green-700' },
   REJECTED: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-700' },
@@ -152,10 +152,10 @@ export default function QuotesPage() {
         setQuotes(json.data || []);
         setTotal(json.pagination?.total || 0);
       } else {
-        toast.error(json.error?.message || t('admin.crm.quotes.loadError') || 'Failed to load quotes');
+        toast.error(json.error?.message || t('admin.crm.quotes.loadError'));
       }
     } catch {
-      toast.error(t('admin.crm.quotes.loadError') || 'Failed to load quotes');
+      toast.error(t('admin.crm.quotes.loadError'));
     } finally {
       setLoading(false);
     }
@@ -223,13 +223,13 @@ export default function QuotesPage() {
     e.preventDefault();
 
     if (!formDealId) {
-      toast.error(t('admin.crm.quotes.selectDeal') || 'Please select a deal');
+      toast.error(t('admin.crm.quotes.selectDeal'));
       return;
     }
 
     const validItems = formItems.filter((item) => item.description.trim());
     if (validItems.length === 0) {
-      toast.error(t('admin.crm.quotes.addItems') || 'Add at least one line item');
+      toast.error(t('admin.crm.quotes.addItems'));
       return;
     }
 
@@ -258,7 +258,7 @@ export default function QuotesPage() {
         throw new Error(json.error?.message || 'Failed to create quote');
       }
 
-      toast.success(t('admin.crm.quotes.created') || 'Quote created successfully');
+      toast.success(t('admin.crm.quotes.created'));
       resetForm();
       setShowCreateModal(false);
       fetchQuotes();
@@ -292,7 +292,7 @@ export default function QuotesPage() {
       if (!json.success) {
         throw new Error(json.error?.message || 'Failed to send quote');
       }
-      toast.success(t('admin.crm.quotes.sent') || 'Quote sent');
+      toast.success(t('admin.crm.quotes.sent'));
       fetchQuotes();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to send quote');
@@ -306,7 +306,7 @@ export default function QuotesPage() {
     try {
       const res = await fetch(`/api/admin/crm/quotes/${quoteId}`, { method: 'DELETE' });
       if (res.status === 204 || res.ok) {
-        toast.success(t('admin.crm.quotes.deleted') || 'Quote deleted');
+        toast.success(t('admin.crm.quotes.deleted'));
         setQuotes((prev) => prev.filter((q) => q.id !== quoteId));
         if (selectedQuote?.id === quoteId) setSelectedQuote(null);
       } else {
@@ -335,19 +335,19 @@ export default function QuotesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="h-6 w-6 text-teal-600" />
-            {t('admin.crm.quotes.title') || 'Quotes'}
+            <FileText className="h-6 w-6 text-indigo-600" />
+            {t('admin.crm.quotes.title')}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {t('admin.crm.quotes.subtitle') || 'Create and manage sales quotes for deals'}
+            {t('admin.crm.quotes.subtitle')}
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          {t('admin.crm.quotes.new') || 'New Quote'}
+          {t('admin.crm.quotes.new')}
         </button>
       </div>
 
@@ -359,17 +359,17 @@ export default function QuotesPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            placeholder={t('admin.crm.quotes.search') || 'Search quotes...'}
-            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            placeholder={t('admin.crm.quotes.search')}
+            className="w-full ps-10 pe-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
           >
-            <option value="">{t('admin.crm.quotes.allStatuses') || 'All Statuses'}</option>
+            <option value="">{t('admin.crm.quotes.allStatuses')}</option>
             {STATUS_OPTIONS.filter(Boolean).map((s) => (
               <option key={s} value={s}>{STATUS_CONFIG[s]?.label || s}</option>
             ))}
@@ -381,16 +381,16 @@ export default function QuotesPage() {
       {/* Quotes Table */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : quotes.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
-            {t('admin.crm.quotes.empty') || 'No quotes found'}
+            {t('admin.crm.quotes.empty')}
           </p>
           <p className="text-sm text-gray-400 mt-1">
-            {t('admin.crm.quotes.emptyDesc') || 'Create a quote to get started'}
+            {t('admin.crm.quotes.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -400,25 +400,25 @@ export default function QuotesPage() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.numberCol') || 'Quote #'}
+                    {t('admin.crm.quotes.numberCol')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.dealCol') || 'Deal'}
+                    {t('admin.crm.quotes.dealCol')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.statusCol') || 'Status'}
+                    {t('admin.crm.quotes.statusCol')}
                   </th>
                   <th className="text-end px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.totalCol') || 'Total'}
+                    {t('admin.crm.quotes.totalCol')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.validUntilCol') || 'Valid Until'}
+                    {t('admin.crm.quotes.validUntilCol')}
                   </th>
                   <th className="text-start px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.createdByCol') || 'Created By'}
+                    {t('admin.crm.quotes.createdByCol')}
                   </th>
                   <th className="px-4 py-3 font-medium text-gray-600">
-                    {t('admin.crm.quotes.actionsCol') || 'Actions'}
+                    {t('admin.crm.quotes.actionsCol')}
                   </th>
                 </tr>
               </thead>
@@ -430,7 +430,7 @@ export default function QuotesPage() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => setSelectedQuote(quote)}
-                          className="font-medium text-teal-600 hover:text-teal-800"
+                          className="font-medium text-indigo-600 hover:text-indigo-800"
                         >
                           {quote.number}
                         </button>
@@ -456,8 +456,8 @@ export default function QuotesPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setSelectedQuote(quote)}
-                            className="p-1 text-gray-400 hover:text-teal-600"
-                            title={t('admin.crm.quotes.view') || 'View'}
+                            className="p-1 text-gray-400 hover:text-indigo-600"
+                            title={t('admin.crm.quotes.view')}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -465,15 +465,15 @@ export default function QuotesPage() {
                             <>
                               <button
                                 onClick={() => handleSend(quote.id)}
-                                className="p-1 text-gray-400 hover:text-teal-600"
-                                title={t('admin.crm.quotes.send') || 'Send'}
+                                className="p-1 text-gray-400 hover:text-indigo-600"
+                                title={t('admin.crm.quotes.send')}
                               >
                                 <Send className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleDelete(quote.id)}
                                 className="p-1 text-gray-400 hover:text-red-600"
-                                title={t('common.delete') || 'Delete'}
+                                title={t('common.delete')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -492,7 +492,7 @@ export default function QuotesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
               <p className="text-sm text-gray-500">
-                {t('admin.crm.quotes.showing') || 'Showing'} {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} {t('admin.crm.quotes.of') || 'of'} {total}
+                {t('admin.crm.quotes.showing')} {(page - 1) * 20 + 1}-{Math.min(page * 20, total)} {t('admin.crm.quotes.of')} {total}
               </p>
               <div className="flex gap-2">
                 <button
@@ -500,14 +500,14 @@ export default function QuotesPage() {
                   disabled={page <= 1}
                   className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('common.previous') || 'Previous'}
+                  {t('common.previous')}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
                   className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('common.next') || 'Next'}
+                  {t('common.next')}
                 </button>
               </div>
             </div>
@@ -547,7 +547,7 @@ export default function QuotesPage() {
               {selectedQuote.deal?.lead && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    {t('admin.crm.quotes.client') || 'Client'}
+                    {t('admin.crm.quotes.client')}
                   </h3>
                   <p className="font-medium text-gray-900">{selectedQuote.deal.lead.contactName}</p>
                   {selectedQuote.deal.lead.companyName && (
@@ -562,17 +562,17 @@ export default function QuotesPage() {
               {/* Line Items */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  {t('admin.crm.quotes.lineItems') || 'Line Items'}
+                  {t('admin.crm.quotes.lineItems')}
                 </h3>
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="text-start px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.description') || 'Description'}</th>
-                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.qty') || 'Qty'}</th>
-                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.price') || 'Price'}</th>
-                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.disc') || 'Disc%'}</th>
-                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.total') || 'Total'}</th>
+                        <th className="text-start px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.description')}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.qty')}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.price')}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.disc')}</th>
+                        <th className="text-end px-3 py-2 font-medium text-gray-600">{t('admin.crm.quotes.total')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -593,15 +593,15 @@ export default function QuotesPage() {
               {/* Totals */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('admin.crm.quotes.subtotal') || 'Subtotal'}</span>
+                  <span className="text-gray-500">{t('admin.crm.quotes.subtotal')}</span>
                   <span className="font-medium text-gray-900">{fmt(selectedQuote.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('admin.crm.quotes.tax') || 'Tax'} ({(Number(selectedQuote.taxRate) * 100).toFixed(2)}%)</span>
+                  <span className="text-gray-500">{t('admin.crm.quotes.tax')} ({(Number(selectedQuote.taxRate) * 100).toFixed(2)}%)</span>
                   <span className="font-medium text-gray-900">{fmt(selectedQuote.taxAmount)}</span>
                 </div>
                 <div className="flex justify-between text-base pt-2 border-t border-gray-200">
-                  <span className="font-semibold text-gray-900">{t('admin.crm.quotes.total') || 'Total'}</span>
+                  <span className="font-semibold text-gray-900">{t('admin.crm.quotes.total')}</span>
                   <span className="font-bold text-gray-900">{fmt(selectedQuote.total)}</span>
                 </div>
               </div>
@@ -610,7 +610,7 @@ export default function QuotesPage() {
               {selectedQuote.validUntil && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  {t('admin.crm.quotes.validUntil') || 'Valid until'}: {fmtDate(selectedQuote.validUntil)}
+                  {t('admin.crm.quotes.validUntil')}: {fmtDate(selectedQuote.validUntil)}
                 </div>
               )}
 
@@ -618,7 +618,7 @@ export default function QuotesPage() {
               {selectedQuote.notes && (
                 <div>
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    {t('admin.crm.quotes.notes') || 'Notes'}
+                    {t('admin.crm.quotes.notes')}
                   </h3>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedQuote.notes}</p>
                 </div>
@@ -628,7 +628,7 @@ export default function QuotesPage() {
               {selectedQuote.terms && (
                 <div>
                   <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    {t('admin.crm.quotes.terms') || 'Terms & Conditions'}
+                    {t('admin.crm.quotes.terms')}
                   </h3>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedQuote.terms}</p>
                 </div>
@@ -640,17 +640,17 @@ export default function QuotesPage() {
                   <>
                     <button
                       onClick={() => { handleSend(selectedQuote.id); setSelectedQuote(null); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                     >
                       <Send className="h-4 w-4" />
-                      {t('admin.crm.quotes.send') || 'Send Quote'}
+                      {t('admin.crm.quotes.send')}
                     </button>
                     <button
                       onClick={() => { handleDelete(selectedQuote.id); setSelectedQuote(null); }}
                       className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
-                      {t('common.delete') || 'Delete'}
+                      {t('common.delete')}
                     </button>
                   </>
                 )}
@@ -667,8 +667,8 @@ export default function QuotesPage() {
           <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-teal-600" />
-                {t('admin.crm.quotes.createTitle') || 'Create Quote'}
+                <DollarSign className="h-5 w-5 text-indigo-600" />
+                {t('admin.crm.quotes.createTitle')}
               </h2>
               <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
                 <X className="h-5 w-5 text-gray-500" />
@@ -679,15 +679,15 @@ export default function QuotesPage() {
               {/* Deal Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('admin.crm.quotes.deal') || 'Deal'} *
+                  {t('admin.crm.quotes.deal')} *
                 </label>
                 <select
                   value={formDealId}
                   onChange={(e) => setFormDealId(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 >
-                  <option value="">{loadingDeals ? (t('common.loading') || 'Loading...') : (t('admin.crm.quotes.selectDeal') || 'Select a deal...')}</option>
+                  <option value="">{loadingDeals ? (t('common.loading')) : (t('admin.crm.quotes.selectDeal'))}</option>
                   {deals.map((deal) => (
                     <option key={deal.id} value={deal.id}>
                       {deal.title} {deal.lead ? `- ${deal.lead.contactName}` : ''}
@@ -700,7 +700,7 @@ export default function QuotesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.quotes.taxRate') || 'Tax Rate (%)'}
+                    {t('admin.crm.quotes.taxRate')}
                   </label>
                   <input
                     type="number"
@@ -709,18 +709,18 @@ export default function QuotesPage() {
                     max="100"
                     value={formTaxRate}
                     onChange={(e) => setFormTaxRate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.quotes.validUntilLabel') || 'Valid Until'}
+                    {t('admin.crm.quotes.validUntilLabel')}
                   </label>
                   <input
                     type="date"
                     value={formValidUntil}
                     onChange={(e) => setFormValidUntil(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -729,15 +729,15 @@ export default function QuotesPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-gray-700">
-                    {t('admin.crm.quotes.lineItems') || 'Line Items'} *
+                    {t('admin.crm.quotes.lineItems')} *
                   </label>
                   <button
                     type="button"
                     onClick={addLineItem}
-                    className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 font-medium"
+                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                   >
                     <Plus className="h-3 w-3" />
-                    {t('admin.crm.quotes.addItem') || 'Add Item'}
+                    {t('admin.crm.quotes.addItem')}
                   </button>
                 </div>
                 <div className="space-y-3">
@@ -746,32 +746,32 @@ export default function QuotesPage() {
                       <div className="grid grid-cols-12 gap-3 items-end">
                         <div className="col-span-12 sm:col-span-5">
                           <label className="block text-xs text-gray-500 mb-1">
-                            {t('admin.crm.quotes.description') || 'Description'}
+                            {t('admin.crm.quotes.description')}
                           </label>
                           <input
                             type="text"
                             value={item.description}
                             onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            placeholder={t('admin.crm.quotes.itemDesc') || 'Item description...'}
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder={t('admin.crm.quotes.itemDesc')}
                             required
                           />
                         </div>
                         <div className="col-span-3 sm:col-span-2">
                           <label className="block text-xs text-gray-500 mb-1">
-                            {t('admin.crm.quotes.qty') || 'Qty'}
+                            {t('admin.crm.quotes.qty')}
                           </label>
                           <input
                             type="number"
                             min={1}
                             value={item.quantity}
                             onChange={(e) => updateLineItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                           <label className="block text-xs text-gray-500 mb-1">
-                            {t('admin.crm.quotes.unitPrice') || 'Unit Price'}
+                            {t('admin.crm.quotes.unitPrice')}
                           </label>
                           <input
                             type="number"
@@ -779,12 +779,12 @@ export default function QuotesPage() {
                             step="0.01"
                             value={item.unitPrice}
                             onChange={(e) => updateLineItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div className="col-span-3 sm:col-span-2">
                           <label className="block text-xs text-gray-500 mb-1">
-                            {t('admin.crm.quotes.discountPct') || 'Disc %'}
+                            {t('admin.crm.quotes.discountPct')}
                           </label>
                           <input
                             type="number"
@@ -793,7 +793,7 @@ export default function QuotesPage() {
                             step="0.01"
                             value={item.discount}
                             onChange={(e) => updateLineItem(index, 'discount', parseFloat(e.target.value) || 0)}
-                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                         </div>
                         <div className="col-span-2 sm:col-span-1 flex items-end justify-end">
@@ -809,7 +809,7 @@ export default function QuotesPage() {
                         </div>
                       </div>
                       <div className="text-end text-xs text-gray-500 mt-2">
-                        {t('admin.crm.quotes.itemTotal') || 'Item total'}: <span className="font-medium text-gray-700">{fmt(calcItemTotal(item))}</span>
+                        {t('admin.crm.quotes.itemTotal')}: <span className="font-medium text-gray-700">{fmt(calcItemTotal(item))}</span>
                       </div>
                     </div>
                   ))}
@@ -819,15 +819,15 @@ export default function QuotesPage() {
               {/* Totals Preview */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('admin.crm.quotes.subtotal') || 'Subtotal'}</span>
+                  <span className="text-gray-500">{t('admin.crm.quotes.subtotal')}</span>
                   <span className="font-medium">{fmt(calcFormSubtotal())}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('admin.crm.quotes.tax') || 'Tax'} ({formTaxRate}%)</span>
+                  <span className="text-gray-500">{t('admin.crm.quotes.tax')} ({formTaxRate}%)</span>
                   <span className="font-medium">{fmt(calcFormTax())}</span>
                 </div>
                 <div className="flex justify-between text-base pt-2 border-t border-gray-200">
-                  <span className="font-semibold">{t('admin.crm.quotes.total') || 'Total'}</span>
+                  <span className="font-semibold">{t('admin.crm.quotes.total')}</span>
                   <span className="font-bold text-gray-900">{fmt(calcFormTotal())}</span>
                 </div>
               </div>
@@ -836,26 +836,26 @@ export default function QuotesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.quotes.notes') || 'Notes'}
+                    {t('admin.crm.quotes.notes')}
                   </label>
                   <textarea
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-                    placeholder={t('admin.crm.quotes.notesPlaceholder') || 'Internal notes...'}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    placeholder={t('admin.crm.quotes.notesPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('admin.crm.quotes.terms') || 'Terms & Conditions'}
+                    {t('admin.crm.quotes.terms')}
                   </label>
                   <textarea
                     value={formTerms}
                     onChange={(e) => setFormTerms(e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-                    placeholder={t('admin.crm.quotes.termsPlaceholder') || 'Payment terms, conditions...'}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    placeholder={t('admin.crm.quotes.termsPlaceholder')}
                   />
                 </div>
               </div>
@@ -867,14 +867,14 @@ export default function QuotesPage() {
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  {t('common.cancel') || 'Cancel'}
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  {saving ? (t('common.saving') || 'Saving...') : (t('admin.crm.quotes.create') || 'Create Quote')}
+                  {saving ? (t('common.saving')) : (t('admin.crm.quotes.create'))}
                 </button>
               </div>
             </form>
