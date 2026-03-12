@@ -173,44 +173,88 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       : [];
     const existingSubMap = new Map(existingSubscribers.map(s => [s.email, s]));
 
+    // N+1 FIX: Separate contacts into create/update/skip batches, then use batch operations
+    const contactsToCreate: { id: string; email: string; name: string | null; locale: string; source: string; isActive: boolean }[] = [];
+    const contactsToUpdate: { email: string; name: string | null }[] = [];
+
     for (const contact of validContacts) {
+      // RGPD compliance: check if subscriber previously unsubscribed
+      const existing = existingSubMap.get(contact.email);
+
+      if (existing && !existing.isActive && existing.unsubscribedAt) {
+        // User actively unsubscribed — do NOT re-subscribe (RGPD violation)
+        preservedUnsubscribed++;
+        continue;
+      }
+
+      if (existing) {
+        contactsToUpdate.push({ email: contact.email, name: contact.name || null });
+      } else {
+        contactsToCreate.push({
+          id: crypto.randomUUID(),
+          email: contact.email,
+          name: contact.name,
+          locale: contact.locale,
+          source: 'csv-import',
+          isActive: true,
+        });
+      }
+    }
+
+    // Batch create new subscribers
+    if (contactsToCreate.length > 0) {
       try {
-        // RGPD compliance: check if subscriber previously unsubscribed
-        const existing = existingSubMap.get(contact.email);
-
-        if (existing && !existing.isActive && existing.unsubscribedAt) {
-          // User actively unsubscribed — do NOT re-subscribe (RGPD violation)
-          preservedUnsubscribed++;
-          continue;
-        }
-
-        if (existing) {
-          // Update existing subscriber
-          await prisma.newsletterSubscriber.update({
-            where: { email: contact.email },
-            data: {
-              name: contact.name || undefined,
-            },
-          });
-          updated++;
-        } else {
-          // Create new subscriber
-          await prisma.newsletterSubscriber.create({
-            data: {
-              id: crypto.randomUUID(),
-              email: contact.email,
-              name: contact.name,
-              locale: contact.locale,
-              source: 'csv-import',
-              isActive: true,
-            },
-          });
-          imported++;
-        }
+        await prisma.newsletterSubscriber.createMany({
+          data: contactsToCreate,
+          skipDuplicates: true,
+        });
+        imported = contactsToCreate.length;
       } catch (error) {
-        logger.error('[MailingListImport] Database error importing contact', { email: contact.email, error: error instanceof Error ? error.message : String(error) });
-        failed++;
-        errors.push({ row: contact.row, email: contact.email, reason: 'db_error' });
+        logger.error('[MailingListImport] Batch create failed, falling back to individual creates', { error: error instanceof Error ? error.message : String(error) });
+        // Fallback to individual creates if batch fails
+        for (const contact of contactsToCreate) {
+          try {
+            await prisma.newsletterSubscriber.create({ data: contact });
+            imported++;
+          } catch (err) {
+            logger.error('[MailingListImport] Database error creating contact', { email: contact.email, error: err instanceof Error ? err.message : String(err) });
+            failed++;
+            const matchingValid = validContacts.find(c => c.email === contact.email);
+            errors.push({ row: matchingValid?.row ?? 0, email: contact.email, reason: 'db_error' });
+          }
+        }
+      }
+    }
+
+    // Batch update existing subscribers using a transaction
+    if (contactsToUpdate.length > 0) {
+      try {
+        await prisma.$transaction(
+          contactsToUpdate.map((contact) =>
+            prisma.newsletterSubscriber.update({
+              where: { email: contact.email },
+              data: { name: contact.name || undefined },
+            })
+          )
+        );
+        updated = contactsToUpdate.length;
+      } catch (error) {
+        logger.error('[MailingListImport] Batch update failed, falling back to individual updates', { error: error instanceof Error ? error.message : String(error) });
+        // Fallback to individual updates if batch fails
+        for (const contact of contactsToUpdate) {
+          try {
+            await prisma.newsletterSubscriber.update({
+              where: { email: contact.email },
+              data: { name: contact.name || undefined },
+            });
+            updated++;
+          } catch (err) {
+            logger.error('[MailingListImport] Database error updating contact', { email: contact.email, error: err instanceof Error ? err.message : String(err) });
+            failed++;
+            const matchingValid = validContacts.find(c => c.email === contact.email);
+            errors.push({ row: matchingValid?.row ?? 0, email: contact.email, reason: 'db_error' });
+          }
+        }
       }
     }
 

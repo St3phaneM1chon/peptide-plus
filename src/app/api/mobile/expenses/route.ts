@@ -70,7 +70,14 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const parsed = createSchema.parse(body);
+    const result = createSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const parsed = result.data;
 
     // Check if the target accounting period is locked
     const periodLockError = await checkPeriodLock(new Date(parsed.date));
@@ -123,9 +130,6 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
-    }
     console.error('Error creating expense:', error);
     return NextResponse.json({ error: 'Erreur création dépense' }, { status: 500 });
   }

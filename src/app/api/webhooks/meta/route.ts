@@ -59,33 +59,38 @@ function verifyTokenSafe(provided: string | null, expected: string): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const mode = request.nextUrl.searchParams.get('hub.mode');
-  const token = request.nextUrl.searchParams.get('hub.verify_token');
-  const challenge = request.nextUrl.searchParams.get('hub.challenge');
+  try {
+    const mode = request.nextUrl.searchParams.get('hub.mode');
+    const token = request.nextUrl.searchParams.get('hub.verify_token');
+    const challenge = request.nextUrl.searchParams.get('hub.challenge');
 
-  const verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN;
-  if (!verifyToken) {
-    logger.error('[Meta Webhook] META_WEBHOOK_VERIFY_TOKEN not configured');
-    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
-  }
+    const verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN;
+    if (!verifyToken) {
+      logger.error('[Meta Webhook] META_WEBHOOK_VERIFY_TOKEN not configured');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+    }
 
-  if (mode === 'subscribe' && verifyTokenSafe(token, verifyToken)) {
-    logger.info('[Meta Webhook] Verification successful');
-    // Meta expects the challenge value as plain text response
-    return new NextResponse(challenge || '', {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
+    if (mode === 'subscribe' && verifyTokenSafe(token, verifyToken)) {
+      logger.info('[Meta Webhook] Verification successful');
+      // Meta expects the challenge value as plain text response
+      return new NextResponse(challenge || '', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+
+    logger.warn('[Meta Webhook] Verification failed', {
+      mode,
+      tokenMatch: false,
     });
+    return NextResponse.json(
+      { error: 'Verification failed' },
+      { status: 403 },
+    );
+  } catch (error) {
+    console.error('[webhooks/meta GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  logger.warn('[Meta Webhook] Verification failed', {
-    mode,
-    tokenMatch: false,
-  });
-  return NextResponse.json(
-    { error: 'Verification failed' },
-    { status: 403 },
-  );
 }
 
 // ---------------------------------------------------------------------------

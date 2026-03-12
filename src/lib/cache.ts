@@ -328,3 +328,83 @@ export function cacheStats() {
 export function isCacheRedisConnected(): boolean {
   return isRedisAvailable();
 }
+
+// ---------------------------------------------------------------------------
+// Convenience wrappers
+// ---------------------------------------------------------------------------
+
+/**
+ * Cache-aside convenience wrapper.
+ *
+ * Usage:
+ *   const products = await cachedQuery('products:featured', 300, () =>
+ *     prisma.product.findMany({ where: { isFeatured: true } })
+ *   );
+ *
+ * If Redis is down, the query executes directly (graceful degradation is
+ * handled by the underlying cacheGetOrSet / redisGet / redisSet helpers).
+ */
+export async function cachedQuery<T>(
+  key: string,
+  ttlSeconds: number,
+  queryFn: () => Promise<T>,
+  tags?: string[],
+): Promise<T> {
+  return cacheGetOrSet<T>(key, queryFn, { ttl: ttlSeconds, tags });
+}
+
+/**
+ * Invalidate all cache entries whose keys match a given prefix/pattern.
+ *
+ * - L1 (in-memory): iterates globalCacheStore keys and deletes matches.
+ * - L2 (Redis): uses SCAN to find matching keys and DEL them.
+ *
+ * The pattern is treated as a simple prefix match (e.g. "products:" matches
+ * "products:list:abc", "products:slug:xyz", etc.). For tag-based invalidation
+ * prefer `cacheInvalidateTag()` instead.
+ */
+export async function invalidateCache(pattern: string): Promise<void> {
+  // L1: in-memory (collect first, then delete to avoid iterator invalidation)
+  const l1KeysToDelete: string[] = [];
+  for (const key of globalCacheStore.keys()) {
+    if (key.startsWith(pattern) || key.includes(pattern)) {
+      l1KeysToDelete.push(key);
+    }
+  }
+  for (const key of l1KeysToDelete) {
+    const item = globalCacheStore.get(key);
+    if (item) {
+      for (const tag of item.tags) {
+        tagIndex.get(tag)?.delete(key);
+      }
+    }
+    globalCacheStore.delete(key);
+  }
+
+  // L2: Redis SCAN + DEL
+  try {
+    if (!isRedisAvailable()) return;
+    const client = await getRedisClient();
+    if (!client) return;
+
+    // Use SCAN to find matching keys (safe, non-blocking)
+    const matchPattern = `${CACHE_PREFIX}${pattern}*`;
+    let cursor: string | number = '0';
+    const keysToDelete: string[] = [];
+
+    do {
+      const [nextCursor, keys] = await client.scan(cursor, 'MATCH', matchPattern, 'COUNT', 100);
+      cursor = nextCursor;
+      keysToDelete.push(...keys);
+    } while (String(cursor) !== '0');
+
+    if (keysToDelete.length > 0) {
+      await client.del(...keysToDelete);
+    }
+  } catch (err) {
+    logger.debug('[cache] invalidateCache Redis error', {
+      pattern,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}

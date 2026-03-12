@@ -5,10 +5,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { publishChatEvent } from '@/lib/chat/realtime';
 import { logger } from '@/lib/logger';
+import { validateBody } from '@/lib/api-validation';
+
+const markReadSchema = z.object({
+  conversationId: z.string().min(1, 'conversationId is required').max(100),
+  messageIds: z.array(z.string().min(1).max(100)).max(500).optional(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -17,10 +24,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { conversationId, messageIds } = await request.json();
-    if (!conversationId) {
-      return NextResponse.json({ error: 'conversationId required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const validation = validateBody(markReadSchema, body);
+    if (!validation.success) return validation.response;
+    const { conversationId, messageIds } = validation.data;
 
     // Verify the user is a participant in this conversation
     const conversation = await db.chatConversation.findUnique({

@@ -30,6 +30,22 @@ export const LOYALTY_POINTS_CONFIG = {
   maxPointsPerTransaction: 100_000,
 } as const;
 
+/**
+ * Earning caps to prevent loyalty fraud / abuse.
+ * T2-9: Daily and monthly caps per user.
+ * Points that would exceed these caps are silently skipped (logged, not errored).
+ */
+export const LOYALTY_EARNING_CAPS = {
+  /** Maximum points a single user can earn per calendar day */
+  dailyCap: 1_000,
+  /** Maximum points a single user can earn per calendar month */
+  monthlyCap: 10_000,
+  /** Transaction types exempt from earning caps (admin adjustments, one-time bonuses) */
+  exemptTypes: ['EARN_SIGNUP', 'ADJUST'] as readonly string[],
+  /** Points expiration period in months of inactivity (T2-10) */
+  expirationMonths: 12,
+} as const;
+
 /** Tier thresholds - CANONICAL definition. All UI and API must use these. */
 export const LOYALTY_TIER_THRESHOLDS = [
   { id: 'BRONZE',   name: 'Bronze',   minPoints: 0,     multiplier: 1,   color: 'orange' },

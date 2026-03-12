@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   processAccountingQuestion,
@@ -12,6 +13,13 @@ import {
 } from '@/lib/accounting/ai-accountant.service';
 import type { ChatMessage } from '@/lib/accounting/ai-accountant.service';
 import { logger } from '@/lib/logger';
+import { validateBody } from '@/lib/api-validation';
+
+const aiChatSchema = z.object({
+  message: z.string().min(1).max(1000).optional(),
+  sessionId: z.string().max(100).optional(),
+  action: z.enum(['clear']).optional(),
+}).strict();
 
 // ---------------------------------------------------------------------------
 // POST /api/accounting/ai-chat
@@ -23,11 +31,11 @@ export const POST = withAdminGuard(
   async (request: NextRequest) => {
     try {
       const body = await request.json();
-      const { message, sessionId: rawSessionId, action } = body as {
-        message?: string;
-        sessionId?: string;
-        action?: string;
-      };
+
+      // Validate with Zod
+      const validation = validateBody(aiChatSchema, body);
+      if (!validation.success) return validation.response;
+      const { message, sessionId: rawSessionId, action } = validation.data;
 
       // Generate session ID if not provided
       const sessionId = rawSessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -38,17 +46,10 @@ export const POST = withAdminGuard(
         return NextResponse.json({ success: true, sessionId });
       }
 
-      // Validate message
-      if (!message || typeof message !== 'string') {
+      // Validate message is present when not clearing
+      if (!message) {
         return NextResponse.json(
-          { error: 'Message is required and must be a string' },
-          { status: 400 },
-        );
-      }
-
-      if (message.length > 1000) {
-        return NextResponse.json(
-          { error: 'Message must be 1000 characters or less' },
+          { error: 'Message is required' },
           { status: 400 },
         );
       }

@@ -22,172 +22,182 @@ const cartSyncSchema = z.object({
 
 // GET: Load cart from DB for authenticated user
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ items: [] });
-  }
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ items: [] });
+    }
 
-  const cart = await prisma.cart.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      items: {
-        select: {
-          productId: true,
-          formatId: true,
-          quantity: true,
-          priceAtAdd: true,
+    const cart = await prisma.cart.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        items: {
+          select: {
+            productId: true,
+            formatId: true,
+            quantity: true,
+            priceAtAdd: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!cart || cart.items.length === 0) {
-    return NextResponse.json({ items: [] });
-  }
+    if (!cart || cart.items.length === 0) {
+      return NextResponse.json({ items: [] });
+    }
 
-  // Enrich with product names for display (batch query, select only needed fields)
-  const productIds = [...new Set(cart.items.map(i => i.productId))];
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: {
-      id: true,
-      name: true,
-      imageUrl: true,
-      images: {
-        take: 1,
-        orderBy: { sortOrder: 'asc' },
-        select: { url: true },
+    // Enrich with product names for display (batch query, select only needed fields)
+    const productIds = [...new Set(cart.items.map(i => i.productId))];
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        images: {
+          take: 1,
+          orderBy: { sortOrder: 'asc' },
+          select: { url: true },
+        },
       },
-    },
-  });
-  const productMap = new Map(products.map(p => [p.id, p]));
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
 
-  const items = cart.items.map(item => {
-    const product = productMap.get(item.productId);
-    return {
-      productId: item.productId,
-      formatId: item.formatId,
-      quantity: item.quantity,
-      price: Number(item.priceAtAdd),
-      name: product?.name || 'Unknown Product',
-      image: product?.images?.[0]?.url || product?.imageUrl || undefined,
-    };
-  });
+    const items = cart.items.map(item => {
+      const product = productMap.get(item.productId);
+      return {
+        productId: item.productId,
+        formatId: item.formatId,
+        quantity: item.quantity,
+        price: Number(item.priceAtAdd),
+        name: product?.name || 'Unknown Product',
+        image: product?.images?.[0]?.url || product?.imageUrl || undefined,
+      };
+    });
 
-  return NextResponse.json({ items });
+    return NextResponse.json({ items });
+  } catch (error) {
+    console.error('[cart/sync GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // POST: Sync cart items to DB for authenticated user
 export async function POST(request: NextRequest) {
-  // COMMERCE-002 FIX: Rate limiting on cart sync
-  const ip = request.headers.get('x-azure-clientip')
-    || (() => {
-      const xff = request.headers.get('x-forwarded-for');
-      if (!xff) return null;
-      const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i));
-      return ips[ips.length - 1] || null;
-    })()
-    || request.headers.get('x-real-ip')
-    || '127.0.0.1';
-  const rl = await rateLimitMiddleware(ip, '/api/cart/sync');
-  if (!rl.success) {
-    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-    return res;
-  }
-
-  // COMMERCE-002 FIX: CSRF protection for state-changing endpoint
-  const csrfValid = await validateCsrf(request);
-  if (!csrfValid) {
-    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-  }
-
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const raw = await request.json();
-  const parsed = cartSyncSchema.safeParse(raw);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid input', details: parsed.error.flatten() },
-      { status: 400 }
-    );
-  }
-
-  const { items } = parsed.data;
-
-  // COMMERCE-001 FIX: Resolve all prices from the database, never trust client-sent prices.
-  // Batch-fetch products and formats upfront to avoid N+1 queries.
-  const productIds = [...new Set(items.map(i => i.productId))];
-  const allProducts = await prisma.product.findMany({
-    where: { id: { in: productIds }, isActive: true },
-    select: { id: true, price: true },
-  });
-  const productMap = new Map(allProducts.map(p => [p.id, p]));
-
-  const formatIds = items.map(i => i.formatId).filter((f): f is string => !!f);
-  const allFormats = formatIds.length > 0
-    ? await prisma.productFormat.findMany({
-        where: { id: { in: [...new Set(formatIds)] } },
-        select: { id: true, price: true, productId: true },
-      })
-    : [];
-  const formatMap = new Map(allFormats.map(f => [f.id, f]));
-
-  // Validate all items have valid products/formats and resolve server-side prices
-  const resolvedItems: { productId: string; formatId: string | null; quantity: number; serverPrice: number }[] = [];
-  for (const item of items) {
-    const product = productMap.get(item.productId);
-    if (!product) {
-      return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 400 });
+  try {
+    // COMMERCE-002 FIX: Rate limiting on cart sync
+    const ip = request.headers.get('x-azure-clientip')
+      || (() => {
+        const xff = request.headers.get('x-forwarded-for');
+        if (!xff) return null;
+        const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i));
+        return ips[ips.length - 1] || null;
+      })()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/cart/sync');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
 
-    let serverPrice = Number(product.price);
-
-    if (item.formatId) {
-      const format = formatMap.get(item.formatId);
-      if (!format) {
-        return NextResponse.json({ error: `Format not found: ${item.formatId}` }, { status: 400 });
-      }
-      // Verify format belongs to the claimed product
-      if (format.productId !== item.productId) {
-        return NextResponse.json({ error: 'Format does not belong to product' }, { status: 400 });
-      }
-      serverPrice = Number(format.price);
+    // COMMERCE-002 FIX: CSRF protection for state-changing endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
-    resolvedItems.push({
-      productId: item.productId,
-      formatId: item.formatId || null,
-      quantity: item.quantity,
-      serverPrice,
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const raw = await request.json();
+    const parsed = cartSyncSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { items } = parsed.data;
+
+    // COMMERCE-001 FIX: Resolve all prices from the database, never trust client-sent prices.
+    // Batch-fetch products and formats upfront to avoid N+1 queries.
+    const productIds = [...new Set(items.map(i => i.productId))];
+    const allProducts = await prisma.product.findMany({
+      where: { id: { in: productIds }, isActive: true },
+      select: { id: true, price: true },
     });
-  }
+    const productMap = new Map(allProducts.map(p => [p.id, p]));
 
-  // Upsert cart
-  const cart = await prisma.cart.upsert({
-    where: { userId: session.user.id },
-    create: { userId: session.user.id },
-    update: { updatedAt: new Date() },
-  });
+    const formatIds = items.map(i => i.formatId).filter((f): f is string => !!f);
+    const allFormats = formatIds.length > 0
+      ? await prisma.productFormat.findMany({
+          where: { id: { in: [...new Set(formatIds)] } },
+          select: { id: true, price: true, productId: true },
+        })
+      : [];
+    const formatMap = new Map(allFormats.map(f => [f.id, f]));
 
-  // Delete existing items and replace with new ones
-  await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    // Validate all items have valid products/formats and resolve server-side prices
+    const resolvedItems: { productId: string; formatId: string | null; quantity: number; serverPrice: number }[] = [];
+    for (const item of items) {
+      const product = productMap.get(item.productId);
+      if (!product) {
+        return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 400 });
+      }
 
-  if (resolvedItems.length > 0) {
-    await prisma.cartItem.createMany({
-      data: resolvedItems.map((item) => ({
-        cartId: cart.id,
+      let serverPrice = Number(product.price);
+
+      if (item.formatId) {
+        const format = formatMap.get(item.formatId);
+        if (!format) {
+          return NextResponse.json({ error: `Format not found: ${item.formatId}` }, { status: 400 });
+        }
+        // Verify format belongs to the claimed product
+        if (format.productId !== item.productId) {
+          return NextResponse.json({ error: 'Format does not belong to product' }, { status: 400 });
+        }
+        serverPrice = Number(format.price);
+      }
+
+      resolvedItems.push({
         productId: item.productId,
-        formatId: item.formatId,
+        formatId: item.formatId || null,
         quantity: item.quantity,
-        priceAtAdd: item.serverPrice, // COMMERCE-001: Always use server-validated price
-      })),
-    });
-  }
+        serverPrice,
+      });
+    }
 
-  return NextResponse.json({ ok: true });
+    // Upsert cart
+    const cart = await prisma.cart.upsert({
+      where: { userId: session.user.id },
+      create: { userId: session.user.id },
+      update: { updatedAt: new Date() },
+    });
+
+    // Delete existing items and replace with new ones
+    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+    if (resolvedItems.length > 0) {
+      await prisma.cartItem.createMany({
+        data: resolvedItems.map((item) => ({
+          cartId: cart.id,
+          productId: item.productId,
+          formatId: item.formatId,
+          quantity: item.quantity,
+          priceAtAdd: item.serverPrice, // COMMERCE-001: Always use server-validated price
+        })),
+      });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('[cart/sync POST] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

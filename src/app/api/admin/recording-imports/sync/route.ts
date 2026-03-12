@@ -6,16 +6,28 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { syncRecordings } from '@/lib/platform/recording-import';
 import { type Platform, SUPPORTED_PLATFORMS } from '@/lib/platform/oauth';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
+const syncSchema = z.object({
+  platform: z.string().min(1).max(50).optional(),
+}).strict();
+
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json().catch(() => ({}));
-    const { platform } = body as { platform?: string };
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = syncSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { platform } = parsed.data;
 
     if (platform) {
       // Sync specific platform

@@ -30,6 +30,7 @@ import { sendEmail, pointsExpiringEmail, generateUnsubscribeUrl } from '@/lib/em
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { processInactivityExpiration } from '@/lib/loyalty/points-engine';
 
 const BATCH_SIZE = 10;
 const INACTIVITY_MONTHS = 11;
@@ -148,6 +149,17 @@ export async function GET(request: NextRequest) {
       }
 
       logger.info(`[CRON:POINTS] Expired points for ${expiredCount} users (${Object.keys(expiredByUser).length} total)`);
+
+      // === T2-10: Inactivity-based expiration (12 months no transactions) ===
+      let inactivityResult = { usersProcessed: 0, totalPointsExpired: 0 };
+      try {
+        inactivityResult = await processInactivityExpiration(db);
+        if (inactivityResult.usersProcessed > 0) {
+          logger.info(`[CRON:POINTS] Inactivity expiration: ${inactivityResult.usersProcessed} users, ${inactivityResult.totalPointsExpired} points expired`);
+        }
+      } catch (err) {
+        logger.error('[CRON:POINTS] Inactivity expiration failed', { error: err instanceof Error ? err.message : String(err) });
+      }
 
       // === STRATEGY 1: Points with explicit expiresAt in ~30 days ===
     const thirtyDaysFromNow = new Date();
@@ -422,6 +434,10 @@ export async function GET(request: NextRequest) {
       pointsExpired: {
         usersProcessed: expiredCount,
         totalUsersWithExpiredPoints: Object.keys(expiredByUser).length,
+      },
+      inactivityExpired: {
+        usersProcessed: inactivityResult.usersProcessed,
+        totalPointsExpired: inactivityResult.totalPointsExpired,
       },
       breakdown: {
         explicitExpiry: expiringTransactions.length,

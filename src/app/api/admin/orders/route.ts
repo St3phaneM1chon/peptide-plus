@@ -386,9 +386,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const orderIds = orders.map((o: { orderId: string }) => o.orderId);
     const existingOrders = await prisma.order.findMany({
       where: { id: { in: orderIds } },
-      select: { id: true, orderNumber: true, status: true, shippedAt: true, deliveredAt: true },
+      select: { id: true, orderNumber: true, status: true, shippedAt: true, deliveredAt: true, userId: true, trackingNumber: true, carrier: true },
     });
     const orderMap = new Map(existingOrders.map((o) => [o.id, o]));
+
+    // Collect order IDs that need automation events (SHIPPED/DELIVERED) for batch user lookup after transaction
+    const automationOrderIds: Array<{ orderId: string; status: string; trackingNumber?: string; carrier?: string }> = [];
 
     // Process each order update inside a transaction for atomicity
     await prisma.$transaction(async (tx) => {
@@ -448,29 +451,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
             });
           }
 
-          // Trigger automation engine for order lifecycle events (fire-and-forget)
-          const automationMap: Record<string, string> = {
-            SHIPPED: 'order.shipped',
-            DELIVERED: 'order.delivered',
-          };
-          const triggerEvent = automationMap[status];
-          if (triggerEvent) {
-            prisma.order.findUnique({
-              where: { id: orderId },
-              select: { userId: true, orderNumber: true, trackingNumber: true, carrier: true, user: { select: { email: true, name: true } } },
-            }).then((o) => {
-              if (o?.user) {
-                handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
-                  email: o.user.email,
-                  name: o.user.name || undefined,
-                  userId: o.userId ?? undefined,
-                  orderId,
-                  orderNumber: o.orderNumber,
-                  trackingNumber: o.trackingNumber || '',
-                  carrier: o.carrier || '',
-                }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch automation event handling failed', { error: error instanceof Error ? error.message : String(error) }); });
-              }
-            }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch order refetch failed', { error: error instanceof Error ? error.message : String(error) }); });
+          // Collect for batch automation event dispatch after transaction
+          if (status === 'SHIPPED' || status === 'DELIVERED') {
+            automationOrderIds.push({ orderId, status, trackingNumber, carrier });
           }
         }
 
@@ -491,6 +474,35 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
     }
     }); // end $transaction
+
+    // N+1 FIX: Batch-fetch user data for automation events AFTER transaction
+    // instead of individual findUnique per order inside the loop
+    if (automationOrderIds.length > 0) {
+      const automationIds = automationOrderIds.map(a => a.orderId);
+      prisma.order.findMany({
+        where: { id: { in: automationIds } },
+        select: { id: true, userId: true, orderNumber: true, trackingNumber: true, carrier: true, user: { select: { email: true, name: true } } },
+      }).then((orderDetails) => {
+        const detailMap = new Map(orderDetails.map(o => [o.id, o]));
+        const automationMap: Record<string, string> = { SHIPPED: 'order.shipped', DELIVERED: 'order.delivered' };
+
+        for (const { orderId, status } of automationOrderIds) {
+          const o = detailMap.get(orderId);
+          const triggerEvent = automationMap[status];
+          if (o?.user && triggerEvent) {
+            handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
+              email: o.user.email,
+              name: o.user.name || undefined,
+              userId: o.userId ?? undefined,
+              orderId,
+              orderNumber: o.orderNumber,
+              trackingNumber: o.trackingNumber || '',
+              carrier: o.carrier || '',
+            }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch automation event handling failed', { error: error instanceof Error ? error.message : String(error) }); });
+          }
+        }
+      }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch order refetch failed', { error: error instanceof Error ? error.message : String(error) }); });
+    }
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;

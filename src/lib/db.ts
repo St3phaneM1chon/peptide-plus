@@ -40,7 +40,14 @@ function getDatasourceUrl(): string | undefined {
 
 const datasourceUrl = getDatasourceUrl();
 
-export const prisma =
+/**
+ * Default limit for findMany queries that don't specify `take`.
+ * Prevents unbounded result sets that could cause OOM at scale.
+ * Set to 200 as a safe default — callers can override with explicit `take`.
+ */
+const DEFAULT_FIND_MANY_LIMIT = 200;
+
+const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log:
@@ -53,10 +60,24 @@ export const prisma =
     ...(datasourceUrl
       ? { datasources: { db: { url: datasourceUrl } } }
       : {}),
+  }).$extends({
+    query: {
+      $allModels: {
+        async findMany({ args, query }) {
+          // Apply default limit only when caller didn't specify `take`
+          if (args.take === undefined) {
+            args.take = DEFAULT_FIND_MANY_LIMIT;
+          }
+          return query(args);
+        },
+      },
+    },
   });
 
+export const prisma = basePrisma;
+
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = basePrisma as unknown as PrismaClient;
 }
 
 // ---------------------------------------------------------------------------

@@ -141,6 +141,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       updateData.title = data.title;
 
       // Regenerate slug if title changes
+      // N+1 FIX: Fetch all potential slug conflicts in a single query instead of
+      // iterating with individual findUnique calls
       const baseSlug = data.title
         .toLowerCase()
         .normalize('NFD')
@@ -148,13 +150,20 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
+      const conflictingSlugs = await prisma.blogPost.findMany({
+        where: {
+          slug: { startsWith: baseSlug },
+          id: { not: id },
+        },
+        select: { slug: true },
+      });
+      const existingSlugs = new Set(conflictingSlugs.map(s => s.slug));
+
       let slug = baseSlug;
       let slugSuffix = 1;
-      let existingSlug = await prisma.blogPost.findUnique({ where: { slug } });
-      while (existingSlug && existingSlug.id !== id) {
+      while (existingSlugs.has(slug)) {
         slug = `${baseSlug}-${slugSuffix}`;
         slugSuffix++;
-        existingSlug = await prisma.blogPost.findUnique({ where: { slug } });
       }
       updateData.slug = slug;
     }
@@ -208,35 +217,39 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }).catch(() => {});
 
     // Handle translations if provided
+    // N+1 FIX: Batch all translation upserts in a single transaction
     if (data.translations && Array.isArray(data.translations)) {
-      for (const t of data.translations) {
-        if (!t.locale) continue;
-
-        await prisma.blogPostTranslation.upsert({
-          where: {
-            blogPostId_locale: {
-              blogPostId: id,
-              locale: t.locale,
-            },
-          },
-          update: {
-            ...(t.title !== undefined && { title: t.title }),
-            ...(t.excerpt !== undefined && { excerpt: t.excerpt }),
-            ...(t.content !== undefined && { content: t.content }),
-            ...(t.metaTitle !== undefined && { metaTitle: t.metaTitle }),
-            ...(t.metaDescription !== undefined && { metaDescription: t.metaDescription }),
-            ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
-          },
-          create: {
-            blogPostId: id,
-            locale: t.locale,
-            title: t.title || null,
-            excerpt: t.excerpt || null,
-            content: t.content || null,
-            metaTitle: t.metaTitle || null,
-            metaDescription: t.metaDescription || null,
-          },
-        });
+      const validTranslations = data.translations.filter(t => !!t.locale);
+      if (validTranslations.length > 0) {
+        await prisma.$transaction(
+          validTranslations.map((t) =>
+            prisma.blogPostTranslation.upsert({
+              where: {
+                blogPostId_locale: {
+                  blogPostId: id,
+                  locale: t.locale,
+                },
+              },
+              update: {
+                ...(t.title !== undefined && { title: t.title }),
+                ...(t.excerpt !== undefined && { excerpt: t.excerpt }),
+                ...(t.content !== undefined && { content: t.content }),
+                ...(t.metaTitle !== undefined && { metaTitle: t.metaTitle }),
+                ...(t.metaDescription !== undefined && { metaDescription: t.metaDescription }),
+                ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
+              },
+              create: {
+                blogPostId: id,
+                locale: t.locale,
+                title: t.title || null,
+                excerpt: t.excerpt || null,
+                content: t.content || null,
+                metaTitle: t.metaTitle || null,
+                metaDescription: t.metaDescription || null,
+              },
+            })
+          )
+        );
       }
 
       // Re-fetch with updated translations

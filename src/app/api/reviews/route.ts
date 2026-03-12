@@ -20,6 +20,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { apiSuccess, apiError, apiPaginated, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { createReviewSchema } from '@/lib/validations/review';
+import { checkEarningCaps } from '@/lib/loyalty/points-engine';
 
 export async function GET(request: NextRequest) {
   try {
@@ -249,8 +250,30 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate points: 50 for text review, 100 if includes photos
-    const pointsToAward = imageUrls?.length ? 100 : 50;
-    const shouldAwardPoints = !existingReward;
+    let pointsToAward = imageUrls?.length ? 100 : 50;
+    let shouldAwardPoints = !existingReward;
+
+    // T2-9: Check earning caps before awarding review points
+    if (shouldAwardPoints) {
+      const capCheck = await checkEarningCaps(prisma, session.user.id, pointsToAward, 'EARN_REVIEW');
+      if (capCheck.adjustedPoints <= 0) {
+        shouldAwardPoints = false;
+        logger.warn('Review points skipped due to earning cap', {
+          userId: session.user.id,
+          capReason: capCheck.capReason,
+          earnedToday: capCheck.earnedToday,
+          earnedThisMonth: capCheck.earnedThisMonth,
+        });
+      } else if (!capCheck.allowed) {
+        pointsToAward = capCheck.adjustedPoints;
+        logger.info('Review points reduced due to earning cap', {
+          userId: session.user.id,
+          originalPoints: imageUrls?.length ? 100 : 50,
+          adjustedPoints: pointsToAward,
+          capReason: capCheck.capReason,
+        });
+      }
+    }
 
     // Use transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {

@@ -22,23 +22,34 @@ export async function reserveStock(
   // E-19 FIX: Self-healing — release expired reservations for the requested products/formats
   // before checking available stock. This prevents permanently locked inventory if the
   // cron job (releaseExpiredReservations) stops running.
+  // N+1 FIX: Release all expired reservations for all requested items in a single query
+  // instead of one query per item.
   const now = new Date();
-  for (const item of items) {
+  const formatItemIds = items.filter(i => i.formatId).map(i => i.formatId!);
+  const productOnlyItemIds = items.filter(i => !i.formatId).map(i => i.productId);
+
+  const releaseConditions: Array<Record<string, unknown>> = [];
+  if (formatItemIds.length > 0) {
+    releaseConditions.push({ formatId: { in: formatItemIds } });
+  }
+  if (productOnlyItemIds.length > 0) {
+    releaseConditions.push({ productId: { in: productOnlyItemIds }, formatId: null });
+  }
+
+  if (releaseConditions.length > 0) {
     const released = await prisma.inventoryReservation.updateMany({
       where: {
         status: 'RESERVED',
         expiresAt: { lt: now },
-        ...(item.formatId
-          ? { formatId: item.formatId }
-          : { productId: item.productId, formatId: null }),
+        OR: releaseConditions,
       },
       data: { status: 'RELEASED', releasedAt: now },
     });
     if (released.count > 0) {
       logger.info('[reserveStock] E-19 self-healing: released expired reservations', {
-        productId: item.productId,
-        formatId: item.formatId ?? null,
         releasedCount: released.count,
+        formatIds: formatItemIds,
+        productIds: productOnlyItemIds,
       });
     }
   }
@@ -234,24 +245,28 @@ export async function purchaseStock(
   supplierInvoiceId?: string,
   createdBy?: string
 ): Promise<void> {
-  // Capture old stock values before transaction for audit logging
+  // N+1 FIX: Batch-fetch old stock values for audit logging instead of individual lookups per item
   const oldQuantities: Map<string, number> = new Map();
-  for (const item of items) {
-    const key = item.formatId || item.productId;
-    if (item.formatId) {
-      const fmt = await prisma.productFormat.findUnique({
-        where: { id: item.formatId },
-        select: { stockQuantity: true },
-      });
-      oldQuantities.set(key, fmt?.stockQuantity || 0);
-    } else {
-      const prod = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: { stockQuantity: true },
-      });
-      oldQuantities.set(key, prod?.stockQuantity || 0);
-    }
-  }
+  const formatIds = items.filter(i => i.formatId).map(i => i.formatId!);
+  const productOnlyIds = items.filter(i => !i.formatId).map(i => i.productId);
+
+  const [formats, products] = await Promise.all([
+    formatIds.length > 0
+      ? prisma.productFormat.findMany({
+          where: { id: { in: formatIds } },
+          select: { id: true, stockQuantity: true },
+        })
+      : [],
+    productOnlyIds.length > 0
+      ? prisma.product.findMany({
+          where: { id: { in: productOnlyIds } },
+          select: { id: true, stockQuantity: true },
+        })
+      : [],
+  ]);
+
+  for (const fmt of formats) oldQuantities.set(fmt.id, fmt.stockQuantity);
+  for (const prod of products) oldQuantities.set(prod.id, prod.stockQuantity);
 
   // Wrap ALL items in a single transaction for atomicity
   await prisma.$transaction(async (tx) => {

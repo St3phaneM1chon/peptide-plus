@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic';
 
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 import { apiSuccess, apiError } from '@/lib/api-response';
+import { validateBody } from '@/lib/api-validation';
 import {
   parseCSV,
   csvToExpenseItems,
@@ -11,6 +13,13 @@ import {
   MAX_BATCH_SIZE,
   type BatchType,
 } from '@/lib/accounting/batch-operations.service';
+
+const batchImportJsonSchema = z.object({
+  csvContent: z.string().min(1, 'CSV content is required').max(5 * 1024 * 1024, 'CSV content exceeds 5MB limit'),
+  type: z.enum(['expenses', 'journal_entries', 'invoices'], {
+    errorMap: () => ({ message: "Type must be one of: expenses, journal_entries, invoices" }),
+  }),
+}).strict();
 
 // ---------------------------------------------------------------------------
 // POST /api/accounting/batch/import - Upload CSV for batch import
@@ -46,10 +55,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
       csvContent = await file.text();
     } else if (contentType.includes('application/json')) {
-      // JSON body with CSV content as string
+      // JSON body with CSV content as string — validate with Zod
       const body = await request.json();
-      csvContent = body.csvContent || '';
-      importType = body.type || '';
+      const validation = validateBody(batchImportJsonSchema, body);
+      if (!validation.success) return validation.response;
+      csvContent = validation.data.csvContent;
+      importType = validation.data.type;
     } else {
       return apiError('Content-Type doit être multipart/form-data ou application/json', 'VALIDATION_ERROR', { status: 400 });
     }

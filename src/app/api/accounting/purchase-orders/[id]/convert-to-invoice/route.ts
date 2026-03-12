@@ -1,10 +1,18 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { logger } from '@/lib/logger';
+import { validateBody } from '@/lib/api-validation';
+
+const convertToInvoiceSchema = z.object({
+  invoiceNumber: z.string().min(1).max(50).optional(),
+  invoiceDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)).optional(),
+  dueDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)).optional(),
+}).strict();
 
 /**
  * POST /api/accounting/purchase-orders/[id]/convert-to-invoice
@@ -26,9 +34,13 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
     let dueDate: Date | undefined;
     try {
       const body = await request.json();
-      if (body.invoiceNumber) invoiceNumber = body.invoiceNumber;
-      if (body.invoiceDate) invoiceDate = new Date(body.invoiceDate);
-      if (body.dueDate) dueDate = new Date(body.dueDate);
+      // Validate body with Zod (body is optional, so we only validate if present)
+      const validation = validateBody(convertToInvoiceSchema, body);
+      if (!validation.success) return validation.response;
+      const data = validation.data;
+      if (data.invoiceNumber) invoiceNumber = data.invoiceNumber;
+      if (data.invoiceDate) invoiceDate = new Date(data.invoiceDate);
+      if (data.dueDate) dueDate = new Date(data.dueDate);
     } catch (bodyErr) {
       // Body is optional for this route — log at debug level
       logger.debug('[PO Convert] No JSON body provided (optional)', {

@@ -36,33 +36,52 @@ const dealStatsActionSchema = z.object({
 
 async function getChurnRates() {
   // Calculate churn based on customers who haven't ordered recently
+  // N+1 FIX: Instead of 12 sequential groupBy calls (2 per period x 6 periods),
+  // fetch all orders in the full date range once, then compute periods in JS.
   const now = new Date();
+
+  // Compute the earliest date needed: 7 months before current month start
+  const earliestDate = new Date(now.getFullYear(), now.getMonth() - 7, 1);
+  const latestDate = new Date(now.getFullYear(), now.getMonth(), 0); // end of last month
+
+  // Single query: get all (userId, createdAt) pairs in the needed range
+  const allOrders = await prisma.order.findMany({
+    where: { createdAt: { gte: earliestDate, lte: latestDate } },
+    select: { userId: true, createdAt: true },
+  });
+
+  // Index orders by month key -> Set<userId>
+  const ordersByMonth = new Map<string, Set<string>>();
+  for (const order of allOrders) {
+    if (!order.userId) continue;
+    const key = `${order.createdAt.getFullYear()}-${String(order.createdAt.getMonth()).padStart(2, '0')}`;
+    if (!ordersByMonth.has(key)) ordersByMonth.set(key, new Set());
+    ordersByMonth.get(key)!.add(order.userId);
+  }
+
   const periods: { period: string; startCustomers: number; endCustomers: number; churned: number; churnRate: number }[] = [];
 
   for (let i = 5; i >= 0; i--) {
     const periodStart = new Date(now.getFullYear(), now.getMonth() - i - 1, 1);
-    const periodEnd = new Date(now.getFullYear(), now.getMonth() - i, 0);
     const prevPeriodStart = new Date(periodStart.getFullYear(), periodStart.getMonth() - 1, 1);
 
-    const startCustomers = await prisma.order.groupBy({
-      by: ['userId'],
-      where: { createdAt: { lt: periodStart, gte: prevPeriodStart } },
-    });
+    const prevKey = `${prevPeriodStart.getFullYear()}-${String(prevPeriodStart.getMonth()).padStart(2, '0')}`;
+    const currentKey = `${periodStart.getFullYear()}-${String(periodStart.getMonth()).padStart(2, '0')}`;
 
-    const activeCustomers = await prisma.order.groupBy({
-      by: ['userId'],
-      where: { createdAt: { gte: periodStart, lte: periodEnd } },
-    });
+    const startCustomerIds = ordersByMonth.get(prevKey) ?? new Set<string>();
+    const activeCustomerIds = ordersByMonth.get(currentKey) ?? new Set<string>();
 
-    const startCount = startCustomers.length || 1;
-    const activeIds = new Set(activeCustomers.map(c => c.userId));
-    const churned = startCustomers.filter(c => !activeIds.has(c.userId)).length;
+    const startCount = startCustomerIds.size || 1;
+    let churned = 0;
+    for (const userId of startCustomerIds) {
+      if (!activeCustomerIds.has(userId)) churned++;
+    }
     const churnRate = Math.round((churned / startCount) * 10000) / 100;
 
     periods.push({
       period: periodStart.toLocaleDateString('en-CA', { year: 'numeric', month: 'short' }),
       startCustomers: startCount,
-      endCustomers: activeCustomers.length,
+      endCustomers: activeCustomerIds.size,
       churned,
       churnRate,
     });

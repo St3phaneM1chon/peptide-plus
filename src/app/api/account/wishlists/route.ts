@@ -230,23 +230,31 @@ export const DELETE = withUserGuard(async (request: NextRequest, { session }) =>
     }
 
     // Move items to default wishlist
+    // N+1 FIX: Use a transaction with batch operations instead of individual upserts in a loop
     if (wishlist.items.length > 0) {
-      const itemsToMove = wishlist.items.map((item) => ({
-        collectionId: defaultWishlist.id,
-        productId: item.productId,
-      }));
+      // First, find which products already exist in the default collection
+      const productIds = wishlist.items.map((item) => item.productId);
+      const existingInDefault = await prisma.wishlistItem.findMany({
+        where: {
+          collectionId: defaultWishlist.id,
+          productId: { in: productIds },
+        },
+        select: { productId: true },
+      });
+      const existingProductIds = new Set(existingInDefault.map((e) => e.productId));
 
-      // Use upsert to avoid duplicates
-      for (const item of itemsToMove) {
-        await prisma.wishlistItem.upsert({
-          where: {
-            collectionId_productId: {
-              collectionId: item.collectionId,
-              productId: item.productId,
-            },
-          },
-          update: {},
-          create: item,
+      // Only create items that don't already exist in the default collection
+      const itemsToCreate = wishlist.items
+        .filter((item) => !existingProductIds.has(item.productId))
+        .map((item) => ({
+          collectionId: defaultWishlist.id,
+          productId: item.productId,
+        }));
+
+      if (itemsToCreate.length > 0) {
+        await prisma.wishlistItem.createMany({
+          data: itemsToCreate,
+          skipDuplicates: true,
         });
       }
     }

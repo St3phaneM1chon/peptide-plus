@@ -34,13 +34,16 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const parsed = createSchema.parse(body);
-    const project = await createProject(parsed);
+    const result = createSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const project = await createProject(result.data);
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
-    }
     return NextResponse.json({ error: 'Erreur lors de la création du projet RS&DE' }, { status: 500 });
   }
 });

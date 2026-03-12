@@ -1,9 +1,8 @@
-'use client';
-
 import Link from 'next/link';
 
 /**
  * PAGE NOTRE MISSION - BioCycle Peptides
+ * Server Component — no client-side hooks or event handlers needed
  */
 
 export default function MissionPage() {

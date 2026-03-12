@@ -50,23 +50,35 @@ function fixAzureRequest(req: NextRequest): NextRequest {
   return req;
 }
 
-export const GET = (req: NextRequest) => handlers.GET(fixAzureRequest(req));
+export const GET = (req: NextRequest) => {
+  try {
+    return handlers.GET(fixAzureRequest(req));
+  } catch (error) {
+    console.error('[auth GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+};
 
 export const POST = async (req: NextRequest) => {
-  // SEC-002: Rate limit signin POST requests (credentials login) by IP
-  // This complements the per-email brute-force protection in auth-config.ts
-  const pathname = req.nextUrl.pathname;
-  if (pathname.includes('/callback/credentials') || pathname.includes('/signin')) {
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || req.headers.get('x-real-ip')
-      || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/auth/login');
-    if (!rl.success) {
-      return NextResponse.json(
-        { error: rl.error!.message },
-        { status: 429, headers: rl.headers }
-      );
+  try {
+    // SEC-002: Rate limit signin POST requests (credentials login) by IP
+    // This complements the per-email brute-force protection in auth-config.ts
+    const pathname = req.nextUrl.pathname;
+    if (pathname.includes('/callback/credentials') || pathname.includes('/signin')) {
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || req.headers.get('x-real-ip')
+        || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/auth/login');
+      if (!rl.success) {
+        return NextResponse.json(
+          { error: rl.error!.message },
+          { status: 429, headers: rl.headers }
+        );
+      }
     }
+    return handlers.POST(fixAzureRequest(req));
+  } catch (error) {
+    console.error('[auth POST] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-  return handlers.POST(fixAzureRequest(req));
 };

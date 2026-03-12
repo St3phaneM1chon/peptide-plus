@@ -232,5 +232,10 @@ export async function POST(request: NextRequest) {
  * HEAD/GET for Telnyx webhook URL verification.
  */
 export async function GET() {
-  return NextResponse.json({ status: 'Telnyx webhook endpoint active' });
+  try {
+    return NextResponse.json({ status: 'Telnyx webhook endpoint active' });
+  } catch (error) {
+    console.error('[voip/webhooks/telnyx GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

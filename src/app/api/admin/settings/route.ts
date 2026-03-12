@@ -52,7 +52,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
-import { siteSettingsCache } from '@/lib/cache';
+import { cacheGetOrSet, cacheInvalidateTag, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
 
 // FAILLE-026 FIX: Zod schema for PUT body validation
 const settingsPutSchema = z.object({
@@ -73,32 +73,29 @@ const settingsPatchSchema = z.object({
 }).strict();
 
 /**
- * Fetch SiteSettings singleton with caching
- * Returns cached result if available (within 30s TTL), otherwise fetches from DB
+ * Fetch SiteSettings singleton with Redis-backed two-layer caching.
+ * L1 (in-memory) + L2 (Redis) with 30-second TTL.
+ * A7-P0-002: Upgraded from in-memory-only SimpleCache to L1+L2 cacheGetOrSet.
  */
 async function getCachedSiteSettings(): Promise<Awaited<ReturnType<typeof prisma.siteSettings.create>>> {
-  // Check cache first
-  const cachedSettings = siteSettingsCache.get();
-  if (cachedSettings) {
-    logger.debug('SiteSettings cache hit');
-    return cachedSettings as Awaited<ReturnType<typeof prisma.siteSettings.create>>;
-  }
+  return cacheGetOrSet(
+    CacheKeys.config.siteSettings(),
+    async () => {
+      logger.debug('SiteSettings cache miss, fetching from DB');
+      let siteSettings = await prisma.siteSettings.findUnique({
+        where: { id: 'default' },
+      });
 
-  // Cache miss - fetch from DB
-  logger.debug('SiteSettings cache miss, fetching from DB');
-  let siteSettings = await prisma.siteSettings.findUnique({
-    where: { id: 'default' },
-  });
+      if (!siteSettings) {
+        siteSettings = await prisma.siteSettings.create({
+          data: { id: 'default' },
+        });
+      }
 
-  if (!siteSettings) {
-    siteSettings = await prisma.siteSettings.create({
-      data: { id: 'default' },
-    });
-  }
-
-  // Update cache
-  siteSettingsCache.set(siteSettings);
-  return siteSettings;
+      return siteSettings;
+    },
+    { ttl: CacheTTL.SITE_SETTINGS, tags: [CacheTags.SITE_SETTINGS] },
+  );
 }
 
 // GET /api/admin/settings - Get all settings
@@ -245,7 +242,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
           create: { id: 'default', ...updateData },
         });
         // Invalidate cache when SiteSettings are updated
-        siteSettingsCache.invalidate();
+        cacheInvalidateTag(CacheTags.SITE_SETTINGS);
       }
     }
 
@@ -305,6 +302,10 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       });
 
       results.updatedKeys = updatedKeys;
+
+      // A7-P0-002: Invalidate site settings + module flags cache after key-value updates
+      // This covers module flags (ff.*_module) stored as SiteSetting entries
+      cacheInvalidateTag(CacheTags.SITE_SETTINGS);
     }
 
     // Audit log for settings update (fire-and-forget)
@@ -368,7 +369,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
     });
 
     // Invalidate cache when any setting is updated
-    siteSettingsCache.invalidate();
+    cacheInvalidateTag(CacheTags.SITE_SETTINGS);
 
     logAdminAction({
       adminUserId: session.user.id,

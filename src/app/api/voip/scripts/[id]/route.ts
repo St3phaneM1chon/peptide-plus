@@ -23,12 +23,11 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     const script = await prisma.dialerScript.findUnique({
@@ -41,6 +40,7 @@ export async function GET(
 
     return NextResponse.json({ data: script });
   } catch (error) {
+    console.error('[voip/scripts GET] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -52,12 +52,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
     const raw = await request.json();
     const parsed = scriptUpdateSchema.safeParse(raw);
@@ -79,6 +78,7 @@ export async function PUT(
 
     return NextResponse.json({ data: script });
   } catch (error) {
+    console.error('[voip/scripts PUT] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -90,12 +90,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     await prisma.dialerScript.update({
@@ -105,6 +104,7 @@ export async function DELETE(
 
     return NextResponse.json({ status: 'deactivated' });
   } catch (error) {
+    console.error('[voip/scripts DELETE] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

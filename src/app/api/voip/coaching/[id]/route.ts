@@ -18,12 +18,11 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     // Resolve tenant to scope by companyId
@@ -62,6 +61,7 @@ export async function GET(
       },
     });
   } catch (error) {
+    console.error('[voip/coaching GET] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -73,12 +73,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     // Resolve tenant to scope by companyId
@@ -139,6 +138,7 @@ export async function PUT(
 
     return NextResponse.json({ data: updated });
   } catch (error) {
+    console.error('[voip/coaching PUT] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -150,12 +150,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     // Resolve tenant to scope by companyId
@@ -187,6 +186,7 @@ export async function DELETE(
 
     return NextResponse.json({ status: 'cancelled' });
   } catch (error) {
+    console.error('[voip/coaching DELETE] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

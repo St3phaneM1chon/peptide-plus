@@ -53,7 +53,14 @@ export const GET = withAdminGuard(async () => {
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const { action, projectId, description } = actionSchema.parse(body);
+    const result = actionSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { action, projectId, description } = result.data;
 
     if (action === 'start') {
       // Stop any running timer first
@@ -74,9 +81,6 @@ export const POST = withAdminGuard(async (request) => {
       return NextResponse.json(entry);
     }
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
-    }
     return NextResponse.json({ error: 'Erreur timer' }, { status: 500 });
   }
 });

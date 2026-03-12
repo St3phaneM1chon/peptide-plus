@@ -34,13 +34,16 @@ export const PUT = withAdminGuard(async (request, { params }: { params: Promise<
   try {
     const { id } = await params;
     const body = await request.json();
-    const parsed = updateSchema.parse(body);
-    const project = await updateProject(id, parsed as Parameters<typeof updateProject>[1]);
+    const result = updateSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const project = await updateProject(id, result.data as Parameters<typeof updateProject>[1]);
     return NextResponse.json(project);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
-    }
     console.error('Error updating RS&DE project:', error);
     return NextResponse.json({ error: 'Erreur lors de la mise à jour du projet' }, { status: 500 });
   }

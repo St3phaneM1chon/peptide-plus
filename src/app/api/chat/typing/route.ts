@@ -5,9 +5,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { publishChatEvent } from '@/lib/chat/realtime';
+import { validateBody } from '@/lib/api-validation';
+
+const typingSchema = z.object({
+  conversationId: z.string().min(1, 'conversationId is required').max(100),
+  isTyping: z.boolean().optional().default(true),
+}).strict();
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -16,10 +23,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { conversationId, isTyping } = await request.json();
-    if (!conversationId) {
-      return NextResponse.json({ error: 'conversationId required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const validation = validateBody(typingSchema, body);
+    if (!validation.success) return validation.response;
+    const { conversationId, isTyping } = validation.data;
 
     // Verify the user is a participant in this conversation
     const conversation = await db.chatConversation.findUnique({

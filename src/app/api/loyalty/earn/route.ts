@@ -24,6 +24,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { earnPointsSchema } from '@/lib/validations';
+import { checkEarningCaps } from '@/lib/loyalty/points-engine';
 
 // Points par type d'action - imported from central constants
 const POINTS_CONFIG = {
@@ -201,6 +202,41 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
+
+    // T2-9: Earning cap check — prevent fraud by capping daily/monthly points
+    const capCheck = await checkEarningCaps(db, user.id, pointsToEarn, transactionType);
+    if (capCheck.adjustedPoints <= 0) {
+      // Cap fully exceeded — skip the award silently (no error, log and return)
+      logger.warn('Loyalty earning cap exceeded', {
+        userId: user.id,
+        transactionType,
+        requestedPoints: pointsToEarn,
+        capReason: capCheck.capReason,
+        earnedToday: capCheck.earnedToday,
+        earnedThisMonth: capCheck.earnedThisMonth,
+      });
+      return NextResponse.json({
+        success: true,
+        pointsEarned: 0,
+        newBalance: user.loyaltyPoints,
+        lifetimePoints: user.lifetimePoints,
+        tier: calculateTierName(user.lifetimePoints),
+        capApplied: true,
+        capReason: capCheck.capReason,
+        message: 'Earning cap reached for this period. Points will be available in the next period.',
+      });
+    }
+    if (!capCheck.allowed) {
+      // Partial cap — reduce the award to what's available
+      logger.info('Loyalty earning cap partially applied', {
+        userId: user.id,
+        transactionType,
+        originalPoints: pointsToEarn,
+        adjustedPoints: capCheck.adjustedPoints,
+        capReason: capCheck.capReason,
+      });
+      pointsToEarn = capCheck.adjustedPoints;
     }
 
     // F-005 FIX: Use interactive transaction with atomic increment to prevent race condition.

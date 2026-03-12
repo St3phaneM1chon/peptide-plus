@@ -36,6 +36,7 @@ interface HealthStatus {
  * Retourne l'etat de sante de l'application
  */
 export async function GET(request: NextRequest) {
+  try {
   const startTime = Date.now();
   const checks: HealthCheck[] = [];
 
@@ -266,6 +267,10 @@ export async function GET(request: NextRequest) {
       'Content-Type': 'application/json',
     },
   });
+  } catch (error) {
+    console.error('[health] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 /**

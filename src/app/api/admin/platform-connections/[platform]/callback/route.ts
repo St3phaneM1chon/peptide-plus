@@ -18,49 +18,56 @@ function publicRedirect(path: string): URL {
 }
 
 export async function GET(request: NextRequest, context: RouteParams) {
-  const { platform } = await context.params;
+  try {
+    const { platform } = await context.params;
 
-  if (!SUPPORTED_PLATFORMS.some((sp) => sp.id === platform)) {
-    return NextResponse.redirect(publicRedirect('/admin/media/connections?error=invalid_platform'));
-  }
+    if (!SUPPORTED_PLATFORMS.some((sp) => sp.id === platform)) {
+      return NextResponse.redirect(publicRedirect('/admin/media/connections?error=invalid_platform'));
+    }
 
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
 
-  if (error) {
-    logger.warn(`[OAuth Callback] ${platform} returned error:`, error);
+    if (error) {
+      logger.warn(`[OAuth Callback] ${platform} returned error:`, error);
+      return NextResponse.redirect(
+        publicRedirect(`/admin/media/connections?error=${encodeURIComponent(error)}&platform=${platform}`)
+      );
+    }
+
+    if (!code) {
+      return NextResponse.redirect(
+        publicRedirect(`/admin/media/connections?error=no_code&platform=${platform}`)
+      );
+    }
+
+    // Verify admin session — only EMPLOYEE/OWNER can connect platforms
+    const session = await auth();
+    const userId = session?.user?.id;
+    const userRole = (session?.user as any)?.role;
+
+    if (!userId || !['OWNER', 'EMPLOYEE'].includes(userRole)) {
+      return NextResponse.redirect(
+        publicRedirect('/admin/media/connections?error=unauthorized')
+      );
+    }
+
+    const result = await handleCallback(platform as Platform, code, userId);
+
+    if (result.success) {
+      return NextResponse.redirect(
+        publicRedirect(`/admin/media/connections?connected=${platform}`)
+      );
+    }
+
     return NextResponse.redirect(
-      publicRedirect(`/admin/media/connections?error=${encodeURIComponent(error)}&platform=${platform}`)
+      publicRedirect(`/admin/media/connections?error=${encodeURIComponent(result.error || 'unknown')}&platform=${platform}`)
+    );
+  } catch (error) {
+    console.error('[OAuth callback] Error:', error);
+    return NextResponse.redirect(
+      publicRedirect('/admin/media/connections?error=internal_error')
     );
   }
-
-  if (!code) {
-    return NextResponse.redirect(
-      publicRedirect(`/admin/media/connections?error=no_code&platform=${platform}`)
-    );
-  }
-
-  // Verify admin session — only EMPLOYEE/OWNER can connect platforms
-  const session = await auth();
-  const userId = session?.user?.id;
-  const userRole = (session?.user as any)?.role;
-
-  if (!userId || !['OWNER', 'EMPLOYEE'].includes(userRole)) {
-    return NextResponse.redirect(
-      publicRedirect('/admin/media/connections?error=unauthorized')
-    );
-  }
-
-  const result = await handleCallback(platform as Platform, code, userId);
-
-  if (result.success) {
-    return NextResponse.redirect(
-      publicRedirect(`/admin/media/connections?connected=${platform}`)
-    );
-  }
-
-  return NextResponse.redirect(
-    publicRedirect(`/admin/media/connections?error=${encodeURIComponent(result.error || 'unknown')}&platform=${platform}`)
-  );
 }

@@ -71,71 +71,76 @@ function validateApiKey(request: NextRequest): boolean {
 // ---------------------------------------------------------------------------
 
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  const trigger = searchParams.get('trigger') || 'new_lead';
-
-  switch (trigger) {
-    case 'new_lead': {
-      // Return a sample lead for Zapier trigger setup
-      const lead = await prisma.crmLead.findFirst({
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          contactName: true,
-          email: true,
-          phone: true,
-          companyName: true,
-          source: true,
-          status: true,
-          score: true,
-          createdAt: true,
-        },
-      });
-
-      return NextResponse.json([
-        lead || {
-          id: 'sample_lead_001',
-          contactName: 'John Doe',
-          email: 'john@example.com',
-          phone: '+15145551234',
-          companyName: 'Acme Corp',
-          source: 'WEB',
-          status: 'NEW',
-          score: 50,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+  try {
+    if (!validateApiKey(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    case 'new_deal': {
-      const deal = await prisma.crmDeal.findFirst({
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          value: true,
-          currency: true,
-          createdAt: true,
-        },
-      });
+    const { searchParams } = new URL(request.url);
+    const trigger = searchParams.get('trigger') || 'new_lead';
 
-      return NextResponse.json([
-        deal || {
-          id: 'sample_deal_001',
-          title: 'Sample Deal',
-          value: 5000,
-          currency: 'CAD',
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+    switch (trigger) {
+      case 'new_lead': {
+        // Return a sample lead for Zapier trigger setup
+        const lead = await prisma.crmLead.findFirst({
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            contactName: true,
+            email: true,
+            phone: true,
+            companyName: true,
+            source: true,
+            status: true,
+            score: true,
+            createdAt: true,
+          },
+        });
+
+        return NextResponse.json([
+          lead || {
+            id: 'sample_lead_001',
+            contactName: 'John Doe',
+            email: 'john@example.com',
+            phone: '+15145551234',
+            companyName: 'Acme Corp',
+            source: 'WEB',
+            status: 'NEW',
+            score: 50,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      }
+
+      case 'new_deal': {
+        const deal = await prisma.crmDeal.findFirst({
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            title: true,
+            value: true,
+            currency: true,
+            createdAt: true,
+          },
+        });
+
+        return NextResponse.json([
+          deal || {
+            id: 'sample_deal_001',
+            title: 'Sample Deal',
+            value: 5000,
+            currency: 'CAD',
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      }
+
+      default:
+        return NextResponse.json({ error: `Unknown trigger: ${trigger}` }, { status: 400 });
     }
-
-    default:
-      return NextResponse.json({ error: `Unknown trigger: ${trigger}` }, { status: 400 });
+  } catch (error) {
+    console.error('[webhooks/zapier GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

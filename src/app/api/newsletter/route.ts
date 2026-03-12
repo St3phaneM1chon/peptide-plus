@@ -194,7 +194,12 @@ export async function POST(request: NextRequest) {
 
 // SEC-23: Always return generic response to prevent subscription status enumeration
 export async function GET() {
-  return NextResponse.json({
-    message: 'If this email is subscribed, you will continue to receive emails',
-  });
+  try {
+    return NextResponse.json({
+      message: 'If this email is subscribed, you will continue to receive emails',
+    });
+  } catch (error) {
+    console.error('[newsletter GET] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

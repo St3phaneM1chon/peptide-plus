@@ -36,13 +36,16 @@ export const POST = withAdminGuard(async (request, { params }: { params: Promise
   try {
     const { id } = await params;
     const body = await request.json();
-    const parsed = createSchema.parse(body);
-    const expense = await createExpense({ ...parsed, projectId: id });
+    const result = createSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const expense = await createExpense({ ...result.data, projectId: id });
     return NextResponse.json(expense, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
-    }
     console.error('Error creating RS&DE expense:', error);
     return NextResponse.json({ error: 'Erreur lors de la création de la dépense' }, { status: 500 });
   }

@@ -61,6 +61,7 @@ export interface PointsBalance {
 // that was missing the DIAMOND tier and could drift out of sync with constants.ts.
 import {
   LOYALTY_POINTS_CONFIG,
+  LOYALTY_EARNING_CAPS,
   LOYALTY_TIER_THRESHOLDS,
   calculateTierFromPoints,
 } from '@/lib/constants';
@@ -193,4 +194,247 @@ export function evaluateStreak(
 
   // Gap of 2+ days - streak broken, reset to 1
   return { newStreak: 1, newLongest: longestStreak, streakBroken: true };
+}
+
+// ---------------------------------------------------------------------------
+// T2-9: Earning Caps (Fraud Prevention)
+// ---------------------------------------------------------------------------
+
+export interface EarningCapCheck {
+  /** Whether the full amount of points can be awarded */
+  allowed: boolean;
+  /** Points already earned in the current day */
+  earnedToday: number;
+  /** Points already earned in the current month */
+  earnedThisMonth: number;
+  /** Maximum additional points allowed before hitting the daily cap */
+  dailyRemaining: number;
+  /** Maximum additional points allowed before hitting the monthly cap */
+  monthlyRemaining: number;
+  /** If not fully allowed, the reduced amount of points that can still be awarded (0 if fully capped) */
+  adjustedPoints: number;
+  /** Reason the cap was hit, if any */
+  capReason: 'none' | 'daily_cap' | 'monthly_cap' | 'both_caps';
+}
+
+/**
+ * Check whether a user has room under their daily/monthly earning caps.
+ * This function queries accumulated EARN-type transactions for the current
+ * UTC day and month, then determines how many more points can be awarded.
+ *
+ * @param db - Prisma client (or transaction client)
+ * @param userId - The user's ID
+ * @param pointsToEarn - The points about to be awarded
+ * @param transactionType - The loyalty transaction type (exempt types bypass caps)
+ * @returns EarningCapCheck with allowance details
+ */
+export async function checkEarningCaps(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  userId: string,
+  pointsToEarn: number,
+  transactionType: string,
+): Promise<EarningCapCheck> {
+  // Exempt types bypass earning caps entirely
+  if (LOYALTY_EARNING_CAPS.exemptTypes.includes(transactionType)) {
+    return {
+      allowed: true,
+      earnedToday: 0,
+      earnedThisMonth: 0,
+      dailyRemaining: LOYALTY_EARNING_CAPS.dailyCap,
+      monthlyRemaining: LOYALTY_EARNING_CAPS.monthlyCap,
+      adjustedPoints: pointsToEarn,
+      capReason: 'none',
+    };
+  }
+
+  const now = new Date();
+
+  // Start of current UTC day
+  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // Start of current UTC month
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+  // Query daily and monthly totals in parallel
+  const [dailyAgg, monthlyAgg] = await Promise.all([
+    db.loyaltyTransaction.aggregate({
+      where: {
+        userId,
+        points: { gt: 0 },
+        type: { startsWith: 'EARN' },
+        createdAt: { gte: dayStart },
+      },
+      _sum: { points: true },
+    }),
+    db.loyaltyTransaction.aggregate({
+      where: {
+        userId,
+        points: { gt: 0 },
+        type: { startsWith: 'EARN' },
+        createdAt: { gte: monthStart },
+      },
+      _sum: { points: true },
+    }),
+  ]);
+
+  const earnedToday = dailyAgg._sum.points || 0;
+  const earnedThisMonth = monthlyAgg._sum.points || 0;
+
+  const dailyRemaining = Math.max(0, LOYALTY_EARNING_CAPS.dailyCap - earnedToday);
+  const monthlyRemaining = Math.max(0, LOYALTY_EARNING_CAPS.monthlyCap - earnedThisMonth);
+
+  // The effective cap is the minimum of daily and monthly remaining
+  const effectiveRemaining = Math.min(dailyRemaining, monthlyRemaining);
+  const adjustedPoints = Math.min(pointsToEarn, effectiveRemaining);
+
+  let capReason: EarningCapCheck['capReason'] = 'none';
+  if (adjustedPoints < pointsToEarn) {
+    if (dailyRemaining <= 0 && monthlyRemaining <= 0) {
+      capReason = 'both_caps';
+    } else if (dailyRemaining <= 0) {
+      capReason = 'daily_cap';
+    } else {
+      capReason = 'monthly_cap';
+    }
+  }
+
+  return {
+    allowed: adjustedPoints >= pointsToEarn,
+    earnedToday,
+    earnedThisMonth,
+    dailyRemaining,
+    monthlyRemaining,
+    adjustedPoints,
+    capReason,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// T2-10: Points Expiration (Inactivity-based)
+// ---------------------------------------------------------------------------
+
+export interface ExpirationResult {
+  /** Number of users whose points were expired */
+  usersProcessed: number;
+  /** Total points expired across all users */
+  totalPointsExpired: number;
+  /** Per-user details */
+  details: Array<{
+    userId: string;
+    pointsExpired: number;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
+/**
+ * Process points expiration for users inactive for >= expirationMonths.
+ * Creates EXPIRE debit transactions and decrements user balances.
+ *
+ * This function handles INACTIVITY-based expiration (no transactions for N months).
+ * The existing cron at /api/cron/points-expiring handles EXPLICIT expiresAt-based
+ * expiration. This function complements it for users who have points without
+ * expiresAt dates (legacy data) or whose inactivity period has elapsed.
+ *
+ * @param db - Prisma client
+ * @param expirationMonths - Months of inactivity before expiration (default from config)
+ * @returns ExpirationResult with processing details
+ */
+export async function processInactivityExpiration(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  expirationMonths: number = LOYALTY_EARNING_CAPS.expirationMonths,
+): Promise<ExpirationResult> {
+  const cutoffDate = new Date();
+  cutoffDate.setMonth(cutoffDate.getMonth() - expirationMonths);
+
+  // Find users with points who have had NO loyalty transactions since the cutoff
+  const inactiveUsersWithPoints = await db.user.findMany({
+    where: {
+      loyaltyPoints: { gt: 0 },
+      loyaltyTransactions: {
+        none: {
+          createdAt: { gte: cutoffDate },
+        },
+      },
+    },
+    select: {
+      id: true,
+      loyaltyPoints: true,
+    },
+  });
+
+  const result: ExpirationResult = {
+    usersProcessed: 0,
+    totalPointsExpired: 0,
+    details: [],
+  };
+
+  for (const user of inactiveUsersWithPoints) {
+    try {
+      // Check that we haven't already expired these points (idempotency)
+      // Look for an EXPIRE transaction in the last 24 hours for this user
+      const recentExpire = await db.loyaltyTransaction.findFirst({
+        where: {
+          userId: user.id,
+          type: 'EXPIRE',
+          description: { contains: 'inactivity' },
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+      });
+
+      if (recentExpire) {
+        // Already processed recently, skip
+        continue;
+      }
+
+      const pointsToExpire = user.loyaltyPoints;
+
+      await db.$transaction(async (tx: any) => {
+        // Decrement user balance
+        const updatedUser = await tx.user.update({
+          where: { id: user.id },
+          data: { loyaltyPoints: { decrement: pointsToExpire } },
+          select: { loyaltyPoints: true },
+        });
+
+        // Guard against negative balance
+        const finalBalance = Math.max(0, updatedUser.loyaltyPoints);
+        if (updatedUser.loyaltyPoints < 0) {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { loyaltyPoints: 0 },
+          });
+        }
+
+        // Create EXPIRE transaction for audit trail
+        await tx.loyaltyTransaction.create({
+          data: {
+            userId: user.id,
+            type: 'EXPIRE',
+            points: -pointsToExpire,
+            description: `Points expired due to ${expirationMonths} months of inactivity`,
+            balanceAfter: finalBalance,
+          },
+        });
+      });
+
+      result.usersProcessed++;
+      result.totalPointsExpired += pointsToExpire;
+      result.details.push({
+        userId: user.id,
+        pointsExpired: pointsToExpire,
+        success: true,
+      });
+    } catch (error) {
+      result.details.push({
+        userId: user.id,
+        pointsExpired: 0,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return result;
 }

@@ -21,6 +21,7 @@ import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { calculatePurchasePoints, calculateTierFromPoints } from '@/lib/constants';
 import { subtract, applyRate } from '@/lib/decimal-calculator';
+import { checkEarningCaps } from '@/lib/loyalty/points-engine';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
@@ -775,11 +776,21 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
 
   logger.info('Order created', { orderId: order.id, orderNumber });
 
-  // Create accounting entries (non-blocking - don't fail the webhook)
+  // ---------------------------------------------------------------------------
+  // T3-5: Partial failure resilience — each independent side effect is wrapped
+  // in its own try/catch so a failure in one (e.g. SMS) does not block the
+  // others.  Results are collected and logged as a summary at the end.
+  // Core operations (order creation above + webhook completion below) must
+  // succeed; everything else is non-critical.
+  // ---------------------------------------------------------------------------
+  const sideEffectResults: Record<string, 'ok' | 'skipped' | string> = {};
+
+  // 1. Accounting entries
   let journalEntryId: string | undefined;
   try {
     const result = await createAccountingEntriesForOrder(order.id);
     journalEntryId = result.saleEntryId;
+    sideEffectResults.accounting = 'ok';
     logger.info('Accounting entries created', {
       orderNumber,
       saleEntryId: result.saleEntryId,
@@ -787,25 +798,23 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       invoiceId: result.invoiceId,
     });
   } catch (acctError) {
-    logger.error('Failed to create accounting entries', {
-      orderNumber,
-      error: acctError instanceof Error ? acctError.message : String(acctError),
-    });
-    // Don't fail the webhook for accounting errors
+    const msg = acctError instanceof Error ? acctError.message : String(acctError);
+    sideEffectResults.accounting = msg;
+    logger.error('[webhook] accounting failed', { orderNumber, error: msg });
   }
 
-  // Generate COGS entry (non-blocking)
+  // 2. COGS entry
   try {
     await generateCOGSEntry(order.id);
+    sideEffectResults.cogs = 'ok';
     logger.info('COGS entry created', { orderNumber });
   } catch (cogsError) {
-    logger.error('Failed to create COGS entry', {
-      orderNumber,
-      error: cogsError instanceof Error ? cogsError.message : String(cogsError),
-    });
+    const msg = cogsError instanceof Error ? cogsError.message : String(cogsError);
+    sideEffectResults.cogs = msg;
+    logger.error('[webhook] cogs failed', { orderNumber, error: msg });
   }
 
-  // Create ambassador commission if the order used a referral code
+  // 3. Ambassador commission (only if a promo code was used)
   if (promoCode) {
     try {
       const ambassador = await prisma.ambassador.findUnique({
@@ -836,21 +845,25 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           },
           update: {},
         });
+        sideEffectResults.ambassadorCommission = 'ok';
         logger.info('Ambassador commission created', {
           ambassadorName: ambassador.name,
           commissionAmount,
           orderNumber,
         });
+      } else {
+        sideEffectResults.ambassadorCommission = 'skipped';
       }
     } catch (commError) {
-      logger.error('Failed to create ambassador commission', {
-        orderNumber,
-        error: commError instanceof Error ? commError.message : String(commError),
-      });
+      const msg = commError instanceof Error ? commError.message : String(commError);
+      sideEffectResults.ambassadorCommission = msg;
+      logger.error('[webhook] ambassador commission failed', { orderNumber, error: msg });
     }
+  } else {
+    sideEffectResults.ambassadorCommission = 'skipped';
   }
 
-  // Referral program: qualify referral if buyer was referred and this is their first paid order
+  // 4. Referral qualification
   if (userId) {
     try {
       const buyer = await prisma.user.findUnique({
@@ -871,21 +884,28 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         if (previousPaidOrders === 0) {
           const result = await qualifyReferral(userId, order.id, Number(cadTotal));
           if (result.success) {
+            sideEffectResults.referral = 'ok';
             logger.info('Referral qualified', { orderNumber, message: result.message });
           } else {
+            sideEffectResults.referral = 'skipped';
             logger.info('Referral not qualified', { orderNumber, message: result.message });
           }
+        } else {
+          sideEffectResults.referral = 'skipped';
         }
+      } else {
+        sideEffectResults.referral = 'skipped';
       }
     } catch (refError) {
-      logger.error('Failed to process referral qualification', {
-        orderNumber,
-        error: refError instanceof Error ? refError.message : String(refError),
-      });
-      // Don't fail the webhook for referral errors
+      const msg = refError instanceof Error ? refError.message : String(refError);
+      sideEffectResults.referral = msg;
+      logger.error('[webhook] referral qualification failed', { orderNumber, error: msg });
     }
+  } else {
+    sideEffectResults.referral = 'skipped';
   }
 
+  // 5. Loyalty points + 6. Confirmation email + 7. Automation engine (require user)
   // N+1 FIX: Fetch user once for both loyalty points and automation engine
   if (userId) {
     // Single user fetch with all needed fields
@@ -894,80 +914,152 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       select: { email: true, name: true, loyaltyPoints: true, lifetimePoints: true, loyaltyTier: true },
     });
 
-    // G2-FLAW-10: Award loyalty points for purchase (non-blocking)
+    // 5. G2-FLAW-10: Award loyalty points for purchase (non-blocking)
     if (user) {
       try {
         // F-001 FIX: Use canonical tier multiplier from LOYALTY_TIER_THRESHOLDS
         // instead of hardcoded values that can drift out of sync.
         const canonicalTier = calculateTierFromPoints(user.lifetimePoints || 0);
         const tierMultiplier = canonicalTier.multiplier;
-        const pointsToAward = calculatePurchasePoints(Number(cadTotal), tierMultiplier);
+        let pointsToAward = calculatePurchasePoints(Number(cadTotal), tierMultiplier);
 
         if (pointsToAward > 0) {
-          const newBalance = (user.loyaltyPoints || 0) + pointsToAward;
-          await prisma.loyaltyTransaction.create({
-            data: {
-              userId,
-              type: 'EARN_PURCHASE',
-              points: pointsToAward,
-              description: `Purchase ${orderNumber}`,
-              balanceAfter: newBalance,
-              // A8-P2-005 FIX: Set expiration on purchase points (12 months)
-              expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-              metadata: JSON.stringify({ orderId: order.id, orderNumber, total: Number(cadTotal) }),
-            },
-          });
-          await prisma.user.update({
-            where: { id: userId },
-            data: {
-              loyaltyPoints: newBalance,
-              lifetimePoints: (user.lifetimePoints || 0) + pointsToAward,
-            },
-          });
-          logger.info('Loyalty points awarded', { userId, pointsToAward, newBalance, orderNumber });
+          // T2-9: Check earning caps before awarding purchase points
+          const capCheck = await checkEarningCaps(prisma, userId, pointsToAward, 'EARN_PURCHASE');
+          if (capCheck.adjustedPoints <= 0) {
+            sideEffectResults.loyaltyPoints = 'skipped';
+            logger.warn('Purchase points skipped due to earning cap', {
+              userId, orderNumber, requestedPoints: pointsToAward,
+              capReason: capCheck.capReason,
+              earnedToday: capCheck.earnedToday,
+              earnedThisMonth: capCheck.earnedThisMonth,
+            });
+          } else {
+            if (!capCheck.allowed) {
+              logger.info('Purchase points reduced due to earning cap', {
+                userId, orderNumber,
+                originalPoints: pointsToAward,
+                adjustedPoints: capCheck.adjustedPoints,
+                capReason: capCheck.capReason,
+              });
+              pointsToAward = capCheck.adjustedPoints;
+            }
+            const newBalance = (user.loyaltyPoints || 0) + pointsToAward;
+            await prisma.loyaltyTransaction.create({
+              data: {
+                userId,
+                type: 'EARN_PURCHASE',
+                points: pointsToAward,
+                description: `Purchase ${orderNumber}`,
+                balanceAfter: newBalance,
+                // A8-P2-005 FIX: Set expiration on purchase points (12 months)
+                expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+                metadata: JSON.stringify({ orderId: order.id, orderNumber, total: Number(cadTotal) }),
+              },
+            });
+            await prisma.user.update({
+              where: { id: userId },
+              data: {
+                loyaltyPoints: newBalance,
+                lifetimePoints: (user.lifetimePoints || 0) + pointsToAward,
+              },
+            });
+            sideEffectResults.loyaltyPoints = 'ok';
+            logger.info('Loyalty points awarded', { userId, pointsToAward, newBalance, orderNumber });
+          }
+        } else {
+          sideEffectResults.loyaltyPoints = 'skipped';
         }
       } catch (loyaltyError) {
-        logger.error('Failed to award loyalty points', {
-          orderNumber,
-          error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
-        });
-        // Don't fail the webhook for loyalty errors
+        const msg = loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError);
+        sideEffectResults.loyaltyPoints = msg;
+        logger.error('[webhook] loyalty points failed', { orderNumber, error: msg });
       }
+    } else {
+      sideEffectResults.loyaltyPoints = 'skipped';
     }
 
-    // Mark webhook as completed
+    // Core: Mark webhook as completed (must succeed — not a side effect)
     await completeWebhookEvent(eventId, order.id, journalEntryId);
 
-    // Send confirmation email (non-blocking)
-    await sendOrderConfirmationEmailAsync(order.id, userId);
+    // 6. Confirmation email
+    try {
+      await sendOrderConfirmationEmailAsync(order.id, userId);
+      sideEffectResults.confirmationEmail = 'ok';
+    } catch (emailError) {
+      const msg = emailError instanceof Error ? emailError.message : String(emailError);
+      sideEffectResults.confirmationEmail = msg;
+      logger.error('[webhook] confirmation email failed', { orderNumber, error: msg });
+    }
 
-    // Trigger automation engine for order.created (fire-and-forget) - reuse fetched user
+    // 7. Automation engine for order.created (fire-and-forget) - reuse fetched user
     if (user) {
       try {
         const { handleEvent } = await import('@/lib/email/automation-engine');
-        handleEvent('order.created', {
+        await handleEvent('order.created', {
           email: user.email,
           name: user.name || undefined,
           userId,
           orderId: order.id,
           orderNumber,
           total: cadTotal,
-        }).catch((err) => {
-          logger.error('[AutomationEngine] Failed to handle order.created', { error: String(err) });
         });
-      } catch (error) {
-        logger.error('[Webhook] Automation engine trigger failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
+        sideEffectResults.automationEngine = 'ok';
+      } catch (autoError) {
+        const msg = autoError instanceof Error ? autoError.message : String(autoError);
+        sideEffectResults.automationEngine = msg;
+        logger.error('[webhook] automation engine failed', { orderNumber, error: msg });
       }
+    } else {
+      sideEffectResults.automationEngine = 'skipped';
     }
   } else {
-    // Guest user - just mark webhook as completed
+    // Guest user — side effects that require a user are skipped
+    sideEffectResults.loyaltyPoints = 'skipped';
+    sideEffectResults.referral = 'skipped';
+    sideEffectResults.confirmationEmail = 'skipped';
+    sideEffectResults.automationEngine = 'skipped';
+
+    // Core: Mark webhook as completed
     await completeWebhookEvent(eventId, order.id, journalEntryId);
   }
 
-  // Send SMS notification to admin (non-blocking)
-  sendOrderNotificationSms(Number(cadTotal), orderNumber).catch((err) => {
-    logger.error('Failed to send order SMS', { orderNumber, error: String(err) });
-  });
+  // 8. SMS notification to admin
+  try {
+    await sendOrderNotificationSms(Number(cadTotal), orderNumber);
+    sideEffectResults.smsNotification = 'ok';
+  } catch (smsError) {
+    const msg = smsError instanceof Error ? smsError.message : String(smsError);
+    sideEffectResults.smsNotification = msg;
+    logger.error('[webhook] SMS notification failed', { orderNumber, error: msg });
+  }
+
+  // ---------------------------------------------------------------------------
+  // T3-5: Summary log — shows which side effects succeeded/failed/were skipped
+  // ---------------------------------------------------------------------------
+  const failures = Object.entries(sideEffectResults).filter(([, v]) => v !== 'ok' && v !== 'skipped');
+  const succeeded = Object.entries(sideEffectResults).filter(([, v]) => v === 'ok').map(([k]) => k);
+  const skipped = Object.entries(sideEffectResults).filter(([, v]) => v === 'skipped').map(([k]) => k);
+
+  if (failures.length > 0) {
+    logger.warn('[webhook] checkout.session.completed processed with partial failures', {
+      orderNumber,
+      orderId: order.id,
+      succeeded,
+      skipped,
+      failures: Object.fromEntries(failures),
+      totalEffects: Object.keys(sideEffectResults).length,
+      failedCount: failures.length,
+    });
+  } else {
+    logger.info('[webhook] checkout.session.completed all side effects succeeded', {
+      orderNumber,
+      orderId: order.id,
+      succeeded,
+      skipped,
+      totalEffects: Object.keys(sideEffectResults).length,
+    });
+  }
 }
 
 async function handleRefund(charge: Stripe.Charge, eventId: string) {
@@ -1069,7 +1161,14 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     }
   }));
 
-  // Create refund accounting entries (non-blocking - uses its own internal transaction)
+  // ---------------------------------------------------------------------------
+  // T3-5: Partial failure resilience for refund side effects
+  // Core operation (order status + inventory restore) is the transaction above.
+  // Everything below is non-critical — collect results and log summary.
+  // ---------------------------------------------------------------------------
+  const refundResults: Record<string, 'ok' | 'skipped' | string> = {};
+
+  // 1. Refund accounting entries
   try {
     const { createRefundAccountingEntries } = await import('@/lib/accounting/webhook-accounting.service');
     const tps = Number(order.taxTps);
@@ -1087,14 +1186,14 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       'Remboursement Stripe',
       applyRate(pst, refundRatio)
     );
+    refundResults.refundAccounting = 'ok';
   } catch (acctError) {
-    logger.error('Failed to create refund accounting entries', {
-      orderId: order.id,
-      error: acctError instanceof Error ? acctError.message : String(acctError),
-    });
+    const msg = acctError instanceof Error ? acctError.message : String(acctError);
+    refundResults.refundAccounting = msg;
+    logger.error('[webhook] refund accounting failed', { orderId: order.id, error: msg });
   }
 
-  // Clawback ambassador commission on refund (P2 #28 fix)
+  // 2. Clawback ambassador commission on refund (P2 #28 fix)
   try {
     const result = await clawbackAmbassadorCommission(
       order.id,
@@ -1103,21 +1202,23 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       isFullRefund
     );
     if (result.clawbackAmount && result.clawbackAmount > 0) {
+      refundResults.commissionClawback = 'ok';
       logger.info('Ambassador commission clawback on Stripe refund', {
         orderId: order.id,
         orderNumber: order.orderNumber,
         clawbackAmount: result.clawbackAmount,
         wasPaidOut: result.wasPaidOut,
       });
+    } else {
+      refundResults.commissionClawback = 'skipped';
     }
   } catch (commError) {
-    logger.error('Failed to clawback ambassador commission', {
-      orderId: order.id,
-      error: commError instanceof Error ? commError.message : String(commError),
-    });
+    const msg = commError instanceof Error ? commError.message : String(commError);
+    refundResults.commissionClawback = msg;
+    logger.error('[webhook] commission clawback failed', { orderId: order.id, error: msg });
   }
 
-  // A5-P1-003: Revoke loyalty points awarded for this order on refund
+  // 3. A5-P1-003: Revoke loyalty points awarded for this order on refund
   if (order.userId) {
     try {
       const earnTransactions = await prisma.loyaltyTransaction.findMany({
@@ -1174,22 +1275,56 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
             });
           });
 
+          refundResults.loyaltyRevocation = 'ok';
           logger.info('Loyalty points revoked on Stripe refund', {
             orderId: order.id,
             userId: order.userId,
             pointsRevoked: pointsToRevoke,
           });
+        } else {
+          refundResults.loyaltyRevocation = 'skipped';
         }
+      } else {
+        refundResults.loyaltyRevocation = 'skipped';
       }
     } catch (loyaltyError) {
-      logger.error('Failed to revoke loyalty points on Stripe refund', {
-        orderId: order.id,
-        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
-      });
+      const msg = loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError);
+      refundResults.loyaltyRevocation = msg;
+      logger.error('[webhook] loyalty points revocation failed', { orderId: order.id, error: msg });
     }
+  } else {
+    refundResults.loyaltyRevocation = 'skipped';
   }
 
+  // Core: Mark webhook as completed
   await completeWebhookEvent(eventId, order.id);
+
+  // ---------------------------------------------------------------------------
+  // T3-5: Refund side-effect summary log
+  // ---------------------------------------------------------------------------
+  const refundFailures = Object.entries(refundResults).filter(([, v]) => v !== 'ok' && v !== 'skipped');
+  const refundSucceeded = Object.entries(refundResults).filter(([, v]) => v === 'ok').map(([k]) => k);
+  const refundSkipped = Object.entries(refundResults).filter(([, v]) => v === 'skipped').map(([k]) => k);
+
+  if (refundFailures.length > 0) {
+    logger.warn('[webhook] charge.refunded processed with partial failures', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      succeeded: refundSucceeded,
+      skipped: refundSkipped,
+      failures: Object.fromEntries(refundFailures),
+      totalEffects: Object.keys(refundResults).length,
+      failedCount: refundFailures.length,
+    });
+  } else {
+    logger.info('[webhook] charge.refunded all side effects succeeded', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      succeeded: refundSucceeded,
+      skipped: refundSkipped,
+      totalEffects: Object.keys(refundResults).length,
+    });
+  }
 }
 
 /**

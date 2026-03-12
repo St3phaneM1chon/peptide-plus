@@ -25,12 +25,11 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     const voicemail = await prisma.voicemail.findUnique({
@@ -66,6 +65,7 @@ export async function GET(
 
     return NextResponse.json({ data: voicemail });
   } catch (error) {
+    console.error('[voip/voicemail GET] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -77,12 +77,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
     const raw = await request.json();
     const parsed = voicemailUpdateSchema.safeParse(raw);
@@ -115,6 +114,7 @@ export async function PUT(
 
     return NextResponse.json({ data: voicemail });
   } catch (error) {
+    console.error('[voip/voicemail PUT] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,12 +126,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  try {
     const { id } = await params;
 
     await prisma.voicemail.delete({ where: { id } });
@@ -149,6 +148,7 @@ export async function DELETE(
 
     return NextResponse.json({ status: 'deleted' });
   } catch (error) {
+    console.error('[voip/voicemail DELETE] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

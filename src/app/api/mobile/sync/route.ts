@@ -19,7 +19,14 @@ const syncSchema = z.object({
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const { items } = syncSchema.parse(body);
+    const result = syncSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { items } = result.data;
     const results: Array<{ id: string; success: boolean; error?: string }> = [];
 
     for (const item of items) {
@@ -43,9 +50,6 @@ export const POST = withAdminGuard(async (request) => {
       results,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Format invalide' }, { status: 400 });
-    }
     return NextResponse.json({ error: 'Erreur synchronisation' }, { status: 500 });
   }
 });

@@ -44,7 +44,14 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate body
     const body = await request.json();
-    const data = demoRequestSchema.parse(body);
+    const parsed = demoRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Données invalides', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     // Create CRM Lead
     const lead = await prisma.crmLead.create({
@@ -78,13 +85,6 @@ export async function POST(request: NextRequest) {
       message: 'Demande de démo enregistrée. Un membre de notre équipe vous contactera sous 24h.',
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('[demo-request] Failed to create demo request', {
       error: error instanceof Error ? error.message : String(error),
     });

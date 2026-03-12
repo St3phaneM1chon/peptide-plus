@@ -18,7 +18,14 @@ const receiptSchema = z.object({
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const parsed = receiptSchema.parse(body);
+    const result = receiptSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const parsed = result.data;
 
     // Check if the target accounting period is locked
     const periodLockError = await checkPeriodLock(new Date(parsed.date));
@@ -72,9 +79,6 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Données invalides', details: error.errors }, { status: 400 });
-    }
     console.error('Error creating receipt entry:', error);
     return NextResponse.json({ error: 'Erreur enregistrement reçu' }, { status: 500 });
   }
