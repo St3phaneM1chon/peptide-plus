@@ -10,10 +10,24 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 
-export const GET = withAdminGuard(async () => {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    const phoneNumbers = await prisma.phoneNumber.findMany({
+    // Find the company to filter owned phone numbers
+    // Single-tenant: find by owner, or fall back to first active company
+    const userCompany = await prisma.company.findFirst({
+      where: { ownerId: session.user.id },
+      select: { id: true },
+    }) ?? await prisma.company.findFirst({
       where: { isActive: true },
+      select: { id: true },
+    });
+
+    const phoneNumbers = await prisma.phoneNumber.findMany({
+      where: {
+        isActive: true,
+        // Only show phone numbers owned by the admin's company
+        ...(userCompany ? { companyId: userCompany.id } : { companyId: { not: null } }),
+      },
       select: {
         id: true,
         number: true,

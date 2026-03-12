@@ -186,14 +186,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     // Handle resend-invite action
     if (data.action === 'resend-invite') {
-      // User must not already have a password (i.e., hasn't accepted yet)
-      if (existing.password) {
-        return NextResponse.json(
-          { error: 'This employee has already set up their account' },
-          { status: 400 }
-        );
-      }
-
+      // Generate a fresh invite token (works for new and existing employees)
       const inviteToken = crypto.randomBytes(32).toString('hex');
       const inviteTokenExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000);
 

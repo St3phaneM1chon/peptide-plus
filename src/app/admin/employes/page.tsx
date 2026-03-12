@@ -463,18 +463,16 @@ export default function EmployesPage() {
                   backLabel: t('admin.employees.title'),
                   actions: (
                     <div className="flex items-center gap-2">
-                      {!selectedEmployee.hasPassword && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={Send}
-                          onClick={() => resendInvite(selectedEmployee.id)}
-                          loading={resending === selectedEmployee.id}
-                          disabled={resending === selectedEmployee.id}
-                        >
-                          {t('admin.employees.resendInvite')}
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Send}
+                        onClick={() => resendInvite(selectedEmployee.id)}
+                        loading={resending === selectedEmployee.id}
+                        disabled={resending === selectedEmployee.id}
+                      >
+                        {t('admin.employees.resendInvite')}
+                      </Button>
                       <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(selectedEmployee)}>
                         {t('admin.employees.editBtn')}
                       </Button>
@@ -660,13 +658,27 @@ export default function EmployesPage() {
             </FormField>
           )}
 
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
-            <Button variant="secondary" onClick={resetForm} className="flex-1">
-              {t('admin.employees.cancelBtn')}
-            </Button>
-            <Button variant="primary" className="flex-1" onClick={handleSubmit} loading={saving} disabled={saving}>
-              {editingEmployee ? t('admin.employees.saveBtn') : t('admin.employees.sendInvitation')}
-            </Button>
+          <div className="flex flex-col gap-3 pt-4 border-t border-slate-200">
+            {editingEmployee && (
+              <Button
+                variant="secondary"
+                icon={Send}
+                onClick={() => { resendInvite(editingEmployee.id); }}
+                loading={resending === editingEmployee.id}
+                disabled={resending === editingEmployee.id}
+                className="w-full"
+              >
+                {t('admin.employees.resendInvite')}
+              </Button>
+            )}
+            <div className="flex gap-3">
+              <Button variant="secondary" onClick={resetForm} className="flex-1">
+                {t('admin.employees.cancelBtn')}
+              </Button>
+              <Button variant="primary" className="flex-1" onClick={handleSubmit} loading={saving} disabled={saving}>
+                {editingEmployee ? t('admin.employees.saveBtn') : t('admin.employees.sendInvitation')}
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>
