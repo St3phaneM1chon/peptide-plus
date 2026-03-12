@@ -213,8 +213,10 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <>
+      {/* nosemgrep: react-dangerouslysetinnerhtml — safe: server-generated JSON-LD from DB content, not user input */}
       <script
         type="application/ld+json"
+        // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <CategoryPageClient
