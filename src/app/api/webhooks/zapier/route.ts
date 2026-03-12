@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/webhooks/zapier - Handle Zapier action requests (create lead, create deal, etc.)
  * GET  /api/webhooks/zapier - Provide sample data for Zapier trigger setup
  *
- * Auth: API key header validation (x-api-key)
+ * Auth: API key header validation (x-api-key) + HMAC-SHA256 signature verification (T3-7)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -63,6 +63,60 @@ function validateApiKey(request: NextRequest): boolean {
     return timingSafeEqual(a, b);
   } catch {
     return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// HMAC Signature Verification (T3-7)
+// ---------------------------------------------------------------------------
+
+/**
+ * Verify the HMAC-SHA256 signature of the request body.
+ * Uses timing-safe comparison to prevent timing attacks.
+ *
+ * Headers checked (in order): x-zapier-signature, x-hook-secret
+ *
+ * If ZAPIER_WEBHOOK_SECRET is not set, verification is skipped with a warning
+ * (graceful degradation for development environments).
+ */
+function verifyHmacSignature(
+  rawBody: string,
+  request: NextRequest
+): { valid: boolean; skipped: boolean; error?: string } {
+  const secret = process.env.ZAPIER_WEBHOOK_SECRET;
+
+  if (!secret) {
+    logger.warn(
+      '[zapier] ZAPIER_WEBHOOK_SECRET not configured — HMAC signature verification DISABLED. ' +
+        'Set this env var in production to secure the webhook endpoint.'
+    );
+    return { valid: true, skipped: true };
+  }
+
+  // Accept signature from either header (x-zapier-signature preferred)
+  const signature =
+    request.headers.get('x-zapier-signature') ||
+    request.headers.get('x-hook-secret');
+
+  if (!signature) {
+    return { valid: false, skipped: false, error: 'Missing signature header (x-zapier-signature or x-hook-secret)' };
+  }
+
+  const computed = createHmac('sha256', secret).update(rawBody).digest('hex');
+
+  try {
+    const sigBuffer = Buffer.from(signature);
+    const computedBuffer = Buffer.from(computed);
+
+    // timingSafeEqual requires equal-length buffers
+    if (sigBuffer.length !== computedBuffer.length) {
+      return { valid: false, skipped: false, error: 'Invalid signature' };
+    }
+
+    const isValid = timingSafeEqual(sigBuffer, computedBuffer);
+    return { valid: isValid, skipped: false, error: isValid ? undefined : 'Invalid signature' };
+  } catch {
+    return { valid: false, skipped: false, error: 'Signature comparison failed' };
   }
 }
 
@@ -153,8 +207,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Read raw body for HMAC verification (must be done before parsing JSON)
+  let rawBody: string;
   try {
-    const raw = await request.json();
+    rawBody = await request.text();
+  } catch (err) {
+    logger.error('[zapier] Failed to read request body', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json({ error: 'Failed to read request body' }, { status: 400 });
+  }
+
+  // HMAC signature verification (T3-7)
+  const hmacResult = verifyHmacSignature(rawBody, request);
+  if (!hmacResult.valid) {
+    logger.warn('[zapier] HMAC signature verification failed', {
+      error: hmacResult.error,
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
+    });
+    return NextResponse.json({ error: hmacResult.error || 'Unauthorized' }, { status: 401 });
+  }
+  if (!hmacResult.skipped) {
+    logger.debug('[zapier] HMAC signature verified successfully');
+  }
+
+  try {
+    // Parse the raw body as JSON (already consumed via .text() above)
+    let raw: unknown;
+    try {
+      raw = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const parsed = zapierPostSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });

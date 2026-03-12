@@ -46,7 +46,7 @@ interface Bundle {
 export default function BundleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { t: _t } = useI18n();
+  const { t } = useI18n();
   const { addItem } = useCart();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
@@ -60,7 +60,7 @@ export default function BundleDetailPage() {
         const response = await fetch(`/api/bundles/${slug}`);
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Bundle not found');
+            setError(t('shop.bundleNotFound'));
           } else {
             throw new Error('Failed to fetch bundle');
           }
@@ -70,7 +70,7 @@ export default function BundleDetailPage() {
         setBundle(data);
       } catch (err) {
         console.error('Error fetching bundle:', err);
-        setError('Failed to load bundle');
+        setError(t('shop.bundleNotFound'));
       } finally {
         setLoading(false);
       }
@@ -79,7 +79,7 @@ export default function BundleDetailPage() {
     if (slug) {
       fetchBundle();
     }
-  }, [slug]);
+  }, [slug, t]);
 
   const handleAddBundleToCart = () => {
     if (!bundle) return;
@@ -103,10 +103,10 @@ export default function BundleDetailPage() {
         });
       });
 
-      toast.success(`${bundle.name} added to cart!`);
+      toast.success(t('shop.bundleAdded'));
     } catch (err) {
       console.error('Error adding bundle to cart:', err);
-      toast.error('Failed to add bundle to cart');
+      toast.error(t('shop.addToCartError'));
     } finally {
       setAddingToCart(false);
     }
@@ -127,13 +127,13 @@ export default function BundleDetailPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {error || 'Bundle not found'}
+            {error || t('shop.bundleNotFound')}
           </h2>
           <Link
             href="/bundles"
             className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
           >
-            Back to Bundles
+            {t('shop.backToBundles')}
           </Link>
         </div>
       </div>
@@ -144,9 +144,9 @@ export default function BundleDetailPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <div className="mb-6 text-sm text-gray-500">
-        <Link href="/" className="hover:text-gray-700">Home</Link>
+        <Link href="/" className="hover:text-gray-700">{t('nav.home')}</Link>
         <span className="mx-2">/</span>
-        <Link href="/bundles" className="hover:text-gray-700">Bundles</Link>
+        <Link href="/bundles" className="hover:text-gray-700">{t('shop.bundles')}</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{bundle.name}</span>
       </div>
@@ -186,7 +186,7 @@ export default function BundleDetailPage() {
             {/* Savings Badge */}
             {bundle.discount > 0 && (
               <div className="absolute top-4 end-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
-                Save {bundle.discount}%
+                {t('shop.savePercent', { percent: bundle.discount })}
               </div>
             )}
           </div>
@@ -203,26 +203,26 @@ export default function BundleDetailPage() {
           {/* Price Summary */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
             <div className="flex items-baseline justify-between mb-2">
-              <span className="text-gray-600">Original Price:</span>
+              <span className="text-gray-600">{t('shop.originalPrice')}:</span>
               <span className="text-xl text-gray-500 line-through">
                 ${bundle.originalPrice.toFixed(2)}
               </span>
             </div>
             <div className="flex items-baseline justify-between mb-2">
-              <span className="text-gray-600">Bundle Discount:</span>
+              <span className="text-gray-600">{t('shop.bundleDiscount')}:</span>
               <span className="text-lg font-semibold text-red-600">
                 -{bundle.discount}%
               </span>
             </div>
             <div className="border-t pt-3 mt-3">
               <div className="flex items-baseline justify-between mb-2">
-                <span className="text-xl font-semibold text-gray-900">Bundle Price:</span>
+                <span className="text-xl font-semibold text-gray-900">{t('shop.bundlePrice')}:</span>
                 <span className="text-3xl font-bold text-teal-600">
                   ${bundle.bundlePrice.toFixed(2)}
                 </span>
               </div>
               <div className="text-end text-green-600 font-medium">
-                You save ${bundle.savings.toFixed(2)}!
+                {t('shop.youSaveAmount', { amount: `$${bundle.savings.toFixed(2)}` })}
               </div>
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function BundleDetailPage() {
             {addingToCart ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Adding to Cart...
+                {t('shop.addingToCart')}
               </>
             ) : (
               <>
@@ -254,7 +254,7 @@ export default function BundleDetailPage() {
                     d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
                   />
                 </svg>
-                Add Bundle to Cart
+                {t('shop.addBundleToCart')}
               </>
             )}
           </button>
@@ -262,7 +262,7 @@ export default function BundleDetailPage() {
           {/* What's Included */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              What&apos;s Included ({bundle.itemCount} {bundle.itemCount === 1 ? 'Product' : 'Products'})
+              {t('shop.whatsIncluded')} ({bundle.itemCount} {bundle.itemCount === 1 ? t('shop.productCount') : t('shop.products')})
             </h2>
             <div className="space-y-4">
               {bundle.items.map((item) => {
@@ -312,17 +312,17 @@ export default function BundleDetailPage() {
                       </h3>
                       {selectedFormat && (
                         <p className="text-sm text-gray-600 mb-1">
-                          Format: {selectedFormat.name}
+                          {t('shop.format')}: {selectedFormat.name}
                         </p>
                       )}
                       {item.product.purity && (
                         <p className="text-sm text-gray-600">
-                          Purity: {item.product.purity}%
+                          {t('shop.purity')}: {item.product.purity}%
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
-                        <span className="text-sm text-gray-400">×</span>
+                        <span className="text-sm text-gray-600">{t('shop.qty')}: {item.quantity}</span>
+                        <span className="text-sm text-gray-400">&times;</span>
                         <span className="text-sm font-semibold text-gray-900">
                           ${item.itemPrice.toFixed(2)}
                         </span>
@@ -338,7 +338,7 @@ export default function BundleDetailPage() {
                       href={`/products/${item.product.slug}`}
                       className="text-teal-600 hover:text-teal-700 text-sm font-medium self-start"
                     >
-                      View →
+                      {t('shop.viewProduct')} &rarr;
                     </Link>
                   </div>
                 );
@@ -354,7 +354,7 @@ export default function BundleDetailPage() {
           href="/bundles"
           className="inline-block text-teal-600 hover:text-teal-700 font-medium"
         >
-          ← Back to All Bundles
+          &larr; {t('shop.backToBundles')}
         </Link>
       </div>
     </div>

@@ -10642,7 +10642,14 @@
     "subscribe": "ਸਬਸਕ੍ਰਾਈਬ ਕਰੋ",
     "subtitle": "ਪੈਪਟਾਈਡ, ਖੋਜ ਪ੍ਰੋਟੋਕੋਲ ਅਤੇ ਸਭ ਤੋਂ ਵਧੀਆ ਅਭਿਆਸਾਂ 'ਤੇ ਸਾਡੇ ਸ਼ਿੱਖਣ ਸਮੱਗਰੀ ਨਾਲ ਆਪਣੇ ਗਿਆਨ ਨੂੰ ਵਧਾਓ.",
     "title": "ਸਿੱਖਣ ਦਾ ਕੇਂਦਰ",
-    "viewFaq": "FAQ ਵੇਖੋ"
+    "viewFaq": "FAQ ਵੇਖੋ",
+    "articles": {
+      "peptideStorageGuide": "Peptide Storage Guide",
+      "whatArePeptides": "What Are Peptides?"
+    },
+    "interestedInPeptide": "Interested in this peptide?",
+    "interestedInPeptides": "Interested in these peptides?",
+    "viewProduct": "View {name}"
   },
   "legal": {
     "accessibility": {
@@ -12151,7 +12158,35 @@
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",
       "placeholderMessage": "Add a personal message...",
       "placeholderRecipientEmail": "john@example.com",
-      "placeholderRecipientName": "John Doe"
+      "placeholderRecipientName": "John Doe",
+      "breadcrumb": "Gift Cards",
+      "canBeUsedAcrossOrders": "Balance can be used across multiple orders",
+      "canBeUsedForAnyProduct": "Can be used for any product on our site",
+      "characters": "characters",
+      "copyCode": "Copy Code",
+      "created": "Gift Card Created!",
+      "customAmountLabel": "Or enter custom amount ($25 - $1000)",
+      "detailsTitle": "Gift Card Details",
+      "giftCardLabel": "GIFT CARD",
+      "giveTheGift": "Give the gift of wellness. Perfect for any occasion.",
+      "messageLabel": "MESSAGE:",
+      "nonRefundable": "Non-refundable and cannot be exchanged for cash",
+      "peptidePlusLabel": "PEPTIDE PLUS+",
+      "personalMessage": "Personal Message",
+      "preview": "Gift Card Preview",
+      "printGiftCard": "Print Gift Card",
+      "processing": "Processing...",
+      "purchaseAnother": "Purchase Another Gift Card",
+      "purchaseButton": "Purchase Gift Card - {price}",
+      "purchaseTitle": "Purchase Gift Card",
+      "readyToUse": "Your gift card is ready to use",
+      "recipientEmail": "Recipient Email",
+      "recipientInfo": "Recipient Information (Optional)",
+      "recipientName": "Recipient Name",
+      "selectAmount": "Select Amount",
+      "title": "Gift Cards",
+      "toLabel": "TO:",
+      "validForOneYear": "Valid for 1 year from purchase date"
     },
     "highestPurity": "ਸਭ ਤੋਂ ਉੱਚੀ ਸ਼ੁੱਧਤਾ",
     "hplcPurity": "HPLC ਸ਼ੁੱਧਤਾ",
@@ -12287,7 +12322,19 @@
     "category": "Category",
     "products": "products",
     "of": "of",
-    "saved": "Saved"
+    "saved": "Saved",
+    "checkoutError": {
+      "cartSafe": "We encountered an error during checkout. Your cart items are safe.",
+      "returnToShop": "Return to Shop",
+      "title": "Checkout Error",
+      "tryAgain": "Try again"
+    },
+    "productNotFound": {
+      "browseCatalog": "Browse Catalog",
+      "description": "The product you're looking for doesn't exist or has been removed.",
+      "title": "Product Not Found"
+    },
+    "youSaveAmount": "You save {amount}!"
   },
   "subscriptions": {
     "availableProducts": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਲਈ ਉਪਲਬਧ",

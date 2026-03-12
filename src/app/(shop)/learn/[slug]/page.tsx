@@ -2,6 +2,7 @@
 
 import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { useI18n } from '@/i18n/client';
 import type DOMPurifyType from 'dompurify';
 
 // DOMPurify client-only — safe guard for SSR prerender
@@ -542,6 +543,7 @@ Proper reconstitution requires accurate calculations. A peptide calculator simpl
 export default function ArticlePage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { t } = useI18n();
 
   const article = articlesContent[slug];
 
@@ -558,22 +560,22 @@ export default function ArticlePage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Learning Center
+            {t('learn.backToLearning')}
           </Link>
-          
+
           <span className="inline-block px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-medium rounded-full mb-4">
             {article.category}
           </span>
-          
+
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             {article.title}
           </h1>
-          
+
           <div className="flex flex-wrap items-center gap-4 text-neutral-400 text-sm">
             <span>{article.author}</span>
-            <span>•</span>
+            <span>&bull;</span>
             <span>{article.date}</span>
-            <span>•</span>
+            <span>&bull;</span>
             <span>{article.readTime}</span>
           </div>
         </div>
@@ -582,7 +584,7 @@ export default function ArticlePage() {
       {/* Content */}
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8 md:p-12">
-          <div 
+          <div
             className="prose prose-lg prose-gray max-w-none
               prose-headings:text-gray-900 prose-headings:font-bold
               prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
@@ -612,7 +614,11 @@ export default function ArticlePage() {
         {/* Related Products CTA */}
         {articleProductMap[slug] && articleProductMap[slug].length > 0 && (
           <div className="mt-8 p-6 bg-purple-50 border border-purple-100 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-3">Interested in {articleProductMap[slug].length === 1 ? 'this peptide' : 'these peptides'}?</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              {articleProductMap[slug].length === 1
+                ? t('learn.interestedInPeptide')
+                : t('learn.interestedInPeptides')}
+            </h3>
             <div className="flex flex-wrap gap-3">
               {articleProductMap[slug].map((product) => (
                 <Link
@@ -620,7 +626,7 @@ export default function ArticlePage() {
                   href={`/product/${product.slug}`}
                   className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium transition-colors"
                 >
-                  View {product.name}
+                  {t('learn.viewProduct', { name: product.name })}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -632,36 +638,36 @@ export default function ArticlePage() {
 
         {/* Related Articles */}
         <div className="mt-12">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Continue Learning</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-6">{t('learn.continueLearning')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link
               href="/learn/what-are-peptides"
               className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
             >
-              <span className="text-xs text-orange-600 font-medium">Education</span>
-              <h4 className="font-semibold text-gray-900 mt-2">What Are Peptides?</h4>
+              <span className="text-xs text-orange-600 font-medium">{t('learn.education')}</span>
+              <h4 className="font-semibold text-gray-900 mt-2">{t('learn.articles.whatArePeptides')}</h4>
             </Link>
             <Link
               href="/learn/peptide-storage-guide"
               className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
             >
-              <span className="text-xs text-orange-600 font-medium">How-To</span>
-              <h4 className="font-semibold text-gray-900 mt-2">Peptide Storage Guide</h4>
+              <span className="text-xs text-orange-600 font-medium">{t('learn.howTo')}</span>
+              <h4 className="font-semibold text-gray-900 mt-2">{t('learn.articles.peptideStorageGuide')}</h4>
             </Link>
           </div>
         </div>
 
         {/* CTA */}
         <div className="mt-12 bg-orange-50 rounded-xl p-8 text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to Start Your Research?</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('learn.readyToStart')}</h3>
           <p className="text-gray-600 mb-6">
-            Browse our collection of high-purity research peptides.
+            {t('learn.browseCollection')}
           </p>
           <Link
             href="/shop"
             className="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
           >
-            Shop Peptides
+            {t('learn.shopPeptides')}
           </Link>
         </div>
       </article>

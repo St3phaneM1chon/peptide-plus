@@ -1,6 +1,6 @@
 const SITE_URL = 'https://biocyclepeptides.com';
 const SITE_NAME = 'BioCycle Peptides';
-const DEFAULT_LOGO = `${SITE_URL}/images/logo.png`;
+const DEFAULT_LOGO = `${SITE_URL}/icon-512.png`;
 
 export function organizationSchema() {
   return {

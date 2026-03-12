@@ -88,8 +88,8 @@ export default function GiftCardsPage() {
       <div className="min-h-screen bg-gray-50 py-12">
         <Breadcrumbs
           items={[
-            { label: t('nav.home') || 'Home', href: '/' },
-            { label: 'Gift Cards' },
+            { label: t('nav.home'), href: '/' },
+            { label: t('shop.giftCard.breadcrumb') },
           ]}
         />
 
@@ -101,11 +101,11 @@ export default function GiftCardsPage() {
               </svg>
             </div>
 
-            <h1 className="text-3xl font-bold mb-2">Gift Card Created!</h1>
-            <p className="text-gray-600 mb-8">Your gift card is ready to use</p>
+            <h1 className="text-3xl font-bold mb-2">{t('shop.giftCard.created')}</h1>
+            <p className="text-gray-600 mb-8">{t('shop.giftCard.readyToUse')}</p>
 
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 text-white mb-8">
-              <div className="text-sm font-medium mb-2 opacity-90">GIFT CARD</div>
+              <div className="text-sm font-medium mb-2 opacity-90">{t('shop.giftCard.giftCardLabel')}</div>
               <div className="text-4xl font-bold mb-6 font-mono tracking-wider">
                 {purchasedCard.code}
               </div>
@@ -125,7 +125,7 @@ export default function GiftCardsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Copy Code
+                {t('shop.giftCard.copyCode')}
               </button>
 
               <button
@@ -135,7 +135,7 @@ export default function GiftCardsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                Print Gift Card
+                {t('shop.giftCard.printGiftCard')}
               </button>
             </div>
 
@@ -148,7 +148,7 @@ export default function GiftCardsPage() {
               }}
               className="text-orange-600 hover:underline"
             >
-              Purchase Another Gift Card
+              {t('shop.giftCard.purchaseAnother')}
             </button>
           </div>
         </div>
@@ -160,28 +160,28 @@ export default function GiftCardsPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <Breadcrumbs
         items={[
-          { label: t('nav.home') || 'Home', href: '/' },
-          { label: 'Gift Cards' },
+          { label: t('nav.home'), href: '/' },
+          { label: t('shop.giftCard.breadcrumb') },
         ]}
       />
 
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Gift Cards</h1>
+          <h1 className="text-4xl font-bold mb-4">{t('shop.giftCard.title')}</h1>
           <p className="text-gray-600 text-lg">
-            Give the gift of wellness. Perfect for any occasion.
+            {t('shop.giftCard.giveTheGift')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: Purchase Form */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-bold mb-6">Purchase Gift Card</h2>
+            <h2 className="text-xl font-bold mb-6">{t('shop.giftCard.purchaseTitle')}</h2>
 
             {/* Amount Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Select Amount
+                {t('shop.giftCard.selectAmount')}
               </label>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {PRESET_AMOUNTS.map((amount) => (
@@ -201,7 +201,7 @@ export default function GiftCardsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Or enter custom amount ($25 - $1000)
+                  {t('shop.giftCard.customAmountLabel')}
                 </label>
                 <div className="relative">
                   <span className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
@@ -221,12 +221,12 @@ export default function GiftCardsPage() {
             {/* Recipient Information */}
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Recipient Information (Optional)
+                {t('shop.giftCard.recipientInfo')}
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Recipient Name</label>
+                  <label className="block text-sm text-gray-600 mb-1">{t('shop.giftCard.recipientName')}</label>
                   <input
                     type="text"
                     value={recipientName}
@@ -237,7 +237,7 @@ export default function GiftCardsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Recipient Email</label>
+                  <label className="block text-sm text-gray-600 mb-1">{t('shop.giftCard.recipientEmail')}</label>
                   <input
                     type="email"
                     value={recipientEmail}
@@ -248,7 +248,7 @@ export default function GiftCardsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Personal Message</label>
+                  <label className="block text-sm text-gray-600 mb-1">{t('shop.giftCard.personalMessage')}</label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
@@ -257,7 +257,7 @@ export default function GiftCardsPage() {
                     maxLength={500}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                   />
-                  <p className="text-xs text-gray-500 mt-1">{message.length}/500 characters</p>
+                  <p className="text-xs text-gray-500 mt-1">{message.length}/500 {t('shop.giftCard.characters')}</p>
                 </div>
               </div>
             </div>
@@ -273,11 +273,11 @@ export default function GiftCardsPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Processing...
+                  {t('shop.giftCard.processing')}
                 </>
               ) : (
                 <>
-                  Purchase Gift Card - {formatPrice(finalAmount)}
+                  {t('shop.giftCard.purchaseButton', { price: formatPrice(finalAmount) })}
                 </>
               )}
             </button>
@@ -286,11 +286,11 @@ export default function GiftCardsPage() {
           {/* Right: Preview */}
           <div>
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-bold mb-4">Gift Card Preview</h3>
+              <h3 className="text-lg font-bold mb-4">{t('shop.giftCard.preview')}</h3>
 
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 text-white">
-                <div className="text-sm font-medium mb-2 opacity-90">PEPTIDE PLUS+</div>
-                <div className="text-sm font-medium mb-6 opacity-90">GIFT CARD</div>
+                <div className="text-sm font-medium mb-2 opacity-90">{t('shop.giftCard.peptidePlusLabel')}</div>
+                <div className="text-sm font-medium mb-6 opacity-90">{t('shop.giftCard.giftCardLabel')}</div>
 
                 <div className="text-3xl font-bold mb-8">
                   {formatPrice(finalAmount)}
@@ -298,14 +298,14 @@ export default function GiftCardsPage() {
 
                 {recipientName && (
                   <div className="border-t border-white/30 pt-4">
-                    <div className="text-xs opacity-75 mb-1">TO:</div>
+                    <div className="text-xs opacity-75 mb-1">{t('shop.giftCard.toLabel')}</div>
                     <div className="font-medium">{recipientName}</div>
                   </div>
                 )}
 
                 {message && (
                   <div className="border-t border-white/30 pt-4 mt-4">
-                    <div className="text-xs opacity-75 mb-1">MESSAGE:</div>
+                    <div className="text-xs opacity-75 mb-1">{t('shop.giftCard.messageLabel')}</div>
                     <div className="text-sm italic opacity-90">&quot;{message}&quot;</div>
                   </div>
                 )}
@@ -313,31 +313,31 @@ export default function GiftCardsPage() {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Gift Card Details</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">{t('shop.giftCard.detailsTitle')}</h4>
               <ul className="text-sm text-blue-700 space-y-1">
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Valid for 1 year from purchase date
+                  {t('shop.giftCard.validForOneYear')}
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Can be used for any product on our site
+                  {t('shop.giftCard.canBeUsedForAnyProduct')}
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Balance can be used across multiple orders
+                  {t('shop.giftCard.canBeUsedAcrossOrders')}
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Non-refundable and cannot be exchanged for cash
+                  {t('shop.giftCard.nonRefundable')}
                 </li>
               </ul>
             </div>

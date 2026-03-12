@@ -107,7 +107,9 @@ export function seoMetaToHtml(meta: SEOMeta): string {
 
   if (meta.ogImage) tags.push(`<meta property="og:image" content="${escapeHtml(meta.ogImage)}" />`);
   if (meta.canonical) tags.push(`<link rel="canonical" href="${escapeHtml(meta.canonical)}" />`);
-  tags.push(`<script type="application/ld+json">${JSON.stringify(meta.jsonLd)}</script>`);
+  // SECURITY: Escape '<' to prevent script tag injection (XSS) in JSON-LD.
+  const safeJsonLd = JSON.stringify(meta.jsonLd).replace(/</g, '\\u003c');
+  tags.push(`<script type="application/ld+json">${safeJsonLd}</script>`);
 
   return tags.join('\n');
 }

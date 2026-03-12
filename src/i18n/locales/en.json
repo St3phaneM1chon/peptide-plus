@@ -10618,6 +10618,10 @@
   "learn": {
     "allArticles": "All Articles",
     "articleNotFound": "Article Not Found",
+    "articles": {
+      "peptideStorageGuide": "Peptide Storage Guide",
+      "whatArePeptides": "What Are Peptides?"
+    },
     "backToLearning": "Back to Learning Center",
     "browseCollection": "Browse our collection of high-purity research peptides.",
     "calculator": "Peptide Calculator",
@@ -10630,6 +10634,8 @@
     "guideDesc": "Download our free comprehensive guide covering peptide fundamentals, storage, reconstitution, and research protocols. Perfect for researchers of all experience levels.",
     "guideTitle": "The Complete Guide to Peptide Research",
     "howTo": "How-To",
+    "interestedInPeptide": "Interested in this peptide?",
+    "interestedInPeptides": "Interested in these peptides?",
     "labResults": "Lab Results",
     "quickLinks": "Quick Links",
     "readTime": "min read",
@@ -10642,7 +10648,8 @@
     "subscribe": "Subscribe",
     "subtitle": "Expand your knowledge with our educational resources on peptides, research protocols, and best practices.",
     "title": "Learning Center",
-    "viewFaq": "View FAQ"
+    "viewFaq": "View FAQ",
+    "viewProduct": "View {name}"
   },
   "legal": {
     "accessibility": {
@@ -12107,6 +12114,12 @@
     "buyNow": "Buy now",
     "canadaWide": "Canada-wide",
     "casNumber": "CAS Number",
+    "checkoutError": {
+      "cartSafe": "We encountered an error during checkout. Your cart items are safe.",
+      "returnToShop": "Return to Shop",
+      "title": "Checkout Error",
+      "tryAgain": "Try again"
+    },
     "checkout": "Checkout",
     "chemicalProperties": "Chemical Properties",
     "clearAllFilters": "Clear all filters",
@@ -12147,11 +12160,39 @@
       }
     },
     "giftCard": {
+      "breadcrumb": "Gift Cards",
+      "canBeUsedAcrossOrders": "Balance can be used across multiple orders",
+      "canBeUsedForAnyProduct": "Can be used for any product on our site",
+      "characters": "characters",
+      "copyCode": "Copy Code",
+      "created": "Gift Card Created!",
+      "customAmountLabel": "Or enter custom amount ($25 - $1000)",
+      "detailsTitle": "Gift Card Details",
+      "giftCardLabel": "GIFT CARD",
+      "giveTheGift": "Give the gift of wellness. Perfect for any occasion.",
+      "messageLabel": "MESSAGE:",
+      "nonRefundable": "Non-refundable and cannot be exchanged for cash",
+      "peptidePlusLabel": "PEPTIDE PLUS+",
+      "personalMessage": "Personal Message",
       "placeholderAmount": "Enter amount",
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",
       "placeholderMessage": "Add a personal message...",
       "placeholderRecipientEmail": "john@example.com",
-      "placeholderRecipientName": "John Doe"
+      "placeholderRecipientName": "John Doe",
+      "preview": "Gift Card Preview",
+      "printGiftCard": "Print Gift Card",
+      "processing": "Processing...",
+      "purchaseAnother": "Purchase Another Gift Card",
+      "purchaseButton": "Purchase Gift Card - {price}",
+      "purchaseTitle": "Purchase Gift Card",
+      "readyToUse": "Your gift card is ready to use",
+      "recipientEmail": "Recipient Email",
+      "recipientInfo": "Recipient Information (Optional)",
+      "recipientName": "Recipient Name",
+      "selectAmount": "Select Amount",
+      "title": "Gift Cards",
+      "toLabel": "TO:",
+      "validForOneYear": "Valid for 1 year from purchase date"
     },
     "highestPurity": "Highest Purity",
     "hplcPurity": "HPLC Purity",
@@ -12189,6 +12230,11 @@
     "productCount_one": "{count} product",
     "productCount_other": "{count} products",
     "productIncluded": "{count} product included",
+    "productNotFound": {
+      "browseCatalog": "Browse Catalog",
+      "description": "The product you're looking for doesn't exist or has been removed.",
+      "title": "Product Not Found"
+    },
     "productVideo": "Product video",
     "productsIncluded": "Products Included",
     "promoCode": "Promo Code",
@@ -12281,6 +12327,7 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "You save",
+    "youSaveAmount": "You save {amount}!",
     "category": "Category",
     "of": "of",
     "products": "products",
