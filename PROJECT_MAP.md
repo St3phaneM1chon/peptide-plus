@@ -1,5 +1,5 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-10 (Mega-Audit P0-P3: schema split, dynamic pricing, BullMQ, exports, CDN, RTL)
+# LAST UPDATED: 2026-03-12 (T4-7: +5 cross-module bridges #51-#55, total 50 bridges)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
@@ -2176,11 +2176,12 @@ Under `admin.bridges`: orderProducts, orderReviews, promoProducts, reviewPurchas
 
 #### Bridge Coverage Summary
 - **Before**: 11 bridges (8.3% of 132 possible directions)
-- **After**: 43 done + 2 planned = 45 total (~34% coverage)
-- **All 45 bridges done** — no more planned bridges
+- **After Phase 5**: 45 bridges done (~34% coverage)
+- **After T4-7**: 50 bridges done (~38% coverage, +5 new cross-module pairs)
+- **New bridges (T4-7)**: #51 Marketing→Loyalty, #52 Community→Marketing, #53 Loyalty→CRM, #54 Catalog→Accounting, #55 Email→Accounting
 - **Schema change**: `EmailLog.campaignId` FK added for Marketing↔Email bridges
 - **All bridges**: Feature-flag gated via `ff.{module}_module` in SiteSetting
-- **Registry**: `src/lib/bridges/registry.ts` (complete index of all 45 bridges)
+- **Registry**: `src/lib/bridges/registry.ts` (complete index of all 50 bridges)
 
 ### New Files (2026-03-10 Mega-Audit P0-P3: Schema Split, Dynamic Pricing, BullMQ, Exports, CDN, RTL)
 

@@ -487,6 +487,58 @@ export const BRIDGE_REGISTRY: BridgeDefinition[] = [
     status: 'done',
     renderedIn: 'crm/deals/[id]/page.tsx',
   },
+
+  // ── New bridges (T4-7: Missing cross-module pairs) ────────
+  {
+    id: '#51',
+    source: 'marketing',
+    target: 'loyalty',
+    label: 'Marketing → Fidélité (Points Campagne)',
+    i18nKey: 'admin.bridges.campaignLoyalty',
+    endpoint: '/api/admin/newsletter/campaigns/{id}/loyalty',
+    status: 'done',
+    renderedIn: 'newsletter/page.tsx',
+  },
+  {
+    id: '#52',
+    source: 'community',
+    target: 'marketing',
+    label: 'Communauté → Marketing (Engagement Insights)',
+    i18nKey: 'admin.bridges.communityMarketing',
+    endpoint: '/api/admin/reviews/community-marketing',
+    status: 'done',
+    renderedIn: 'avis/page.tsx',
+  },
+  {
+    id: '#53',
+    source: 'loyalty',
+    target: 'crm',
+    label: 'Fidélité → CRM (Deals Membre)',
+    i18nKey: 'admin.bridges.loyaltyCrm',
+    endpoint: '/api/admin/loyalty/members/{id}/crm',
+    status: 'done',
+    renderedIn: 'fidelite/page.tsx',
+  },
+  {
+    id: '#54',
+    source: 'catalog',
+    target: 'accounting',
+    label: 'Catalogue → Comptabilité (Revenus Produit)',
+    i18nKey: 'admin.bridges.productAccounting',
+    endpoint: '/api/admin/products/{id}/accounting',
+    status: 'done',
+    renderedIn: 'produits/[id]/ProductEditClient.tsx',
+  },
+  {
+    id: '#55',
+    source: 'email',
+    target: 'accounting',
+    label: 'Emails → Comptabilité (Attribution Revenus)',
+    i18nKey: 'admin.bridges.emailAccounting',
+    endpoint: '/api/admin/emails/{id}/accounting',
+    status: 'done',
+    renderedIn: 'emails/page.tsx',
+  },
 ];
 
 /**

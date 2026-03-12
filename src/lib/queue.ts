@@ -17,6 +17,7 @@
 
 import { Queue, Worker, Job, type ConnectionOptions } from 'bullmq';
 import { logger } from '@/lib/logger';
+import { moveToDeadLetterQueue } from '@/lib/queue/dlq';
 
 // ---------------------------------------------------------------------------
 // Queue name constants — matching existing cron job route names
@@ -71,6 +72,9 @@ export const QUEUE_NAMES = {
   DEPENDENCY_CHECK: 'dependency-check',
   DEAL_ROTTING: 'deal-rotting',
   PROCESS_CALLBACKS: 'process-callbacks',
+
+  // Dead Letter Queue
+  DLQ: 'dlq',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -239,8 +243,8 @@ export function createWorker(
       const isDeadLettered = attemptsMade >= maxAttempts;
 
       if (isDeadLettered) {
-        // All retries exhausted — job moves to "failed" state (DLQ equivalent).
-        // These remain queryable via getQueueStats().failed and the admin dashboard.
+        // All retries exhausted — move to the dedicated Dead Letter Queue
+        // for admin investigation, retry, or purging.
         logger.error('[queue] Job dead-lettered (all retries exhausted)', {
           queue: name,
           jobId: job?.id,
@@ -248,6 +252,15 @@ export function createWorker(
           maxAttempts,
           error: err.message,
           data: job?.data,
+        });
+
+        // Fire-and-forget: copy job data to DLQ. Errors are logged internally.
+        moveToDeadLetterQueue(name, job, err).catch((dlqErr) => {
+          logger.error('[queue] Failed to move job to DLQ', {
+            queue: name,
+            jobId: job?.id,
+            dlqError: dlqErr instanceof Error ? dlqErr.message : String(dlqErr),
+          });
         });
       } else {
         logger.warn('[queue] Job failed (will retry)', {

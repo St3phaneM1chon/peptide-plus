@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getAllQueueStats, QUEUE_NAMES, ACTIVE_QUEUE_NAMES } from '@/lib/queue';
 import { isRedisAvailable } from '@/lib/redis';
+import { getDlqStats } from '@/lib/queue/dlq';
 import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async () => {
@@ -28,10 +29,13 @@ export const GET = withAdminGuard(async () => {
 
     // FIX A9-P0-001: Only query active queues by default (those with processors)
     // to avoid creating dead Redis queue instances
-    const stats = await getAllQueueStats(true);
+    const [stats, dlqStats] = await Promise.all([
+      getAllQueueStats(true),
+      getDlqStats(),
+    ]);
 
     // Compute aggregate summary
-    const allQueueNames = Object.values(QUEUE_NAMES);
+    const allQueueNames = Object.values(QUEUE_NAMES).filter((n) => n !== 'dlq');
     const summary = {
       totalQueues: allQueueNames.length,
       activeQueues: ACTIVE_QUEUE_NAMES.size,
@@ -46,6 +50,13 @@ export const GET = withAdminGuard(async () => {
     return NextResponse.json({
       available: true,
       summary,
+      dlq: {
+        total: dlqStats.total,
+        byQueue: dlqStats.byQueue,
+        oldest: dlqStats.oldest,
+        newest: dlqStats.newest,
+        endpoint: '/api/admin/queues/dlq',
+      },
       queues: stats,
       // List all queue names with their type for admin reference
       allQueues: allQueueNames.map((name) => ({

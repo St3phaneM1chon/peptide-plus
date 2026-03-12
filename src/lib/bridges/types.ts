@@ -301,6 +301,132 @@ export interface ReviewerOrdersBridgeData {
   hasPurchased: boolean;
 }
 
+// ─── Bridge #51 Marketing → Fidélité (Campaign Loyalty) ────
+export interface CampaignLoyaltyBridgeData {
+  campaignName: string;
+  attributionWindow: { start: string; end: string };
+  totalPointsAwarded: number;
+  totalTransactions: number;
+  transactions: CampaignLoyaltyTransaction[];
+}
+
+export interface CampaignLoyaltyTransaction {
+  id: string;
+  type: string;
+  points: number;
+  description: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  userId: string;
+  date: string;
+}
+
+// ─── Bridge #52 Communauté → Marketing (Community Insights) ─
+export interface CommunityMarketingBridgeData {
+  period: { since: string; until: string };
+  reviewStats: {
+    totalReviews: number;
+    averageRating: number;
+  };
+  topContributors: CommunityContributor[];
+  forumActivity: ForumActivityItem[];
+}
+
+export interface CommunityContributor {
+  userId: string;
+  userName: string | null;
+  userEmail: string | null;
+  reviewCount: number;
+  avgRating: number;
+}
+
+export interface ForumActivityItem {
+  id: string;
+  title: string;
+  upvotes: number;
+  viewCount: number;
+  authorName: string | null;
+  authorEmail: string | null;
+  authorId: string;
+  date: string;
+}
+
+// ─── Bridge #53 Fidélité → CRM (Member Deals) ──────────────
+export interface LoyaltyCrmBridgeData {
+  member: {
+    id: string;
+    name: string | null;
+    email: string;
+    loyaltyTier: string | null;
+    loyaltyPoints: number;
+  };
+  deals: BridgeDeal[];
+  totalDeals: number;
+  totalDealValue: number;
+}
+
+// ─── Bridge #54 Catalogue → Comptabilité (Product Accounting) ─
+export interface ProductAccountingBridgeData {
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    sku: string | null;
+  };
+  revenue: {
+    totalRevenue: number;
+    totalUnits: number;
+    totalOrders: number;
+  };
+  accounting: {
+    entries: ProductAccountingEntry[];
+    totalDebit: number;
+    totalCredit: number;
+    entryCount: number;
+  };
+}
+
+export interface ProductAccountingEntry {
+  id: string;
+  entryNumber: string;
+  date: string;
+  description: string;
+  type: string;
+  status: string;
+  lineCount: number;
+}
+
+// ─── Bridge #55 Emails → Comptabilité (Email Revenue Attribution) ─
+export interface EmailAccountingBridgeData {
+  email: {
+    id: string;
+    subject: string | null;
+    recipientEmail: string;
+    sentAt: string | null;
+  };
+  attribution: {
+    windowDays: number;
+    attributedOrders: number;
+    attributedRevenue: number;
+    orders: BridgeOrder[];
+  };
+  accounting: {
+    entries: EmailAccountingEntry[];
+    totalDebit: number;
+    totalCredit: number;
+    entryCount: number;
+  };
+}
+
+export interface EmailAccountingEntry {
+  id: string;
+  entryNumber: string;
+  date: string;
+  description: string | null;
+  type: string;
+  status: string;
+}
+
 // ─── Dashboard cross-module ────────────────────────────────
 export interface DashboardCommerceSummary {
   ordersToday: number;
