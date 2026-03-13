@@ -51,12 +51,13 @@ export interface ScrapeResult {
 export async function scrapePlacesToProspects(
   listId: string,
   options: ScrapeOptions,
+  preScrapedPlaces?: ScrapedPlace[],
 ): Promise<ScrapeResult> {
   const maxResults = options.maxResults || 200;
   const crawlWebsites = options.crawlWebsites ?? true;
 
-  // ---- Scrape Google Maps via Playwright ----
-  const places = await scrapeGoogleMaps({
+  // ---- Use pre-scraped places if provided, otherwise scrape via Playwright ----
+  const places = preScrapedPlaces ?? await scrapeGoogleMaps({
     query: options.query,
     location: options.location,
     latitude: options.latitude,

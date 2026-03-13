@@ -1,29 +1,41 @@
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
 
 /**
- * Google Maps Playwright Scraper — Excel Export
+ * Google Maps Scraper — Excel Export
  * POST /api/admin/scraper/export-excel
  *
- * Scrapes Google Maps and returns an .xlsx file.
+ * Accepts pre-scraped results array OR scrape params.
+ * If results are provided, exports directly (instant).
+ * If only query params, re-scrapes (slow, legacy support).
  */
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiError } from '@/lib/api-response';
-import { scrapeGoogleMaps } from '@/lib/scraper/google-maps-playwright';
 import ExcelJS from 'exceljs';
 
+const placeSchema = z.object({
+  name: z.string(),
+  address: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  googleRating: z.number().nullable().optional(),
+  googleReviewCount: z.number().nullable().optional(),
+  category: z.string().nullable().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  openingHours: z.array(z.string()).nullable().optional(),
+  googleMapsUrl: z.string().nullable().optional(),
+});
+
 const exportSchema = z.object({
-  query: z.string().min(1, 'Query is required').max(500).trim(),
-  location: z.string().max(200).trim().optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
-  zoom: z.number().int().min(3).max(21).optional(),
-  maxResults: z.number().int().min(1).max(500).optional().default(100),
-  crawlWebsites: z.boolean().optional().default(true),
-  scrollTimeout: z.number().int().min(5000).max(120000).optional().default(30000),
+  results: z.array(placeSchema).min(1, 'Results are required for export'),
 });
 
 const COLUMNS = [
@@ -58,18 +70,8 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
   }
 
   try {
-    const results = await scrapeGoogleMaps({
-      query: parsed.data.query,
-      location: parsed.data.location,
-      latitude: parsed.data.latitude,
-      longitude: parsed.data.longitude,
-      zoom: parsed.data.zoom,
-      maxResults: parsed.data.maxResults,
-      crawlWebsites: parsed.data.crawlWebsites,
-      scrollTimeout: parsed.data.scrollTimeout,
-    });
+    const results = parsed.data.results;
 
-    // Build Excel workbook
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'BioCycle Peptides - LeadEngine';
     workbook.created = new Date();
@@ -80,7 +82,6 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     sheet.columns = COLUMNS;
 
-    // Style header row
     const headerRow = sheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.fill = {
@@ -90,7 +91,6 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Add data rows
     for (const place of results) {
       sheet.addRow({
         name: place.name,
@@ -111,13 +111,11 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       });
     }
 
-    // Auto-filter
     sheet.autoFilter = {
       from: 'A1',
       to: `O${results.length + 1}`,
     };
 
-    // Generate buffer
     const buffer = await workbook.xlsx.writeBuffer();
     const today = new Date().toISOString().slice(0, 10);
 
@@ -132,4 +130,4 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     const message = err instanceof Error ? err.message : 'Export failed';
     return apiError('Google Maps export failed', 'EXTERNAL_SERVICE_ERROR', { status: 502, details: message, request });
   }
-}, { rateLimit: 3 });
+}, { rateLimit: 10 });

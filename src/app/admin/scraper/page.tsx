@@ -1,132 +1,149 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * Google Maps Scraper — Admin page
+ *
+ * Full interactive map + search panel + results list + job pipeline.
+ * Split layout: 70% map / 30% panel on desktop, stacked on mobile.
+ */
+
+import { useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from '@/hooks/useTranslations';
 import {
-  Search,
-  Download,
-  FileSpreadsheet,
   MapPin,
-  Phone,
-  Mail,
-  Globe,
-  Star,
   Loader2,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
+import { haversineDistance } from '@/lib/scraper/polygon-decomposition';
+import MapProvider from '@/components/admin/scraper/MapProvider';
+import SearchPanel, { type SearchParams } from '@/components/admin/scraper/SearchPanel';
+import ResultsList from '@/components/admin/scraper/ResultsList';
+import ScraperToolbar from '@/components/admin/scraper/ScraperToolbar';
+import JobsPanel from '@/components/admin/scraper/JobsPanel';
+import type { ScrapedPlace } from '@/components/admin/scraper/types';
+import { getPlaceId } from '@/components/admin/scraper/types';
+import type { DrawnShape } from '@/components/admin/scraper/DrawingTools';
 
-// A7-P2-005: Dynamic import — MapSelector loads Google Maps API (~200KB)
-const MapSelector = dynamic(() => import('@/components/admin/scraper/MapSelector'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200">
-      <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-    </div>
-  ),
-});
-
-interface ScrapedPlace {
-  name: string;
-  address: string | null;
-  city: string | null;
-  province: string | null;
-  postalCode: string | null;
-  country: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  googleRating: number | null;
-  googleReviewCount: number | null;
-  category: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  openingHours: string[] | null;
-}
-
-interface MapSelection {
-  latitude: number;
-  longitude: number;
-  radius: number;
-  label: string;
-}
+// Dynamic import for InteractiveMap (loads Google Maps API client-side)
+const InteractiveMap = dynamic(
+  () => import('@/components/admin/scraper/InteractiveMap'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full flex items-center justify-center bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    ),
+  },
+);
 
 export default function ScraperPage() {
   const { t } = useTranslations();
 
-  const [query, setQuery] = useState('');
-  const [location, setLocation] = useState('');
-  const [mapSelection, setMapSelection] = useState<MapSelection | null>(null);
-  const [maxResults, setMaxResults] = useState(100);
-  const [crawlWebsites, setCrawlWebsites] = useState(true);
+  // Search state
   const [results, setResults] = useState<ScrapedPlace[]>([]);
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const emailCount = results.filter((r) => r.email).length;
-  const googleMapsApiKey = typeof window !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || '')
-    : '';
+  // Map state
+  const [drawingMode, setDrawingMode] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [showStreetView, setShowStreetView] = useState(false);
+  const [streetViewTarget, setStreetViewTarget] = useState<ScrapedPlace | null>(null);
+  const [drawnShape, setDrawnShape] = useState<DrawnShape | null>(null);
 
-  /** Build search payload with either text location or map coordinates */
-  const buildPayload = () => {
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // UI state
+  const [showJobsPanel, setShowJobsPanel] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [activePanel, setActivePanel] = useState<'search' | 'results'>('search');
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [crmSuccess, setCrmSuccess] = useState<string | null>(null);
+  // Track last search center for distance sorting
+  const lastSearchCenter = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Build search payload — sends full region for proper polygon decomposition on the backend
+  const buildPayload = useCallback((params: SearchParams) => {
     const payload: Record<string, unknown> = {
-      query,
-      maxResults,
-      crawlWebsites,
+      query: params.query,
+      maxResults: params.maxResults,
+      crawlWebsites: params.crawlWebsites,
+      engine: params.engine || 'playwright',
     };
 
-    if (mapSelection) {
-      payload.latitude = mapSelection.latitude;
-      payload.longitude = mapSelection.longitude;
-      payload.radius = mapSelection.radius;
-    } else if (location) {
-      payload.location = location;
+    if (params.region) {
+      // Send the full region shape — backend handles decomposition
+      payload.region = params.region;
+
+      // Track search center for distance sorting in ResultsList
+      if (params.region.type === 'circle' && params.region.center) {
+        lastSearchCenter.current = params.region.center;
+      } else if (params.region.type === 'rectangle' && params.region.bounds) {
+        const b = params.region.bounds;
+        lastSearchCenter.current = { lat: (b.north + b.south) / 2, lng: (b.east + b.west) / 2 };
+      } else if (params.region.type === 'polygon' && params.region.path && params.region.path.length > 0) {
+        const p = params.region.path;
+        lastSearchCenter.current = {
+          lat: p.reduce((s, pt) => s + pt.lat, 0) / p.length,
+          lng: p.reduce((s, pt) => s + pt.lng, 0) / p.length,
+        };
+      }
+    } else if (params.location) {
+      payload.location = params.location;
     }
 
     return payload;
-  };
+  }, []);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  // Search handler
+  const handleSearch = useCallback(async (params: SearchParams) => {
     setLoading(true);
     setError(null);
+    setActivePanel('results');
+
     try {
+      const payload = buildPayload(params);
       const res = await fetch('/api/admin/scraper/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload()),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || data.error || 'Search failed');
       setResults(data.data || []);
+      setSelectedIds(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildPayload]);
 
-  const handleExport = async (format: 'csv' | 'excel' = 'csv') => {
-    if (!query.trim()) return;
+  // Export handlers
+  const handleExport = useCallback(async (format: 'csv' | 'excel') => {
+    if (results.length === 0) return;
     const isExcel = format === 'excel';
     if (isExcel) setExportingExcel(true); else setExporting(true);
+
     try {
       const endpoint = isExcel ? '/api/admin/scraper/export-excel' : '/api/admin/scraper/export';
+      // Re-export current results via a lightweight approach - send cached results
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload()),
+        body: JSON.stringify({ results }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const ext = isExcel ? 'xlsx' : 'csv';
-      a.download = `google-maps-${new Date().toISOString().slice(0, 10)}.${ext}`;
+      a.download = `google-maps-${new Date().toISOString().slice(0, 10)}.${isExcel ? 'xlsx' : 'csv'}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -134,341 +151,228 @@ export default function ScraperPage() {
     } finally {
       if (isExcel) setExportingExcel(false); else setExporting(false);
     }
-  };
+  }, [results]);
 
-  const renderStars = (rating: number | null) => {
-    if (rating === null) return <span className="text-zinc-500">—</span>;
-    const full = Math.floor(rating);
-    const hasHalf = rating - full >= 0.5;
-    return (
-      <span className="flex items-center gap-0.5">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Star
-            key={i}
-            className={`h-3.5 w-3.5 ${
-              i < full
-                ? 'fill-yellow-400 text-yellow-400'
-                : i === full && hasHalf
-                  ? 'fill-yellow-400/50 text-yellow-400'
-                  : 'text-zinc-600'
-            }`}
-          />
-        ))}
-        <span className="ms-1 text-xs text-zinc-400">{rating.toFixed(1)}</span>
-      </span>
-    );
-  };
+  // Selection handlers
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(results.map(r => getPlaceId(r))));
+  }, [results]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  // CRM handlers
+  const addPlacesToCrm = useCallback(async (places: ScrapedPlace[]) => {
+    if (places.length === 0) return;
+    setCrmLoading(true);
+    setCrmSuccess(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/scraper/add-to-crm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ places }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || 'CRM import failed');
+      setCrmSuccess(`${data.data.added} added, ${data.data.duplicates} dupes`);
+      setTimeout(() => setCrmSuccess(null), 4000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'CRM import failed');
+    } finally {
+      setCrmLoading(false);
+    }
+  }, []);
+
+  const handleAddToCrm = useCallback(async (place: ScrapedPlace) => {
+    await addPlacesToCrm([place]);
+  }, [addPlacesToCrm]);
+
+  const handleAddSelectedToCrm = useCallback(async () => {
+    const selected = results.filter(r => selectedIds.has(getPlaceId(r)));
+    await addPlacesToCrm(selected);
+  }, [results, selectedIds, addPlacesToCrm]);
+
+  // Street View handlers
+  const handleOpenStreetView = useCallback((place: ScrapedPlace) => {
+    setStreetViewTarget(place);
+    setShowStreetView(true);
+  }, []);
+
+  const handleCloseStreetView = useCallback(() => {
+    setShowStreetView(false);
+    setStreetViewTarget(null);
+  }, []);
+
+  // Shape handler
+  const handleShapeDrawn = useCallback((shape: DrawnShape | null) => {
+    setDrawnShape(shape);
+    if (shape) setDrawingMode(false);
+  }, []);
+
+  // Highlight marker — pan map to place + open InfoWindow
+  const [highlightedPlace, setHighlightedPlace] = useState<ScrapedPlace | null>(null);
+  const handleHighlightMarker = useCallback((place: ScrapedPlace) => {
+    setHighlightedPlace(place);
+  }, []);
+
+  const handleHighlightHandled = useCallback(() => {
+    setHighlightedPlace(null);
+  }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">
-          {t('admin.scraper.title')}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          {t('admin.scraper.description')}
-        </p>
-      </div>
-
-      {/* Search Form */}
-      <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/50 p-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Query */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-300">
-              {t('admin.scraper.queryLabel')}
-            </label>
-            <div className="relative">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder={t('admin.scraper.queryPlaceholder')}
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Location (text input, disabled when map selection active) */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-300">
-              {t('admin.scraper.locationLabel')}
-            </label>
-            <div className="relative">
-              <MapPin className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                value={mapSelection ? mapSelection.label : location}
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                  if (mapSelection) setMapSelection(null);
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder={t('admin.scraper.locationPlaceholder')}
-                disabled={!!mapSelection}
-                className={`w-full rounded-lg border border-zinc-600 bg-zinc-900 ps-10 pe-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors ${
-                  mapSelection ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Map Selector */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-300">
-            {t('admin.scraper.mapSelectorLabel')}
-          </label>
-          <MapSelector
-            apiKey={googleMapsApiKey || undefined}
-            onSelect={(selection) => {
-              setMapSelection(selection);
-              if (selection) {
-                setLocation(''); // Clear text location when map is used
-              }
-            }}
-          />
-          {mapSelection && (
-            <p className="text-xs text-blue-400">
-              {t('admin.scraper.mapSearchArea')}: {mapSelection.label} — rayon {
-                mapSelection.radius >= 1000
-                  ? `${(mapSelection.radius / 1000).toFixed(mapSelection.radius % 1000 === 0 ? 0 : 1)} km`
-                  : `${mapSelection.radius} m`
-              }
+    <div className="h-full flex flex-col">
+      {/* Header + Toolbar */}
+      <div className="px-4 py-3 border-b border-zinc-700/50 space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-white">
+              {t('admin.scraper.title')}
+            </h1>
+            <p className="text-xs text-zinc-500">
+              {t('admin.scraper.description')}
             </p>
-          )}
+          </div>
         </div>
 
-        {/* Max Results + Crawl Checkbox */}
-        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-300">
-              {t('admin.scraper.maxResultsLabel')}
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={1}
-                max={500}
-                value={maxResults}
-                onChange={(e) => setMaxResults(Number(e.target.value))}
-                className="w-40 accent-blue-500"
-              />
-              <input
-                type="number"
-                min={1}
-                max={500}
-                value={maxResults}
-                onChange={(e) => {
-                  const v = Math.min(500, Math.max(1, Number(e.target.value) || 1));
-                  setMaxResults(v);
-                }}
-                className="w-16 rounded-lg border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-sm text-white text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              />
-            </div>
+        <ScraperToolbar
+          drawingMode={drawingMode}
+          showHeatmap={showHeatmap}
+          showStreetView={showStreetView}
+          hasResults={results.length > 0}
+          onToggleDrawing={() => setDrawingMode(d => !d)}
+          onToggleHeatmap={() => setShowHeatmap(h => !h)}
+          onToggleStreetView={() => setShowStreetView(s => !s)}
+          onExportCsv={() => handleExport('csv')}
+          onExportExcel={() => handleExport('excel')}
+          onShowJobs={() => setShowJobsPanel(j => !j)}
+          exporting={exporting}
+          exportingExcel={exportingExcel}
+        />
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-900/20 px-3 py-2 text-xs text-red-400">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          {error}
+          <button onClick={() => setError(null)} className="ml-auto text-red-400/60 hover:text-red-300">
+            &times;
+          </button>
+        </div>
+      )}
+
+      {/* CRM success banner */}
+      {crmSuccess && (
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg border border-green-800/50 bg-green-900/20 px-3 py-2 text-xs text-green-400">
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+          CRM: {crmSuccess}
+        </div>
+      )}
+
+      {/* Main content: Map + Side panel */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Map area (70%) */}
+        <div className="flex-1 lg:w-[70%] relative min-h-[300px]">
+          <MapProvider>
+            <InteractiveMap
+              results={results}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onShapeDrawn={handleShapeDrawn}
+              onAddToCrm={handleAddToCrm}
+              crmLoading={crmLoading}
+              drawingMode={drawingMode}
+              showHeatmap={showHeatmap}
+              showStreetView={showStreetView}
+              streetViewTarget={streetViewTarget}
+              onCloseStreetView={handleCloseStreetView}
+              highlightedPlace={highlightedPlace}
+              onHighlightHandled={handleHighlightHandled}
+            />
+          </MapProvider>
+        </div>
+
+        {/* Side panel (30%) */}
+        <div className="lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] border-t lg:border-t-0 lg:border-l border-zinc-700/50 flex flex-col bg-zinc-800/30">
+          {/* Panel tabs */}
+          <div className="flex border-b border-zinc-700/50">
+            <button
+              onClick={() => setActivePanel('search')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activePanel === 'search'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {t('admin.scraper.searchTab')}
+            </button>
+            <button
+              onClick={() => setActivePanel('results')}
+              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                activePanel === 'results'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {t('admin.scraper.resultsTab')}
+              {results.length > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-blue-600/30 text-blue-400 text-[10px]">
+                  {results.length}
+                </span>
+              )}
+            </button>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={crawlWebsites}
-              onChange={(e) => setCrawlWebsites(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 h-4 w-4"
-            />
-            <span className="text-sm text-zinc-300">
-              {t('admin.scraper.crawlWebsites')}
-            </span>
-          </label>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 pt-2">
-          <button
-            onClick={handleSearch}
-            disabled={loading || !query.trim()}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+          {/* Panel content */}
+          <div className="flex-1 overflow-hidden">
+            {activePanel === 'search' ? (
+              <div className="p-3 overflow-y-auto h-full">
+                <SearchPanel
+                  onSearch={handleSearch}
+                  loading={loading}
+                  drawnShape={drawnShape}
+                />
+              </div>
             ) : (
-              <Search className="h-4 w-4" />
+              results.length > 0 ? (
+                <ResultsList
+                  results={results}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                  onSelectAll={selectAll}
+                  onDeselectAll={deselectAll}
+                  onAddSelectedToCrm={handleAddSelectedToCrm}
+                  onOpenStreetView={handleOpenStreetView}
+                  onHighlightMarker={handleHighlightMarker}
+                  crmLoading={crmLoading}
+                  searchCenter={lastSearchCenter.current}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
+                  <MapPin className="h-10 w-10 mb-3 text-zinc-600" />
+                  <p className="text-xs">{t('admin.scraper.emptyState')}</p>
+                </div>
+              )
             )}
-            {t('admin.scraper.searchButton')}
-          </button>
-
-          <button
-            onClick={() => handleExport('csv')}
-            disabled={exporting || !query.trim()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            {t('admin.scraper.exportButton')}
-          </button>
-
-          <button
-            onClick={() => handleExport('excel')}
-            disabled={exportingExcel || !query.trim()}
-            className="inline-flex items-center gap-2 rounded-lg border border-green-700 bg-green-800/50 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {exportingExcel ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FileSpreadsheet className="h-4 w-4" />
-            )}
-            {t('admin.scraper.exportExcelButton')}
-          </button>
+          </div>
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-900/20 px-4 py-3 text-sm text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
-        </div>
-      )}
-
-      {/* Results */}
-      {results.length > 0 && (
-        <div className="space-y-3">
-          {/* Stats Bar */}
-          <div className="flex items-center gap-4 text-sm text-zinc-400">
-            <span>
-              <span className="font-semibold text-white">{results.length}</span>{' '}
-              {t('admin.scraper.resultsFound')}
-            </span>
-            <span className="text-zinc-600">|</span>
-            <span>
-              <Mail className="inline h-3.5 w-3.5 me-1" />
-              <span className="font-semibold text-white">{emailCount}</span>{' '}
-              {t('admin.scraper.emailsFound')}
-            </span>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto rounded-xl border border-zinc-700/50">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-700/50 bg-zinc-800/80">
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colName')}
-                  </th>
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colAddress')}
-                  </th>
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colPhone')}
-                  </th>
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colEmail')}
-                  </th>
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colWebsite')}
-                  </th>
-                  <th className="px-4 py-3 text-start font-medium text-zinc-300">
-                    {t('admin.scraper.colRating')}
-                  </th>
-                  <th className="px-4 py-3 text-end font-medium text-zinc-300">
-                    {t('admin.scraper.colReviews')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-700/30">
-                {results.map((place, idx) => (
-                  <tr
-                    key={idx}
-                    className="bg-zinc-800/30 hover:bg-zinc-700/30 transition-colors"
-                  >
-                    {/* Name */}
-                    <td className="px-4 py-3 font-medium text-white whitespace-nowrap">
-                      {place.name}
-                    </td>
-
-                    {/* Address */}
-                    <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">
-                      {place.address || '—'}
-                    </td>
-
-                    {/* Phone */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {place.phone ? (
-                        <a
-                          href={`tel:${place.phone}`}
-                          className="inline-flex items-center gap-1 text-zinc-300 hover:text-blue-400 transition-colors"
-                        >
-                          <Phone className="h-3.5 w-3.5" />
-                          {place.phone}
-                        </a>
-                      ) : (
-                        <span className="text-zinc-600">—</span>
-                      )}
-                    </td>
-
-                    {/* Email */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {place.email ? (
-                        <a
-                          href={`mailto:${place.email}`}
-                          className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          <Mail className="h-3.5 w-3.5" />
-                          {place.email}
-                        </a>
-                      ) : (
-                        <span className="text-zinc-600">—</span>
-                      )}
-                    </td>
-
-                    {/* Website */}
-                    <td className="px-4 py-3 max-w-[180px] truncate">
-                      {place.website ? (
-                        <a
-                          href={place.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          <Globe className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">
-                            {place.website.replace(/^https?:\/\/(www\.)?/, '')}
-                          </span>
-                        </a>
-                      ) : (
-                        <span className="text-zinc-600">—</span>
-                      )}
-                    </td>
-
-                    {/* Rating */}
-                    <td className="px-4 py-3">{renderStars(place.googleRating)}</td>
-
-                    {/* Reviews */}
-                    <td className="px-4 py-3 text-end text-zinc-400">
-                      {place.googleReviewCount !== null
-                        ? place.googleReviewCount.toLocaleString()
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && results.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
-          <MapPin className="h-12 w-12 mb-3 text-zinc-600" />
-          <p className="text-sm">{t('admin.scraper.emptyState')}</p>
-        </div>
-      )}
+      {/* Jobs Pipeline panel (bottom) */}
+      <JobsPanel
+        visible={showJobsPanel}
+        onClose={() => setShowJobsPanel(false)}
+      />
     </div>
   );
 }

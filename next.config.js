@@ -113,14 +113,14 @@ const nextConfig = {
               "default-src 'self'",
               // In production: no unsafe-eval. In dev: needed for HMR/React Fast Refresh
               process.env.NODE_ENV === 'production'
-                ? `script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com`
-                : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com`,
+                ? `script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com https://maps.googleapis.com`
+                : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com https://maps.googleapis.com`,
               // unsafe-inline required by Next.js styled-jsx and Radix UI inline styles
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 https://api.telnyx.com",
-              "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 https://api.telnyx.com https://maps.googleapis.com",
+              "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com https://www.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self' https://accounts.google.com https://appleid.apple.com https://www.facebook.com https://x.com https://twitter.com",

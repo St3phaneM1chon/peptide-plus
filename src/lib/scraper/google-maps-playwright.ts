@@ -13,6 +13,8 @@
 
 import { chromium, Browser, Page } from 'playwright';
 import { logger } from '@/lib/logger';
+import { getProxyManager } from './proxy-manager';
+import { getRandomBrowserConfig, randomDelay } from './ua-rotator';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -64,7 +66,7 @@ async function extractEmailFromWebsite(websiteUrl: string): Promise<string | nul
     const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(websiteUrl, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LeadEngine/1.0)' },
+      headers: { 'User-Agent': getRandomBrowserConfig().userAgent },
       redirect: 'follow',
     });
     clearTimeout(timeout);
@@ -175,8 +177,14 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
   let browser: Browser | null = null;
 
   try {
+    // Anti-detection: randomized browser config + optional proxy
+    const proxyManager = getProxyManager();
+    const proxyConfig = proxyManager.getPlaywrightProxy();
+    const browserConfig = getRandomBrowserConfig();
+
     browser = await chromium.launch({
       headless: true,
+      proxy: proxyConfig,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -186,9 +194,10 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
     });
 
     const context = await browser.newContext({
-      locale: 'fr-CA',
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      viewport: { width: 1920, height: 1080 },
+      locale: browserConfig.locale,
+      userAgent: browserConfig.userAgent,
+      viewport: browserConfig.viewport,
+      timezoneId: browserConfig.timezoneId,
     });
 
     const page = await context.newPage();
@@ -215,11 +224,11 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
       const btn = page.locator('button:has-text("Tout accepter"), button:has-text("Accept all")');
       if (await btn.isVisible({ timeout: 3000 })) {
         await btn.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(randomDelay(1500, 500));
       }
     } catch {}
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(randomDelay(2500, 800));
 
     // ---- Check for results feed ----
     const feedSelector = 'div[role="feed"]';
@@ -255,7 +264,7 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
       const ref = placeRefs[i];
       try {
         await page.goto(ref.href, { waitUntil: 'domcontentloaded', timeout: 15000 });
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(randomDelay(2000, 800));
 
         const place = await scrapePlaceFromPage(page, crawlWebsites, ref.name);
         if (place) {
@@ -269,6 +278,11 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
       }
     }
 
+    // Mark proxy as successful if used
+    if (proxyConfig?.server) {
+      proxyManager.markSuccess(proxyConfig.server);
+    }
+
     logger.info('Playwright scraper: completed', {
       query: options.query,
       location: options.location || `${options.latitude},${options.longitude}`,
@@ -279,6 +293,10 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
 
     return places;
   } catch (err) {
+    // Mark proxy as failed if used
+    if (proxyConfig?.server) {
+      proxyManager.markFailed(proxyConfig.server);
+    }
     logger.error('Playwright scraper: fatal error', {
       error: err instanceof Error ? err.message : String(err),
     });
@@ -329,7 +347,7 @@ async function scrollAndCollectLinks(
       if (feed) feed.scrollTop = feed.scrollHeight;
     }, feedSelector);
 
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(randomDelay(2000, 600));
   }
 
   // Collect all links

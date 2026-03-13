@@ -1,5 +1,5 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-12 (T4-7: +5 cross-module bridges #51-#55, total 50 bridges)
+# LAST UPDATED: 2026-03-12 (Scraper mega-audit: 46 issues fixed, E2E tested, 6 API routes + 13 components + 5 libs documented)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
@@ -1032,6 +1032,41 @@ orders, users/[id], users/[id]/points, **users/[id]/email** (POST - admin transa
 | /api/admin/crm/lists/[id]/deduplicate | POST | Prospect | admin-guard | Cross-list dedup (phone+domain+GPS) |
 | /api/admin/crm/lists/[id]/integrate | POST | Prospect,CrmLead,DnclEntry | admin-guard | Convert prospects → CRM leads + DNC check + assignment |
 | /api/admin/crm/lists/[id]/start-campaign | POST | CrmLead,DialerCampaign,DialerListEntry,DnclEntry | admin-guard | 1-click campaign creation from list |
+
+### Google Maps Scraper Routes (6 routes - 2026-03-12)
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/admin/scraper/search | POST | — | admin-guard (rateLimit:3) | Search via Playwright or Places API, supports region decomposition (circle/rect/polygon) |
+| /api/admin/scraper/jobs | GET,POST | ScrapeJob,ProspectList,Prospect | admin-guard | Job pipeline: create (POST) + list with polling (GET), max 3 concurrent |
+| /api/admin/scraper/jobs/[id] | GET,DELETE | ScrapeJob | admin-guard | Job detail + cancellation |
+| /api/admin/scraper/add-to-crm | POST | Prospect,ProspectList | admin-guard | Import scraped places → Prospect + lead scoring + dedup |
+| /api/admin/scraper/export | POST | — | admin-guard | CSV export of cached results |
+| /api/admin/scraper/export-excel | POST | — | admin-guard | XLSX export of cached results |
+
+### Google Maps Scraper Components (13 components - 2026-03-12)
+| Component | Path | Consumers | Notes |
+|-----------|------|-----------|-------|
+| InteractiveMap | components/admin/scraper/InteractiveMap.tsx | page.tsx | Full Google Maps with markers, clustering, drawing, heatmap, Street View |
+| MapProvider | components/admin/scraper/MapProvider.tsx | page.tsx | @vis.gl/react-google-maps APIProvider wrapper |
+| SearchPanel | components/admin/scraper/SearchPanel.tsx | page.tsx | Query + engine + region + crawl options |
+| ResultsList | components/admin/scraper/ResultsList.tsx | page.tsx | Scrollable sorted/filtered results with CRM import |
+| ScraperToolbar | components/admin/scraper/ScraperToolbar.tsx | page.tsx | Drawing/heatmap/export/jobs toggles |
+| JobsPanel | components/admin/scraper/JobsPanel.tsx | page.tsx | Background job pipeline with polling |
+| ProspectMarker | components/admin/scraper/ProspectMarker.tsx | InteractiveMap | AdvancedMarker for each place |
+| ProspectInfoWindow | components/admin/scraper/ProspectInfoWindow.tsx | InteractiveMap | InfoWindow with CRM import button |
+| MarkerCluster | components/admin/scraper/MarkerCluster.tsx | InteractiveMap | @googlemaps/markerclusterer integration |
+| DrawingTools | components/admin/scraper/DrawingTools.tsx | InteractiveMap | Circle/rect/polygon drawing overlay |
+| HeatmapLayer | components/admin/scraper/HeatmapLayer.tsx | InteractiveMap | Google Maps heatmap visualization |
+| StreetViewPanel | components/admin/scraper/StreetViewPanel.tsx | InteractiveMap | Street View overlay with error handling |
+
+### Google Maps Scraper Libs (5 files - 2026-03-12)
+| File | Path | Notes |
+|------|------|-------|
+| google-maps-playwright.ts | lib/scraper/ | Headless Chrome scraper with proxy/UA rotation, anti-detection |
+| google-maps-standalone.ts | lib/scraper/ | Places API Text Search + Nearby Search + Place Details |
+| polygon-decomposition.ts | lib/scraper/ | Haversine distance, region → search circles decomposition |
+| proxy-manager.ts | lib/scraper/ | SOCKS5/HTTP proxy rotation with health checks |
+| ua-rotator.ts | lib/scraper/ | 21 UAs, Gaussian random delays, browser config randomization |
 
 ### Mega-Audit v2 Routes (32 new routes - 2026-03-04)
 

@@ -229,6 +229,9 @@ model User {
   // Prospect Lists
   prospectListsCreated   ProspectList[]        @relation("ProspectListCreator")
 
+  // Scrape Jobs
+  scrapeJobsCreated      ScrapeJob[]           @relation("ScrapeJobCreator")
+
   // FIX A1-P0-002: Reverse relations for newly added FKs
   subscriptions          Subscription[]        @relation("UserSubscriptions")
   wishlists              Wishlist[]            @relation("UserWishlists")

@@ -1007,6 +1007,7 @@ model ProspectList {
   createdById      String
   createdBy        User                @relation("ProspectListCreator", fields: [createdById], references: [id])
   prospects        Prospect[]
+  scrapeJobs       ScrapeJob[]
 
   tags             String[]            @default([])
   createdAt        DateTime            @default(now())
@@ -1091,5 +1092,34 @@ model Prospect {
   @@index([website])
   @@index([enrichmentScore])
   @@index([dncStatus])
+}
+
+// --- Scraper Job Queue ---
+model ScrapeJob {
+  id             String        @id @default(cuid())
+  status         String        @default("pending") // pending, running, completed, failed, cancelled
+  query          String
+  engine         String        @default("playwright") // playwright | places_api
+  region         Json?         // {type: "circle"|"rect"|"polygon", coords: [...]}
+  totalFound     Int           @default(0)
+  totalImported  Int           @default(0)
+  totalDupes     Int           @default(0)
+  errorLog       String?       @db.Text
+  progress       Int           @default(0) // 0-100
+
+  prospectListId String?
+  prospectList   ProspectList? @relation(fields: [prospectListId], references: [id])
+
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  createdById    String?
+  createdBy      User?         @relation("ScrapeJobCreator", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([createdById])
+  @@index([createdAt])
 }
 
