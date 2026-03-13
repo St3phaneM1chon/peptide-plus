@@ -46,13 +46,13 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-zinc-200">
+      <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
         {t('admin.scraper.searchTitle')}
       </h3>
 
       {/* Keyword */}
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-400">
+        <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
           {t('admin.scraper.queryLabel')}
         </label>
         <div className="relative">
@@ -63,14 +63,14 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder={t('admin.scraper.queryPlaceholder')}
-            className="w-full rounded-lg border border-zinc-600 bg-zinc-900 ps-8 pe-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 ps-8 pe-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
           />
         </div>
       </div>
 
       {/* Location (disabled if shape drawn) */}
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-400">
+        <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
           {t('admin.scraper.locationLabel')}
         </label>
         <input
@@ -80,7 +80,7 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder={t('admin.scraper.locationPlaceholder')}
           disabled={!!drawnShape}
-          className={`w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
+          className={`w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none ${
             drawnShape ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         />
@@ -93,13 +93,13 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
 
       {/* Engine select */}
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-400">
+        <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
           {t('admin.scraper.engineLabel')}
         </label>
         <select
           value={engine}
           onChange={(e) => setEngine(e.target.value as 'playwright' | 'places_api')}
-          className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
         >
           <option value="playwright">{t('admin.scraper.enginePlaywright')}</option>
           <option value="places_api">{t('admin.scraper.engineGooglePlaces')}</option>
@@ -108,7 +108,7 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
 
       {/* Max results */}
       <div className="space-y-1">
-        <label className="text-xs font-medium text-zinc-400">
+        <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
           {t('admin.scraper.maxResultsLabel')}
         </label>
         <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
             max={500}
             value={maxResults}
             onChange={(e) => setMaxResults(Math.min(500, Math.max(1, Number(e.target.value) || 1)))}
-            className="w-14 rounded border border-zinc-600 bg-zinc-900 px-1.5 py-1 text-xs text-white text-center focus:border-blue-500 outline-none"
+            className="w-14 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-1.5 py-1 text-xs text-zinc-900 dark:text-white text-center focus:border-blue-500 outline-none"
           />
         </div>
       </div>
@@ -137,9 +137,9 @@ export default function SearchPanel({ onSearch, loading, drawnShape }: SearchPan
           type="checkbox"
           checked={crawlWebsites}
           onChange={(e) => setCrawlWebsites(e.target.checked)}
-          className="rounded border-zinc-600 bg-zinc-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 h-3.5 w-3.5"
+          className="rounded border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 h-3.5 w-3.5"
         />
-        <span className="text-xs text-zinc-300">
+        <span className="text-xs text-zinc-700 dark:text-zinc-300">
           {t('admin.scraper.crawlWebsites')}
         </span>
       </label>

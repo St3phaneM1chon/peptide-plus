@@ -197,11 +197,11 @@ export default function DrawingTools({ onShapeDrawn }: DrawingToolsProps) {
   };
 
   return (
-    <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-zinc-900/90 rounded-lg p-1.5 backdrop-blur-sm border border-zinc-700/50">
+    <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/90 dark:bg-zinc-900/90 rounded-lg p-1.5 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700/50">
       <button
         onClick={() => setDrawingMode('circle')}
         className={`p-2 rounded-md transition-colors ${
-          activeMode === 'circle' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-zinc-700 hover:text-white'
+          activeMode === 'circle' ? 'bg-blue-600 text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
         }`}
         title={t('admin.scraper.drawCircle')}
       >
@@ -210,7 +210,7 @@ export default function DrawingTools({ onShapeDrawn }: DrawingToolsProps) {
       <button
         onClick={() => setDrawingMode('rectangle')}
         className={`p-2 rounded-md transition-colors ${
-          activeMode === 'rectangle' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-zinc-700 hover:text-white'
+          activeMode === 'rectangle' ? 'bg-blue-600 text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
         }`}
         title={t('admin.scraper.drawRectangle')}
       >
@@ -219,7 +219,7 @@ export default function DrawingTools({ onShapeDrawn }: DrawingToolsProps) {
       <button
         onClick={() => setDrawingMode('polygon')}
         className={`p-2 rounded-md transition-colors ${
-          activeMode === 'polygon' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:bg-zinc-700 hover:text-white'
+          activeMode === 'polygon' ? 'bg-blue-600 text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
         }`}
         title={t('admin.scraper.drawPolygon')}
       >
@@ -228,7 +228,7 @@ export default function DrawingTools({ onShapeDrawn }: DrawingToolsProps) {
 
       {overlayRef.current && (
         <>
-          <div className="w-px h-5 bg-zinc-700" />
+          <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700" />
           <button
             onClick={handleClear}
             className="p-2 rounded-md text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
@@ -237,7 +237,7 @@ export default function DrawingTools({ onShapeDrawn }: DrawingToolsProps) {
             <Trash2 className="h-4 w-4" />
           </button>
           {shapeInfo && (
-            <span className="text-xs text-zinc-400 px-1">{shapeInfo}</span>
+            <span className="text-xs text-zinc-600 dark:text-zinc-400 px-1">{shapeInfo}</span>
           )}
         </>
       )}

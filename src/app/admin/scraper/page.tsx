@@ -32,8 +32,8 @@ const InteractiveMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-full flex items-center justify-center bg-zinc-800/50 rounded-xl border border-zinc-700/50">
-        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      <div className="h-full flex items-center justify-center bg-gray-100/50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-600 dark:text-zinc-400" />
       </div>
     ),
   },
@@ -170,11 +170,15 @@ export default function ScraperPage() {
     setSelectedIds(new Set());
   }, []);
 
+  // CRM state for link
+  const [crmListId, setCrmListId] = useState<string | null>(null);
+
   // CRM handlers
   const addPlacesToCrm = useCallback(async (places: ScrapedPlace[]) => {
     if (places.length === 0) return;
     setCrmLoading(true);
     setCrmSuccess(null);
+    setCrmListId(null);
     setError(null);
     try {
       const res = await fetch('/api/admin/scraper/add-to-crm', {
@@ -184,14 +188,17 @@ export default function ScraperPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'CRM import failed');
-      setCrmSuccess(`${data.data.added} added, ${data.data.duplicates} dupes`);
-      setTimeout(() => setCrmSuccess(null), 4000);
+      const resultData = data.data;
+      setCrmSuccess(`${resultData.added} ${t('admin.scraper.crmImportSuccess')}, ${resultData.duplicates} ${t('admin.scraper.dupes')}`);
+      setCrmListId(resultData.listId || null);
+      setSelectedIds(new Set()); // Clear selection after successful import
+      setTimeout(() => { setCrmSuccess(null); setCrmListId(null); }, 8000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'CRM import failed');
     } finally {
       setCrmLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleAddToCrm = useCallback(async (place: ScrapedPlace) => {
     await addPlacesToCrm([place]);
@@ -232,10 +239,10 @@ export default function ScraperPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header + Toolbar */}
-      <div className="px-4 py-3 border-b border-zinc-700/50 space-y-2">
+      <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700/50 space-y-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-zinc-900 dark:text-white">
               {t('admin.scraper.title')}
             </h1>
             <p className="text-xs text-zinc-500">
@@ -276,6 +283,14 @@ export default function ScraperPage() {
         <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg border border-green-800/50 bg-green-900/20 px-3 py-2 text-xs text-green-400">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
           CRM: {crmSuccess}
+          {crmListId && (
+            <a
+              href={`/admin/crm/lists/${crmListId}`}
+              className="ml-2 underline hover:text-green-300 font-medium"
+            >
+              {t('admin.scraper.viewInCrm')}
+            </a>
+          )}
         </div>
       )}
 
@@ -303,15 +318,15 @@ export default function ScraperPage() {
         </div>
 
         {/* Side panel (30%) */}
-        <div className="lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] border-t lg:border-t-0 lg:border-l border-zinc-700/50 flex flex-col bg-zinc-800/30">
+        <div className="lg:w-[30%] lg:min-w-[320px] lg:max-w-[420px] border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-700/50 flex flex-col bg-gray-50/50 dark:bg-zinc-800/30">
           {/* Panel tabs */}
-          <div className="flex border-b border-zinc-700/50">
+          <div className="flex border-b border-zinc-200 dark:border-zinc-700/50">
             <button
               onClick={() => setActivePanel('search')}
               className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                 activePanel === 'search'
                   ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               {t('admin.scraper.searchTab')}
@@ -321,7 +336,7 @@ export default function ScraperPage() {
               className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                 activePanel === 'results'
                   ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               {t('admin.scraper.resultsTab')}
@@ -358,8 +373,8 @@ export default function ScraperPage() {
                   searchCenter={lastSearchCenter.current}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
-                  <MapPin className="h-10 w-10 mb-3 text-zinc-600" />
+                <div className="flex flex-col items-center justify-center py-16 text-zinc-500 dark:text-zinc-500">
+                  <MapPin className="h-10 w-10 mb-3 text-zinc-400 dark:text-zinc-600" />
                   <p className="text-xs">{t('admin.scraper.emptyState')}</p>
                 </div>
               )

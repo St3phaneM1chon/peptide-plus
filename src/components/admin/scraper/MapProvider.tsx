@@ -17,7 +17,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 export default function MapProvider({ children }: MapProviderProps) {
   if (!API_KEY) {
     return (
-      <div className="flex items-center justify-center h-64 bg-zinc-800/50 rounded-xl border border-zinc-700/50 text-zinc-500 text-sm">
+      <div className="flex items-center justify-center h-64 bg-gray-100/50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/50 text-zinc-500 text-sm">
         Google Maps API key not configured (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
       </div>
     );

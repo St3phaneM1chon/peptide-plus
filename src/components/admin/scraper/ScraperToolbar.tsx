@@ -54,7 +54,7 @@ export default function ScraperToolbar({
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
           drawingMode
             ? 'bg-blue-600 text-white'
-            : 'bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600/50 hover:text-white border border-zinc-600'
+            : 'bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600'
         }`}
       >
         <Pencil className="h-3.5 w-3.5" />
@@ -67,7 +67,7 @@ export default function ScraperToolbar({
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
           showStreetView
             ? 'bg-blue-600 text-white'
-            : 'bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600/50 hover:text-white border border-zinc-600'
+            : 'bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600'
         }`}
       >
         <Eye className="h-3.5 w-3.5" />
@@ -81,20 +81,20 @@ export default function ScraperToolbar({
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
           showHeatmap
             ? 'bg-orange-600 text-white'
-            : 'bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600/50 hover:text-white border border-zinc-600'
+            : 'bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600'
         } disabled:opacity-40 disabled:cursor-not-allowed`}
       >
         <Layers className="h-3.5 w-3.5" />
         {t('admin.scraper.heatmap')}
       </button>
 
-      <div className="w-px h-5 bg-zinc-700 mx-1" />
+      <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1" />
 
       {/* Export CSV */}
       <button
         onClick={onExportCsv}
         disabled={!hasResults || exporting}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600/50 hover:text-white border border-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Download className="h-3.5 w-3.5" />
         {t('admin.scraper.exportCsv')}
@@ -113,7 +113,7 @@ export default function ScraperToolbar({
       {/* Job History */}
       <button
         onClick={onShowJobs}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600/50 hover:text-white border border-zinc-600 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600 transition-colors"
       >
         <History className="h-3.5 w-3.5" />
         {t('admin.scraper.jobHistory')}

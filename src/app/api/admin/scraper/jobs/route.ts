@@ -11,6 +11,26 @@ import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiPaginated, apiError } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
+
+// Global map of active job AbortControllers for real cancellation
+const activeJobControllers = new Map<string, AbortController>();
+
+/** Get AbortSignal for a job, or undefined if not tracked */
+export function getJobSignal(jobId: string): AbortSignal | undefined {
+  return activeJobControllers.get(jobId)?.signal;
+}
+
+/** Cancel an active job by aborting its controller */
+export function cancelJob(jobId: string): boolean {
+  const controller = activeJobControllers.get(jobId);
+  if (controller) {
+    controller.abort();
+    activeJobControllers.delete(jobId);
+    return true;
+  }
+  return false;
+}
 
 const createJobSchema = z.object({
   query: z.string().min(1).max(500).trim(),
@@ -79,9 +99,15 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     },
   });
 
+  // Register AbortController for real cancellation
+  const controller = new AbortController();
+  activeJobControllers.set(job.id, controller);
+
   // Start the scrape in background (non-blocking)
-  runScrapeJob(job.id, data).catch((err) => {
-    console.error('Background scrape job failed:', err);
+  runScrapeJob(job.id, data, controller.signal).catch((err) => {
+    logger.error('Background scrape job failed', { jobId: job.id, error: err instanceof Error ? err.message : String(err) });
+  }).finally(() => {
+    activeJobControllers.delete(job.id);
   });
 
   return apiSuccess(job, { status: 201, request });
@@ -124,20 +150,31 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 async function runScrapeJob(
   jobId: string,
   params: z.infer<typeof createJobSchema>,
+  signal: AbortSignal,
 ) {
   try {
+    // Check abort before starting
+    if (signal.aborted) return;
+
     await prisma.scrapeJob.update({
       where: { id: jobId },
       data: { status: 'running', startedAt: new Date(), progress: 5 },
     });
 
-    // Import the scraper dynamically to avoid loading at build time
     await prisma.scrapeJob.update({
       where: { id: jobId },
       data: { progress: 10 },
     });
 
-    // Phase 1: Scrape (single scrape — never double)
+    if (signal.aborted) {
+      await prisma.scrapeJob.update({
+        where: { id: jobId },
+        data: { status: 'cancelled', completedAt: new Date() },
+      });
+      return;
+    }
+
+    // Phase 1: Scrape
     let results: Awaited<ReturnType<typeof import('@/lib/scraper/google-maps-playwright').scrapeGoogleMaps>>;
 
     if (params.engine === 'places_api') {
@@ -161,12 +198,20 @@ async function runScrapeJob(
       });
     }
 
+    if (signal.aborted) {
+      await prisma.scrapeJob.update({
+        where: { id: jobId },
+        data: { status: 'cancelled', totalFound: results.length, completedAt: new Date() },
+      });
+      return;
+    }
+
     await prisma.scrapeJob.update({
       where: { id: jobId },
       data: { totalFound: results.length, progress: 70 },
     });
 
-    // Phase 2: Import to CRM if prospect list specified (pass pre-scraped results to avoid re-scraping)
+    // Phase 2: Import to CRM if prospect list specified
     let imported = 0;
     let dupes = 0;
     if (params.prospectListId) {
@@ -194,7 +239,15 @@ async function runScrapeJob(
       },
     });
   } catch (err) {
+    if (signal.aborted) {
+      await prisma.scrapeJob.update({
+        where: { id: jobId },
+        data: { status: 'cancelled', completedAt: new Date() },
+      }).catch(() => {});
+      return;
+    }
     const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.error('Scrape job failed', { jobId, error: errorMessage });
     await prisma.scrapeJob.update({
       where: { id: jobId },
       data: {

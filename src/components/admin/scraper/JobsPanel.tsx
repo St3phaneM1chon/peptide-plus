@@ -117,12 +117,12 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
   };
 
   return (
-    <div className="border-t border-zinc-700/50 bg-zinc-800/80 max-h-48 overflow-y-auto">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-700/30">
-        <h3 className="text-xs font-semibold text-zinc-300">
+    <div className="border-t border-zinc-200 dark:border-zinc-700/50 bg-gray-100/80 dark:bg-zinc-800/80 max-h-48 overflow-y-auto">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-700/30">
+        <h3 className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
           {t('admin.scraper.jobsPipeline')} ({jobs.length})
         </h3>
-        <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -145,7 +145,7 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
         </div>
       )}
 
-      <div className="divide-y divide-zinc-800/50">
+      <div className="divide-y divide-zinc-200 dark:divide-zinc-800/50">
         {jobs.map(job => (
           <div key={job.id} className="px-4 py-2 flex items-center gap-3">
             {/* Status icon */}
@@ -154,13 +154,13 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
             {/* Job info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-white truncate">{job.query}</span>
+                <span className="text-xs font-medium text-zinc-900 dark:text-white truncate">{job.query}</span>
                 <span className="text-[10px] text-zinc-500 uppercase">{job.engine}</span>
               </div>
 
               {/* Progress bar for running jobs */}
               {(job.status === 'running' || job.status === 'pending') && (
-                <div className="mt-1 h-1 rounded-full bg-zinc-700 overflow-hidden">
+                <div className="mt-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-blue-500 transition-all duration-500"
                     style={{ width: `${job.progress}%` }}

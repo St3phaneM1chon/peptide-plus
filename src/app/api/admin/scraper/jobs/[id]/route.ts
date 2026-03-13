@@ -10,6 +10,7 @@ import { NextRequest } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
+import { cancelJob } from '../route';
 
 export const GET = withAdminGuard(async (
   request: NextRequest,
@@ -45,6 +46,9 @@ export const DELETE = withAdminGuard(async (
   if (job.status === 'completed' || job.status === 'failed') {
     return apiError('Cannot cancel a finished job', 'VALIDATION_ERROR', { status: 400, request });
   }
+
+  // Abort the running scraper (real cancellation)
+  cancelJob(id);
 
   await prisma.scrapeJob.update({
     where: { id },

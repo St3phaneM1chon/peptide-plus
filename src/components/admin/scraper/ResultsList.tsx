@@ -112,7 +112,7 @@ export default function ResultsList({
     return (
       <span className="flex items-center gap-0.5">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-        <span className="text-xs text-zinc-300">{rating.toFixed(1)}</span>
+        <span className="text-xs text-zinc-700 dark:text-zinc-300">{rating.toFixed(1)}</span>
       </span>
     );
   };
@@ -120,15 +120,15 @@ export default function ResultsList({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-zinc-700/50 space-y-2">
+      <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-700/50 space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-xs text-zinc-400">
-            <span className="font-semibold text-white">{results.length}</span>{' '}
+          <div className="text-xs text-zinc-600 dark:text-zinc-400">
+            <span className="font-semibold text-zinc-900 dark:text-white">{results.length}</span>{' '}
             {t('admin.scraper.resultsFound')}
             {emailCount > 0 && (
               <span className="ml-2">
                 <Mail className="inline h-3 w-3 mr-0.5" />
-                <span className="font-semibold text-white">{emailCount}</span>
+                <span className="font-semibold text-zinc-900 dark:text-white">{emailCount}</span>
               </span>
             )}
           </div>
@@ -159,7 +159,7 @@ export default function ResultsList({
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as SortField)}
-              className="bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-400 px-1 py-0.5 outline-none"
+              className="bg-gray-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded text-[10px] text-zinc-600 dark:text-zinc-400 px-1 py-0.5 outline-none"
             >
               <option value="rating">{t('admin.scraper.colRating')}</option>
               <option value="reviews">{t('admin.scraper.colReviews')}</option>
@@ -168,7 +168,7 @@ export default function ResultsList({
             </select>
             <button
               onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-              className="text-zinc-500 hover:text-white transition-colors"
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               <ChevronDown className={`h-3 w-3 transition-transform ${sortDir === 'asc' ? 'rotate-180' : ''}`} />
             </button>
@@ -180,7 +180,7 @@ export default function ResultsList({
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-400 px-2 py-1 outline-none"
+            className="w-full bg-gray-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded text-[10px] text-zinc-600 dark:text-zinc-400 px-2 py-1 outline-none"
           >
             <option value="">{t('admin.scraper.allCategories')}</option>
             {categories.map(cat => (
@@ -199,7 +199,7 @@ export default function ResultsList({
           return (
             <div
               key={id}
-              className={`px-3 py-2.5 border-b border-zinc-800/50 hover:bg-zinc-700/30 transition-colors cursor-pointer ${
+              className={`px-3 py-2.5 border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-gray-100 dark:hover:bg-zinc-700/30 transition-colors cursor-pointer ${
                 selected ? 'bg-blue-900/20 border-l-2 border-l-blue-500' : ''
               }`}
               onClick={() => onHighlightMarker(place)}
@@ -211,7 +211,7 @@ export default function ResultsList({
                   className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded border ${
                     selected
                       ? 'bg-blue-600 border-blue-600 text-white'
-                      : 'border-zinc-600 hover:border-zinc-400'
+                      : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-400'
                   } flex items-center justify-center transition-colors`}
                 >
                   {selected && <Check className="h-2.5 w-2.5" />}
@@ -220,7 +220,7 @@ export default function ResultsList({
                 <div className="min-w-0 flex-1">
                   {/* Name + category */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-white truncate">{place.name}</span>
+                    <span className="text-xs font-medium text-zinc-900 dark:text-white truncate">{place.name}</span>
                     {renderStars(place.googleRating)}
                   </div>
 
@@ -240,7 +240,7 @@ export default function ResultsList({
                       <a
                         href={`tel:${place.phone}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-0.5 text-[10px] text-zinc-400 hover:text-blue-400"
+                        className="inline-flex items-center gap-0.5 text-[10px] text-zinc-600 dark:text-zinc-400 hover:text-blue-400"
                       >
                         <Phone className="h-2.5 w-2.5" />
                         {place.phone}
@@ -262,7 +262,7 @@ export default function ResultsList({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-0.5 text-[10px] text-zinc-400 hover:text-blue-400 truncate max-w-[120px]"
+                        className="inline-flex items-center gap-0.5 text-[10px] text-zinc-600 dark:text-zinc-400 hover:text-blue-400 truncate max-w-[120px]"
                       >
                         <Globe className="h-2.5 w-2.5 shrink-0" />
                         {place.website.replace(/^https?:\/\/(www\.)?/, '')}
@@ -275,7 +275,7 @@ export default function ResultsList({
                 {place.latitude != null && place.longitude != null && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onOpenStreetView(place); }}
-                    className="flex-shrink-0 p-1 rounded text-zinc-500 hover:text-white hover:bg-zinc-700 transition-colors"
+                    className="flex-shrink-0 p-1 rounded text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                     title={t('admin.scraper.streetViewButton')}
                   >
                     <Eye className="h-3.5 w-3.5" />
