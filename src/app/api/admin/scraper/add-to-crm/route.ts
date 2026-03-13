@@ -159,6 +159,23 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         } catch (e) {
           logger.error('Lead scoring failed', { error: e instanceof Error ? e.message : String(e), listId: capturedListId });
         }
+        try {
+          const { findCrossListProspectDuplicates } = await import('@/lib/crm/prospect-dedup');
+          const prospects = await prisma.prospect.findMany({
+            where: { listId: capturedListId, status: { notIn: ['MERGED', 'EXCLUDED'] } },
+            select: {
+              id: true, email: true, phone: true, website: true,
+              contactName: true, companyName: true, googlePlaceId: true,
+              latitude: true, longitude: true, googleCategory: true,
+            },
+          });
+          for (const prospect of prospects) {
+            await findCrossListProspectDuplicates(prospect, capturedListId);
+          }
+          logger.info('Cross-list dedup completed', { listId: capturedListId, prospectsChecked: prospects.length });
+        } catch (e) {
+          logger.error('Cross-list dedup failed', { error: e instanceof Error ? e.message : String(e), listId: capturedListId });
+        }
       })();
     }
 

@@ -8643,7 +8643,9 @@
       "ownershipShared": "Shared between lists",
       "existingList": "Add to existing list",
       "newList": "Create new list",
-      "selectList": "Select a list..."
+      "selectList": "Select a list...",
+      "jobCompleted": "Job completed successfully",
+      "jobFailed": "Job failed"
     },
     "crmLists": {
       "title": "Prospect Lists",

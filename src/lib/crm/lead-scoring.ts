@@ -179,10 +179,26 @@ export async function scoreProspect(
 
   const breakdown = calculateScore(prospect as Parameters<typeof calculateScore>[0], config);
 
-  // Update Prospect.enrichmentScore
+  // Update Prospect.enrichmentScore + store breakdown in customFields
+  const existingCustom = (prospect as { customFields?: Record<string, unknown> }).customFields ?? {};
   await prisma.prospect.update({
     where: { id: prospectId },
-    data: { enrichmentScore: breakdown.total },
+    data: {
+      enrichmentScore: breakdown.total,
+      customFields: {
+        ...existingCustom,
+        scoreBreakdown: {
+          googleRating: breakdown.googleRating,
+          reviewVolume: breakdown.reviewVolume,
+          websiteQuality: breakdown.websiteQuality,
+          emailAvailable: breakdown.emailAvailable,
+          phoneAvailable: breakdown.phoneAvailable,
+          industryFit: breakdown.industryFit,
+          recency: breakdown.recency,
+          temperature: breakdown.temperature,
+        },
+      },
+    },
   });
 
   // Sync score to CrmLead if this prospect was converted to a lead

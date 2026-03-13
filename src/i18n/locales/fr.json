@@ -8643,7 +8643,9 @@
       "ownershipShared": "Partagé entre les listes",
       "existingList": "Ajouter à une liste existante",
       "newList": "Créer une nouvelle liste",
-      "selectList": "Sélectionner une liste..."
+      "selectList": "Sélectionner une liste...",
+      "jobCompleted": "Job terminé avec succès",
+      "jobFailed": "Le job a échoué"
     },
     "crmLists": {
       "title": "Gestion des Listes",

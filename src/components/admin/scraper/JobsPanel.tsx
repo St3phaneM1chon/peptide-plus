@@ -22,13 +22,21 @@ interface JobsPanelProps {
   onClose: () => void;
 }
 
+interface JobNotification {
+  id: string;
+  message: string;
+  type: 'completed' | 'failed';
+}
+
 export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
   const { t } = useTranslations();
   const [jobs, setJobs] = useState<ScrapeJobInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<JobNotification[]>([]);
   const jobsRef = useRef(jobs);
   jobsRef.current = jobs;
+  const prevStatusesRef = useRef<Record<string, string>>({});
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -38,7 +46,7 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success) {
-        setJobs(data.data.map((j: Record<string, unknown>) => ({
+        const newJobs: ScrapeJobInfo[] = data.data.map((j: Record<string, unknown>) => ({
           id: j.id,
           status: j.status,
           query: j.query,
@@ -53,14 +61,47 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
           startedAt: j.startedAt,
           completedAt: j.completedAt,
           createdAt: j.createdAt,
-        })));
+        }));
+
+        // Detect job status transitions (running/pending -> completed/failed)
+        const prev = prevStatusesRef.current;
+        const newNotifications: JobNotification[] = [];
+        for (const job of newJobs) {
+          const prevStatus = prev[job.id as string];
+          if (
+            prevStatus &&
+            (prevStatus === 'running' || prevStatus === 'pending') &&
+            (job.status === 'completed' || job.status === 'failed')
+          ) {
+            newNotifications.push({
+              id: `${job.id}-${Date.now()}`,
+              message:
+                job.status === 'completed'
+                  ? `${t('admin.scraper.jobCompleted')}: ${job.query}`
+                  : `${t('admin.scraper.jobFailed')}: ${job.query}`,
+              type: job.status as 'completed' | 'failed',
+            });
+          }
+        }
+        if (newNotifications.length > 0) {
+          setNotifications((n) => [...n, ...newNotifications]);
+        }
+
+        // Update previous statuses map
+        const statusMap: Record<string, string> = {};
+        for (const job of newJobs) {
+          statusMap[job.id as string] = job.status as string;
+        }
+        prevStatusesRef.current = statusMap;
+
+        setJobs(newJobs);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load jobs');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Initial fetch + polling for running jobs (only when visible)
   useEffect(() => {
@@ -75,6 +116,15 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
 
     return () => clearInterval(interval);
   }, [visible, fetchJobs]);
+
+  // Auto-dismiss notifications after 5 seconds
+  useEffect(() => {
+    if (notifications.length === 0) return;
+    const timer = setTimeout(() => {
+      setNotifications((n) => n.slice(1));
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [notifications]);
 
   const handleCancel = async (jobId: string) => {
     try {
@@ -132,6 +182,32 @@ export default function JobsPanel({ visible, onClose }: JobsPanelProps) {
           {error}
         </div>
       )}
+
+      {notifications.map((notif) => (
+        <div
+          key={notif.id}
+          className={`px-4 py-1.5 text-[10px] border-b flex items-center justify-between ${
+            notif.type === 'completed'
+              ? 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/20 border-green-200 dark:border-green-800/30'
+              : 'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/20 border-red-200 dark:border-red-800/30'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            {notif.type === 'completed' ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : (
+              <XCircle className="h-3 w-3" />
+            )}
+            {notif.message}
+          </span>
+          <button
+            onClick={() => setNotifications((n) => n.filter((x) => x.id !== notif.id))}
+            className="ml-2 opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      ))}
 
       {loading && jobs.length === 0 && (
         <div className="flex items-center justify-center py-4">

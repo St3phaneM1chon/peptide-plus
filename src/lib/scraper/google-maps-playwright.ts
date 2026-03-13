@@ -83,6 +83,49 @@ async function extractEmailFromWebsite(websiteUrl: string): Promise<string | nul
 }
 
 // ---------------------------------------------------------------------------
+// Country name → ISO code normalization
+// ---------------------------------------------------------------------------
+
+const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+  'canada': 'CA',
+  'france': 'FR',
+  'united states': 'US',
+  'united states of america': 'US',
+  'usa': 'US',
+  'états-unis': 'US',
+  'etats-unis': 'US',
+  'united kingdom': 'GB',
+  'uk': 'GB',
+  'royaume-uni': 'GB',
+  'germany': 'DE',
+  'allemagne': 'DE',
+  'deutschland': 'DE',
+  'spain': 'ES',
+  'espagne': 'ES',
+  'españa': 'ES',
+  'italy': 'IT',
+  'italie': 'IT',
+  'italia': 'IT',
+  'brazil': 'BR',
+  'brésil': 'BR',
+  'brasil': 'BR',
+  'mexico': 'MX',
+  'mexique': 'MX',
+  'méxico': 'MX',
+  'australia': 'AU',
+  'australie': 'AU',
+};
+
+function normalizeCountryCode(country: string | null): string | null {
+  if (!country) return null;
+  const trimmed = country.trim();
+  // Already an ISO code (2 uppercase letters)
+  if (/^[A-Z]{2}$/.test(trimmed)) return trimmed;
+  const iso = COUNTRY_NAME_TO_ISO[trimmed.toLowerCase()];
+  return iso ?? trimmed;
+}
+
+// ---------------------------------------------------------------------------
 // Address parsing from Google Maps formatted address
 // ---------------------------------------------------------------------------
 
@@ -262,19 +305,10 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
       if (maxResults > 0 && places.length >= maxResults) break;
 
       const ref = placeRefs[i];
-      try {
-        await page.goto(ref.href, { waitUntil: 'domcontentloaded', timeout: 15000 });
-        await page.waitForTimeout(randomDelay(2000, 800));
-
-        const place = await scrapePlaceFromPage(page, crawlWebsites, ref.name);
-        if (place) {
-          places.push(place);
-          logger.info(`Playwright scraper: scraped ${places.length}/${placeRefs.length} - ${place.name}`);
-        }
-      } catch (err) {
-        logger.warn(`Playwright scraper: failed to scrape "${ref.name}"`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
+      const place = await scrapeWithRetry(page, ref, crawlWebsites, 2);
+      if (place) {
+        places.push(place);
+        logger.info(`Playwright scraper: scraped ${places.length}/${placeRefs.length} - ${place.name}`);
       }
     }
 
@@ -306,6 +340,56 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
       await browser.close();
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Retry wrapper for individual place scraping (navigation/timeout errors only)
+// ---------------------------------------------------------------------------
+
+const RETRY_DELAYS = [1000, 3000]; // Exponential backoff: 1s, 3s
+
+function isNavigationOrTimeoutError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message.toLowerCase();
+  return (
+    msg.includes('timeout') ||
+    msg.includes('navigation') ||
+    msg.includes('net::') ||
+    msg.includes('err_connection') ||
+    msg.includes('err_name_not_resolved') ||
+    msg.includes('page.goto') ||
+    msg.includes('waiting for selector') ||
+    msg.includes('frame was detached')
+  );
+}
+
+async function scrapeWithRetry(
+  page: Page,
+  ref: PlaceRef,
+  crawlWebsites: boolean,
+  maxRetries: number,
+): Promise<ScrapedPlace | null> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await page.goto(ref.href, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(randomDelay(2000, 800));
+
+      return await scrapePlaceFromPage(page, crawlWebsites, ref.name);
+    } catch (err) {
+      const isRetryable = isNavigationOrTimeoutError(err);
+      if (!isRetryable || attempt >= maxRetries) {
+        logger.warn(`Playwright scraper: failed to scrape "${ref.name}" (attempt ${attempt + 1}/${maxRetries + 1})`, {
+          error: err instanceof Error ? err.message : String(err),
+          retryable: isRetryable,
+        });
+        return null;
+      }
+      const delay = RETRY_DELAYS[attempt] ?? 3000;
+      logger.info(`Playwright scraper: retrying "${ref.name}" in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      await page.waitForTimeout(delay);
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -487,7 +571,7 @@ async function scrapePlaceFromPage(
     city: addressParts.city,
     province: addressParts.province,
     postalCode: addressParts.postalCode,
-    country: addressParts.country,
+    country: normalizeCountryCode(addressParts.country),
     phone: data.phone,
     email,
     website: data.website,
