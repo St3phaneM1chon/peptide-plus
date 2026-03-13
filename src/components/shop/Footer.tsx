@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
 export default function Footer() {
@@ -52,11 +53,14 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
           {/* Logo & Info */}
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BC</span>
-              </div>
-              <span className="font-bold text-xl">BioCycle Peptides</span>
+            <div className="mb-4">
+              <Image
+                src="/images/brand/logo-600x200.png"
+                alt="BioCycle Peptides"
+                width={180}
+                height={60}
+                className="h-10 w-auto brightness-0 invert"
+              />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed mb-4">
               {t('footer.description') || 'Canada\'s trusted source for high-purity research peptides. 99%+ purity guaranteed with third-party lab testing.'}

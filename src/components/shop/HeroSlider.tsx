@@ -234,7 +234,7 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
             style={{ backgroundColor: `rgba(0,0,0,${Math.max(s.overlayOpacity, 75) / 100})` }}
           />
           {s.overlayGradient && (
-            <div className={`absolute inset-0 bg-gradient-to-r ${s.overlayGradient}`} />
+            <div className="absolute inset-0 bg-black/40" />
           )}
         </div>
       ))}

@@ -105,7 +105,7 @@ function CheckoutSuccessContent() {
 
           {/* A-043: Loyalty points earned on this order */}
           {pointsEarned !== null && pointsEarned > 0 && (
-            <div className="bg-gradient-to-r from-amber-50 to-primary-50 border border-amber-200 rounded-lg p-4 mb-6 text-start">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-start">
               <div className="flex items-center gap-3">
                 <span className="text-2xl" aria-hidden="true">🎉</span>
                 <div>

@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Plus, Save, Trash2, Settings,
   BarChart3, TrendingUp, PieChart, Table, Hash, GripVertical,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,7 +108,7 @@ export default function DashboardBuilderPage() {
     try {
       const res = await fetch('/api/admin/crm/dashboard-builder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name: dashboardName, widgets, isDefault: false }),
       });
       const json = await res.json();

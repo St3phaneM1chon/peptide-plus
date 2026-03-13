@@ -453,7 +453,7 @@ export default function RapportsComptablesPage() {
       </SectionCard>
 
       {/* Quick Stats */}
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
+      <div className="bg-emerald-600 rounded-xl p-6 text-white">
         <h3 className="font-semibold text-emerald-100 mb-4">{t('admin.reports.fiscalSummary', { year: selectedYear })}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>

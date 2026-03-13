@@ -100,7 +100,7 @@ export function IntegrationCard({
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className={`px-6 py-4 border-b border-slate-100 ${enabled ? `bg-gradient-to-r ${color}` : 'bg-slate-50'}`}>
+      <div className={`px-6 py-4 border-b border-slate-100 ${enabled ? color : 'bg-slate-50'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${enabled ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-500'}`}>

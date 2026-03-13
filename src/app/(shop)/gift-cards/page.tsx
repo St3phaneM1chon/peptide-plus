@@ -104,7 +104,7 @@ export default function GiftCardsPage() {
             <h1 className="text-3xl font-bold mb-2">{t('shop.giftCard.created')}</h1>
             <p className="text-gray-600 mb-8">{t('shop.giftCard.readyToUse')}</p>
 
-            <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-8 text-white mb-8">
+            <div className="bg-primary-500 rounded-xl p-8 text-white mb-8">
               <div className="text-sm font-medium mb-2 opacity-90">{t('shop.giftCard.giftCardLabel')}</div>
               <div className="text-4xl font-bold mb-6 font-mono tracking-wider">
                 {purchasedCard.code}
@@ -288,7 +288,7 @@ export default function GiftCardsPage() {
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <h3 className="text-lg font-bold mb-4">{t('shop.giftCard.preview')}</h3>
 
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-8 text-white">
+              <div className="bg-primary-500 rounded-xl p-8 text-white">
                 <div className="text-sm font-medium mb-2 opacity-90">{t('shop.giftCard.peptidePlusLabel')}</div>
                 <div className="text-sm font-medium mb-6 opacity-90">{t('shop.giftCard.giftCardLabel')}</div>
 

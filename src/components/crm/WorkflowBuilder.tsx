@@ -234,7 +234,7 @@ function TriggerNode({ id, data }: NodeProps<TriggerNodeData>) {
       ].join(' ')}
     >
       {/* Purple header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2.5 flex items-center gap-2.5">
+      <div className="bg-purple-600 px-4 py-2.5 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <Zap className="h-4 w-4 text-white" />
         </div>
@@ -300,7 +300,7 @@ function ActionNode({ id, data }: NodeProps<ActionNodeData>) {
       />
 
       {/* Blue header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-2.5 flex items-center gap-2.5">
+      <div className="bg-blue-500 px-4 py-2.5 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <Icon className="h-4 w-4 text-white" />
         </div>
@@ -374,7 +374,7 @@ function ConditionNode({ id, data }: NodeProps<ConditionNodeData>) {
       />
 
       {/* Orange header */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2.5 flex items-center gap-2.5">
+      <div className="bg-orange-500 px-4 py-2.5 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <GitBranch className="h-4 w-4 text-white" />
         </div>
@@ -432,7 +432,7 @@ function WaitNode({ id, data }: NodeProps<WaitNodeData>) {
       />
 
       {/* Gray header */}
-      <div className="bg-gradient-to-r from-gray-500 to-gray-400 px-4 py-2.5 flex items-center gap-2.5">
+      <div className="bg-gray-500 px-4 py-2.5 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
           <Clock className="h-4 w-4 text-white" />
         </div>

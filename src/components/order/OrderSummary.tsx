@@ -107,7 +107,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%)',
+                background: 'var(--gray-200)',
               }}
             >
               <svg

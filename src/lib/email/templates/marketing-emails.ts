@@ -92,7 +92,7 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
         : `${safeName}, the entire BioCycle Peptides team wishes you a wonderful birthday! 🎈`}
     </p>
 
-    <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 32px 0; text-align: center; border: 2px dashed #f59e0b;">
+    <div style="background: #fef3c7; border-radius: 16px; padding: 32px; margin: 32px 0; text-align: center; border: 2px dashed #f59e0b;">
       <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e; text-transform: uppercase; letter-spacing: 2px;">
         ${isFr ? 'Votre cadeau d\'anniversaire' : 'Your birthday gift'}
       </p>
@@ -658,7 +658,7 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
       ` : ''}
       <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1f2937;">${escapeHtml(data.productName)}</h2>
 
-      <div style="display: inline-block; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+      <div style="display: inline-block; background: #d1fae5; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
         <p style="margin: 0 0 4px 0; font-size: 12px; color: #065f46; text-transform: uppercase; letter-spacing: 1px;">
           ${isFr ? 'Prix réduit de' : 'Price reduced by'}
         </p>
@@ -883,7 +883,7 @@ export function browseAbandonmentEmail(data: BrowseAbandonmentEmailData): { subj
         </p>
 
         ${data.discountCode ? `
-        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
+        <div style="background: #fef3c7; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e; text-transform: uppercase; letter-spacing: 2px;">
             ${isFr ? 'Offre limitée' : 'Limited offer'}
           </p>
@@ -1099,7 +1099,7 @@ export function replenishmentReminderEmail(data: ReplenishmentReminderEmailData)
         </p>
 
         ${data.discountCode ? `
-        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #10b981;">
+        <div style="background: #d1fae5; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #10b981;">
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #065f46; text-transform: uppercase; letter-spacing: 2px;">
             ${isFr ? 'Offre de retour' : 'Come-back offer'}
           </p>
@@ -1457,7 +1457,7 @@ export function sunsetEmail(data: SunsetEmailData): { subject: string; html: str
         </p>
 
         ${data.discountCode ? `
-        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
+        <div style="background: #fef3c7; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px dashed #f59e0b;">
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">
             ${isFr ? '🎁 Un petit cadeau de retrouvailles' : '🎁 A little reunion gift'}
           </p>
@@ -1693,7 +1693,7 @@ export function vipTierUpEmail(data: VipTierUpEmailData): { subject: string; htm
         : `${safeName}, you've reached the`}
     </p>
 
-    <div style="background: linear-gradient(135deg, ${tierDef.color}15 0%, ${tierDef.color}30 100%); border: 2px solid ${tierDef.color}; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center;">
+    <div style="background: ${tierDef.color}15; border: 2px solid ${tierDef.color}; border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center;">
       <p style="margin: 0 0 8px 0; font-size: 48px; font-weight: bold; color: ${tierDef.color};">
         ${tierName}
       </p>

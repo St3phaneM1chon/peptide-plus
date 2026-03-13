@@ -36,7 +36,7 @@ export default function AccountSidebar() {
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     isActive
-                      ? 'bg-orange-50 text-orange-600 font-medium'
+                      ? 'bg-primary-50 text-primary-600 font-medium'
                       : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                   }`}
                 >

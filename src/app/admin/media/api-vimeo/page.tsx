@@ -125,7 +125,7 @@ export default function MediaVimeoPage() {
         title={t('admin.media.vimeoTitle')}
         description={t('admin.media.vimeoDescription')}
         icon={<Video className="w-6 h-6" />}
-        color="from-sky-500 to-sky-600"
+        color="bg-sky-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

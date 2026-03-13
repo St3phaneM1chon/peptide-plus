@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, Clock, Shield, Loader2, FileText } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,7 +93,7 @@ function ActionModal({ approval, action, onClose, onComplete }: ActionModalProps
     try {
       const res = await fetch(`/api/admin/crm/approvals/${approval.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action, note: note || undefined }),
       });
       const json = await res.json();

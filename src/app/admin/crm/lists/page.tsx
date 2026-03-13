@@ -8,6 +8,7 @@ import {
   Search, Plus, Upload, Trash2, Archive,
   ListChecks, MapPin, FileSpreadsheet, Eye, ChevronLeft, ChevronRight,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,7 +112,7 @@ export default function ProspectListsPage() {
     try {
       const res = await fetch('/api/admin/crm/lists', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name: newName.trim(), description: newDesc.trim() || undefined, source: newSource }),
       });
       const json = await res.json();
@@ -150,7 +151,7 @@ export default function ProspectListsPage() {
       }
       const res = await fetch(`/api/admin/crm/lists/${csvListId}/import`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ rows }),
       });
       const json = await res.json();
@@ -176,7 +177,7 @@ export default function ProspectListsPage() {
   async function handleDelete(id: string) {
     if (!confirm(t('admin.crmLists.deleteListConfirm'))) return;
     try {
-      const res = await fetch(`/api/admin/crm/lists/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/crm/lists/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success) {
         toast.success(t('admin.crmLists.deleteSuccess'));
@@ -195,7 +196,7 @@ export default function ProspectListsPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'ARCHIVED' }),
       });
       const json = await res.json();

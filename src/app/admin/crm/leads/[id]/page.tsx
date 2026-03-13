@@ -12,6 +12,7 @@ import {
 import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
 import { ScoreBreakdown } from '@/components/admin/crm/ScoreBreakdown';
 import { InlineEdit } from '@/components/admin/crm/InlineEdit';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface LeadDetail {
   id: string;
@@ -86,7 +87,7 @@ export default function LeadDetailPage() {
   const recalculateScore = async () => {
     setScoring(true);
     try {
-      const res = await fetch(`/api/admin/crm/leads/${leadId}/score`, { method: 'POST' });
+      const res = await fetch(`/api/admin/crm/leads/${leadId}/score`, { method: 'POST', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success) {
         toast.success(`Score: ${json.data.score}`);
@@ -100,7 +101,7 @@ export default function LeadDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/leads/${leadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ [field]: value || null }),
       });
       const json = await res.json();
@@ -348,7 +349,7 @@ function ConvertModal({ leadId, onClose, onConverted }: { leadId: string; onClos
       const body: Record<string, unknown> = { title: form.title, pipelineId: form.pipelineId, stageId: form.stageId };
       if (form.value) body.value = parseFloat(form.value);
       const res = await fetch(`/api/admin/crm/leads/${leadId}/convert`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        method: 'POST', headers: addCSRFHeader({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
       });
       const json = await res.json();
       if (json.success) { toast.success('Lead converted to deal!'); onConverted(); }

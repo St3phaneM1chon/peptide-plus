@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { GitMerge, Users, AlertTriangle, X, Loader2, Search } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,7 +66,7 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
     try {
       const res = await fetch(`/api/admin/crm/duplicates/${survivorId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ survivorId, mergedId }),
       });
       const json = await res.json();

@@ -78,7 +78,7 @@ function AcceptTermsContent() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white text-center">
+        <div className="bg-primary-500 p-6 text-white text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-full mb-3">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

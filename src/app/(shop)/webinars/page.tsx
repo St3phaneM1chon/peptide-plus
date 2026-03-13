@@ -179,7 +179,7 @@ export default function WebinarsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-teal-600 to-teal-700 text-white py-12">
+        <section className="bg-teal-600 text-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-4xl" aria-hidden="true">🎓</span>
@@ -207,7 +207,7 @@ export default function WebinarsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-teal-600 to-teal-700 text-white py-12">
+      <section className="bg-teal-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-4xl" aria-hidden="true">🎓</span>
@@ -301,7 +301,7 @@ export default function WebinarsPage() {
             >
               {/* Thumbnail */}
               <div className="relative aspect-video bg-neutral-200">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute inset-0 bg-black/40" />
                 <div className="absolute top-3 start-3">
                   {getStatusBadge(webinar.status)}
                 </div>
@@ -406,7 +406,7 @@ export default function WebinarsPage() {
         )}
 
         {/* Newsletter CTA */}
-        <div className="mt-12 bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-8 text-white text-center">
+        <div className="mt-12 bg-teal-600 rounded-2xl p-8 text-white text-center">
           <span className="text-5xl mb-4 block" aria-hidden="true">📬</span>
           <h2 className="text-2xl font-bold mb-2">{t('webinars.stayUpdated') || 'Never Miss a Webinar'}</h2>
           <p className="text-teal-100 mb-6 max-w-md mx-auto">

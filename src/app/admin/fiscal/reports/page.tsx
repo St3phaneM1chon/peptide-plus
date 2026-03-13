@@ -253,22 +253,22 @@ export default function GlobalReportsPage() {
 
       {/* Global Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm p-6 text-white">
+        <div className="bg-indigo-500 rounded-xl shadow-sm p-6 text-white">
           <div className="text-indigo-100 text-sm">{t('admin.fiscalReports.totalOrders')}</div>
           <div className="text-4xl font-bold mt-1">{totals.totalOrders.toLocaleString(locale)}</div>
           <div className="text-indigo-200 text-sm mt-2">{t('admin.fiscalReports.allCountries')}</div>
         </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-sm p-6 text-white">
+        <div className="bg-green-500 rounded-xl shadow-sm p-6 text-white">
           <div className="text-green-100 text-sm">{t('admin.fiscalReports.totalRevenue')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalRevenue / 1000).toFixed(0)}K</div>
           <div className="text-green-200 text-sm mt-2">CAD</div>
         </div>
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm p-6 text-white">
+        <div className="bg-indigo-500 rounded-xl shadow-sm p-6 text-white">
           <div className="text-indigo-100 text-sm">{t('admin.fiscalReports.taxCollected')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalTax / 1000).toFixed(0)}K</div>
           <div className="text-indigo-200 text-sm mt-2">{t('admin.fiscalReports.toRemit')}</div>
         </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
+        <div className="bg-purple-500 rounded-xl shadow-sm p-6 text-white">
           <div className="text-purple-100 text-sm">{t('admin.fiscalReports.avgGrowth')}</div>
           <div className="text-4xl font-bold mt-1">+{totals.avgGrowth.toFixed(1)}%</div>
           <div className="text-purple-200 text-sm mt-2">{t('admin.fiscalReports.vsPreviousPeriod')}</div>

@@ -387,7 +387,7 @@ export default function AICopilotPanel({ open, onClose }: AICopilotPanelProps) {
         aria-label={t('admin.copilot.title') || 'AI Copilot'}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-950/50 dark:to-slate-900">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-indigo-50 dark:bg-indigo-950/50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
               <Sparkles className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
@@ -427,7 +427,7 @@ export default function AICopilotPanel({ open, onClose }: AICopilotPanelProps) {
             <div className="space-y-4">
               {/* Welcome */}
               <div className="text-center py-6">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center mb-3">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-100 flex items-center justify-center mb-3">
                   <Sparkles className="w-7 h-7 text-indigo-600" />
                 </div>
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100">

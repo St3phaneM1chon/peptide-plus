@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
 export default function DisclaimerModal() {
@@ -90,11 +91,14 @@ export default function DisclaimerModal() {
         className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
       >
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold">BC</span>
-          </div>
-          <span className="font-bold text-xl">BioCycle Peptides</span>
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/images/brand/logo-600x200.png"
+            alt="BioCycle Peptides"
+            width={200}
+            height={67}
+            className="h-12 w-auto"
+          />
         </div>
 
         {/* Title */}

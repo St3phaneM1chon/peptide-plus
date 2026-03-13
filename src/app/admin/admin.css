@@ -83,14 +83,14 @@
 .admin-marble-rail {
   background:
     url('/images/admin-marble-bg.png') repeat-y center / cover,
-    linear-gradient(175deg, #1f2567 0%, #1a2058 30%, #1e2463 55%, #171c53 80%, #1a1f5c 100%);
+    #1e2463;
 }
 
 /* Marble for wider panels */
 .admin-marble-wide {
   background:
     url('/images/admin-marble-wide.png') repeat-y center / cover,
-    linear-gradient(175deg, #1f2567 0%, #1e2463 50%, #171c53 100%);
+    #1e2463;
 }
 
 /* Thin scrollbar for admin panels */

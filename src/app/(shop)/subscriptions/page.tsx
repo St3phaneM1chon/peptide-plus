@@ -186,7 +186,7 @@ export default function SubscriptionsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-500 to-primary-600 text-white py-16">
+      <section className="bg-primary-500 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="text-6xl mb-4 block">🔄</span>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">

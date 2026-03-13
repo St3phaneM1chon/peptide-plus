@@ -127,8 +127,8 @@ export default function CountdownTimer({
 
     return (
       <div className="flex flex-col items-center">
-        <div className="bg-white rounded-lg shadow-md px-3 py-2 min-w-[60px] border-2 border-orange-200">
-          <div className="text-2xl md:text-3xl font-bold text-orange-600 tabular-nums transition-all">
+        <div className="bg-white rounded-lg shadow-md px-3 py-2 min-w-[60px] border-2 border-primary-200">
+          <div className="text-2xl md:text-3xl font-bold text-primary-600 tabular-nums transition-all">
             {displayValue}
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function CountdownTimer({
   const Separator = () => {
     if (variant === 'compact') return null;
     return (
-      <div className="text-2xl md:text-3xl font-bold text-orange-400 mx-1">
+      <div className="text-2xl md:text-3xl font-bold text-primary-400 mx-1">
         :
       </div>
     );

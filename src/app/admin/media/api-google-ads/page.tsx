@@ -135,7 +135,7 @@ export default function MediaGoogleAdsPage() {
         // FIX: F35 - Use i18n for description instead of hardcoded English
         description={t('admin.media.googleDescription')}
         icon={<Search className="w-6 h-6" />}
-        color="from-indigo-600 to-green-500"
+        color="bg-indigo-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

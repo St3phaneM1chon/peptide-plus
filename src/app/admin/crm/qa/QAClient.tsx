@@ -12,6 +12,7 @@ import {
   BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell,
 } from 'recharts';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -126,7 +127,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
     try {
       const res = await fetch('/api/admin/crm/qa-forms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name, description: description || null, criteria: validCriteria }),
       });
       const json = await res.json();
@@ -317,7 +318,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
     try {
       const res = await fetch('/api/admin/crm/qa-scores', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           formId: selectedFormId,
           agentId,

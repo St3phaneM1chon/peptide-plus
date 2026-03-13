@@ -321,7 +321,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
             {/* Flash Sale Countdown Timer */}
             {product.promotion?.endsAt && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-primary-50 to-red-50 border-2 border-primary-300 rounded-lg">
+              <div className="mb-6 p-4 bg-primary-50 border-2 border-primary-300 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xl">⚡</span>
                   <h3 className="font-bold text-primary-800">

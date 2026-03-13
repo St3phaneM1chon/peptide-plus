@@ -90,7 +90,7 @@ export default function SubscriptionOfferModal({
         className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 text-white">
+        <div className="bg-primary-500 px-6 py-5 text-white">
           <h2 className="text-xl font-bold">{t('subscriptions.offerTitle')}</h2>
           <p className="text-sm text-white/80 mt-1">
             {productName}
@@ -114,7 +114,7 @@ export default function SubscriptionOfferModal({
                   key={freq.id}
                   className={`flex items-center justify-between p-3 border-2 rounded-xl cursor-pointer transition-all ${
                     selectedFrequency === freq.id
-                      ? 'border-orange-500 bg-orange-50'
+                      ? 'border-primary-500 bg-primary-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -125,7 +125,7 @@ export default function SubscriptionOfferModal({
                       value={freq.id}
                       checked={selectedFrequency === freq.id}
                       onChange={() => setSelectedFrequency(freq.id)}
-                      className="text-orange-500 focus:ring-orange-500"
+                      className="text-primary-500 focus:ring-primary-500"
                     />
                     <div>
                       <span className="font-medium text-gray-900">{freq.label}</span>
@@ -161,7 +161,7 @@ export default function SubscriptionOfferModal({
             </button>
             <button
               onClick={() => onAccept(selectedFrequency, selected.discount)}
-              className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
+              className="flex-1 px-4 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors"
             >
               {t('subscriptions.subscribe')}
             </button>

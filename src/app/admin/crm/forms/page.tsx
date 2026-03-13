@@ -9,6 +9,7 @@ import {
   Copy,
   Code,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface FormField {
   name: string;
@@ -69,7 +70,7 @@ export default function LeadFormsPage() {
     try {
       const res = await fetch('/api/admin/crm/forms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: newForm.name,
           fields: newForm.fields,

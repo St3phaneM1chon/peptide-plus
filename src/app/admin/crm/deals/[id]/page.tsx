@@ -24,6 +24,7 @@ import {
   Route,
 } from 'lucide-react';
 import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface DealDetail {
   id: string;
@@ -150,7 +151,7 @@ export default function DealDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/deals/${dealId}/move`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ stageId }),
       });
       const json = await res.json();

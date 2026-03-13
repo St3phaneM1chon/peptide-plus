@@ -7,6 +7,7 @@ import {
   Plus, X, MessageSquare, Copy, Edit, Trash2,
   Eye, Variable, Check, Search, ToggleLeft, ToggleRight,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface SmsTemplate {
   id: string;
@@ -87,7 +88,7 @@ export default function SmsTemplatesPage() {
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name: form.name, body: form.body, variables }),
       });
       const json = await res.json();
@@ -105,7 +106,7 @@ export default function SmsTemplatesPage() {
   const deleteTemplate = async (id: string) => {
     if (!window.confirm(t('admin.crm.confirmDeleteTemplate'))) return;
     try {
-      const res = await fetch(`/api/admin/crm/sms-templates/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/crm/sms-templates/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       if (res.ok) { toast.success(t('admin.crm.templateDeleted')); fetchTemplates(); }
     } catch { toast.error('Failed to delete'); }
   };
@@ -114,7 +115,7 @@ export default function SmsTemplatesPage() {
     try {
       const res = await fetch(`/api/admin/crm/sms-templates/${tpl.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ isActive: !tpl.isActive }),
       });
       const json = await res.json();

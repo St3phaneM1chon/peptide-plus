@@ -274,7 +274,7 @@ export default function VideoPlayer({
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
           <Play className="h-16 w-16 text-white/20" />
         </div>
       )}
@@ -285,10 +285,10 @@ export default function VideoPlayer({
       {/* Play button */}
       <button
         onClick={handlePlay}
-        className="absolute inset-0 flex cursor-pointer items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+        className="absolute inset-0 flex cursor-pointer items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
         aria-label={playLabel}
       >
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 shadow-2xl transition-all group-hover:scale-110 group-hover:bg-orange-600 sm:h-20 sm:w-20">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-500 shadow-2xl transition-all group-hover:scale-110 group-hover:bg-primary-600 sm:h-20 sm:w-20">
           {isEmbeddable ? (
             <Play className="h-8 w-8 text-white ms-0.5 sm:h-10 sm:w-10" fill="currentColor" />
           ) : (
@@ -305,7 +305,7 @@ export default function VideoPlayer({
 
       {/* Title overlay (bottom) */}
       {title && (
-        <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3 pt-8">
+        <div className="absolute bottom-0 start-0 end-0 bg-black/40 px-4 pb-3 pt-8">
           <p className="truncate text-sm font-medium text-white">{title}</p>
         </div>
       )}

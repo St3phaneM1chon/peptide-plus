@@ -116,7 +116,7 @@ export default function AdminConsentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <FileCheck className="h-6 w-6 text-orange-600" />
+          <FileCheck className="h-6 w-6 text-primary-600" />
           <h1 className="text-2xl font-bold text-gray-900">
             {t('admin.consents.title')}
           </h1>
@@ -170,7 +170,7 @@ export default function AdminConsentsPage() {
                 placeholder={t('admin.consents.searchPlaceholder')}
                 className="flex-1 border rounded px-3 py-1.5 text-sm"
               />
-              <button onClick={handleSearch} className="px-3 py-1.5 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
+              <button onClick={handleSearch} className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm hover:bg-primary-700">
                 <Search className="h-4 w-4" />
               </button>
             </div>
@@ -220,7 +220,7 @@ export default function AdminConsentsPage() {
       <div className="bg-white border rounded-lg overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
           </div>
         ) : consents.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
@@ -260,7 +260,7 @@ export default function AdminConsentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {consent.video ? (
-                        <Link href={`/admin/media/videos/${consent.video.id}`} className="text-orange-600 hover:underline text-xs">
+                        <Link href={`/admin/media/videos/${consent.video.id}`} className="text-primary-600 hover:underline text-xs">
                           {consent.video.title}
                         </Link>
                       ) : (
@@ -330,7 +330,7 @@ export default function AdminConsentsPage() {
                               }
                             }}
                           >
-                            <Send className="h-4 w-4 text-orange-500" />
+                            <Send className="h-4 w-4 text-primary-500" />
                           </button>
                         )}
                       </div>

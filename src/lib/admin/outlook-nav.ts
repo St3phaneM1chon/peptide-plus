@@ -401,6 +401,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/crm/dialer', labelKey: 'admin.nav.crmDialer', icon: Phone },
           { href: '/admin/crm/wallboard', labelKey: 'admin.nav.crmWallboard', icon: Monitor },
           { href: '/admin/crm/agents/performance', labelKey: 'admin.nav.crmAgentPerf', icon: UserCheck },
+          { href: '/admin/crm/reps', labelKey: 'admin.nav.crmReps360', icon: Users },
           { href: '/admin/crm/call-analytics', labelKey: 'admin.nav.crmCallAnalytics', icon: BarChart2 },
           { href: '/admin/crm/call-center-kpis', labelKey: 'admin.nav.crmCallKpis', icon: Activity },
           { href: '/admin/crm/scheduling', labelKey: 'admin.nav.crmScheduling', icon: Calendar },

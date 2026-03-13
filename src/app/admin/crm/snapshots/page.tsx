@@ -9,6 +9,7 @@ import {
   CheckCircle2, ArrowUpRight, ArrowDownRight, Minus,
   Settings,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -119,7 +120,7 @@ export default function SnapshotsPage() {
     try {
       const res = await fetch('/api/admin/crm/deals/stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'take_snapshot',
           name: snapshotName,
@@ -176,7 +177,7 @@ export default function SnapshotsPage() {
     try {
       const res = await fetch('/api/admin/crm/deals/stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'schedule_snapshot',
           frequency: scheduleFrequency,

@@ -8,6 +8,7 @@ import {
   Calendar, Clock, Users, ChevronLeft, ChevronRight, Plus, X, Save,
   ArrowUpDown, Zap, GraduationCap, Star, Check, Filter,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -160,7 +161,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
 
       const res = await fetch('/api/admin/crm/agent-schedules', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       const json = await res.json();

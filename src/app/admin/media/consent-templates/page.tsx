@@ -176,7 +176,7 @@ export default function ConsentTemplatesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ClipboardCheck className="h-6 w-6 text-orange-600" />
+          <ClipboardCheck className="h-6 w-6 text-primary-600" />
           <h1 className="text-2xl font-bold text-gray-900">
             {t('admin.consentTemplates.title')}
           </h1>
@@ -184,7 +184,7 @@ export default function ConsentTemplatesPage() {
         {!showForm && (
           <button
             onClick={() => { resetForm(); setShowForm(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
           >
             <Plus className="h-4 w-4" />
             {t('admin.consentTemplates.create')}
@@ -239,7 +239,7 @@ export default function ConsentTemplatesPage() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">{t('admin.consentTemplates.labelQuestions')}</label>
-              <button onClick={addQuestion} className="text-sm text-orange-600 hover:text-orange-800 flex items-center gap-1">
+              <button onClick={addQuestion} className="text-sm text-primary-600 hover:text-primary-800 flex items-center gap-1">
                 <Plus className="h-3 w-3" /> {t('admin.consentTemplates.addQuestion')}
               </button>
             </div>
@@ -313,7 +313,7 @@ export default function ConsentTemplatesPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {editingId ? t('admin.consentTemplates.update') : t('common.create')}
@@ -326,7 +326,7 @@ export default function ConsentTemplatesPage() {
       <div className="bg-white border rounded-lg overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
           </div>
         ) : templates.length === 0 ? (
           <div className="text-center py-20 text-gray-500">

@@ -11,6 +11,7 @@ import {
   Phone, MapPinned, Zap, BarChart3, FileDown, Shield,
   Megaphone, Clock, CalendarDays,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -235,7 +236,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/prospects/${editingCell.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ [editingCell.field]: editValue || null }),
       });
       const json = await res.json();
@@ -259,7 +260,7 @@ export default function ProspectListDetailPage() {
       await Promise.all(ids.map((id) =>
         fetch(`/api/admin/crm/lists/${listId}/prospects/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status }),
         }),
       ));
@@ -288,7 +289,7 @@ export default function ProspectListDetailPage() {
       await Promise.all(toValidate.map((p) =>
         fetch(`/api/admin/crm/lists/${listId}/prospects/${p.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status: 'VALIDATED' }),
         }),
       ));
@@ -306,7 +307,7 @@ export default function ProspectListDetailPage() {
     try {
       await fetch(`/api/admin/crm/lists/${listId}/prospects`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ ids }),
       });
       toast.success(t('admin.crmLists.deleteSuccess'));
@@ -327,7 +328,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/prospects`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ prospects: [newProspect] }),
       });
       const json = await res.json();
@@ -349,7 +350,7 @@ export default function ProspectListDetailPage() {
 
   async function handleDeduplicate() {
     try {
-      const res = await fetch(`/api/admin/crm/lists/${listId}/deduplicate`, { method: 'POST' });
+      const res = await fetch(`/api/admin/crm/lists/${listId}/deduplicate`, { method: 'POST', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success) {
         toast.success(`${t('admin.crmLists.deduplicateSuccess')}: ${json.data.merged} merged`);
@@ -371,7 +372,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/scrape`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           query: gmQuery,
           location: gmLocation || undefined,
@@ -405,7 +406,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/enrich`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ maxConcurrent: 3 }),
       });
       const json = await res.json();
@@ -431,7 +432,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/score`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ autoQualify: true, qualifyThreshold: 50 }),
       });
       const json = await res.json();
@@ -472,7 +473,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/integrate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           assignmentMethod: assignMethod,
           agentIds: selectedAgents,
@@ -510,7 +511,7 @@ export default function ProspectListDetailPage() {
     try {
       const res = await fetch(`/api/admin/crm/lists/${listId}/start-campaign`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           campaignName: campaignName.trim(),
           companyId: selectedCompanyId,
@@ -1482,7 +1483,7 @@ export default function ProspectListDetailPage() {
   async function handleDeleteProspect(id: string) {
     if (!confirm(t('admin.crmLists.deleteConfirm'))) return;
     try {
-      await fetch(`/api/admin/crm/lists/${listId}/prospects/${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/crm/lists/${listId}/prospects/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       toast.success(t('admin.crmLists.deleteSuccess'));
       fetchProspects();
       fetchList();
@@ -1496,7 +1497,7 @@ export default function ProspectListDetailPage() {
     try {
       await fetch(`/api/admin/crm/lists/${listId}/prospects/${mergedId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'MERGED' }),
       });
       toast.success(t('admin.crmLists.deduplicateSuccess'));

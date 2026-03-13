@@ -40,7 +40,7 @@ export default function MailingListSignup() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-indigo-50 border border-teal-200 rounded-xl p-6">
+    <div className="bg-teal-50 border border-teal-200 rounded-xl p-6">
       <div className="flex items-center gap-2 mb-3">
         <Mail className="w-5 h-5 text-teal-600" />
         <h3 className="font-semibold text-slate-900">{t('mailingList.title')}</h3>

@@ -53,7 +53,7 @@ export default function MoleculeBackground({
             }}
           >
             {/* Hexagonal molecule shape */}
-            <circle cx="0" cy="0" r={m.size * 0.04} fill="#38A169" opacity="0.5" />
+            <circle cx="0" cy="0" r={m.size * 0.04} fill="#238838" opacity="0.5" />
             <circle cx={m.size * 0.08} cy={m.size * 0.04} r={m.size * 0.03} fill="#319795" opacity="0.4" />
             <line
               x1="0" y1="0"

@@ -6,6 +6,7 @@ import PipelineKanban from '@/components/admin/crm/PipelineKanban';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { X, List, LayoutGrid } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 export default function PipelinePage() {
   const { t } = useI18n();
@@ -70,7 +71,7 @@ export default function PipelinePage() {
 
       const res = await fetch('/api/admin/crm/deals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
       const json = await res.json();

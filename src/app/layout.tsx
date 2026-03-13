@@ -6,7 +6,7 @@
  */
 
 import type { Metadata, Viewport } from 'next';
-import { Inter, DM_Serif_Display } from 'next/font/google';
+import { Inter, Montserrat } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { cookies, headers } from 'next/headers';
@@ -39,11 +39,11 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const dmSerif = DM_Serif_Display({
-  weight: '400',
+const montserrat = Montserrat({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-dm-serif',
+  variable: '--font-heading',
 });
 
 // Namespaces that must be available immediately for the app shell (nav, footer,
@@ -112,7 +112,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#38A169',
+  themeColor: '#238838',
 };
 
 export const metadata: Metadata = {
@@ -247,7 +247,7 @@ export default async function RootLayout({
         {/* Anti-FOUC: apply dark class before first paint to avoid white flash */}
         <script dangerouslySetInnerHTML={{ __html: `try{var p=location.pathname;var k=p.startsWith('/admin')?'admin-theme':'site-theme';if(localStorage.getItem(k)==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
       </head>
-      <body className={`${inter.className} ${dmSerif.variable}`}>
+      <body className={`${inter.className} ${montserrat.variable}`}>
         <GoogleAnalytics />
         <MetaPixel />
         <WebVitals />

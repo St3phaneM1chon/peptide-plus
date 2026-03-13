@@ -16,6 +16,7 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Lead {
   id: string;
@@ -128,7 +129,7 @@ export default function LeadsPage() {
     try {
       const res = await fetch('/api/admin/crm/leads/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ leads: leadsToImport }),
       });
       const json = await res.json();
@@ -163,7 +164,7 @@ export default function LeadsPage() {
       const promises = Array.from(selected).map(id =>
         fetch(`/api/admin/crm/leads/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status }),
         })
       );
@@ -181,7 +182,7 @@ export default function LeadsPage() {
     if (!confirm(`Delete ${selected.size} leads? This cannot be undone.`)) return;
     try {
       const promises = Array.from(selected).map(id =>
-        fetch(`/api/admin/crm/leads/${id}`, { method: 'DELETE' })
+        fetch(`/api/admin/crm/leads/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) })
       );
       await Promise.all(promises);
       toast.success(`${selected.size} leads deleted`);
@@ -196,7 +197,7 @@ export default function LeadsPage() {
     if (selected.size === 0) return;
     try {
       const promises = Array.from(selected).map(id =>
-        fetch(`/api/admin/crm/leads/${id}/score`, { method: 'POST' })
+        fetch(`/api/admin/crm/leads/${id}/score`, { method: 'POST', headers: addCSRFHeader({}) })
       );
       await Promise.all(promises);
       toast.success(`${selected.size} scores recalculated`);
@@ -484,7 +485,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
       const res = await fetch('/api/admin/crm/leads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
       });
       const json = await res.json();

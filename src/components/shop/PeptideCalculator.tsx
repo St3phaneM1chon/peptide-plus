@@ -125,9 +125,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
               [&::-webkit-slider-thumb]:w-3 
               [&::-webkit-slider-thumb]:h-3 
               [&::-webkit-slider-thumb]:rounded-full 
-              [&::-webkit-slider-thumb]:bg-gradient-to-b 
-              [&::-webkit-slider-thumb]:from-amber-300 
-              [&::-webkit-slider-thumb]:to-amber-600 
+              [&::-webkit-slider-thumb]:bg-amber-500 
               [&::-webkit-slider-thumb]:border 
               [&::-webkit-slider-thumb]:border-amber-200 
               [&::-webkit-slider-thumb]:shadow 
@@ -136,9 +134,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
               [&::-moz-range-thumb]:w-3 
               [&::-moz-range-thumb]:h-3 
               [&::-moz-range-thumb]:rounded-full 
-              [&::-moz-range-thumb]:bg-gradient-to-b 
-              [&::-moz-range-thumb]:from-amber-300 
-              [&::-moz-range-thumb]:to-amber-600 
+              [&::-moz-range-thumb]:bg-amber-500 
               [&::-moz-range-thumb]:border 
               [&::-moz-range-thumb]:border-amber-200 
               [&::-moz-range-thumb]:cursor-grab
@@ -146,7 +142,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
               [&::-moz-range-track]:rounded-full
               [&::-moz-range-track]:bg-neutral-700/50"
             style={{
-              background: `linear-gradient(to right, ${colors[color].track} 0%, ${colors[color].track} ${((value - min) / (max - min)) * 100}%, rgba(64,64,64,0.5) ${((value - min) / (max - min)) * 100}%, rgba(64,64,64,0.5) 100%)`
+              background: colors[color].track
             }}
           />
         </div>
@@ -167,14 +163,11 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
   return (
     <div className={containerClasses}>
       {/* Cadre principal */}
-      <div className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-xl p-1 shadow-2xl w-full mx-auto">
-        <div className="relative bg-gradient-to-br from-amber-900/30 via-neutral-900 to-amber-900/30 rounded-lg overflow-hidden">
+      <div className="bg-neutral-900 rounded-xl p-1 shadow-2xl w-full mx-auto">
+        <div className="relative bg-neutral-900 rounded-lg overflow-hidden">
           
           {/* Bandes d'avertissement en haut */}
-          <div className="h-3 bg-repeat-x" style={{ 
-            backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #f59e0b 10px, #f59e0b 20px)',
-            backgroundSize: '28px 100%'
-          }} />
+          <div className="h-3 bg-amber-500" />
           
           <div className="p-4 md:p-6">
             {/* Header */}
@@ -221,7 +214,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                 />
                 
                 {/* Overlay sombre pour lisibilité */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+                <div className="absolute inset-0 bg-black/40" />
                 
                 {/* Contenu superposé */}
                 <div className="relative z-10 p-4 md:p-6">
@@ -380,7 +373,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                 
                 {/* Unités à injecter */}
                 {calculations.unitsU100 <= 100 ? (
-                  <div className="p-3 bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-lg flex-grow text-center">
+                  <div className="p-3 bg-neutral-800 rounded-lg flex-grow text-center">
                     <p className="text-xs text-neutral-400 mb-1">{t('calculator.unitsToInject')}</p>
                     <p className="text-4xl font-bold text-amber-400 mb-0.5">
                       {calculations.unitsU100.toFixed(1)}
@@ -396,7 +389,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       <span className="text-xs text-red-400">{t('calculator.syringe3mlRequired')}</span>
                     </div>
                     
-                    <div className="p-3 bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-lg text-center">
+                    <div className="p-3 bg-neutral-800 rounded-lg text-center">
                       <p className="text-xs text-neutral-400 mb-1">{t('calculator.volumeToInject')}</p>
                       <p className="text-4xl font-bold text-blue-400 mb-0.5">
                         {calculations.volumeToInjectMl.toFixed(2)}
@@ -421,10 +414,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
           </div>
           
           {/* Bandes d'avertissement en bas */}
-          <div className="h-3 bg-repeat-x" style={{ 
-            backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #f59e0b 10px, #f59e0b 20px)',
-            backgroundSize: '28px 100%'
-          }} />
+          <div className="h-3 bg-amber-500" />
         </div>
       </div>
     </div>

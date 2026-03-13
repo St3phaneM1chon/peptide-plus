@@ -220,7 +220,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                     onClick={onClose}
                     className="flex items-center gap-4 px-6 py-3 hover:bg-neutral-50 transition-colors"
                   >
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
                       <span className="text-xl">🧬</span>
                     </div>
                     <div className="flex-1">

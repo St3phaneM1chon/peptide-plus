@@ -9,6 +9,7 @@ import {
   Calendar, Tag, Activity, ExternalLink,
   Clock, Hash,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Conversation {
   id: string;
@@ -102,7 +103,7 @@ export default function InboxPage() {
     try {
       const res = await fetch(`/api/admin/crm/inbox/${selected.id}/reply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ content: replyText.trim() }),
       });
       const json = await res.json();
@@ -119,7 +120,7 @@ export default function InboxPage() {
     try {
       const res = await fetch(`/api/admin/crm/inbox/${selected.id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status }),
       });
       const json = await res.json();
@@ -269,7 +270,7 @@ export default function InboxPage() {
       {selected && (
         <div className="w-72 border-l bg-white overflow-y-auto">
           {/* Contact Header */}
-          <div className="p-4 border-b bg-gradient-to-b from-indigo-50 to-white">
+          <div className="p-4 border-b bg-indigo-50">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                 <User className="h-5 w-5 text-indigo-600" />

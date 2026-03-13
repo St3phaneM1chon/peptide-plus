@@ -47,11 +47,11 @@ import { LOYALTY_TIER_THRESHOLDS, LOYALTY_POINTS_CONFIG, LOYALTY_REWARDS_CATALOG
 // Configuration des niveaux - derived from CANONICAL thresholds in constants.ts
 // benefits keys resolved at render time via t()
 const tierExtras: Record<string, { color: string; icon: string; benefitKeys: string[]; discount: number }> = {
-  BRONZE:   { color: 'from-amber-600 to-amber-700', icon: '🥉', benefitKeys: ['customerRewards.benefit1PointPerDollar', 'customerRewards.benefitMemberOffers'], discount: 0 },
-  SILVER:   { color: 'from-gray-400 to-gray-500', icon: '🥈', benefitKeys: ['customerRewards.benefit1_25PointsPerDollar', 'customerRewards.benefit5PercentDiscount', 'customerRewards.benefitPriorityAccess'], discount: 5 },
-  GOLD:     { color: 'from-yellow-500 to-amber-500', icon: '🥇', benefitKeys: ['customerRewards.benefit1_5PointsPerDollar', 'customerRewards.benefit10PercentDiscount', 'customerRewards.benefitFreeShipping', 'customerRewards.benefitPrioritySupport'], discount: 10 },
-  PLATINUM: { color: 'from-slate-600 to-slate-800', icon: '💎', benefitKeys: ['customerRewards.benefit2PointsPerDollar', 'customerRewards.benefit15PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 15 },
-  DIAMOND:  { color: 'from-indigo-600 to-indigo-800', icon: '💠', benefitKeys: ['customerRewards.benefit3PointsPerDollar', 'customerRewards.benefit20PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 20 },
+  BRONZE:   { color: 'bg-amber-600', icon: '🥉', benefitKeys: ['customerRewards.benefit1PointPerDollar', 'customerRewards.benefitMemberOffers'], discount: 0 },
+  SILVER:   { color: 'bg-gray-400', icon: '🥈', benefitKeys: ['customerRewards.benefit1_25PointsPerDollar', 'customerRewards.benefit5PercentDiscount', 'customerRewards.benefitPriorityAccess'], discount: 5 },
+  GOLD:     { color: 'bg-yellow-500', icon: '🥇', benefitKeys: ['customerRewards.benefit1_5PointsPerDollar', 'customerRewards.benefit10PercentDiscount', 'customerRewards.benefitFreeShipping', 'customerRewards.benefitPrioritySupport'], discount: 10 },
+  PLATINUM: { color: 'bg-slate-600', icon: '💎', benefitKeys: ['customerRewards.benefit2PointsPerDollar', 'customerRewards.benefit15PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 15 },
+  DIAMOND:  { color: 'bg-indigo-600', icon: '💠', benefitKeys: ['customerRewards.benefit3PointsPerDollar', 'customerRewards.benefit20PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 20 },
 };
 
 const LOYALTY_LEVELS_CONFIG: LoyaltyLevel[] = LOYALTY_TIER_THRESHOLDS.map(tier => {
@@ -251,7 +251,7 @@ export default function RewardsPage() {
         </div>
 
         {/* Level Card */}
-        <div className={`bg-gradient-to-r ${currentLevel.color} rounded-2xl p-6 md:p-8 text-white mb-8`}>
+        <div className={`${currentLevel.color} rounded-2xl p-6 md:p-8 text-white mb-8`}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -449,7 +449,7 @@ export default function RewardsPage() {
             </div>
 
             {/* Referral Program */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+            <div className="bg-purple-50 rounded-xl border border-purple-200 p-6">
               <h3 className="font-bold text-purple-900 mb-2">{t('customerRewards.referralProgram')}</h3>
               <p className="text-sm text-purple-700 mb-4">
                 {t('customerRewards.earnPerFriend')}

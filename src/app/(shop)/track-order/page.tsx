@@ -42,7 +42,7 @@ export default function TrackOrderPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-16">
+      <section className="bg-neutral-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {t('track.title') || 'Track Your Order'}
@@ -116,7 +116,7 @@ export default function TrackOrderPage() {
             {trackingResult.found ? (
               <>
                 {/* Order Summary */}
-                <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                <div className="p-6 bg-green-50 border-b">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                       <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -78,15 +78,15 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder={t('common.search')}
-            className="w-full ps-10 pe-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-400"
+            className="w-full ps-10 pe-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400"
           />
         </div>
-        <button onClick={handleSearch} className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">
+        <button onClick={handleSearch} className="px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium">
           {t('common.search')}
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className={`px-3 py-2.5 border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1.5 ${showAdvanced ? 'bg-orange-50 border-orange-200 text-orange-700' : ''}`}
+          className={`px-3 py-2.5 border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1.5 ${showAdvanced ? 'bg-primary-50 border-primary-200 text-primary-700' : ''}`}
         >
           <SlidersHorizontal className="h-4 w-4" />
           <span className="hidden sm:inline">{t('videos.filters')}</span>
@@ -162,7 +162,7 @@ export default function VideoFilters({ filters, onFiltersChange, categories = []
       {hasFilters && !showAdvanced && (
         <div className="flex flex-wrap gap-2">
           {filters.search && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 rounded-full text-xs">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 rounded-full text-xs">
               Search: &quot;{filters.search}&quot;
               <button onClick={() => { setSearchInput(''); onFiltersChange({ ...filters, search: '' }); }}>
                 <X className="h-3 w-3" />

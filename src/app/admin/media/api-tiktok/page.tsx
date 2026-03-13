@@ -134,7 +134,7 @@ export default function MediaTikTokPage() {
         // FIX: F35 - Use i18n for description instead of hardcoded English
         description={t('admin.media.tiktokDescription')}
         icon={<Activity className="w-6 h-6" />}
-        color="from-pink-500 to-pink-600"
+        color="bg-pink-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

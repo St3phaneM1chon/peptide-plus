@@ -24,7 +24,7 @@ export default function EquipePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-500 to-blue-700 text-white py-20 px-6 text-center">
+      <section className="bg-blue-500 text-white py-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
             &larr; {t('about.backToAbout')}
@@ -84,7 +84,7 @@ export default function EquipePage() {
         </section>
 
         {/* Join Us */}
-        <section className="p-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl text-center text-white">
+        <section className="p-10 bg-gray-800 rounded-2xl text-center text-white">
           <h2 className="text-2xl font-semibold mb-4">
             {t('about.team.joinTitle')}
           </h2>

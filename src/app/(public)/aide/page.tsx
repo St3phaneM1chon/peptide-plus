@@ -27,7 +27,7 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-20 px-6 text-center">
+      <section className="bg-neutral-900 text-white py-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6">
             {t('help.title')}

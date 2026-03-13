@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          background: '#1a1a2e',
           padding: '60px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
               width: '56px',
               height: '56px',
               borderRadius: '14px',
-              background: 'linear-gradient(135deg, #f97316, #ea580c)',
+              background: '#f97316',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

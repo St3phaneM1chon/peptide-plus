@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { FileText, Plus, Search, Edit, Trash2, X, Copy } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -139,7 +140,7 @@ export default function SnippetsPage() {
 
       const res = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
@@ -172,6 +173,7 @@ export default function SnippetsPage() {
     try {
       const res = await fetch(`/api/admin/crm/snippets?id=${id}`, {
         method: 'DELETE',
+        headers: addCSRFHeader({}),
       });
 
       if (res.status === 204 || res.ok) {

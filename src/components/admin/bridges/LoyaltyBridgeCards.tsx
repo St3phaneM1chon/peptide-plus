@@ -106,7 +106,7 @@ export function LoyaltyPromosBridgeCard({
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
-          <Tag className="w-4 h-4 text-orange-500" />
+          <Tag className="w-4 h-4 text-primary-500" />
           {t('admin.bridges.loyaltyPromos') || 'Loyalty & Promos'}
         </h3>
         <BridgeSkeleton />
@@ -119,7 +119,7 @@ export function LoyaltyPromosBridgeCard({
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-3">
-        <Tag className="w-4 h-4 text-orange-500" />
+        <Tag className="w-4 h-4 text-primary-500" />
         {t('admin.bridges.loyaltyPromos') || 'Loyalty & Promos'}
         <span className="ms-auto text-xs font-normal text-slate-400">
           {data.usages.length} {t('admin.bridges.usages') || 'uses'}
@@ -129,14 +129,14 @@ export function LoyaltyPromosBridgeCard({
         {data.usages.slice(0, 5).map((u) => (
           <div
             key={u.id}
-            className="flex items-center justify-between text-xs p-2 rounded-md bg-orange-50"
+            className="flex items-center justify-between text-xs p-2 rounded-md bg-primary-50"
           >
             <div className="min-w-0">
-              <span className="font-medium text-orange-800">{u.userName || u.userEmail}</span>
-              <span className="text-orange-500 ms-2 font-mono">{u.promoCode}</span>
+              <span className="font-medium text-primary-800">{u.userName || u.userEmail}</span>
+              <span className="text-primary-500 ms-2 font-mono">{u.promoCode}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-orange-600">-${u.discount.toFixed(2)}</span>
+              <span className="text-primary-600">-${u.discount.toFixed(2)}</span>
               <span className="text-slate-400">
                 {new Date(u.date).toLocaleDateString(locale)}
               </span>

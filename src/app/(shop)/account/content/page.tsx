@@ -149,7 +149,7 @@ export default function AccountContentPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                  <div className="w-full h-full bg-primary-100 flex items-center justify-center">
                     <Play className="h-10 w-10 text-primary-400" />
                   </div>
                 )}

@@ -18,6 +18,7 @@ import {
   List,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { addCSRFHeader } from '@/lib/csrf';
 
 const WorkflowBuilder = dynamic(
   () => import('@/components/crm/WorkflowBuilder'),
@@ -509,7 +510,7 @@ export default function WorkflowsPage() {
       };
       const res = await fetch('/api/admin/crm/workflows', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       const json = await res.json();
@@ -533,7 +534,7 @@ export default function WorkflowsPage() {
     try {
       const res = await fetch(`/api/admin/crm/workflows/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: newStatus }),
       });
       const json = await res.json();
@@ -555,7 +556,7 @@ export default function WorkflowsPage() {
   const deleteWorkflow = async (id: string) => {
     if (!window.confirm(t('admin.crm.confirmDeleteWorkflow'))) return;
     try {
-      const res = await fetch(`/api/admin/crm/workflows/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/crm/workflows/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success || res.status === 204) {
         toast.success(t('admin.crm.workflowDeleted'));

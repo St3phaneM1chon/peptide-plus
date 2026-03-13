@@ -151,7 +151,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                   onClick={onClose}
                   className="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary-50 transition-colors mb-2"
                 >
-                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 text-white group-hover:scale-110 transition-transform">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-500 text-white group-hover:scale-110 transition-transform">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
@@ -274,7 +274,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
               </h3>
 
               {/* Promo Banner */}
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-6 text-white mb-4 hover:shadow-lg transition-shadow">
+              <div className="bg-primary-500 rounded-xl p-6 text-white mb-4 hover:shadow-lg transition-shadow">
                 <div className="text-sm font-semibold uppercase tracking-wide mb-2">
                   {t('shop.newArrival') || 'New Arrival'}
                 </div>

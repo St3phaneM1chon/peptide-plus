@@ -78,7 +78,7 @@ export default function AccountPage() {
       />
 
       {/* Header */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-12">
+      <section className="bg-neutral-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             {session.user?.image ? (
@@ -236,7 +236,7 @@ export default function AccountPage() {
           />
           <Link
             href="/shop"
-            className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-5 shadow-sm hover:shadow-md transition-all group text-white"
+            className="bg-primary-500 rounded-xl p-5 shadow-sm hover:shadow-md transition-all group text-white"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -335,7 +335,7 @@ function QuickActionCard({
       href={href}
       className={`rounded-xl p-5 shadow-sm border transition-all group ${
         highlight
-          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400 hover:shadow-md'
+          ? 'bg-blue-50 border-blue-200 hover:border-blue-400 hover:shadow-md'
           : 'bg-white border-neutral-200 hover:border-primary-500 hover:shadow-md'
       }`}
     >

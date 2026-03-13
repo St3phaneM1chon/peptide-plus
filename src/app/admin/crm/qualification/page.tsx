@@ -7,6 +7,7 @@ import {
   Target, Search, ChevronDown, ChevronRight,
   CheckCircle2, XCircle, MinusCircle, Save, Users,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Lead {
   id: string;
@@ -91,7 +92,7 @@ export default function QualificationPage() {
     try {
       const res = await fetch(`/api/admin/crm/leads/${leadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           qualificationFramework: editingFramework,
           qualificationData: editingData,

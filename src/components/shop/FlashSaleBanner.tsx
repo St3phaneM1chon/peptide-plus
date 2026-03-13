@@ -52,10 +52,10 @@ export default function FlashSaleBanner({
   if (status === 'dismissed') return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-primary-500 via-red-500 to-pink-500 text-white overflow-hidden">
+    <div className="relative bg-primary-500 text-white overflow-hidden">
       {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
+        <div className="absolute inset-0 bg-white/10 animate-shimmer"></div>
       </div>
 
       {/* Content */}

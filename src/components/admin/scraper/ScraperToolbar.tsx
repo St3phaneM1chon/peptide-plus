@@ -80,7 +80,7 @@ export default function ScraperToolbar({
         disabled={!hasResults}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
           showHeatmap
-            ? 'bg-orange-600 text-white'
+            ? 'bg-primary-600 text-white'
             : 'bg-gray-200 dark:bg-zinc-700/50 text-zinc-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-600/50 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-600'
         } disabled:opacity-40 disabled:cursor-not-allowed`}
       >

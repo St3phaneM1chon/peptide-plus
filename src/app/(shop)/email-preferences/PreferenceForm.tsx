@@ -198,7 +198,7 @@ export default function PreferenceForm({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-8">
+      <section className="bg-neutral-900 text-white py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">

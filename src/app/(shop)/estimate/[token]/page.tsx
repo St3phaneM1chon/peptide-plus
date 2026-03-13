@@ -303,7 +303,7 @@ export default function EstimateClientPortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Chargement du devis...</p>
@@ -314,7 +314,7 @@ export default function EstimateClientPortalPage() {
 
   if (error || !estimate) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
           <AlertTriangle className="w-12 h-12 text-primary-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Devis introuvable</h1>
@@ -331,12 +331,12 @@ export default function EstimateClientPortalPage() {
   const canAct = ['SENT', 'VIEWED'].includes(estimate.status);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8 px-4">
+    <div className="min-h-screen bg-indigo-50 py-8 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Company Banner */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 text-white">
+          <div className="bg-indigo-600 px-8 py-6 text-white">
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold">BioCycle Peptides</h1>

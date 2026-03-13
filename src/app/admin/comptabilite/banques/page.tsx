@@ -286,7 +286,7 @@ export default function BanquesPage() {
       />
 
       {/* Total Balance */}
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
+      <div className="bg-emerald-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-emerald-100">{t('admin.bankAccounts.totalBalanceCAD')}</p>

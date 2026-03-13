@@ -90,7 +90,7 @@ export default function MediaTeamsPage() {
         title={t('admin.media.teamsTitle')}
         description={t('admin.integrations.teamsSetupDesc')}
         icon={<Video className="w-6 h-6" />}
-        color="from-purple-500 to-purple-600"
+        color="bg-purple-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

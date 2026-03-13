@@ -47,7 +47,7 @@ export default function ScienceStorySection() {
   return (
     <section
       ref={ref}
-      className="relative py-20 bg-gradient-to-b from-primary-50 to-white overflow-hidden"
+      className="relative py-20 bg-primary-50 overflow-hidden"
     >
       <MoleculeBackground opacity={0.05} count={8} />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -66,7 +66,7 @@ export default function ScienceStorySection() {
               style={{ transitionDelay: isVisible ? `${200 + i * 150}ms` : '0ms' }}
             >
               <div className="flex justify-center mb-5">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center">
                   {pillar.icon}
                 </div>
               </div>

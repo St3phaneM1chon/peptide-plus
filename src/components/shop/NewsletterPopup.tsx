@@ -112,7 +112,7 @@ export default function NewsletterPopup() {
         {!isSubmitted ? (
           <>
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-8 text-white text-center">
+            <div className="bg-primary-500 p-8 text-white text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
                 <span className="text-3xl">💊</span>
               </div>

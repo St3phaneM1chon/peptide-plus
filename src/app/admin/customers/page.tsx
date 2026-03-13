@@ -209,7 +209,7 @@ export default function CustomersPage() {
       {/* VIP Customer Identification Panel */}
       {vipCustomers.length > 0 && (
         <div className="px-4 lg:px-6 pt-4 lg:pt-6 flex-shrink-0">
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200 p-4 mb-4">
+          <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4">
             <button
               onClick={() => setShowVipPanel(!showVipPanel)}
               className="w-full flex items-center justify-between"

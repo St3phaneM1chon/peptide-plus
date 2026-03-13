@@ -8,7 +8,7 @@ export default function Loading() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Dark header section */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-12">
+      <section className="bg-neutral-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Skeleton className="w-16 h-16 rounded-full bg-neutral-700" />

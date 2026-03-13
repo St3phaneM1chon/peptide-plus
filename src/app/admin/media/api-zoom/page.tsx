@@ -90,7 +90,7 @@ export default function MediaZoomPage() {
         title={t('admin.media.zoomTitle')}
         description={t('admin.integrations.zoomSetupDesc')}
         icon={<Video className="w-6 h-6" />}
-        color="from-indigo-500 to-indigo-600"
+        color="bg-indigo-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

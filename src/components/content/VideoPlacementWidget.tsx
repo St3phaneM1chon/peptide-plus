@@ -64,7 +64,7 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
     <div className={className}>
       {title && (
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Play className="h-5 w-5 text-orange-500" />
+          <Play className="h-5 w-5 text-primary-500" />
           {title}
         </h3>
       )}
@@ -105,13 +105,13 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
                 className="object-cover group-hover:scale-105 transition-transform"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                <Play className="h-12 w-12 text-orange-400" />
+              <div className="w-full h-full bg-primary-100 flex items-center justify-center">
+                <Play className="h-12 w-12 text-primary-400" />
               </div>
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity w-14 h-14 bg-white/90 rounded-full flex items-center justify-center">
-                <Play className="h-6 w-6 text-orange-600 ms-0.5" />
+                <Play className="h-6 w-6 text-primary-600 ms-0.5" />
               </div>
             </div>
             {videos[0].duration && (
@@ -120,7 +120,7 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
               </div>
             )}
           </div>
-          <p className="mt-2 font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
+          <p className="mt-2 font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
             {videos[0].title}
           </p>
         </div>
@@ -143,13 +143,13 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
                       className="object-cover group-hover:scale-105 transition-transform"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                      <Play className="h-8 w-8 text-orange-400" />
+                    <div className="w-full h-full bg-primary-100 flex items-center justify-center">
+                      <Play className="h-8 w-8 text-primary-400" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
-                      <Play className="h-4 w-4 text-orange-600 ms-0.5" />
+                      <Play className="h-4 w-4 text-primary-600 ms-0.5" />
                     </div>
                   </div>
                   {video.duration && (
@@ -158,7 +158,7 @@ export default function VideoPlacementWidget({ placement, contextId, title, limi
                     </div>
                   )}
                 </div>
-                <p className="mt-1.5 text-sm font-medium text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2">
+                <p className="mt-1.5 text-sm font-medium text-gray-900 group-hover:text-primary-600 transition-colors line-clamp-2">
                   {video.title}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">

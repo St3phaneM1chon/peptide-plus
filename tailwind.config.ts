@@ -10,19 +10,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // BioGreen — primary brand color (from logo)
+        // BioGreen — primary brand color (extracted from logo signature #238838)
         primary: {
-          50: '#F0FFF4',
-          100: '#C6F6D5',
-          200: '#9AE6B4',
-          300: '#68D391',
-          400: '#48BB78',
-          500: '#38A169',
-          600: '#2F855A',
-          700: '#276749',
-          800: '#22543D',
-          900: '#1C4532',
-          950: '#0F2918',
+          50: '#F3F9F4',
+          100: '#E2F3E6',
+          200: '#BCE6C5',
+          300: '#85D696',
+          400: '#39C657',
+          500: '#238838',
+          600: '#1B722D',
+          700: '#165824',
+          800: '#12421C',
+          900: '#0E3116',
+          950: '#0A1D0E',
         },
         // BioCyan — secondary / molecular accent
         secondary: {
@@ -90,7 +90,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        heading: ['var(--font-dm-serif)', 'Georgia', 'serif'],
+        heading: ['var(--font-heading)', 'Montserrat', 'system-ui', 'sans-serif'],
       },
       // Keyframes & animations
       keyframes: {
@@ -121,8 +121,8 @@ const config: Config = {
           '75%': { transform: 'translateY(-18px) rotate(1deg)', opacity: '0.05' },
         },
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 8px rgba(56, 161, 105, 0.3)' },
-          '50%': { boxShadow: '0 0 20px rgba(56, 161, 105, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 8px rgba(35, 136, 56, 0.3)' },
+          '50%': { boxShadow: '0 0 20px rgba(35, 136, 56, 0.6)' },
         },
         'fade-scale-in': {
           '0%': { opacity: '0', transform: 'scale(0.95)' },

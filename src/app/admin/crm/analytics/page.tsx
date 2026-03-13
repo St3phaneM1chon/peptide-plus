@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-indigo-600 transition-all"
+                            className="h-full rounded-full bg-indigo-400 transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

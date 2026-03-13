@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Settings,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ComplianceStats {
   internalDncCount: number;
@@ -82,7 +83,7 @@ export default function CompliancePage() {
     try {
       const res = await fetch('/api/admin/crm/compliance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action: 'add-dnc', phone: dncPhone, reason: dncReason }),
       });
       const json = await res.json();
@@ -112,7 +113,7 @@ export default function CompliancePage() {
       try {
         const res = await fetch('/api/admin/crm/compliance', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ action: 'import-dncl', phoneNumbers, source: file.name }),
         });
         const json = await res.json();
@@ -130,7 +131,7 @@ export default function CompliancePage() {
     try {
       const res = await fetch('/api/admin/crm/compliance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action: 'create-calling-rule', ...newRule }),
       });
       const json = await res.json();

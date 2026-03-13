@@ -8,6 +8,7 @@ import {
   Search, Plus, DollarSign, LayoutGrid, List, Trash2,
   X, TrendingUp, Target, Clock,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface Deal {
   id: string;
@@ -127,7 +128,7 @@ export default function DealsPage() {
     if (!confirm(`Delete ${selected.size} deals? This cannot be undone.`)) return;
     try {
       const promises = Array.from(selected).map(id =>
-        fetch(`/api/admin/crm/deals/${id}`, { method: 'DELETE' })
+        fetch(`/api/admin/crm/deals/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) })
       );
       await Promise.all(promises);
       toast.success(`${selected.size} deals deleted`);

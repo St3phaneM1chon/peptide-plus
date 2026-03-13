@@ -10,7 +10,7 @@ export default function AboutPage() {
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       {/* Hero Section */}
       <div style={{ 
-        background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', 
+        background: '#1f2937',
         color: 'white', 
         padding: '80px 24px',
         textAlign: 'center'

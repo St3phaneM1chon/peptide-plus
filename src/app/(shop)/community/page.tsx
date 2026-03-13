@@ -409,7 +409,7 @@ export default function CommunityPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-purple-600 to-purple-700 text-white py-12">
+      <section className="bg-purple-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-4xl">{'\u{1F465}'}</span>

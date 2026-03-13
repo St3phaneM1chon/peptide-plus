@@ -83,7 +83,7 @@ export default function ApiGoogleMeetPage() {
         title={t('admin.media.googleMeetTitle')}
         description={t('admin.media.googleMeetDescription')}
         icon={<Video className="w-6 h-6" />}
-        color="from-green-500 to-green-600"
+        color="bg-green-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

@@ -90,7 +90,7 @@ export default function InstallPWA() {
   return (
     <div className="fixed bottom-20 start-4 end-4 md:start-auto md:end-4 md:max-w-md z-50 animate-slide-up">
       <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
-        <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 p-4">
+        <div className="relative bg-primary-500 p-4">
           <button
             onClick={handleDismiss}
             className="absolute top-2 end-2 text-white/80 hover:text-white transition-colors"
@@ -115,15 +115,15 @@ export default function InstallPWA() {
         <div className="p-4 bg-gray-50">
           <ul className="space-y-2 mb-4 text-sm text-gray-700">
             <li className="flex items-center gap-2">
-              <span className="text-orange-500">✓</span>
+              <span className="text-primary-500">✓</span>
               <span>{t('pwa.homeScreenAccess')}</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-orange-500">✓</span>
+              <span className="text-primary-500">✓</span>
               <span>{t('pwa.fasterPerformance')}</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-orange-500">✓</span>
+              <span className="text-primary-500">✓</span>
               <span>{t('pwa.worksOffline')}</span>
             </li>
           </ul>
@@ -131,7 +131,7 @@ export default function InstallPWA() {
           <div className="flex gap-2">
             <button
               onClick={handleInstallClick}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" />
               {t('pwa.installNow')}

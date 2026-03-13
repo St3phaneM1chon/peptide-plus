@@ -94,7 +94,7 @@ export default function ContactPage() {
       {/* Hero */}
       <section
         style={{
-          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+          background: '#1f2937',
           color: 'white',
           padding: '64px 24px',
           textAlign: 'center',

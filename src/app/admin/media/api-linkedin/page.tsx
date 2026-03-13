@@ -132,7 +132,7 @@ export default function MediaLinkedInPage() {
         title={t('admin.media.linkedinTitle')}
         description={t('admin.media.linkedinDescription')}
         icon={<Briefcase className="w-6 h-6" />}
-        color="from-indigo-700 to-indigo-800"
+        color="bg-indigo-700"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

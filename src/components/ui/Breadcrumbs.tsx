@@ -84,7 +84,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
                     // Linked breadcrumb with home icon for first item
                     <Link
                       href={item.href}
-                      className="text-neutral-600 hover:text-orange-600 transition-colors flex items-center gap-1.5"
+                      className="text-neutral-600 hover:text-primary-600 transition-colors flex items-center gap-1.5"
                     >
                       {isFirst && (
                         <svg

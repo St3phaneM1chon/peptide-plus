@@ -99,7 +99,7 @@ export default function MediaAnalyticsClient() {
     { label: t('admin.media.totalViews'), value: analytics.totalViews.toLocaleString(), icon: Eye, color: 'text-indigo-600 bg-indigo-50', delta: null },
     { label: t('admin.media.totalClicks'), value: analytics.totalClicks.toLocaleString(), icon: MousePointer, color: 'text-green-600 bg-green-50', delta: null },
     { label: t('admin.media.totalShares'), value: analytics.totalShares.toLocaleString(), icon: Share2, color: 'text-purple-600 bg-purple-50', delta: null },
-    { label: t('admin.media.conversions'), value: analytics.totalConversions.toLocaleString(), icon: TrendingUp, color: 'text-orange-600 bg-orange-50', delta: null },
+    { label: t('admin.media.conversions'), value: analytics.totalConversions.toLocaleString(), icon: TrendingUp, color: 'text-primary-600 bg-primary-50', delta: null },
   ];
 
   // Format daily trend for Recharts

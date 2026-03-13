@@ -10,7 +10,7 @@
 /* WCAG 2.2 AA: Global focus-visible ring for keyboard navigation */
 @layer base {
   *:focus-visible {
-    outline: 2px solid #38A169;
+    outline: 2px solid #238838;
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -75,7 +75,7 @@
   --gray-500: #44403C;  /* Texte principal */
 
   /* Semantic Brand Tokens — BioGreen primary */
-  --color-primary: #38A169;
+  --color-primary: #238838;
   --color-primary-hover: #2F855A;
   --color-primary-light: #C6F6D5;
   --color-primary-subtle: #F0FFF4;
@@ -88,7 +88,7 @@
   --color-accent-hover: #2B6CB0;
 
   /* Accents subtils */
-  --accent: #38A169;
+  --accent: #238838;
   --accent-hover: #2F855A;
 
   /* Navy */
@@ -108,7 +108,7 @@
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: var(--font-dm-serif, 'DM Serif Display'), Georgia, serif;
+  --font-heading: 'Montserrat', system-ui, sans-serif;
 }
 
 /* =====================================================
@@ -1123,7 +1123,7 @@ a:hover {
 
 /* Focus-visible outline for keyboard navigation (WCAG 2.4.7) */
 *:focus-visible {
-  outline: 2px solid #38A169;
+  outline: 2px solid #238838;
   outline-offset: 2px;
 }
 
@@ -1132,7 +1132,7 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #38A169;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #238838;
 }
 
 /* Buttons and links: ensure focus-visible is never fully hidden */
@@ -1140,7 +1140,7 @@ button:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #38A169 !important;
+  outline: 2px solid #238838 !important;
   outline-offset: 2px !important;
 }
 
@@ -1226,11 +1226,9 @@ a:focus-visible,
    BIO DESIGN SYSTEM UTILITIES
    ===================================================== */
 
-/* Gradient text — green→cyan→blue */
+/* Bio text color — solid green */
 .text-gradient-bio {
-  background: linear-gradient(135deg, #38A169, #319795, #3182CE);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #2F855A;
   background-clip: text;
 }
 
@@ -1265,11 +1263,7 @@ html.dark .glass {
 
 /* Subtle molecule-like dot pattern background */
 .molecule-bg {
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(56, 161, 105, 0.06) 1px, transparent 1px),
-    radial-gradient(circle at 80% 70%, rgba(49, 151, 149, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(49, 130, 206, 0.04) 1.5px, transparent 1.5px);
-  background-size: 60px 60px, 80px 80px, 100px 100px;
+  background-color: rgba(35, 136, 56, 0.03);
 }
 
 /* Scroll-triggered entry animation */
@@ -1367,7 +1361,7 @@ html.dark .glass {
 /* Legal pages list/link styling */
 .legal-content ul { padding-left: 20px; margin: 8px 0; }
 .legal-content li { margin-bottom: 8px; }
-.legal-content a { color: #38A169; }
+.legal-content a { color: #238838; }
 
 @media print {
   .no-print,

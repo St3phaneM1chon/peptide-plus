@@ -510,10 +510,10 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
             )}
 
             {crossModule.modules.marketing && (
-              <Link href="/admin/promo-codes" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-orange-200 hover:shadow-sm transition-all">
+              <Link href="/admin/promo-codes" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-primary-200 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center">
-                    <Megaphone className="w-5 h-5 text-orange-600" />
+                  <div className="w-9 h-9 bg-primary-50 rounded-lg flex items-center justify-center">
+                    <Megaphone className="w-5 h-5 text-primary-600" />
                   </div>
                   <span className="font-medium text-slate-900">{t('admin.dashboard.marketing')}</span>
                 </div>

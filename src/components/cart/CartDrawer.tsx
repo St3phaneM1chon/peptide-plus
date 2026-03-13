@@ -215,7 +215,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: Ca
             style={{
               width: '100%',
               height: '100%',
-              background: 'linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%)',
+              background: '#E0E0E0',
             }}
           />
         )}

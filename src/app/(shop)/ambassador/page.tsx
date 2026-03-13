@@ -169,7 +169,7 @@ export default function AmbassadorPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-500 via-primary-600 to-red-500 text-white py-16">
+      <section className="bg-primary-500 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="text-6xl mb-4 block" aria-hidden="true">🤝</span>
           <h1 className="text-3xl md:text-5xl font-bold mb-4">

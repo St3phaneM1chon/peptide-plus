@@ -113,7 +113,7 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
             <Play className="w-12 h-12 text-gray-400" />
           </div>
         )}

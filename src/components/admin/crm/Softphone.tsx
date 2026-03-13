@@ -1301,7 +1301,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
             {/* ACW countdown bar */}
             {acwCountdown > 0 && (
               <div className="mb-3">
-                <div className="flex items-center justify-between text-xs text-orange-600 mb-1">
+                <div className="flex items-center justify-between text-xs text-primary-600 mb-1">
                   <span>ACW: {formatDuration(acwCountdown)}</span>
                   <button
                     onClick={forceReady}
@@ -1312,7 +1312,7 @@ export default function Softphone({ onCallEnd }: SoftphoneProps) {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div
-                    className="bg-orange-500 h-1.5 rounded-full transition-all duration-1000"
+                    className="bg-primary-500 h-1.5 rounded-full transition-all duration-1000"
                     style={{ width: `${(acwCountdown / acwDuration) * 100}%` }}
                   />
                 </div>

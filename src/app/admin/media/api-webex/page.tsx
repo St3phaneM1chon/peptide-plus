@@ -81,7 +81,7 @@ export default function ApiWebexPage() {
         title={t('admin.media.webexTitle')}
         description={t('admin.media.webexDescription')}
         icon={<Video className="w-6 h-6" />}
-        color="from-cyan-500 to-cyan-600"
+        color="bg-cyan-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

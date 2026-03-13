@@ -626,7 +626,7 @@ export default function CategoriesPage() {
             <select
               value={formData.parentId}
               onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
             >
               <option value="">{t('admin.categories.noParent')}</option>
               {parentOptions

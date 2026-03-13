@@ -5,7 +5,7 @@
   "start_url": "/admin/crm",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#7c3aed",
+  "theme_color": "#38A169",
   "orientation": "portrait-primary",
   "categories": ["business", "productivity"],
   "icons": [

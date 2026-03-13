@@ -67,7 +67,7 @@ export default function MorningBriefingWidget() {
   return (
     <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-amber-50/60 to-white dark:from-amber-950/30 dark:to-slate-900">
+      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-amber-50/60 dark:bg-amber-950/30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900 flex items-center justify-center">

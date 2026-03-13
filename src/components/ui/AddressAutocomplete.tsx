@@ -235,8 +235,8 @@ export function AddressAutocomplete({
               aria-selected={index === selectedIndex}
               onClick={() => handleSelect(prediction.place_id)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`w-full text-start px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                index === selectedIndex ? 'bg-orange-50' : ''
+              className={`w-full text-start px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                index === selectedIndex ? 'bg-primary-50' : ''
               }`}
             >
               <div className="flex items-start gap-3">

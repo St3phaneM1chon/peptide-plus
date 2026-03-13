@@ -50,7 +50,7 @@ export default function QuantityTiers({
   , sortedTiers[0]);
 
   return (
-    <div className="bg-gradient-to-br from-primary-50 to-amber-50 rounded-lg border border-primary-200 p-4">
+    <div className="bg-primary-50 rounded-lg border border-primary-200 p-4">
       <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2">
         <span className="text-lg">💰</span>
         {t('shop.bulkPricing') || 'Bulk Pricing'}

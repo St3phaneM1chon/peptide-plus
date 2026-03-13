@@ -263,7 +263,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
       )}
 
       {/* Rewards Info Banner */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-primary-50 to-amber-50 border border-primary-200 rounded-lg flex items-center gap-3">
+      <div className="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-lg flex items-center gap-3">
         <span className="text-2xl">💰</span>
         <div>
           <p className="font-medium text-primary-800">

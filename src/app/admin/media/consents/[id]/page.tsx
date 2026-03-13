@@ -99,7 +99,7 @@ export default function AdminConsentDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
       </div>
     );
   }
@@ -108,7 +108,7 @@ export default function AdminConsentDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-gray-500">{t('admin.consents.notFound')}</p>
-        <Link href="/admin/media/consents" className="text-orange-600 hover:underline mt-2 inline-block">
+        <Link href="/admin/media/consents" className="text-primary-600 hover:underline mt-2 inline-block">
           {t('common.back')}
         </Link>
       </div>
@@ -127,7 +127,7 @@ export default function AdminConsentDetailPage() {
         <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <FileCheck className="h-6 w-6 text-orange-600" />
+        <FileCheck className="h-6 w-6 text-primary-600" />
         <div>
           <h1 className="text-xl font-bold text-gray-900">{t('admin.consents.detailTitle')}</h1>
           <p className="text-xs text-gray-400 font-mono">{consent.id}</p>
@@ -145,7 +145,7 @@ export default function AdminConsentDetailPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-gray-500">{t('common.name')}:</span>{' '}
-            <Link href={`/admin/clients/${consent.client.id}`} className="font-medium text-orange-600 hover:underline">
+            <Link href={`/admin/clients/${consent.client.id}`} className="font-medium text-primary-600 hover:underline">
               {consent.client.name || '—'}
             </Link>
           </div>
@@ -175,7 +175,7 @@ export default function AdminConsentDetailPage() {
             <Video className="h-4 w-4" /> {t('admin.consents.relatedVideo')}
           </h2>
           <div className="flex items-center gap-3">
-            <Link href={`/admin/media/videos/${consent.video.id}`} className="text-orange-600 hover:underline font-medium">
+            <Link href={`/admin/media/videos/${consent.video.id}`} className="text-primary-600 hover:underline font-medium">
               {consent.video.title}
             </Link>
             <span className={`text-xs px-2 py-0.5 rounded ${consent.video.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -249,7 +249,7 @@ export default function AdminConsentDetailPage() {
           )}
           {consent.expiresAt && (
             <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-orange-400" />
+              <Clock className="h-3.5 w-3.5 text-primary-400" />
               <span className="text-gray-500">{t('admin.consents.expires')}:</span>
               <span>{new Date(consent.expiresAt).toLocaleString(locale)}</span>
             </div>

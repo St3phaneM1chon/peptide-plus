@@ -8,6 +8,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
 function LoadingFallback() {
@@ -158,11 +159,15 @@ function ResetPasswordContent() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 justify-center">
-            <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">BC</span>
-            </div>
-            <span className="font-bold text-2xl text-gray-900">BioCycle Peptides</span>
+          <Link href="/" className="flex justify-center mb-8">
+            <Image
+              src="/images/brand/logo-600x200.png"
+              alt="BioCycle Peptides"
+              width={220}
+              height={73}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
           <h2 className="mt-6 text-2xl font-bold text-gray-900">
             {t('auth.forgotPasswordTitle')}

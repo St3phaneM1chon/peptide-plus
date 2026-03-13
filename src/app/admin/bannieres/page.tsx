@@ -660,7 +660,7 @@ export default function BannieresPage() {
                 ))}
               </div>
               {/* F90 FIX: Right fade gradient to indicate more tabs are scrollable */}
-              <div className="absolute end-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+              <div className="absolute end-0 top-0 bottom-0 w-8 bg-white/10 pointer-events-none" />
             </div>
           </div>
         </div>

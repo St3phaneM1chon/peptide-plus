@@ -287,7 +287,7 @@ export default function InvoicesPage() {
     <>
       <div className="min-h-screen bg-gray-50 no-print">
         {/* Header */}
-        <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-8">
+        <section className="bg-neutral-900 text-white py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="text-sm text-neutral-400 mb-4">
               <Link href="/" className="hover:text-primary-400">{t('nav.home') || 'Home'}</Link>

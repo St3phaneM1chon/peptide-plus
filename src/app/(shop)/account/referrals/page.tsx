@@ -290,7 +290,7 @@ export default function ReferralsPage() {
 
         {/* No referral code yet - Generate CTA */}
         {!hasCode && (
-          <div className="bg-gradient-to-br from-[#CC5500] to-[#a34400] rounded-2xl p-8 md:p-12 text-white text-center mb-8 relative overflow-hidden">
+          <div className="bg-[#CC5500] rounded-2xl p-8 md:p-12 text-white text-center mb-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
               <div className="absolute -top-10 -end-10 w-40 h-40 bg-white rounded-full" />
               <div className="absolute -bottom-10 -start-10 w-60 h-60 bg-white rounded-full" />
@@ -328,7 +328,7 @@ export default function ReferralsPage() {
         {hasCode && stats && (
           <>
             {/* Big referral code display */}
-            <div className="bg-gradient-to-br from-[#CC5500] to-[#a34400] rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
+            <div className="bg-[#CC5500] rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
               <div className="absolute inset-0 opacity-10">
                 <div className="absolute -top-10 -end-10 w-40 h-40 bg-white rounded-full" />
                 <div className="absolute -bottom-10 -start-10 w-60 h-60 bg-white rounded-full" />

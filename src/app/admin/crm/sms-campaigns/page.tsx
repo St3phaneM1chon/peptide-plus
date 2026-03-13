@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   Plus, Play, Pause, X,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface SmsCampaign {
   id: string;
@@ -58,7 +59,7 @@ export default function SmsCampaignsPage() {
     try {
       const res = await fetch('/api/admin/crm/sms-campaigns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(createForm),
       });
       const json = await res.json();
@@ -70,7 +71,7 @@ export default function SmsCampaignsPage() {
 
   const sendCampaign = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/crm/sms-campaigns/${id}/send`, { method: 'POST' });
+      const res = await fetch(`/api/admin/crm/sms-campaigns/${id}/send`, { method: 'POST', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success) { toast.success('Campaign started'); fetchCampaigns(); }
       else toast.error(json.error?.message || 'Failed');
@@ -79,7 +80,7 @@ export default function SmsCampaignsPage() {
 
   const togglePause = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/crm/sms-campaigns/${id}/pause`, { method: 'PUT' });
+      const res = await fetch(`/api/admin/crm/sms-campaigns/${id}/pause`, { method: 'PUT', headers: addCSRFHeader({}) });
       const json = await res.json();
       if (json.success) { toast.success('Campaign updated'); fetchCampaigns(); }
       else toast.error(json.error?.message || 'Failed');

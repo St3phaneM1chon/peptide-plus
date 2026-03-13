@@ -132,7 +132,7 @@ export default function MediaXPage() {
         // FIX: F35 - Use i18n for description instead of hardcoded English
         description={t('admin.media.xDescription')}
         icon={<MessageCircle className="w-6 h-6" />}
-        color="from-slate-800 to-slate-900"
+        color="bg-slate-800"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

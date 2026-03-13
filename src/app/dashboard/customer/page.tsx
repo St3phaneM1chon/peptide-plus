@@ -71,10 +71,10 @@ export default async function CustomerDashboard() {
   const { orders, user, recentTransactions, stats } = await getCustomerData(session.user.id);
 
   const tierColors: Record<string, string> = {
-    BRONZE: 'from-amber-600 to-amber-800',
-    SILVER: 'from-gray-400 to-gray-600',
-    GOLD: 'from-yellow-500 to-yellow-700',
-    PLATINUM: 'from-cyan-400 to-cyan-700',
+    BRONZE: 'bg-amber-600',
+    SILVER: 'bg-gray-400',
+    GOLD: 'bg-yellow-500',
+    PLATINUM: 'bg-cyan-400',
   };
 
   return (
@@ -172,7 +172,7 @@ export default async function CustomerDashboard() {
           {/* Sidebar - Points de fidélité */}
           <aside className="space-y-6">
             {/* Carte de fidélité */}
-            <div className={`bg-gradient-to-br ${tierColors[user?.loyaltyTier || 'BRONZE']} rounded-xl p-6 text-white`}>
+            <div className={`${tierColors[user?.loyaltyTier || 'BRONZE']} rounded-xl p-6 text-white`}>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm opacity-80">Niveau</span>
                 <span className="font-bold">{user?.loyaltyTier || 'BRONZE'}</span>

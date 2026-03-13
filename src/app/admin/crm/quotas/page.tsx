@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { Target, Plus, TrendingUp } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -93,7 +94,7 @@ export default function QuotasPage() {
     try {
       const res = await fetch('/api/admin/crm/quotas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           agentId: formAgentId,
           period: formPeriod,
@@ -119,7 +120,7 @@ export default function QuotasPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/crm/quotas/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/crm/quotas/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       if (res.status === 204 || res.ok) {
         toast.success(t('admin.crm.quotas.deleted'));
         setQuotas((prev) => prev.filter((q) => q.id !== id));

@@ -158,7 +158,7 @@ export default function ConsentFormPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
+          <div className="bg-primary-500 p-6 text-white">
             <div className="flex items-center gap-3 mb-2">
               <FileCheck className="h-6 w-6" />
               <h1 className="text-xl font-bold">

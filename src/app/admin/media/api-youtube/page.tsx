@@ -131,7 +131,7 @@ export default function MediaYouTubePage() {
         // FIX: F35 - Use i18n for description instead of hardcoded English
         description={t('admin.media.youtubeDescription')}
         icon={<Video className="w-6 h-6" />}
-        color="from-red-500 to-red-600"
+        color="bg-red-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

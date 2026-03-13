@@ -33,7 +33,7 @@ export default function FreeShippingBanner() {
     <div
       role="banner"
       aria-label={t('shop.aria.freeShippingInfo')}
-      className={`bg-gradient-to-r from-primary-500 to-secondary-600 text-white text-center py-2 px-4 text-sm font-medium transition-all duration-300 ${
+      className={`bg-accent-700 text-white text-center py-2 px-4 text-sm font-medium transition-all duration-300 ${
         isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 h-0 py-0'
       }`}
     >

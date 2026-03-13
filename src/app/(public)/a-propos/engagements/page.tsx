@@ -52,7 +52,7 @@ export default function EngagementsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white py-20 px-6 text-center">
+      <section className="bg-emerald-500 text-white py-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
             &larr; {t('about.backToAbout')}

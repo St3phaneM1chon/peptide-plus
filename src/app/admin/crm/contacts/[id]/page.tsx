@@ -12,6 +12,7 @@ import {
 import { ActivityTimeline } from '@/components/admin/crm/ActivityTimeline';
 import { ScoreBreakdown } from '@/components/admin/crm/ScoreBreakdown';
 import { InlineEdit } from '@/components/admin/crm/InlineEdit';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ContactDetail {
   id: string;
@@ -112,7 +113,7 @@ export default function ContactDetailPage() {
       try {
         const res = await fetch(`/api/admin/crm/contacts/${contactId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ [field]: value || null }),
         });
         const json = await res.json();

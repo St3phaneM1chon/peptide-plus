@@ -15,6 +15,7 @@ import {
   Search,
   Eye,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -237,7 +238,7 @@ export default function QuotesPage() {
     try {
       const res = await fetch('/api/admin/crm/quotes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           dealId: formDealId,
           taxRate: parseFloat(formTaxRate) / 100, // convert percentage to decimal
@@ -285,7 +286,7 @@ export default function QuotesPage() {
     try {
       const res = await fetch(`/api/admin/crm/quotes/${quoteId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'SENT' }),
       });
       const json = await res.json();
@@ -304,7 +305,7 @@ export default function QuotesPage() {
   // ---------------------------
   const handleDelete = async (quoteId: string) => {
     try {
-      const res = await fetch(`/api/admin/crm/quotes/${quoteId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/crm/quotes/${quoteId}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       if (res.status === 204 || res.ok) {
         toast.success(t('admin.crm.quotes.deleted'));
         setQuotes((prev) => prev.filter((q) => q.id !== quoteId));

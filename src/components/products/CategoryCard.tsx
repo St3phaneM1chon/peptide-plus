@@ -29,11 +29,11 @@ export const CategoryCard = memo(function CategoryCard({ category }: CategoryCar
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-700" />
+          <div className="absolute inset-0 bg-blue-500" />
         )}
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-black/40" />
 
         {/* Contenu */}
         <div className="absolute bottom-0 start-0 end-0 p-4 text-white">

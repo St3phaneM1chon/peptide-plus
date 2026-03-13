@@ -16,7 +16,7 @@ export default function MissionPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-700 text-white py-20 px-6 text-center">
+      <section className="bg-primary-600 text-white py-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <Link href="/a-propos" className="text-white/80 hover:text-white text-sm transition-colors">
             &larr; {t('about.backToAbout')}

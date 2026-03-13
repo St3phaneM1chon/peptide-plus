@@ -303,7 +303,7 @@ export function CheckoutPageClient({
                       width: '100%',
                       height: '100%',
                       background:
-                        'linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%)',
+                        'var(--gray-200)',
                     }}
                   />
                 )}

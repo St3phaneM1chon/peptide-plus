@@ -360,7 +360,7 @@ export default function ProtocolsPage() {
         )}
 
         {/* Tips Section */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
           <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
             {t('protocols.tipsTitle')}
           </h3>

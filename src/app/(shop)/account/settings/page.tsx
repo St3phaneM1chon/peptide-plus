@@ -252,7 +252,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-8">
+      <section className="bg-neutral-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/account" className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 mb-4">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

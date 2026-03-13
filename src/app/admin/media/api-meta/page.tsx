@@ -140,7 +140,7 @@ export default function MediaMetaPage() {
         title={t('admin.media.metaTitle')}
         description={t('admin.media.metaDescription')}
         icon={<Globe className="w-6 h-6" />}
-        color="from-indigo-600 to-indigo-600"
+        color="bg-indigo-600"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[

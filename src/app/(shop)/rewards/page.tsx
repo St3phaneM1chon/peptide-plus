@@ -110,7 +110,7 @@ export default function RewardsPage() {
       />
 
       {/* Hero Section */}
-      <section className={`bg-gradient-to-br ${tier.color} text-white py-12`}>
+      <section className={`${tier.color} text-white py-12`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
@@ -379,7 +379,7 @@ export default function RewardsPage() {
         {/* Referral Tab */}
         {activeTab === 'referral' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-8 text-white text-center">
+            <div className="bg-primary-500 rounded-xl p-8 text-white text-center">
               <span className="text-6xl mb-4 block" aria-hidden="true">👥</span>
               <h2 className="text-2xl font-bold mb-2">{t('rewards.referTitle') || 'Give $10, Get $10'}</h2>
               <p className="text-white/80 mb-6 max-w-md mx-auto">

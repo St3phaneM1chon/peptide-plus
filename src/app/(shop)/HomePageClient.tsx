@@ -519,7 +519,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
       <SectionDivider fromColor="#FFFFFF" toColor="#F0FFF4" variant="wave" />
 
       {/* 9. About / Mission (gradient green→cyan) */}
-      <section ref={aboutRef} className="relative py-20 bg-gradient-to-br from-primary-50 via-white to-secondary-50 overflow-hidden">
+      <section ref={aboutRef} className="relative py-20 bg-primary-50 overflow-hidden">
         <MoleculeBackground opacity={0.04} count={6} />
         <div className={`relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-700 ${aboutVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <h2 className="font-heading text-3xl md:text-4xl text-neutral-900 mb-6">
@@ -625,7 +625,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
       <SectionDivider fromColor="#F5F5F4" toColor="#0F2440" variant="wave" />
 
       {/* 12. CTA (gradient navy + molecule decoration) */}
-      <section ref={ctaRef} className="relative py-20 bg-gradient-to-br from-navy-800 to-navy-900 text-white overflow-hidden">
+      <section ref={ctaRef} className="relative py-20 bg-navy-800 text-white overflow-hidden">
         <MoleculeBackground opacity={0.08} count={10} />
         <div className={`relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-700 ${ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <h2 className="font-heading text-3xl md:text-4xl mb-4">

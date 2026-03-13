@@ -61,7 +61,7 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(135deg, #F0F0F0 0%, #E0E0E0 100%)',
+              background: '#F0F0F0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

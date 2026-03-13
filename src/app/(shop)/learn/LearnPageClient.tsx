@@ -96,7 +96,7 @@ export default function LearnPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-16">
+      <section className="bg-neutral-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {t('learn.title') || 'Learning Center'}
@@ -121,7 +121,7 @@ export default function LearnPage() {
                 href={`/learn/${article.slug}`}
                 className="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300"
               >
-                <div className="aspect-video bg-gradient-to-br from-primary-400 to-primary-600 relative">
+                <div className="aspect-video bg-primary-400 relative">
                   <div className="absolute inset-0 flex items-center justify-center text-white text-6xl opacity-50">
                     📚
                   </div>
@@ -205,7 +205,7 @@ export default function LearnPage() {
                   href={`/learn/${article.slug}`}
                   className="group flex gap-6 bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300"
                 >
-                  <div className="w-48 h-32 bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0 flex items-center justify-center text-4xl">
+                  <div className="w-48 h-32 bg-gray-200 flex-shrink-0 flex items-center justify-center text-4xl">
                     📄
                   </div>
                   <div className="flex-1 py-4 pe-4">
@@ -229,7 +229,7 @@ export default function LearnPage() {
         </div>
 
         {/* Free Guide CTA */}
-        <section className="mt-16 bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-8 md:p-12 text-white">
+        <section className="mt-16 bg-primary-500 rounded-2xl p-8 md:p-12 text-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">
               📘 The Complete Guide to Peptide Research

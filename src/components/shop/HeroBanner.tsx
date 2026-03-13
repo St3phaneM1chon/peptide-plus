@@ -11,7 +11,7 @@ interface Slide {
   description: string;
   cta: string;
   href: string;
-  bgGradient: string;
+  bgColor: string;
   badge?: string;
 }
 
@@ -28,7 +28,7 @@ export default function HeroBanner() {
       description: t('home.hero.slide1Description'),
       cta: t('home.hero.slide1Cta'),
       href: '/shop',
-      bgGradient: 'from-emerald-900 via-emerald-800 to-neutral-900',
+      bgColor: 'bg-emerald-900',
       badge: t('home.hero.slide1Badge'),
     },
     {
@@ -38,7 +38,7 @@ export default function HeroBanner() {
       description: t('home.hero.slide2Description'),
       cta: t('home.hero.slide2Cta'),
       href: '/category/weight-loss',
-      bgGradient: 'from-blue-900 via-blue-800 to-neutral-900',
+      bgColor: 'bg-blue-900',
       badge: t('home.hero.slide2Badge'),
     },
     {
@@ -48,7 +48,7 @@ export default function HeroBanner() {
       description: t('home.hero.slide3Description'),
       cta: t('home.hero.slide3Cta'),
       href: '/category/peptide-blends',
-      bgGradient: 'from-purple-900 via-purple-800 to-neutral-900',
+      bgColor: 'bg-purple-900',
       badge: t('home.hero.slide3Badge'),
     },
     {
@@ -58,7 +58,7 @@ export default function HeroBanner() {
       description: t('home.hero.slide4Description'),
       cta: t('home.hero.slide4Cta'),
       href: '/shop',
-      bgGradient: 'from-amber-900 via-amber-800 to-neutral-900',
+      bgColor: 'bg-amber-900',
       badge: t('home.hero.slide4Badge'),
     },
   ];
@@ -92,7 +92,7 @@ export default function HeroBanner() {
     >
       {/* Background */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${slide.bgGradient} transition-all duration-700`}
+        className={`absolute inset-0 ${slide.bgColor} transition-all duration-700`}
       />
 
       {/* Decorative Elements */}

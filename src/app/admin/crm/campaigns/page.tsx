@@ -8,6 +8,7 @@ import {
   Layers, Clock, Users, TrendingUp, ChevronDown, ChevronRight,
   Calendar, X, Search,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -135,7 +136,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
 
       const res = await fetch('/api/admin/crm/campaigns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       const json = await res.json();
@@ -406,12 +407,12 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
     try {
       let res: Response;
       if (action === 'start') {
-        res = await fetch(`/api/admin/crm/campaigns/${campaign.id}/start`, { method: 'POST' });
+        res = await fetch(`/api/admin/crm/campaigns/${campaign.id}/start`, { method: 'POST', headers: addCSRFHeader({}) });
       } else {
         const newStatus = action === 'pause' ? 'PAUSED' : 'CANCELLED';
         res = await fetch(`/api/admin/crm/campaigns/${campaign.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ status: newStatus }),
         });
       }

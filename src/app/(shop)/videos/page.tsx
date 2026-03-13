@@ -217,7 +217,7 @@ export default function VideosPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ====== Hero ====== */}
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-12">
+      <section className="bg-neutral-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
             <Film className="w-9 h-9 text-primary-400" />
@@ -354,7 +354,7 @@ export default function VideosPage() {
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-200 to-neutral-300">
+                          <div className="absolute inset-0 flex items-center justify-center bg-neutral-200">
                             <Play className="w-12 h-12 text-neutral-400" />
                           </div>
                         )}
@@ -416,7 +416,7 @@ export default function VideosPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-200 to-neutral-300">
+                        <div className="absolute inset-0 flex items-center justify-center bg-neutral-200">
                           <Play className="w-12 h-12 text-neutral-400" />
                         </div>
                       )}

@@ -88,7 +88,7 @@ export default function MediaWhatsAppPage() {
         title={t('admin.media.whatsappTitle')}
         description={t('admin.integrations.whatsappSetupDesc')}
         icon={<MessageCircle className="w-6 h-6" />}
-        color="from-green-500 to-green-600"
+        color="bg-green-500"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[
