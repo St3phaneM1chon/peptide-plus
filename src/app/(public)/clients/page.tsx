@@ -2,43 +2,36 @@
  * PAGE CLIENTS - Principale
  */
 
+'use client';
+
 import Link from 'next/link';
-
-export const metadata = {
-  title: 'Nos clients',
-  description: 'Découvrez les entreprises et chercheurs qui font confiance à BioCycle Peptides pour leurs peptides de recherche.',
-  openGraph: {
-    title: 'Nos clients | BioCycle Peptides',
-    description: 'Les entreprises et chercheurs qui font confiance à BioCycle Peptides.',
-    url: 'https://biocyclepeptides.com/clients',
-    siteName: 'BioCycle Peptides',
-    type: 'website',
-  },
-};
-
-const clients = [
-  { name: 'Desjardins', industry: 'Finance', logo: '🏦' },
-  { name: 'Hydro-Québec', industry: 'Énergie', logo: '⚡' },
-  { name: 'Bell Canada', industry: 'Télécommunications', logo: '📱' },
-  { name: 'Bombardier', industry: 'Aérospatiale', logo: '✈️' },
-  { name: 'CGI', industry: 'Technologie', logo: '💻' },
-  { name: 'Couche-Tard', industry: 'Commerce de détail', logo: '🏪' },
-  { name: 'Saputo', industry: 'Agroalimentaire', logo: '🥛' },
-  { name: 'National Bank', industry: 'Finance', logo: '🏛️' },
-  { name: 'Loto-Québec', industry: 'Divertissement', logo: '🎰' },
-  { name: 'SAQ', industry: 'Commerce de détail', logo: '🍷' },
-  { name: 'Metro', industry: 'Alimentation', logo: '🛒' },
-  { name: 'Vidéotron', industry: 'Télécommunications', logo: '📺' },
-];
-
-const stats = [
-  { value: '500+', label: 'Entreprises clientes' },
-  { value: '50K+', label: 'Apprenants formés' },
-  { value: '98%', label: 'Taux de satisfaction' },
-  { value: '92%', label: 'Taux de recommandation' },
-];
+import { useI18n } from '@/i18n/client';
 
 export default function ClientsPage() {
+  const { t } = useI18n();
+
+  const clients = [
+    { name: 'Desjardins', industry: t('clients.industryFinance'), logo: '🏦' },
+    { name: 'Hydro-Québec', industry: t('clients.industryEnergy'), logo: '⚡' },
+    { name: 'Bell Canada', industry: t('clients.industryTelecom'), logo: '📱' },
+    { name: 'Bombardier', industry: t('clients.industryAerospace'), logo: '✈️' },
+    { name: 'CGI', industry: t('clients.industryTech'), logo: '💻' },
+    { name: 'Couche-Tard', industry: t('clients.industryRetail'), logo: '🏪' },
+    { name: 'Saputo', industry: t('clients.industryFood'), logo: '🥛' },
+    { name: 'National Bank', industry: t('clients.industryFinance'), logo: '🏛️' },
+    { name: 'Loto-Québec', industry: t('clients.industryEntertainment'), logo: '🎰' },
+    { name: 'SAQ', industry: t('clients.industryRetail'), logo: '🍷' },
+    { name: 'Metro', industry: t('clients.industryGrocery'), logo: '🛒' },
+    { name: 'Vidéotron', industry: t('clients.industryTelecom'), logo: '📺' },
+  ];
+
+  const stats = [
+    { value: '500+', label: t('clients.statsCompanies') },
+    { value: '50K+', label: t('clients.statsLearners') },
+    { value: '98%', label: t('clients.statsSatisfaction') },
+    { value: '92%', label: t('clients.statsRecommendation') },
+  ];
+
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
       {/* Hero */}
@@ -52,11 +45,10 @@ export default function ClientsPage() {
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Ils nous font confiance
+            {t('clients.heroTitle')}
           </h1>
           <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Des centaines d'entreprises au Canada et à l'international ont choisi 
-            nos formations pour développer les compétences de leurs équipes.
+            {t('clients.heroText')}
           </p>
         </div>
       </section>
@@ -79,7 +71,7 @@ export default function ClientsPage() {
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
-            Quelques-uns de nos clients
+            {t('clients.someClients')}
           </h2>
           <div
             style={{
@@ -128,10 +120,10 @@ export default function ClientsPage() {
               <span style={{ fontSize: '40px' }}>💬</span>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  Témoignages
+                  {t('clients.testimonialsTitle')}
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-                  Ce que nos clients disent de nous
+                  {t('clients.testimonialsDesc')}
                 </p>
               </div>
             </Link>
@@ -150,10 +142,10 @@ export default function ClientsPage() {
               <span style={{ fontSize: '40px' }}>📊</span>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  Études de cas
+                  {t('clients.caseStudiesTitle')}
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-                  Projets détaillés avec résultats
+                  {t('clients.caseStudiesDesc')}
                 </p>
               </div>
             </Link>
@@ -172,10 +164,10 @@ export default function ClientsPage() {
               <span style={{ fontSize: '40px' }}>🏆</span>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gray-500)', marginBottom: '4px' }}>
-                  Références
+                  {t('clients.referencesTitle')}
                 </h3>
                 <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-                  Liste complète de nos clients
+                  {t('clients.referencesDesc')}
                 </p>
               </div>
             </Link>
@@ -186,13 +178,13 @@ export default function ClientsPage() {
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-          Rejoignez nos clients satisfaits
+          {t('clients.ctaTitle')}
         </h2>
         <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-          Découvrez comment nous pouvons vous aider.
+          {t('clients.ctaText')}
         </p>
         <Link href="/demo" className="btn btn-primary" style={{ padding: '14px 32px' }}>
-          Demander une démo
+          {t('clients.requestDemo')}
         </Link>
       </section>
     </div>

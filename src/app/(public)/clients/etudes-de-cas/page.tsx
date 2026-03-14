@@ -2,74 +2,67 @@
  * PAGE ÉTUDES DE CAS
  */
 
+'use client';
+
 import Link from 'next/link';
-
-export const metadata = {
-  title: 'Études de cas',
-  description: 'Découvrez comment nos clients utilisent les peptides de recherche BioCycle Peptides pour atteindre leurs objectifs scientifiques.',
-  openGraph: {
-    title: 'Études de cas | BioCycle Peptides',
-    description: 'Découvrez comment nos clients utilisent les peptides BioCycle Peptides.',
-    url: 'https://biocyclepeptides.com/clients/etudes-de-cas',
-    siteName: 'BioCycle Peptides',
-    type: 'website',
-  },
-};
-
-const caseStudies = [
-  {
-    id: 'desjardins-transformation',
-    company: 'Desjardins',
-    industry: 'Finance',
-    title: 'Transformation digitale de 5000 employés',
-    summary: 'Comment Desjardins a accompagné sa transformation digitale en formant 5000 employés en moins d\'un an.',
-    results: ['+45% productivité', '98% satisfaction', '6 mois d\'avance'],
-    image: null,
-    featured: true,
-  },
-  {
-    id: 'cgi-leadership',
-    company: 'CGI',
-    industry: 'Technologie',
-    title: 'Programme de leadership pour managers',
-    summary: 'Développement d\'un programme sur mesure pour former 200 nouveaux managers.',
-    results: ['+30% engagement', 'Promotion interne x2', '92% completion'],
-    image: null,
-    featured: true,
-  },
-  {
-    id: 'hydro-conformite',
-    company: 'Hydro-Québec',
-    industry: 'Énergie',
-    title: 'Conformité et certifications obligatoires',
-    summary: 'Mise en place d\'un système de formation continue pour garantir la conformité réglementaire.',
-    results: ['100% conformité', 'Zéro incident', 'ROI 300%'],
-    image: null,
-    featured: false,
-  },
-  {
-    id: 'bell-onboarding',
-    company: 'Bell Canada',
-    industry: 'Télécommunications',
-    title: 'Optimisation de l\'onboarding',
-    summary: 'Réduction du temps d\'intégration des nouvelles recrues de 40%.',
-    results: ['-40% temps intégration', '+25% rétention', 'Standardisation'],
-    image: null,
-    featured: false,
-  },
-  {
-    id: 'bombardier-technique',
-    company: 'Bombardier',
-    industry: 'Aérospatiale',
-    title: 'Montée en compétences techniques',
-    summary: 'Formation de 300 ingénieurs sur les nouvelles technologies de fabrication.',
-    results: ['300 certifiés', '-20% erreurs', 'Innovation accélérée'],
-    image: null,
-    featured: false,
-  },
-];
+import { useI18n } from '@/i18n/client';
 
 export default function CaseStudiesPage() {
+  const { t } = useI18n();
+
+  const caseStudies = [
+    {
+      id: 'desjardins-transformation',
+      company: 'Desjardins',
+      industry: t('clients.industryFinance'),
+      title: t('caseStudies.study1Title'),
+      summary: t('caseStudies.study1Summary'),
+      results: ['+45% productivité', '98% satisfaction', '6 mois d\'avance'],
+      image: null,
+      featured: true,
+    },
+    {
+      id: 'cgi-leadership',
+      company: 'CGI',
+      industry: t('clients.industryTech'),
+      title: t('caseStudies.study2Title'),
+      summary: t('caseStudies.study2Summary'),
+      results: ['+30% engagement', 'Promotion interne x2', '92% completion'],
+      image: null,
+      featured: true,
+    },
+    {
+      id: 'hydro-conformite',
+      company: 'Hydro-Québec',
+      industry: t('clients.industryEnergy'),
+      title: t('caseStudies.study3Title'),
+      summary: t('caseStudies.study3Summary'),
+      results: ['100% conformité', 'Zéro incident', 'ROI 300%'],
+      image: null,
+      featured: false,
+    },
+    {
+      id: 'bell-onboarding',
+      company: 'Bell Canada',
+      industry: t('clients.industryTelecom'),
+      title: t('caseStudies.study4Title'),
+      summary: t('caseStudies.study4Summary'),
+      results: ['-40% temps intégration', '+25% rétention', 'Standardisation'],
+      image: null,
+      featured: false,
+    },
+    {
+      id: 'bombardier-technique',
+      company: 'Bombardier',
+      industry: t('clients.industryAerospace'),
+      title: t('caseStudies.study5Title'),
+      summary: t('caseStudies.study5Summary'),
+      results: ['300 certifiés', '-20% erreurs', 'Innovation accélérée'],
+      image: null,
+      featured: false,
+    },
+  ];
+
   const featuredStudies = caseStudies.filter(cs => cs.featured);
   const otherStudies = caseStudies.filter(cs => !cs.featured);
 
@@ -86,11 +79,10 @@ export default function CaseStudiesPage() {
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Études de cas
+            {t('caseStudies.title')}
           </h1>
           <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Des résultats concrets, mesurables et documentés. Découvrez comment 
-            nos clients ont atteint leurs objectifs.
+            {t('caseStudies.heroText')}
           </p>
         </div>
       </section>
@@ -99,7 +91,7 @@ export default function CaseStudiesPage() {
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--gray-500)' }}>
-            Études phares
+            {t('caseStudies.featured')}
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
             {featuredStudies.map((study) => (
@@ -168,7 +160,7 @@ export default function CaseStudiesPage() {
       <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '40px', color: 'var(--gray-500)' }}>
-            Autres études de cas
+            {t('caseStudies.otherStudies')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {otherStudies.map((study) => (
@@ -197,7 +189,7 @@ export default function CaseStudiesPage() {
                   <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>{study.summary}</p>
                 </div>
                 <span style={{ fontSize: '14px', color: 'var(--gray-500)', fontWeight: 500, flexShrink: 0 }}>
-                  Lire →
+                  {t('caseStudies.readMore')}
                 </span>
               </Link>
             ))}
@@ -208,13 +200,13 @@ export default function CaseStudiesPage() {
       {/* CTA */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-          Écrivons votre success story
+          {t('caseStudies.ctaTitle')}
         </h2>
         <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-          Discutons de vos objectifs et créons ensemble votre programme de formation.
+          {t('caseStudies.ctaText')}
         </p>
         <Link href="/demo" className="btn btn-primary" style={{ padding: '14px 32px' }}>
-          Demander une démo
+          {t('caseStudies.requestDemo')}
         </Link>
       </section>
     </div>

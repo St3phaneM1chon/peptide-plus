@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
-    logger.error('Error fetching webinars:', error);
+    logger.error('Error fetching webinars', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching webinars' },
       { status: 500 }

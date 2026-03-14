@@ -181,13 +181,13 @@ export async function POST(request: NextRequest) {
             } else {
               errorCount++;
               logger.error(
-                `Failed to send stock alert to ${alert.email}:`,
-                emailResult.error
+                `Failed to send stock alert to ${alert.email}`,
+                { error: emailResult.error instanceof Error ? emailResult.error.message : String(emailResult.error) }
               );
             }
           } catch (error) {
             errorCount++;
-            logger.error(`Error processing alert ${alert.id}:`, error);
+            logger.error(`Error processing alert ${alert.id}`, { error: error instanceof Error ? error.message : String(error) });
           }
         })
       );
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
         message: `Processed ${processedCount} alerts, sent ${sentCount} emails, ${errorCount} errors`,
       });
     } catch (error) {
-      logger.error('Stock alerts cron error:', error);
+      logger.error('Stock alerts cron error', { error: error instanceof Error ? error.message : String(error) });
       // BE-SEC-04: Don't leak error details in production
       return NextResponse.json(
         {
