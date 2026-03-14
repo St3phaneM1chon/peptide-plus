@@ -13,7 +13,7 @@ async function safeDecryptField(value: string | null): Promise<string | null> {
   try {
     return await decrypt(value);
   } catch (error) {
-    console.error('[BankImport] Decryption failed for field (returning raw value):', error);
+    logger.error('Decryption failed for field, returning raw value', { error: error instanceof Error ? error.message : String(error) });
     return value;
   }
 }
@@ -289,7 +289,7 @@ export async function syncBankAccount(
     }
 
   } catch (error) {
-    console.error('[BankImport] Sync error during bank import:', error);
+    logger.error('Sync error during bank import', { error: error instanceof Error ? error.message : String(error) });
     result.success = false;
     result.errors.push(`Sync error: ${error}`);
   }

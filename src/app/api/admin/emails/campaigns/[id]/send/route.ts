@@ -16,7 +16,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
-import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
+// shouldSuppressEmail replaced by batch query (N+1 fix)
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 import { escapeHtml } from '@/lib/email/templates/base-template';
@@ -322,10 +322,50 @@ export const POST = withAdminGuard(
       const prefsMap = new Map(allPrefs.map(p => [p.userId, p]));
       const consentEmails = new Set(allConsents.map(c => c.email.toLowerCase()));
 
+      // Batch fetch all suppressions and bounces to avoid N+1 per-recipient queries
+      const recipientEmails = recipients.map(r => r.email.toLowerCase().trim());
+      const [allSuppressions, allBounces] = await Promise.all([
+        prisma.emailSuppression.findMany({
+          where: {
+            email: { in: recipientEmails },
+            OR: [
+              { expiresAt: null },
+              { expiresAt: { gt: new Date() } },
+            ],
+          },
+          select: { email: true },
+        }),
+        prisma.emailBounce.findMany({
+          where: { email: { in: recipientEmails } },
+          select: { email: true, bounceType: true, count: true },
+        }),
+      ]);
+
+      const suppressedEmails = new Set(allSuppressions.map(s => s.email.toLowerCase()));
+
+      // Build a map of bounce status per email: hard bounce = suppress, soft >= SOFT_BOUNCE_MAX = suppress
+      const SOFT_BOUNCE_MAX = parseInt(process.env.SOFT_BOUNCE_MAX || '3', 10);
+      const bounceSuppressedEmails = new Set<string>();
+      const softBounceCountMap = new Map<string, number>();
+      for (const b of allBounces) {
+        const email = b.email.toLowerCase();
+        if (b.bounceType === 'hard') {
+          bounceSuppressedEmails.add(email);
+        } else {
+          softBounceCountMap.set(email, (softBounceCountMap.get(email) || 0) + b.count);
+        }
+      }
+      for (const [email, count] of softBounceCountMap) {
+        if (count >= SOFT_BOUNCE_MAX) {
+          bounceSuppressedEmails.add(email);
+        }
+      }
+
       const validRecipients: typeof recipients = [];
       for (const r of recipients) {
-        const { suppressed } = await shouldSuppressEmail(r.email);
-        if (suppressed) continue;
+        const emailLower = r.email.toLowerCase().trim();
+        // Suppression check (replaces per-recipient shouldSuppressEmail call)
+        if (suppressedEmails.has(emailLower) || bounceSuppressedEmails.has(emailLower)) continue;
         const prefs = prefsMap.get(r.id);
         if (prefs && !prefs.newsletter && !prefs.promotions) continue;
         const hasConsent = consentEmails.has(r.email.toLowerCase());

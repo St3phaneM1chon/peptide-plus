@@ -333,7 +333,7 @@ export async function translateEntity(
         }
       }
     } catch (error) {
-      console.error('[AutoTranslate] Failed to parse/translate customSections:', error);
+      logger.error('Failed to parse/translate customSections', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

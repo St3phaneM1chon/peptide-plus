@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[chat/stream] Error:', error);
+    logger.error('Chat stream error', { error: error instanceof Error ? error.message : String(error) });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

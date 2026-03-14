@@ -21,97 +21,101 @@ import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (_request: NextRequest) => {
   try {
-    // ── 1. Fetch all active formats with their recorded stock ──────────
-    // A7-P2-003: Add take limit to prevent unbounded result sets
-    const formats = await prisma.productFormat.findMany({
-      where: { isActive: true, trackInventory: true },
-      select: {
-        id: true,
-        productId: true,
-        name: true,
-        stockQuantity: true,
-        product: { select: { id: true, name: true, slug: true } },
-      },
-      orderBy: { product: { name: 'asc' } },
-      take: 10000,
-    });
-
-    // ── 2. Compute calculated stock per (productId, formatId) ──────────
-    //    Sum of all InventoryTransaction.quantity grouped by productId + formatId
-    const calculatedRows = await prisma.$queryRaw<
-      { productId: string; formatId: string | null; total: bigint }[]
+    // ── 1-4. Single query: formats with calculated stock via LEFT JOIN ──
+    // Combines format fetch + inventory transaction sum into one round-trip
+    const formatReconciliation = await prisma.$queryRaw<
+      Array<{
+        productId: string;
+        productName: string;
+        formatId: string;
+        formatName: string;
+        recordedStock: number;
+        calculatedStock: number;
+      }>
     >`
-      SELECT "productId", "formatId", SUM("quantity") AS total
-      FROM "InventoryTransaction"
-      GROUP BY "productId", "formatId"
+      SELECT
+        pf."productId",
+        p.name AS "productName",
+        pf.id AS "formatId",
+        pf.name AS "formatName",
+        pf."stockQuantity"::int AS "recordedStock",
+        COALESCE(SUM(it.quantity), 0)::int AS "calculatedStock"
+      FROM "ProductFormat" pf
+      JOIN "Product" p ON pf."productId" = p.id
+      LEFT JOIN "InventoryTransaction" it
+        ON pf."productId" = it."productId" AND pf.id = it."formatId"
+      WHERE pf."isActive" = true AND pf."trackInventory" = true
+      GROUP BY pf.id, pf."productId", p.name, pf.name, pf."stockQuantity"
+      ORDER BY p.name ASC
+      LIMIT 10000
     `;
 
-    const calculatedMap = new Map<string, number>();
-    for (const row of calculatedRows) {
-      const key = `${row.productId}:${row.formatId ?? ''}`;
-      calculatedMap.set(key, Number(row.total));
-    }
+    // ── Base products (no format) with calculated stock via LEFT JOIN ──
+    const baseReconciliation = await prisma.$queryRaw<
+      Array<{
+        productId: string;
+        productName: string;
+        recordedStock: number;
+        calculatedStock: number;
+      }>
+    >`
+      SELECT
+        p.id AS "productId",
+        p.name AS "productName",
+        p."stockQuantity"::int AS "recordedStock",
+        COALESCE(SUM(it.quantity), 0)::int AS "calculatedStock"
+      FROM "Product" p
+      LEFT JOIN "InventoryTransaction" it
+        ON p.id = it."productId" AND it."formatId" IS NULL
+      WHERE p."isActive" = true AND p."trackInventory" = true
+      GROUP BY p.id, p.name, p."stockQuantity"
+      LIMIT 10000
+    `;
 
-    // ── 3. Get last reconciliation date (latest ADJUSTMENT transaction) ─
+    // ── Get last reconciliation date (latest ADJUSTMENT transaction) ─
     const lastAdjustment = await prisma.inventoryTransaction.findFirst({
       where: { type: 'ADJUSTMENT', reason: { startsWith: 'Reconciliation:' } },
       orderBy: { createdAt: 'desc' },
       select: { createdAt: true },
     });
 
-    // ── 4. Build items list, comparing recorded vs calculated ──────────
+    // ── Build items list from combined results ──────────
     let matchCount = 0;
     let discrepancyCount = 0;
 
-    const items = formats.map((format) => {
-      const key = `${format.productId}:${format.id}`;
-      const calculatedStock = calculatedMap.get(key) ?? 0;
-      const recordedStock = format.stockQuantity;
-      const discrepancy = recordedStock - calculatedStock;
+    const items = formatReconciliation.map((row) => {
+      const discrepancy = row.recordedStock - row.calculatedStock;
       const status = discrepancy === 0 ? 'MATCH' : 'DISCREPANCY';
-
       if (status === 'MATCH') matchCount++;
       else discrepancyCount++;
 
       return {
-        productId: format.productId,
-        productName: format.product.name,
-        formatId: format.id,
-        formatName: format.name,
-        recordedStock,
-        calculatedStock,
+        productId: row.productId,
+        productName: row.productName,
+        formatId: row.formatId,
+        formatName: row.formatName,
+        recordedStock: row.recordedStock,
+        calculatedStock: row.calculatedStock,
         discrepancy,
         status,
       };
     });
 
-    // ── 5. Also check base products (no format) that track inventory ───
-    // A7-P2-003: Add take limit to prevent unbounded result sets
-    const baseProducts = await prisma.product.findMany({
-      where: { isActive: true, trackInventory: true },
-      select: { id: true, name: true, stockQuantity: true },
-      take: 10000,
-    });
-
-    for (const product of baseProducts) {
-      const key = `${product.id}:`;
-      const calculatedStock = calculatedMap.get(key) ?? 0;
-      const recordedStock = product.stockQuantity;
-      const discrepancy = recordedStock - calculatedStock;
+    for (const row of baseReconciliation) {
+      const discrepancy = row.recordedStock - row.calculatedStock;
       const status = discrepancy === 0 ? 'MATCH' : 'DISCREPANCY';
-
       if (status === 'MATCH') matchCount++;
       else discrepancyCount++;
 
       // Only include base-product rows when there are transactions or stock
-      if (calculatedStock !== 0 || recordedStock !== 0) {
+      if (row.calculatedStock !== 0 || row.recordedStock !== 0) {
         items.push({
-          productId: product.id,
-          productName: product.name,
+          productId: row.productId,
+          productName: row.productName,
           formatId: '',
           formatName: '(base product)',
-          recordedStock,
-          calculatedStock,
+          recordedStock: row.recordedStock,
+          calculatedStock: row.calculatedStock,
           discrepancy,
           status,
         });

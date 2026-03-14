@@ -145,7 +145,7 @@ export function verifySignature(
       Buffer.from(expected, 'hex')
     );
   } catch (error) {
-    console.error('[Webhooks] Signature verification failed:', error);
+    logger.error('Signature verification failed', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }
@@ -355,7 +355,7 @@ async function scheduleRetry(
       responseBody = await response.text().catch(() => '');
       success = httpStatus >= 200 && httpStatus < 300;
     } catch (fetchErr) {
-      console.error('[Webhooks] Fetch failed during webhook delivery retry:', fetchErr);
+      logger.error('Fetch failed during webhook delivery retry', { error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
       responseBody = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
     }
 
@@ -374,7 +374,7 @@ async function scheduleRetry(
         },
       });
     } catch (error) {
-      console.error('[Webhooks] Failed to update delivery record after retry:', error);
+      logger.error('Failed to update delivery record after retry', { error: error instanceof Error ? error.message : String(error) });
     }
 
     logger.info('[webhooks/outgoing] Retry completed', {

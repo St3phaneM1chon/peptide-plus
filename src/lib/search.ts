@@ -310,7 +310,7 @@ export async function suggestCorrection(query: string): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('[Search] pg_trgm did-you-mean query failed:', error);
+    logger.error('pg_trgm did-you-mean query failed', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -336,7 +336,7 @@ export async function fuzzySearch(
       LIMIT ${limit}`;
     return results;
   } catch (error) {
-    console.error('[Search] Fuzzy search query failed:', error);
+    logger.error('Fuzzy search query failed', { error: error instanceof Error ? error.message : String(error) });
     return [];
   }
 }

@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
@@ -106,34 +107,41 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     // 2. Monthly timeline - deals grouped by expectedCloseDate month
     // ---------------------------------------------------------------------------
 
-    // Batch: fetch all deals within the full timeline range in one query
+    // Aggregate timeline data at the database level to avoid fetching all deal rows
     const timelineRangeStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastYear = now.getFullYear() + Math.floor((now.getMonth() + months - 1) / 12);
     const lastMonth = (now.getMonth() + months - 1) % 12;
     const timelineRangeEnd = new Date(lastYear, lastMonth + 1, 0, 23, 59, 59, 999);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const timelineWhere: Record<string, any> = {
-      expectedCloseDate: { gte: timelineRangeStart, lte: timelineRangeEnd },
-    };
-    if (pipelineId) timelineWhere.pipelineId = pipelineId;
+    const pipelineFilter = pipelineId
+      ? Prisma.sql`AND d."pipelineId" = ${pipelineId}`
+      : Prisma.empty;
 
-    const allTimelineDeals = await prisma.crmDeal.findMany({
-      where: timelineWhere,
-      include: {
-        stage: { select: { probability: true, isWon: true } },
-      },
-    });
+    const timelineRows = await prisma.$queryRaw<
+      Array<{
+        month_label: string;
+        total_value: number;
+        weighted_value: number;
+        won_value: number;
+        deal_count: bigint;
+      }>
+    >(Prisma.sql`
+      SELECT
+        TO_CHAR(d."expectedCloseDate", 'YYYY-MM') AS month_label,
+        COALESCE(SUM(d.value), 0)::float AS total_value,
+        COALESCE(SUM(d.value * COALESCE(s.probability, 0)), 0)::float AS weighted_value,
+        COALESCE(SUM(CASE WHEN s."isWon" = true AND d."actualCloseDate" IS NOT NULL THEN d.value ELSE 0 END), 0)::float AS won_value,
+        COUNT(*)::bigint AS deal_count
+      FROM "CrmDeal" d
+      JOIN "CrmStage" s ON d."stageId" = s.id
+      WHERE d."expectedCloseDate" >= ${timelineRangeStart}
+        AND d."expectedCloseDate" <= ${timelineRangeEnd}
+        ${pipelineFilter}
+      GROUP BY TO_CHAR(d."expectedCloseDate", 'YYYY-MM')
+      ORDER BY month_label
+    `);
 
-    // Group deals by month label
-    const dealsByMonth = new Map<string, typeof allTimelineDeals>();
-    for (const deal of allTimelineDeals) {
-      if (!deal.expectedCloseDate) continue;
-      const d = new Date(deal.expectedCloseDate);
-      const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      if (!dealsByMonth.has(label)) dealsByMonth.set(label, []);
-      dealsByMonth.get(label)!.push(deal);
-    }
+    const timelineMap = new Map(timelineRows.map(r => [r.month_label, r]));
 
     const timeline: Array<{
       month: string;
@@ -148,27 +156,14 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       const month = (now.getMonth() + i) % 12;
       const monthLabel = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      const deals = dealsByMonth.get(monthLabel) || [];
-
-      let totalValue = 0;
-      let weightedValue = 0;
-      let wonValue = 0;
-
-      for (const deal of deals) {
-        const value = Number(deal.value);
-        totalValue += value;
-        weightedValue += value * (deal.stage.probability ?? 0);
-        if (deal.stage.isWon && deal.actualCloseDate) {
-          wonValue += value;
-        }
-      }
+      const row = timelineMap.get(monthLabel);
 
       timeline.push({
         month: monthLabel,
-        totalValue: Math.round(totalValue * 100) / 100,
-        weightedValue: Math.round(weightedValue * 100) / 100,
-        wonValue: Math.round(wonValue * 100) / 100,
-        dealCount: deals.length,
+        totalValue: Math.round((row?.total_value ?? 0) * 100) / 100,
+        weightedValue: Math.round((row?.weighted_value ?? 0) * 100) / 100,
+        wonValue: Math.round((row?.won_value ?? 0) * 100) / 100,
+        dealCount: Number(row?.deal_count ?? 0),
       });
     }
 

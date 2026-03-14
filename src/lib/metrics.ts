@@ -66,7 +66,7 @@ async function getRedis() {
     redisClient = client as unknown as typeof redisClient;
     return redisClient;
   } catch (error) {
-    console.error('[Metrics] Redis connection for metrics failed:', error);
+    logger.error('Redis connection for metrics failed', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

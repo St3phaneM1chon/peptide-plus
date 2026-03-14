@@ -113,7 +113,6 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     return apiSuccess(job, { status: 201, request });
   } catch (error) {
-    console.error('[Scraper Jobs POST] Error creating scrape job:', error);
     logger.error('Scraper Jobs POST error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to create scrape job', 'INTERNAL_ERROR', { status: 500, request });
   }
@@ -149,7 +148,6 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
     return apiPaginated(jobs, page, pageSize, total, { request });
   } catch (error) {
-    console.error('[Scraper Jobs GET] Error listing scrape jobs:', error);
     logger.error('Scraper Jobs GET error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to list scrape jobs', 'INTERNAL_ERROR', { status: 500, request });
   }

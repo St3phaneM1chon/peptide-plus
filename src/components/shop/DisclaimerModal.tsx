@@ -8,10 +8,20 @@ export default function DisclaimerModal() {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Focus trap
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  // Escape key + Focus trap
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+
       if (e.key === 'Tab' && dialogRef.current) {
         const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -30,12 +40,15 @@ export default function DisclaimerModal() {
         }
       }
     },
-    []
+    [handleClose]
   );
 
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
       document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+
       requestAnimationFrame(() => {
         const focusable = dialogRef.current?.querySelector<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -45,6 +58,8 @@ export default function DisclaimerModal() {
     }
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousFocusRef.current?.focus();
     };
   }, [isOpen, handleKeyDown]);
 

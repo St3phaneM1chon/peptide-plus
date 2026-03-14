@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 
@@ -13,6 +13,64 @@ export default function NewsletterPopup() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    localStorage.setItem('newsletter_popup_seen', 'true');
+  }, []);
+
+  // Escape key + Focus trap
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+
+      // Focus trap
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [handleClose]
+  );
+
+  // Focus management, body scroll lock, keydown listener
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+
+      // Auto-focus the email input when modal opens
+      requestAnimationFrame(() => {
+        emailInputRef.current?.focus();
+      });
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, handleKeyDown]);
 
   useEffect(() => {
     // Don't show to logged-in users (they already have an account)
@@ -51,11 +109,6 @@ export default function NewsletterPopup() {
       window.removeEventListener('disclaimerAccepted', handleDisclaimerAccepted);
     };
   }, [session]);
-
-  const handleClose = () => {
-    setIsOpen(false);
-    localStorage.setItem('newsletter_popup_seen', 'true');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,8 +149,14 @@ export default function NewsletterPopup() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="presentation">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('newsletter.title')}
+        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
+      >
         {/* Close Button */}
         <button
           onClick={handleClose}
@@ -132,6 +191,7 @@ export default function NewsletterPopup() {
                     {t('newsletter.emailLabel')}
                   </label>
                   <input
+                    ref={emailInputRef}
                     type="email"
                     id="newsletter-email"
                     value={email}

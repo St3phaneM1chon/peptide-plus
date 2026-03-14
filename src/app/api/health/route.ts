@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
     },
   });
   } catch (error) {
-    console.error('[health] Error:', error);
+    logger.error('Health check error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

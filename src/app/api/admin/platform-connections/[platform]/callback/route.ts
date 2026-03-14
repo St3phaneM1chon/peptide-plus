@@ -65,7 +65,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
       publicRedirect(`/admin/media/connections?error=${encodeURIComponent(result.error || 'unknown')}&platform=${platform}`)
     );
   } catch (error) {
-    console.error('[OAuth callback] Error:', error);
+    logger.error('OAuth callback error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(
       publicRedirect('/admin/media/connections?error=internal_error')
     );

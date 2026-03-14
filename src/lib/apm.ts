@@ -46,7 +46,7 @@ function getSentry(): typeof import('@sentry/nextjs') | null {
     Sentry = require('@sentry/nextjs');
     return Sentry;
   } catch (error) {
-    console.error('[APM] Failed to load @sentry/nextjs:', error);
+    logger.error('Failed to load @sentry/nextjs', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

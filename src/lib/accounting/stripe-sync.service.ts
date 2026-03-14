@@ -237,12 +237,12 @@ export async function syncStripeCharges(
           }
         }
       } catch (chargeError) {
-        console.error('[StripeSync] Error processing charge:', charge.id, chargeError);
+        logger.error('Error processing charge', { chargeId: charge.id, error: chargeError instanceof Error ? chargeError.message : String(chargeError) });
         result.errors.push(`Error processing charge ${charge.id}: ${chargeError}`);
       }
     }
   } catch (error) {
-    console.error('[StripeSync] Stripe charges API error:', error);
+    logger.error('Stripe charges API error', { error: error instanceof Error ? error.message : String(error) });
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }
@@ -349,12 +349,12 @@ export async function syncStripeRefunds(
           result.entriesCreated++;
         }
       } catch (refundError) {
-        console.error('[StripeSync] Error processing refund:', refund.id, refundError);
+        logger.error('Error processing refund', { refundId: refund.id, error: refundError instanceof Error ? refundError.message : String(refundError) });
         result.errors.push(`Error processing refund ${refund.id}: ${refundError}`);
       }
     }
   } catch (error) {
-    console.error('[StripeSync] Stripe refunds API error:', error);
+    logger.error('Stripe refunds API error', { error: error instanceof Error ? error.message : String(error) });
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }
@@ -438,12 +438,12 @@ export async function syncStripePayouts(
         result.entries.push(payoutEntry);
         result.entriesCreated++;
       } catch (payoutError) {
-        console.error('[StripeSync] Error processing payout:', payout.id, payoutError);
+        logger.error('Error processing payout', { payoutId: payout.id, error: payoutError instanceof Error ? payoutError.message : String(payoutError) });
         result.errors.push(`Error processing payout ${payout.id}: ${payoutError}`);
       }
     }
   } catch (error) {
-    console.error('[StripeSync] Stripe payouts API error:', error);
+    logger.error('Stripe payouts API error', { error: error instanceof Error ? error.message : String(error) });
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }

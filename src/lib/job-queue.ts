@@ -222,7 +222,7 @@ async function dequeueOne(queueKey: string): Promise<Job | null> {
         return null;
       }
     } catch (error) {
-      console.error('[JobQueue] Redis dequeue failed, falling through to memory:', error);
+      logger.error('Redis dequeue failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -241,7 +241,7 @@ async function requeueJob(queueKey: string, job: Job): Promise<void> {
         return;
       }
     } catch (error) {
-      console.error('[JobQueue] Redis requeue failed, falling through to memory:', error);
+      logger.error('Redis requeue failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -259,11 +259,11 @@ async function moveToDLQ(jobType: string, job: Job): Promise<void> {
       const redis = await getRedisClient();
       if (redis) {
         await redis.lpush(dlqKey, JSON.stringify(job));
-        await redis.hincrby(STATS_KEY, `dlq:${jobType}`, 1).catch((error: unknown) => { console.error('[JobQueue] DLQ stats increment failed:', error); });
+        await redis.hincrby(STATS_KEY, `dlq:${jobType}`, 1).catch((error: unknown) => { logger.error('DLQ stats increment failed', { error: error instanceof Error ? error.message : String(error) }); });
         return;
       }
     } catch (error) {
-      console.error('[JobQueue] Redis DLQ push failed, falling through to memory:', error);
+      logger.error('Redis DLQ push failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -292,7 +292,7 @@ export async function getQueueStats(): Promise<Record<string, unknown>> {
         };
       }
     } catch (error) {
-      console.error('[JobQueue] Redis stats retrieval failed, falling through to memory:', error);
+      logger.error('Redis stats retrieval failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -336,7 +336,7 @@ export async function getQueueLength(jobType: string): Promise<number> {
           continue;
         }
       } catch (error) {
-        console.error('[JobQueue] Redis queue length check failed, falling through:', error);
+        logger.error('Redis queue length check failed, falling through', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 

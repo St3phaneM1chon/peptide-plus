@@ -375,7 +375,7 @@ export async function processDueRecurringEntries(): Promise<{
         metadata: { source: 'processRecurringEntries', templateId: template.id },
       }).catch((auditErr) => {
         // Audit logging must never break recurring processing
-        console.error('[RecurringEntries] Non-blocking audit log failure:', auditErr instanceof Error ? auditErr.message : String(auditErr));
+        logger.error('Non-blocking audit log failure', { error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
       });
 
       // Persist nextRunDate and lastRunDate to database
@@ -414,7 +414,7 @@ export async function processDueRecurringEntries(): Promise<{
       template.totalRuns++;
 
     } catch (error) {
-      console.error('[RecurringEntries] All retries exhausted for template:', template.name, error);
+      logger.error('All retries exhausted for template', { template: template.name, error: error instanceof Error ? error.message : String(error) });
       result.errors.push(
         `Erreur pour ${template.name} (après ${RETRY_CONFIG.MAX_RETRIES} tentatives): ${error}`
       );

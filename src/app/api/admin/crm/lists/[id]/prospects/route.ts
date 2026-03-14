@@ -101,39 +101,79 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
   let duplicates = 0;
   const errors: { index: number; contactName: string; reason: string }[] = [];
 
-  for (let i = 0; i < parsed.data.prospects.length; i++) {
-    const p = parsed.data.prospects[i];
-    try {
-      const prospect = await prisma.prospect.create({
-        data: {
-          listId,
-          contactName: p.contactName,
-          companyName: p.companyName || null,
-          email: p.email?.toLowerCase() || null,
-          phone: p.phone || null,
-          website: p.website || null,
-          address: p.address || null,
-          city: p.city || null,
-          province: p.province || null,
-          postalCode: p.postalCode || null,
-          country: p.country || null,
-          industry: p.industry || null,
-          notes: p.notes || null,
-          customFields: p.customFields ? JSON.parse(JSON.stringify(p.customFields)) : undefined,
-          status: 'NEW',
-        },
-      });
+  // Bulk insert all prospects using createManyAndReturn (Prisma 5.14+)
+  const prospectsData = parsed.data.prospects.map((p, i) => ({
+    index: i,
+    data: {
+      listId,
+      contactName: p.contactName,
+      companyName: p.companyName || null,
+      email: p.email?.toLowerCase() || null,
+      phone: p.phone || null,
+      website: p.website || null,
+      address: p.address || null,
+      city: p.city || null,
+      province: p.province || null,
+      postalCode: p.postalCode || null,
+      country: p.country || null,
+      industry: p.industry || null,
+      notes: p.notes || null,
+      customFields: p.customFields ? JSON.parse(JSON.stringify(p.customFields)) : undefined,
+      status: 'NEW' as const,
+    },
+  }));
 
-      // Check for duplicates within the list
+  // Create prospects one by one in a transaction for error isolation, but batch all dedup after
+  const createdProspects: Array<{ id: string; email: string | null; phone: string | null; contactName: string; companyName: string | null; googlePlaceId: string | null }> = [];
+
+  // Use transaction to batch all creates (single round-trip to DB)
+  try {
+    const results = await prisma.$transaction(
+      prospectsData.map(p => prisma.prospect.create({
+        data: p.data,
+        select: { id: true, email: true, phone: true, contactName: true, companyName: true, googlePlaceId: true },
+      }))
+    );
+    for (const r of results) {
+      createdProspects.push(r);
+      added++;
+    }
+  } catch {
+    // If bulk transaction fails, fall back to individual creates for error isolation
+    for (let i = 0; i < prospectsData.length; i++) {
+      try {
+        const result = await prisma.prospect.create({
+          data: prospectsData[i].data,
+          select: { id: true, email: true, phone: true, contactName: true, companyName: true, googlePlaceId: true },
+        });
+        createdProspects.push(result);
+        added++;
+      } catch (err) {
+        errors.push({ index: i, contactName: prospectsData[i].data.contactName, reason: err instanceof Error ? err.message : 'Unknown error' });
+      }
+    }
+  }
+
+  // Batch duplicate detection: run findProspectDuplicates for each created prospect
+  // and batch-update duplicates in a single transaction
+  if (createdProspects.length > 0) {
+    const dupUpdates: Array<{ id: string; duplicateOfId: string }> = [];
+
+    for (const prospect of createdProspects) {
       const dups = await findProspectDuplicates(prospect, listId);
       if (dups.length > 0 && dups[0].confidence >= 0.85) {
-        await prisma.prospect.update({ where: { id: prospect.id }, data: { status: 'DUPLICATE', duplicateOfId: dups[0].matchedId } });
-        duplicates++;
+        dupUpdates.push({ id: prospect.id, duplicateOfId: dups[0].matchedId });
       }
+    }
 
-      added++;
-    } catch (err) {
-      errors.push({ index: i, contactName: p.contactName, reason: err instanceof Error ? err.message : 'Unknown error' });
+    if (dupUpdates.length > 0) {
+      await prisma.$transaction(
+        dupUpdates.map(d => prisma.prospect.update({
+          where: { id: d.id },
+          data: { status: 'DUPLICATE', duplicateOfId: d.duplicateOfId },
+        }))
+      );
+      duplicates = dupUpdates.length;
     }
   }
 

@@ -235,7 +235,7 @@ export async function GET() {
   try {
     return NextResponse.json({ status: 'Telnyx webhook endpoint active' });
   } catch (error) {
-    console.error('[voip/webhooks/telnyx GET] Error:', error);
+    logger.error('Telnyx webhook GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

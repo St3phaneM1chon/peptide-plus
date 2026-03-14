@@ -293,7 +293,7 @@ function checkLearnedPatterns(
           matchCount++;
         }
       } catch (error) {
-        console.error('[MLReconciliation] Invalid regex pattern in rule, skipping:', rule.pattern.bankDescriptionRegex, error);
+        logger.error('Invalid regex pattern in rule, skipping', { pattern: rule.pattern.bankDescriptionRegex, error: error instanceof Error ? error.message : String(error) });
       }
     }
 

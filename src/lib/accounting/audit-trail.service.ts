@@ -254,7 +254,7 @@ export async function getAuditHistory(
         userMap.set(user.id, user.name || user.email || 'Utilisateur');
       }
     } catch (error) {
-      console.error('[AuditTrail] Failed to fetch user names for audit log enrichment:', error);
+      logger.error('Failed to fetch user names for audit log enrichment', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -343,7 +343,7 @@ export async function generateAuditReport(
         reportUserMap.set(user.id, user.name || user.email || 'Utilisateur');
       }
     } catch (error) {
-      console.error('[AuditTrail] Failed to fetch user names for report enrichment:', error);
+      logger.error('Failed to fetch user names for report enrichment', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

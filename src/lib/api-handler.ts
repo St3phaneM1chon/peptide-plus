@@ -71,7 +71,7 @@ export async function validateBodySize(
     const data = JSON.parse(text);
     return { data };
   } catch (error) {
-    console.error('[ApiHandler] Failed to parse JSON request body:', error);
+    logger.error('Failed to parse JSON request body', { error: error instanceof Error ? error.message : String(error) });
     return {
       error: NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }),
     };

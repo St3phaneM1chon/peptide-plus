@@ -130,7 +130,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
         try {
           parsedDetails = JSON.parse(log.details);
         } catch (error) {
-          console.error('[AdminLogs] Failed to parse log details JSON:', error);
+          logger.error('Failed to parse log details JSON', { error: error instanceof Error ? error.message : String(error) });
           parsedDetails = { raw: log.details };
         }
       }

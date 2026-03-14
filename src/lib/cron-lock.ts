@@ -84,7 +84,7 @@ async function releaseRedisLock(jobName: string): Promise<void> {
       await redis.del(`${LOCK_PREFIX}${jobName}`);
     }
   } catch (error) {
-    console.error('[CronLock] Redis lock release failed (will expire via TTL):', error);
+    logger.error('Redis lock release failed, will expire via TTL', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 

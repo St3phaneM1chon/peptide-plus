@@ -54,7 +54,7 @@ export const GET = (req: NextRequest) => {
   try {
     return handlers.GET(fixAzureRequest(req));
   } catch (error) {
-    console.error('[auth GET] Error:', error);
+    logger.error('Auth GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 };
@@ -78,7 +78,7 @@ export const POST = async (req: NextRequest) => {
     }
     return handlers.POST(fixAzureRequest(req));
   } catch (error) {
-    console.error('[auth POST] Error:', error);
+    logger.error('Auth POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 };

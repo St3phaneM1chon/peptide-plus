@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: `Unknown trigger: ${trigger}` }, { status: 400 });
     }
   } catch (error) {
-    console.error('[webhooks/zapier GET] Error:', error);
+    logger.error('Zapier webhook GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

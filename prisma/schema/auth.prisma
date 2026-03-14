@@ -264,6 +264,8 @@ model User {
   @@index([loyaltyTier])
   @@index([referredById])
   @@index([updatedAt])
+  @@index([role, createdAt])
+  @@index([loyaltyTier, createdAt])
 }
 
 model Authenticator {

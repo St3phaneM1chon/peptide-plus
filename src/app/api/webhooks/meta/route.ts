@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       { status: 403 },
     );
   } catch (error) {
-    console.error('[webhooks/meta GET] Error:', error);
+    logger.error('Meta webhook GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

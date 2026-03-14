@@ -199,7 +199,7 @@ export function evaluateFormula(
   try {
     return safeArithmeticParse(expression);
   } catch (error) {
-    console.error('[QuickEntry] Arithmetic expression parsing failed:', error);
+    logger.error('Arithmetic expression parsing failed', { error: error instanceof Error ? error.message : String(error) });
     return 0;
   }
 }

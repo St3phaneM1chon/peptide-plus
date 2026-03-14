@@ -199,7 +199,7 @@ export async function GET() {
       message: 'If this email is subscribed, you will continue to receive emails',
     });
   } catch (error) {
-    console.error('[newsletter GET] Error:', error);
+    logger.error('Newsletter GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
