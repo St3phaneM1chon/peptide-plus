@@ -79,12 +79,12 @@ export const POST = withAdminGuard(async (request, { params: paramsPromise }) =>
     include: { product: { select: { id: true, name: true, slug: true, imageUrl: true } } },
   });
 
-  // Update deal value to sum of all products
-  const allProducts = await prisma.crmDealProduct.findMany({
+  // Update deal value using aggregate instead of loading all products
+  const agg = await prisma.crmDealProduct.aggregate({
     where: { dealId },
-    select: { total: true },
+    _sum: { total: true },
   });
-  const newDealValue = allProducts.reduce((sum, p) => sum + Number(p.total), 0);
+  const newDealValue = Number(agg._sum.total ?? 0);
   await prisma.crmDeal.update({
     where: { id: dealId },
     data: { value: new Prisma.Decimal(newDealValue) },
@@ -106,12 +106,12 @@ export const DELETE = withAdminGuard(async (request) => {
 
   await prisma.crmDealProduct.delete({ where: { id: dealProductId } });
 
-  // Recalculate deal value
-  const remaining = await prisma.crmDealProduct.findMany({
+  // Recalculate deal value using aggregate
+  const remainingAgg = await prisma.crmDealProduct.aggregate({
     where: { dealId: dp.dealId },
-    select: { total: true },
+    _sum: { total: true },
   });
-  const newValue = remaining.reduce((sum, p) => sum + Number(p.total), 0);
+  const newValue = Number(remainingAgg._sum.total ?? 0);
   await prisma.crmDeal.update({
     where: { id: dp.dealId },
     data: { value: new Prisma.Decimal(newValue) },

@@ -62,38 +62,37 @@ export const POST = withAdminGuard(async (
 
   const { title, value, pipelineId, stageId, assignedToId } = parsed.data;
 
-  // Validate pipeline exists
-  const pipeline = await prisma.crmPipeline.findUnique({
-    where: { id: pipelineId },
-    select: { id: true },
-  });
+  // Resolve assigned user: explicit > lead assignee > current user
+  const resolvedAssignedToId = assignedToId || lead.assignedToId || session.user.id;
+
+  // Validate pipeline, stage, and assignee in parallel
+  const [pipeline, stage, assignee] = await Promise.all([
+    prisma.crmPipeline.findUnique({
+      where: { id: pipelineId },
+      select: { id: true },
+    }),
+    prisma.crmPipelineStage.findFirst({
+      where: { id: stageId, pipelineId },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: resolvedAssignedToId },
+      select: { id: true },
+    }),
+  ]);
+
   if (!pipeline) {
     return apiError('Pipeline not found', 'RESOURCE_NOT_FOUND', {
       status: 404,
       request,
     });
   }
-
-  // Validate stage belongs to pipeline
-  const stage = await prisma.crmPipelineStage.findFirst({
-    where: { id: stageId, pipelineId },
-    select: { id: true },
-  });
   if (!stage) {
     return apiError('Stage not found in the specified pipeline', 'RESOURCE_NOT_FOUND', {
       status: 404,
       request,
     });
   }
-
-  // Resolve assigned user: explicit > lead assignee > current user
-  const resolvedAssignedToId = assignedToId || lead.assignedToId || session.user.id;
-
-  // Validate assignee exists
-  const assignee = await prisma.user.findUnique({
-    where: { id: resolvedAssignedToId },
-    select: { id: true },
-  });
   if (!assignee) {
     return apiError('Assigned user not found', 'RESOURCE_NOT_FOUND', {
       status: 404,

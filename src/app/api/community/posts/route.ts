@@ -222,17 +222,11 @@ export async function POST(request: NextRequest) {
     const { title, content, categoryId } = parsed.data;
 
     // Resolve category: the frontend may send a slug (e.g. "general") or a cuid
-    // Try by ID first, then by slug
-    let category = await prisma.forumCategory.findUnique({
-      where: { id: categoryId },
+    // Single query with OR instead of 2 sequential queries (N+1 fix)
+    const category = await prisma.forumCategory.findFirst({
+      where: { OR: [{ id: categoryId }, { slug: categoryId }] },
       select: { id: true, name: true, slug: true, icon: true },
     });
-    if (!category) {
-      category = await prisma.forumCategory.findUnique({
-        where: { slug: categoryId },
-        select: { id: true, name: true, slug: true, icon: true },
-      });
-    }
     if (!category) {
       return apiError('Category not found', ErrorCode.NOT_FOUND, { request });
     }

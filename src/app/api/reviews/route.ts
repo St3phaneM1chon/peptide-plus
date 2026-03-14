@@ -202,51 +202,39 @@ export async function POST(request: NextRequest) {
       return apiError('Reviews cannot contain URLs', ErrorCode.VALIDATION_ERROR, { request });
     }
 
-    // Check if product exists
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      select: { id: true },
-    });
+    // Batch all pre-validation queries in parallel (N+1 fix)
+    const [product, existingReview, hasPurchased, existingReward] = await Promise.all([
+      prisma.product.findUnique({
+        where: { id: productId },
+        select: { id: true },
+      }),
+      prisma.review.findFirst({
+        where: { userId: session.user.id, productId },
+        select: { id: true },
+      }),
+      prisma.orderItem.findFirst({
+        where: {
+          productId,
+          order: { userId: session.user.id, status: 'DELIVERED' },
+        },
+        select: { id: true },
+      }),
+      prisma.loyaltyTransaction.findFirst({
+        where: {
+          userId: session.user.id,
+          description: { contains: `Review for product ${productId}` },
+        },
+        select: { id: true },
+      }),
+    ]);
 
     if (!product) {
       return apiError('Product not found', ErrorCode.NOT_FOUND, { request });
     }
 
-    // Check if user has already reviewed this product
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        userId: session.user.id,
-        productId,
-      },
-      select: { id: true },
-    });
-
     if (existingReview) {
       return apiError('You have already reviewed this product', ErrorCode.CONFLICT, { status: 409, request });
     }
-
-    // Check if user has purchased this product (for verified purchase badge)
-    const hasPurchased = await prisma.orderItem.findFirst({
-      where: {
-        productId,
-        order: {
-          userId: session.user.id,
-          status: 'DELIVERED',
-        },
-      },
-      select: { id: true },
-    });
-
-    // Check if user has already been rewarded for reviewing this product
-    const existingReward = await prisma.loyaltyTransaction.findFirst({
-      where: {
-        userId: session.user.id,
-        description: {
-          contains: `Review for product ${productId}`,
-        },
-      },
-      select: { id: true },
-    });
 
     // Calculate points: 50 for text review, 100 if includes photos
     let pointsToAward = imageUrls?.length ? 100 : 50;
