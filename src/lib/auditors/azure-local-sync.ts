@@ -198,16 +198,14 @@ export class AzureLocalSyncAuditor extends BaseAuditor {
       results.push(this.pass('sync-05', `${migrations.length} Prisma migrations found`));
     }
 
-    // Check schema.prisma exists and is valid (non-empty)
-    // Schema path handled by readPrismaSchema()
-    if (fs.existsSync(schemaPath)) {
-      const schema = this.readPrismaSchema();
+    // Check schema exists and is valid (non-empty)
+    const schema = this.readPrismaSchema();
+    if (schema) {
       const modelCount = (schema.match(/^model\s+/gm) || []).length;
       if (modelCount === 0) {
         results.push(
-          this.fail('sync-05b', 'CRITICAL', 'Prisma schema has no models', 'schema.prisma exists but contains no models.', {
-            filePath: this.relativePath(schemaPath),
-            recommendation: 'Verify schema.prisma is not corrupted',
+          this.fail('sync-05b', 'CRITICAL', 'Prisma schema has no models', 'Schema exists but contains no models.', {
+            recommendation: 'Verify prisma schema is not corrupted',
           })
         );
       } else {
