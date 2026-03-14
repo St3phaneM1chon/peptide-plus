@@ -190,7 +190,7 @@ export default class EmailCaslAuditor extends BaseAuditor {
     }
 
     // Also check schema for consent fields
-    const schema = this.readFile(`${this.rootDir}/prisma/schema.prisma`);
+    const schema = this.readPrismaSchema();
     const schemaConsentPatterns = [
       /emailConsent/i,
       /marketingConsent/i,

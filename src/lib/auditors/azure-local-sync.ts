@@ -78,7 +78,7 @@ export class AzureLocalSyncAuditor extends BaseAuditor {
       'next.config.js',
       'next.config.mjs',
       'tsconfig.json',
-      'prisma/schema.prisma',
+      'prisma/schema.prisma', // or prisma/schema/ folder (checked below)
       'src/app/layout.tsx',
       'src/middleware.ts',
     ];
@@ -90,6 +90,8 @@ export class AzureLocalSyncAuditor extends BaseAuditor {
         // next.config can be either .js or .mjs
         if (file === 'next.config.js' && fs.existsSync(path.join(this.rootDir, 'next.config.mjs'))) continue;
         if (file === 'next.config.mjs' && fs.existsSync(path.join(this.rootDir, 'next.config.js'))) continue;
+        // prisma/schema.prisma can be a folder (prismaSchemaFolder feature)
+        if (file === 'prisma/schema.prisma' && fs.existsSync(path.join(this.rootDir, 'prisma', 'schema')) && fs.statSync(path.join(this.rootDir, 'prisma', 'schema')).isDirectory()) continue;
         missing.push(file);
       }
     }
@@ -197,9 +199,9 @@ export class AzureLocalSyncAuditor extends BaseAuditor {
     }
 
     // Check schema.prisma exists and is valid (non-empty)
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
+    // Schema path handled by readPrismaSchema()
     if (fs.existsSync(schemaPath)) {
-      const schema = this.readFile(schemaPath);
+      const schema = this.readPrismaSchema();
       const modelCount = (schema.match(/^model\s+/gm) || []).length;
       if (modelCount === 0) {
         results.push(

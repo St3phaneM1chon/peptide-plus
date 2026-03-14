@@ -228,8 +228,8 @@ export default class AccountingIntegrityAuditor extends BaseAuditor {
    */
   private checkOrphanPrevention(): AuditCheckResult[] {
     const results: AuditCheckResult[] = [];
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schemaContent = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schemaContent = this.readPrismaSchema();
 
     if (!schemaContent) {
       results.push(

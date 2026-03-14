@@ -6,6 +6,7 @@
 
 import BaseAuditor from './base-auditor';
 import type { AuditCheckResult } from '@/lib/audit-engine';
+import * as fs from 'fs';
 import * as path from 'path';
 
 interface ParsedRelation {
@@ -35,17 +36,23 @@ export default class DbIntegrityAuditor extends BaseAuditor {
 
   async run(): Promise<AuditCheckResult[]> {
     const results: AuditCheckResult[] = [];
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schemaContent = this.readFile(schemaPath);
+    // Support both single-file and prismaSchemaFolder
+    const singlePath = path.join(this.rootDir, 'prisma', 'schema.prisma');
+    const folderPath = path.join(this.rootDir, 'prisma', 'schema');
+    let schemaContent = this.readFile(singlePath);
+    if (!schemaContent && fs.existsSync(folderPath) && fs.statSync(folderPath).isDirectory()) {
+      const files = fs.readdirSync(folderPath).filter(f => f.endsWith('.prisma'));
+      schemaContent = files.map(f => this.readFile(path.join(folderPath, f)) || '').join('\n');
+    }
 
     if (!schemaContent) {
       results.push(
         this.fail(
           'db-01',
           'CRITICAL',
-          'Cannot read prisma/schema.prisma',
-          'The Prisma schema file could not be read. All DB integrity checks require the schema.',
-          { recommendation: 'Ensure prisma/schema.prisma exists and is readable.' }
+          'Cannot read Prisma schema',
+          'Neither prisma/schema.prisma nor prisma/schema/ folder could be read.',
+          { recommendation: 'Ensure prisma/schema.prisma or prisma/schema/ directory exists.' }
         )
       );
       return results;

@@ -21,8 +21,8 @@ export default class SectionAccountingAuditor extends BaseSectionAuditor {
     const prefix = 'section-accounting-db';
 
     // Check that JournalEntry model has debit/credit balance fields
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
     const journalLineBlock = this.extractModelBlock(schema, 'JournalLine');
 
     if (journalLineBlock) {

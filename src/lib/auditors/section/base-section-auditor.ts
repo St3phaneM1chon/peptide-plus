@@ -51,8 +51,14 @@ export abstract class BaseSectionAuditor extends BaseAuditor {
     const prefix = `${this.auditTypeCode.toLowerCase()}-db`;
 
     // Check Prisma schema has the expected models
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Support both single-file schema and prismaSchemaFolder (multiple .prisma files)
+    const singleSchemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
+    const schemaFolderPath = path.join(this.rootDir, 'prisma', 'schema');
+    let schema = this.readFile(singleSchemaPath);
+    if (!schema && fs.existsSync(schemaFolderPath) && fs.statSync(schemaFolderPath).isDirectory()) {
+      const schemaFiles = fs.readdirSync(schemaFolderPath).filter(f => f.endsWith('.prisma'));
+      schema = schemaFiles.map(f => this.readFile(path.join(schemaFolderPath, f)) || '').join('\n');
+    }
 
     for (const model of cfg.prismaModels) {
       const modelRegex = new RegExp(`^model\\s+${model}\\s*\\{`, 'm');

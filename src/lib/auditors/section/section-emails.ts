@@ -17,8 +17,8 @@ export default class SectionEmailsAuditor extends BaseSectionAuditor {
   protected override async angle1_dbFirst(): Promise<AuditCheckResult[]> {
     const results = await super.angle1_dbFirst();
     const prefix = 'section-emails-db';
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     // EmailTemplate must have subject, body/htmlBody, and type/trigger
     const templateBlock = this.extractModelBlock(schema, 'EmailTemplate');

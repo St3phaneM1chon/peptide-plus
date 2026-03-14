@@ -252,8 +252,8 @@ export default class RaceConditionsAuditor extends BaseAuditor {
     const results: AuditCheckResult[] = [];
 
     // Check schema for version fields
-    const schemaPath = `${this.rootDir}/prisma/schema.prisma`;
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     const hasVersionField = /version\s+Int/i.test(schema);
     const hasUpdatedAt = /@updatedAt/.test(schema);

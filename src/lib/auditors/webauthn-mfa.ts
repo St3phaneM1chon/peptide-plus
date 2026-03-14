@@ -76,7 +76,7 @@ export default class WebauthnMfaAuditor extends BaseAuditor {
     }
 
     // Also check schema for MFA fields
-    const schema = this.readFile(`${this.rootDir}/prisma/schema.prisma`);
+    const schema = this.readPrismaSchema();
     const hasMfaSchema =
       /mfaEnabled|twoFactorEnabled|totpSecret|mfaSecret|authenticatorSecret/i.test(
         schema
@@ -138,7 +138,7 @@ export default class WebauthnMfaAuditor extends BaseAuditor {
     }
 
     // Also check schema
-    const schema = this.readFile(`${this.rootDir}/prisma/schema.prisma`);
+    const schema = this.readPrismaSchema();
     if (/recoveryCodes|backupCodes|RecoveryCode/i.test(schema)) {
       hasRecoveryCodes = true;
     }

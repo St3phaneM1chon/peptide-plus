@@ -173,8 +173,8 @@ export default class DbPerformanceAuditor extends BaseAuditor {
    */
   private checkMissingForeignKeyIndexes(): AuditCheckResult[] {
     const results: AuditCheckResult[] = [];
-    const schemaPath = `${this.rootDir}/prisma/schema.prisma`;
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     if (!schema) {
       results.push(

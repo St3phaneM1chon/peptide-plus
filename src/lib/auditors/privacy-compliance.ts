@@ -31,8 +31,8 @@ export default class PrivacyComplianceAuditor extends BaseAuditor {
     const results: AuditCheckResult[] = [];
 
     // Check Prisma schema
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schemaContent = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schemaContent = this.readPrismaSchema();
 
     const consentFields = /consentDate|consentAt|consentGranted|grantedAt|termsAcceptedAt|privacyAcceptedAt|consentTimestamp/i;
 
@@ -233,8 +233,8 @@ export default class PrivacyComplianceAuditor extends BaseAuditor {
     const results: AuditCheckResult[] = [];
 
     // Check Prisma schema for privacy policy versioning
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schemaContent = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schemaContent = this.readPrismaSchema();
 
     let foundVersioning = false;
 

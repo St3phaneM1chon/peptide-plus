@@ -18,8 +18,8 @@ export default class SectionCommunityAuditor extends BaseSectionAuditor {
   protected override async angle1_dbFirst(): Promise<AuditCheckResult[]> {
     const results = await super.angle1_dbFirst();
     const prefix = 'section-community-db';
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     // Review model: rating, verified purchase, moderation status
     const reviewBlock = this.extractModelBlock(schema, 'Review');

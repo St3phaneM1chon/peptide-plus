@@ -15,8 +15,8 @@ export default class SectionCatalogAuditor extends BaseSectionAuditor {
   protected override async angle1_dbFirst(): Promise<AuditCheckResult[]> {
     const results = await super.angle1_dbFirst();
     const prefix = 'section-catalog-db';
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     // Category must support parent/child hierarchy via parentId
     const categoryBlock = this.extractModelBlock(schema, 'Category');

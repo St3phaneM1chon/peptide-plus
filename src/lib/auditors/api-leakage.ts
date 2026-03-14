@@ -284,7 +284,7 @@ export default class ApiLeakageAuditor extends BaseAuditor {
           label: 'Sequential ID in URL params',
           check: () => {
             // Check schema for autoincrement on the relevant model
-            const schema = this.readFile(`${this.rootDir}/prisma/schema.prisma`);
+            const schema = this.readPrismaSchema();
             return /id\s+Int\s+@id\s+@default\(autoincrement\(\)\)/.test(schema);
           },
         },

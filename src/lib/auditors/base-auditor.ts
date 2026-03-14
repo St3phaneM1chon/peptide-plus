@@ -88,6 +88,22 @@ export abstract class BaseAuditor implements Auditor {
     };
   }
 
+  /** Read the full Prisma schema, supporting both single-file and prismaSchemaFolder */
+  protected readPrismaSchema(): string {
+    const singlePath = path.join(this.rootDir, 'prisma', 'schema.prisma');
+    const singleContent = this.readFile(singlePath);
+    if (singleContent) return singleContent;
+
+    const folderPath = path.join(this.rootDir, 'prisma', 'schema');
+    if (fs.existsSync(folderPath) && fs.statSync(folderPath).isDirectory()) {
+      const files = fs.readdirSync(folderPath).filter(f => f.endsWith('.prisma'));
+      const combined = files.map(f => this.readFile(path.join(folderPath, f))).filter(Boolean).join('\n');
+      if (combined) return combined;
+    }
+
+    return '';
+  }
+
   /** Find all API route files */
   protected findApiRoutes(): string[] {
     return this.findFiles(path.join(this.srcDir, 'app', 'api'), /^route\.ts$/);

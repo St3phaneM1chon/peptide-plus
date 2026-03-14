@@ -18,8 +18,8 @@ export default class SectionCRMAuditor extends BaseSectionAuditor {
   protected override async angle1_dbFirst(): Promise<AuditCheckResult[]> {
     const results = await super.angle1_dbFirst();
     const prefix = 'section-crm-db';
-    const schemaPath = path.join(this.rootDir, 'prisma', 'schema.prisma');
-    const schema = this.readFile(schemaPath);
+    // Schema path handled by readPrismaSchema()
+    const schema = this.readPrismaSchema();
 
     // CrmPipeline must have stages (relation or JSON field)
     const pipelineBlock = this.extractModelBlock(schema, 'CrmPipeline');
