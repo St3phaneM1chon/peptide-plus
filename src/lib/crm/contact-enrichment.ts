@@ -85,16 +85,72 @@ export async function enrichLead(leadId: string): Promise<EnrichmentResult> {
 
 /**
  * Bulk enrich leads (e.g., for newly imported leads).
+ * N+1 fix: fetch all leads in one query, compute updates in memory, batch writes.
  */
 export async function bulkEnrichLeads(leadIds: string[]): Promise<EnrichmentResult[]> {
+  if (leadIds.length === 0) return [];
+
+  // Batch fetch all leads at once
+  const leads = await prisma.crmLead.findMany({
+    where: { id: { in: leadIds } },
+  });
+
+  const leadMap = new Map(leads.map(l => [l.id, l]));
+  const FREE_DOMAINS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com']);
   const results: EnrichmentResult[] = [];
-  for (const id of leadIds) {
+  const updates: Promise<unknown>[] = [];
+
+  for (const leadId of leadIds) {
+    const lead = leadMap.get(leadId);
+    if (!lead) {
+      logger.warn('Enrichment failed for lead', { leadId, error: 'Lead not found' });
+      continue;
+    }
+
     try {
-      results.push(await enrichLead(id));
+      const fieldsEnriched: string[] = [];
+      const data: EnrichmentResult['data'] = {};
+      const updateData: Record<string, unknown> = {};
+
+      if (lead.email) {
+        const domain = lead.email.split('@')[1];
+        if (domain && !FREE_DOMAINS.has(domain)) {
+          data.companyDomain = domain;
+          if (!lead.companyName) {
+            const companyName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+            updateData.companyName = companyName;
+            fieldsEnriched.push('companyName');
+          }
+        }
+      }
+
+      if (Object.keys(data).length > 0) {
+        const existingCustom = (lead.customFields as Record<string, unknown>) || {};
+        updateData.customFields = { ...existingCustom, _enrichment: data, _enrichedAt: new Date().toISOString() };
+        fieldsEnriched.push('customFields');
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        updates.push(
+          prisma.crmLead.update({
+            where: { id: leadId },
+            data: updateData as Parameters<typeof prisma.crmLead.update>[0]['data'],
+          })
+        );
+      }
+
+      results.push({ leadId, fieldsEnriched, data });
     } catch (err) {
-      logger.warn('Enrichment failed for lead', { leadId: id, error: err instanceof Error ? err.message : String(err) });
+      logger.warn('Enrichment failed for lead', { leadId, error: err instanceof Error ? err.message : String(err) });
     }
   }
+
+  // Execute all updates in parallel
+  if (updates.length > 0) {
+    await Promise.all(updates);
+  }
+
+  logger.info('Bulk enrichment completed', { total: leadIds.length, enriched: results.length, updated: updates.length });
   return results;
 }
 

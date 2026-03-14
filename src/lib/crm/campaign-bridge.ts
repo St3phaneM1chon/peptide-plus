@@ -48,28 +48,6 @@ export interface CampaignBridgeResult {
 }
 
 // ---------------------------------------------------------------------------
-// DNC Check
-// ---------------------------------------------------------------------------
-
-async function checkDnc(phone: string): Promise<boolean> {
-  if (!phone) return false;
-  const variants = phoneDncVariants(phone);
-  if (variants.length === 0) return false;
-
-  const entry = await prisma.dnclEntry.findFirst({
-    where: {
-      phoneNumber: { in: variants },
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gt: new Date() } },
-      ],
-    },
-  });
-
-  return !!entry;
-}
-
-// ---------------------------------------------------------------------------
 // Main Bridge: List → Campaign
 // ---------------------------------------------------------------------------
 
@@ -93,32 +71,58 @@ export async function createCampaignFromList(options: CampaignBridgeOptions): Pr
   const errors: { prospectId: string; reason: string }[] = [];
   let dncFiltered = 0;
 
-  // 2. Convert each prospect to CrmLead (if not already done)
+  // 2a. Batch DNC pre-check: collect all phone variants, query once (N+1 fix)
+  const allPhoneVariants: string[] = [];
+  const phoneToProspectIds = new Map<string, string[]>();
+  for (const p of prospects) {
+    if (p.phone && !p.convertedLeadId) {
+      const variants = phoneDncVariants(p.phone);
+      for (const v of variants) {
+        allPhoneVariants.push(v);
+        if (!phoneToProspectIds.has(v)) phoneToProspectIds.set(v, []);
+        phoneToProspectIds.get(v)!.push(p.id);
+      }
+    }
+  }
+
+  const dncSet = new Set<string>();
+  if (allPhoneVariants.length > 0) {
+    const dncEntries = await prisma.dnclEntry.findMany({
+      where: {
+        phoneNumber: { in: allPhoneVariants },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      select: { phoneNumber: true },
+    });
+    for (const e of dncEntries) {
+      const prospectIds = phoneToProspectIds.get(e.phoneNumber);
+      if (prospectIds) prospectIds.forEach(id => dncSet.add(id));
+    }
+  }
+
+  // 2b. Convert each prospect to CrmLead
+  const dncProspectUpdates: Promise<unknown>[] = [];
   for (const prospect of prospects) {
     try {
-      // Skip if already converted
       if (prospect.convertedLeadId) {
         createdLeadIds.push(prospect.convertedLeadId);
         continue;
       }
 
-      // DNC pre-check
-      if (prospect.phone) {
-        const isDnc = await checkDnc(prospect.phone);
-        if (isDnc) {
-          await prisma.prospect.update({
+      // Check batched DNC result
+      if (dncSet.has(prospect.id)) {
+        dncProspectUpdates.push(
+          prisma.prospect.update({
             where: { id: prospect.id },
             data: { dncChecked: true, dncStatus: 'NATIONAL_DNC' },
-          });
-          dncFiltered++;
-          continue;
-        }
+          })
+        );
+        dncFiltered++;
+        continue;
       }
 
-      // Generate BANT data
       const bant = generateBANT(prospect as Parameters<typeof generateBANT>[0]);
 
-      // Create CrmLead
       const lead = await prisma.crmLead.create({
         data: {
           contactName: prospect.contactName,
@@ -136,7 +140,6 @@ export async function createCampaignFromList(options: CampaignBridgeOptions): Pr
         },
       });
 
-      // Link prospect → lead
       await prisma.prospect.update({
         where: { id: prospect.id },
         data: {
@@ -151,6 +154,11 @@ export async function createCampaignFromList(options: CampaignBridgeOptions): Pr
     } catch (err) {
       errors.push({ prospectId: prospect.id, reason: err instanceof Error ? err.message : 'Unknown error' });
     }
+  }
+
+  // Flush DNC prospect updates in parallel
+  if (dncProspectUpdates.length > 0) {
+    await Promise.all(dncProspectUpdates);
   }
 
   // 3. Assign leads to agents
@@ -208,23 +216,23 @@ export async function createCampaignFromList(options: CampaignBridgeOptions): Pr
     select: { id: true, contactName: true, email: true, phone: true },
   });
 
-  let entriesCreated = 0;
-  for (const lead of leads) {
-    if (!lead.phone) continue;
+  const entryData = leads
+    .filter(lead => !!lead.phone)
+    .map(lead => ({
+      campaignId: campaign.id,
+      crmLeadId: lead.id,
+      phoneNumber: toE164(lead.phone!),
+      firstName: lead.contactName ? lead.contactName.split(' ')[0] : null,
+      lastName: lead.contactName ? lead.contactName.split(' ').slice(1).join(' ') || null : null,
+      email: lead.email,
+      isDncl: false,
+      dnclCheckedAt: new Date(),
+    }));
 
-    await prisma.dialerListEntry.create({
-      data: {
-        campaignId: campaign.id,
-        crmLeadId: lead.id,
-        phoneNumber: toE164(lead.phone),
-        firstName: lead.contactName ? lead.contactName.split(' ')[0] : null,
-        lastName: lead.contactName ? lead.contactName.split(' ').slice(1).join(' ') || null : null,
-        email: lead.email,
-        isDncl: false,
-        dnclCheckedAt: new Date(),
-      },
-    });
-    entriesCreated++;
+  let entriesCreated = 0;
+  if (entryData.length > 0) {
+    const result = await prisma.dialerListEntry.createMany({ data: entryData });
+    entriesCreated = result.count;
   }
 
   // Update campaign contact count
