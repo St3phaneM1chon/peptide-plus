@@ -55,11 +55,11 @@ export default function Footer() {
           <div className="col-span-2">
             <div className="mb-4">
               <Image
-                src="/images/brand/logo-icon.png"
+                src="/images/brand/signature-header.png"
                 alt="BioCycle Peptides"
-                width={200}
+                width={600}
                 height={200}
-                className="h-10 w-10 brightness-0 invert"
+                className="h-10 w-auto brightness-0 invert"
               />
             </div>
             <p className="text-neutral-300 text-sm leading-relaxed mb-4">

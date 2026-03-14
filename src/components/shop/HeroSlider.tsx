@@ -238,7 +238,7 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-14 sm:px-16 lg:px-20">
-        <div className="max-w-3xl">
+        <div className="max-w-5xl">
           {/* Badge */}
           {badgeText && (
             <div
@@ -316,7 +316,7 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
         {stats.length > 0 && (
           <div
             key={`stats-${current}`}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-3xl animate-fadeInUp"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-5xl animate-fadeInUp"
             style={{ animationDelay: '0.4s' }}
           >
             {stats.map((stat, i) => (

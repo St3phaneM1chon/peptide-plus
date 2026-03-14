@@ -118,19 +118,15 @@ export default function Header() {
           <div className="flex items-center justify-between py-4">
             
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Link href="/" className="flex items-center shrink-0">
               <Image
-                src="/images/brand/logo-icon.png"
+                src="/images/brand/signature-header.png"
                 alt="BioCycle Peptides"
-                width={200}
+                width={600}
                 height={200}
-                className="h-10 w-10"
+                className="h-10 sm:h-12 w-auto"
                 priority
               />
-              <span className="font-heading text-lg font-bold text-gray-900 hidden sm:inline">
-                <span className="text-primary-600">Bio</span>Cycle
-                <span className="block text-xs font-normal text-gray-500 -mt-1 tracking-wider">PEPTIDES</span>
-              </span>
             </Link>
 
             {/* Desktop Navigation - Simplified */}

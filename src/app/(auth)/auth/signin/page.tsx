@@ -117,11 +117,11 @@ function SignInContent() {
         <div className="text-center mb-8">
           <Link href="/" className="flex justify-center mb-8">
             <Image
-              src="/images/brand/logo-icon.png"
+              src="/images/brand/signature-header.png"
               alt="BioCycle Peptides"
-              width={200}
+              width={600}
               height={200}
-              className="h-16 w-16"
+              className="h-16 w-auto"
               priority
             />
           </Link>
