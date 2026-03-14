@@ -20,6 +20,7 @@ import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function POST(
   request: NextRequest,
@@ -38,9 +39,7 @@ export async function POST(
     }
 
     // Rate limit: 30 votes per minute per user
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/reviews/[id]/vote', session.user.id);
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { status: 429, request, headers: rl.headers });

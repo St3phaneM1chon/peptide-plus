@@ -57,8 +57,7 @@ function sanitizeFolderPath(rawFolder: string): string {
 // PATCH /api/admin/medias/[id] - Update media metadata
 export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/medias/[id]');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -120,8 +119,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 // F27 FIX: Renamed from _request since this parameter is used (getClientIpFromRequest, validateCsrf)
 export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/medias/[id]');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

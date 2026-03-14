@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 /**
  * Centralized Prisma error handler for accounting API routes.
@@ -53,7 +54,7 @@ export async function safeJsonParse(
     const data = await request.json();
     return { data, error: null };
   } catch (error) {
-    console.error('[AccountingErrorHandler] Failed to parse JSON request body:', error);
+    logger.error('[AccountingErrorHandler] Failed to parse JSON request body', { error: error instanceof Error ? error.message : String(error) });
     return {
       data: null,
       error: NextResponse.json(

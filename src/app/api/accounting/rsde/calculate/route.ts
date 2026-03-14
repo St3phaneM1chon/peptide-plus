@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { z } from 'zod';
 import { calculateCredits } from '@/lib/accounting/rsde.service';
+import { logger } from '@/lib/logger';
 
 const schema = z.object({ projectId: z.string().min(1) });
 
@@ -20,7 +21,7 @@ export const POST = withAdminGuard(async (request) => {
     const result = await calculateCredits(parsed.data.projectId);
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error calculating RS&DE credits:', error);
+    logger.error('[accounting/rsde/calculate] Error calculating RS&DE credits', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors du calcul des crédits RS&DE' }, { status: 500 });
   }
 });

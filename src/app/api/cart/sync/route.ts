@@ -6,6 +6,8 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const cartItemSchema = z.object({
   productId: z.string().min(1),
@@ -77,7 +79,7 @@ export async function GET() {
 
     return NextResponse.json({ items });
   } catch (error) {
-    console.error('[cart/sync GET] Error:', error);
+    logger.error('[cart/sync GET] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -86,15 +88,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // COMMERCE-002 FIX: Rate limiting on cart sync
-    const ip = request.headers.get('x-azure-clientip')
-      || (() => {
-        const xff = request.headers.get('x-forwarded-for');
-        if (!xff) return null;
-        const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i));
-        return ips[ips.length - 1] || null;
-      })()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/cart/sync');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -197,7 +191,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('[cart/sync POST] Error:', error);
+    logger.error('[cart/sync POST] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

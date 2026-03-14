@@ -14,6 +14,7 @@
 import { processRecurringEntries } from './recurring-entries.service';
 import { evaluateAlertRules } from './alert-rules.service';
 import { runAutoReconciliation } from './auto-reconciliation.service';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,7 +66,7 @@ async function runTask(
       details,
     };
   } catch (error) {
-    console.error('[Scheduler] Task execution failed:', name, error);
+    logger.error('[Scheduler] Task execution failed', { task: name, error: error instanceof Error ? error.message : String(error) });
     return {
       task: name,
       success: false,

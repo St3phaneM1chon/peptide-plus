@@ -13,6 +13,7 @@ import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const quickReplySchema = z.object({
   title: z.string().min(1).max(100),
@@ -50,8 +51,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting + CSRF
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/chat/quick-replies');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

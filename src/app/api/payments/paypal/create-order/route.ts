@@ -19,6 +19,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { add, multiply, subtract, divide, percentage } from '@/lib/decimal-calculator';
 import { calculateTaxAmount } from '@/lib/tax-rates';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createOrderItemSchema = z.object({
   productId: z.string().min(1),
@@ -52,9 +53,7 @@ const createOrderSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting on payment creation
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/payments/paypal/create-order');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

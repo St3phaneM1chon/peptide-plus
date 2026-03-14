@@ -5,19 +5,13 @@ import { prisma } from '@/lib/db';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function GET(request: NextRequest) {
   try {
     // Rate limit to prevent session ID brute-force
-    const ip = request.headers.get('x-azure-clientip')
-      || (() => {
-        const xff = request.headers.get('x-forwarded-for');
-        if (!xff) return null;
-        const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i));
-        return ips[ips.length - 1] || null;
-      })()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/orders/by-session');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -76,7 +70,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ orderNumber: null });
     }
   } catch (error) {
-    console.error('[orders/by-session] Error:', error);
+    logger.error('[orders/by-session] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

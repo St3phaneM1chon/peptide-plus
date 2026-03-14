@@ -11,6 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
 import { cancelJob } from '../route';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (
   request: NextRequest,
@@ -32,7 +33,7 @@ export const GET = withAdminGuard(async (
 
     return apiSuccess(job, { request });
   } catch (error) {
-    console.error('[Scraper Job GET] Error fetching scrape job:', error);
+    logger.error('[Scraper Job GET] Error fetching scrape job', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch scrape job', 'INTERNAL_ERROR', { status: 500, request });
   }
 }, { rateLimit: 60 });
@@ -66,7 +67,7 @@ export const DELETE = withAdminGuard(async (
 
     return apiNoContent({ request });
   } catch (error) {
-    console.error('[Scraper Job DELETE] Error cancelling scrape job:', error);
+    logger.error('[Scraper Job DELETE] Error cancelling scrape job', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to cancel scrape job', 'INTERNAL_ERROR', { status: 500, request });
   }
 }, { rateLimit: 10 });

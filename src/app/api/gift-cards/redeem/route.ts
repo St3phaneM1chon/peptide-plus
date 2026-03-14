@@ -12,6 +12,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const redeemGiftCardSchema = z.object({
   code: z.string().min(1, 'Gift card code is required').max(50),
@@ -20,9 +21,7 @@ const redeemGiftCardSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting to prevent gift card code brute-forcing
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/gift-cards/redeem');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

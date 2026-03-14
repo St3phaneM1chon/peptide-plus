@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Rate limiting: max 5 demo requests per IP per hour
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
@@ -27,7 +28,7 @@ const demoRequestSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limit check
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const ip = getClientIpFromRequest(request);
     const now = Date.now();
     const entry = rateLimit.get(ip);
     if (entry && entry.resetAt > now) {

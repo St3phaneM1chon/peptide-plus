@@ -23,6 +23,7 @@ import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createReplySchema = z.object({
   content: z.string().min(2, 'Reply must be at least 2 characters').max(5000, 'Reply must be at most 5,000 characters'),
@@ -116,9 +117,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { id: postId } = await context.params;
 
     // SEC-FIX: Rate limiting on reply creation to prevent spam/abuse
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/community/replies');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });

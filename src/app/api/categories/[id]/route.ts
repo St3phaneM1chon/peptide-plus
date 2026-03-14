@@ -33,6 +33,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { cacheInvalidateTag, CacheTags } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 import { updateCategorySchema } from '@/lib/validations/category';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -81,9 +82,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     // SECURITY: Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request, headers: rl.headers });
@@ -201,9 +200,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     // SECURITY: Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request, headers: rl.headers });

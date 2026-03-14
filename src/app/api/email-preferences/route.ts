@@ -21,6 +21,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import * as jose from 'jose';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Token utilities
@@ -45,13 +46,7 @@ async function verifyToken(token: string): Promise<PreferenceTokenPayload> {
   return payload as unknown as PreferenceTokenPayload;
 }
 
-function getIp(request: NextRequest): string {
-  return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    '127.0.0.1'
-  );
-}
+function getIp(request: Request): string { return getClientIpFromRequest(request); }
 
 // Security: Mask email for public display
 function maskEmail(email: string): string {

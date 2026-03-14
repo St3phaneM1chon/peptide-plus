@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Zod schemas
@@ -37,8 +38,7 @@ const reconciliationPutSchema = z.object({
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/reconciliation');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -296,8 +296,7 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/reconciliation');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

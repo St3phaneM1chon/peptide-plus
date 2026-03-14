@@ -10,6 +10,7 @@
  */
 
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -86,7 +87,7 @@ export function trackCronExecution(jobName: string): {
             return;
           }
         } catch (error) {
-          console.error('[CronMonitor] Redis stats recording failed, falling through to memory:', error);
+          logger.error('[CronMonitor] Redis stats recording failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
         }
       }
 
@@ -147,7 +148,7 @@ export async function getCronJobStats(jobName: string): Promise<CronJobStats> {
         }
       }
     } catch (error) {
-      console.error('[CronMonitor] Redis stats retrieval failed, falling through to memory:', error);
+      logger.error('[CronMonitor] Redis stats retrieval failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

@@ -11,6 +11,7 @@ import { logger } from '@/lib/logger';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { AuditLogger } from '@/lib/voip/audit-log';
 import type { Prisma } from '@prisma/client';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const auditLogger = new AuditLogger({ flushSize: 20, flushIntervalMs: 60_000 });
 
@@ -85,7 +86,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
         userId: session.user.id,
         action: 'report.export',
         resource: 'CallLog',
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
         result: 'success',
         details: {

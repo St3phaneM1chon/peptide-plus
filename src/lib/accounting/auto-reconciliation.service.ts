@@ -12,6 +12,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -417,7 +418,7 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
         }
       }
     } catch (error) {
-      console.error('[AutoReconciliation] Reconciliation failed for transaction:', bankTx.id, error);
+      logger.error('[AutoReconciliation] Reconciliation failed for transaction', { transactionId: bankTx.id, error: error instanceof Error ? error.message : String(error) });
       result.errors.push(
         `Erreur pour tx ${bankTx.id}: ${error instanceof Error ? error.message : String(error)}`
       );

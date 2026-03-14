@@ -9,6 +9,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { passwordSchema } from '@/lib/security';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const changePasswordBodySchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required').max(256),
@@ -19,9 +20,8 @@ export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
   try {
 
     // SEC-27: Rate limit password changes - 5 per user per hour
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/account/password', session.user.id);
     if (!rl.success) {
       const res = NextResponse.json(

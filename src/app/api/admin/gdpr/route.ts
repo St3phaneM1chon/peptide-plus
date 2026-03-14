@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const gdprErasureSchema = z.object({
   userId: z.string().min(1, 'userId is required'),
@@ -142,7 +143,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
         entityType: 'user',
         entityId: userId,
         details: `Data erasure requested and executed for user ${user.email}`,
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined,
+        ipAddress: getClientIpFromRequest(request),
       },
     });
 

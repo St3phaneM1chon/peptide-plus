@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Period lock check: N/A - this operation is not date-specific (chart of accounts CRUD manages account structure, not accounting period transactions)
 
@@ -102,8 +103,7 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -191,8 +191,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -292,8 +291,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

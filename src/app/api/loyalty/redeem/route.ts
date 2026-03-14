@@ -21,9 +21,7 @@ const REWARDS = LOYALTY_REWARDS_CATALOG;
 export async function POST(request: NextRequest) {
   try {
     // FIX F-025: Add rate limiting and CSRF validation
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/loyalty/redeem');
     if (!rl.success) {
       const res = NextResponse.json(

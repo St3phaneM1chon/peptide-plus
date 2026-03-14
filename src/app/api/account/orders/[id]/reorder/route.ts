@@ -16,6 +16,7 @@ import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 interface ReorderItem {
   productId: string;
@@ -38,8 +39,7 @@ interface SkippedItem {
 export const POST = withUserGuard(async (request: NextRequest, { session, params }) => {
   try {
     // Rate limiting for payment-related endpoint
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/account/orders/reorder');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

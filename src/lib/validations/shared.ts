@@ -11,6 +11,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Input sanitization (Item 22)
@@ -136,7 +137,7 @@ export const imageUrlSchema = z
           (d) => hostname === d || hostname.endsWith(`.${d}`)
         );
       } catch (error) {
-        console.error('[SharedValidation] Image URL validation failed:', error);
+        logger.error('[SharedValidation] Image URL validation failed', { error: error instanceof Error ? error.message : String(error) });
         return false;
       }
     },

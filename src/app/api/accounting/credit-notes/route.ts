@@ -11,6 +11,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { assertPeriodOpen } from '@/lib/accounting/validation';
 import { generateCreditNoteNumber } from '@/lib/accounting/sequence.service';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // #65 Audit: Valid status transitions for credit notes
 // DRAFT -> ISSUED, VOID
@@ -133,8 +134,7 @@ const createCreditNoteSchema = z.object({
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/credit-notes');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -295,8 +295,7 @@ const updateCreditNoteSchema = z.object({
 
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/credit-notes');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -485,8 +484,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/credit-notes');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

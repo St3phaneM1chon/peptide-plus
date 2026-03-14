@@ -149,8 +149,7 @@ export const GET = withAdminGuard(
 export const PUT = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const ip = getClientIpFromRequest(request);
       const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
       if (!rl.success) {
         const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -223,8 +222,7 @@ export const PUT = withAdminGuard(
 export const DELETE = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const ip = getClientIpFromRequest(request);
       const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
       if (!rl.success) {
         const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -265,8 +263,7 @@ export const DELETE = withAdminGuard(
 export const POST = withAdminGuard(
   async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
     try {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const ip = getClientIpFromRequest(request);
       const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
       if (!rl.success) {
         const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

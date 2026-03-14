@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { decodeTrackingId } from '@/lib/email/tracking';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // 1x1 transparent GIF (43 bytes)
 const TRANSPARENT_GIF = Buffer.from(
@@ -83,9 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '0.0.0.0';
+    const ip = getClientIpFromRequest(request);
 
     // Rate limit: don't count multiple opens from same IP within 5 minutes
     if (isRateLimited(emailLogId, ip)) {

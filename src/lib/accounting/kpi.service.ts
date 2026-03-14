@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -113,9 +114,9 @@ async function bulkSumByAccountType(
 
     return rows;
   } catch (error) {
-    console.error('[KPIService] bulkSumByAccountType query failed:', {
-      startDate,
-      endDate,
+    logger.error('[KPIService] bulkSumByAccountType query failed', {
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
       error: error instanceof Error ? error.message : String(error),
     });
     return [];
@@ -229,7 +230,7 @@ export async function calculateKPIs(startDate: Date, endDate: Date): Promise<Fin
     runwayMonths: round2(runwayMonths),
   };
   } catch (error) {
-    console.error('[KPIService] Failed to calculate KPIs:', error instanceof Error ? error.message : String(error));
+    logger.error('[KPIService] Failed to calculate KPIs', { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -371,7 +372,7 @@ export async function getKPITrend(
         value: kpis[kpiName],
       });
     } catch (error) {
-      console.error('[KPIService] Failed to calculate trend for period:', {
+      logger.error('[KPIService] Failed to calculate trend for period', {
         periodStart: periodStart.toISOString(),
         periodEnd: periodEnd.toISOString(),
         error: error instanceof Error ? error.message : String(error),

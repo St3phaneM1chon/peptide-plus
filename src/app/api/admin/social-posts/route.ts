@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Chantier 1.3: Support both single platform (string) and multi-platform (array) for cross-posting
 const platformEnum = z.enum(['instagram', 'facebook', 'twitter', 'tiktok', 'linkedin']);
@@ -96,7 +97,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     return NextResponse.json({ posts, count: posts.length }, { status: 201 });
   } catch (error) {
-    console.error('Error creating social post:', error);
+    logger.error('[admin/social-posts] Error creating social post', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create social post' }, { status: 500 });
   }
 });

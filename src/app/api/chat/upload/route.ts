@@ -15,6 +15,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,9 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limit: 5 uploads per minute per IP
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/chat/upload', session?.user?.id);
     if (!rl.success) {
       const res = NextResponse.json(

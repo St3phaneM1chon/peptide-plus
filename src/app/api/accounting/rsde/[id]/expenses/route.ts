@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { z } from 'zod';
 import { listExpenses, createExpense } from '@/lib/accounting/rsde.service';
+import { logger } from '@/lib/logger';
 
 const createSchema = z.object({
   category: z.enum(['SALARY', 'MATERIALS', 'SUBCONTRACTOR', 'CAPITAL', 'OVERHEAD']),
@@ -27,7 +28,7 @@ export const GET = withAdminGuard(async (request, { params }: { params: Promise<
     const result = await listExpenses(id, { category: category || undefined, page, limit });
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching RS&DE expenses:', error);
+    logger.error('[accounting/rsde/expenses] Error fetching RS&DE expenses', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la récupération des dépenses' }, { status: 500 });
   }
 });
@@ -46,7 +47,7 @@ export const POST = withAdminGuard(async (request, { params }: { params: Promise
     const expense = await createExpense({ ...result.data, projectId: id });
     return NextResponse.json(expense, { status: 201 });
   } catch (error) {
-    console.error('Error creating RS&DE expense:', error);
+    logger.error('[accounting/rsde/expenses] Error creating RS&DE expense', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la création de la dépense' }, { status: 500 });
   }
 });

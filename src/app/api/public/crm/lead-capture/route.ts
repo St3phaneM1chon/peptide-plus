@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { processWorkflowTrigger } from '@/lib/crm/workflow-engine';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Simple rate limiter (in-memory, per IP)
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -35,7 +36,7 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: NextRequest) {
   // Rate limit
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const ip = getClientIpFromRequest(request);
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
       { success: false, error: 'Too many requests' },

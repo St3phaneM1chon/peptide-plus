@@ -8,6 +8,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { updateExchangeRates } from '@/lib/exchange-rates';
 import { getExchangeRate, type FXRate } from '@/lib/accounting/forex-service';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Bank of Canada supported pairs (CAD-based)
@@ -105,10 +106,7 @@ export const GET = withAdminGuard(async () => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/fx-rates');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -52,7 +53,7 @@ export async function GET() {
       referralCode: ambassador.referralCode,
     });
   } catch (error) {
-    console.error('[ambassador/status] Error:', error);
+    logger.error('[ambassador/status] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

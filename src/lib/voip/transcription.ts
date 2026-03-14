@@ -26,10 +26,11 @@ export interface TranscriptionResult {
 // OpenAI client (lazy singleton per KB-PP-BUILD-002)
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _openai: any = null;
+type OpenAIClient = import('openai').default;
 
-function getOpenAI() {
+let _openai: OpenAIClient | null = null;
+
+function getOpenAI(): OpenAIClient {
   if (_openai) return _openai;
   // Dynamic require to avoid top-level crash
   // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -37,8 +38,9 @@ function getOpenAI() {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY not configured');
   }
-  _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  return _openai;
+  const client: OpenAIClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  _openai = client;
+  return client;
 }
 
 // ---------------------------------------------------------------------------
@@ -101,9 +103,8 @@ export async function transcribeRecording(
       response_format: 'text',
     });
 
-    const fullText = typeof transcriptionResponse === 'string'
-      ? transcriptionResponse
-      : transcriptionResponse.text || '';
+    // With response_format: 'text', the API returns a string directly
+    const fullText = String(transcriptionResponse || '');
 
     if (!fullText.trim()) {
       logger.warn(`[Transcription] Empty transcription for ${recordingId}`);

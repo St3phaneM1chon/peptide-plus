@@ -20,6 +20,7 @@ import {
   getDefaultChatbotConfig,
   shouldEscalateToHuman,
 } from '@/lib/crm/chatbot-engine';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Rate limiter (in-memory, per IP)
@@ -55,10 +56,7 @@ const chatbotRequestSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    'unknown';
+  const ip = getClientIpFromRequest(request);
 
   if (!checkRateLimit(ip)) {
     return NextResponse.json(

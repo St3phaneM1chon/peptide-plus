@@ -10,6 +10,7 @@
  */
 
 import { encrypt, decrypt } from './security';
+import { logger } from '@/lib/logger';
 
 const ENCRYPTED_PREFIX = 'enc:';
 
@@ -49,7 +50,7 @@ export async function decryptToken(token: string | null | undefined): Promise<st
   // Token is NOT encrypted (migration period — stored before encryption was enabled)
   if (process.env.NODE_ENV === 'production') {
     // In production, log warning but still return to avoid breaking existing sessions
-    console.warn('[TokenEncryption] Unencrypted token detected in production — schedule re-encryption');
+    logger.warn('[TokenEncryption] Unencrypted token detected in production — schedule re-encryption');
   }
   return token;
 }

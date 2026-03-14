@@ -14,6 +14,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const zapierPostSchema = z.discriminatedUnion('action', [
   z.object({
@@ -223,7 +224,7 @@ export async function POST(request: NextRequest) {
   if (!hmacResult.valid) {
     logger.warn('[zapier] HMAC signature verification failed', {
       error: hmacResult.error,
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
+      ip: getClientIpFromRequest(request),
     });
     return NextResponse.json({ error: hmacResult.error || 'Unauthorized' }, { status: 401 });
   }

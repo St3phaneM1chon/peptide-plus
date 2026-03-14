@@ -19,6 +19,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { applyRate, add, multiply, subtract, convertCurrency, toCents, clamp } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
 let _stripe: Stripe | null = null;
@@ -127,9 +128,7 @@ function calculateServerShipping(subtotal: number, country: string, productTypes
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting on checkout session creation
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/payments/create-checkout');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

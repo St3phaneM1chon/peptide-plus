@@ -11,6 +11,7 @@ import { auth } from '@/lib/auth-config';
 import { verifyMFACode } from '@/lib/mfa';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const mfaChallengeSchema = z.object({
   code: z.string().min(6).max(8, 'Code must be 6-8 characters'),
@@ -19,9 +20,8 @@ const mfaChallengeSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limit: 5 attempts per minute per IP
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/mfa/challenge');
     if (!rl.success) {
       return NextResponse.json(

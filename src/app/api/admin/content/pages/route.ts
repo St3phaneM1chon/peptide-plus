@@ -55,8 +55,7 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
 // POST /api/admin/content/pages - Create a new page
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -123,8 +122,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 // PUT /api/admin/content/pages - Update a page
 export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -202,8 +200,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
 // DELETE /api/admin/content/pages - Delete a page
 export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

@@ -8,6 +8,27 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
+// Meta Webhook Payload Types
+// ---------------------------------------------------------------------------
+
+interface MetaWebhookPayload {
+  entry?: MetaWebhookEntry[];
+  [key: string]: unknown;
+}
+
+interface MetaWebhookEntry {
+  messaging?: MetaMessagingEvent[];
+  [key: string]: unknown;
+}
+
+interface MetaMessagingEvent {
+  sender?: { id: string };
+  message?: { text?: string; mid?: string };
+  timestamp?: number;
+  [key: string]: unknown;
+}
+
+// ---------------------------------------------------------------------------
 // Facebook message processing
 // ---------------------------------------------------------------------------
 
@@ -15,7 +36,7 @@ import { logger } from '@/lib/logger';
  * Parse a Meta webhook payload for Facebook Messenger and create
  * InboxConversation + InboxMessage records.
  */
-export async function processFacebookMessage(payload: any): Promise<void> {
+export async function processFacebookMessage(payload: MetaWebhookPayload): Promise<void> {
   const entries = payload?.entry;
   if (!Array.isArray(entries)) {
     logger.warn('[SocialInbox] Facebook payload has no entries');
@@ -150,7 +171,7 @@ export async function processFacebookMessage(payload: any): Promise<void> {
  * Parse a Meta webhook payload for Instagram DMs and create
  * InboxConversation + InboxMessage records.
  */
-export async function processInstagramMessage(payload: any): Promise<void> {
+export async function processInstagramMessage(payload: MetaWebhookPayload): Promise<void> {
   const entries = payload?.entry;
   if (!Array.isArray(entries)) {
     logger.warn('[SocialInbox] Instagram payload has no entries');
@@ -306,7 +327,7 @@ export async function sendFacebookReply(
   }
 
   const lastInbound = conversation.messages[0];
-  const metadata = lastInbound?.metadata as Record<string, any> | null;
+  const metadata = lastInbound?.metadata as Record<string, unknown> | null;
   const recipientId = metadata?.platformSenderId;
 
   if (!recipientId) {

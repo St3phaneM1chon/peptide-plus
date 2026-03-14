@@ -13,6 +13,7 @@ import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 const scryptAsync = promisify(scrypt);
 
@@ -310,7 +311,7 @@ export function sanitizeUrl(url: string): string | null {
 
     return parsed.href;
   } catch (error) {
-    console.error('[Security] URL validation failed:', error);
+    logger.error('[Security] URL validation failed', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

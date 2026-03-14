@@ -35,6 +35,7 @@ export interface TaxBreakdown {
  * separate hardcoded table that could drift out of sync.
  */
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
+import { logger } from '@/lib/logger';
 
 const PROVINCE_TAX: Record<string, { gst: number; pst: number; hst: number; qst: number; name: string }> = (() => {
   const map: Record<string, { gst: number; pst: number; hst: number; qst: number; name: string }> = {};
@@ -65,7 +66,7 @@ export function calculateTax(
   const rates = PROVINCE_TAX[prov];
   // A8-P2-001 FIX: Unknown provinces get GST-only (5%) instead of QC rates
   if (!rates) {
-    console.warn(`[canadian-tax-engine] Unknown province code "${province}" — using GST-only fallback`);
+    logger.warn(`[canadian-tax-engine] Unknown province code "${province}" — using GST-only fallback`);
     const gst = round(subtotal * 5 / 100);
     return {
       subtotal, gst, pst: 0, hst: 0, qst: 0,
@@ -125,7 +126,7 @@ export function getTotalTaxRate(province: string): number {
   const prov = province.toUpperCase();
   const rates = PROVINCE_TAX[prov];
   if (!rates) {
-    console.warn(`[canadian-tax-engine] Unknown province code "${province}" in getTotalTaxRate — using GST-only (5%)`);
+    logger.warn(`[canadian-tax-engine] Unknown province code "${province}" in getTotalTaxRate — using GST-only (5%)`);
     return 5; // GST only
   }
   if (rates.hst > 0) return rates.hst;
@@ -368,7 +369,7 @@ export function calculateDigitalGoodsTax(
   const rates = PROVINCE_TAX[prov];
   // A8-P2-001 FIX: Unknown provinces get GST-only instead of QC rates
   if (!rates) {
-    console.warn(`[canadian-tax-engine] Unknown province code "${province}" in calculateDigitalGoodsTax — using GST-only fallback`);
+    logger.warn(`[canadian-tax-engine] Unknown province code "${province}" in calculateDigitalGoodsTax — using GST-only fallback`);
     const gst = round(subtotal * 5 / 100);
     return {
       subtotal, gst, pst: 0, hst: 0, qst: 0,

@@ -13,6 +13,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { sendEmail } from '@/lib/email/email-service';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // API-003: Zod schema for newsletter subscription
 const newsletterSubscribeSchema = z.object({
@@ -24,9 +25,7 @@ const newsletterSubscribeSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // BE-SEC-01: Rate limit newsletter subscribe - 5 per IP per hour
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/newsletter');
     if (!rl.success) {
       const res = NextResponse.json(

@@ -12,6 +12,7 @@ import { locales, isValidLocale } from '@/i18n/config';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const localeSchema = z.object({
   locale: z.string().max(10).refine((val) => isValidLocale(val), {
@@ -28,8 +29,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/user/locale');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
         userId: session.user.id,
         entityType: 'User',
         details: JSON.stringify({ newLocale: locale }),
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+        ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });

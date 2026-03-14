@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { encryptToken, decryptToken } from '@/lib/platform/crypto';
+import { logger } from '@/lib/logger';
 
 const extensionSchema = z.object({
   userId: z.string().cuid(),
@@ -54,7 +55,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ extensions: masked });
   } catch (error) {
-    console.error('Extensions error:', error);
+    logger.error('[admin/voip/extensions] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }, { skipCsrf: true });
@@ -140,7 +141,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     const sipPassword = decryptToken(ext.sipPassword);
 
     if (!sipUsername || !sipPassword) {
-      console.error('SIP credential decryption failed for user', session.user.id, '- check ENCRYPTION_KEY');
+      logger.error('[admin/voip/extensions] SIP credential decryption failed', { userId: session.user.id, hint: 'check ENCRYPTION_KEY' });
       return NextResponse.json(
         { error: 'SIP credentials could not be decrypted. Contact administrator.' },
         { status: 500 }

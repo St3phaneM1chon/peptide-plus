@@ -3,6 +3,8 @@
  * Uses OpenAI Vision or Tesseract for document processing
  */
 
+import { logger } from '@/lib/logger';
+
 interface InvoiceData {
   invoiceNumber?: string;
   invoiceDate?: Date;
@@ -113,7 +115,7 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
     if (!response.ok) {
       // ACF-001: Do not expose raw OpenAI API error body to callers (may contain key/rate info)
       const errorBody = await response.text();
-      console.error('[OCR] OpenAI API error', { status: response.status, body: errorBody });
+      logger.error('[OCR] OpenAI API error', { status: response.status, body: errorBody });
       return { success: false, error: `OpenAI Vision API returned status ${response.status}` };
     }
 
@@ -148,7 +150,7 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
         processingTime: Date.now() - startTime,
       };
     } catch (parseError) {
-      console.error('[OCR] Failed to parse OCR result:', parseError);
+      logger.error('[OCR] Failed to parse OCR result', { error: parseError instanceof Error ? parseError.message : String(parseError) });
       return {
         success: false,
         error: 'Failed to parse OCR result',
@@ -156,7 +158,7 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
       };
     }
   } catch (error: unknown) {
-    console.error('[OCR] OCR invoice processing failed:', error);
+    logger.error('[OCR] OCR invoice processing failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -334,7 +336,7 @@ export async function processInvoiceFromText(
       processingTime: Date.now() - startTime,
     };
   } catch (error: unknown) {
-    console.error('[OCR] OCR receipt processing failed:', error);
+    logger.error('[OCR] OCR receipt processing failed', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

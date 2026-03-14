@@ -17,6 +17,7 @@ import { ErrorCode } from '@/lib/error-codes';
 import { contactFormSchema } from '@/lib/validations/contact';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Status codes: 200 OK, 400 Bad Request, 415 Unsupported Media Type, 429 Rate Limited, 500 Internal Error
 export async function POST(request: NextRequest) {
@@ -26,9 +27,7 @@ export async function POST(request: NextRequest) {
     if (ctError) return ctError;
 
     // BE-SEC-01: Rate limit contact form - 3 per IP per hour
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/contact');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { status: 429, request, headers: rl.headers });

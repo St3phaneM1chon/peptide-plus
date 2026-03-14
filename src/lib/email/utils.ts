@@ -2,6 +2,8 @@
  * Shared utilities for the email subsystem.
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Safely parse a JSON string (or pass through an object) with an optional fallback.
  *
@@ -17,7 +19,7 @@ export function safeParseJson<T = unknown>(input: unknown, fallback?: T): T | nu
     try {
       return JSON.parse(input) as T;
     } catch (error) {
-      console.error('[EmailUtils] JSON parse failed in safeParseJson:', error);
+      logger.error('[EmailUtils] JSON parse failed in safeParseJson', { error: error instanceof Error ? error.message : String(error) });
       return fallback ?? null;
     }
   }

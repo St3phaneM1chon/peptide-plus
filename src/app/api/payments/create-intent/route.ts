@@ -14,6 +14,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { add, toCents } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createIntentSchema = z.object({
   productId: z.string().min(1, 'Product ID requis'),
@@ -28,9 +29,7 @@ const createIntentSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting on payment intent creation
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/payments/create-intent');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

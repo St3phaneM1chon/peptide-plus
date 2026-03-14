@@ -66,8 +66,7 @@ export const GET = withAdminGuard(async (_request, { session: _session, params }
 // PATCH /api/admin/emails/[id] - Update an email template
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/emails/[id]');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -220,8 +219,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 // DELETE /api/admin/emails/[id] - Delete an email template
 export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/emails/[id]');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

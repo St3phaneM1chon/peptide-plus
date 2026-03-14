@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getDualChannelRecording } from '@/lib/voip/recording';
 import { AuditLogger } from '@/lib/voip/audit-log';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Shared audit logger instance for recording access events
 const auditLogger = new AuditLogger({ flushSize: 10, flushIntervalMs: 60_000 });
@@ -67,7 +68,7 @@ export const GET = withAdminGuard(async (
       action: auditAction,
       resource: 'CallRecording',
       resourceId: id,
-      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
       result: 'failure',
       details: { reason: 'Recording not uploaded yet' },
@@ -89,7 +90,7 @@ export const GET = withAdminGuard(async (
       action: auditAction,
       resource: 'CallRecording',
       resourceId: id,
-      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
       result: 'success',
       details: {

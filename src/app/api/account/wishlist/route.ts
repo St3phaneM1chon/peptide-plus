@@ -6,6 +6,7 @@ import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const addWishlistSchema = z.object({
   productId: z.string().min(1, 'productId is required'),
@@ -101,7 +102,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/account/wishlist');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 

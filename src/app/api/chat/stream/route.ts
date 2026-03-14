@@ -14,6 +14,7 @@ import { UserRole } from '@/types';
 import { getRedisPubSubClient } from '@/lib/redis';
 import { getChatChannel, type ChatEvent } from '@/lib/chat/realtime';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Simple rate limiter for SSE connections (max 3 concurrent per IP)
 const activeConnections = new Map<string, number>();
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Rate limit: max concurrent SSE connections per IP
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const ip = getClientIpFromRequest(request);
     const currentCount = activeConnections.get(ip) || 0;
     if (currentCount >= MAX_CONCURRENT_SSE) {
       return new Response(JSON.stringify({ error: 'Too many concurrent SSE connections' }), {

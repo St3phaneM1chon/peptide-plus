@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -167,10 +168,9 @@ export async function withPrismaRetry<T>(
       }
 
       const delay = backoffMs * Math.pow(2, attempt);
-      console.warn(
-        `[Prisma] Retryable error, attempt ${attempt + 1}/${maxRetries}, waiting ${delay}ms`,
-        error instanceof Error ? error.message : String(error)
-      );
+      logger.warn(`[Prisma] Retryable error, attempt ${attempt + 1}/${maxRetries}, waiting ${delay}ms`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }

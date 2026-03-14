@@ -24,9 +24,11 @@ import { logger } from '@/lib/logger';
 // Lazy OpenAI client
 // ---------------------------------------------------------------------------
 
-let _openai: any | null = null;
+type OpenAIClient = import('openai').default;
 
-function getOpenAI(): any {
+let _openai: OpenAIClient | null = null;
+
+function getOpenAI(): OpenAIClient {
   if (_openai) return _openai;
 
   if (!process.env.OPENAI_API_KEY) {
@@ -35,8 +37,9 @@ function getOpenAI(): any {
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { default: OpenAI } = require('openai');
-  _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  return _openai;
+  const client: OpenAIClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  _openai = client;
+  return client;
 }
 
 // ---------------------------------------------------------------------------

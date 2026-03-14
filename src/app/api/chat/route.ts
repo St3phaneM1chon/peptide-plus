@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
 import type { ChatStatus } from '@prisma/client';
 import { z } from 'zod';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET - Liste des conversations (admin only)
 // When ?conversationId=XXX is provided, returns a single conversation with its messages (paginated).
@@ -93,9 +94,7 @@ export async function POST(request: NextRequest) {
     // Rate limiting on conversation lookup/creation
     // Uses 'chat' bucket (30/min) instead of 'chat/route' (10/hour) because
     // the widget polls this endpoint every 10s for new messages
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/chat');
     if (!rl.success) {
       const res = NextResponse.json(

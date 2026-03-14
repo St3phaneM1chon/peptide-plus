@@ -8,6 +8,7 @@
 
 import { applyRate, add } from '@/lib/decimal-calculator';
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
+import { logger } from '@/lib/logger';
 
 export interface ProvinceTaxRates {
   gst: number;
@@ -55,7 +56,7 @@ export function getProvinceTaxRates(province: string): ProvinceTaxRates {
   const key = province.toUpperCase();
   const rates = TAX_RATES[key];
   if (!rates) {
-    console.warn(`[tax-rates] Unknown province code "${province}" — using 0% provincial tax (GST-only fallback)`);
+    logger.warn(`[tax-rates] Unknown province code "${province}" — using 0% provincial tax (GST-only fallback)`);
     return { gst: 0.05 }; // Federal GST only, no provincial tax
   }
   return rates;

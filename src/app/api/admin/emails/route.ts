@@ -111,8 +111,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 // POST /api/admin/emails - Create a new email template (or clone from sourceId)
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/admin/emails');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

@@ -7,6 +7,7 @@ import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import { randomBytes } from 'crypto';
 import { encrypt, decrypt } from './security';
+import { logger } from '@/lib/logger';
 
 // Configuration TOTP
 authenticator.options = {
@@ -50,7 +51,7 @@ export function verifyTOTP(secret: string, token: string): boolean {
   try {
     return authenticator.verify({ token, secret });
   } catch (error) {
-    console.error('[MFA] TOTP verification failed:', error);
+    logger.error('[MFA] TOTP verification failed', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }
@@ -223,7 +224,7 @@ export async function verifyMFACode(
   try {
     secret = await decrypt(user.mfaSecret);
   } catch (decryptError) {
-    console.error('[MFA] Failed to decrypt MFA secret - user must re-setup MFA:', decryptError instanceof Error ? decryptError.message : String(decryptError));
+    logger.error('[MFA] Failed to decrypt MFA secret - user must re-setup MFA', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
     return { valid: false, type: null };
   }
 
@@ -238,7 +239,7 @@ export async function verifyMFACode(
     try {
       hashedCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
     } catch (decryptError) {
-      console.error('[MFA] Failed to decrypt backup codes:', decryptError instanceof Error ? decryptError.message : String(decryptError));
+      logger.error('[MFA] Failed to decrypt backup codes', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
       return { valid: false, type: null };
     }
     const { valid, usedIndex } = await verifyBackupCode(code, hashedCodes, userId);

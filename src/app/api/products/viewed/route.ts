@@ -17,6 +17,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const viewedProductSchema = z.object({
   productId: z.string().min(1, 'productId required').regex(/^[a-z0-9]{20,30}$/, 'Invalid productId format'),
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products/viewed');
     if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 

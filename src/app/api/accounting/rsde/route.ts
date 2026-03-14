@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { z } from 'zod';
 import { listProjects, createProject } from '@/lib/accounting/rsde.service';
+import { logger } from '@/lib/logger';
 
 const createSchema = z.object({
   name: z.string().min(1).max(200),
@@ -27,7 +28,7 @@ export const GET = withAdminGuard(async (request) => {
     const result = await listProjects({ fiscalYear, status, page, limit });
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching RS&DE projects:', error);
+    logger.error('[accounting/rsde] Error fetching RS&DE projects', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la récupération des projets RS&DE' }, { status: 500 });
   }
 });
@@ -45,7 +46,7 @@ export const POST = withAdminGuard(async (request) => {
     const project = await createProject(result.data);
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    console.error('Error creating RS&DE project:', error);
+    logger.error('[accounting/rsde] Error creating RS&DE project', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la création du projet RS&DE' }, { status: 500 });
   }
 });

@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const chatPostSchema = z.object({
   action: z.enum(['start', 'message', 'end']),
@@ -41,7 +42,7 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const ip = getClientIpFromRequest(request);
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 });
   }

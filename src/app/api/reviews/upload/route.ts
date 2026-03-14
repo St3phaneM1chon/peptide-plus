@@ -11,6 +11,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMAGES = 3;
@@ -31,9 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // SECURITY: Rate limit image uploads - 10 per minute per user
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/reviews/upload', session.user.id);
     if (!rl.success) {
       return NextResponse.json(

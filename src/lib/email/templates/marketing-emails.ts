@@ -20,6 +20,7 @@
  */
 
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
+import { logger } from '@/lib/logger';
 
 const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || 'https://biocyclepeptides.com';
 
@@ -38,7 +39,7 @@ function isSafeUrl(url: string): boolean {
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch (error) {
-    console.error('[MarketingEmails] Invalid URL validation:', error);
+    logger.error('[MarketingEmails] Invalid URL validation', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

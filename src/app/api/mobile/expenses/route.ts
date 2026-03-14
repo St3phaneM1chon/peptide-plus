@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { checkPeriodLock } from '@/lib/accounting/period-close.service';
+import { logger } from '@/lib/logger';
 
 const createSchema = z.object({
   description: z.string().min(1).max(500),
@@ -62,7 +63,7 @@ export const GET = withAdminGuard(async (request) => {
       limit,
     });
   } catch (error) {
-    console.error('Error fetching expenses:', error);
+    logger.error('[mobile/expenses] Error fetching expenses', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur récupération dépenses' }, { status: 500 });
   }
 });
@@ -130,7 +131,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    console.error('Error creating expense:', error);
+    logger.error('[mobile/expenses] Error creating expense', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur création dépense' }, { status: 500 });
   }
 });

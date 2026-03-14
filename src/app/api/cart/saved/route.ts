@@ -22,6 +22,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -125,9 +126,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // COMMERCE-019 FIX: Rate limiting + CSRF on state-changing endpoint
-    const ip = request.headers.get('x-azure-clientip')
-      || (() => { const xff = request.headers.get('x-forwarded-for'); if (!xff) return null; const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i)); return ips[ips.length - 1] || null; })()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/cart/saved');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -214,9 +213,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // COMMERCE-019 FIX: Rate limiting + CSRF on state-changing endpoint
-    const ip = request.headers.get('x-azure-clientip')
-      || (() => { const xff = request.headers.get('x-forwarded-for'); if (!xff) return null; const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i)); return ips[ips.length - 1] || null; })()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/cart/saved');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

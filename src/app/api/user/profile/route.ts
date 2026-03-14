@@ -15,6 +15,7 @@ import { locales } from '@/i18n/config';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const updateProfileSchema = z.object({
   name: z.string().max(100).optional(),
@@ -69,9 +70,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     // SECURITY: Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/user/profile');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

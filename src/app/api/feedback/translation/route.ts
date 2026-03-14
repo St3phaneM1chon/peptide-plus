@@ -7,6 +7,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Zod schema
@@ -22,9 +23,7 @@ const translationFeedbackSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit unauthenticated feedback endpoint - prevents abuse/spam
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/feedback/translation');
     if (!rl.success) {
       const res = NextResponse.json(

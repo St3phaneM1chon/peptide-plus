@@ -21,6 +21,7 @@ import { apiSuccess, apiError, apiPaginated, validateContentType } from '@/lib/a
 import { ErrorCode } from '@/lib/error-codes';
 import { createReviewSchema } from '@/lib/validations/review';
 import { checkEarningCaps } from '@/lib/loyalty/points-engine';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -141,9 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // BE-SEC-01: Rate limit review submission - 10 per user per day
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/reviews', session.user.id);
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { status: 429, request, headers: rl.headers });

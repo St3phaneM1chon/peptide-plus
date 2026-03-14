@@ -14,6 +14,8 @@
  *   l'entreprise doit s'inscrire si elle dépasse les seuils de nexus
  */
 
+import { logger } from '@/lib/logger';
+
 // Exchange rate CAD to USD (should be fetched from API in production)
 export const CAD_TO_USD_RATE = 0.73; // Approximate rate - update regularly
 export const USD_TO_CAD_RATE = 1.37;
@@ -621,7 +623,7 @@ export function calculateTaxes(subtotal: number, regionCode: string, country: st
     province = CANADIAN_PROVINCES[regionCode.toUpperCase()];
     // A8-P2-001 FIX: Unknown provinces get GST-only (5%) instead of QC rates
     if (!province) {
-      console.warn(`[canadianTaxes] Unknown Canadian province code "${regionCode}" — using GST-only fallback`);
+      logger.warn(`[canadianTaxes] Unknown Canadian province code "${regionCode}" — using GST-only fallback`);
       province = {
         code: regionCode.toUpperCase(), name: regionCode, nameFr: regionCode,
         country: 'CA', taxType: 'GST_ONLY', gst: 0.05, totalRate: 0.05,
@@ -2484,7 +2486,7 @@ export function validatePostalCode(postalCode: string, countryCode: string): boo
     const regex = new RegExp(format.postalCodePattern, 'i');
     return regex.test(postalCode.trim());
   } catch (error) {
-    console.error('[CanadianTaxes] Invalid postal code regex pattern:', error);
+    logger.error('[CanadianTaxes] Invalid postal code regex pattern', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

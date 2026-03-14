@@ -8,6 +8,7 @@
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from './audit-trail.service';
 import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -320,7 +321,7 @@ export async function applyPaymentMatch(
       },
     });
   } catch (error) {
-    console.error('[PaymentMatching] Audit log creation failed (non-critical):', error);
+    logger.error('[PaymentMatching] Audit log creation failed (non-critical)', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return {

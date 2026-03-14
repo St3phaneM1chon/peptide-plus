@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { SignJWT, jwtVerify } from 'jose';
 import { logger } from '@/lib/logger';
 import { stripHtml } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -112,9 +113,7 @@ interface SharedCartPayload {
 export async function POST(request: NextRequest) {
   try {
     // Rate limit by IP
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    const ip = getClientIpFromRequest(request);
 
     if (!checkRateLimit(ip)) {
       return NextResponse.json(

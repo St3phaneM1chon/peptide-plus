@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { syncAds } from '@/lib/ads/ads-sync';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const adsSyncSchema = z.object({
   platform: z.string().optional(),
@@ -47,7 +48,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 export async function GET(request: NextRequest) {
   if (!validateCronSecret(request)) {
     logger.warn('[AdSync] Unauthorized cron attempt', {
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
+      ip: getClientIpFromRequest(request),
     });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

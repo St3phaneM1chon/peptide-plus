@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Fetch wrapper with automatic retry for transient server errors.
  * Only retries on 5xx errors and network failures.
@@ -23,7 +25,7 @@ export async function fetchWithRetry(
       }
       return res; // Return the error response on last attempt
     } catch (err) {
-      console.error('[FetchWithRetry] Fetch attempt failed:', url, err);
+      logger.error('[FetchWithRetry] Fetch attempt failed', { url, error: err instanceof Error ? err.message : String(err) });
       lastError = err instanceof Error ? err : new Error(String(err));
       if (attempt < retries) {
         await new Promise(r => setTimeout(r, baseDelay * (attempt + 1)));

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -49,7 +50,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, context: RouteP
 
     return NextResponse.json({ post });
   } catch (error) {
-    console.error('[SocialPost PATCH] Error:', error instanceof Error ? error.message : String(error));
+    logger.error('[SocialPost PATCH] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
@@ -67,7 +68,7 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, context: Rout
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[SocialPost DELETE] Error:', error instanceof Error ? error.message : String(error));
+    logger.error('[SocialPost DELETE] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

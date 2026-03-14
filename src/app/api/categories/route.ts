@@ -18,12 +18,13 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { apiSuccess, apiError, withETag } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET - Liste des catégories
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/categories');
     if (!rl.success) {
       const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
@@ -143,7 +144,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/categories');
     if (!rl.success) {
       const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });

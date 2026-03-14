@@ -11,6 +11,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { createFormatSchema } from '@/lib/validations/format';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET all formats for a product
 export async function GET(
@@ -38,7 +39,7 @@ export async function POST(
 ) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products/formats');
     if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 

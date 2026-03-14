@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 const alertSchema = z.object({
   errorMessage: z.string().max(1000),
@@ -128,7 +129,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       );
       sentCount = results.filter((r) => r.status === 'fulfilled' && r.value.success).length;
     } catch (emailErr) {
-      console.error('[VoIP Alert] Email sending failed:', emailErr);
+      logger.error('[VoIP Alert] Email sending failed', { error: emailErr instanceof Error ? emailErr.message : String(emailErr) });
     }
 
     // Update cooldown
@@ -140,7 +141,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       sentCount,
     });
   } catch (error) {
-    console.error('[VoIP Alert] Error:', error);
+    logger.error('[VoIP Alert] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to send alert' },
       { status: 500 }

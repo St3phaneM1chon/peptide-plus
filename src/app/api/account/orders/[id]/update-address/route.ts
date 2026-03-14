@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { calculateTaxBreakdown } from '@/lib/tax-rates';
 import { add, subtract } from '@/lib/decimal-calculator';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const updateAddressSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(100),
@@ -31,7 +32,7 @@ const updateAddressSchema = z.object({
 export const PUT = withUserGuard(async (request: NextRequest, { session, params }) => {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/account/orders/update-address');
     if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
@@ -179,7 +180,7 @@ export const PUT = withUserGuard(async (request: NextRequest, { session, params 
             updatedAt: new Date().toISOString(),
           },
         }),
-        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
       },
     });

@@ -18,6 +18,7 @@ import { jwtVerify } from 'jose';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // COMMERCE-010 FIX: Must match the secret used in /api/cart/share (CART_SHARE_SECRET)
 // Lazy-initialized to avoid crashing during Next.js build/SSG when env vars
@@ -57,9 +58,7 @@ export async function GET(
 ) {
   try {
     // COMMERCE-022 FIX: Rate limiting on public shared cart endpoint
-    const ip = _request.headers.get('x-azure-clientip')
-      || (() => { const xff = _request.headers.get('x-forwarded-for'); if (!xff) return null; const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i)); return ips[ips.length - 1] || null; })()
-      || _request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(_request);
     const rl = await rateLimitMiddleware(ip, '/api/cart/shared');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

@@ -22,12 +22,13 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { createProductSchema } from '@/lib/validations/product';
 import { cacheGetOrSet, cacheInvalidateTag, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
 import { createHash } from 'crypto';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products');
     if (!rl.success) {
       const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
@@ -333,7 +334,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products');
     if (!rl.success) {
       const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });

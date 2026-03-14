@@ -162,8 +162,7 @@ export const PUT = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       // Rate limiting
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const ip = getClientIpFromRequest(request);
       const rl = await rateLimitMiddleware(ip, '/api/admin/emails/inbox/update');
       if (!rl.success) {
         const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

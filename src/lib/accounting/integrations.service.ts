@@ -8,6 +8,7 @@
  */
 
 import { JournalEntry, getPaymentProcessorFees } from './types';
+import { logger } from '@/lib/logger';
 
 // ============================================
 // QUICKBOOKS ONLINE INTEGRATION
@@ -167,7 +168,7 @@ export async function exportToQuickBooks(
 
       result.exported++;
     } catch (error: unknown) {
-      console.error('[Integrations] QBO export failed for entry:', entry.entryNumber, error);
+      logger.error('[Integrations] QBO export failed for entry', { entryNumber: entry.entryNumber, error: error instanceof Error ? error.message : String(error) });
       result.failed++;
       result.errors.push({
         entryNumber: entry.entryNumber,

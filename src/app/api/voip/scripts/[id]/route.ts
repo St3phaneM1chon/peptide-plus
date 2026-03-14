@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -40,7 +41,7 @@ export async function GET(
 
     return NextResponse.json({ data: script });
   } catch (error) {
-    console.error('[voip/scripts GET] Error:', error);
+    logger.error('[voip/scripts GET] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -78,7 +79,7 @@ export async function PUT(
 
     return NextResponse.json({ data: script });
   } catch (error) {
-    console.error('[voip/scripts PUT] Error:', error);
+    logger.error('[voip/scripts PUT] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -104,7 +105,7 @@ export async function DELETE(
 
     return NextResponse.json({ status: 'deactivated' });
   } catch (error) {
-    console.error('[voip/scripts DELETE] Error:', error);
+    logger.error('[voip/scripts DELETE] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

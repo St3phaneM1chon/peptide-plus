@@ -7,6 +7,7 @@
 // FAILLE-016 FIX: Delegate IP range checking to the canonical implementation in security.ts
 // which covers all private/reserved IPv4 and IPv6 ranges.
 import { isPrivateOrReservedIP } from '@/lib/security';
+import { logger } from '@/lib/logger';
 
 /**
  * Escape HTML entities to prevent stored XSS.
@@ -43,7 +44,7 @@ export function sanitizeUrl(url: string): string | null {
 
     return parsed.toString();
   } catch (error) {
-    console.error('[Sanitize] URL validation/parsing failed:', error);
+    logger.error('[Sanitize] URL validation/parsing failed', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

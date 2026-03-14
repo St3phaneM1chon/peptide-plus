@@ -4,6 +4,7 @@
  */
 
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 // =====================================================
 // HTML SANITIZATION (Server-side DOMPurify)
@@ -328,7 +329,7 @@ export function isValidUrl(url: string, allowedProtocols: string[] = ['http', 'h
     const parsed = new URL(url);
     return allowedProtocols.includes(parsed.protocol.replace(':', ''));
   } catch (error) {
-    console.error('[Validation] Invalid URL format:', error);
+    logger.error('[Validation] Invalid URL format', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

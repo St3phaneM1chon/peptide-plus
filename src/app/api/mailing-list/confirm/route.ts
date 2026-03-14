@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function GET(request: Request) {
   try {
@@ -26,9 +27,7 @@ export async function GET(request: Request) {
     }
 
     const confirmedAt = new Date();
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    const ip = getClientIpFromRequest(request);
 
     await prisma.mailingListSubscriber.update({
       where: { id: subscriber.id },

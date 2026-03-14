@@ -7,6 +7,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { auth } from '@/lib/auth-config';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Validation schema
 const subscribeSchema = z.object({
@@ -21,9 +22,7 @@ const subscribeSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SEC-24: Rate limit stock alert subscriptions
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/stock-alerts');
     if (!rl.success) {
       const res = NextResponse.json(

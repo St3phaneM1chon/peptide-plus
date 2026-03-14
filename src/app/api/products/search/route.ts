@@ -20,11 +20,12 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 // BUG-077 FIX: Import multiLanguageSearch for non-English locales
 import { fullTextSearch, multiLanguageSearch } from '@/lib/search';
 import { auth } from '@/lib/auth-config';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function GET(request: NextRequest) {
   try {
     // BUG-033 FIX: Add rate limiting to search API (30 req/min per IP via rate-limiter config)
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rlResult = await rateLimitMiddleware(ip, '/api/products/search');
     if (!rlResult.success) {
       return apiError(rlResult.error?.message || 'Too many requests', ErrorCode.RATE_LIMITED, { request, headers: rlResult.headers });

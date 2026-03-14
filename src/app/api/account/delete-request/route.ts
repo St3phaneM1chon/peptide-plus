@@ -25,6 +25,7 @@ import { baseTemplate } from '@/lib/email/templates/base-template';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { createHash } from 'crypto';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const deleteRequestSchema = z.object({
   reason: z.string().max(500).optional(),
@@ -38,7 +39,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     const userId = session.user.id!;
 
     // SEC-002: Rate limit account deletion requests - 2 per user per day
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/account/delete-request', userId);
     if (!rl.success) {
       const res = NextResponse.json(
@@ -287,7 +288,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
             gracePeriodDays: GRACE_PERIOD_DAYS,
             permanentDeletionDate: permanentDeletionDate.toISOString(),
           }),
-          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+          ipAddress: getClientIpFromRequest(request) || null,
         },
       });
     });

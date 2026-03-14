@@ -9,6 +9,7 @@ import { UserRole } from '@/types';
 import { ZodSchema, ZodError } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Standard API error response
 interface ApiError {
@@ -133,15 +134,8 @@ export function withApiHandler(
 
       // Rate limiting (enabled by default)
       if (options.rateLimit !== false) {
-        const ip = request.headers.get('x-azure-clientip')
-          || (() => {
-            const xff = request.headers.get('x-forwarded-for');
-            if (!xff) return null;
-            const ips = xff.split(',').map(i => i.trim()).filter(i => /^[\d.:a-fA-F]{3,45}$/.test(i));
-            return ips[ips.length - 1] || null;
-          })()
-          || request.headers.get('x-real-ip')
-          || '127.0.0.1';
+        // SEC-FIX: Use shared getClientIpFromRequest for consistent IP extraction
+        const ip = getClientIpFromRequest(request);
         const path = new URL(request.url).pathname;
         const rl = await rateLimitMiddleware(ip, path);
 

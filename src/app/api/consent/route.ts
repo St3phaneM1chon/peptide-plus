@@ -26,6 +26,7 @@ import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { cookies } from 'next/headers';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,9 +66,7 @@ const memoryStore = new Map<string, ConsentRecord>();
 
 function getClientIp(request: NextRequest): string {
   return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    '127.0.0.1'
+    getClientIpFromRequest(request)
   );
 }
 
@@ -192,8 +191,7 @@ const consentSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit consent saves
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/consent');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

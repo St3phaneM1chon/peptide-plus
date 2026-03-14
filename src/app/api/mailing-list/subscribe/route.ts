@@ -9,6 +9,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import crypto from 'crypto';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Zod schema
@@ -24,9 +25,7 @@ const subscribeSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // FLAW-FIX: Rate limit newsletter signup - 5 per IP per hour (prevents spam/abuse)
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/newsletter');
     if (!rl.success) {
       const res = NextResponse.json(

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ── AdminNavSection ─────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ const safeUrlSchema = z.string().url().max(2000).refine(
       const parsed = new URL(val);
       return parsed.protocol === 'https:';
     } catch (error) {
-      console.error('[AdminNav] URL validation failed:', error);
+      logger.error('[AdminNav] URL validation failed', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   },

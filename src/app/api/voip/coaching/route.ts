@@ -31,6 +31,7 @@ import {
   raiseHand,
 } from '@/lib/voip/training-conference';
 import { AuditLogger } from '@/lib/voip/audit-log';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const auditLogger = new AuditLogger({ flushSize: 10, flushIntervalMs: 60_000 });
 
@@ -159,7 +160,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           action: 'call.listen',
           resource: 'CoachingSession',
           resourceId: body.sessionId,
-          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+          ipAddress: getClientIpFromRequest(request),
           userAgent: request.headers.get('user-agent') || undefined,
           result: result.status === 'ok' ? 'success' : 'failure',
           details: { action: 'start-call' },
@@ -211,7 +212,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           action: auditAction,
           resource: 'CoachingSession',
           resourceId: sessionId,
-          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+          ipAddress: getClientIpFromRequest(request),
           userAgent: request.headers.get('user-agent') || undefined,
           result: result.status === 'ok' ? 'success' : 'failure',
           details: { mode, supervisorPhone },

@@ -13,6 +13,7 @@ import { logger } from '@/lib/logger';
 import { createHash } from 'crypto';
 import { generateConsentPdf } from '@/lib/consent-pdf';
 import { sendConsentConfirmationEmail, sendConsentAdminNotification } from '@/lib/consent-email';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -93,9 +94,7 @@ export async function GET(_request: Request, context: RouteContext) {
 export async function POST(request: Request, context: RouteContext) {
   try {
     // Rate limit check
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    const clientIp = getClientIpFromRequest(request);
     if (!checkRateLimit(clientIp)) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
@@ -144,9 +143,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const now = new Date();
-    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    const ipAddress = getClientIpFromRequest(request);
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Generate tamper-detection hash

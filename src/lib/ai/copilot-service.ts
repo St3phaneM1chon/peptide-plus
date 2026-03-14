@@ -18,27 +18,31 @@ import { prisma } from '@/lib/db';
 
 type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
-let _anthropic: any | null = null;
-let _openai: any | null = null;
+// Lazy-loaded SDK instances typed with import type to avoid top-level init (KB-PP-BUILD-002)
+type AnthropicClient = import('@anthropic-ai/sdk').default;
+type OpenAIClient = import('openai').default;
+
+let _anthropic: AnthropicClient | null = null;
+let _openai: OpenAIClient | null = null;
 
 function usesClaude(): boolean {
   return !!process.env.ANTHROPIC_API_KEY;
 }
 
-async function getAnthropic() {
+async function getAnthropic(): Promise<AnthropicClient> {
   if (_anthropic) return _anthropic;
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
   _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   return _anthropic;
 }
 
-async function getOpenAI() {
+async function getOpenAI(): Promise<OpenAIClient> {
   if (_openai) return _openai;
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('No AI API key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.');
   }
-  const { default: OpenAIClient } = await import('openai');
-  _openai = new OpenAIClient({ apiKey: process.env.OPENAI_API_KEY });
+  const { default: OpenAISDK } = await import('openai');
+  _openai = new OpenAISDK({ apiKey: process.env.OPENAI_API_KEY });
   return _openai;
 }
 
@@ -63,10 +67,14 @@ async function aiComplete(
       max_tokens: maxTokens,
       temperature,
       system: systemMsg,
-      messages: nonSystemMsgs.map((m: ChatMessage) => ({ role: m.role, content: m.content })),
+      messages: nonSystemMsgs.map((m: ChatMessage) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
     });
 
-    return response.content[0]?.text || '';
+    const firstBlock = response.content[0];
+    return (firstBlock && 'text' in firstBlock ? firstBlock.text : '') || '';
   } else {
     const openai = await getOpenAI();
     const completion = await openai.chat.completions.create({

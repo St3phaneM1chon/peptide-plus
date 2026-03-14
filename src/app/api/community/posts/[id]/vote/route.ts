@@ -17,6 +17,7 @@ import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const voteSchema = z.object({
   value: z.union([z.literal(1), z.literal(-1)]),
@@ -31,9 +32,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { id: postId } = await context.params;
 
     // SEC-FIX: Rate limiting on voting to prevent abuse
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/community/vote');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });

@@ -16,6 +16,7 @@ import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const promoValidateSchema = z.object({
   code: z.string().min(1, 'Code promo requis').max(100),
@@ -29,9 +30,7 @@ const promoValidateSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // BE-SEC-02: Rate limit promo validation - 10 per IP per hour (prevents brute-force enumeration)
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/promo/validate');
     if (!rl.success) {
       const res = NextResponse.json(

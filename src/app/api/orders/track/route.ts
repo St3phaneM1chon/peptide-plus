@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Order Placed',
@@ -29,9 +30,7 @@ const STATUS_ORDER = [
 export async function GET(request: NextRequest) {
   try {
     // SEC-18: Rate limit order tracking requests
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/orders/track');
     if (!rl.success) {
       const res = NextResponse.json(

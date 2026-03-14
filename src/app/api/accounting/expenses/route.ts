@@ -11,6 +11,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 // FIX: F017 - Import consolidated schemas from validation.ts instead of duplicating
 import { createExpenseSchema, updateExpenseSchema, assertPeriodOpen } from '@/lib/accounting/validation';
 import { generateExpenseNumber } from '@/lib/accounting/sequence.service';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // Deductibility rules per category (Canadian tax rules)
@@ -184,8 +185,7 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/expenses');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -291,8 +291,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/expenses');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
@@ -424,8 +423,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
     // CSRF + Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/accounting/expenses');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

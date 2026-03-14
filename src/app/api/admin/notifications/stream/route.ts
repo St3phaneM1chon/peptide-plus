@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // NOTE: This SSE endpoint uses manual auth checks instead of withAdminGuard because
 // withAdminGuard sets rate-limit headers on the response and casts it to NextResponse,
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Rate limit: max concurrent SSE connections per IP
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const ip = getClientIpFromRequest(request);
   const currentCount = activeConnections.get(ip) || 0;
   if (currentCount >= MAX_CONCURRENT_SSE) {
     return new Response(JSON.stringify({ error: 'Too many concurrent SSE connections' }), {

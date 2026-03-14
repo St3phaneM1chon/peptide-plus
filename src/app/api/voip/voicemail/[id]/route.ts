@@ -8,11 +8,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { markVoicemailRead, archiveVoicemail } from '@/lib/voip/voicemail-engine';
 import { AuditLogger } from '@/lib/voip/audit-log';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const voicemailUpdateSchema = z.object({
   isRead: z.boolean().optional(),
@@ -54,7 +56,7 @@ export async function GET(
       action: 'voicemail.listen',
       resource: 'Voicemail',
       resourceId: id,
-      ipAddress: _request.headers.get('x-forwarded-for') || _request.headers.get('x-real-ip') || undefined,
+      ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
       result: 'success',
       details: {
@@ -65,7 +67,7 @@ export async function GET(
 
     return NextResponse.json({ data: voicemail });
   } catch (error) {
-    console.error('[voip/voicemail GET] Error:', error);
+    logger.error('[voip/voicemail GET] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -114,7 +116,7 @@ export async function PUT(
 
     return NextResponse.json({ data: voicemail });
   } catch (error) {
-    console.error('[voip/voicemail PUT] Error:', error);
+    logger.error('[voip/voicemail PUT] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -141,14 +143,14 @@ export async function DELETE(
       action: 'voicemail.delete',
       resource: 'Voicemail',
       resourceId: id,
-      ipAddress: _request.headers.get('x-forwarded-for') || _request.headers.get('x-real-ip') || undefined,
+      ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
       result: 'success',
     });
 
     return NextResponse.json({ status: 'deleted' });
   } catch (error) {
-    console.error('[voip/voicemail DELETE] Error:', error);
+    logger.error('[voip/voicemail DELETE] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

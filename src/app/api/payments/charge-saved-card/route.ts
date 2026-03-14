@@ -25,6 +25,7 @@ import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { add, toCents } from '@/lib/decimal-calculator';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const chargeSavedCardSchema = z.object({
   cardId: z.string().min(1, 'Card ID is required'),
@@ -53,9 +54,7 @@ function getStripeClient(): Stripe {
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting on saved card payment
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/payments/charge-saved-card');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

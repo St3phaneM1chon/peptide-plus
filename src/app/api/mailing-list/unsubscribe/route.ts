@@ -6,12 +6,9 @@ import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
-function getIp(request: Request): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-real-ip')
-    || 'unknown';
-}
+function getIp(request: Request): string { return getClientIpFromRequest(request); }
 
 function logUnsubscribe(subscriberId: string, email: string, ip: string, method: string) {
   logger.info('mailing_list_unsubscribed', {

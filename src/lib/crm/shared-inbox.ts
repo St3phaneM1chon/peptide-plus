@@ -35,10 +35,10 @@ export async function getSharedMailboxes(): Promise<SharedMailbox[]> {
     try {
       const parsed = JSON.parse(envMailboxes);
       if (Array.isArray(parsed)) {
-        return parsed.map((m: any) => ({
-          address: m.address || '',
-          name: m.name || m.address || '',
-          assignedTeam: Array.isArray(m.assignedTeam) ? m.assignedTeam : [],
+        return parsed.map((m: Record<string, unknown>) => ({
+          address: (m.address as string) || '',
+          name: (m.name as string) || (m.address as string) || '',
+          assignedTeam: Array.isArray(m.assignedTeam) ? (m.assignedTeam as string[]) : [],
         }));
       }
     } catch (error) {

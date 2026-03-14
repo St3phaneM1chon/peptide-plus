@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { checkPeriodLock } from '@/lib/accounting/period-close.service';
+import { logger } from '@/lib/logger';
 
 const receiptSchema = z.object({
   vendor: z.string().min(1).max(200),
@@ -79,7 +80,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    console.error('Error creating receipt entry:', error);
+    logger.error('[mobile/receipts] Error creating receipt entry', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur enregistrement reçu' }, { status: 500 });
   }
 });

@@ -29,13 +29,12 @@ import { logger } from '@/lib/logger';
 import { publishChatEvent } from '@/lib/chat/realtime';
 import type { ChatSender, ChatMessageType } from '@prisma/client';
 import { z } from 'zod';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function POST(request: NextRequest) {
   try {
     // BE-SEC-14: Rate limit chat messages - 20 per user/visitor per hour (prevents OpenAI cost explosion)
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
+    const ip = getClientIpFromRequest(request);
     const session = await auth();
     const rl = await rateLimitMiddleware(ip, '/api/chat/message', session?.user?.id);
     if (!rl.success) {
