@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Email requis').max(255),
@@ -24,7 +25,8 @@ const TOKEN_EXPIRY_HOURS = 1;
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit password reset requests
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rateLimit = await rateLimitMiddleware(ip, '/api/auth/forgot-password');
     if (!rateLimit.success) {
       return NextResponse.json(

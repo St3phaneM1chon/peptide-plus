@@ -15,6 +15,7 @@ import { handlers } from '@/lib/auth-config';
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 function fixAzureRequest(req: NextRequest): NextRequest {
   const xArrSsl = req.headers.get('x-arr-ssl');
@@ -65,9 +66,8 @@ export const POST = async (req: NextRequest) => {
     // This complements the per-email brute-force protection in auth-config.ts
     const pathname = req.nextUrl.pathname;
     if (pathname.includes('/callback/credentials') || pathname.includes('/signin')) {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || req.headers.get('x-real-ip')
-        || '127.0.0.1';
+      // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+      const ip = getClientIpFromRequest(req);
       const rl = await rateLimitMiddleware(ip, '/api/auth/login');
       if (!rl.success) {
         return NextResponse.json(

@@ -49,7 +49,7 @@ const DEFAULT_FIND_MANY_LIMIT = 200;
 
 const basePrisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
+  (new PrismaClient({
     log:
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
@@ -72,7 +72,7 @@ const basePrisma =
         },
       },
     },
-  });
+  }) as unknown as PrismaClient);
 
 export const prisma = basePrisma;
 

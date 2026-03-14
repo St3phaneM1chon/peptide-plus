@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const acceptTermsSchema = z.object({
   termsVersion: z.string().min(1, 'termsVersion is required').max(20),
@@ -24,8 +25,8 @@ const acceptTermsSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/auth/accept-terms');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

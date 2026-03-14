@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Schéma de validation NYDFS-compliant
 const signupSchema = z.object({
@@ -37,7 +38,8 @@ const signupSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit signup attempts
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rateLimit = await rateLimitMiddleware(ip, '/api/auth/register');
     if (!rateLimit.success) {
       return NextResponse.json(

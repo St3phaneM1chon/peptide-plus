@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 type AuthenticatorTransport = 'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb';
 
@@ -24,8 +25,8 @@ const webauthnAuthOptionsSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit WebAuthn authentication options requests
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/auth/login');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

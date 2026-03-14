@@ -23,9 +23,11 @@ interface TelnyxCallObject {
   answer: () => void;
   hangup: () => void;
   hold: (params?: { hold: boolean }) => void;
+  unhold: () => void;
   dtmf: (digit: string) => void;
   muteAudio: () => void;
   unmuteAudio: () => void;
+  transfer: (destination: string) => void;
   [key: string]: unknown;
 }
 
@@ -89,7 +91,8 @@ export function useTelnyxWebRTC(): UseTelnyxWebRTCReturn {
   const [call, setCall] = useState<TelnyxCallInfo>(INITIAL_CALL);
   const [error, setError] = useState<string | null>(null);
 
-  const clientRef = useRef<{ disconnect: () => void; connect: () => void; on: (event: string, handler: (...args: unknown[]) => void) => void; newCall: (params: Record<string, unknown>) => TelnyxCallObject; [key: string]: unknown } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TelnyxRTC SDK client has complex internal types from dynamic import
+  const clientRef = useRef<any>(null);
   const activeCallRef = useRef<TelnyxCallObject | null>(null);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
 

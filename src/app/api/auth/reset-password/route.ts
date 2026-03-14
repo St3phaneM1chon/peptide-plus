@@ -15,6 +15,7 @@ import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token requis').max(256),
@@ -31,7 +32,8 @@ const resetPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit password reset attempts
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rateLimit = await rateLimitMiddleware(ip, '/api/auth/reset-password');
     if (!rateLimit.success) {
       return NextResponse.json(

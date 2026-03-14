@@ -8,6 +8,7 @@ import { rpName, rpID } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 // CSRF EXCEPTION (audited 2026-02-24): WebAuthn routes do not require separate CSRF
 // protection. The WebAuthn protocol provides built-in challenge-response authentication:
@@ -17,8 +18,8 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit WebAuthn registration options requests
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip') || '127.0.0.1';
+    // SEC-FIX: Use rightmost XFF IP + Azure header to prevent rate-limit bypass via spoofed X-Forwarded-For
+    const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/auth/register');
     if (!rl.success) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });

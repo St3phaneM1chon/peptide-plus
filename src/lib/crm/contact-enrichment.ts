@@ -168,7 +168,17 @@ async function fetchPageContent(url: string): Promise<string | null> {
 async function extractStructuredData(
   content: string,
   context: string,
-): Promise<Record<string, unknown>> {
+): Promise<{
+  companyName?: string;
+  companySize?: string;
+  industry?: string;
+  description?: string;
+  technologies?: string[];
+  headquarters?: string;
+  foundedYear?: number;
+  revenue?: string;
+  socialProfiles?: Record<string, string>;
+}> {
   try {
     const openai = getOpenAI();
 

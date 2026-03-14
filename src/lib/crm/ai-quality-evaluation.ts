@@ -334,7 +334,7 @@ async function performAIEvaluation(params: {
   entityId: string;
   agentId: string;
   scorerId: string;
-  form: { id: string; criteria: any[] };
+  form: { id: string; criteria: { name: string; maxScore: number; weight?: number }[] };
   content: string;
   contentLabel: string;
 }): Promise<AutoQAResult> {
@@ -642,7 +642,7 @@ export async function identifyCoachingOpportunities(
     for (const [criterion, score] of Object.entries(scores)) {
       if (typeof score !== 'number') continue;
 
-      const formCriterion = form.criteria.find((c: any) => c.name === criterion);
+      const formCriterion = form.criteria.find((c: { name: string; maxScore: number }) => c.name === criterion);
       const maxScore = formCriterion ? Number(formCriterion.maxScore) : 10;
 
       const entry = criterionStats.get(criterion) ?? {
