@@ -120,6 +120,7 @@ export const PERMISSIONS = {
   'crm.campaigns.manage': 'Manage CRM campaigns',
   'crm.workflows.manage': 'Manage CRM workflows',
   'crm.reports.view': 'View CRM reports',
+  'crm.reports.edit': 'Manage CRM reports, commissions, and bonuses',
   'crm.compliance.manage': 'Manage CRM compliance (DNC, consent)',
   'crm.ai.use': 'Use CRM AI features',
   'crm.settings': 'Manage CRM settings',
@@ -185,7 +186,7 @@ export const PERMISSION_MODULES: Record<string, { label: string; permissions: Pe
       'crm.deals.view', 'crm.deals.create', 'crm.deals.edit', 'crm.deals.delete',
       'crm.contacts.view', 'crm.contacts.edit',
       'crm.pipelines.manage', 'crm.campaigns.view', 'crm.campaigns.manage',
-      'crm.workflows.manage', 'crm.reports.view', 'crm.compliance.manage', 'crm.ai.use', 'crm.settings',
+      'crm.workflows.manage', 'crm.reports.view', 'crm.reports.edit', 'crm.compliance.manage', 'crm.ai.use', 'crm.settings',
     ],
   },
   admin: {

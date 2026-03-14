@@ -109,6 +109,7 @@ export function seoMetaToHtml(meta: SEOMeta): string {
   if (meta.canonical) tags.push(`<link rel="canonical" href="${escapeHtml(meta.canonical)}" />`);
   // SECURITY: Escape '<' to prevent script tag injection (XSS) in JSON-LD.
   const safeJsonLd = JSON.stringify(meta.jsonLd).replace(/</g, '\\u003c');
+  // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
   tags.push(`<script type="application/ld+json">${safeJsonLd}</script>`);
 
   return tags.join('\n');

@@ -233,7 +233,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { params }: { se
     });
     return apiError('Failed to calculate commission', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { requiredPermission: 'crm.reports.view' });
+}, { requiredPermission: 'crm.reports.edit' });
 
 // ---------------------------------------------------------------------------
 // PATCH: Approve/reject a payout
@@ -297,4 +297,4 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     });
     return apiError('Failed to update commission payout', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { requiredPermission: 'crm.reports.view' });
+}, { requiredPermission: 'crm.reports.edit' });

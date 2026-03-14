@@ -24,7 +24,7 @@ export const EMPLOYEE_DEFAULT_PERMISSIONS: ReadonlySet<string> = new Set([
   'crm.deals.view', 'crm.deals.create', 'crm.deals.edit',
   'crm.contacts.view', 'crm.contacts.edit',
   'crm.campaigns.view',
-  'crm.reports.view',
+  'crm.reports.view', 'crm.reports.edit',
   'crm.ai.use',
 ]);
 

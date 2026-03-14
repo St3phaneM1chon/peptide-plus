@@ -101,7 +101,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { params }: { se
     });
     return apiError('Failed to create bonus tier', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { requiredPermission: 'crm.reports.view' });
+}, { requiredPermission: 'crm.reports.edit' });
 
 // ---------------------------------------------------------------------------
 // PATCH: Update a tier
@@ -151,7 +151,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { params }: { s
     });
     return apiError('Failed to update bonus tier', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { requiredPermission: 'crm.reports.view' });
+}, { requiredPermission: 'crm.reports.edit' });
 
 // ---------------------------------------------------------------------------
 // DELETE: Soft delete (set isActive=false)
@@ -185,4 +185,4 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { params }: { 
     });
     return apiError('Failed to deactivate bonus tier', ErrorCode.INTERNAL_ERROR, { request });
   }
-}, { requiredPermission: 'crm.reports.view' });
+}, { requiredPermission: 'crm.reports.edit' });
