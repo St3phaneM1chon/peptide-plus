@@ -44,15 +44,18 @@ export function Header() {
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/images/brand/signature-600x200.png"
+                src="/images/brand/logo-icon.png"
                 alt="BioCycle Peptides"
-                width={180}
-                height={60}
-                className="h-10 w-auto"
+                width={200}
+                height={200}
+                className="h-8 w-8"
                 priority
               />
+              <span className="font-heading text-base font-bold text-gray-900">
+                <span className="text-primary-600">Bio</span>Cycle
+              </span>
             </Link>
           </div>
 

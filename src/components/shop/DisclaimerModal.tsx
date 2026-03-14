@@ -93,11 +93,11 @@ export default function DisclaimerModal() {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
-            src="/images/brand/signature-600x200.png"
+            src="/images/brand/logo-icon.png"
             alt="BioCycle Peptides"
             width={200}
-            height={67}
-            className="h-12 w-auto"
+            height={200}
+            className="h-14 w-14"
           />
         </div>
 

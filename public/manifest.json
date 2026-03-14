@@ -1,11 +1,11 @@
 {
-  "name": "BioCycle CRM",
-  "short_name": "CRM",
-  "description": "BioCycle Peptides CRM - Customer Relationship Management",
-  "start_url": "/admin/crm",
+  "name": "BioCycle Peptides",
+  "short_name": "BioCycle",
+  "description": "BioCycle Peptides - Premium Research Peptides Canada",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#38A169",
+  "theme_color": "#238838",
   "orientation": "portrait-primary",
   "categories": ["business", "productivity"],
   "icons": [

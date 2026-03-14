@@ -592,10 +592,10 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
         <div className={`relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-700 ${ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <div className="mb-8">
             <Image
-              src="/images/brand/signature-1200x400.png"
+              src="/images/brand/logo-icon.png"
               alt="BioCycle Peptides"
-              width={320}
-              height={107}
+              width={200}
+              height={200}
               className="h-16 md:h-20 w-auto mx-auto brightness-0 invert"
             />
           </div>

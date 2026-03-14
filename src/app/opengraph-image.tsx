@@ -26,7 +26,7 @@ export default function OGImage() {
               width: '64px',
               height: '64px',
               borderRadius: '16px',
-              background: '#f97316',
+              background: '#238838',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -87,11 +87,11 @@ export default function OGImage() {
         >
           <div
             style={{
-              background: 'rgba(249,115,22,0.15)',
-              border: '1px solid rgba(249,115,22,0.3)',
+              background: 'rgba(35,136,56,0.15)',
+              border: '1px solid rgba(35,136,56,0.3)',
               borderRadius: '8px',
               padding: '8px 16px',
-              color: '#f97316',
+              color: '#238838',
               fontSize: '18px',
               fontWeight: 600,
             }}

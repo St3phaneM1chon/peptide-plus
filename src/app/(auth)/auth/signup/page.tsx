@@ -187,11 +187,11 @@ function SignUpContent() {
         <div className="text-center mb-8">
           <Link href="/" className="flex justify-center mb-8">
             <Image
-              src="/images/brand/signature-600x200.png"
+              src="/images/brand/logo-icon.png"
               alt="BioCycle Peptides"
-              width={220}
-              height={73}
-              className="h-14 w-auto"
+              width={200}
+              height={200}
+              className="h-16 w-16"
               priority
             />
           </Link>
