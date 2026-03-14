@@ -9,7 +9,7 @@ model Media {
   folder       String   @default("general")
   // TODO (F14): Add FK relation to User model for uploadedBy field
   // Requires coordinated migration: uploadedBy String? @db.VarChar(255)
-  // uploader User? @relation("MediaUploader", fields: [uploadedBy], references: [id])
+  // uploader User? @relation("MediaUploader", fields: [uploadedBy], references: [id], onDelete: Restrict)
   uploadedBy   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -503,7 +503,7 @@ model VideoRoom {
   name            String          @unique
   displayName     String
   createdById     String
-  createdBy       User            @relation("videoRoomsCreated", fields: [createdById], references: [id])
+  createdBy       User            @relation("videoRoomsCreated", fields: [createdById], references: [id], onDelete: Restrict)
   maxParticipants Int             @default(10)
   isRecording     Boolean         @default(false)
   egressId        String?
@@ -511,7 +511,7 @@ model VideoRoom {
   startedAt       DateTime        @default(now())
   endedAt         DateTime?
   recordingId     String?         @unique
-  recording       CallRecording?  @relation(fields: [recordingId], references: [id])
+  recording       CallRecording?  @relation(fields: [recordingId], references: [id], onDelete: SetNull)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 

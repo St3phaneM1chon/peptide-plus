@@ -42,7 +42,7 @@ model WorkflowRule {
 model ApprovalRequest {
   id              String        @id @default(cuid())
   workflowRuleId  String?
-  workflowRule    WorkflowRule? @relation(fields: [workflowRuleId], references: [id])
+  workflowRule    WorkflowRule? @relation(fields: [workflowRuleId], references: [id], onDelete: SetNull)
   entityType      String
   entityId        String
   entitySummary   String?
@@ -77,9 +77,9 @@ model CrmLead {
   score           Int             @default(0) // 0-100
   temperature     LeadTemperature @default(COLD)
   assignedToId    String?
-  assignedTo      User?           @relation("CrmLeadAssignee", fields: [assignedToId], references: [id])
+  assignedTo      User?           @relation("CrmLeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   convertedDealId String?         @unique
-  convertedDeal   CrmDeal?        @relation("ConvertedFromLead", fields: [convertedDealId], references: [id])
+  convertedDeal   CrmDeal?        @relation("ConvertedFromLead", fields: [convertedDealId], references: [id], onDelete: SetNull)
   tags            String[]        @default([])
   customFields    Json?
   lastContactedAt DateTime?
@@ -159,15 +159,15 @@ model CrmDeal {
   value             Decimal          @default(0)
   currency          String           @default("CAD")
   stageId           String
-  stage             CrmPipelineStage @relation("DealStage", fields: [stageId], references: [id])
+  stage             CrmPipelineStage @relation("DealStage", fields: [stageId], references: [id], onDelete: Restrict)
   pipelineId        String
-  pipeline          CrmPipeline      @relation(fields: [pipelineId], references: [id])
+  pipeline          CrmPipeline      @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
   leadId            String?
-  lead              CrmLead?         @relation("LeadDeals", fields: [leadId], references: [id])
+  lead              CrmLead?         @relation("LeadDeals", fields: [leadId], references: [id], onDelete: SetNull)
   contactId         String?
-  contact           User?            @relation("CrmDealContact", fields: [contactId], references: [id])
+  contact           User?            @relation("CrmDealContact", fields: [contactId], references: [id], onDelete: SetNull)
   assignedToId      String
-  assignedTo        User             @relation("CrmDealAssignee", fields: [assignedToId], references: [id])
+  assignedTo        User             @relation("CrmDealAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
   expectedCloseDate DateTime?
   actualCloseDate   DateTime?
   lostReason        String?
@@ -214,7 +214,7 @@ model CrmDealProduct {
   dealId    String
   deal      CrmDeal  @relation(fields: [dealId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
   quantity  Int      @default(1)
   unitPrice Decimal  @db.Decimal(10, 2)
   discount  Decimal  @default(0) @db.Decimal(5, 2) // percentage
@@ -234,11 +234,11 @@ model CrmDealStageHistory {
   dealId      String
   deal        CrmDeal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
   fromStageId String?
-  fromStage   CrmPipelineStage? @relation("StageHistoryFrom", fields: [fromStageId], references: [id])
+  fromStage   CrmPipelineStage? @relation("StageHistoryFrom", fields: [fromStageId], references: [id], onDelete: SetNull)
   toStageId   String
-  toStage     CrmPipelineStage @relation("StageHistoryTo", fields: [toStageId], references: [id])
+  toStage     CrmPipelineStage @relation("StageHistoryTo", fields: [toStageId], references: [id], onDelete: Restrict)
   changedById String
-  changedBy   User             @relation("CrmDealStageChanger", fields: [changedById], references: [id])
+  changedBy   User             @relation("CrmDealStageChanger", fields: [changedById], references: [id], onDelete: Restrict)
   duration    Int              @default(0) // seconds in previous stage
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -261,13 +261,13 @@ model CrmTask {
   dueAt        DateTime?
   completedAt  DateTime?
   assignedToId String
-  assignedTo   User            @relation("CrmTaskAssignee", fields: [assignedToId], references: [id])
+  assignedTo   User            @relation("CrmTaskAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
   dealId       String?
-  deal         CrmDeal?        @relation("CrmTaskDeal", fields: [dealId], references: [id])
+  deal         CrmDeal?        @relation("CrmTaskDeal", fields: [dealId], references: [id], onDelete: SetNull)
   leadId       String?
-  lead         CrmLead?        @relation("CrmTaskLead", fields: [leadId], references: [id])
+  lead         CrmLead?        @relation("CrmTaskLead", fields: [leadId], references: [id], onDelete: SetNull)
   contactId    String?
-  contact      User?           @relation("CrmTaskContact", fields: [contactId], references: [id])
+  contact      User?           @relation("CrmTaskContact", fields: [contactId], references: [id], onDelete: SetNull)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
@@ -286,13 +286,13 @@ model CrmActivity {
   description   String?
   metadata      Json?
   dealId        String?
-  deal          CrmDeal?        @relation("CrmActivityDeal", fields: [dealId], references: [id])
+  deal          CrmDeal?        @relation("CrmActivityDeal", fields: [dealId], references: [id], onDelete: SetNull)
   leadId        String?
-  lead          CrmLead?        @relation("CrmActivityLead", fields: [leadId], references: [id])
+  lead          CrmLead?        @relation("CrmActivityLead", fields: [leadId], references: [id], onDelete: SetNull)
   contactId     String?
-  contact       User?           @relation("CrmActivityContact", fields: [contactId], references: [id])
+  contact       User?           @relation("CrmActivityContact", fields: [contactId], references: [id], onDelete: SetNull)
   performedById String?
-  performedBy   User?           @relation("CrmActivityPerformer", fields: [performedById], references: [id])
+  performedBy   User?           @relation("CrmActivityPerformer", fields: [performedById], references: [id], onDelete: SetNull)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
@@ -311,11 +311,11 @@ model InboxConversation {
   status        InboxStatus  @default(OPEN)
   subject       String?
   contactId     String?
-  contact       User?        @relation("InboxContact", fields: [contactId], references: [id])
+  contact       User?        @relation("InboxContact", fields: [contactId], references: [id], onDelete: SetNull)
   leadId        String?
-  lead          CrmLead?     @relation("InboxConversationLead", fields: [leadId], references: [id])
+  lead          CrmLead?     @relation("InboxConversationLead", fields: [leadId], references: [id], onDelete: SetNull)
   assignedToId  String?
-  assignedTo    User?        @relation("InboxAssignee", fields: [assignedToId], references: [id])
+  assignedTo    User?        @relation("InboxAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   slaDeadline   DateTime?
   lastMessageAt DateTime?
   createdAt     DateTime     @default(now())
@@ -368,7 +368,7 @@ model SlaPolicy {
 model AgentDailyStats {
   id            String   @id @default(cuid())
   agentId       String
-  agent         User     @relation("AgentDailyStatsAgent", fields: [agentId], references: [id])
+  agent         User     @relation("AgentDailyStatsAgent", fields: [agentId], references: [id], onDelete: Restrict)
   date          DateTime @db.Date
   callsMade     Int      @default(0)
   callsReceived Int      @default(0)
@@ -399,7 +399,7 @@ model CrmWorkflow {
   triggerType WorkflowTriggerType
   triggerConfig Json?             // e.g. { stageId: "...", threshold: 70 }
   createdById String
-  createdBy   User                @relation("CrmWorkflowCreator", fields: [createdById], references: [id])
+  createdBy   User                @relation("CrmWorkflowCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -459,7 +459,7 @@ model CrmCampaign {
   startAt         DateTime?
   endAt           DateTime?
   createdById     String
-  createdBy       User            @relation("CrmCampaignCreator", fields: [createdById], references: [id])
+  createdBy       User            @relation("CrmCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
   // Stats
   totalLeads      Int             @default(0)
   contacted       Int             @default(0)
@@ -556,7 +556,7 @@ model CallingRule {
 model CrmQuota {
   id        String   @id @default(cuid())
   agentId   String
-  agent     User     @relation("CrmQuotaAgent", fields: [agentId], references: [id])
+  agent     User     @relation("CrmQuotaAgent", fields: [agentId], references: [id], onDelete: Restrict)
   period    String   // 'daily' | 'weekly' | 'monthly' | 'quarterly'
   periodStart DateTime
   periodEnd   DateTime
@@ -582,7 +582,7 @@ model CrmScheduledReport {
   nextSendAt  DateTime?
   isActive    Boolean  @default(true)
   createdById String
-  createdBy   User     @relation("CrmScheduledReportCreator", fields: [createdById], references: [id])
+  createdBy   User     @relation("CrmScheduledReportCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -602,7 +602,7 @@ model CrmLeadForm {
   isActive    Boolean  @default(true)
   submissions Int      @default(0)
   createdById String
-  createdBy   User     @relation("CrmLeadFormCreator", fields: [createdById], references: [id])
+  createdBy   User     @relation("CrmLeadFormCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -620,7 +620,7 @@ model CrmSnippet {
   shortcut    String?  // e.g. /greet, /close
   isActive    Boolean  @default(true)
   createdById String
-  createdBy   User     @relation("CrmSnippetCreator", fields: [createdById], references: [id])
+  createdBy   User     @relation("CrmSnippetCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -635,7 +635,7 @@ model CrmQuote {
   id          String         @id @default(cuid())
   number      String         @unique // QUO-001
   dealId      String
-  deal        CrmDeal        @relation(fields: [dealId], references: [id])
+  deal        CrmDeal        @relation(fields: [dealId], references: [id], onDelete: Restrict)
   status      CrmQuoteStatus @default(DRAFT)
   currency    String         @default("CAD")
   subtotal    Decimal        @default(0) @db.Decimal(12, 2)
@@ -650,7 +650,7 @@ model CrmQuote {
   notes       String?
   terms       String?        // terms & conditions
   createdById String
-  createdBy   User           @relation("CrmQuoteCreator", fields: [createdById], references: [id])
+  createdBy   User           @relation("CrmQuoteCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -667,7 +667,7 @@ model CrmQuoteItem {
   quoteId     String
   quote       CrmQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   productId   String?
-  product     Product? @relation(fields: [productId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   description String
   quantity    Int      @default(1)
   unitPrice   Decimal  @db.Decimal(10, 2)
@@ -689,9 +689,9 @@ model CrmApproval {
   reason        String?
   status        ApprovalStatus @default(PENDING)
   requestedById String
-  requestedBy   User           @relation("CrmApprovalRequester", fields: [requestedById], references: [id])
+  requestedBy   User           @relation("CrmApprovalRequester", fields: [requestedById], references: [id], onDelete: Restrict)
   approverId    String?
-  approver      User?          @relation("CrmApprovalApprover", fields: [approverId], references: [id])
+  approver      User?          @relation("CrmApprovalApprover", fields: [approverId], references: [id], onDelete: SetNull)
   approvedAt    DateTime?
   rejectedAt    DateTime?
   rejectionNote String?
@@ -708,7 +708,7 @@ model CrmApproval {
 model AgentSchedule {
   id        String         @id @default(cuid())
   agentId   String
-  agent     User           @relation("AgentScheduleAgent", fields: [agentId], references: [id])
+  agent     User           @relation("AgentScheduleAgent", fields: [agentId], references: [id], onDelete: Restrict)
   date      DateTime       @db.Date
   shiftType AgentShiftType @default(MORNING)
   startTime String         // "09:00"
@@ -745,9 +745,9 @@ model CrmQaScore {
   formId     String
   form       CrmQaForm @relation(fields: [formId], references: [id], onDelete: Cascade)
   agentId    String
-  agent      User      @relation("CrmQaScoreAgent", fields: [agentId], references: [id])
+  agent      User      @relation("CrmQaScoreAgent", fields: [agentId], references: [id], onDelete: Restrict)
   scoredById String
-  scoredBy   User      @relation("CrmQaScoredBy", fields: [scoredById], references: [id])
+  scoredBy   User      @relation("CrmQaScoredBy", fields: [scoredById], references: [id], onDelete: Restrict)
   callLogId  String?
   scores     Json      // { criterionName: score }
   totalScore Decimal   @db.Decimal(5, 2)
@@ -767,7 +767,7 @@ model CrmQaScore {
 model AgentBreak {
   id        String         @id @default(cuid())
   agentId   String
-  agent     User           @relation("AgentBreakAgent", fields: [agentId], references: [id])
+  agent     User           @relation("AgentBreakAgent", fields: [agentId], references: [id], onDelete: Restrict)
   type      AgentBreakType @default(SHORT_BREAK)
   startedAt DateTime       @default(now())
   endedAt   DateTime?
@@ -894,7 +894,7 @@ model KBArticle {
   content     String          @db.Text
   excerpt     String?
   categoryId  String?
-  category    KBCategory?     @relation(fields: [categoryId], references: [id])
+  category    KBCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   status      KBArticleStatus @default(DRAFT)
   authorId    String?
   viewCount   Int             @default(0)
@@ -919,7 +919,7 @@ model KBCategory {
   slug        String    @unique
   description String?
   parentId    String?
-  parent      KBCategory? @relation("KBCategoryHierarchy", fields: [parentId], references: [id])
+  parent      KBCategory? @relation("KBCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children    KBCategory[] @relation("KBCategoryHierarchy")
   position    Int       @default(0)
   createdAt   DateTime  @default(now())
@@ -1012,7 +1012,7 @@ model ProspectList {
 
   // Relations
   createdById      String
-  createdBy        User                @relation("ProspectListCreator", fields: [createdById], references: [id])
+  createdBy        User                @relation("ProspectListCreator", fields: [createdById], references: [id], onDelete: Restrict)
   prospects        Prospect[]
   scrapeJobs       ScrapeJob[]
 
@@ -1076,12 +1076,12 @@ model Prospect {
   // Status & dedup
   status           ProspectStatus  @default(NEW)
   duplicateOfId    String?
-  duplicateOf      Prospect?       @relation("ProspectDuplicates", fields: [duplicateOfId], references: [id])
+  duplicateOf      Prospect?       @relation("ProspectDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
   duplicates       Prospect[]      @relation("ProspectDuplicates")
 
   // Integration CRM
   convertedLeadId  String?         @unique
-  convertedLead    CrmLead?        @relation("ProspectToLead", fields: [convertedLeadId], references: [id])
+  convertedLead    CrmLead?        @relation("ProspectToLead", fields: [convertedLeadId], references: [id], onDelete: SetNull)
 
   // List membership
   listId           String
@@ -1115,7 +1115,7 @@ model ScrapeJob {
   progress       Int           @default(0) // 0-100
 
   prospectListId String?
-  prospectList   ProspectList? @relation(fields: [prospectListId], references: [id])
+  prospectList   ProspectList? @relation(fields: [prospectListId], references: [id], onDelete: SetNull)
 
   startedAt      DateTime?
   completedAt    DateTime?
@@ -1123,7 +1123,7 @@ model ScrapeJob {
   updatedAt      DateTime      @updatedAt
 
   createdById    String?
-  createdBy      User?         @relation("ScrapeJobCreator", fields: [createdById], references: [id])
+  createdBy      User?         @relation("ScrapeJobCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([createdById])
@@ -1154,10 +1154,10 @@ model RepFollowUpSchedule {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  agent          User           @relation("RepFollowUpAgent", fields: [agentId], references: [id])
-  lead           CrmLead?       @relation("CrmLeadFollowUps", fields: [leadId], references: [id])
-  deal           CrmDeal?       @relation("CrmDealFollowUps", fields: [dealId], references: [id])
-  customer       User?          @relation("RepFollowUpCustomer", fields: [customerId], references: [id])
+  agent          User           @relation("RepFollowUpAgent", fields: [agentId], references: [id], onDelete: Restrict)
+  lead           CrmLead?       @relation("CrmLeadFollowUps", fields: [leadId], references: [id], onDelete: SetNull)
+  deal           CrmDeal?       @relation("CrmDealFollowUps", fields: [dealId], references: [id], onDelete: SetNull)
+  customer       User?          @relation("RepFollowUpCustomer", fields: [customerId], references: [id], onDelete: SetNull)
 
   @@index([agentId, status])
   @@index([scheduledDate])
@@ -1259,9 +1259,9 @@ model CommissionPayout {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  agent                 User         @relation("RepCommissionAgent", fields: [agentId], references: [id])
-  tier                  RepBonusTier @relation(fields: [tierId], references: [id])
-  approvedBy            User?        @relation("RepCommissionApprover", fields: [approvedById], references: [id])
+  agent                 User         @relation("RepCommissionAgent", fields: [agentId], references: [id], onDelete: Restrict)
+  tier                  RepBonusTier @relation(fields: [tierId], references: [id], onDelete: Restrict)
+  approvedBy            User?        @relation("RepCommissionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([agentId, periodStart])
   @@index([status])

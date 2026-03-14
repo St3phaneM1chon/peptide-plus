@@ -214,7 +214,7 @@ model ChartOfAccount {
   isContra           Boolean          @default(false)
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
-  parent             ChartOfAccount?  @relation("ChartOfAccountToChartOfAccount", fields: [parentId], references: [id])
+  parent             ChartOfAccount?  @relation("ChartOfAccountToChartOfAccount", fields: [parentId], references: [id], onDelete: SetNull)
   children           ChartOfAccount[] @relation("ChartOfAccountToChartOfAccount")
   journalLines       JournalLine[]
   fixedAssets        FixedAsset[]     @relation("AssetAccount")
@@ -254,7 +254,7 @@ model CreditNote {
   updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
   taxPst           Decimal          @default(0) @db.Decimal(12, 2)
-  invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id])
+  invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([invoiceId])
@@ -349,7 +349,7 @@ model Expense {
   // Categorization
   category          String // meals, travel, office, professional, advertising, etc.
   accountId         String?
-  account           ChartOfAccount? @relation("expenseAccount", fields: [accountId], references: [id])
+  account           ChartOfAccount? @relation("expenseAccount", fields: [accountId], references: [id], onDelete: SetNull)
   deductiblePercent Int             @default(100) // 100, 50, or 0
 
   // Vendor
@@ -706,7 +706,7 @@ model BankRule {
 
   // Actions
   accountId   String?
-  account     ChartOfAccount? @relation("bankRuleAccount", fields: [accountId], references: [id])
+  account     ChartOfAccount? @relation("bankRuleAccount", fields: [accountId], references: [id], onDelete: SetNull)
   categoryTag String?
   taxCode     String? // GST, QST, HST, EXEMPT, ZERO_RATED
   description String? // Override description
@@ -931,8 +931,8 @@ model PayrollEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
-  employee   Employee   @relation(fields: [employeeId], references: [id])
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Restrict)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Restrict)
 
   @@index([payrollRunId])
   @@index([employeeId])
@@ -954,7 +954,7 @@ model PayStub {
   pdfUrl           String?  // Generated PDF URL
   createdAt        DateTime @default(now())
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
 
   @@index([employeeId])
   @@index([periodStart, periodEnd])
@@ -1101,7 +1101,7 @@ model ProjectCostEntry {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  project CostProject @relation(fields: [projectId], references: [id])
+  project CostProject @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   @@index([projectId])
   @@index([type])
@@ -1127,7 +1127,7 @@ model ProjectMilestone {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  project CostProject @relation(fields: [projectId], references: [id])
+  project CostProject @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   @@index([projectId])
   @@index([status])
@@ -1181,7 +1181,7 @@ model LegalEntity {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  parentEntity        LegalEntity?              @relation("EntityHierarchy", fields: [parentEntityId], references: [id])
+  parentEntity        LegalEntity?              @relation("EntityHierarchy", fields: [parentEntityId], references: [id], onDelete: SetNull)
   childEntities       LegalEntity[]             @relation("EntityHierarchy")
   intercoTransactions IntercompanyTransaction[] @relation("IntercoFrom")
   intercoReceived     IntercompanyTransaction[] @relation("IntercoTo")
@@ -1208,8 +1208,8 @@ model IntercompanyTransaction {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  fromEntity LegalEntity @relation("IntercoFrom", fields: [fromEntityId], references: [id])
-  toEntity   LegalEntity @relation("IntercoTo", fields: [toEntityId], references: [id])
+  fromEntity LegalEntity @relation("IntercoFrom", fields: [fromEntityId], references: [id], onDelete: Restrict)
+  toEntity   LegalEntity @relation("IntercoTo", fields: [toEntityId], references: [id], onDelete: Restrict)
 
   @@index([fromEntityId])
   @@index([toEntityId])

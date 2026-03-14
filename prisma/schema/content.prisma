@@ -571,7 +571,7 @@ model ForumReply {
   // FIX A1-P0-004: Preserve forum replies when user is deleted
   author        User         @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   post          ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parentReply   ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  parentReply   ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id], onDelete: SetNull)
   childReplies  ForumReply[] @relation("ReplyToReply")
   votes         ForumVote[]  @relation("ReplyVotes")
 

@@ -76,7 +76,7 @@ model Category {
   parentId     String?
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
-  parent       Category?             @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  parent       Category?             @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children     Category[]            @relation("CategoryHierarchy")
   translations CategoryTranslation[]
   products     Product[]
@@ -265,8 +265,8 @@ model GiftCard {
   redeemedBy            String?
   stripePaymentIntentId String?   @unique // BUG E-21: Track payment intent to prevent double-use
   createdAt             DateTime  @default(now())
-  purchaser             User?     @relation("GiftCard_purchaserIdToUser", fields: [purchaserId], references: [id])
-  redeemer              User?     @relation("GiftCard_redeemedByToUser", fields: [redeemedBy], references: [id])
+  purchaser             User?     @relation("GiftCard_purchaserIdToUser", fields: [purchaserId], references: [id], onDelete: SetNull)
+  redeemer              User?     @relation("GiftCard_redeemedByToUser", fields: [redeemedBy], references: [id], onDelete: SetNull)
 
   @@index([code])
   @@index([purchaserId])
@@ -381,7 +381,7 @@ model Order {
   idempotencyKey        String?         @unique
   user                  User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
   currency              Currency        @relation(fields: [currencyId], references: [id], onDelete: Restrict)
-  parentOrder           Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
+  parentOrder           Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id], onDelete: SetNull)
   replacementOrders     Order[]         @relation("OrderToOrder")
   billingName           String?
   billingAddress1       String?
@@ -861,7 +861,7 @@ model Purchase {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   courseAccess    CourseAccess?
-  company         Company?       @relation(fields: [companyId], references: [id])
+  company         Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
   product         Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
   user            User           @relation(fields: [userId], references: [id], onDelete: Restrict)
   shipping        Shipping?

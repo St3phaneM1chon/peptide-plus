@@ -13,7 +13,7 @@ model Ambassador {
   joinedAt       DateTime               @default(now())
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
-  user           User?                  @relation(fields: [userId], references: [id])
+  user           User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   commissions    AmbassadorCommission[]
   payouts        AmbassadorPayout[]
 
@@ -38,7 +38,7 @@ model AmbassadorCommission {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   ambassador       Ambassador        @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
-  payout           AmbassadorPayout? @relation(fields: [payoutId], references: [id])
+  payout           AmbassadorPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
 
   @@unique([ambassadorId, orderId])
   @@index([ambassadorId])

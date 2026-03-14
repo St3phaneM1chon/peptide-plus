@@ -596,7 +596,7 @@ model ApiUsageLog {
   userAgent  String?
   createdAt  DateTime @default(now())
 
-  apiKey ApiKey @relation(fields: [apiKeyId], references: [id])
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Restrict)
 
   @@index([apiKeyId])
   @@index([endpoint])

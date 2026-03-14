@@ -78,7 +78,7 @@ model Conversation {
   unreadCount   Int                @default(1)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
-  assignedTo    User?              @relation("Conversation_assignedToIdToUser", fields: [assignedToId], references: [id])
+  assignedTo    User?              @relation("Conversation_assignedToIdToUser", fields: [assignedToId], references: [id], onDelete: SetNull)
   // FIX A1-P0-005: Preserve conversation history when user is deleted
   user          User               @relation("Conversation_userIdToUser", fields: [userId], references: [id], onDelete: Restrict)
   messages      Message[]
@@ -613,7 +613,7 @@ model VoipConnection {
 
   // Audit
   configuredById String?
-  configuredBy   User?    @relation("VoipConfiguredBy", fields: [configuredById], references: [id])
+  configuredBy   User?    @relation("VoipConfiguredBy", fields: [configuredById], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -629,7 +629,7 @@ model VoipConnection {
 model PhoneNumber {
   id           String          @id @default(cuid())
   connectionId String
-  connection   VoipConnection  @relation(fields: [connectionId], references: [id])
+  connection   VoipConnection  @relation(fields: [connectionId], references: [id], onDelete: Restrict)
 
   number       String          @unique // "+15145551234" E.164 format
   displayName  String? // "Support BioCycle"
@@ -646,7 +646,7 @@ model PhoneNumber {
 
   // Tenant ownership
   companyId    String?
-  company      Company?        @relation("CompanyPhoneNumbers", fields: [companyId], references: [id])
+  company      Company?        @relation("CompanyPhoneNumbers", fields: [companyId], references: [id], onDelete: SetNull)
 
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
@@ -664,7 +664,7 @@ model PhoneNumber {
 model SipExtension {
   id             String      @id @default(cuid())
   userId         String
-  user           User        @relation("UserExtension", fields: [userId], references: [id])
+  user           User        @relation("UserExtension", fields: [userId], references: [id], onDelete: Restrict)
 
   extension      String      @unique // "1001", "1002"
   sipUsername    String // encrypted
@@ -682,7 +682,7 @@ model SipExtension {
 
   // Tenant ownership
   companyId      String?
-  company        Company?    @relation("CompanySipExtensions", fields: [companyId], references: [id])
+  company        Company?    @relation("CompanySipExtensions", fields: [companyId], references: [id], onDelete: SetNull)
 
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -705,7 +705,7 @@ model CallLog {
   // Call identification
   pbxUuid        String?         @unique // FreeSWITCH UUID
   connectionId   String?
-  connection     VoipConnection? @relation(fields: [connectionId], references: [id])
+  connection     VoipConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
 
   // Participants
   callerNumber   String // "+15145551234"
@@ -715,9 +715,9 @@ model CallLog {
 
   // Routing
   phoneNumberId  String?
-  phoneNumber    PhoneNumber?    @relation(fields: [phoneNumberId], references: [id])
+  phoneNumber    PhoneNumber?    @relation(fields: [phoneNumberId], references: [id], onDelete: SetNull)
   agentId        String?
-  agent          SipExtension?   @relation("AgentCalls", fields: [agentId], references: [id])
+  agent          SipExtension?   @relation("AgentCalls", fields: [agentId], references: [id], onDelete: SetNull)
   queue          String? // Queue name if routed via queue
   ivr            String? // IVR name if passed through IVR
 
@@ -735,9 +735,9 @@ model CallLog {
 
   // CRM linking
   clientId       String?
-  client         User?           @relation("ClientCalls", fields: [clientId], references: [id])
+  client         User?           @relation("ClientCalls", fields: [clientId], references: [id], onDelete: SetNull)
   companyId      String?
-  company        Company?        @relation("CompanyCalls", fields: [companyId], references: [id])
+  company        Company?        @relation("CompanyCalls", fields: [companyId], references: [id], onDelete: SetNull)
 
   // Notes
   agentNotes     String?
@@ -770,7 +770,7 @@ model CallLog {
 model CallRecording {
   id              String   @id @default(cuid())
   callLogId       String?  @unique
-  callLog         CallLog? @relation(fields: [callLogId], references: [id])
+  callLog         CallLog? @relation(fields: [callLogId], references: [id], onDelete: SetNull)
 
   // Storage
   blobUrl         String? // Azure Blob URL
@@ -807,9 +807,9 @@ model CallRecording {
 model CallTranscription {
   id             String         @id @default(cuid())
   callLogId      String         @unique
-  callLog        CallLog        @relation(fields: [callLogId], references: [id])
+  callLog        CallLog        @relation(fields: [callLogId], references: [id], onDelete: Restrict)
   recordingId    String?        @unique
-  recording      CallRecording? @relation(fields: [recordingId], references: [id])
+  recording      CallRecording? @relation(fields: [recordingId], references: [id], onDelete: SetNull)
 
   // Content
   fullText       String // Complete transcription
@@ -837,7 +837,7 @@ model CallTranscription {
 model CallSurvey {
   id           String    @id @default(cuid())
   callLogId    String    @unique
-  callLog      CallLog   @relation(fields: [callLogId], references: [id])
+  callLog      CallLog   @relation(fields: [callLogId], references: [id], onDelete: Restrict)
 
   // Scores (1-5)
   overallScore Int? // "Comment evaluez-vous le service?"
@@ -857,7 +857,7 @@ model Voicemail {
   id            String        @id @default(cuid())
 
   extensionId   String
-  extension     SipExtension  @relation(fields: [extensionId], references: [id])
+  extension     SipExtension  @relation(fields: [extensionId], references: [id], onDelete: Restrict)
 
   callerNumber  String
   callerName    String?
@@ -872,7 +872,7 @@ model Voicemail {
 
   // CRM linking
   clientId      String?
-  client        User?         @relation("ClientVoicemails", fields: [clientId], references: [id])
+  client        User?         @relation("ClientVoicemails", fields: [clientId], references: [id], onDelete: SetNull)
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -888,7 +888,7 @@ model Voicemail {
 model DialerCampaign {
   id           String         @id @default(cuid())
   companyId    String
-  company      Company        @relation("CompanyCampaigns", fields: [companyId], references: [id])
+  company      Company        @relation("CompanyCampaigns", fields: [companyId], references: [id], onDelete: Restrict)
 
   name         String
   description  String?
@@ -940,7 +940,7 @@ model DialerListEntry {
 
   // CRM bridge
   crmLeadId    String?
-  crmLead      CrmLead?        @relation("DialerListLead", fields: [crmLeadId], references: [id])
+  crmLead      CrmLead?        @relation("DialerListLead", fields: [crmLeadId], references: [id], onDelete: SetNull)
 
   // State
   isCalled     Boolean         @default(false)
@@ -972,7 +972,7 @@ model DialerDisposition {
   listEntryId  String                @unique
   listEntry    DialerListEntry       @relation(fields: [listEntryId], references: [id], onDelete: Cascade)
   callLogId    String?               @unique
-  callLog      CallLog?              @relation(fields: [callLogId], references: [id])
+  callLog      CallLog?              @relation(fields: [callLogId], references: [id], onDelete: SetNull)
 
   type         DialerDispositionType
   notes        String?
@@ -1004,7 +1004,7 @@ model DnclEntry {
 model DialerScript {
   id          String   @id @default(cuid())
   companyId   String
-  company     Company  @relation("CompanyDialerScripts", fields: [companyId], references: [id])
+  company     Company  @relation("CompanyDialerScripts", fields: [companyId], references: [id], onDelete: Restrict)
   name        String
   content     String   // Rich text / markdown script body
   category    String?  // "sales", "support", "survey"
@@ -1020,7 +1020,7 @@ model DialerScript {
 model CallQueue {
   id           String           @id @default(cuid())
   companyId    String
-  company      Company          @relation("CompanyQueues", fields: [companyId], references: [id])
+  company      Company          @relation("CompanyQueues", fields: [companyId], references: [id], onDelete: Restrict)
 
   name         String           // "Sales", "Support", "Formation"
   strategy     QueueStrategy    @default(RING_ALL)
@@ -1056,7 +1056,7 @@ model CallQueueMember {
   queueId     String
   queue       CallQueue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
   userId      String
-  user        User         @relation("QueueAgent", fields: [userId], references: [id])
+  user        User         @relation("QueueAgent", fields: [userId], references: [id], onDelete: Restrict)
 
   priority    Int          @default(0)  // Lower = higher priority
   penalty     Int          @default(0)  // Weighted routing
@@ -1071,7 +1071,7 @@ model CallQueueMember {
 model IvrMenu {
   id           String        @id @default(cuid())
   companyId    String
-  company      Company       @relation("CompanyIvrMenus", fields: [companyId], references: [id])
+  company      Company       @relation("CompanyIvrMenus", fields: [companyId], references: [id], onDelete: Restrict)
 
   name         String        // "Main Menu", "After Hours"
   description  String?
@@ -1130,7 +1130,7 @@ model IvrMenuOption {
 model PresenceStatus {
   id          String      @id @default(cuid())
   userId      String
-  user        User        @relation("UserPresence", fields: [userId], references: [id])
+  user        User        @relation("UserPresence", fields: [userId], references: [id], onDelete: Restrict)
 
   status      AgentStatus @default(OFFLINE)
   statusText  String?     // "En reunion", "Pause diner"
@@ -1155,18 +1155,18 @@ model PresenceStatus {
 model CoachingSession {
   id           String                @id @default(cuid())
   companyId    String
-  company      Company               @relation("CompanyCoaching", fields: [companyId], references: [id])
+  company      Company               @relation("CompanyCoaching", fields: [companyId], references: [id], onDelete: Restrict)
 
   coachId      String
-  coach        User                  @relation("CoachingCoach", fields: [coachId], references: [id])
+  coach        User                  @relation("CoachingCoach", fields: [coachId], references: [id], onDelete: Restrict)
   studentId    String
-  student      User                  @relation("CoachingStudent", fields: [studentId], references: [id])
+  student      User                  @relation("CoachingStudent", fields: [studentId], references: [id], onDelete: Restrict)
   supervisorId String?
-  supervisor   User?                 @relation("CoachingSupervisor", fields: [supervisorId], references: [id])
+  supervisor   User?                 @relation("CoachingSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
 
   // Call reference (one-to-one with CallLog)
   callLogId    String?               @unique
-  callLog      CallLog?              @relation(fields: [callLogId], references: [id])
+  callLog      CallLog?              @relation(fields: [callLogId], references: [id], onDelete: SetNull)
 
   // Session info
   status       CoachingSessionStatus @default(SCHEDULED)
@@ -1225,7 +1225,7 @@ model SmsLog {
   sentAt    DateTime @default(now())
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([to])
@@ -1240,7 +1240,7 @@ model SmsCampaign {
   name             String
   status           SmsCampaignStatus   @default(DRAFT)
   templateId       String?
-  template         SmsTemplate?        @relation(fields: [templateId], references: [id])
+  template         SmsTemplate?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
   message          String?
   segmentCriteria  Json?
   scheduledAt      DateTime?
@@ -1252,7 +1252,7 @@ model SmsCampaign {
   failed           Int                 @default(0)
   optedOut         Int                 @default(0)
   createdById      String
-  createdBy        User                @relation("SmsCampaignCreator", fields: [createdById], references: [id])
+  createdBy        User                @relation("SmsCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
@@ -1270,7 +1270,7 @@ model SmsCampaignMessage {
   campaignId  String
   campaign    SmsCampaign               @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   recipientId String?
-  recipient   User?                     @relation("SmsCampaignRecipient", fields: [recipientId], references: [id])
+  recipient   User?                     @relation("SmsCampaignRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
   phone       String
   status      SmsCampaignMessageStatus  @default(PENDING)
   sentAt      DateTime?
