@@ -19,7 +19,6 @@ export interface ProxyConfig {
 }
 
 const MAX_FAIL_COUNT = 3;
-const HEALTH_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 class ProxyManager {
   private proxies: ProxyConfig[] = [];

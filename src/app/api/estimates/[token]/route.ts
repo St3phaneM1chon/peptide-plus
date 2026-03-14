@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -74,6 +77,15 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    // Rate limit estimate viewing (prevent token enumeration)
+    const ip = getClientIpFromRequest(_request);
+    const rl = await rateLimitMiddleware(ip, '/api/estimates/view');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { token } = await params;
     if (!token || token.length < 10) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 400 });
@@ -120,6 +132,15 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    // Rate limit estimate actions (prevent brute-force token guessing)
+    const ip = getClientIpFromRequest(request);
+    const rl = await rateLimitMiddleware(ip, '/api/estimates/action');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { token } = await params;
     if (!token || token.length < 10) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 400 });
@@ -134,7 +155,9 @@ export async function POST(
       );
     }
 
-    const { action, acceptedBy, signatureData, declineReason } = parsed.data;
+    const { action, signatureData } = parsed.data;
+    const acceptedBy = parsed.data.acceptedBy ? stripControlChars(stripHtml(parsed.data.acceptedBy)) : undefined;
+    const declineReason = parsed.data.declineReason ? stripControlChars(stripHtml(parsed.data.declineReason)) : undefined;
 
     const estimate = await prisma.estimate.findFirst({
       where: { viewToken: token, deletedAt: null },

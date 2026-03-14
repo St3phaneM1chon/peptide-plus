@@ -22,7 +22,7 @@ import { logger } from '@/lib/logger';
 // dlq.ts imports createQueue/addJob from queue.ts, so we can't import dlq.ts at top level.
 async function lazyMoveToDeadLetterQueue(queueName: string, job: Job, error: Error): Promise<void> {
   const { moveToDeadLetterQueue } = await import('@/lib/queue/dlq');
-  return moveToDeadLetterQueue(queueName, job, error);
+  await moveToDeadLetterQueue(queueName, job, error);
 }
 
 // ---------------------------------------------------------------------------
@@ -261,7 +261,7 @@ export function createWorker(
         });
 
         // Fire-and-forget: copy job data to DLQ. Errors are logged internally.
-        lazyMoveToDeadLetterQueue(name, job, err).catch((dlqErr) => {
+        if (job) lazyMoveToDeadLetterQueue(name, job, err).catch((dlqErr) => {
           logger.error('[queue] Failed to move job to DLQ', {
             queue: name,
             jobId: job?.id,

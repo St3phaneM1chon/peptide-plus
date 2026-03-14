@@ -218,11 +218,12 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
   const zoom = options.zoom ?? 13;
 
   let browser: Browser | null = null;
+  // Declared outside try so catch/finally can reference them
+  const proxyManager = getProxyManager();
+  const proxyConfig = proxyManager.getPlaywrightProxy();
 
   try {
     // Anti-detection: randomized browser config + optional proxy
-    const proxyManager = getProxyManager();
-    const proxyConfig = proxyManager.getPlaywrightProxy();
     const browserConfig = getRandomBrowserConfig();
 
     browser = await chromium.launch({

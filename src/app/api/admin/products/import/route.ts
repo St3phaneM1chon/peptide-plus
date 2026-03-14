@@ -138,6 +138,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // File size limit: 10MB max for import files
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'File too large. Maximum size is 10MB.' },
+        { status: 400 }
+      );
+    }
+
     // Item 73: Support both CSV and JSON file formats
     const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv';
     const isJSON = file.name.endsWith('.json') || file.type === 'application/json';

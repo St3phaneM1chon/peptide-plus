@@ -264,7 +264,7 @@ export async function checkEarningCaps(
       where: {
         userId,
         points: { gt: 0 },
-        type: { startsWith: 'EARN' },
+        type: { in: ['EARN_PURCHASE', 'EARN_REFERRAL', 'EARN_REVIEW', 'EARN_SIGNUP', 'EARN_BIRTHDAY', 'EARN_BONUS', 'EARN_REFERRAL_MILESTONE'] },
         createdAt: { gte: dayStart },
       },
       _sum: { points: true },
@@ -273,15 +273,15 @@ export async function checkEarningCaps(
       where: {
         userId,
         points: { gt: 0 },
-        type: { startsWith: 'EARN' },
+        type: { in: ['EARN_PURCHASE', 'EARN_REFERRAL', 'EARN_REVIEW', 'EARN_SIGNUP', 'EARN_BIRTHDAY', 'EARN_BONUS', 'EARN_REFERRAL_MILESTONE'] },
         createdAt: { gte: monthStart },
       },
       _sum: { points: true },
     }),
   ]);
 
-  const earnedToday = dailyAgg._sum.points || 0;
-  const earnedThisMonth = monthlyAgg._sum.points || 0;
+  const earnedToday = dailyAgg._sum?.points || 0;
+  const earnedThisMonth = monthlyAgg._sum?.points || 0;
 
   const dailyRemaining = Math.max(0, LOYALTY_EARNING_CAPS.dailyCap - earnedToday);
   const monthlyRemaining = Math.max(0, LOYALTY_EARNING_CAPS.monthlyCap - earnedThisMonth);

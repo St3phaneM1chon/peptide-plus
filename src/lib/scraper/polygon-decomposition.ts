@@ -36,11 +36,6 @@ function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-/** Convert radians to degrees */
-function toDeg(rad: number): number {
-  return (rad * 180) / Math.PI;
-}
-
 /** Haversine distance between two points in meters */
 export function haversineDistance(a: GeoPoint, b: GeoPoint): number {
   const dLat = toRad(b.lat - a.lat);

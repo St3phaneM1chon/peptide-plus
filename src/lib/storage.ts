@@ -44,8 +44,10 @@ export interface StorageOptions {
 // Azure Blob Storage Client (lazy-loaded)
 // ---------------------------------------------------------------------------
 
-let blobServiceClient: { getContainerClient: (name: string) => Record<string, unknown> } | null = null;
-let containerClient: Record<string, unknown> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let blobServiceClient: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let containerClient: any = null;
 
 async function getAzureClients() {
   if (containerClient) return { blobServiceClient: blobServiceClient!, containerClient };
@@ -161,7 +163,8 @@ export class StorageService {
     }
 
     try {
-      const azureBlob = await import('@azure/storage-blob');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const azureBlob: any = await import('@azure/storage-blob');
       const { BlobSASPermissions, generateBlobSASQueryParameters, StorageSharedKeyCredential } = azureBlob;
 
       const blockBlobClient = azure.containerClient.getBlockBlobClient(blobPath);
@@ -216,13 +219,14 @@ export class StorageService {
   // -------------------------------------------------------------------------
 
   private async uploadToAzure(
-    container: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container: any,
     file: Buffer,
     blobPath: string,
     contentType: string,
     contentHash: string
   ): Promise<UploadResult> {
-    const blockBlobClient = container!.getBlockBlobClient(blobPath);
+    const blockBlobClient = container.getBlockBlobClient(blobPath);
 
     // MEDIA-001 FIX: Set Content-Disposition for non-image types to prevent
     // inline rendering of uploaded files (e.g., PDF, video) when accessed directly.
@@ -246,7 +250,8 @@ export class StorageService {
   }
 
   private async deleteFromAzure(
-    container: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container: any,
     url: string
   ): Promise<void> {
     // FIX (F18): Parse URL properly instead of fragile split('/')
@@ -263,7 +268,7 @@ export class StorageService {
       logger.error('URL parsing failed for blob deletion, using fallback', { error: error instanceof Error ? error.message : String(error) });
       blobName = url.split('/').slice(-2).join('/');
     }
-    const blobClient = container!.getBlobClient(blobName);
+    const blobClient = container.getBlobClient(blobName);
     await blobClient.deleteIfExists();
   }
 
@@ -592,7 +597,8 @@ export class StorageService {
    * Get all media URLs that are currently referenced by content entities.
    * Used by findOrphanMedia to exclude active media.
    */
-  private async getReferencedUrls(prisma: { heroSlide: { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }; product: { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }; category: { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }; user: { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> } }): Promise<string[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async getReferencedUrls(prisma: any): Promise<string[]> {
     try {
       const urls: string[] = [];
 

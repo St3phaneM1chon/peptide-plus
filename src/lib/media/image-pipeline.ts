@@ -54,19 +54,20 @@ export const DEFAULT_VARIANTS: ImageVariant[] = [
 // Lazy Sharp import
 // ---------------------------------------------------------------------------
 
-let sharpFn: ((input?: Buffer | string) => Record<string, unknown>) | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let sharpFn: any = null;
 
 async function getSharp() {
   if (!sharpFn) {
     try {
       const mod = await import('sharp');
       // Handle both ESM default export and CJS module
-      sharpFn = (mod as { default?: (input?: Buffer | string) => Record<string, unknown> }).default || (mod as unknown as (input?: Buffer | string) => Record<string, unknown>);
+      sharpFn = mod.default || mod;
     } catch {
       throw new Error('sharp is not installed. Run: npm install sharp');
     }
   }
-  return sharpFn!;
+  return sharpFn;
 }
 
 // ---------------------------------------------------------------------------
