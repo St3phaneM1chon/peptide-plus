@@ -435,7 +435,7 @@ export default function LeadsPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold">{t('admin.crm.importCSV')}</h2>
-              <button onClick={() => setShowImportModal(false)} className="p-1 hover:bg-gray-100 rounded">
+              <button onClick={() => setShowImportModal(false)} className="p-1 hover:bg-gray-100 rounded" aria-label="Close">
                 <X className="h-5 w-5" />
               </button>
             </div>
