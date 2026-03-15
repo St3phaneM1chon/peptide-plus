@@ -151,7 +151,10 @@ async function loadHipaaConfig(): Promise<HipaaConfig> {
   try {
     const parsed = JSON.parse(setting.newValue);
     return { ...DEFAULT_HIPAA_CONFIG, ...parsed };
-  } catch {
+  } catch (error) {
+    logger.warn('[hipaa-compliance] Failed to parse HIPAA config JSON, using defaults', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return { ...DEFAULT_HIPAA_CONFIG };
   }
 }

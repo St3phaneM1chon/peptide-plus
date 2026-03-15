@@ -153,12 +153,12 @@ async function crawlWebsite(websiteUrl: string): Promise<WebsiteCrawlResult> {
             if (!result.phones.includes(phone)) result.phones.push(phone);
           }
         }
-      } catch {
-        // Contact page crawl failed, continue
+      } catch (error) {
+        logger.debug('[Enrichment] Contact page crawl failed', { error: error instanceof Error ? error.message : String(error) });
       }
     }
-  } catch {
-    // Website crawl failed entirely
+  } catch (error) {
+    logger.debug('[Enrichment] Website crawl failed', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return result;

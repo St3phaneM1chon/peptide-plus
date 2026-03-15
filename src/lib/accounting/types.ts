@@ -142,7 +142,8 @@ export async function getPaymentProcessorFees(): Promise<typeof DEFAULT_FEES> {
     };
     _feeCache = { data: fees, expiresAt: Date.now() + 5 * 60 * 1000 };
     return fees;
-  } catch {
+  } catch (error) {
+    console.error('[Accounting] Failed to load payment processor fees from DB, using defaults:', error);
     return DEFAULT_FEES;
   }
 }

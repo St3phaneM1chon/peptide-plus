@@ -121,7 +121,7 @@ export default class SectionCatalogAuditor extends BaseSectionAuditor {
 
     // Produits page should have image upload capability
     const produitsPage = path.join(this.srcDir, 'app', 'admin', 'produits', 'page.tsx');
-    const produitsContent = this.readFile(produitsPage);
+    const produitsContent = this.getEffectivePageContent(produitsPage);
     if (produitsContent) {
       const hasImageUpload = /upload|file.*input|type="file"|type='file'|dropzone|ImageUpload|UploadButton/.test(produitsContent);
       results.push(
@@ -145,7 +145,7 @@ export default class SectionCatalogAuditor extends BaseSectionAuditor {
 
     // Categories page should have tree/nested view
     const categoriesPage = path.join(this.srcDir, 'app', 'admin', 'categories', 'page.tsx');
-    const categoriesContent = this.readFile(categoriesPage);
+    const categoriesContent = this.getEffectivePageContent(categoriesPage);
     if (categoriesContent) {
       const hasTreeView = /tree|nested|children|parent|indent|level|collapse|expand|TreeView|Accordion/.test(categoriesContent);
       results.push(

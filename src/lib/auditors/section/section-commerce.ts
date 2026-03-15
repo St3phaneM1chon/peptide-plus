@@ -148,7 +148,7 @@ export default class SectionCommerceAuditor extends BaseSectionAuditor {
 
     // Check commandes page for bulk actions
     const commandesPage = path.join(this.srcDir, 'app', 'admin', 'commandes', 'page.tsx');
-    const content = this.readFile(commandesPage);
+    const content = this.getEffectivePageContent(commandesPage);
     if (content) {
       const hasBulkActions = /selectAll|bulkAction|bulk|selectedIds|selectedRows|checkbox.*select/i.test(content);
       results.push(

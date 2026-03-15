@@ -245,8 +245,11 @@ export function withAdminGuard(
           remaining: redisResult.remaining,
           resetIn: Math.max(0, redisResult.resetAt - Date.now()),
         };
-      } catch {
+      } catch (error) {
         // Redis unavailable - gracefully fall back to in-memory rate limiting
+        logger.warn('[AdminGuard] Redis rate limiter unavailable, falling back to in-memory', {
+          error: error instanceof Error ? error.message : String(error),
+        });
         rateResult = checkRateLimitMemory(rateLimitKey, maxRequests, RATE_LIMIT_WINDOW_MS);
       }
 

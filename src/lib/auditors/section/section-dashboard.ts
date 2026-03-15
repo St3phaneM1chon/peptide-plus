@@ -18,7 +18,7 @@ export default class SectionDashboardAuditor extends BaseSectionAuditor {
     const prefix = 'section-dashboard-ui';
 
     const dashboardPage = path.join(this.srcDir, 'app', 'admin', 'dashboard', 'page.tsx');
-    const content = this.readFile(dashboardPage);
+    const content = this.getEffectivePageContent(dashboardPage);
     if (!content) return results;
 
     // Check for KPI cards/widgets
@@ -63,7 +63,7 @@ export default class SectionDashboardAuditor extends BaseSectionAuditor {
     const prefix = 'section-dashboard-state';
 
     const dashboardPage = path.join(this.srcDir, 'app', 'admin', 'dashboard', 'page.tsx');
-    const content = this.readFile(dashboardPage);
+    const content = this.getEffectivePageContent(dashboardPage);
     if (!content) return results;
 
     // Check for zero-data / empty state (new install with no orders)
@@ -97,7 +97,7 @@ export default class SectionDashboardAuditor extends BaseSectionAuditor {
     const prefix = 'section-dashboard-responsive';
 
     const dashboardPage = path.join(this.srcDir, 'app', 'admin', 'dashboard', 'page.tsx');
-    const content = this.readFile(dashboardPage);
+    const content = this.getEffectivePageContent(dashboardPage);
     if (!content) return results;
 
     // Check KPI cards use responsive grid (grid-cols with breakpoints)

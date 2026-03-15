@@ -270,7 +270,9 @@ export async function scrapeGoogleMaps(options: PlaywrightSearchOptions): Promis
         await btn.click();
         await page.waitForTimeout(randomDelay(1500, 500));
       }
-    } catch {}
+    } catch {
+      // Consent dialog might not appear - safe to ignore
+    }
 
     await page.waitForTimeout(randomDelay(2500, 800));
 

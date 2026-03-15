@@ -117,7 +117,11 @@ async function getWarmupData(domain: string): Promise<WarmupPlan | null> {
     if (!trail?.metadata) return null;
     const config = trail.metadata as Record<string, unknown>;
     return config as unknown as WarmupPlan;
-  } catch {
+  } catch (error) {
+    logger.warn('[Domain-Warmup] Failed to load warmup data', {
+      domain,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -372,8 +376,12 @@ export async function shouldThrottle(domain: string): Promise<boolean> {
     const progress = await getWarmupProgress(domain);
     if (progress.status !== 'active') return false;
     return progress.todaySent >= progress.todayLimit;
-  } catch {
+  } catch (error) {
     // No warmup plan = no throttling
+    logger.debug('[Domain-Warmup] shouldThrottle check failed (no plan or DB error)', {
+      domain,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return false;
   }
 }

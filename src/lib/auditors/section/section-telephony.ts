@@ -153,7 +153,7 @@ export default class SectionTelephonyAuditor extends BaseSectionAuditor {
     const prefix = 'section-telephony-state';
 
     const pagePath = path.join(this.srcDir, 'app', 'admin', 'telephonie', 'page.tsx');
-    const content = this.readFile(pagePath);
+    const content = this.getEffectivePageContent(pagePath);
     if (!content) return results;
 
     // Empty call log state (no calls recorded yet)

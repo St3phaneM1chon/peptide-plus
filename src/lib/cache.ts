@@ -140,7 +140,8 @@ async function redisGet(key: string): Promise<string | null> {
     const client = await getRedisClient();
     if (!client) return null;
     return await client.get(`${CACHE_PREFIX}${key}`);
-  } catch {
+  } catch (err) {
+    logger.debug('[cache-l2] Redis read failed', { key, error: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }
@@ -166,7 +167,9 @@ async function redisDel(key: string): Promise<void> {
     const client = await getRedisClient();
     if (!client) return;
     await client.del(`${CACHE_PREFIX}${key}`);
-  } catch { /* graceful */ }
+  } catch (err) {
+    logger.debug('[cache-l2] Redis delete failed', { key, error: err instanceof Error ? err.message : String(err) });
+  }
 }
 
 async function redisInvalidateTag(tag: string): Promise<void> {
@@ -185,7 +188,9 @@ async function redisInvalidateTag(tag: string): Promise<void> {
       await client.del(...keys.map(k => `${CACHE_PREFIX}${k}`));
     }
     await client.del(tagKey);
-  } catch { /* graceful */ }
+  } catch (err) {
+    logger.debug('[cache-l2] Redis tag invalidation failed', { tag, error: err instanceof Error ? err.message : String(err) });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +227,9 @@ export async function cacheGetOrSet<T>(
         tagIndex.get(tag)!.add(key);
       }
       return parsed;
-    } catch { /* parse failed, fetch fresh */ }
+    } catch (err) {
+      logger.debug('[cache-l2] JSON parse failed for cached value, fetching fresh', { key, error: err instanceof Error ? err.message : String(err) });
+    }
   }
 
   // Miss: fetch fresh value

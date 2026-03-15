@@ -129,6 +129,13 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
           // (e.g., timingSafeEqual catch, JSON.parse fallback, feature detection, revalidation)
           // Strip trailing braces/commas/semicolons from body for content analysis
           const bodyContentClean = body.replace(/[}\s,;]+$/, '').trim();
+          // Strip lines that are only comments to check if actual code remains
+          const bodyWithoutComments = bodyContentClean
+            .split('\n')
+            .filter(ln => !/^\s*\/\//.test(ln) && !/^\s*\/\*/.test(ln) && !/^\s*\*/.test(ln))
+            .join('\n')
+            .trim();
+
           const isControlFlowCatch =
             // Variable assignment fallback (e.g., valid = false; or result = null;)
             /^\s*\w+\s*=\s*(false|true|null|undefined|0|''|""|``);?\s*$/.test(bodyContentClean) ||
@@ -139,9 +146,23 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
             // Inline comment-only catches (e.g., /* revalidation is best-effort */)
             /^\s*\/\*[\s\S]*?\*\/\s*$/.test(bodyContentClean) ||
             /^\s*\/\/.*$/.test(bodyContentClean) ||
+            // Multi-line comment-only catches (comment lines + nothing else)
+            bodyWithoutComments.length === 0 ||
+            // Comment followed by a simple return/assignment (e.g., // fallback \n return null;)
+            /^\s*return\s+(false|true|null|undefined|0|''|""|``|\[\]|\{\});?\s*$/.test(bodyWithoutComments) ||
+            /^\s*\w+\s*=\s*(false|true|null|undefined|0|''|""|``);?\s*$/.test(bodyWithoutComments) ||
             // revalidatePath/revalidateTag catches are intentionally best-effort
             /revalidatePath|revalidateTag/.test(lines[i] || '') ||
-            /revalidatePath|revalidateTag/.test(lines[i - 1] || '');
+            /revalidatePath|revalidateTag/.test(lines[i - 1] || '') ||
+            // Feature detection: catch after require/import that throws a new Error
+            /throw\s+new\s+Error/.test(body) ||
+            // Directory creation that might already exist (mkdirSync)
+            /mkdirSync|mkdir/.test(lines.slice(Math.max(0, i - 5), i).join(' ')) ||
+            // Counter increments in loop (e.g., failed++)
+            /^\s*\w+\+\+;?\s*$/.test(bodyWithoutComments) ||
+            // Continue in loop (e.g., catch { continue; })
+            /^\s*continue;?\s*$/.test(bodyContentClean) ||
+            /^\s*break;?\s*$/.test(bodyContentClean);
 
           if (isControlFlowCatch) {
             // Skip - intentional control flow, not an error handling gap

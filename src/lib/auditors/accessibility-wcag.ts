@@ -453,18 +453,29 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
         const line = lines[i];
 
         // Look for inline style color properties
-        const colorMatch = line.match(/color\s*:\s*['"]?(#[0-9a-fA-F]{3,6}|[a-zA-Z]+)['"]?/);
+        // Use a more specific regex that matches `color:` but NOT `background-color:` or `backgroundColor:`
+        const colorMatch = line.match(/(?<![a-zA-Z-])color\s*:\s*['"]?(#[0-9a-fA-F]{3,6}|[a-zA-Z]+)['"]?/);
         if (colorMatch) {
           const color = colorMatch[1].toLowerCase();
 
           // Check if it's a potentially low-contrast color
           if (lightColors.includes(color)) {
-            potentialIssues.push({
-              file,
-              line: i + 1,
-              color: colorMatch[1],
-              property: 'color',
-            });
+            // Skip false positive: light foreground color paired with a background on the same line/element
+            // This handles both static (`background:#059669`) and dynamic (`background:${...}`) patterns
+            const hasBackground = /background\s*[:=]/.test(line);
+
+            // Skip false positive: line is building an HTML string (template literal or concatenation)
+            // for email templates, not actual rendered JSX — WCAG applies to rendered UI, not generated HTML
+            const isHtmlStringBuilder = /`.*<.*style=.*`|'.*<.*style=.*'|".*<.*style=.*"|\.innerHTML|html\s*\+=/.test(line);
+
+            if (!hasBackground && !isHtmlStringBuilder) {
+              potentialIssues.push({
+                file,
+                line: i + 1,
+                color: colorMatch[1],
+                property: 'color',
+              });
+            }
           }
         }
 

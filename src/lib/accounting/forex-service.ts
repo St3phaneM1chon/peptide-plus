@@ -61,8 +61,9 @@ export async function getExchangeRate(from: string, to: string): Promise<FXRate>
         }
       }
     }
-  } catch {
+  } catch (error) {
     // Fall through to fallback
+    console.error('[Forex] Bank of Canada API call failed, using fallback rates:', error);
   }
 
   // Fallback to static rates

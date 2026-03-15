@@ -151,7 +151,7 @@ export default class SectionCRMAuditor extends BaseSectionAuditor {
     const crmPagePath = path.join(this.srcDir, 'app', 'admin', 'crm', 'page.tsx');
     // Also check deals sub-page and components directory
     const dealsPagePath = path.join(this.srcDir, 'app', 'admin', 'crm', 'deals', 'page.tsx');
-    const content = this.readFile(crmPagePath) + this.readFile(dealsPagePath);
+    const content = this.getEffectivePageContent(crmPagePath) + this.getEffectivePageContent(dealsPagePath);
 
     if (content) {
       // Kanban / board view for deal pipeline visualization

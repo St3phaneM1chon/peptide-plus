@@ -84,7 +84,8 @@ export function getSyncQueue(): SyncQueueItem[] {
   if (typeof localStorage === 'undefined') return [];
   try {
     return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]');
-  } catch {
+  } catch (error) {
+    console.error('[PWA] Failed to parse sync queue from localStorage:', error);
     return [];
   }
 }
@@ -124,7 +125,8 @@ export async function processSyncQueue(): Promise<{ succeeded: number; failed: n
       } else {
         failed++;
       }
-    } catch {
+    } catch (error) {
+      console.error(`[PWA] Sync queue item ${item.id} failed:`, error);
       failed++;
     }
   }
@@ -152,7 +154,8 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
   try {
     return await navigator.serviceWorker.register('/sw.js');
-  } catch {
+  } catch (error) {
+    console.error('[PWA] Service worker registration failed:', error);
     return null;
   }
 }
