@@ -20,7 +20,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { isProcessableImage, optimizeImage, generateVariants, DEFAULT_VARIANTS } from '@/lib/media/image-pipeline';
+import { isProcessableImage, optimizeForDisplay, generateVariants, DEFAULT_VARIANTS, DISPLAY_SIZE_TARGETS } from '@/lib/media/image-pipeline';
 
 /**
  * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.
@@ -85,6 +85,21 @@ function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Detect the display context from the upload folder path.
+ * Maps folder names to display size targets so images are optimized
+ * to 110% of their actual display dimensions.
+ */
+function detectDisplayContext(folder: string): keyof typeof DISPLAY_SIZE_TARGETS {
+  const lower = folder.toLowerCase();
+  if (lower.includes('product') || lower.includes('produit')) return 'product';
+  if (lower.includes('categor')) return 'category';
+  if (lower.includes('banner') || lower.includes('banniere') || lower.includes('hero') || lower.includes('slide')) return 'banner';
+  if (lower.includes('avatar') || lower.includes('profile') || lower.includes('profil')) return 'avatar';
+  if (lower.includes('thumb') || lower.includes('icon') || lower.includes('logo')) return 'thumbnail';
+  return 'general';
 }
 
 // F44 FIX: Filter media by uploadedBy for non-owner users
@@ -289,17 +304,29 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
       if (isProcessableImage(file.type)) {
         try {
-          // Optimize original (resize to max 1920px, convert to webp, strip EXIF)
-          const optimized = await optimizeImage(buffer, { maxWidth: 1920, maxHeight: 1080, quality: 85 });
-          uploadBuffer = optimized.buffer;
-          uploadMime = optimized.mimeType;
+          // Detect image context from folder name for 110% display-size rule
+          const displayContext = detectDisplayContext(folder);
 
-          // C-13: Auto-generate responsive variants (thumb, card, hero)
-          const variants = await generateVariants(buffer, DEFAULT_VARIANTS);
-          for (const v of variants) {
-            const variantName = `${randomUUID()}_${v.variant}.webp`;
-            const variantResult = await storage.upload(v.buffer, variantName, v.mimeType, { folder: `${folder}/variants` });
-            variantUrls[v.variant] = variantResult.url;
+          // Optimize original: resize to 110% of display size, convert to WebP, strip EXIF
+          const result = await optimizeForDisplay(buffer as Buffer, displayContext, {
+            quality: 85,
+            generateVariants: true,
+            stripMetadata: true,
+          });
+          uploadBuffer = result.optimized.buffer;
+          uploadMime = result.optimized.mimeType;
+
+          if (result.savingsPercent > 0) {
+            logger.info(`[MediaUpload] Optimized ${file.name}: ${result.savingsPercent}% smaller (${displayContext} context)`);
+          }
+
+          // C-13: Upload responsive variants (thumb, card, hero)
+          if (result.variants) {
+            for (const v of result.variants) {
+              const variantName = `${randomUUID()}_${v.variant}.webp`;
+              const variantResult = await storage.upload(v.buffer, variantName, v.mimeType, { folder: `${folder}/variants` });
+              variantUrls[v.variant] = variantResult.url;
+            }
           }
         } catch (pipelineError) {
           // Non-fatal: fall back to original buffer
