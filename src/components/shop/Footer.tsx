@@ -65,15 +65,15 @@ export default function Footer() {
             <p className="text-neutral-300 text-sm leading-relaxed mb-4">
               {t('footer.description') || 'Canada\'s trusted source for high-purity research peptides. 99%+ purity guaranteed with third-party lab testing.'}
             </p>
-            <p className="text-neutral-500 text-sm mb-2">
+            <p className="text-neutral-300 text-sm mb-2">
               📧 <a href="mailto:info@biocyclepeptides.com" className="text-primary-400 hover:underline">info@biocyclepeptides.com</a>
             </p>
-            <p className="text-neutral-500 text-sm">
+            <p className="text-neutral-300 text-sm">
               📍 Montreal, Quebec, Canada
             </p>
-            
+
             {/* Trust Badges */}
-            <div className="flex items-center gap-4 mt-4 text-xs text-neutral-500">
+            <div className="flex items-center gap-4 mt-4 text-xs text-neutral-300">
               <span>✓ 99%+ Purity</span>
               <span>✓ Lab Tested</span>
               <span>✓ Made in Canada</span>
@@ -220,13 +220,13 @@ export default function Footer() {
 
         {/* Disclaimer */}
         <div className="mt-8 pt-8 border-t border-neutral-800">
-          <p className="text-xs text-neutral-500 leading-relaxed mb-4">
+          <p className="text-xs text-neutral-300 leading-relaxed mb-4">
             <strong className="text-primary-400">DISCLAIMER:</strong> {t('disclaimer.text') || 'All products are intended for laboratory and research use only. Not for human consumption. Products have not been evaluated by Health Canada or the FDA. Purchasers must be 18+ years of age. By using this website, you agree that these products are being purchased for research purposes only.'}
           </p>
 
           {/* Company Legal Identification */}
-          <div className="mb-4 text-xs text-neutral-500 leading-relaxed">
-            <p className="font-semibold text-neutral-400 mb-1">{t('footer.companyInfo')}</p>
+          <div className="mb-4 text-xs text-neutral-300 leading-relaxed">
+            <p className="font-semibold text-neutral-200 mb-1">{t('footer.companyInfo')}</p>
             <p>{t('footer.companyName')}</p>
             <p>{t('footer.companyNeq')}</p>
             <p>{t('footer.companyAddress')}</p>

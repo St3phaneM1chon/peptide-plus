@@ -167,11 +167,11 @@ export default memo(function ProductCard({
       <article className="bg-white rounded-xl border border-neutral-200 hover:shadow-lg transition-all duration-300 relative overflow-visible flex flex-col h-full group" aria-label={productName}>
         {/* Image */}
         <div className="relative">
-          <Link href={`/product/${slug}`} aria-label={`View ${productName} details`}>
+          <Link href={`/product/${slug}`} aria-label={`${t('shop.viewProduct')} ${productName}`}>
             <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-t-xl">
               <Image
                 src={imageUrl || '/images/products/peptide-default.png'}
-                alt={`${productName} - ${categoryName || 'product'} image`}
+                alt={`${productName} - ${categoryName || ''}`}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className="object-cover hover:scale-105 transition-transform duration-300"
@@ -290,7 +290,7 @@ export default memo(function ProductCard({
                   e.preventDefault();
                   setIsDropdownOpen(!isDropdownOpen);
                 }}
-                aria-label={`Select format for ${productName}`}
+                aria-label={`${t('shop.selectFormat')} ${productName}`}
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="listbox"
                 className="w-full mt-1 flex items-center justify-between gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white hover:border-primary-400 transition-colors"
@@ -370,7 +370,7 @@ export default memo(function ProductCard({
           {/* Quantity & Add to Cart */}
           <div className="flex items-center gap-2">
           {/* Quantity Selector */}
-          <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${productName}`}>
+          <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`${t('shop.quantity')} ${productName}`}>
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -400,7 +400,7 @@ export default memo(function ProductCard({
           <button
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
-            aria-label={`Add ${productName} to cart`}
+            aria-label={t('shop.aria.addToCartName', { name: productName })}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
               isAdding
                 ? 'bg-green-600 text-white scale-105'
