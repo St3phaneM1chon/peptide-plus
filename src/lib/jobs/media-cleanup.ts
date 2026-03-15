@@ -38,93 +38,104 @@ export async function processMediaCleanup(job: Job): Promise<void> {
     maxStalePending,
   });
 
-  // -------------------------------------------------------------------------
-  // 1. Clean up stale reviews-pending uploads (older than 24 hours)
-  // -------------------------------------------------------------------------
-  const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const stalePending = await prisma.media.findMany({
-    where: {
-      folder: 'reviews-pending',
-      createdAt: { lt: staleCutoff },
-    },
-    select: { id: true, url: true, size: true },
-    take: maxStalePending,
-  });
+  try {
+    // -------------------------------------------------------------------------
+    // 1. Clean up stale reviews-pending uploads (older than 24 hours)
+    // -------------------------------------------------------------------------
+    const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const stalePending = await prisma.media.findMany({
+      where: {
+        folder: 'reviews-pending',
+        createdAt: { lt: staleCutoff },
+      },
+      select: { id: true, url: true, size: true },
+      take: maxStalePending,
+    });
 
-  let stalePendingBytesFreed = 0;
-  let stalePendingDeleted = 0;
+    let stalePendingBytesFreed = 0;
+    let stalePendingDeleted = 0;
 
-  if (!dryRun && stalePending.length > 0) {
-    // Delete from storage first, collect IDs of successfully deleted files
-    const successfullyDeletedIds: string[] = [];
-    const storageDeleteResults = await Promise.allSettled(
-      stalePending.map(async (media) => {
-        await storage.delete(media.url);
-        return media;
-      })
-    );
+    if (!dryRun && stalePending.length > 0) {
+      // Delete from storage first, collect IDs of successfully deleted files
+      const successfullyDeletedIds: string[] = [];
+      const storageDeleteResults = await Promise.allSettled(
+        stalePending.map(async (media) => {
+          await storage.delete(media.url);
+          return media;
+        })
+      );
 
-    for (const result of storageDeleteResults) {
-      if (result.status === 'fulfilled') {
-        successfullyDeletedIds.push(result.value.id);
-        stalePendingBytesFreed += result.value.size;
-      } else {
-        logger.warn('[media-cleanup-job] Failed to delete stale pending media from storage', {
-          error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+      for (const result of storageDeleteResults) {
+        if (result.status === 'fulfilled') {
+          successfullyDeletedIds.push(result.value.id);
+          stalePendingBytesFreed += result.value.size;
+        } else {
+          logger.warn('[media-cleanup-job] Failed to delete stale pending media from storage', {
+            error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+          });
+        }
+      }
+
+      // Batch delete all successfully removed media records
+      if (successfullyDeletedIds.length > 0) {
+        const { count } = await prisma.media.deleteMany({
+          where: { id: { in: successfullyDeletedIds } },
         });
+        stalePendingDeleted = count;
       }
     }
 
-    // Batch delete all successfully removed media records
-    if (successfullyDeletedIds.length > 0) {
-      const { count } = await prisma.media.deleteMany({
-        where: { id: { in: successfullyDeletedIds } },
-      });
-      stalePendingDeleted = count;
+    // Report progress (BullMQ feature)
+    await job.updateProgress(50);
+
+    // -------------------------------------------------------------------------
+    // 2. Find and clean up orphan media (older than 30 days)
+    // -------------------------------------------------------------------------
+    const orphans = await storage.findOrphanMedia(30, maxOrphans);
+    const orphanBytesFreed = orphans.reduce((sum, o) => sum + o.size, 0);
+    let orphansDeleted = 0;
+
+    if (!dryRun && orphans.length > 0) {
+      const orphanIds = orphans.map((o) => o.id);
+      orphansDeleted = await storage.cleanupOrphanMedia(orphanIds);
     }
+
+    await job.updateProgress(100);
+
+    const duration = Date.now() - startTime;
+
+    const result = {
+      dryRun,
+      duration: `${duration}ms`,
+      stalePendingReviews: {
+        found: stalePending.length,
+        deleted: stalePendingDeleted,
+        bytesFreed: stalePendingBytesFreed,
+      },
+      orphanMedia: {
+        found: orphans.length,
+        deleted: orphansDeleted,
+        bytesFreed: orphanBytesFreed,
+      },
+      totalBytesFreed: stalePendingBytesFreed + orphanBytesFreed,
+      totalMBFreed: ((stalePendingBytesFreed + orphanBytesFreed) / (1024 * 1024)).toFixed(2),
+    };
+
+    logger.info('[media-cleanup-job] Completed', {
+      jobId: job.id,
+      ...result,
+    });
+
+    // Store result on the job for later retrieval via admin API
+    await job.updateData({ ...job.data, result });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    logger.error('[media-cleanup-job] Failed', {
+      jobId: job.id,
+      duration: `${duration}ms`,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error; // Re-throw so BullMQ marks the job as failed
   }
-
-  // Report progress (BullMQ feature)
-  await job.updateProgress(50);
-
-  // -------------------------------------------------------------------------
-  // 2. Find and clean up orphan media (older than 30 days)
-  // -------------------------------------------------------------------------
-  const orphans = await storage.findOrphanMedia(30, maxOrphans);
-  const orphanBytesFreed = orphans.reduce((sum, o) => sum + o.size, 0);
-  let orphansDeleted = 0;
-
-  if (!dryRun && orphans.length > 0) {
-    const orphanIds = orphans.map((o) => o.id);
-    orphansDeleted = await storage.cleanupOrphanMedia(orphanIds);
-  }
-
-  await job.updateProgress(100);
-
-  const duration = Date.now() - startTime;
-
-  const result = {
-    dryRun,
-    duration: `${duration}ms`,
-    stalePendingReviews: {
-      found: stalePending.length,
-      deleted: stalePendingDeleted,
-      bytesFreed: stalePendingBytesFreed,
-    },
-    orphanMedia: {
-      found: orphans.length,
-      deleted: orphansDeleted,
-      bytesFreed: orphanBytesFreed,
-    },
-    totalBytesFreed: stalePendingBytesFreed + orphanBytesFreed,
-    totalMBFreed: ((stalePendingBytesFreed + orphanBytesFreed) / (1024 * 1024)).toFixed(2),
-  };
-
-  logger.info('[media-cleanup-job] Completed', {
-    jobId: job.id,
-    ...result,
-  });
-
-  // Store result on the job for later retrieval via admin API
-  await job.updateData({ ...job.data, result });
 }

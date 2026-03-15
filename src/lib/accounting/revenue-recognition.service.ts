@@ -21,7 +21,7 @@
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
 import { logger } from '@/lib/logger';
-import { assertJournalBalance } from './validation';
+import { assertJournalBalance, assertPeriodOpen } from './validation';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -152,6 +152,9 @@ export async function createRevenueSchedule(
   if (totalAmount <= 0) {
     throw new Error('Total revenue schedule amount must be positive');
   }
+
+  // Verify the accounting period is open for the start date
+  await assertPeriodOpen(effectiveStartDate);
 
   const scheduleRef = `${SCHEDULE_REF_PREFIX}${orderId}`;
 
@@ -407,6 +410,9 @@ export async function recognizeRevenue(
       if (amountToRecognize <= 0) continue;
       // Cap at remaining deferred amount
       amountToRecognize = Math.min(amountToRecognize, remaining);
+
+      // Verify the accounting period is open for the recognition date
+      await assertPeriodOpen(asOfDate);
 
       // Create recognition journal entry
       await prisma.$transaction(async (tx) => {

@@ -17,6 +17,7 @@ import { Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { roundCurrency } from '@/lib/financial';
 import { generateCSV } from '@/lib/csv-export';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -198,6 +199,9 @@ async function processBatchJournalEntries(
       }
 
       const data = parsed.data;
+
+      // Verify the accounting period is open for this date
+      await assertPeriodOpen(new Date(data.date));
 
       // Validate balance
       const totalDebit = data.lines.reduce((s, l) => s + l.debit, 0);
@@ -422,6 +426,9 @@ async function processBatchExpenses(
       }
 
       const data = parsed.data;
+
+      // Verify the accounting period is open for this date
+      await assertPeriodOpen(new Date(data.date));
 
       // Validate total = subtotal + taxes
       const computedTotal = data.subtotal + data.taxGst + data.taxQst + data.taxOther;

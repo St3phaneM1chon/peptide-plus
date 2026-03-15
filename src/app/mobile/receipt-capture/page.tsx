@@ -82,6 +82,7 @@ export default function ReceiptCapture() {
         <div className="space-y-4">
           {/* Preview */}
           <div className="bg-gray-100 rounded-xl overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imagePreview} alt="Reçu" className="w-full max-h-48 object-contain" />
           </div>
 
