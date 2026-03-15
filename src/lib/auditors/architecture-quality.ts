@@ -179,17 +179,18 @@ export default class ArchitectureQualityAuditor extends BaseAuditor {
       if (/NextResponse\.json/.test(content)) patterns.usesNextResponse++;
       if (/(?<!Next)Response\.json/.test(content)) patterns.usesJsonResponse++;
 
-      // Check try/catch (withApiHandler wraps in try/catch automatically)
+      // Check try/catch (withApiHandler/withAdminGuard/withUserGuard wrap in try/catch automatically)
       // NextAuth catch-all route uses its own error handling framework
       const isFrameworkRoute = /\[\.\.\.nextauth\]|NextAuth\(/.test(content);
-      if (/try\s*\{/.test(content) || /withApiHandler/.test(content) || isFrameworkRoute) {
+      const usesGuardWrapper = /withApiHandler|withAdminGuard|withUserGuard/.test(content);
+      if (/try\s*\{/.test(content) || usesGuardWrapper || isFrameworkRoute || /\.catch\s*\(/.test(content)) {
         patterns.hasTryCatch++;
       } else {
         fileIssues.push('no try/catch');
       }
 
       // Check auth
-      if (/auth\(|getServerSession|requireAuth|withAdminGuard|getSession/.test(content)) {
+      if (/auth\(|getServerSession|requireAuth|withAdminGuard|withUserGuard|getSession|CRON_SECRET|timingSafeEqual/.test(content)) {
         patterns.hasAuth++;
       }
 

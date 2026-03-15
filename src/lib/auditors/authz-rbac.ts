@@ -44,6 +44,17 @@ export default class AuthzRbacAuditor extends BaseAuditor {
       /isAdmin/,
       /session\.user\.role/,
       /\.role\s*!==?\s*['"](?:ADMIN|admin|SUPER_ADMIN|OWNER)['"]/,
+      // Cron/webhook routes use secret-based auth instead of role checks
+      /CRON_SECRET/,
+      /verifyCronSecret/,
+      /WEBHOOK_SECRET/,
+      /verifyWebhookSecret/,
+      /TELNYX_WEBHOOK_SECRET/,
+      /VOIP_CDR_WEBHOOK_SECRET/,
+      /timingSafeEqual/,
+      // API key auth
+      /withApiAuth/,
+      /x-api-key/i,
     ];
 
     let unprotectedCount = 0;

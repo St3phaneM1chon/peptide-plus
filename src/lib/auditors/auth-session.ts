@@ -43,6 +43,14 @@ export default class AuthSessionAuditor extends BaseAuditor {
       /requireAdmin/,
       /requireAuth/,
       /getSession\s*\(/,
+      // Cron/webhook secret-based auth (alternative to session auth)
+      /CRON_SECRET/,
+      /verifyCronSecret/,
+      /WEBHOOK_SECRET/,
+      /verifyWebhookSecret/,
+      /VOIP_CDR_WEBHOOK_SECRET/,
+      /TELNYX_WEBHOOK_SECRET/,
+      /timingSafeEqual/,
     ];
 
     let unprotectedCount = 0;

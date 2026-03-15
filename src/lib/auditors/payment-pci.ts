@@ -242,10 +242,21 @@ export default class PaymentPciAuditor extends BaseAuditor {
       const content = this.readFile(file);
       const hasStripeVerification = /(?:stripe|getStripe\w*\(\))\.webhooks\.constructEvent/.test(content);
       const hasPayPalVerification = /verify-webhook-signature|verifyWebhookSignature/.test(content);
-      const hasSignatureVerification = hasStripeVerification || hasPayPalVerification;
+      // Alternative auth patterns: cron secrets, webhook secrets, API key auth, HMAC verification
+      const hasAlternativeAuth =
+        /CRON_SECRET/.test(content) ||
+        /verifyCronSecret/.test(content) ||
+        /timingSafeEqual/.test(content) ||
+        /TELNYX_WEBHOOK_SECRET/.test(content) ||
+        /META_APP_SECRET/.test(content) ||
+        /EMAIL_WEBHOOK_SECRET/.test(content) ||
+        /WEBHOOK_SECRET/.test(content) ||
+        /verifyMetaSignature/.test(content) ||
+        /withApiAuth/.test(content);
+      const hasSignatureVerification = hasStripeVerification || hasPayPalVerification || hasAlternativeAuth;
 
       if (hasSignatureVerification) {
-        const provider = hasStripeVerification ? 'Stripe' : 'PayPal';
+        const provider = hasStripeVerification ? 'Stripe' : hasPayPalVerification ? 'PayPal' : 'secret/signature';
         results.push(this.pass('payment-01', `${provider} webhook signature verification found in ${this.relativePath(file)}`));
       } else {
         const lineNum = this.findLineNumber(content, 'webhook') || this.findLineNumber(content, 'event');

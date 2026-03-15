@@ -39,18 +39,43 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
     const end = Math.min(content.length, matchIndex + 200);
     const context = content.substring(start, end).toLowerCase();
 
+    // Get the full line containing the match
+    const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
+    const lineEnd = content.indexOf('\n', matchIndex);
+    const line = content.substring(lineStart, lineEnd === -1 ? content.length : lineEnd);
+    const trimmedLine = line.trim();
+
     // Skip Quick Method rates (CRA simplified remittance rates)
     if (/quick.?method|remittance.?rate|remit/i.test(context)) return false;
 
     // Skip string/template literal descriptions (not actual numeric rates)
     // e.g., rate: '9.975% QST + 5% GST = 14.975% effective'
-    const lineStart = content.lastIndexOf('\n', matchIndex) + 1;
-    const lineEnd = content.indexOf('\n', matchIndex);
-    const line = content.substring(lineStart, lineEnd === -1 ? content.length : lineEnd);
     if (/['"`].*\d+\.?\d*%.*['"`]/.test(line)) return false;
 
     // Skip payroll/exemption threshold amounts (dollar values, not rates)
     if (/annual.?exemption|exemption.?amount|threshold|maximum|minimum|ceiling/i.test(context)) return false;
+
+    // Skip variable initializations to zero (e.g., `let qst = 0;`, `let gst = 0;`)
+    // These are accumulator variables, not tax rate definitions
+    if (/(?:let|var|const)\s+\w*(?:gst|qst|hst)\w*\s*=\s*0\s*[;,]/.test(trimmedLine.toLowerCase())) return false;
+
+    // Skip account code references (e.g., "QST: 2310+", "GST: 1234")
+    // Account codes are numeric identifiers > 100, not rates
+    if (/(?:gst|qst|hst)\s*:\s*\d{3,}/i.test(trimmedLine)) return false;
+
+    // Skip loop/math expressions that coincidentally match rate values
+    // (e.g., `i * 0.05`, `value * 0.15` where context is not tax-related)
+    if (/\b[a-z_]\w*\s*\*\s*[\d.]+/.test(trimmedLine.toLowerCase())) {
+      // Only skip if the line does NOT mention tax/rate keywords
+      if (!/tax|rate|gst|qst|hst|tps|tvq/i.test(trimmedLine)) return false;
+    }
+
+    // Skip tax credit calculations (e.g., `td1Credit * 0.15`)
+    // These use a rate for credit calculations, not tax rate definitions
+    if (/credit\s*\*\s*[\d.]+/i.test(trimmedLine)) return false;
+
+    // Skip comments
+    if (/^\s*\/\//.test(trimmedLine) || /^\s*\*/.test(trimmedLine)) return false;
 
     return true;
   }

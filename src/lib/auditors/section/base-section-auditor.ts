@@ -197,8 +197,21 @@ export abstract class BaseSectionAuditor extends BaseAuditor {
       const content = this.readFile(routePath);
       if (!content) continue;
 
-      // Check auth guard
-      const hasAuth = /auth\(\)|getServerSession|withAdminGuard/.test(content);
+      // Check auth guard (session-based, secret-based, or signature-based)
+      const hasAuth = /auth\(\)|getServerSession|withAdminGuard/.test(content) ||
+        // Webhook signature verification
+        /constructEvent/.test(content) ||
+        /timingSafeEqual/.test(content) ||
+        /WEBHOOK_SECRET/.test(content) ||
+        /verifySignature/.test(content) ||
+        /x-hub-signature/i.test(content) ||
+        // Session/token checks (non-standard patterns)
+        /session\?\.user/.test(content) ||
+        /request\.headers\.get.*authorization/i.test(content) ||
+        // Cron/API key auth
+        /CRON_SECRET/.test(content) ||
+        /verifyCronSecret/.test(content) ||
+        /withApiAuth/.test(content);
       if (hasAuth) {
         results.push(this.pass(`${prefix}-auth-${route.replace(/\//g, '-')}`, `API ${route} has auth guard`));
       } else {

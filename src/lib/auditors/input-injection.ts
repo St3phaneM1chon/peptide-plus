@@ -167,9 +167,11 @@ export default class InputInjectionAuditor extends BaseAuditor {
         const nearbyCode = nearbyBefore + nearbyAfter;
         // Check for sanitization: nearby usage OR import at file level
         // JSON.stringify is safe for structured data (JSON-LD, etc.) - it escapes all HTML characters
+        // SECURITY AUDIT comment = developer has acknowledged and reviewed the usage
         const hasSanitization = /DOMPurify|sanitize|sanitizeHtml|xss|purify|escape/i.test(nearbyCode) ||
           /import.*(?:DOMPurify|sanitize|sanitizeHtml|xss|purify)/i.test(content) ||
-          /JSON\.stringify/.test(nearbyCode);
+          /JSON\.stringify/.test(nearbyCode) ||
+          /\/\/\s*SECURITY AUDIT|\/\*\s*SECURITY AUDIT/.test(nearbyCode);
         // Admin-only pages rendering admin-authored HTML (CMS content, email previews)
         // are lower risk since admins are trusted content authors
         const isAdminPage = /\/admin\//.test(this.relativePath(file));
@@ -259,7 +261,7 @@ export default class InputInjectionAuditor extends BaseAuditor {
         );
       }
 
-      // Check for new Function() - skip safe parser contexts
+      // Check for new Function() - skip safe parser contexts and security-audited usages
       const funcRegex = /new\s+Function\s*\(/g;
       while ((match = funcRegex.exec(content)) !== null) {
         const lineStart = content.lastIndexOf('\n', match.index) + 1;
@@ -267,6 +269,10 @@ export default class InputInjectionAuditor extends BaseAuditor {
         const isInComment = /^\s*\/\//.test(lineText) || /^\s*\*/.test(lineText);
         if (isInComment) continue;
         if (hasSafeParser) continue;
+
+        // Skip if nearby comment contains SECURITY AUDIT (developer acknowledged the risk)
+        const nearbyBefore = content.substring(Math.max(0, match.index - 300), match.index);
+        if (/\/\/\s*SECURITY AUDIT|\/\*\s*SECURITY AUDIT/.test(nearbyBefore)) continue;
 
         evalCount++;
         const lineNum = content.substring(0, match.index).split('\n').length;

@@ -368,6 +368,16 @@ export default class DbIntegrityAuditor extends BaseAuditor {
       'ActivityLog',
       'LoginHistory',
       'PasswordHistory',
+      // Contact/message models: same person can submit multiple messages
+      'ContactMessage',
+      // CRM models: leads/prospects can share emails across lists/campaigns
+      'CrmLead',
+      'CrmConsentRecord',
+      'Prospect',
+      // Dialer: same email in multiple campaign lists
+      'DialerListEntry',
+      // Cart recovery: same email can have multiple abandoned carts
+      'AbandonedCart',
     ]);
 
     // Per-model field exclusions for fields that look like business keys but aren't unique
@@ -375,6 +385,8 @@ export default class DbIntegrityAuditor extends BaseAuditor {
     const fieldExclusions: Record<string, Set<string>> = {
       // AuditTrail.userName is a cached display name, not a unique identifier
       AuditTrail: new Set(['userName', 'username']),
+      // TimeEntry.userName is a cached display name; a user can have many time entries
+      TimeEntry: new Set(['userName', 'username']),
     };
 
     const missingUniques: { model: string; field: string }[] = [];

@@ -344,6 +344,10 @@ export default class AccountingIntegrityAuditor extends BaseAuditor {
       // Skip test/UAT files
       if (/\.test\.ts$|\.spec\.ts$|\/uat\//.test(file)) continue;
 
+      // Skip files in domains unrelated to tax/accounting (audio, video, CRM, VoIP, etc.)
+      // These may contain * 0.05 for non-tax purposes (audio impulse lengths, canvas coords, delivery rates)
+      if (/\/voip\/|\/crm\/|\/media\/|\/chat\/|\/video\/|\/audio\/|\/notification/i.test(file)) continue;
+
       // Detect centralized tax references
       if (/calculateTax|calcTax|GST_RATE|QST_RATE|TAX_RATES|gstRate|qstRate|hstRate/i.test(content) && /function|=>|const.*=|import/.test(content)) {
         taxCalcFiles.push(file);
@@ -371,7 +375,7 @@ export default class AccountingIntegrityAuditor extends BaseAuditor {
         //   * 0.14 (HST NS 14%, effective 2025-04-01)
         //   * 0.15 (HST NB/NL/PE 15%)
         // Skip lines where * 0.05 is clearly a non-tax usage (tolerance, threshold, etc.)
-        if (/\*\s*0\.(05|09975|14975|13|14|15)\b/.test(line) && !/tolerance|threshold|percent|margin|confidence|amountDiff|matchScore|ratio/i.test(line)) {
+        if (/\*\s*0\.(05|09975|14975|13|14|15)\b/.test(line) && !/tolerance|threshold|percent|margin|confidence|amountDiff|matchScore|ratio|sampleRate|canvas|ctx|width|height|impulse|delivered|bounced|opened|Math\.round/i.test(line)) {
           // Verify this file does NOT already import centralized tax constants
           const importsTaxConstants =
             /import\s+.*(?:GST_RATE|QST_RATE|TAX_RATES|calculateTax|getTaxRate)/i.test(content) ||
