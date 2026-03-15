@@ -58,25 +58,65 @@ export async function reserveStock(
   return prisma.$transaction(async (tx) => {
     const reservationIds: string[] = [];
 
+    // N+1 FIX: Batch-fetch all format and product stock data before the loop
+    // instead of individual findUnique per item (was 2-5 queries per item, now 2 queries total)
+    const formatIdsToCheck = items.filter(i => i.formatId).map(i => i.formatId!);
+    const productIdsToCheck = items.filter(i => !i.formatId).map(i => i.productId);
+
+    const [allFormats, allProducts] = await Promise.all([
+      formatIdsToCheck.length > 0
+        ? tx.productFormat.findMany({
+            where: { id: { in: formatIdsToCheck } },
+            select: { id: true, stockQuantity: true, trackInventory: true },
+          })
+        : [],
+      productIdsToCheck.length > 0
+        ? tx.product.findMany({
+            where: { id: { in: productIdsToCheck } },
+            select: { id: true, stockQuantity: true, trackInventory: true },
+          })
+        : [],
+    ]);
+
+    const formatMap = new Map(allFormats.map(f => [f.id, f]));
+    const productMap = new Map(allProducts.map(p => [p.id, p]));
+
+    // Batch-fetch all existing reservations for all requested formats and products
+    const allFormatReservations = formatIdsToCheck.length > 0
+      ? await tx.inventoryReservation.groupBy({
+          by: ['formatId'],
+          where: {
+            formatId: { in: formatIdsToCheck },
+            status: 'RESERVED',
+            expiresAt: { gt: new Date() },
+          },
+          _sum: { quantity: true },
+        })
+      : [];
+    const allProductReservations = productIdsToCheck.length > 0
+      ? await tx.inventoryReservation.groupBy({
+          by: ['productId'],
+          where: {
+            productId: { in: productIdsToCheck },
+            formatId: null,
+            status: 'RESERVED',
+            expiresAt: { gt: new Date() },
+          },
+          _sum: { quantity: true },
+        })
+      : [];
+
+    const formatReservedMap = new Map(allFormatReservations.map(r => [r.formatId, r._sum.quantity || 0]));
+    const productReservedMap = new Map(allProductReservations.map(r => [r.productId, r._sum.quantity || 0]));
+
     for (const item of items) {
-      // Check available stock (total - reserved) atomically within transaction
+      // Check available stock using pre-fetched data
       if (item.formatId) {
-        const format = await tx.productFormat.findUnique({
-          where: { id: item.formatId },
-          select: { stockQuantity: true, trackInventory: true },
-        });
+        const format = formatMap.get(item.formatId);
 
         if (format?.trackInventory) {
-          const reservedQty = await tx.inventoryReservation.aggregate({
-            where: {
-              formatId: item.formatId,
-              status: 'RESERVED',
-              expiresAt: { gt: new Date() },
-            },
-            _sum: { quantity: true },
-          });
-
-          const available = format.stockQuantity - (reservedQty._sum.quantity || 0);
+          const reservedQty = formatReservedMap.get(item.formatId) || 0;
+          const available = format.stockQuantity - reservedQty;
           if (available < item.quantity) {
             throw new Error(
               `Stock insuffisant pour format ${item.formatId}: demandé ${item.quantity}, disponible ${available}`
@@ -85,23 +125,11 @@ export async function reserveStock(
         }
       } else {
         // E-07 FIX: Check stock for base products (no formatId)
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { stockQuantity: true, trackInventory: true },
-        });
+        const product = productMap.get(item.productId);
 
         if (product?.trackInventory) {
-          const reservedQty = await tx.inventoryReservation.aggregate({
-            where: {
-              productId: item.productId,
-              formatId: null,
-              status: 'RESERVED',
-              expiresAt: { gt: new Date() },
-            },
-            _sum: { quantity: true },
-          });
-
-          const available = product.stockQuantity - (reservedQty._sum.quantity || 0);
+          const reservedQty = productReservedMap.get(item.productId) || 0;
+          const available = product.stockQuantity - reservedQty;
           if (available < item.quantity) {
             throw new Error(
               `Stock insuffisant pour produit ${item.productId}: demandé ${item.quantity}, disponible ${available}`
@@ -175,6 +203,31 @@ export async function consumeReservation(
       data: { status: 'CONSUMED', orderId, consumedAt: new Date() },
     });
 
+    // N+1 FIX: Batch-fetch WAC for all product/format pairs before the loop
+    // instead of individual findFirst per reservation (was 1 query per reservation, now 1 query total)
+    const wacPairs = reservations.map(r => ({ productId: r.productId, formatId: r.formatId }));
+    const uniquePairs = Array.from(
+      new Map(wacPairs.map(p => [`${p.productId}:${p.formatId || 'null'}`, p])).values()
+    );
+    const allWacTransactions = await tx.inventoryTransaction.findMany({
+      where: {
+        OR: uniquePairs.map(p => ({
+          productId: p.productId,
+          formatId: p.formatId,
+        })),
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { productId: true, formatId: true, runningWAC: true, createdAt: true },
+    });
+    // Build WAC map: keep only the most recent transaction per product/format pair
+    const wacMap = new Map<string, number>();
+    for (const wt of allWacTransactions) {
+      const key = `${wt.productId}:${wt.formatId || 'null'}`;
+      if (!wacMap.has(key)) {
+        wacMap.set(key, Number(wt.runningWAC));
+      }
+    }
+
     // Process stock decrements and inventory transactions for each reservation
     for (const reservation of reservations) {
       // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
@@ -204,16 +257,9 @@ export async function consumeReservation(
         }
       }
 
-      // Get current WAC for this product/format
-      const lastTransaction = await tx.inventoryTransaction.findFirst({
-        where: {
-          productId: reservation.productId,
-          formatId: reservation.formatId,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+      // Get current WAC from pre-fetched map
+      const wacKey = `${reservation.productId}:${reservation.formatId || 'null'}`;
+      const wac = wacMap.get(wacKey) || 0;
 
       // Create inventory transaction
       await tx.inventoryTransaction.create({
@@ -270,34 +316,64 @@ export async function purchaseStock(
 
   // Wrap ALL items in a single transaction for atomicity
   await prisma.$transaction(async (tx) => {
+    // N+1 FIX: Batch-fetch current stock quantities and WAC for all items before the loop
+    // instead of individual findUnique + findFirst per item (was 3 queries per item, now 3 queries total)
+    const txFormatIds = items.filter(i => i.formatId).map(i => i.formatId!);
+    const txProductOnlyIds = items.filter(i => !i.formatId).map(i => i.productId);
+
+    const [txFormats, txProducts] = await Promise.all([
+      txFormatIds.length > 0
+        ? tx.productFormat.findMany({
+            where: { id: { in: txFormatIds } },
+            select: { id: true, stockQuantity: true },
+          })
+        : [],
+      txProductOnlyIds.length > 0
+        ? tx.product.findMany({
+            where: { id: { in: txProductOnlyIds } },
+            select: { id: true, stockQuantity: true },
+          })
+        : [],
+    ]);
+
+    const txFormatQtyMap = new Map(txFormats.map(f => [f.id, f.stockQuantity]));
+    const txProductQtyMap = new Map(txProducts.map(p => [p.id, p.stockQuantity]));
+
+    // Batch-fetch WAC for all product/format pairs
+    const wacPairs = items.map(i => ({ productId: i.productId, formatId: i.formatId || null }));
+    const uniqueWacPairs = Array.from(
+      new Map(wacPairs.map(p => [`${p.productId}:${p.formatId || 'null'}`, p])).values()
+    );
+    const allWacTransactions = await tx.inventoryTransaction.findMany({
+      where: {
+        OR: uniqueWacPairs.map(p => ({
+          productId: p.productId,
+          formatId: p.formatId,
+        })),
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { productId: true, formatId: true, runningWAC: true, createdAt: true },
+    });
+    const txWacMap = new Map<string, number>();
+    for (const wt of allWacTransactions) {
+      const key = `${wt.productId}:${wt.formatId || 'null'}`;
+      if (!txWacMap.has(key)) {
+        txWacMap.set(key, Number(wt.runningWAC));
+      }
+    }
+
     for (const item of items) {
-      // Get current stock quantity and WAC
+      // Get current stock quantity and WAC from pre-fetched maps
       let currentQty = 0;
-      let currentWAC = 0;
 
       if (item.formatId) {
-        const format = await tx.productFormat.findUnique({
-          where: { id: item.formatId },
-          select: { stockQuantity: true },
-        });
-        currentQty = format?.stockQuantity || 0;
+        currentQty = txFormatQtyMap.get(item.formatId) || 0;
       } else {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { stockQuantity: true },
-        });
-        currentQty = product?.stockQuantity || 0;
+        currentQty = txProductQtyMap.get(item.productId) || 0;
       }
 
-      const lastTransaction = await tx.inventoryTransaction.findFirst({
-        where: {
-          productId: item.productId,
-          formatId: item.formatId || null,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      currentWAC = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+      const wacKey = `${item.productId}:${(item.formatId || null) || 'null'}`;
+      const currentWAC = txWacMap.get(wacKey) || 0;
 
       // Calculate new WAC
       const totalCurrentValue = currentQty * currentWAC;
@@ -541,15 +617,14 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
   // Ensure the accounting period for the order date is open
   await assertPeriodOpen(order.createdAt);
 
-  // Get account IDs
-  const cogsAccount = await prisma.chartOfAccount.findUnique({
-    where: { code: ACCOUNT_CODES.PURCHASES },
-    select: { id: true },
+  // N+1 FIX: Batch-fetch both chart accounts in a single query
+  // instead of two separate findUnique calls
+  const accounts = await prisma.chartOfAccount.findMany({
+    where: { code: { in: [ACCOUNT_CODES.PURCHASES, ACCOUNT_CODES.INVENTORY] } },
+    select: { id: true, code: true },
   });
-  const stockAccount = await prisma.chartOfAccount.findUnique({
-    where: { code: ACCOUNT_CODES.INVENTORY },
-    select: { id: true },
-  });
+  const cogsAccount = accounts.find(a => a.code === ACCOUNT_CODES.PURCHASES);
+  const stockAccount = accounts.find(a => a.code === ACCOUNT_CODES.INVENTORY);
 
   if (!cogsAccount || !stockAccount) {
     logger.error('COGS or Stock account not found in Chart of Accounts');

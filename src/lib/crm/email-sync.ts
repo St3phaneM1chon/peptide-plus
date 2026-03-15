@@ -133,6 +133,39 @@ export async function syncInboundEmails(): Promise<{ synced: number; errors: num
 
   const emails = await fetchUnreadEmails();
 
+  // N+1 FIX: Batch-check duplicate messageIds in a single query instead of
+  // per-email findFirst (was 1 query per email, now 1 query total)
+  const allMessageIds = emails.filter((e) => e.from).map((e) => e.messageId);
+  const existingMessages = allMessageIds.length > 0
+    ? await prisma.inboxMessage.findMany({
+        where: {
+          OR: allMessageIds.map((mid) => ({
+            metadata: { path: ['emailMessageId'], equals: mid },
+          })),
+        },
+        select: { metadata: true },
+      })
+    : [];
+  const existingMessageIds = new Set(
+    existingMessages.map((m) => {
+      const meta = m.metadata as Record<string, unknown> | null;
+      return meta?.emailMessageId as string | undefined;
+    }).filter(Boolean)
+  );
+
+  // N+1 FIX: Batch-match all sender emails to leads in a single query
+  // instead of per-email matchEmailToLead (was 1 query per email, now 1 query total)
+  const allSenderEmails = [...new Set(emails.filter((e) => e.from).map((e) => e.from.toLowerCase()))];
+  const matchedLeads = allSenderEmails.length > 0
+    ? await prisma.crmLead.findMany({
+        where: { email: { in: allSenderEmails, mode: 'insensitive' } },
+        select: { id: true, email: true },
+      })
+    : [];
+  const emailToLeadMap = new Map(
+    matchedLeads.map((l) => [l.email!.toLowerCase(), l.id])
+  );
+
   for (const email of emails) {
     try {
       // Skip empty/invalid emails
@@ -141,23 +174,13 @@ export async function syncInboundEmails(): Promise<{ synced: number; errors: num
         continue;
       }
 
-      // Check for duplicate by messageId in metadata
-      const existingMsg = await prisma.inboxMessage.findFirst({
-        where: {
-          metadata: {
-            path: ['emailMessageId'],
-            equals: email.messageId,
-          },
-        },
-        select: { id: true },
-      });
-
-      if (existingMsg) {
+      // Check pre-fetched duplicate set
+      if (existingMessageIds.has(email.messageId)) {
         continue; // Already synced
       }
 
-      // Try to match to a lead
-      const leadId = await matchEmailToLead(email.from);
+      // Use pre-fetched lead map instead of per-email DB query
+      const leadId = emailToLeadMap.get(email.from.toLowerCase()) || null;
 
       // Find or create conversation
       let conversation = await prisma.inboxConversation.findFirst({

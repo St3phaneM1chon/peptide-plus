@@ -192,23 +192,40 @@ export async function assignLeadsManual(
 // Helpers
 // ---------------------------------------------------------------------------
 
+// N+1 FIX: Batch-fetch all user names and deal counts instead of
+// per-agent findUnique + count (was 2 queries per agent, now 2 queries total)
 export async function getAgentWorkload(
   agentIds: string[],
 ): Promise<{ agentId: string; name: string | null; openDeals: number }[]> {
-  return Promise.all(
-    agentIds.map(async (agentId) => {
-      const [user, dealCount] = await Promise.all([
-        prisma.user.findUnique({ where: { id: agentId }, select: { name: true } }),
-        prisma.crmDeal.count({
-          where: {
-            assignedToId: agentId,
-            stage: { isWon: false, isLost: false },
-          },
-        }),
-      ]);
-      return { agentId, name: user?.name ?? null, openDeals: dealCount };
+  if (agentIds.length === 0) return [];
+
+  const [users, dealCounts] = await Promise.all([
+    prisma.user.findMany({
+      where: { id: { in: agentIds } },
+      select: { id: true, name: true },
     }),
+    prisma.crmDeal.groupBy({
+      by: ['assignedToId'],
+      where: {
+        assignedToId: { in: agentIds },
+        stage: { isWon: false, isLost: false },
+      },
+      _count: { id: true },
+    }),
+  ]);
+
+  const userNameMap = new Map(users.map((u) => [u.id, u.name]));
+  const dealCountMap = new Map(
+    dealCounts
+      .filter((d) => d.assignedToId !== null)
+      .map((d) => [d.assignedToId as string, d._count.id])
   );
+
+  return agentIds.map((agentId) => ({
+    agentId,
+    name: userNameMap.get(agentId) ?? null,
+    openDeals: dealCountMap.get(agentId) ?? 0,
+  }));
 }
 
 async function applyBulkAssignments(assignments: { leadId: string; agentId: string }[]): Promise<void> {

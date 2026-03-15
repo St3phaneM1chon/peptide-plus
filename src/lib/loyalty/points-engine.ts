@@ -372,20 +372,27 @@ export async function processInactivityExpiration(
     details: [],
   };
 
-  for (const user of inactiveUsersWithPoints) {
-    try {
-      // Check that we haven't already expired these points (idempotency)
-      // Look for an EXPIRE transaction in the last 24 hours for this user
-      const recentExpire = await db.loyaltyTransaction.findFirst({
+  // N+1 FIX: Batch-fetch all recent EXPIRE transactions for all inactive users
+  // instead of individual findFirst per user (was 1 query per user, now 1 query total)
+  const userIds = inactiveUsersWithPoints.map(u => u.id);
+  const recentExpires = userIds.length > 0
+    ? await db.loyaltyTransaction.findMany({
         where: {
-          userId: user.id,
+          userId: { in: userIds },
           type: 'EXPIRE',
           description: { contains: 'inactivity' },
           createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
         },
-      });
+        select: { userId: true },
+      })
+    : [];
+  const recentlyExpiredUserIds = new Set(recentExpires.map(r => r.userId));
 
-      if (recentExpire) {
+  for (const user of inactiveUsersWithPoints) {
+    try {
+      // Check that we haven't already expired these points (idempotency)
+      // Using pre-fetched batch data instead of per-user query
+      if (recentlyExpiredUserIds.has(user.id)) {
         // Already processed recently, skip
         continue;
       }

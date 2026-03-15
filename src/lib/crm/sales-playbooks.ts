@@ -173,19 +173,18 @@ export async function installDefaultPlaybooks(): Promise<{ installed: number }> 
     },
   ];
 
-  let installed = 0;
-  for (const pb of defaultPlaybooks) {
-    await prisma.crmPlaybook.create({
-      data: {
-        name: pb.name,
-        description: pb.description,
-        status: pb.status,
-        stages: pb.stages as unknown as Prisma.InputJsonValue,
-      },
-    });
-    installed++;
-  }
+  // N+1 FIX: Use createMany to batch-insert all playbooks in a single query
+  // instead of sequential individual creates (was 1 query per playbook, now 1 query total)
+  const result = await prisma.crmPlaybook.createMany({
+    data: defaultPlaybooks.map((pb) => ({
+      name: pb.name,
+      description: pb.description,
+      status: pb.status,
+      stages: pb.stages as unknown as Prisma.InputJsonValue,
+    })),
+  });
 
+  const installed = result.count;
   logger.info('[sales-playbooks] Default playbooks installed', { installed });
   return { installed };
 }

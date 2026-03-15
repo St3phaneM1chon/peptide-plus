@@ -153,13 +153,23 @@ const DEFAULT_RULES: DefaultRule[] = [
  * Idempotent: only inserts rules whose names are not already present.
  */
 export async function seedDefaultWorkflowRules(): Promise<number> {
-  let created = 0;
-  for (const rule of DEFAULT_RULES) {
-    const existing = await prisma.workflowRule.findFirst({
-      where: { name: rule.name, deletedAt: null },
-    });
-    if (!existing) {
-      await prisma.workflowRule.create({
+  // N+1 FIX: Batch-check all existing rule names in a single query
+  // instead of individual findFirst per rule (was 5 queries, now 1)
+  const ruleNames = DEFAULT_RULES.map(r => r.name);
+  const existingRules = await prisma.workflowRule.findMany({
+    where: { name: { in: ruleNames }, deletedAt: null },
+    select: { name: true },
+  });
+  const existingNames = new Set(existingRules.map(r => r.name));
+
+  const rulesToCreate = DEFAULT_RULES.filter(r => !existingNames.has(r.name));
+
+  if (rulesToCreate.length === 0) return 0;
+
+  // Batch create all missing rules in a single transaction
+  await prisma.$transaction(
+    rulesToCreate.map(rule =>
+      prisma.workflowRule.create({
         data: {
           name: rule.name,
           description: rule.description,
@@ -171,14 +181,12 @@ export async function seedDefaultWorkflowRules(): Promise<number> {
           isActive: true,
           createdBy: 'system',
         },
-      });
-      created++;
-    }
-  }
-  if (created > 0) {
-    logger.info(`Seeded ${created} default workflow rules`);
-  }
-  return created;
+      })
+    )
+  );
+
+  logger.info(`Seeded ${rulesToCreate.length} default workflow rules`);
+  return rulesToCreate.length;
 }
 
 // ---------------------------------------------------------------------------

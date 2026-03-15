@@ -392,29 +392,33 @@ function estimateTalkTime(transcript: string): { coach: number; student: number 
   return { coach: 50, student: 50 };
 }
 
+// N+1 FIX: Batch all upserts in a single $transaction instead of
+// sequential individual upserts (was 1 query per criterion, now 1 transaction)
 async function saveScores(
   sessionId: string,
   criteria: Array<{ criterion: string; score: number; weight: number; comment: string }>
 ): Promise<void> {
-  for (const c of criteria) {
-    await prisma.coachingScore.upsert({
-      where: {
-        sessionId_criterion: { sessionId, criterion: c.criterion },
-      },
-      update: {
-        score: c.score,
-        weight: c.weight,
-        comment: c.comment,
-        isAutoScored: true,
-      },
-      create: {
-        sessionId,
-        criterion: c.criterion,
-        score: c.score,
-        weight: c.weight,
-        comment: c.comment,
-        isAutoScored: true,
-      },
-    });
-  }
+  await prisma.$transaction(
+    criteria.map((c) =>
+      prisma.coachingScore.upsert({
+        where: {
+          sessionId_criterion: { sessionId, criterion: c.criterion },
+        },
+        update: {
+          score: c.score,
+          weight: c.weight,
+          comment: c.comment,
+          isAutoScored: true,
+        },
+        create: {
+          sessionId,
+          criterion: c.criterion,
+          score: c.score,
+          weight: c.weight,
+          comment: c.comment,
+          isAutoScored: true,
+        },
+      })
+    )
+  );
 }

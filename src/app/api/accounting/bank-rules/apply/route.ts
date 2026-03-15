@@ -149,6 +149,10 @@ export const POST = withAdminGuard(async (request) => {
     const results: Array<{ transactionId: string; ruleId: string; ruleName: string }> = [];
     const ruleUpdateMap = new Map<string, number>(); // ruleId -> count of matches
 
+    // N+1 FIX: Collect all transaction updates, then batch-execute in a single transaction
+    // instead of individual update per matched transaction (was 1 query per match, now 1 transaction)
+    const txUpdateOps: Array<ReturnType<typeof prisma.bankTransaction.update>> = [];
+
     for (const tx of transactions) {
       // Try each rule in priority order - first match wins
       for (const rule of rules) {
@@ -167,10 +171,12 @@ export const POST = withAdminGuard(async (request) => {
 
           // Only update if there's something to change
           if (Object.keys(updateData).length > 0) {
-            await prisma.bankTransaction.update({
-              where: { id: tx.id },
-              data: updateData,
-            });
+            txUpdateOps.push(
+              prisma.bankTransaction.update({
+                where: { id: tx.id },
+                data: updateData,
+              })
+            );
           }
 
           // Track rule application stats
@@ -187,19 +193,21 @@ export const POST = withAdminGuard(async (request) => {
       }
     }
 
-    // Batch-update rule stats (timesApplied, lastAppliedAt)
+    // Batch-execute all transaction updates + rule stat updates in a single transaction
     const now = new Date();
-    await Promise.all(
-      Array.from(ruleUpdateMap.entries()).map(([ruleId, count]) =>
-        prisma.bankRule.update({
-          where: { id: ruleId },
-          data: {
-            timesApplied: { increment: count },
-            lastAppliedAt: now,
-          },
-        })
-      )
+    const ruleUpdateOps = Array.from(ruleUpdateMap.entries()).map(([ruleId, count]) =>
+      prisma.bankRule.update({
+        where: { id: ruleId },
+        data: {
+          timesApplied: { increment: count },
+          lastAppliedAt: now,
+        },
+      })
     );
+
+    if (txUpdateOps.length > 0 || ruleUpdateOps.length > 0) {
+      await prisma.$transaction([...txUpdateOps, ...ruleUpdateOps]);
+    }
 
     return NextResponse.json({
       matched: results.length,

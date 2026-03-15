@@ -61,9 +61,11 @@ export async function runAudit(
     const findings = results.filter((r) => !r.passed);
     const passed = results.filter((r) => r.passed);
 
-    for (const finding of findings) {
-      await prisma.auditFinding.create({
-        data: {
+    // N+1 FIX: Use createMany to batch-insert all findings in a single query
+    // instead of sequential individual creates (was 1 query per finding, now 1 query total)
+    if (findings.length > 0) {
+      await prisma.auditFinding.createMany({
+        data: findings.map((finding) => ({
           auditRunId: run.id,
           functionId: finding.functionId || null,
           checkId: finding.checkId,
@@ -74,7 +76,7 @@ export async function runAudit(
           lineNumber: finding.lineNumber,
           codeSnippet: finding.codeSnippet,
           recommendation: finding.recommendation,
-        },
+        })),
       });
     }
 

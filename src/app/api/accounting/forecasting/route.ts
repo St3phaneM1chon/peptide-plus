@@ -93,21 +93,24 @@ export const GET = withAdminGuard(async (request) => {
     const currentYear = now.getFullYear();
     const yearStart = new Date(currentYear, 0, 1);
 
-    const revenueTotal = await prisma.journalLine.aggregate({
-      where: {
-        entry: { status: 'POSTED', deletedAt: null, date: { gte: yearStart } },
-        account: { code: { startsWith: '4' } },
-      },
-      _sum: { credit: true, debit: true },
-    });
-
-    const expenseTotal = await prisma.journalLine.aggregate({
-      where: {
-        entry: { status: 'POSTED', deletedAt: null, date: { gte: yearStart } },
-        account: { code: { startsWith: '6' } },
-      },
-      _sum: { debit: true, credit: true },
-    });
+    // N+1 FIX: Parallelize independent aggregate queries with Promise.all
+    // instead of sequential execution (was 2 sequential queries, now parallel)
+    const [revenueTotal, expenseTotal] = await Promise.all([
+      prisma.journalLine.aggregate({
+        where: {
+          entry: { status: 'POSTED', deletedAt: null, date: { gte: yearStart } },
+          account: { code: { startsWith: '4' } },
+        },
+        _sum: { credit: true, debit: true },
+      }),
+      prisma.journalLine.aggregate({
+        where: {
+          entry: { status: 'POSTED', deletedAt: null, date: { gte: yearStart } },
+          account: { code: { startsWith: '6' } },
+        },
+        _sum: { debit: true, credit: true },
+      }),
+    ]);
 
     const ytdRevenue = Number(revenueTotal._sum.credit || 0) - Number(revenueTotal._sum.debit || 0);
     const ytdExpenses = Number(expenseTotal._sum.debit || 0) - Number(expenseTotal._sum.credit || 0);

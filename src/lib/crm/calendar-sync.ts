@@ -332,30 +332,41 @@ export async function importCalendarEvents(
     }
   }
 
-  let imported = 0;
-  for (const event of events) {
-    // Avoid duplicates by checking title + due date
-    const existing = await prisma.crmTask.findFirst({
-      where: {
-        assignedToId: userId,
-        title: event.title,
-        dueAt: new Date(event.start),
-      },
-    });
+  // N+1 FIX: Batch-fetch all existing tasks for this user matching any event title+date,
+  // then filter in memory instead of per-event findFirst (was 1 query per event, now 1 query total)
+  const eventTitles = events.map((e) => e.title);
+  const eventDates = events.map((e) => new Date(e.start));
 
-    if (!existing) {
-      await prisma.crmTask.create({
-        data: {
-          title: event.title,
-          type: 'MEETING',
-          priority: 'MEDIUM',
-          status: 'PENDING',
-          dueAt: new Date(event.start),
+  const existingTasks = eventTitles.length > 0
+    ? await prisma.crmTask.findMany({
+        where: {
           assignedToId: userId,
+          title: { in: eventTitles },
+          dueAt: { in: eventDates },
         },
-      });
-      imported++;
-    }
+        select: { title: true, dueAt: true },
+      })
+    : [];
+  const existingSet = new Set(
+    existingTasks.map((t) => `${t.title}::${t.dueAt?.toISOString()}`)
+  );
+
+  // Collect new tasks to create
+  const newTasks = events
+    .filter((event) => !existingSet.has(`${event.title}::${new Date(event.start).toISOString()}`))
+    .map((event) => ({
+      title: event.title,
+      type: 'MEETING' as const,
+      priority: 'MEDIUM' as const,
+      status: 'PENDING' as const,
+      dueAt: new Date(event.start),
+      assignedToId: userId,
+    }));
+
+  let imported = 0;
+  if (newTasks.length > 0) {
+    const result = await prisma.crmTask.createMany({ data: newTasks });
+    imported = result.count;
   }
 
   logger.info('[calendar-sync] Events imported', { provider, userId, imported, total: events.length });

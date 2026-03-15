@@ -129,18 +129,22 @@ export async function assignSignature(templateId: string, agentIds: string[]): P
     throw new Error(`Signature template ${templateId} not found`);
   }
 
-  for (const agentId of agentIds) {
-    await prisma.siteSetting.upsert({
-      where: { key: `${ASSIGNMENT_PREFIX}${agentId}` },
-      create: {
-        key: `${ASSIGNMENT_PREFIX}${agentId}`,
-        value: templateId,
-      },
-      update: {
-        value: templateId,
-      },
-    });
-  }
+  // N+1 FIX: Batch all upserts in a single $transaction instead of
+  // sequential individual upserts (was 1 query per agent, now 1 transaction)
+  await prisma.$transaction(
+    agentIds.map((agentId) =>
+      prisma.siteSetting.upsert({
+        where: { key: `${ASSIGNMENT_PREFIX}${agentId}` },
+        create: {
+          key: `${ASSIGNMENT_PREFIX}${agentId}`,
+          value: templateId,
+        },
+        update: {
+          value: templateId,
+        },
+      })
+    )
+  );
 
   logger.info('[email-signatures] Signature assigned to agents', {
     event: 'signature_assigned',

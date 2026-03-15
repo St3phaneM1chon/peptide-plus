@@ -179,29 +179,44 @@ export const POST = withAdminGuard(async (request, { session }) => {
           });
         }
 
-        for (const tx_data of (result.transactions || [])) {
-          if (tx_data.bankAccountId) {
-            // #96 Skip already-imported bank transactions by checking Stripe ID
-            const existingBankTx = await tx.bankTransaction.findFirst({
+        // N+1 FIX: Batch-fetch all existing bank transactions by Stripe ID
+        // instead of individual findFirst per transaction (was 1 query per tx, now 1 query total)
+        const txDataWithBankAccount = (result.transactions || []).filter(
+          (td: { bankAccountId?: string }) => td.bankAccountId
+        );
+        const stripeIds = txDataWithBankAccount.map((td: { id: string }) => td.id);
+        const existingBankTxs = stripeIds.length > 0
+          ? await tx.bankTransaction.findMany({
               where: {
-                rawData: { path: ['stripeId'], equals: tx_data.id },
+                OR: stripeIds.map((sid: string) => ({
+                  rawData: { path: ['stripeId'], equals: sid },
+                })),
               },
-              select: { id: true },
-            });
-            if (existingBankTx) continue;
+              select: { rawData: true },
+            })
+          : [];
+        const existingStripeIds = new Set(
+          existingBankTxs.map((bt) => {
+            const raw = bt.rawData as Record<string, unknown> | null;
+            return raw?.stripeId as string | undefined;
+          }).filter(Boolean)
+        );
 
-            await tx.bankTransaction.create({
-              data: {
-                bankAccountId: tx_data.bankAccountId,
-                date: new Date(tx_data.date),
-                description: tx_data.description,
-                amount: tx_data.amount,
-                type: tx_data.type || 'CREDIT',
-                reconciliationStatus: 'PENDING',
-                rawData: JSON.parse(JSON.stringify(tx_data)),
-              },
-            });
-          }
+        for (const tx_data of txDataWithBankAccount) {
+          // Skip already-imported using pre-fetched set
+          if (existingStripeIds.has(tx_data.id)) continue;
+
+          await tx.bankTransaction.create({
+            data: {
+              bankAccountId: tx_data.bankAccountId,
+              date: new Date(tx_data.date),
+              description: tx_data.description,
+              amount: tx_data.amount,
+              type: tx_data.type || 'CREDIT',
+              reconciliationStatus: 'PENDING',
+              rawData: JSON.parse(JSON.stringify(tx_data)),
+            },
+          });
         }
       });
     }

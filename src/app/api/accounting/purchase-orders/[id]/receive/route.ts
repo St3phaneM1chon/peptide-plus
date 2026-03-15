@@ -106,18 +106,21 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         include: { items: true },
       });
 
-      // Update quantityReceived on PO items
-      for (const receiveItem of data.items) {
-        const poItem = poItemMap.get(receiveItem.purchaseOrderItemId)!;
-        const newReceived = Number(poItem.quantityReceived) + receiveItem.quantityReceived;
-        await tx.purchaseOrderItem.update({
-          where: { id: receiveItem.purchaseOrderItemId },
-          data: {
-            quantityReceived: newReceived,
-            receivedQty: Math.floor(newReceived),
-          },
-        });
-      }
+      // N+1 FIX: Batch update PO item quantities using Promise.all
+      // instead of sequential individual updates (was 1 query per item, now parallel)
+      await Promise.all(
+        data.items.map((receiveItem) => {
+          const poItem = poItemMap.get(receiveItem.purchaseOrderItemId)!;
+          const newReceived = Number(poItem.quantityReceived) + receiveItem.quantityReceived;
+          return tx.purchaseOrderItem.update({
+            where: { id: receiveItem.purchaseOrderItemId },
+            data: {
+              quantityReceived: newReceived,
+              receivedQty: Math.floor(newReceived),
+            },
+          });
+        })
+      );
 
       // Determine new status: check all items
       const updatedItems = await tx.purchaseOrderItem.findMany({

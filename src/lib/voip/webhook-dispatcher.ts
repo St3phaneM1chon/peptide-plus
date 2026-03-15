@@ -348,31 +348,37 @@ export class WebhookDispatcher {
   /**
    * Save current webhook configurations to the database.
    */
+  // N+1 FIX: Batch all upsert operations in a single $transaction
+  // instead of sequential individual $executeRaw per webhook
   async saveToDB(): Promise<void> {
     try {
-      for (const webhook of this.webhooks) {
-        await prisma.$executeRaw`
-          INSERT INTO "WebhookEndpoint" (id, url, events, secret, active, "retryCount", headers, "updatedAt")
-          VALUES (
-            ${webhook.id},
-            ${webhook.url},
-            ${JSON.stringify(webhook.events)},
-            ${webhook.secret || null},
-            ${webhook.active},
-            ${webhook.retryCount ?? 3},
-            ${webhook.headers ? JSON.stringify(webhook.headers) : null},
-            NOW()
-          )
-          ON CONFLICT (id) DO UPDATE SET
-            url = EXCLUDED.url,
-            events = EXCLUDED.events,
-            secret = EXCLUDED.secret,
-            active = EXCLUDED.active,
-            "retryCount" = EXCLUDED."retryCount",
-            headers = EXCLUDED.headers,
-            "updatedAt" = NOW()
-        `;
-      }
+      if (this.webhooks.length === 0) return;
+
+      await prisma.$transaction(
+        this.webhooks.map((webhook) =>
+          prisma.$executeRaw`
+            INSERT INTO "WebhookEndpoint" (id, url, events, secret, active, "retryCount", headers, "updatedAt")
+            VALUES (
+              ${webhook.id},
+              ${webhook.url},
+              ${JSON.stringify(webhook.events)},
+              ${webhook.secret || null},
+              ${webhook.active},
+              ${webhook.retryCount ?? 3},
+              ${webhook.headers ? JSON.stringify(webhook.headers) : null},
+              NOW()
+            )
+            ON CONFLICT (id) DO UPDATE SET
+              url = EXCLUDED.url,
+              events = EXCLUDED.events,
+              secret = EXCLUDED.secret,
+              active = EXCLUDED.active,
+              "retryCount" = EXCLUDED."retryCount",
+              headers = EXCLUDED.headers,
+              "updatedAt" = NOW()
+          `
+        )
+      );
 
       logger.info('[Webhook] Saved webhooks to DB', {
         count: this.webhooks.length,

@@ -287,13 +287,23 @@ export async function cleanupUatRun(runId: string): Promise<{ deleted: Record<st
       where: { orderId: { in: orderIds }, type: 'SALE' },
     });
 
+    // N+1 FIX: Aggregate quantities per format, then batch-update via $transaction
+    // instead of sequential individual updates (was 1 query per sale tx, now 1 transaction)
+    const formatQtyMap = new Map<string, number>();
     for (const tx of saleTxs) {
       if (tx.formatId) {
-        await prisma.productFormat.update({
-          where: { id: tx.formatId },
-          data: { stockQuantity: { increment: Math.abs(tx.quantity) } },
-        });
+        formatQtyMap.set(tx.formatId, (formatQtyMap.get(tx.formatId) || 0) + Math.abs(tx.quantity));
       }
+    }
+    if (formatQtyMap.size > 0) {
+      await prisma.$transaction(
+        Array.from(formatQtyMap.entries()).map(([formatId, qty]) =>
+          prisma.productFormat.update({
+            where: { id: formatId },
+            data: { stockQuantity: { increment: qty } },
+          })
+        )
+      );
     }
 
     const invTxResult = await prisma.inventoryTransaction.deleteMany({

@@ -119,31 +119,35 @@ export async function takeSnapshot(
   config: SnapshotConfig,
   userId?: string,
 ): Promise<Snapshot> {
-  const data: SnapshotData = {};
+  // N+1 FIX: Capture all entity states in parallel instead of sequentially
+  // Each capture is independent and can run concurrently
+  const entityCaptureFns: Record<string, () => Promise<unknown>> = {
+    pipeline: capturePipelineState,
+    leads: captureLeadState,
+    deals: captureDealState,
+    revenue: captureRevenueState,
+    activities: captureActivityState,
+    customers: captureCustomerState,
+  };
 
-  for (const entity of config.entities) {
-    switch (entity) {
-      case 'pipeline':
-        data.pipeline = await capturePipelineState();
-        break;
-      case 'leads':
-        data.leads = await captureLeadState();
-        break;
-      case 'deals':
-        data.deals = await captureDealState();
-        break;
-      case 'revenue':
-        data.revenue = await captureRevenueState();
-        break;
-      case 'activities':
-        data.activities = await captureActivityState();
-        break;
-      case 'customers':
-        data.customers = await captureCustomerState();
-        break;
-      default:
-        logger.warn('[SnapshotReporting] Unknown entity for snapshot', { entity });
+  const validEntities = config.entities.filter(e => {
+    if (!entityCaptureFns[e]) {
+      logger.warn('[SnapshotReporting] Unknown entity for snapshot', { entity: e });
+      return false;
     }
+    return true;
+  });
+
+  const captureResults = await Promise.all(
+    validEntities.map(async (entity) => {
+      const result = await entityCaptureFns[entity]();
+      return { entity, result };
+    })
+  );
+
+  const data: SnapshotData = {};
+  for (const { entity, result } of captureResults) {
+    (data as Record<string, unknown>)[entity] = result;
   }
 
   // Store snapshot as CrmScheduledReport with reportType='SNAPSHOT'
