@@ -204,9 +204,10 @@ export const POST = withAdminGuard(async (request) => {
         if (!isNaN(num)) nextNum = num + 1;
       }
       internalRef = `${internalPrefix}${String(nextNum).padStart(5, '0')}`;
-    } catch {
-      // A097: If internalRef column doesn't exist yet, skip silently.
+    } catch (error) {
+      // A097: If internalRef column doesn't exist yet, skip gracefully.
       // The column may be added in a future migration.
+      console.error('[supplier-invoices] internalRef generation error:', error);
       internalRef = undefined;
     }
 

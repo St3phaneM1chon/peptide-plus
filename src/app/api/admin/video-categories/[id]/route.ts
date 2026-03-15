@@ -127,24 +127,27 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
       include: { translations: true },
     });
 
-    // Upsert translations
+    // N+1 fix: Batch upsert all translations in a single transaction
+    // instead of individual upsert per locale (was N queries, now 1 transaction)
     if (translations && translations.length > 0) {
-      for (const t of translations) {
-        await prisma.videoCategoryTranslation.upsert({
-          where: { videoCategoryId_locale: { videoCategoryId: id, locale: t.locale } },
-          update: {
-            name: t.name ?? undefined,
-            description: t.description ?? undefined,
-            isApproved: t.isApproved ?? undefined,
-          },
-          create: {
-            videoCategoryId: id,
-            locale: t.locale,
-            name: t.name || null,
-            description: t.description || null,
-          },
-        });
-      }
+      await prisma.$transaction(
+        translations.map((t) =>
+          prisma.videoCategoryTranslation.upsert({
+            where: { videoCategoryId_locale: { videoCategoryId: id, locale: t.locale } },
+            update: {
+              name: t.name ?? undefined,
+              description: t.description ?? undefined,
+              isApproved: t.isApproved ?? undefined,
+            },
+            create: {
+              videoCategoryId: id,
+              locale: t.locale,
+              name: t.name || null,
+              description: t.description || null,
+            },
+          })
+        )
+      );
     }
 
     logAdminAction({

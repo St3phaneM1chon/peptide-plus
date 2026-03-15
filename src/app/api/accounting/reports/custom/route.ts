@@ -158,7 +158,8 @@ export const POST = withAdminGuard(async (request) => {
 function safeParseJSON(str: string): unknown {
   try {
     return JSON.parse(str);
-  } catch {
+  } catch (error) {
+    console.error('[custom-reports] safeParseJSON error:', error);
     return str;
   }
 }

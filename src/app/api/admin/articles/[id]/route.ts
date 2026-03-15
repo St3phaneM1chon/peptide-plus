@@ -208,36 +208,40 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
-    // Handle translations if provided
+    // N+1 fix: Batch upsert all translations in a single transaction
+    // instead of individual upsert per locale (was N queries, now 1 transaction)
     if (data.translations && Array.isArray(data.translations)) {
-      for (const t of data.translations) {
-        if (!t.locale) continue;
-
-        await prisma.articleTranslation.upsert({
-          where: {
-            articleId_locale: {
-              articleId: id,
-              locale: t.locale,
-            },
-          },
-          update: {
-            ...(t.title !== undefined && { title: t.title }),
-            ...(t.excerpt !== undefined && { excerpt: t.excerpt }),
-            ...(t.content !== undefined && { content: t.content }),
-            ...(t.metaTitle !== undefined && { metaTitle: t.metaTitle }),
-            ...(t.metaDescription !== undefined && { metaDescription: t.metaDescription }),
-            ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
-          },
-          create: {
-            articleId: id,
-            locale: t.locale,
-            title: t.title || null,
-            excerpt: t.excerpt || null,
-            content: t.content || null,
-            metaTitle: t.metaTitle || null,
-            metaDescription: t.metaDescription || null,
-          },
-        });
+      const validTranslations = data.translations.filter((t: { locale?: string }) => t.locale);
+      if (validTranslations.length > 0) {
+        await prisma.$transaction(
+          validTranslations.map((t: { locale: string; title?: string; excerpt?: string; content?: string; metaTitle?: string; metaDescription?: string; isApproved?: boolean }) =>
+            prisma.articleTranslation.upsert({
+              where: {
+                articleId_locale: {
+                  articleId: id,
+                  locale: t.locale,
+                },
+              },
+              update: {
+                ...(t.title !== undefined && { title: t.title }),
+                ...(t.excerpt !== undefined && { excerpt: t.excerpt }),
+                ...(t.content !== undefined && { content: t.content }),
+                ...(t.metaTitle !== undefined && { metaTitle: t.metaTitle }),
+                ...(t.metaDescription !== undefined && { metaDescription: t.metaDescription }),
+                ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
+              },
+              create: {
+                articleId: id,
+                locale: t.locale,
+                title: t.title || null,
+                excerpt: t.excerpt || null,
+                content: t.content || null,
+                metaTitle: t.metaTitle || null,
+                metaDescription: t.metaDescription || null,
+              },
+            })
+          )
+        );
       }
 
       // Re-fetch with updated translations

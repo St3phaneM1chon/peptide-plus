@@ -58,7 +58,8 @@ const updateReportSchema = z.object({
 function safeParseJSON(str: string): unknown {
   try {
     return JSON.parse(str);
-  } catch {
+  } catch (error) {
+    console.error('[custom-report-by-id] safeParseJSON error:', error);
     return str;
   }
 }

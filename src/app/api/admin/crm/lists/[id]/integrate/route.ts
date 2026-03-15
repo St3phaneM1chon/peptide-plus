@@ -122,40 +122,88 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
     });
   }
 
-  // Create leads and update prospects (must be sequential for ID linkage)
-  for (const { prospect, scoreBreakdown, bant } of leadsToCreate) {
+  // N+1 fix: Batch create all leads + update all prospects in a single transaction
+  // instead of individual create+update per prospect (was 2N queries, now 1 transaction)
+  if (leadsToCreate.length > 0) {
     try {
-      const lead = await prisma.crmLead.create({
-        data: {
-          contactName: prospect.contactName,
-          companyName: prospect.companyName,
-          email: prospect.email,
-          phone: prospect.phone,
-          source: 'IMPORT',
-          status: 'NEW',
-          score: scoreBreakdown.total,
-          temperature: scoreBreakdown.temperature,
-          customFields: prospect.customFields || undefined,
-          qualificationFramework: 'BANT',
-          qualificationData: bant as Record<string, string>,
-          dncStatus: 'CALLABLE',
-        },
+      const txOps = leadsToCreate.flatMap(({ prospect, scoreBreakdown, bant }) => [
+        prisma.crmLead.create({
+          data: {
+            contactName: prospect.contactName,
+            companyName: prospect.companyName,
+            email: prospect.email,
+            phone: prospect.phone,
+            source: 'IMPORT',
+            status: 'NEW',
+            score: scoreBreakdown.total,
+            temperature: scoreBreakdown.temperature,
+            customFields: prospect.customFields || undefined,
+            qualificationFramework: 'BANT',
+            qualificationData: bant as Record<string, string>,
+            dncStatus: 'CALLABLE',
+          },
+        }),
+      ]);
+
+      const createdLeads = await prisma.$transaction(txOps);
+
+      // Now batch-update all prospects with their lead IDs in a single transaction
+      const prospectUpdateOps = leadsToCreate.map(({ prospect }, index) => {
+        const lead = createdLeads[index];
+        return prisma.prospect.update({
+          where: { id: prospect.id },
+          data: {
+            convertedLeadId: lead.id,
+            status: 'INTEGRATED',
+            dncChecked: true,
+            dncStatus: 'CALLABLE',
+          },
+        });
       });
 
-      await prisma.prospect.update({
-        where: { id: prospect.id },
-        data: {
-          convertedLeadId: lead.id,
-          status: 'INTEGRATED',
-          dncChecked: true,
-          dncStatus: 'CALLABLE',
-        },
-      });
+      await prisma.$transaction(prospectUpdateOps);
 
-      createdLeadIds.push(lead.id);
-      integrated++;
+      for (const lead of createdLeads) {
+        createdLeadIds.push(lead.id);
+      }
+      integrated = createdLeads.length;
     } catch (err) {
-      errors.push({ prospectId: prospect.id, reason: err instanceof Error ? err.message : 'Unknown error' });
+      // If bulk transaction fails, fall back to individual creates for error isolation
+      for (const { prospect, scoreBreakdown, bant } of leadsToCreate) {
+        try {
+          const lead = await prisma.crmLead.create({
+            data: {
+              contactName: prospect.contactName,
+              companyName: prospect.companyName,
+              email: prospect.email,
+              phone: prospect.phone,
+              source: 'IMPORT',
+              status: 'NEW',
+              score: scoreBreakdown.total,
+              temperature: scoreBreakdown.temperature,
+              customFields: prospect.customFields || undefined,
+              qualificationFramework: 'BANT',
+              qualificationData: bant as Record<string, string>,
+              dncStatus: 'CALLABLE',
+            },
+          });
+
+          await prisma.prospect.update({
+            where: { id: prospect.id },
+            data: {
+              convertedLeadId: lead.id,
+              status: 'INTEGRATED',
+              dncChecked: true,
+              dncStatus: 'CALLABLE',
+            },
+          });
+
+          createdLeadIds.push(lead.id);
+          integrated++;
+        } catch (individualErr) {
+          errors.push({ prospectId: prospect.id, reason: individualErr instanceof Error ? individualErr.message : 'Unknown error' });
+        }
+      }
     }
   }
 

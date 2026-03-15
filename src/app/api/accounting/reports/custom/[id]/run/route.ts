@@ -28,7 +28,8 @@ function extractId(request: Request): string | null {
 function safeParseJSON(str: string): unknown {
   try {
     return JSON.parse(str);
-  } catch {
+  } catch (error) {
+    console.error('[custom-report-run] safeParseJSON error:', error);
     return str;
   }
 }
