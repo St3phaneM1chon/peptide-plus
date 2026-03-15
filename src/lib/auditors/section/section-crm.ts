@@ -9,7 +9,7 @@ export default class SectionCRMAuditor extends BaseSectionAuditor {
     sectionName: 'CRM',
     adminPages: ['crm'],
     apiRoutes: ['admin/crm', 'admin/crm/deals', 'admin/crm/contacts', 'admin/crm/pipelines', 'admin/crm/playbooks'],
-    prismaModels: ['CrmDeal', 'CrmContact', 'CrmPipeline', 'CrmPlaybook'],
+    prismaModels: ['CrmDeal', 'CrmLead', 'CrmPipeline', 'CrmPlaybook'],
     i18nNamespaces: ['admin.nav.crm'],
   };
 
@@ -56,25 +56,25 @@ export default class SectionCRMAuditor extends BaseSectionAuditor {
       );
     }
 
-    // CrmContact must have email and phone
-    const contactBlock = this.extractModelBlock(schema, 'CrmContact');
-    if (contactBlock) {
-      const hasEmail = /email/.test(contactBlock);
+    // CrmLead must have email and phone
+    const leadBlock = this.extractModelBlock(schema, 'CrmLead');
+    if (leadBlock) {
+      const hasEmail = /email/.test(leadBlock);
       results.push(
         hasEmail
-          ? this.pass(`${prefix}-contact-email`, 'CrmContact has email field')
-          : this.fail(`${prefix}-contact-email`, 'HIGH', 'CrmContact missing email field',
-              'CrmContact must have an email field for contact management',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add email String field to CrmContact' })
+          ? this.pass(`${prefix}-lead-email`, 'CrmLead has email field')
+          : this.fail(`${prefix}-lead-email`, 'HIGH', 'CrmLead missing email field',
+              'CrmLead must have an email field for contact management',
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add email String field to CrmLead' })
       );
 
-      const hasPhone = /phone/.test(contactBlock);
+      const hasPhone = /phone/.test(leadBlock);
       results.push(
         hasPhone
-          ? this.pass(`${prefix}-contact-phone`, 'CrmContact has phone field')
-          : this.fail(`${prefix}-contact-phone`, 'MEDIUM', 'CrmContact missing phone field',
-              'CrmContact should have a phone field for complete contact information',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add phone String? field to CrmContact' })
+          ? this.pass(`${prefix}-lead-phone`, 'CrmLead has phone field')
+          : this.fail(`${prefix}-lead-phone`, 'MEDIUM', 'CrmLead missing phone field',
+              'CrmLead should have a phone field for complete contact information',
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add phone String? field to CrmLead' })
       );
     }
 

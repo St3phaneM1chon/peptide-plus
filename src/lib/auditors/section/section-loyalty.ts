@@ -9,7 +9,7 @@ export default class SectionLoyaltyAuditor extends BaseSectionAuditor {
     sectionName: 'Loyalty',
     adminPages: ['fidelite', 'webinaires'],
     apiRoutes: ['admin/loyalty', 'admin/loyalty/members', 'admin/webinars'],
-    prismaModels: ['LoyaltyMember', 'LoyaltyTransaction', 'Webinar'],
+    prismaModels: ['LoyaltyTierConfig', 'LoyaltyTransaction', 'Webinar'],
     i18nNamespaces: ['admin.nav.loyalty'],
   };
 
@@ -20,28 +20,28 @@ export default class SectionLoyaltyAuditor extends BaseSectionAuditor {
     // Schema path handled by readPrismaSchema()
     const schema = this.readPrismaSchema();
 
-    // LoyaltyMember must have points/balance and tier
-    const memberBlock = this.extractModelBlock(schema, 'LoyaltyMember');
-    if (memberBlock) {
-      const hasPoints = /points|balance/i.test(memberBlock);
-      const hasTier = /tier/i.test(memberBlock);
+    // User model serves as loyalty member — must have loyaltyPoints and loyaltyTier
+    const userBlock = this.extractModelBlock(schema, 'User');
+    if (userBlock) {
+      const hasPoints = /loyaltyPoints|points|balance/i.test(userBlock);
+      const hasTier = /loyaltyTier|tier/i.test(userBlock);
 
       if (hasPoints) {
-        results.push(this.pass(`${prefix}-member-points`, 'LoyaltyMember has points/balance field'));
+        results.push(this.pass(`${prefix}-member-points`, 'User has loyaltyPoints field'));
       } else {
         results.push(this.fail(`${prefix}-member-points`, 'CRITICAL',
-          'LoyaltyMember missing points/balance field',
+          'User missing loyaltyPoints field',
           'A loyalty program cannot function without a points or balance field to track member rewards.',
-          { filePath: 'prisma/schema.prisma', recommendation: 'Add points Int @default(0) or balance Decimal to LoyaltyMember' }));
+          { filePath: 'prisma/schema.prisma', recommendation: 'Add loyaltyPoints Int @default(0) to User model' }));
       }
 
       if (hasTier) {
-        results.push(this.pass(`${prefix}-member-tier`, 'LoyaltyMember has tier field'));
+        results.push(this.pass(`${prefix}-member-tier`, 'User has loyaltyTier field'));
       } else {
         results.push(this.fail(`${prefix}-member-tier`, 'MEDIUM',
-          'LoyaltyMember missing tier field',
+          'User missing loyaltyTier field',
           'Without a tier field, tiered benefits (Bronze/Silver/Gold/Platinum) cannot be assigned to members.',
-          { filePath: 'prisma/schema.prisma', recommendation: 'Add tier String @default("BRONZE") or tier enum to LoyaltyMember' }));
+          { filePath: 'prisma/schema.prisma', recommendation: 'Add loyaltyTier String @default("BRONZE") to User model' }));
       }
     }
 
@@ -62,7 +62,7 @@ export default class SectionLoyaltyAuditor extends BaseSectionAuditor {
     }
 
     // Check for tier thresholds configuration (in schema or config file)
-    const hasTierConfig = /tierThreshold|tier_threshold|SILVER|GOLD|PLATINUM/i.test(schema);
+    const hasTierConfig = /LoyaltyTierConfig|tierThreshold|tier_threshold|SILVER|GOLD|PLATINUM/i.test(schema);
     const configPath = path.join(this.srcDir, 'lib', 'loyalty-tiers.ts');
     const altConfigPath = path.join(this.srcDir, 'lib', 'loyalty', 'tiers.ts');
     const hasTierFile = fs.existsSync(configPath) || fs.existsSync(altConfigPath);

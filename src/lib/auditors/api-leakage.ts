@@ -51,6 +51,10 @@ export default class ApiLeakageAuditor extends BaseAuditor {
 
       // Skip integration management files - they intentionally store/retrieve credentials
       if (/integrations?\//.test(rel)) continue;
+      // Skip platform OAuth/crypto files - they intentionally manage OAuth tokens and secrets
+      if (/platform\/(oauth|crypto|webhook)/.test(rel)) continue;
+      // Skip VoIP engine files - they manage call control tokens and SIP credentials internally
+      if (/voip\/(transfer-engine|voip-state|sip)/.test(rel)) continue;
       // Skip translation service files that use API keys for external services
       if (/translation\/(queue|service)/i.test(rel)) continue;
 

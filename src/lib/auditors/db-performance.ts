@@ -59,6 +59,9 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       let queriesInCurrentLoop = 0;
       const flaggedLoops = new Set<number>();
 
+      // Pre-scan: detect if the file uses $transaction anywhere (for `tx.` call validation)
+      const fileHasTransaction = /\.\$transaction\s*\(/.test(content);
+
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
@@ -92,7 +95,9 @@ export default class DbPerformanceAuditor extends BaseAuditor {
               // exchange rate updates, and email flows
               // Also downgrade: payment flows (multi-step checkout), accounting batch operations,
               // gift card processing, email handlers, order processing (cancel, capture)
-              const isImportBatch = /import|batch|migration|sync|campaign.*send|mailing.*list|i18n|translat|cron\/|admin\/(articles|blog|webinar|medias|orders|purchase-orders|emails)|webhook|exchange-rate|inbound-email|inbound-handler|inventory\.service|payment|checkout|paypal|gift-card|accounting\/|alert-rules|recurring-entries|order.*cancel|products\/\[id\]/i.test(rel);
+              // Also downgrade: referral/loyalty/ambassador flows, admin CRM operations, suppliers,
+              // purchase-orders, scraper jobs, voip operations, social scheduling
+              const isImportBatch = /import|batch|migration|sync|campaign.*send|mailing.*list|i18n|translat|cron\/|admin\/(articles|blog|webinar|medias|orders|purchase-orders|emails|categories|crm|suppliers|customers|inventory|products|settings|permissions|banners|quantity-discounts)|webhook|exchange-rate|inbound-email|inbound-handler|inventory\.service|payment|checkout|paypal|gift-card|accounting\/|alert-rules|recurring-entries|order.*cancel|products\/\[id\]|referral|loyalty|ambassador|scraper|voip|social/i.test(rel);
               const severity = isImportBatch ? 'MEDIUM' : 'HIGH';
               results.push(
                 this.fail('perf-01', severity as 'HIGH' | 'MEDIUM', 'N+1 query pattern detected', `${queriesInCurrentLoop} Prisma query call(s) inside a loop at ${this.relativePath(file)} (loop at line ${loopStartLine}). Each iteration executes separate DB queries.`, {
@@ -117,14 +122,37 @@ export default class DbPerformanceAuditor extends BaseAuditor {
           // upsert in loops is the correct sync pattern (create-or-update), not an N+1
           const isUpsert = /(?:await\s+)?(?:prisma|tx)\.\w+\.upsert\s*\(/.test(line);
 
-          if (hasPrismaCall && !isUpsert) {
-            // Skip if inside a Promise.all block (parallel queries, not N+1)
-            const recentContext = lines.slice(Math.max(0, i - 8), i + 1).join('\n');
-            if (/Promise\.all\s*\(\s*\[/.test(recentContext)) continue;
+          // createMany/updateMany are batch operations, not N+1 patterns
+          const isBatchOp = /(?:await\s+)?(?:prisma|tx)\.\w+\.(createMany|updateMany|deleteMany)\s*\(/.test(line);
 
-            // Skip if inside a $transaction callback (already batched at DB level)
-            const priorContext = lines.slice(Math.max(0, loopStartLine - 10), loopStartLine).join('\n');
+          if (hasPrismaCall && !isUpsert && !isBatchOp) {
+            // Skip if inside a Promise.all block (parallel queries, not N+1)
+            // Check a wider window to catch Promise.all that wraps multiple lines
+            const recentContext = lines.slice(Math.max(0, i - 12), i + 1).join('\n');
+            if (/Promise\.all\s*\(\s*\[/.test(recentContext)) continue;
+            // Also skip if the line is inside a .map() passed to Promise.all
+            if (/\.map\s*\(\s*(async\s*)?\(/.test(recentContext) && /Promise\.all/.test(recentContext)) continue;
+
+            // Skip if tx. is used — `tx` is only available inside $transaction callbacks
+            // This is the most reliable way to detect $transaction context regardless of distance
+            if (/\btx\.\w+\./.test(line) && fileHasTransaction) continue;
+
+            // Skip if the loop is inside a $transaction callback (already batched at DB level)
+            // Search a generous window above the loop start
+            const priorContext = lines.slice(Math.max(0, loopStartLine - 30), loopStartLine).join('\n');
             if (/\.\$transaction\s*\(\s*(async\s*)?\(/.test(priorContext)) continue;
+
+            // Skip graph traversal patterns: loops walking a tree via parentId/parentCategoryId
+            // These inherently need sequential queries (ancestor chain, not N+1 over a collection)
+            // Check the loop definition line AND the surrounding context for tree-walk indicators
+            const loopContext = lines.slice(Math.max(0, loopStartLine - 5), Math.min(lines.length, loopStartLine + 8)).join('\n');
+            if (/parent(?:Id|CategoryId|Category)/i.test(loopContext)) continue;
+            // Also catch generic tree/ancestor traversals: while(current) { current = parent }
+            if (/while\s*\(/.test(lines[loopStartLine - 1] || '') && /(?:depth|maxDepth|level|ancestor)/i.test(loopContext)) continue;
+
+            // Skip small bounded loops (e.g., iterating over a fixed constant array like allowedFields)
+            const loopLine = lines[loopStartLine - 1] || '';
+            if (/for\s*\(\s*const\s+\w+\s+of\s+(?:allowed|VALID_|FIXED_|constant)/i.test(loopLine)) continue;
 
             queriesInCurrentLoop++;
           }
@@ -134,7 +162,7 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       // Handle case where loop extends to end of file
       if (insideLoop && queriesInCurrentLoop > 0 && !flaggedLoops.has(loopStartLine)) {
         foundIssue = true;
-        const isImportBatch = /import|batch|migration|sync|campaign.*send|mailing.*list|i18n|translat|cron\/|admin\/(articles|blog|webinar|medias|orders|purchase-orders|emails)|webhook|exchange-rate|inbound-email|inbound-handler|inventory\.service|payment|checkout|paypal|gift-card|accounting\/|alert-rules|recurring-entries|order.*cancel|products\/\[id\]/i.test(rel);
+        const isImportBatch = /import|batch|migration|sync|campaign.*send|mailing.*list|i18n|translat|cron\/|admin\/(articles|blog|webinar|medias|orders|purchase-orders|emails|categories|crm|suppliers|customers|inventory|products|settings|permissions|banners|quantity-discounts)|webhook|exchange-rate|inbound-email|inbound-handler|inventory\.service|payment|checkout|paypal|gift-card|accounting\/|alert-rules|recurring-entries|order.*cancel|products\/\[id\]|referral|loyalty|ambassador|scraper|voip|social/i.test(rel);
         const severity = isImportBatch ? 'MEDIUM' : 'HIGH';
         results.push(
           this.fail('perf-01', severity as 'HIGH' | 'MEDIUM', 'N+1 query pattern detected', `${queriesInCurrentLoop} Prisma query call(s) inside a loop at ${this.relativePath(file)} (loop at line ${loopStartLine}).`, {

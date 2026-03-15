@@ -138,7 +138,8 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
       createdProspects.push(r);
       added++;
     }
-  } catch {
+  } catch (err) {
+    console.error('[CRM/Prospects] Bulk create transaction failed, falling back to individual creates', err);
     // If bulk transaction fails, fall back to individual creates for error isolation
     for (let i = 0; i < prospectsData.length; i++) {
       try {

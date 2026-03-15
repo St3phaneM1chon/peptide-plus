@@ -252,7 +252,13 @@ export default class PaymentPciAuditor extends BaseAuditor {
         /EMAIL_WEBHOOK_SECRET/.test(content) ||
         /WEBHOOK_SECRET/.test(content) ||
         /verifyMetaSignature/.test(content) ||
-        /withApiAuth/.test(content);
+        /withApiAuth/.test(content) ||
+        // Twilio signature verification (WhatsApp, SMS webhooks)
+        /validateTwilioSignature/.test(content) ||
+        /TWILIO_AUTH_TOKEN/.test(content) ||
+        /x-twilio-signature/i.test(content) ||
+        // Meta/WhatsApp Hub signature verification
+        /X-Hub-Signature/i.test(content);
       const hasSignatureVerification = hasStripeVerification || hasPayPalVerification || hasAlternativeAuth;
 
       if (hasSignatureVerification) {
@@ -541,7 +547,7 @@ export default class PaymentPciAuditor extends BaseAuditor {
 
     for (const file of refundFiles) {
       const content = this.readFile(file);
-      const hasAuth = /auth\s*\(\)|withAdminGuard|getServerSession|requireAuth|isAdmin|role.*ADMIN/i.test(content);
+      const hasAuth = /auth\s*\(\)|withAdminGuard|withUserGuard|getServerSession|requireAuth|isAdmin|role.*ADMIN/i.test(content);
 
       if (hasAuth) {
         results.push(this.pass('payment-05', `Refund authorization check found in ${this.relativePath(file)}`));

@@ -82,7 +82,8 @@ export const GET = withAdminGuard(async () => {
     let permissions: string[] = [];
     try {
       permissions = JSON.parse(key.permissions);
-    } catch {
+    } catch (err) {
+      console.error('[ApiKeys] Failed to parse permissions JSON for key', { keyId: key.id, error: err });
       permissions = [];
     }
 
@@ -102,7 +103,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   let body: unknown;
   try {
     body = await request.json();
-  } catch {
+  } catch (err) {
+    console.error('[ApiKeys] Invalid JSON body in POST request', err);
     return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 

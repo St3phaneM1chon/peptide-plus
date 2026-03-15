@@ -8,7 +8,7 @@ export default class SectionTelephonyAuditor extends BaseSectionAuditor {
     sectionName: 'Telephony',
     adminPages: ['telephonie'],
     apiRoutes: ['admin/voip', 'admin/voip/call-logs', 'admin/voip/extensions', 'admin/voip/ivr'],
-    prismaModels: ['VoipExtension', 'VoipCallLog', 'VoipIVR'],
+    prismaModels: ['SipExtension', 'CallLog', 'IvrMenu'],
     i18nNamespaces: ['admin.nav.telephony'],
   };
 
@@ -20,69 +20,69 @@ export default class SectionTelephonyAuditor extends BaseSectionAuditor {
     // Schema path handled by readPrismaSchema()
     const schema = this.readPrismaSchema();
 
-    // VoipCallLog must have essential call tracking fields
-    const callLogBlock = this.extractModelBlock(schema, 'VoipCallLog');
+    // CallLog must have essential call tracking fields
+    const callLogBlock = this.extractModelBlock(schema, 'CallLog');
     if (callLogBlock) {
       const hasCallerId = /callerId|callerNumber|fromNumber|caller/.test(callLogBlock);
       results.push(
         hasCallerId
-          ? this.pass(`${prefix}-calllog-callerid`, 'VoipCallLog has caller identification field')
-          : this.fail(`${prefix}-calllog-callerid`, 'HIGH', 'VoipCallLog missing caller ID field',
+          ? this.pass(`${prefix}-calllog-callerid`, 'CallLog has caller identification field')
+          : this.fail(`${prefix}-calllog-callerid`, 'HIGH', 'CallLog missing caller ID field',
               'Call logs must identify the caller (callerId, callerNumber, or fromNumber)',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add callerId String field to VoipCallLog' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add callerId String field to CallLog' })
       );
 
       const hasDuration = /duration/.test(callLogBlock);
       results.push(
         hasDuration
-          ? this.pass(`${prefix}-calllog-duration`, 'VoipCallLog has duration field')
-          : this.fail(`${prefix}-calllog-duration`, 'HIGH', 'VoipCallLog missing duration field',
+          ? this.pass(`${prefix}-calllog-duration`, 'CallLog has duration field')
+          : this.fail(`${prefix}-calllog-duration`, 'HIGH', 'CallLog missing duration field',
               'Call logs must track call duration for analytics and billing',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add duration Int field (seconds) to VoipCallLog' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add duration Int field (seconds) to CallLog' })
       );
 
       const hasDirection = /direction/.test(callLogBlock);
       results.push(
         hasDirection
-          ? this.pass(`${prefix}-calllog-direction`, 'VoipCallLog has direction field')
-          : this.fail(`${prefix}-calllog-direction`, 'MEDIUM', 'VoipCallLog missing direction field',
+          ? this.pass(`${prefix}-calllog-direction`, 'CallLog has direction field')
+          : this.fail(`${prefix}-calllog-direction`, 'MEDIUM', 'CallLog missing direction field',
               'Call logs should distinguish inbound vs outbound calls',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add direction String field (inbound/outbound) to VoipCallLog' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add direction String field (inbound/outbound) to CallLog' })
       );
 
       const hasStatus = /status/.test(callLogBlock);
       results.push(
         hasStatus
-          ? this.pass(`${prefix}-calllog-status`, 'VoipCallLog has status field')
-          : this.fail(`${prefix}-calllog-status`, 'MEDIUM', 'VoipCallLog missing status field',
+          ? this.pass(`${prefix}-calllog-status`, 'CallLog has status field')
+          : this.fail(`${prefix}-calllog-status`, 'MEDIUM', 'CallLog missing status field',
               'Call logs should track call outcome (answered, missed, voicemail, failed)',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add status String field to VoipCallLog' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add status String field to CallLog' })
       );
     }
 
-    // VoipExtension must have SIP credentials / number
-    const extensionBlock = this.extractModelBlock(schema, 'VoipExtension');
+    // SipExtension must have SIP credentials / number
+    const extensionBlock = this.extractModelBlock(schema, 'SipExtension');
     if (extensionBlock) {
       const hasSipOrNumber = /sipUser|sipUsername|number|extension/.test(extensionBlock);
       results.push(
         hasSipOrNumber
-          ? this.pass(`${prefix}-ext-sip`, 'VoipExtension has SIP/number identification')
-          : this.fail(`${prefix}-ext-sip`, 'HIGH', 'VoipExtension missing SIP user or number',
+          ? this.pass(`${prefix}-ext-sip`, 'SipExtension has SIP/number identification')
+          : this.fail(`${prefix}-ext-sip`, 'HIGH', 'SipExtension missing SIP user or number',
               'Extensions need a SIP username or extension number for telephony routing',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add sipUser String and/or number String to VoipExtension' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add sipUser String and/or number String to SipExtension' })
       );
     }
 
-    // VoipIVR must have menu/options configuration
-    const ivrBlock = this.extractModelBlock(schema, 'VoipIVR');
+    // IvrMenu must have menu/options configuration
+    const ivrBlock = this.extractModelBlock(schema, 'IvrMenu');
     if (ivrBlock) {
       const hasMenuConfig = /menu|options|config|steps|nodes|greeting|prompt/.test(ivrBlock);
       results.push(
         hasMenuConfig
-          ? this.pass(`${prefix}-ivr-menu`, 'VoipIVR has menu/options configuration')
-          : this.fail(`${prefix}-ivr-menu`, 'HIGH', 'VoipIVR missing menu/options configuration',
+          ? this.pass(`${prefix}-ivr-menu`, 'IvrMenu has menu/options configuration')
+          : this.fail(`${prefix}-ivr-menu`, 'HIGH', 'IvrMenu missing menu/options configuration',
               'IVR system needs menu options (Json field or relation) to define interactive voice response trees',
-              { filePath: 'prisma/schema.prisma', recommendation: 'Add options Json or menuItems relation to VoipIVR' })
+              { filePath: 'prisma/schema.prisma', recommendation: 'Add options Json or menuItems relation to IvrMenu' })
       );
     }
 

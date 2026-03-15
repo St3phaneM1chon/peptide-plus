@@ -76,6 +76,7 @@ export const GET = withAdminGuard(async (request) => {
           results.push(t4);
         }
       } catch (err) {
+        console.error('[T4/RL1] Error generating report for employee', { employeeId: emp.id, error: err });
         errors.push({
           employeeId: emp.id,
           name: `${emp.firstName} ${emp.lastName}`,

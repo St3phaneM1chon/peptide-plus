@@ -346,10 +346,10 @@ export default function SnippetsPage() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="snippet-modal-title">
             {/* Modal header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 id="snippet-modal-title" className="text-lg font-semibold text-gray-900">
                 {editingId
                   ? (t('admin.crm.snippets.editTitle'))
                   : (t('admin.crm.snippets.createTitle'))}

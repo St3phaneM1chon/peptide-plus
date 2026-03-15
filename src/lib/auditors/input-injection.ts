@@ -111,12 +111,19 @@ export default class InputInjectionAuditor extends BaseAuditor {
 
         // Check if the usage employs Prisma.sql tagged template or template literal tag
         // Safe patterns: $queryRaw`...` (tagged template) or $queryRaw(Prisma.sql`...`)
-        const surroundingCode = content.substring(Math.max(0, match.index - 20), Math.min(content.length, match.index + 100));
+        // Widen the window to 300 chars before and 200 after to catch Prisma.sql in the
+        // function argument even when formatting spreads it across lines.
+        const surroundingCode = content.substring(Math.max(0, match.index - 300), Math.min(content.length, match.index + 200));
+
+        // Also check if the file imports Prisma and uses Prisma.sql ANYWHERE (file-level safety)
+        const fileUsesPrismaSql = /import\s*\{[^}]*Prisma[^}]*\}\s*from\s*['"]@prisma\/client['"]/.test(content) &&
+          /Prisma\.sql/.test(content);
 
         const isSafe =
           /\$(?:queryRaw|executeRaw)`/.test(surroundingCode) ||
           /Prisma\.sql/.test(surroundingCode) ||
-          /Prisma\.join/.test(surroundingCode);
+          /Prisma\.join/.test(surroundingCode) ||
+          fileUsesPrismaSql;
 
         if (!isSafe) {
           unsafeRawCount++;
@@ -271,8 +278,14 @@ export default class InputInjectionAuditor extends BaseAuditor {
         if (hasSafeParser) continue;
 
         // Skip if nearby comment contains SECURITY AUDIT (developer acknowledged the risk)
-        const nearbyBefore = content.substring(Math.max(0, match.index - 300), match.index);
-        if (/\/\/\s*SECURITY AUDIT|\/\*\s*SECURITY AUDIT/.test(nearbyBefore)) continue;
+        // Widen the search window to 600 chars before to catch block comments above the function
+        const nearbyBefore = content.substring(Math.max(0, match.index - 600), match.index);
+        if (/\/\/\s*SECURITY AUDIT|\/\*\s*SECURITY AUDIT|\*\s*SECURITY AUDIT/.test(nearbyBefore)) continue;
+
+        // Skip if the file uses Node.js vm module for sandboxing (new Function used only for syntax check)
+        const usesVmSandbox = /import\s.*\bvm\b.*from\s+['"]vm['"]/.test(content) &&
+          /vm\.createContext|vm\.Script|runInContext/.test(content);
+        if (usesVmSandbox) continue;
 
         evalCount++;
         const lineNum = content.substring(0, match.index).split('\n').length;

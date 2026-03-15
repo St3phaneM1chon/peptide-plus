@@ -12,7 +12,7 @@ export default class SectionSystemAuditor extends BaseSectionAuditor {
       'admin/permissions', 'admin/settings', 'admin/audit-log', 'admin/employees',
       'admin/backups', 'admin/diagnostics', 'admin/translations', 'admin/seo',
     ],
-    prismaModels: ['Permission', 'AuditLog', 'SystemSetting'],
+    prismaModels: ['Permission', 'AuditLog', 'SiteSetting'],
     i18nNamespaces: ['admin.nav.settings', 'admin.nav.permissions', 'admin.nav.employees'],
   };
 

@@ -183,9 +183,9 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 id="schedule-modal-title" className="text-lg font-semibold text-gray-900">
             {data.existing
               ? (t('admin.crm.scheduling.editSchedule'))
               : (t('admin.crm.scheduling.addSchedule'))}
@@ -1035,9 +1035,9 @@ export default function SchedulingPage() {
           {/* Training Modal */}
           {showTrainingModal && (
             <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="training-modal-title">
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h3 id="training-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-green-600" />
                     {t('admin.crm.scheduling.newTraining')}
                   </h3>

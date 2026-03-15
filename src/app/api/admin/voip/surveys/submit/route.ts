@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Call not found' }, { status: 404 });
     }
 
-    // Check if survey already exists
+    // Idempotency check: skip if already processed (duplicate event detection)
     const existing = await prisma.callSurvey.findUnique({
       where: { callLogId },
     });

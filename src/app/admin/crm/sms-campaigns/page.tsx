@@ -162,9 +162,9 @@ export default function SmsCampaignsPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="sms-campaign-modal-title">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">New SMS Campaign</h2>
+              <h2 id="sms-campaign-modal-title" className="text-lg font-semibold">New SMS Campaign</h2>
               <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded" aria-label="Close"><X className="h-5 w-5" /></button>
             </div>
             <div>

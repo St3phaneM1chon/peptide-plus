@@ -32,6 +32,8 @@ export default class WebhookIdempotencyAuditor extends BaseAuditor {
       const content = this.readFile(file);
       if (!content) continue;
 
+      const rel = this.relativePath(file).toLowerCase();
+
       // Skip forwarding/proxy handlers that just redirect to the canonical webhook endpoint
       // These don't need their own idempotency since the target handler has it
       const isForwarder =
@@ -40,15 +42,25 @@ export default class WebhookIdempotencyAuditor extends BaseAuditor {
         !/webhookEvent/.test(content);
       if (isForwarder) continue;
 
+      // Skip non-webhook routes that should never be flagged:
+      // - Chat/stream SSE endpoints (real-time streaming, not webhook receivers)
+      if (/chat\/stream|notifications\/stream|sse/i.test(rel)) continue;
+      // - Cron jobs (they PROCESS webhooks, they don't RECEIVE external events)
+      if (/\/cron\//i.test(rel)) continue;
+      // - Deprecated stub routes that return 410 Gone (no processing occurs)
+      if (/status:\s*410|{ status: 410 }/.test(content) || /410.*Gone/i.test(content)) continue;
+
       const isWebhookPath = /webhook/i.test(file);
       if (isWebhookPath) {
-        const rel = this.relativePath(file).toLowerCase();
         // Skip admin webhook management routes (they manage webhooks, not receive events)
         if (/\/admin\/webhook/.test(rel)) continue;
         // Skip email webhook handlers (not payment-related)
         if (/email-bounce|inbound-email/.test(rel)) continue;
         // Skip email campaign sending routes that mention webhooks in path
         if (/emails\/campaigns/.test(rel)) continue;
+        // Skip webhook REGISTRATION endpoints (v1/webhooks creates/lists webhook configs,
+        // it does not receive external provider events)
+        if (/\/v1\/webhooks/.test(rel) && !/constructEvent/.test(content) && !/webhookEvent/.test(content)) continue;
         webhookFiles.push(file);
         continue;
       }
@@ -103,6 +115,10 @@ export default class WebhookIdempotencyAuditor extends BaseAuditor {
         /webhookEvent.*create/i,    // Logging event to DB (for dedup)
         /processedEvents/i,
         /eventLog/i,
+        /alreadyProcessed/i,       // Redis-based dedup pattern
+        /idempotencyKey/i,         // Redis key-based dedup
+        /STATUS_RANK/i,            // Forward-only status progression (shipping)
+        /duplicate.*skip/i,        // Skip duplicates pattern
       ];
 
       const hasIdempotency = idempotencyPatterns.some((p) => p.test(content));

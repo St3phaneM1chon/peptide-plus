@@ -483,8 +483,8 @@ export default function SnapshotsPage() {
       {/* New Snapshot Dialog */}
       {showNewDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Take Snapshot</h3>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="new-snapshot-modal-title">
+            <h3 id="new-snapshot-modal-title" className="text-lg font-semibold text-gray-900 mb-4">Take Snapshot</h3>
 
             <div className="space-y-4">
               <div>
@@ -548,8 +548,8 @@ export default function SnapshotsPage() {
       {/* Auto-Schedule Dialog */}
       {showScheduleDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Auto-Schedule Snapshots</h3>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="schedule-snapshot-modal-title">
+            <h3 id="schedule-snapshot-modal-title" className="text-lg font-semibold text-gray-900 mb-4">Auto-Schedule Snapshots</h3>
 
             <div className="space-y-4">
               <div>

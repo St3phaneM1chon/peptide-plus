@@ -8,7 +8,7 @@ export default class SectionMarketingAuditor extends BaseSectionAuditor {
     sectionName: 'Marketing',
     adminPages: ['promo-codes', 'promotions', 'newsletter', 'bannieres', 'upsell'],
     apiRoutes: ['admin/promo-codes', 'admin/promotions', 'admin/newsletter', 'admin/banners', 'admin/upsell'],
-    prismaModels: ['PromoCode', 'Promotion', 'NewsletterCampaign', 'Banner', 'UpsellRule'],
+    prismaModels: ['PromoCode', 'Discount', 'EmailCampaign', 'HeroSlide', 'UpsellConfig'],
     i18nNamespaces: ['admin.nav.promoCodes', 'admin.nav.newsletter'],
   };
 
@@ -21,7 +21,7 @@ export default class SectionMarketingAuditor extends BaseSectionAuditor {
     // PromoCode must have essential fields
     const promoBlock = this.extractModelBlock(schema, 'PromoCode');
     if (promoBlock) {
-      for (const field of ['code', 'discountType', 'discountValue', 'expiresAt', 'usageLimit']) {
+      for (const field of ['code', 'type', 'value', 'endsAt', 'usageLimit']) {
         const hasField = new RegExp(`\\b${field}\\b`).test(promoBlock);
         results.push(
           hasField
@@ -33,17 +33,17 @@ export default class SectionMarketingAuditor extends BaseSectionAuditor {
       }
     }
 
-    // Banner must have scheduling fields
-    const bannerBlock = this.extractModelBlock(schema, 'Banner');
-    if (bannerBlock) {
+    // HeroSlide must have scheduling fields
+    const heroSlideBlock = this.extractModelBlock(schema, 'HeroSlide');
+    if (heroSlideBlock) {
       for (const field of ['startDate', 'endDate']) {
-        const hasField = new RegExp(`\\b${field}\\b`).test(bannerBlock);
+        const hasField = new RegExp(`\\b${field}\\b`).test(heroSlideBlock);
         results.push(
           hasField
-            ? this.pass(`${prefix}-banner-${field}`, `Banner has ${field} field`)
-            : this.fail(`${prefix}-banner-${field}`, 'MEDIUM', `Banner lacks ${field}`,
-                `Banner scheduling requires ${field} to control display windows`,
-                { filePath: 'prisma/schema.prisma', recommendation: `Add ${field} DateTime? to Banner model` })
+            ? this.pass(`${prefix}-heroslide-${field}`, `HeroSlide has ${field} field`)
+            : this.fail(`${prefix}-heroslide-${field}`, 'MEDIUM', `HeroSlide lacks ${field}`,
+                `HeroSlide scheduling requires ${field} to control display windows`,
+                { filePath: 'prisma/schema.prisma', recommendation: `Add ${field} DateTime? to HeroSlide model` })
         );
       }
     }

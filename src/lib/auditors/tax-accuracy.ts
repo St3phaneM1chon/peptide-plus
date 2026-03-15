@@ -55,9 +55,13 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
     // Skip payroll/exemption threshold amounts (dollar values, not rates)
     if (/annual.?exemption|exemption.?amount|threshold|maximum|minimum|ceiling/i.test(context)) return false;
 
-    // Skip variable initializations to zero (e.g., `let qst = 0;`, `let gst = 0;`)
-    // These are accumulator variables, not tax rate definitions
-    if (/(?:let|var|const)\s+\w*(?:gst|qst|hst)\w*\s*=\s*0\s*[;,]/.test(trimmedLine.toLowerCase())) return false;
+    // Skip variable initializations to zero (e.g., `let qst = 0;`, `gst = 0;`, `qst = 0;`)
+    // These are accumulator variables or resets, not tax rate definitions
+    if (/(?:let|var|const)?\s*\w*(?:gst|qst|hst)\w*\s*=\s*0\s*[;,]/.test(trimmedLine.toLowerCase())) return false;
+
+    // Skip variable declarations with type annotations (e.g., `let gst: number;`)
+    // These are variable declarations, not tax rate definitions
+    if (/(?:let|var|const)\s+\w*(?:gst|qst|hst)\w*\s*[:;]/.test(trimmedLine.toLowerCase())) return false;
 
     // Skip account code references (e.g., "QST: 2310+", "GST: 1234")
     // Account codes are numeric identifiers > 100, not rates
@@ -76,6 +80,17 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
 
     // Skip comments
     if (/^\s*\/\//.test(trimmedLine) || /^\s*\*/.test(trimmedLine)) return false;
+
+    // Skip payroll files (CPP/EI/QPIP rates, not sales tax rates)
+    if (/payroll|CPP|QPP|QPIP|EI_\d|employment.?insurance|pension/i.test(context)) return false;
+
+    // Skip AI/copilot/forecasting service files (text descriptions, not actual rate config)
+    // These files mention HST/GST in string prompts or comments but don't define rates
+    if (/prompt|aiCompletion|chatMessage|system.*message|UNCERTAINTY|forecast|copilot/i.test(context)) return false;
+
+    // Skip string literals that contain tax terms as descriptive text
+    // (e.g., `'Subtotal, taxes (GST/QST/HST), total'`)
+    if (/['"`].*(?:GST|QST|HST).*['"`]/.test(line)) return false;
 
     return true;
   }
@@ -252,8 +267,26 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
       const content = this.readFile(file);
       if (!content) continue;
 
+      const rel = this.relativePath(file).toLowerCase();
+
+      // Skip files that are clearly NOT tax rate configuration files:
+      // - Payroll services (CPP/EI/QPIP rates, not sales tax)
+      // - AI/copilot services (text prompts mentioning tax terms)
+      // - Forecasting services (statistical models, not tax config)
+      // - CRM services (business logic, not tax config)
+      if (/payroll|copilot|forecast|ai-forecast|crm\/ai/i.test(rel)) continue;
+
       // Look for HST rate definitions - object/map style
-      if (/HST|hst/i.test(content) && /rate|Rate/i.test(content)) {
+      // Must be a file that genuinely defines tax rates, not just mentions "HST" in passing
+      const hasHSTRateDefinition =
+        // Explicit HST rate assignment: hstRate = 0.13, HST_RATE: 0.15, etc.
+        /hst(?:_?rate|Rate)\s*[:=]\s*[\d.]+/.test(content) ||
+        // Tax config objects: { hst: 0.13, ... } or { ON: { hst: 13 } }
+        (/\bhst\b\s*:\s*[\d.]+/.test(content) && /province|pst|gst|qst/i.test(content)) ||
+        // Tax engine/calculator files
+        /tax.*engine|tax.*calc|tax.*config|canadian.*tax/i.test(rel);
+
+      if (hasHSTRateDefinition) {
         foundHSTConfig = true;
 
         // Check for province codes near HST mentions
@@ -295,8 +328,10 @@ export default class TaxAccuracyAuditor extends BaseAuditor {
         }
       }
 
-      // Also check for a tax-by-province lookup
-      if (/province|Province|provinceCode/i.test(content) && /tax|Tax|rate|Rate/i.test(content)) {
+      // Also check for a tax-by-province lookup (only in tax/accounting-related files)
+      if (/tax|accounting/i.test(rel) &&
+          /province|Province|provinceCode/i.test(content) &&
+          /tax|Tax|rate|Rate/i.test(content)) {
         foundHSTConfig = true;
       }
     }

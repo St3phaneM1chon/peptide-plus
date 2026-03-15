@@ -10,7 +10,7 @@ export default class SectionAccountingAuditor extends BaseSectionAuditor {
       'admin/accounting', 'admin/accounting/journal-entries', 'admin/accounting/chart-of-accounts',
       'admin/accounting/fiscal', 'admin/accounting/reports', 'admin/accounting/invoices',
     ],
-    prismaModels: ['JournalEntry', 'JournalLine', 'ChartOfAccount', 'FiscalPeriod', 'Invoice'],
+    prismaModels: ['JournalEntry', 'JournalLine', 'ChartOfAccount', 'AccountingPeriod', 'CustomerInvoice'],
     i18nNamespaces: ['admin.nav.accounting', 'admin.nav.fiscal', 'admin.nav.reports'],
   };
 

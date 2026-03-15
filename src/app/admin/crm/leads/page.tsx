@@ -432,9 +432,9 @@ export default function LeadsPage() {
       {/* Import CSV Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4" role="dialog" aria-modal="true" aria-labelledby="import-csv-modal-title">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">{t('admin.crm.importCSV')}</h2>
+              <h2 id="import-csv-modal-title" className="text-lg font-semibold">{t('admin.crm.importCSV')}</h2>
               <button onClick={() => setShowImportModal(false)} className="p-1 hover:bg-gray-100 rounded" aria-label="Close">
                 <X className="h-5 w-5" />
               </button>
@@ -500,9 +500,9 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4" role="dialog" aria-modal="true" aria-labelledby="create-lead-modal-title">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{t('admin.crm.newLead')}</h2>
+          <h2 id="create-lead-modal-title" className="text-lg font-semibold">{t('admin.crm.newLead')}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded" aria-label="Close"><X className="h-5 w-5" /></button>
         </div>
         <div className="p-4 space-y-3">

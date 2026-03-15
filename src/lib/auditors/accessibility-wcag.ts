@@ -59,8 +59,11 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
         const hasAlt = /\balt\s*=/.test(tagContent);
         // alt="" is valid for decorative images
         const hasEmptyAlt = /\balt\s*=\s*["'][\s]*["']/.test(tagContent);
+        // aria-hidden="true" marks decorative images that should be hidden from screen readers
+        const hasAriaHidden = /aria-hidden\s*=\s*["']true["']/.test(tagContent) ||
+          /aria-hidden\s*=\s*\{true\}/.test(tagContent);
 
-        if (!hasAlt) {
+        if (!hasAlt && !hasAriaHidden) {
           missingAlt.push({
             file,
             line: i + 1,

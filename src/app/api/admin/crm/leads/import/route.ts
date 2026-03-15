@@ -135,6 +135,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         existingEmailSet.add(lead.email.toLowerCase());
       }
     } catch (error) {
+      console.error('[CRM/LeadsImport] Error processing lead at index', { index: i, contactName: lead.contactName, error });
       results.errors.push({
         index: i,
         contactName: lead.contactName,

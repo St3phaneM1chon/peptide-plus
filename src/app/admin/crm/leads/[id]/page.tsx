@@ -360,8 +360,8 @@ function ConvertModal({ leadId, onClose, onConverted }: { leadId: string; onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4">
-        <h2 className="text-lg font-semibold">{t('admin.crm.convertToDeal')}</h2>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="convert-modal-title">
+        <h2 id="convert-modal-title" className="text-lg font-semibold">{t('admin.crm.convertToDeal')}</h2>
         <div>
           <label className="block text-sm font-medium mb-1">Deal Title *</label>
           <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}

@@ -198,13 +198,16 @@ export abstract class BaseSectionAuditor extends BaseAuditor {
       if (!content) continue;
 
       // Check auth guard (session-based, secret-based, or signature-based)
-      const hasAuth = /auth\(\)|getServerSession|withAdminGuard/.test(content) ||
+      const hasAuth = /auth\(\)|getServerSession|withAdminGuard|withUserGuard/.test(content) ||
         // Webhook signature verification
         /constructEvent/.test(content) ||
         /timingSafeEqual/.test(content) ||
         /WEBHOOK_SECRET/.test(content) ||
         /verifySignature/.test(content) ||
         /x-hub-signature/i.test(content) ||
+        // Twilio signature verification (WhatsApp, SMS webhooks)
+        /validateTwilioSignature/.test(content) ||
+        /TWILIO_AUTH_TOKEN/.test(content) ||
         // Session/token checks (non-standard patterns)
         /session\?\.user/.test(content) ||
         /request\.headers\.get.*authorization/i.test(content) ||

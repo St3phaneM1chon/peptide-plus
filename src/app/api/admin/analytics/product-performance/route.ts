@@ -83,7 +83,7 @@ export const GET = withAdminGuard(async (
               promoMap.set(pid, (promoMap.get(pid) || 0) + 1);
             }
           }
-        } catch { /* skip invalid JSON */ }
+        } catch (err) { console.error('[ProductPerformance] Invalid JSON in promo productIds', err); }
       }
     }
   }

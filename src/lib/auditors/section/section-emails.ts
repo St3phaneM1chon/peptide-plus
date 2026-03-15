@@ -9,7 +9,7 @@ export default class SectionEmailsAuditor extends BaseSectionAuditor {
     sectionName: 'Emails',
     adminPages: ['emails', 'newsletter'],
     apiRoutes: ['admin/emails', 'admin/newsletter', 'admin/newsletter/campaigns'],
-    prismaModels: ['EmailTemplate', 'NewsletterCampaign', 'NewsletterSubscriber'],
+    prismaModels: ['EmailTemplate', 'EmailCampaign', 'NewsletterSubscriber'],
     i18nNamespaces: ['admin.nav.emails', 'admin.nav.newsletter'],
   };
 
@@ -24,7 +24,7 @@ export default class SectionEmailsAuditor extends BaseSectionAuditor {
     const templateBlock = this.extractModelBlock(schema, 'EmailTemplate');
     if (templateBlock) {
       const hasSubject = /subject/i.test(templateBlock);
-      const hasBody = /body|htmlBody/i.test(templateBlock);
+      const hasBody = /body|htmlBody|htmlContent/i.test(templateBlock);
       const hasTrigger = /type|trigger/i.test(templateBlock);
 
       if (hasSubject && hasBody) {

@@ -149,9 +149,9 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-form-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 id="create-form-modal-title" className="text-lg font-semibold text-gray-900">
             {t('admin.crm.qa.createForm')}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -346,9 +346,9 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="score-call-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h3 id="score-call-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
             {t('admin.crm.qa.scoreCall')}
           </h3>

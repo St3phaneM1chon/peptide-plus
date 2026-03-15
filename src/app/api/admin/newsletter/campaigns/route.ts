@@ -62,7 +62,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       if (c.stats) {
         try {
           parsedStats = JSON.parse(c.stats);
-        } catch { /* ignore invalid JSON */ }
+        } catch (err) { console.error('[Newsletter] Invalid stats JSON for campaign', { id: c.id, error: err }); }
       }
 
       // Extract A/B test config
@@ -70,7 +70,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       if (c.abTestConfig) {
         try {
           abTestConfig = JSON.parse(c.abTestConfig);
-        } catch { /* ignore invalid JSON */ }
+        } catch (err) { console.error('[Newsletter] Invalid abTestConfig JSON for campaign', { id: c.id, error: err }); }
       }
 
       // Extract A/B test result from stats

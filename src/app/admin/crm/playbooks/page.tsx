@@ -297,10 +297,10 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="playbook-modal-title">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h2 id="playbook-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-indigo-600" />
             {playbook
               ? (t('admin.crm.playbooks.editPlaybook'))

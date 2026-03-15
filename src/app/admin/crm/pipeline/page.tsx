@@ -116,9 +116,9 @@ export default function PipelinePage() {
       {/* Create Deal Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4" role="dialog" aria-modal="true" aria-labelledby="create-deal-modal-title">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">{t('admin.crm.newDeal')}</h2>
+              <h2 id="create-deal-modal-title" className="text-lg font-semibold">{t('admin.crm.newDeal')}</h2>
               <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-gray-100 rounded">
                 <X className="h-5 w-5" />
               </button>

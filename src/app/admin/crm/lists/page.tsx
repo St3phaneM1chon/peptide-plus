@@ -371,8 +371,8 @@ export default function ProspectListsPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-4">{t('admin.crmLists.newList')}</h2>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="create-list-modal-title">
+            <h2 id="create-list-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.newList')}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crmLists.name')} *</label>
@@ -425,8 +425,8 @@ export default function ProspectListsPage() {
       {/* Import CSV Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-4">{t('admin.crmLists.importCSV')}</h2>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="import-csv-list-modal-title">
+            <h2 id="import-csv-list-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.importCSV')}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.crmLists.name')}</label>

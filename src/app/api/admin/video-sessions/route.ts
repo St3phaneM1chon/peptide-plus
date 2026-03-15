@@ -101,7 +101,22 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         createdById: session.user.id,
         notes: notes || null,
       },
-      include: {
+      select: {
+        id: true,
+        platform: true,
+        topic: true,
+        contentType: true,
+        status: true,
+        scheduledAt: true,
+        duration: true,
+        startedAt: true,
+        meetingId: true,
+        clientJoinUrl: true,
+        clientId: true,
+        createdById: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
         client: { select: { id: true, name: true, email: true } },
         createdBy: { select: { id: true, name: true } },
       },
@@ -128,14 +143,11 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       }
     }
 
-    // Security: strip sensitive platform credentials from response
-    const { password: _meetingPwd, hostJoinUrl: _hostUrl, ...safeSession } = videoSession;
-
-    // Also strip sensitive fields from meeting object
+    // meeting object: strip sensitive fields (password, hostJoinUrl)
     const { password: _mPwd, hostJoinUrl: _mHostUrl, ...safeMeeting } = meeting;
 
     return NextResponse.json({
-      session: safeSession,
+      session: videoSession,
       meeting: safeMeeting,
       email: emailResult
         ? { sent: emailResult.success, error: emailResult.error }
@@ -181,7 +193,23 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     const [sessions, total] = await Promise.all([
       prisma.videoSession.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          platform: true,
+          topic: true,
+          contentType: true,
+          status: true,
+          scheduledAt: true,
+          duration: true,
+          startedAt: true,
+          endedAt: true,
+          meetingId: true,
+          clientJoinUrl: true,
+          clientId: true,
+          createdById: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
           client: { select: { id: true, name: true, email: true } },
           createdBy: { select: { id: true, name: true } },
           video: { select: { id: true, title: true, slug: true } },
@@ -193,11 +221,8 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       prisma.videoSession.count({ where }),
     ]);
 
-    // Security: strip sensitive platform credentials from each session
-    const safeSessions = sessions.map(({ password: _pwd, hostJoinUrl: _hUrl, ...rest }) => rest);
-
     return NextResponse.json({
-      sessions: safeSessions,
+      sessions,
       pagination: {
         page,
         limit,

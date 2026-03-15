@@ -1411,8 +1411,8 @@ export default function ProspectListDetailPage() {
       {/* Add Prospect Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-4">{t('admin.crmLists.addProspect')}</h2>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="add-prospect-modal-title">
+            <h2 id="add-prospect-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.addProspect')}</h2>
             <div className="space-y-3">
               {(['contactName', 'companyName', 'email', 'phone', 'city'] as const).map((field) => (
                 <div key={field}>

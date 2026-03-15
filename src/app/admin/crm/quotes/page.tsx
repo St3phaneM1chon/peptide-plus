@@ -665,9 +665,9 @@ export default function QuotesPage() {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowCreateModal(false)} />
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4" role="dialog" aria-modal="true" aria-labelledby="create-quote-modal-title">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <h2 id="create-quote-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-indigo-600" />
                 {t('admin.crm.quotes.createTitle')}
               </h2>
