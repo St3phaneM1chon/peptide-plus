@@ -42,8 +42,11 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
         }
         payload = parsed.data;
-      } catch {
-        return NextResponse.json({ success: true }); // Acknowledge silently
+      } catch (parseErr) {
+        logger.warn('[WhatsApp Webhook] JSON parse failed, acknowledging', {
+          error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+        });
+        return NextResponse.json({ success: true });
       }
     }
 

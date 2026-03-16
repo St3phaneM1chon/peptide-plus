@@ -11,6 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
+import { stripHtml } from '@/lib/sanitize';
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -119,8 +120,8 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     try {
       leadsToCreate.push({
-        contactName: lead.contactName,
-        companyName: lead.companyName || null,
+        contactName: stripHtml(lead.contactName),
+        companyName: lead.companyName ? stripHtml(lead.companyName) : null,
         email: lead.email?.toLowerCase() || null,
         phone: lead.phone?.trim() || null,
         source: lead.source || 'IMPORT',

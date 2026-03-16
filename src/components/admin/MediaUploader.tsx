@@ -246,7 +246,7 @@ export function MediaUploader({
   const handleDelete = useCallback(async () => {
     if (mediaId) {
       try {
-        await fetch(`/api/admin/medias/${mediaId}`, { method: 'DELETE' });
+        await fetch(`/api/admin/medias/${mediaId}`, { method: 'DELETE', headers: addCSRFHeader() });
       } catch {
         // Silently continue - the URL will be cleared regardless
       }

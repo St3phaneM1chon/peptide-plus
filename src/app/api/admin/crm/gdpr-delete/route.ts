@@ -105,93 +105,96 @@ export const POST = withAdminGuard(
       })),
     });
 
-    if (leadIds.length > 0) {
-      // Phase 1: Delete child records that depend on conversations (must come first)
-      const conversations = await prisma.inboxConversation.findMany({
-        where: { leadId: { in: leadIds } },
-        select: { id: true },
-      });
-
-      if (conversations.length > 0) {
-        const convIds = conversations.map((c) => c.id);
-        const messagesResult = await prisma.inboxMessage.deleteMany({
-          where: { conversationId: { in: convIds } },
+    // Wrap all deletions in a transaction for atomicity (GDPR requires complete erasure)
+    await prisma.$transaction(async (tx) => {
+      if (leadIds.length > 0) {
+        // Phase 1: Delete child records that depend on conversations (must come first)
+        const conversations = await tx.inboxConversation.findMany({
+          where: { leadId: { in: leadIds } },
+          select: { id: true },
         });
-        deleted.messages = messagesResult.count;
 
-        const convsResult = await prisma.inboxConversation.deleteMany({
-          where: { id: { in: convIds } },
+        if (conversations.length > 0) {
+          const convIds = conversations.map((c) => c.id);
+          const messagesResult = await tx.inboxMessage.deleteMany({
+            where: { conversationId: { in: convIds } },
+          });
+          deleted.messages = messagesResult.count;
+
+          const convsResult = await tx.inboxConversation.deleteMany({
+            where: { id: { in: convIds } },
+          });
+          deleted.conversations = convsResult.count;
+        }
+
+        // Phase 2: Delete all lead-dependent records in parallel
+        const [campaignResult, activitiesResult, tasksResult, dialerResult] = await Promise.all([
+          tx.crmCampaignActivity.deleteMany({
+            where: { leadId: { in: leadIds } },
+          }),
+          tx.crmActivity.deleteMany({
+            where: { leadId: { in: leadIds } },
+          }),
+          tx.crmTask.deleteMany({
+            where: { leadId: { in: leadIds } },
+          }),
+          tx.dialerListEntry.deleteMany({
+            where: { crmLeadId: { in: leadIds } },
+          }),
+        ]);
+        deleted.campaignActivities = campaignResult.count;
+        deleted.activities = activitiesResult.count + tasksResult.count;
+        deleted.dialerEntries = dialerResult.count;
+
+        // Phase 3: Delete leads themselves (after all FK children are gone)
+        const leadsResult = await tx.crmLead.deleteMany({
+          where: { id: { in: leadIds } },
         });
-        deleted.conversations = convsResult.count;
+        deleted.leads = leadsResult.count;
       }
 
-      // Phase 2: Delete all lead-dependent records in parallel (N+1 fix: was 5 sequential awaits)
-      const [campaignResult, activitiesResult, tasksResult, dialerResult] = await Promise.all([
-        prisma.crmCampaignActivity.deleteMany({
-          where: { leadId: { in: leadIds } },
-        }),
-        prisma.crmActivity.deleteMany({
-          where: { leadId: { in: leadIds } },
-        }),
-        prisma.crmTask.deleteMany({
-          where: { leadId: { in: leadIds } },
-        }),
-        prisma.dialerListEntry.deleteMany({
-          where: { crmLeadId: { in: leadIds } },
-        }),
-      ]);
-      deleted.campaignActivities = campaignResult.count;
-      deleted.activities = activitiesResult.count + tasksResult.count;
-      deleted.dialerEntries = dialerResult.count;
+      // Delete contact-info-based records in parallel
+      const contactDeletePromises: Promise<void>[] = [];
 
-      // Phase 3: Delete leads themselves (after all FK children are gone)
-      const leadsResult = await prisma.crmLead.deleteMany({
-        where: { id: { in: leadIds } },
-      });
-      deleted.leads = leadsResult.count;
-    }
+      if (contactEmail || contactPhone) {
+        const consentWhere = [];
+        if (contactEmail) consentWhere.push({ email: contactEmail });
+        if (contactPhone) consentWhere.push({ phone: contactPhone });
 
-    // Delete contact-info-based records in parallel (N+1 fix: was 3 sequential awaits)
-    const contactDeletePromises: Promise<void>[] = [];
+        contactDeletePromises.push(
+          tx.crmConsentRecord.deleteMany({
+            where: { OR: consentWhere },
+          }).then((r) => { deleted.consentRecords = r.count; })
+        );
 
-    if (contactEmail || contactPhone) {
-      const consentWhere = [];
-      if (contactEmail) consentWhere.push({ email: contactEmail });
-      if (contactPhone) consentWhere.push({ phone: contactPhone });
+        const prospectWhere = [];
+        if (contactEmail) prospectWhere.push({ email: contactEmail });
+        if (contactPhone) prospectWhere.push({ phone: contactPhone });
 
-      contactDeletePromises.push(
-        prisma.crmConsentRecord.deleteMany({
-          where: { OR: consentWhere },
-        }).then((r) => { deleted.consentRecords = r.count; })
-      );
+        contactDeletePromises.push(
+          tx.prospect.deleteMany({
+            where: { OR: prospectWhere },
+          }).then((r) => { deleted.prospects = r.count; })
+        );
+      }
 
-      const prospectWhere = [];
-      if (contactEmail) prospectWhere.push({ email: contactEmail });
-      if (contactPhone) prospectWhere.push({ phone: contactPhone });
+      if (contactPhone) {
+        contactDeletePromises.push(
+          tx.callLog.deleteMany({
+            where: {
+              OR: [
+                { callerNumber: contactPhone },
+                { calledNumber: contactPhone },
+              ],
+            },
+          }).then((r) => { deleted.callLogs = r.count; })
+        );
+      }
 
-      contactDeletePromises.push(
-        prisma.prospect.deleteMany({
-          where: { OR: prospectWhere },
-        }).then((r) => { deleted.prospects = r.count; })
-      );
-    }
-
-    if (contactPhone) {
-      contactDeletePromises.push(
-        prisma.callLog.deleteMany({
-          where: {
-            OR: [
-              { callerNumber: contactPhone },
-              { calledNumber: contactPhone },
-            ],
-          },
-        }).then((r) => { deleted.callLogs = r.count; })
-      );
-    }
-
-    if (contactDeletePromises.length > 0) {
-      await Promise.all(contactDeletePromises);
-    }
+      if (contactDeletePromises.length > 0) {
+        await Promise.all(contactDeletePromises);
+      }
+    });
 
     const totalDeleted = Object.values(deleted).reduce((sum, n) => sum + n, 0);
 

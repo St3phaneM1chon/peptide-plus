@@ -66,6 +66,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         assignedTo: { select: { id: true, name: true, email: true } },
         pipeline: { select: { id: true, name: true } },
       },
+      take: 2000, // Safety limit to prevent OOM on large datasets
     });
 
     let weightedTotal = 0;
@@ -92,6 +93,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         actualCloseDate: { gte: monthStart, lte: monthEnd },
       },
       select: { value: true },
+      take: 2000,
     });
     const wonThisMonth = wonDealsThisMonth.reduce((sum, d) => sum + Number(d.value), 0);
 
@@ -259,10 +261,12 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       prisma.crmDeal.findMany({
         where: histWonWhere,
         select: { value: true, actualCloseDate: true },
+        take: 2000,
       }),
       prisma.crmDeal.findMany({
         where: histLostWhere,
         select: { updatedAt: true },
+        take: 2000,
       }),
     ]);
 

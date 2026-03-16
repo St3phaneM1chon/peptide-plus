@@ -88,9 +88,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Build blob path
+    // Build blob path with validated extension
     const sanitizedFolder = sanitizeFolder(rawFolder || 'general');
-    const ext = path.extname(filename);
+    const ext = path.extname(filename).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.pdf', '.mp4', '.webm']);
+    if (ext && !ALLOWED_EXTENSIONS.has(ext)) {
+      return NextResponse.json(
+        { error: `File extension "${ext}" is not allowed` },
+        { status: 400 }
+      );
+    }
     const blobPath = `${sanitizedFolder}/${randomUUID()}${ext}`;
 
     // Generate presigned URL (15 min expiry)
