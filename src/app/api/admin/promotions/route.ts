@@ -231,7 +231,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name: discount.name, type: discount.type, value: Number(discount.value), appliesToAll: discount.appliesToAll, categoryId: discount.categoryId, productId: discount.productId, isActive: discount.isActive },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/promotions] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/promotions] Non-blocking operation failed:', err); });
 
     // Fetch related names for response
     let categoryName: string | null = null;

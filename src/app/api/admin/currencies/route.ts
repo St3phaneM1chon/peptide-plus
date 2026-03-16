@@ -107,7 +107,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { code: currency.code, name: currency.name, symbol: currency.symbol, exchangeRate: Number(currency.exchangeRate), isDefault: currency.isDefault },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/currencies] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/currencies] Non-blocking operation failed:', err); });
 
     return NextResponse.json(
       {

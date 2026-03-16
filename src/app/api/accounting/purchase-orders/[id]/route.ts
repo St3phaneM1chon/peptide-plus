@@ -270,7 +270,7 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       userId: session?.user?.id || session?.user?.email || 'system',
       userName: session?.user?.name || undefined,
       metadata: { poNumber: existing.poNumber },
-    }).catch((err) => { console.error('[accounting/purchase-orders/id] non-blocking:', err); });
+    }).catch((err) => { logger.error('[accounting/purchase-orders/id] non-blocking:', err); });
 
     return NextResponse.json({
       success: true,
@@ -325,7 +325,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       userId: session?.user?.id || session?.user?.email || 'system',
       userName: session?.user?.name || undefined,
       metadata: { poNumber: existing.poNumber, supplierName: existing.supplierName },
-    }).catch((err) => { console.error('[accounting/purchase-orders/id] non-blocking:', err); });
+    }).catch((err) => { logger.error('[accounting/purchase-orders/id] non-blocking:', err); });
 
     logger.info('Purchase order soft-deleted', { poNumber: existing.poNumber });
 

@@ -120,7 +120,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name: data.name, countries: data.countries, baseFee: data.baseFee, isActive: data.isActive },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/shipping/zones] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/shipping/zones] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true, data: zone }, { status: 201 });
   } catch (error) {

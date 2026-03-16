@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess } from '@/lib/api-response';
 import { getModuleFlags } from '@/lib/module-flags';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (
   request: NextRequest,
@@ -84,7 +85,7 @@ export const GET = withAdminGuard(async (
             }
           }
         } catch (err) {
-          console.error('[ProductPerformance] Invalid JSON in promo productIds', err);
+          logger.error('[ProductPerformance] Invalid JSON in promo productIds', err);
         }
       }
     }

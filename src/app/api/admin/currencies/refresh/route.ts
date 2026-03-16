@@ -33,7 +33,7 @@ export const POST = withAdminGuard(async (_request, { session }) => {
       newValue: { updated: result.updated.length, skipped: result.skipped.length, errors: result.errors.length },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/currencies/refresh] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/currencies/refresh] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

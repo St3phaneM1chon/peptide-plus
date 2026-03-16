@@ -54,7 +54,7 @@ async function loadSurveyConfigs(): Promise<SurveyConfig[]> {
     const parsed = JSON.parse(setting.value);
     return Array.isArray(parsed) ? parsed : getDefaultSurveyConfigs();
   } catch (parseErr) {
-    console.error('[VoIP/Surveys] Failed to parse survey config JSON', { error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+    logger.error('[VoIP/Surveys] Failed to parse survey config JSON', { error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
     return getDefaultSurveyConfigs();
   }
 }

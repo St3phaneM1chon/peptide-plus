@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -134,7 +135,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         existingEmailSet.add(lead.email.toLowerCase());
       }
     } catch (error) {
-      console.error('[CRM/LeadsImport] Error processing lead at index', { index: i, contactName: lead.contactName, error });
+      logger.error('[CRM/LeadsImport] Error processing lead at index', { index: i, contactName: lead.contactName, error });
       results.errors.push({
         index: i,
         contactName: lead.contactName,

@@ -101,7 +101,7 @@ export const POST = withAdminGuard(async (request, { session, routeContext }) =>
       newValue: { videoId: id, placement, contextId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/videos/id/placements] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/videos/id/placements] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ placement: created }, { status: 201 });
   } catch (error) {
@@ -138,7 +138,7 @@ export const DELETE = withAdminGuard(async (request, { session, routeContext }) 
       previousValue: { videoId: id, placement: placement.placement, contextId: placement.contextId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/videos/id/placements] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/videos/id/placements] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

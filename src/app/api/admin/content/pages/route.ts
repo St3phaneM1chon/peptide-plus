@@ -110,7 +110,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { title, slug, template: template || 'default', isPublished: isPublished || false },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/content/pages] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/content/pages] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ page }, { status: 201 });
   } catch (error: unknown) {
@@ -188,7 +188,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       newValue: { title, slug, isPublished: nowPublished },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/content/pages] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/content/pages] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ page });
   } catch (error: unknown) {
@@ -228,7 +228,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
       targetId: id,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/content/pages] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/content/pages] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { logAdminAction } from '@/lib/admin-audit';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 const purchaseOrderSchema = z.object({
   supplierId: z.string().min(1),
@@ -46,7 +47,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       if (status && po.status !== status) return null;
       return { id: s.key.replace('po:', ''), ...po };
     } catch (parseErr) {
-      console.error('[PurchaseOrders] Failed to parse PO JSON', { key: s.key, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+      logger.error('[PurchaseOrders] Failed to parse PO JSON', { key: s.key, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
       return null;
     }
   }).filter(Boolean);
@@ -91,7 +92,7 @@ export const POST = withAdminGuard(async (
     targetId: id,
     adminUserId: session.user.id,
     newValue: { totalCost, itemCount: parsed.data.items.length },
-  }).catch((err) => { console.error('[admin/inventory/purchase-orders] Non-blocking operation failed:', err); });
+  }).catch((err) => { logger.error('[admin/inventory/purchase-orders] Non-blocking operation failed:', err); });
 
   return NextResponse.json({ id, ...po }, { status: 201 });
 });

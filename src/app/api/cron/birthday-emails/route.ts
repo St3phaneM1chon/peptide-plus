@@ -317,7 +317,7 @@ export async function GET(request: NextRequest) {
             targetType: 'User',
             targetId: user.id,
             newValue: { points: userBonusPoints, tier: user.loyaltyTier || 'BRONZE' },
-          }).catch((err) => { console.error('[cron/birthday-emails] Non-blocking operation failed:', err); }); // Non-blocking: don't fail the cron if audit logging fails
+          }).catch((err) => { logger.error('[cron/birthday-emails] Non-blocking operation failed:', err); }); // Non-blocking: don't fail the cron if audit logging fails
 
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
           const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);

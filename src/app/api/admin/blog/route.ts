@@ -272,7 +272,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { title: post.title, slug: post.slug, isPublished: post.isPublished, category: post.category },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/blog] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/blog] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {

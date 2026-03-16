@@ -101,7 +101,7 @@ export const GET = withAdminGuard(async (
           next: r.next ? new Date(r.next).toISOString() : null,
         }));
       } catch (repeatErr) {
-        console.error('[admin/queues] Could not fetch repeatable jobs', { queue: name, error: repeatErr instanceof Error ? repeatErr.message : String(repeatErr) });
+        logger.error('[admin/queues] Could not fetch repeatable jobs', { queue: name, error: repeatErr instanceof Error ? repeatErr.message : String(repeatErr) });
       }
     }
 
@@ -158,7 +158,7 @@ export const POST = withAdminGuard(async (
         data = parsed.data;
       }
     } catch (bodyErr) {
-      console.error('[admin/queues] POST body parse failed, using empty data', { queue: name, error: bodyErr instanceof Error ? bodyErr.message : String(bodyErr) });
+      logger.error('[admin/queues] POST body parse failed, using empty data', { queue: name, error: bodyErr instanceof Error ? bodyErr.message : String(bodyErr) });
     }
 
     // Add trigger metadata

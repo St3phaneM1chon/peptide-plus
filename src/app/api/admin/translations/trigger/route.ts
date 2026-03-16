@@ -83,7 +83,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         newValue: { model, queued: entities.length, force },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((err) => { console.error('[admin/translations/trigger] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/translations/trigger] Non-blocking operation failed:', err); });
 
       return NextResponse.json({
         message: `${entities.length} ${model}(s) en file d'attente pour traduction`,
@@ -132,7 +132,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { model, entityId, force, translatedLocales: results.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/translations/trigger] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/translations/trigger] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       message: `Traduction terminée pour ${model}#${entityId}`,

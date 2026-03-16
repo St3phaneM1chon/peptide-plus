@@ -213,7 +213,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name: bundle.name, slug: bundle.slug, discount: Number(bundle.discount), isActive: bundle.isActive },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/bundles] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/bundles] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ data: bundle }, { status: 201 });
   } catch (error) {

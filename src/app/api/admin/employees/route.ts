@@ -323,7 +323,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { email: employee.email, name: employee.name, role: employee.role },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/employees] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/employees] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       employee: {

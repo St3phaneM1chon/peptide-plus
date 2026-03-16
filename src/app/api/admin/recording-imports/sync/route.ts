@@ -55,7 +55,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         const result = await syncRecordings(conn.platform as Platform);
         results.push({ platform: conn.platform, ...result });
       } catch (error) {
-        console.error(`[RecordingImports] Sync failed for platform ${conn.platform}:`, error);
+        logger.error(`[RecordingImports] Sync failed for platform ${conn.platform}:`, error);
         results.push({
           platform: conn.platform,
           newCount: 0,

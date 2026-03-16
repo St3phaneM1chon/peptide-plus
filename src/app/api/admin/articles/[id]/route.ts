@@ -206,7 +206,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/articles/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/articles/id] Non-blocking operation failed:', err); });
 
     // N+1 fix: Batch upsert all translations in a single transaction
     // instead of individual upsert per locale (was N queries, now 1 transaction)
@@ -305,7 +305,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
       previousValue: { title: existing.title },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/articles/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/articles/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

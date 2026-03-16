@@ -46,7 +46,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: parsed.data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/nav-sections] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/nav-sections] Non-blocking operation failed:', err); });
 
     return NextResponse.json(section, { status: 201 });
   } catch (error) {

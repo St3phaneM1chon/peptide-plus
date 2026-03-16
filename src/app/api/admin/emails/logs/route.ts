@@ -270,7 +270,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
       newValue: { olderThanDays, cutoffDate: cutoffDate.toISOString(), deletedCount: result.count },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/emails/logs] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/emails/logs] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,
@@ -340,7 +340,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         newValue: { status: 'retried', messageId: result.messageId },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((err) => { console.error('[admin/emails/logs] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/emails/logs] Non-blocking operation failed:', err); });
 
       return NextResponse.json({
         success: true,

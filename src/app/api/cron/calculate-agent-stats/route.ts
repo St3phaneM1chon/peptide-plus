@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('[cron/calculate-agent-stats] Error:', error instanceof Error ? error.message : String(error));
+      logger.error('[cron/calculate-agent-stats] Error:', error instanceof Error ? error.message : String(error));
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

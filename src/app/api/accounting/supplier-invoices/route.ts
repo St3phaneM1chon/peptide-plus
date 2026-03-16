@@ -207,7 +207,7 @@ export const POST = withAdminGuard(async (request) => {
     } catch (error) {
       // A097: If internalRef column doesn't exist yet, skip gracefully.
       // The column may be added in a future migration.
-      console.error('[supplier-invoices] internalRef generation error:', error);
+      logger.error('[supplier-invoices] internalRef generation error:', error);
       internalRef = undefined;
     }
 
@@ -357,7 +357,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
         invoiceNumber: existing.invoiceNumber,
         supplierName: existing.supplierName,
       },
-    }).catch((err) => { console.error('[accounting/supplier-invoices] non-blocking:', err); });
+    }).catch((err) => { logger.error('[accounting/supplier-invoices] non-blocking:', err); });
 
     return NextResponse.json({ success: true, invoice });
   } catch (error) {

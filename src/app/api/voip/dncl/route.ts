@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import {
   checkDncl,
   bulkCheckDncl,
@@ -28,7 +29,7 @@ export async function GET() {
     const stats = await getDnclStats();
     return NextResponse.json({ data: stats });
   } catch (error) {
-    console.error('[VoIP/DNCL] GET error:', error);
+    logger.error('[VoIP/DNCL] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (error) {
-    console.error('[VoIP/DNCL] POST error:', error);
+    logger.error('[VoIP/DNCL] POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

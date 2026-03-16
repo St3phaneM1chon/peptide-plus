@@ -118,7 +118,7 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
       newValue: parsed.data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/consents/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/consents/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ consent });
   } catch (error) {

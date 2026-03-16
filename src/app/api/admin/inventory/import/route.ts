@@ -285,7 +285,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { imported, skipped, total: rows.length, errorCount: errors.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/inventory/import] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/inventory/import] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

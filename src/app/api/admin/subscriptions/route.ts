@@ -249,7 +249,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { userId, productId, productName: product.name, frequency: freq, quantity: quantity || 1, discount },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/subscriptions] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/subscriptions] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       subscription: {

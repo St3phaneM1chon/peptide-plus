@@ -106,7 +106,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, slug: template.slug, type },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/consent-templates] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/consent-templates] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {

@@ -418,7 +418,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/purchase-orders/id/receive] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/purchase-orders/id/receive] Non-blocking operation failed:', err); });
 
     // ─── Fetch final state ──────────────────────────────────────────────
     const updatedPO = await prisma.purchaseOrder.findUnique({

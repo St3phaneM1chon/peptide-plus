@@ -183,7 +183,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { name, carrier, price, isActive: isActive ?? true },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/shipping-methods] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/shipping-methods] Non-blocking operation failed:', err); });
 
     return NextResponse.json(
       { success: true, shippingMethod: mapZone(zone) },

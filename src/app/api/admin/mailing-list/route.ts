@@ -145,7 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { email: subscriber.email, status: subscriber.status },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/mailing-list] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/mailing-list] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ subscriber }, { status: 201 });
   } catch (error) {
@@ -215,7 +215,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/mailing-list] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/mailing-list] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ subscriber });
   } catch (error) {
@@ -257,7 +257,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       previousValue: { email: existing.email },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/mailing-list] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/mailing-list] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

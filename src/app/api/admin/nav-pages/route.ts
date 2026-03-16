@@ -42,7 +42,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: parsed.data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/nav-pages] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/nav-pages] Non-blocking operation failed:', err); });
 
     return NextResponse.json(page, { status: 201 });
   } catch (error) {

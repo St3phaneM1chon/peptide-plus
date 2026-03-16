@@ -181,7 +181,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         itemsReceived: data.items.length,
         newStatus: result.newStatus,
       },
-    }).catch((err) => { console.error('[accounting/purchase-orders/id/receive] non-blocking:', err); });
+    }).catch((err) => { logger.error('[accounting/purchase-orders/id/receive] non-blocking:', err); });
 
     logger.info('Purchase order goods received', {
       poNumber: po.poNumber,

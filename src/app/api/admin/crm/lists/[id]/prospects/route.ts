@@ -13,6 +13,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { findProspectDuplicatesBatch, updateListCounters } from '@/lib/crm/prospect-dedup';
+import { logger } from '@/lib/logger';
 
 const addProspectSchema = z.object({
   prospects: z.array(z.object({
@@ -138,7 +139,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
       added++;
     }
   } catch (err) {
-    console.error('[CRM/Prospects] Bulk create transaction failed, falling back to individual creates', err);
+    logger.error('[CRM/Prospects] Bulk create transaction failed, falling back to individual creates', err);
     // If bulk transaction fails, fall back to individual creates for error isolation
     for (let i = 0; i < prospectsData.length; i++) {
       try {
@@ -149,7 +150,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
         createdProspects.push(result);
         added++;
       } catch (err) {
-        console.error('[CRM/Prospects] Individual prospect create failed:', err);
+        logger.error('[CRM/Prospects] Individual prospect create failed:', err);
         errors.push({ index: i, contactName: prospectsData[i].data.contactName, reason: err instanceof Error ? err.message : 'Unknown error' });
       }
     }

@@ -59,7 +59,7 @@ function safeParseJSON(str: string): unknown {
   try {
     return JSON.parse(str);
   } catch (error) {
-    console.error('[custom-report-by-id] safeParseJSON error:', error);
+    logger.error('[custom-report-by-id] safeParseJSON error:', error);
     return str;
   }
 }

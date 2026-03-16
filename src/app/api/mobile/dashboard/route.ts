@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async () => {
   try {
@@ -62,7 +63,7 @@ export const GET = withAdminGuard(async () => {
       })),
     });
   } catch (error) {
-    console.error('[Mobile/Dashboard] GET error:', error);
+    logger.error('[Mobile/Dashboard] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur dashboard mobile' }, { status: 500 });
   }
 });

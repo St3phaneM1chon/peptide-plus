@@ -92,7 +92,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       newValue: { enabled, phoneNumberId, businessAccountId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/integrations/whatsapp] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/integrations/whatsapp] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

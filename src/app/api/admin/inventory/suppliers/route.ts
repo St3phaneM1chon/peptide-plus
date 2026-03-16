@@ -10,6 +10,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 const supplierSchema = z.object({
   name: z.string().min(1).max(200),
@@ -35,7 +36,7 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
     try {
       return { id: s.key.replace('supplier:', ''), ...JSON.parse(s.value) };
     } catch (parseErr) {
-      console.error('[Suppliers] Failed to parse supplier JSON', { key: s.key, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+      logger.error('[Suppliers] Failed to parse supplier JSON', { key: s.key, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
       return null;
     }
   }).filter(Boolean);

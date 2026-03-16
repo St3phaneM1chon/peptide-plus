@@ -110,7 +110,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       newValue: { count: upsertedSettings.length, keys: Object.keys(settings) },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/seo] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/seo] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

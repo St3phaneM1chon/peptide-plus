@@ -12,6 +12,7 @@ import { transitionVideoStatus, getAvailableTransitions } from '@/lib/media/appr
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const transitionSchema = z.object({
   targetStatus: z.enum(['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'ARCHIVED']),
@@ -40,7 +41,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { params, sessio
     newValue: { targetStatus: parsed.data.targetStatus },
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
-  }).catch((err) => { console.error('[admin/videos/id/workflow] Non-blocking operation failed:', err); });
+  }).catch((err) => { logger.error('[admin/videos/id/workflow] Non-blocking operation failed:', err); });
 
   return NextResponse.json({ success: true, newStatus: result.newStatus });
 });

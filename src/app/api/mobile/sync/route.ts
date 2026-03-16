@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const syncItemSchema = z.object({
@@ -39,7 +40,7 @@ export const POST = withAdminGuard(async (request) => {
         });
         results.push({ id: item.id, success: res.ok, error: res.ok ? undefined : `Status ${res.status}` });
       } catch (err) {
-        console.error(`[Mobile/Sync] Network error for item ${item.id}:`, err);
+        logger.error(`[Mobile/Sync] Network error for item ${item.id}`, { error: err instanceof Error ? err.message : String(err) });
         results.push({ id: item.id, success: false, error: 'Erreur réseau' });
       }
     }
@@ -51,7 +52,7 @@ export const POST = withAdminGuard(async (request) => {
       results,
     });
   } catch (error) {
-    console.error('[Mobile/Sync] POST error:', error);
+    logger.error('[Mobile/Sync] POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur synchronisation' }, { status: 500 });
   }
 });

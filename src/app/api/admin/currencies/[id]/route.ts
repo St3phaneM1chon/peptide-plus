@@ -92,7 +92,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/currencies/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/currencies/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,
@@ -160,7 +160,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       previousValue: { code: existing.code, name: existing.name },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/currencies/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/currencies/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -121,7 +121,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: { stockQuantity, reason, delta },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/inventory/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/inventory/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

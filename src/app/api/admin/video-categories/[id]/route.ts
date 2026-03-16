@@ -158,7 +158,7 @@ export const PATCH = withAdminGuard(async (request, { session, routeContext }) =
       newValue: parsed.data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/video-categories/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/video-categories/id] Non-blocking operation failed:', err); });
 
     // Refetch with translations
     const updated = await prisma.videoCategory.findUnique({
@@ -211,7 +211,7 @@ export const DELETE = withAdminGuard(async (_request, { session, routeContext })
       newValue: { name: category.name },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/video-categories/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/video-categories/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

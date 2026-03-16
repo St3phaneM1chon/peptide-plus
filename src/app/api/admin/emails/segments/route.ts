@@ -198,7 +198,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
             logger.error('[EmailSegments] Non-blocking segment count update failed', { error: error instanceof Error ? error.message : String(error) });
           })
         )
-      ).catch((err) => { console.error('[admin/emails/segments] Non-blocking operation failed:', err); }); // non-blocking
+      ).catch((err) => { logger.error('[admin/emails/segments] Non-blocking operation failed:', err); }); // non-blocking
 
       customWithType = customSegments.map((s, i) => ({
         id: s.id,
@@ -335,7 +335,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       try {
         queryObj = JSON.parse(source.query);
       } catch (parseErr) {
-        console.error('[EmailSegments] Failed to parse segment query JSON', { segmentId: sourceId, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+        logger.error('[EmailSegments] Failed to parse segment query JSON', { segmentId: sourceId, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
       }
       const count = await countSegment(queryObj, new Date());
 

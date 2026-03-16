@@ -9,7 +9,7 @@
  *
  * Usage:
  *   const analyzer = new LiveSentimentAnalyzer({ minTextLength: 20 });
- *   analyzer.onSentimentUpdate((result) => console.log(result));
+ *   analyzer.onSentimentUpdate((result) => logger.info(result));
  *   analyzer.feedText('I am very happy with this product.');
  */
 

@@ -275,7 +275,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { title, slug: webinar.slug, speaker, category, isPublished: webinar.isPublished },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/webinars] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/webinars] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ webinar }, { status: 201 });
   } catch (error) {

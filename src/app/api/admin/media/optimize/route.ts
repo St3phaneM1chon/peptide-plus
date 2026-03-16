@@ -19,6 +19,7 @@ import {
   optimizeForDisplay,
   isProcessableImage,
 } from '@/lib/media/image-pipeline';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: Request) => {
   try {
@@ -123,7 +124,7 @@ export const POST = withAdminGuard(async (request: Request) => {
           savingsPercent: result.savingsPercent,
         });
       } catch (err) {
-        console.error(`[media/optimize] Error processing ${media.originalName}:`, err);
+        logger.error(`[media/optimize] Error processing ${media.originalName}:`, err);
         results.push({
           id: media.id,
           name: media.originalName,
@@ -145,7 +146,7 @@ export const POST = withAdminGuard(async (request: Request) => {
       results,
     });
   } catch (error) {
-    console.error('[media/optimize] Error:', error);
+    logger.error('[media/optimize] Error:', error);
     return NextResponse.json(
       { error: 'Failed to optimize images' },
       { status: 500 }

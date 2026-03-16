@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           const payload = JSON.stringify({ event: eventType, data, timestamp: new Date().toISOString() });
           controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
         } catch (sendErr) {
-          console.error('[VoIP TeamPresence] SSE send failed (stream closed)', { error: sendErr instanceof Error ? sendErr.message : String(sendErr) });
+          logger.error('[VoIP TeamPresence] SSE send failed (stream closed)', { error: sendErr instanceof Error ? sendErr.message : String(sendErr) });
           isStreamClosed = true;
         }
       }
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
           try {
             controller.close();
           } catch (closeErr) {
-            console.error('[VoIP TeamPresence] Controller close failed', { error: closeErr instanceof Error ? closeErr.message : String(closeErr) });
+            logger.error('[VoIP TeamPresence] Controller close failed', { error: closeErr instanceof Error ? closeErr.message : String(closeErr) });
           }
         });
       } catch (initError) {

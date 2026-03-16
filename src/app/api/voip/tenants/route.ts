@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 import {
   resolveTenant,
   getTenantVoipConfig,
@@ -121,7 +122,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       }
     }
   } catch (error) {
-    console.error('[VoIP/Tenants] GET error:', error);
+    logger.error('[VoIP/Tenants] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

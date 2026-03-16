@@ -373,7 +373,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { folder, count: uploaded.length, files: uploaded.map(m => m.originalName), skipped: errors.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/medias] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/medias] Non-blocking operation failed:', err); });
 
     // FIX: F80 - Return both successful uploads and per-file error report
     return NextResponse.json(

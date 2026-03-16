@@ -265,7 +265,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       newValue: { productId, formatId: effectiveFormatId, oldStock: currentStock, adjustedStock, delta, reason },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/inventory/reconciliation] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/inventory/reconciliation] Non-blocking operation failed:', err); });
 
     logger.info('Inventory reconciliation applied', {
       productId,

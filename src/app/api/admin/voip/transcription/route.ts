@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
@@ -47,7 +48,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
             lines.push(evt.text);
           }
         } catch (parseErr) {
-          console.error('[VoIP/Transcription] Malformed SSE event', { error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+          logger.error('[VoIP/Transcription] Malformed SSE event', { error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
         }
       }
       return NextResponse.json({

@@ -222,7 +222,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
       newValue: { totalUrls: entries.length },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/seo/sitemap] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/seo/sitemap] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

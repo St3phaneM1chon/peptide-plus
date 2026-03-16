@@ -40,7 +40,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { pass2: results.pass2, pass3: results.pass3, cleaned },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/translations/night-worker] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/translations/night-worker] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       message: 'Night worker processing complete',

@@ -122,7 +122,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
       newValue: { name: account.name, email: account.email },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/emails/accounts/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/emails/accounts/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ account });
   } catch (error) {
@@ -158,7 +158,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       previousValue: { name: existing.name, email: existing.email },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/emails/accounts/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/emails/accounts/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

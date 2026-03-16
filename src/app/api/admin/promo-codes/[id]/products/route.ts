@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { isModuleEnabled } from '@/lib/module-flags';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (
   request: NextRequest,
@@ -43,7 +44,7 @@ export const GET = withAdminGuard(async (
         });
       }
     } catch (err) {
-      console.error('[PromoCodes] Invalid productIds JSON', { promoId: promo.id, error: err });
+      logger.error('[PromoCodes] Invalid productIds JSON', { promoId: promo.id, error: err });
     }
   }
 
@@ -58,7 +59,7 @@ export const GET = withAdminGuard(async (
         });
       }
     } catch (err) {
-      console.error('[PromoCodes] Invalid categoryIds JSON', { promoId: promo.id, error: err });
+      logger.error('[PromoCodes] Invalid categoryIds JSON', { promoId: promo.id, error: err });
     }
   }
 

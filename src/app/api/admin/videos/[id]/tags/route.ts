@@ -90,7 +90,7 @@ export const PUT = withAdminGuard(async (request, { session, routeContext }) => 
       newValue: { tags: normalizedTags },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/videos/id/tags] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/videos/id/tags] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ tags: normalizedTags });
   } catch (error) {

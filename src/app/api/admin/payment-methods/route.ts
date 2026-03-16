@@ -127,7 +127,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { countryCode, methodType, provider, isActive },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/payment-methods] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/payment-methods] Non-blocking operation failed:', err); });
 
     return NextResponse.json(
       {
@@ -183,7 +183,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       targetId: id,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/payment-methods] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/payment-methods] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

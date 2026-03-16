@@ -195,7 +195,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/subscriptions/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/subscriptions/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       subscription: {
@@ -246,7 +246,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
       newValue: { status: 'CANCELLED' },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/subscriptions/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/subscriptions/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       subscription: {

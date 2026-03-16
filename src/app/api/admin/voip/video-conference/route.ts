@@ -29,7 +29,7 @@ export const GET = withAdminGuard(async () => {
     try {
       liveRooms = await listRooms();
     } catch (livekitErr) {
-      console.error('[VideoConference] LiveKit not available', { error: livekitErr instanceof Error ? livekitErr.message : String(livekitErr) });
+      logger.error('[VideoConference] LiveKit not available', { error: livekitErr instanceof Error ? livekitErr.message : String(livekitErr) });
     }
 
     const liveRoomMap = new Map(

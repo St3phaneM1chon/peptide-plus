@@ -174,7 +174,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
       newValue: { locale, fields: Object.keys(updateData), approve },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/translations/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/translations/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       message: 'Traduction mise à jour',
@@ -229,7 +229,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
         previousValue: { locale },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((err) => { console.error('[admin/translations/id] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/translations/id] Non-blocking operation failed:', err); });
 
       return NextResponse.json({ message: `Traduction ${locale} supprimée` });
     } else {
@@ -247,7 +247,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
         newValue: { deleted: result.count },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((err) => { console.error('[admin/translations/id] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/translations/id] Non-blocking operation failed:', err); });
 
       return NextResponse.json({
         message: `${result.count} traduction(s) supprimée(s)`,

@@ -261,7 +261,7 @@ async function runScrapeJob(
       await prisma.scrapeJob.update({
         where: { id: jobId },
         data: { status: 'cancelled', completedAt: new Date() },
-      }).catch((err) => { console.error('[admin/scraper/jobs] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/scraper/jobs] Non-blocking operation failed:', err); });
       return;
     }
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -273,6 +273,6 @@ async function runScrapeJob(
         errorLog: errorMessage,
         completedAt: new Date(),
       },
-    }).catch((err) => { console.error('[admin/scraper/jobs] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/scraper/jobs] Non-blocking operation failed:', err); });
   }
 }

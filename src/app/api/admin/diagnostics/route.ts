@@ -22,7 +22,7 @@ export const GET = withAdminGuard(async () => {
       await prisma.$queryRaw`SELECT 1`;
       dbLatency = Date.now() - dbStart;
     } catch (err) {
-      console.error('[Diagnostics] Database health check failed', err);
+      logger.error('[Diagnostics] Database health check failed', err);
       dbStatus = 'error';
     }
 

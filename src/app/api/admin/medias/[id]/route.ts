@@ -103,7 +103,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       newValue: data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/medias/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/medias/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ media });
   } catch (error) {
@@ -170,7 +170,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       previousValue: { filename: existing.filename, originalName: existing.originalName, url: existing.url },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/medias/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/medias/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

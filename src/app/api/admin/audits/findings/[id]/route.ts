@@ -80,7 +80,7 @@ export const PUT = withAdminGuard(async (
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/audits/findings/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/audits/findings/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ data: updated });
   } catch (error) {

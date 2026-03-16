@@ -147,7 +147,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: priceChangeSummary,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/products/bulk-price] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/products/bulk-price] Non-blocking operation failed:', err); });
 
     logger.info('Bulk price update', {
       direction,

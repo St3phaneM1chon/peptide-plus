@@ -213,7 +213,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/blog/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/blog/id] Non-blocking operation failed:', err); });
 
     // Handle translations if provided
     // N+1 FIX: Batch all translation upserts in a single transaction
@@ -312,7 +312,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
       previousValue: { title: existing.title },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/blog/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/blog/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

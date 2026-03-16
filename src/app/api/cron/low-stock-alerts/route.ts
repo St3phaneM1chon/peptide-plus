@@ -203,7 +203,7 @@ async function resolveAdminEmail(): Promise<string | undefined> {
       process.env.ADMIN_EMAIL
     );
   } catch (settingsErr) {
-    console.error('[low-stock-alerts] Failed to fetch admin email from settings', { error: settingsErr instanceof Error ? settingsErr.message : String(settingsErr) });
+    logger.error('[low-stock-alerts] Failed to fetch admin email from settings', { error: settingsErr instanceof Error ? settingsErr.message : String(settingsErr) });
     return process.env.ADMIN_EMAIL;
   }
 }

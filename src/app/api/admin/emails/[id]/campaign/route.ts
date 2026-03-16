@@ -61,7 +61,7 @@ export const GET = withAdminGuard(async (
       try {
         parsedStats = JSON.parse(email.campaign.stats);
       } catch (parseErr) {
-        console.error('[emails/campaign] Failed to parse campaign stats JSON', { emailId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+        logger.error('[emails/campaign] Failed to parse campaign stats JSON', { emailId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
         parsedStats = null;
       }
     }

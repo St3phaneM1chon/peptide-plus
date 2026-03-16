@@ -70,11 +70,11 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       responseBody = await cronResponse.json();
     } catch (jsonErr) {
       // Some crons may not return JSON
-      console.error('[CronTrigger] JSON parse failed, falling back to text', { cronName: name, error: jsonErr instanceof Error ? jsonErr.message : String(jsonErr) });
+      logger.error('[CronTrigger] JSON parse failed, falling back to text', { cronName: name, error: jsonErr instanceof Error ? jsonErr.message : String(jsonErr) });
       try {
         responseBody = await cronResponse.text();
       } catch (textErr) {
-        console.error('[CronTrigger] Text read also failed', { cronName: name, error: textErr instanceof Error ? textErr.message : String(textErr) });
+        logger.error('[CronTrigger] Text read also failed', { cronName: name, error: textErr instanceof Error ? textErr.message : String(textErr) });
         responseBody = null;
       }
     }

@@ -172,7 +172,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { productId, tierCount: tiers.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/quantity-discounts] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/quantity-discounts] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,
@@ -211,7 +211,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       targetId: id,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/quantity-discounts] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/quantity-discounts] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

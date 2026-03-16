@@ -26,6 +26,7 @@ import {
   assignLeadsScoreBased,
   assignLeadsManual,
 } from '@/lib/crm/lead-assignment';
+import { logger } from '@/lib/logger';
 
 const integrateSchema = z.object({
   assignmentMethod: z.enum(['MANUAL', 'ROUND_ROBIN', 'LOAD_BALANCED', 'SCORE_BASED']).optional(),
@@ -168,7 +169,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
       }
       integrated = createdLeads.length;
     } catch (err) {
-      console.error('[CRM/Integrate] Bulk transaction failed, falling back to individual creates', { listId, error: err });
+      logger.error('[CRM/Integrate] Bulk transaction failed, falling back to individual creates', { listId, error: err });
       // If bulk transaction fails, fall back to individual creates for error isolation
       for (const { prospect, scoreBreakdown, bant } of leadsToCreate) {
         try {
@@ -202,7 +203,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { param
           createdLeadIds.push(lead.id);
           integrated++;
         } catch (individualErr) {
-          console.error('[CRM/Integrate] Individual lead create failed:', individualErr);
+          logger.error('[CRM/Integrate] Individual lead create failed:', individualErr);
           errors.push({ prospectId: prospect.id, reason: individualErr instanceof Error ? individualErr.message : 'Unknown error' });
         }
       }

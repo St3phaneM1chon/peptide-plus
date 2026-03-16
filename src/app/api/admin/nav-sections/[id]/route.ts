@@ -48,7 +48,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: parsed.data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/nav-sections/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/nav-sections/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json(section);
   } catch (error) {
@@ -69,7 +69,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetId: params?.id || '',
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/nav-sections/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/nav-sections/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ deleted: true });
   } catch (error) {

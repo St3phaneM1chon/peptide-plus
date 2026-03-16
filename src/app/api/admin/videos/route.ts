@@ -231,7 +231,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         newValue: { title, slug: video.slug, hasFile: !!videoFile },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((err) => { console.error('[admin/videos] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[admin/videos] Non-blocking operation failed:', err); });
 
       return NextResponse.json({ video }, { status: 201 });
     }
@@ -366,7 +366,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { title, slug: video.slug, category, isPublished: isPublished ?? false },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/videos] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/videos] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ video }, { status: 201 });
   } catch (error) {

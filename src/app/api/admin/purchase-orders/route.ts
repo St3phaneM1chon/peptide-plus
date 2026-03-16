@@ -263,7 +263,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { poNumber: po.poNumber, supplierName, department, itemCount: processedItems.length, total },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/purchase-orders] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/purchase-orders] Non-blocking operation failed:', err); });
 
     // Serialize Decimals
     return NextResponse.json(

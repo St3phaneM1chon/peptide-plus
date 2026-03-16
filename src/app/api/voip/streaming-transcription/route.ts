@@ -76,7 +76,7 @@ function pushEvent(callId: string, event: TranscriptionEvent): void {
       try {
         listener(event);
       } catch (listenerErr) {
-        console.error('[streaming-transcription] Listener dispatch failed', { callId, error: listenerErr instanceof Error ? listenerErr.message : String(listenerErr) });
+        logger.error('[streaming-transcription] Listener dispatch failed', { callId, error: listenerErr instanceof Error ? listenerErr.message : String(listenerErr) });
       }
     }
   }
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
           const data = `data: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(encoder.encode(data));
         } catch (streamErr) {
-          console.error('[streaming-transcription] Stream write failed (client disconnected)', { callId, error: streamErr instanceof Error ? streamErr.message : String(streamErr) });
+          logger.error('[streaming-transcription] Stream write failed (client disconnected)', { callId, error: streamErr instanceof Error ? streamErr.message : String(streamErr) });
           removeListener(callId, listener);
         }
       };

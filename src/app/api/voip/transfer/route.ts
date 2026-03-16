@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 import {
   blindTransfer,
   startAttendedTransfer,
@@ -142,7 +143,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session: _sess
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (error) {
-    console.error('[VoIP/Transfer] POST error:', error);
+    logger.error('[VoIP/Transfer] POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -49,7 +49,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { sessi
       newValue: { auditTypeCode, findingsCount: result.findingsCount, passedChecks: result.passedChecks, failedChecks: result.failedChecks },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/audits/run] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/audits/run] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (error) {

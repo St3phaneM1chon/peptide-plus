@@ -131,7 +131,7 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { sessi
       newValue: { totalAudits: codes.length, completed, failed, totalFindings, totalPassed, totalFailed, severity },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/audits/run-batch] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/audits/run-batch] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       data: {

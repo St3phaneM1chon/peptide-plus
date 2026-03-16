@@ -258,7 +258,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/webinars/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/webinars/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ webinar });
   } catch (error) {
@@ -296,7 +296,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       previousValue: { title: existing.title },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/webinars/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/webinars/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

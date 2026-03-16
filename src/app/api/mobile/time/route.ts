@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const actionSchema = z.object({
@@ -46,7 +47,7 @@ export const GET = withAdminGuard(async () => {
       weekTotal,
     });
   } catch (error) {
-    console.error('[Mobile/Time] GET error:', error);
+    logger.error('[Mobile/Time] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur récupération temps' }, { status: 500 });
   }
 });
@@ -82,7 +83,7 @@ export const POST = withAdminGuard(async (request) => {
       return NextResponse.json(entry);
     }
   } catch (error) {
-    console.error('[Mobile/Time] POST error:', error);
+    logger.error('[Mobile/Time] POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur timer' }, { status: 500 });
   }
 });

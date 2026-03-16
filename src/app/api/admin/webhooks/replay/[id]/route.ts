@@ -68,7 +68,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       newValue: { success: result.success, status: result.status, endpointUrl: delivery.endpoint.url },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/webhooks/replay/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/webhooks/replay/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: result.success,

@@ -132,7 +132,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, slug: category.slug, parentId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/video-categories] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/video-categories] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {

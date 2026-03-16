@@ -43,7 +43,7 @@ export const GET = withAdminGuard(
         try {
           parsedStats = { ...parsedStats, ...JSON.parse(campaign.stats) };
         } catch (err) {
-          console.error('[Newsletter/Stats] Invalid stats JSON for campaign', { id, error: err });
+          logger.error('[Newsletter/Stats] Invalid stats JSON for campaign', { id, error: err });
         }
       }
 

@@ -63,7 +63,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
         try {
           parsedStats = JSON.parse(c.stats);
         } catch (err) {
-          console.error('[Newsletter] Invalid stats JSON for campaign', { id: c.id, error: err });
+          logger.error('[Newsletter] Invalid stats JSON for campaign', { id: c.id, error: err });
         }
       }
 
@@ -73,7 +73,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
         try {
           abTestConfig = JSON.parse(c.abTestConfig);
         } catch (err) {
-          console.error('[Newsletter] Invalid abTestConfig JSON for campaign', { id: c.id, error: err });
+          logger.error('[Newsletter] Invalid abTestConfig JSON for campaign', { id: c.id, error: err });
         }
       }
 

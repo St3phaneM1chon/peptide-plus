@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { generateApiKey, ALL_PERMISSIONS, type ApiPermission } from '@/lib/api/api-auth.middleware';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -83,7 +84,7 @@ export const GET = withAdminGuard(async () => {
     try {
       permissions = JSON.parse(key.permissions);
     } catch (err) {
-      console.error('[ApiKeys] Failed to parse permissions JSON for key', { keyId: key.id, error: err });
+      logger.error('[ApiKeys] Failed to parse permissions JSON for key', { keyId: key.id, error: err });
       permissions = [];
     }
 
@@ -104,7 +105,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   try {
     body = await request.json();
   } catch (err) {
-    console.error('[ApiKeys] Invalid JSON body in POST request', err);
+    logger.error('[ApiKeys] Invalid JSON body in POST request', err);
     return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 

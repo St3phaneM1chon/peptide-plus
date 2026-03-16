@@ -52,7 +52,7 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
       targetId: id,
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/uat/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/uat/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

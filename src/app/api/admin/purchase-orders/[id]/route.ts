@@ -368,7 +368,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/purchase-orders/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/purchase-orders/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json(
       serializePO(updated as unknown as Record<string, unknown>)
@@ -422,7 +422,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       previousValue: { poNumber: po.poNumber, status: po.status },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/purchase-orders/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/purchase-orders/id] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       success: true,

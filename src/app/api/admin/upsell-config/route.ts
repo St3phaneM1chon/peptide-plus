@@ -145,7 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { productId: pId, ...data },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/upsell-config] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/upsell-config] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ config });
   } catch (error) {
@@ -212,7 +212,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       newValue: data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/upsell-config] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/upsell-config] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ config });
   } catch (error) {
@@ -240,7 +240,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       targetId: id,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/upsell-config] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/upsell-config] Non-blocking operation failed:', err); });
 
     return NextResponse.json({ success: true });
   } catch (error) {

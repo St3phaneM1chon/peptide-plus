@@ -165,7 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { code: promoCode.code, type, value, isActive: true },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[admin/promo-codes] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[admin/promo-codes] Non-blocking operation failed:', err); });
 
     return NextResponse.json({
       promoCode: {

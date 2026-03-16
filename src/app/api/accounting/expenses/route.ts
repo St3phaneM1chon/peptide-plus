@@ -483,7 +483,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
         total: Number(existing.total),
         category: existing.category,
       },
-    }).catch((err) => { console.error('[accounting/expenses] non-blocking:', err); });
+    }).catch((err) => { logger.error('[accounting/expenses] non-blocking audit log failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     await prisma.expense.update({
       where: { id },
