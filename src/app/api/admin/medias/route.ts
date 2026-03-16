@@ -20,7 +20,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { isProcessableImage, optimizeForDisplay, generateVariants, DEFAULT_VARIANTS, DISPLAY_SIZE_TARGETS } from '@/lib/media/image-pipeline';
+import { isProcessableImage, optimizeForDisplay, DISPLAY_SIZE_TARGETS } from '@/lib/media/image-pipeline';
 
 /**
  * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.

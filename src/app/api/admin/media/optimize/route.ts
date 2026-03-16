@@ -41,7 +41,7 @@ export const POST = withAdminGuard(async (request: Request) => {
         url: true,
         originalName: true,
         mimeType: true,
-        fileSize: true,
+        size: true,
       },
       take: 100, // Process max 100 at a time
     });
@@ -92,7 +92,7 @@ export const POST = withAdminGuard(async (request: Request) => {
         await prisma.media.update({
           where: { id: media.id },
           data: {
-            fileSize: result.optimized.size,
+            size: result.optimized.size,
             // Store optimization metadata in alt field as JSON if no better field
           },
         });
