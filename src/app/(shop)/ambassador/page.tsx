@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { addCSRFHeader } from '@/lib/csrf';
+import { toast } from 'sonner';
 
 interface AmbassadorStats {
   referrals: number;
@@ -154,10 +155,11 @@ export default function AmbassadorPage() {
       });
       if (res.ok) {
         setApplicationSubmitted(true);
+      } else {
+        toast.error(t('ambassador.submitError') || 'Failed to submit application. Please try again.');
       }
-    } catch (error) {
-      console.error('Ambassador application submission failed:', error);
-      // Form stays open for retry
+    } catch {
+      toast.error(t('ambassador.submitError') || 'Failed to submit application. Please try again.');
     } finally {
       setIsApplying(false);
     }

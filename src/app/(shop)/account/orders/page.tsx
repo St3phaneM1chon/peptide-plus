@@ -75,6 +75,7 @@ export default function OrdersPage() {
   const { addItem } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
@@ -108,14 +109,17 @@ export default function OrdersPage() {
   }, [status, router]);
 
   const fetchOrders = useCallback(async () => {
+    setFetchError(false);
     try {
       const res = await fetch('/api/orders');
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
+      } else {
+        setFetchError(true);
       }
-    } catch (error: unknown) {
-      console.error('Failed to fetch orders:', error);
+    } catch {
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -609,6 +613,24 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-5xl block mb-4">⚠️</span>
+          <h2 className="text-xl font-bold text-red-700 mb-2">{t('account.orders.loadError') || 'Failed to load orders'}</h2>
+          <p className="text-neutral-500 mb-4">{t('account.orders.loadErrorDesc') || 'Please check your connection and try again.'}</p>
+          <button
+            onClick={fetchOrders}
+            className="px-6 py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600"
+          >
+            {t('common.retry') || 'Try Again'}
+          </button>
+        </div>
       </div>
     );
   }

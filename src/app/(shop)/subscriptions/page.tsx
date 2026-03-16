@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { addCSRFHeader } from '@/lib/csrf';
+import { toast } from 'sonner';
 
 interface SubscriptionProduct {
   id: string;
@@ -65,11 +66,19 @@ export default function SubscriptionsPage() {
   const [subToCancel, setSubToCancel] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loadingSubs, setLoadingSubs] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState(false);
+  const [subsError, setSubsError] = useState(false);
 
   // Load products from API
   useEffect(() => {
+    setLoadingProducts(true);
+    setProductsError(false);
     fetch(`/api/products?limit=20&active=true&locale=${locale}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
       .then(data => {
         const products = (data.data?.products || data.products || data || []).map((p: Record<string, unknown>) => ({
           id: p.id as string,
@@ -82,7 +91,12 @@ export default function SubscriptionsPage() {
         }));
         setSubscriptionProducts(products);
       })
-      .catch(() => {});
+      .catch(() => {
+        setProductsError(true);
+      })
+      .finally(() => {
+        setLoadingProducts(false);
+      });
   }, []);
 
   // Load subscriptions from DB
@@ -94,14 +108,17 @@ export default function SubscriptionsPage() {
 
   const fetchSubscriptions = async () => {
     setLoadingSubs(true);
+    setSubsError(false);
     try {
       const res = await fetch('/api/account/subscriptions');
       if (res.ok) {
         const data = await res.json();
         setSubscriptions(data.subscriptions || []);
+      } else {
+        setSubsError(true);
       }
-    } catch (error) {
-      console.error('Failed to fetch subscriptions:', error);
+    } catch {
+      setSubsError(true);
     } finally {
       setLoadingSubs(false);
     }
@@ -130,9 +147,12 @@ export default function SubscriptionsPage() {
         await fetchSubscriptions();
         setSelectedProduct(null);
         setActiveTab('manage');
+        toast.success(t('subscriptions.created') || 'Subscription created successfully!');
+      } else {
+        toast.error(t('subscriptions.createError') || 'Failed to create subscription. Please try again.');
       }
-    } catch (error) {
-      console.error('Error creating subscription:', error);
+    } catch {
+      toast.error(t('subscriptions.createError') || 'Failed to create subscription. Please try again.');
     } finally {
       setIsCreating(false);
     }
@@ -152,9 +172,11 @@ export default function SubscriptionsPage() {
 
       if (res.ok) {
         await fetchSubscriptions();
+      } else {
+        toast.error(t('subscriptions.updateError') || 'Failed to update subscription.');
       }
-    } catch (error) {
-      console.error('Error updating subscription:', error);
+    } catch {
+      toast.error(t('subscriptions.updateError') || 'Failed to update subscription.');
     }
   };
 
@@ -176,9 +198,12 @@ export default function SubscriptionsPage() {
 
       if (res.ok) {
         await fetchSubscriptions();
+        toast.success(t('subscriptions.cancelled') || 'Subscription cancelled.');
+      } else {
+        toast.error(t('subscriptions.cancelError') || 'Failed to cancel subscription.');
       }
-    } catch (error) {
-      console.error('Error cancelling subscription:', error);
+    } catch {
+      toast.error(t('subscriptions.cancelError') || 'Failed to cancel subscription.');
     }
   };
 
@@ -249,6 +274,25 @@ export default function SubscriptionsPage() {
             {/* Products List */}
             <div className="lg:col-span-2">
               <h2 className="text-xl font-bold mb-4">{t('subscriptions.availableProducts') || 'Available for Subscription'}</h2>
+              {loadingProducts ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                </div>
+              ) : productsError ? (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+                  <p className="text-red-600 font-medium mb-2">{t('subscriptions.loadError') || 'Failed to load products'}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-sm text-primary-600 hover:underline"
+                  >
+                    {t('common.retry') || 'Try again'}
+                  </button>
+                </div>
+              ) : subscriptionProducts.length === 0 ? (
+                <div className="bg-white rounded-xl p-8 text-center border border-neutral-200">
+                  <p className="text-neutral-500">{t('subscriptions.noProducts') || 'No products available for subscription at this time.'}</p>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {subscriptionProducts.map((product) => (
                   <div
@@ -282,6 +326,7 @@ export default function SubscriptionsPage() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Subscription Builder */}
@@ -439,6 +484,17 @@ export default function SubscriptionsPage() {
             ) : loadingSubs ? (
               <div className="flex items-center justify-center py-16">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              </div>
+            ) : subsError ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-12 text-center">
+                <span className="text-4xl mb-4 block">⚠️</span>
+                <h3 className="text-lg font-bold text-red-700 mb-2">{t('subscriptions.fetchError') || 'Failed to load subscriptions'}</h3>
+                <button
+                  onClick={fetchSubscriptions}
+                  className="mt-2 px-4 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600"
+                >
+                  {t('common.retry') || 'Try Again'}
+                </button>
               </div>
             ) : activeSubscriptions.length === 0 ? (
               <div className="bg-white rounded-xl p-12 text-center">

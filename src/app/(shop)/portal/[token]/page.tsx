@@ -224,6 +224,7 @@ export default function ClientPortalPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [statement, setStatement] = useState<Statement | null>(null);
   const [tabLoading, setTabLoading] = useState(false);
+  const [tabError, setTabError] = useState<string | null>(null);
 
   // Statement date range
   const [dateFrom, setDateFrom] = useState(() => {
@@ -278,51 +279,61 @@ export default function ClientPortalPage() {
 
   const fetchInvoices = useCallback(async () => {
     setTabLoading(true);
+    setTabError(null);
     try {
       const res = await fetch(`/api/accounting/client-portal/${token}/invoices`);
       if (res.ok) {
         const data = await res.json();
         setInvoices(data.data);
+      } else {
+        setTabError(t('portal.tabLoadError') || 'Failed to load data. Please try again.');
       }
     } catch {
-      // Silently fail - data will show as empty
+      setTabError(t('portal.connectionError') || 'Connection error. Please try again.');
     } finally {
       setTabLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   const fetchEstimates = useCallback(async () => {
     setTabLoading(true);
+    setTabError(null);
     try {
       const res = await fetch(`/api/accounting/client-portal/${token}/estimates`);
       if (res.ok) {
         const data = await res.json();
         setEstimates(data.data);
+      } else {
+        setTabError(t('portal.tabLoadError') || 'Failed to load data. Please try again.');
       }
     } catch {
-      // Silently fail
+      setTabError(t('portal.connectionError') || 'Connection error. Please try again.');
     } finally {
       setTabLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   const fetchPayments = useCallback(async () => {
     setTabLoading(true);
+    setTabError(null);
     try {
       const res = await fetch(`/api/accounting/client-portal/${token}/payments`);
       if (res.ok) {
         const data = await res.json();
         setPayments(data.data);
+      } else {
+        setTabError(t('portal.tabLoadError') || 'Failed to load data. Please try again.');
       }
     } catch {
-      // Silently fail
+      setTabError(t('portal.connectionError') || 'Connection error. Please try again.');
     } finally {
       setTabLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   const fetchStatement = useCallback(async () => {
     setTabLoading(true);
+    setTabError(null);
     try {
       const res = await fetch(
         `/api/accounting/client-portal/${token}/statement?dateFrom=${dateFrom}&dateTo=${dateTo}`
@@ -330,13 +341,15 @@ export default function ClientPortalPage() {
       if (res.ok) {
         const data = await res.json();
         setStatement(data.data);
+      } else {
+        setTabError(t('portal.tabLoadError') || 'Failed to load data. Please try again.');
       }
     } catch {
-      // Silently fail
+      setTabError(t('portal.connectionError') || 'Connection error. Please try again.');
     } finally {
       setTabLoading(false);
     }
-  }, [token, dateFrom, dateTo]);
+  }, [token, dateFrom, dateTo, t]);
 
   // Fetch tab data when switching tabs
   useEffect(() => {
@@ -502,6 +515,24 @@ export default function ClientPortalPage() {
             {tabLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+              </div>
+            ) : tabError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <AlertTriangle className="w-8 h-8 text-amber-500 mb-3" />
+                <p className="text-gray-700 font-medium mb-2">{tabError}</p>
+                <button
+                  onClick={() => {
+                    switch (activeTab) {
+                      case 'invoices': fetchInvoices(); break;
+                      case 'estimates': fetchEstimates(); break;
+                      case 'payments': fetchPayments(); break;
+                      case 'statement': fetchStatement(); break;
+                    }
+                  }}
+                  className="text-sm text-indigo-600 hover:underline"
+                >
+                  {t('common.retry') || 'Try again'}
+                </button>
               </div>
             ) : (
               <>

@@ -93,6 +93,7 @@ export default function WebinarsPage() {
 
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     async function fetchWebinars() {
@@ -104,6 +105,7 @@ export default function WebinarsPage() {
         setWebinars(mapped);
       } catch (err) {
         console.error('Error loading webinars:', err);
+        setFetchError(true);
         setWebinars([]);
       } finally {
         setLoading(false);
@@ -195,9 +197,25 @@ export default function WebinarsPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <span className="text-6xl mb-4 block" aria-hidden="true">🎓</span>
-            <h3 className="text-lg font-bold mb-2">{t('webinars.noWebinars') || 'No webinars available yet'}</h3>
-            <p className="text-neutral-500">{t('webinars.checkBack') || 'Check back soon for new educational content!'}</p>
+            {fetchError ? (
+              <>
+                <span className="text-6xl mb-4 block" aria-hidden="true">⚠️</span>
+                <h3 className="text-lg font-bold mb-2 text-red-700">{t('webinars.loadError') || 'Failed to load webinars'}</h3>
+                <p className="text-neutral-500 mb-4">{t('webinars.loadErrorDesc') || 'Please check your connection and try again.'}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700"
+                >
+                  {t('common.retry') || 'Try Again'}
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-6xl mb-4 block" aria-hidden="true">🎓</span>
+                <h3 className="text-lg font-bold mb-2">{t('webinars.noWebinars') || 'No webinars available yet'}</h3>
+                <p className="text-neutral-500">{t('webinars.checkBack') || 'Check back soon for new educational content!'}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
