@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import HomePageClient from './HomePageClient';
 import type { TestimonialData } from './HomePageClient';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 // Revalidate hero slides every 60 seconds (ISR) for fresh content without blocking render
 export const revalidate = 60;
@@ -84,8 +85,41 @@ export default async function HomePage() {
     getTestimonials(),
   ]);
 
+  const siteUrl = 'https://biocyclepeptides.com';
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'BioCycle Peptides',
+    url: siteUrl,
+    logo: `${siteUrl}/images/BioCyclePeptide_transparent.png`,
+    description: "Canada's trusted source for premium research peptides. Lab-tested, 99%+ purity.",
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'CA',
+    },
+    sameAs: [
+      'https://www.facebook.com/biocyclepeptides',
+      'https://www.instagram.com/biocyclepeptides',
+    ],
+  };
+
+  const webSiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'BioCycle Peptides',
+    url: siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <>
+      <JsonLd data={organizationSchema} />
+      <JsonLd data={webSiteSchema} />
       <h1 className="sr-only">BioCycle Peptides - Research Peptides</h1>
       <HomePageClient initialHeroSlides={heroSlides} initialTestimonials={testimonials} />
     </>
