@@ -360,10 +360,11 @@ function SettingsContent() {
             {activeTab === 'profile' && (
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  <label htmlFor="settings-name" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.fullName') }
                   </label>
                   <input
+                    id="settings-name"
                     type="text"
                     value={profileData.name}
                     onChange={(e) => { setProfileData({ ...profileData, name: e.target.value }); clearProfileError('name'); }}
@@ -374,10 +375,11 @@ function SettingsContent() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  <label htmlFor="settings-email" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.email') }
                   </label>
                   <input
+                    id="settings-email"
                     type="email"
                     value={profileData.email}
                     disabled
@@ -389,10 +391,11 @@ function SettingsContent() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  <label htmlFor="settings-phone" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.phone') }
                   </label>
                   <input
+                    id="settings-phone"
                     type="tel"
                     value={profileData.phone}
                     onChange={(e) => { setProfileData({ ...profileData, phone: e.target.value }); clearProfileError('phone'); }}
@@ -436,24 +439,27 @@ function SettingsContent() {
                 ) : (
                   <form onSubmit={handlePasswordSubmit} className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      <label htmlFor="settings-currentPwd" className="block text-sm font-medium text-neutral-700 mb-2">
                         {t('account.currentPassword') }
                       </label>
                       <input
+                        id="settings-currentPwd"
                         type="password"
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                         className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="••••••••"
                         required
+                        autoComplete="current-password"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      <label htmlFor="settings-newPwd" className="block text-sm font-medium text-neutral-700 mb-2">
                         {t('account.newPassword') }
                       </label>
                       <input
+                        id="settings-newPwd"
                         type="password"
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
@@ -461,6 +467,7 @@ function SettingsContent() {
                         placeholder="••••••••"
                         required
                         minLength={12}
+                        autoComplete="new-password"
                       />
                       <p className="text-xs text-neutral-500 mt-1">
                         {t('account.passwordRequirements') }
@@ -468,16 +475,18 @@ function SettingsContent() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      <label htmlFor="settings-confirmPwd" className="block text-sm font-medium text-neutral-700 mb-2">
                         {t('account.confirmPassword') }
                       </label>
                       <input
+                        id="settings-confirmPwd"
                         type="password"
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                         className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="••••••••"
                         required
+                        autoComplete="new-password"
                       />
                     </div>
 
@@ -503,63 +512,72 @@ function SettingsContent() {
             {activeTab === 'address' && (
               <form onSubmit={handleAddressSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  <label htmlFor="settings-address" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.streetAddress') }
                   </label>
                   <input
+                    id="settings-address"
                     type="text"
                     value={addressData.address}
                     onChange={(e) => setAddressData({ ...addressData, address: e.target.value })}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="123 Main Street, Apt 4"
+                    autoComplete="street-address"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label htmlFor="settings-city" className="block text-sm font-medium text-neutral-700 mb-2">
                       {t('account.city') }
                     </label>
                     <input
+                      id="settings-city"
                       type="text"
                       value={addressData.city}
                       onChange={(e) => setAddressData({ ...addressData, city: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder={t('account.settingsForm.placeholderCity')}
+                      autoComplete="address-level2"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label htmlFor="settings-province" className="block text-sm font-medium text-neutral-700 mb-2">
                       {t('account.province') }
                     </label>
                     <input
+                      id="settings-province"
                       type="text"
                       value={addressData.province}
                       onChange={(e) => setAddressData({ ...addressData, province: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder={t('account.settingsForm.placeholderProvince')}
+                      autoComplete="address-level1"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label htmlFor="settings-postalCode" className="block text-sm font-medium text-neutral-700 mb-2">
                       {t('account.postalCode') }
                     </label>
                     <input
+                      id="settings-postalCode"
                       type="text"
                       value={addressData.postalCode}
                       onChange={(e) => setAddressData({ ...addressData, postalCode: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder={t('account.settingsForm.placeholderPostalCode')}
+                      autoComplete="postal-code"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label htmlFor="settings-country" className="block text-sm font-medium text-neutral-700 mb-2">
                       {t('account.country') }
                     </label>
                     <select
+                      id="settings-country"
                       value={addressData.country}
                       onChange={(e) => setAddressData({ ...addressData, country: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
