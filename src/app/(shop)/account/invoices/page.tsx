@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 // =====================================================
 // TYPES
@@ -122,6 +123,7 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -139,6 +141,7 @@ export default function InvoicesPage() {
   // Fetch invoices
   const fetchInvoices = useCallback(async (page: number = 1) => {
     setLoading(true);
+    setFetchError(false);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -153,16 +156,16 @@ export default function InvoicesPage() {
         setInvoices(data.invoices || []);
         setPagination(data.pagination || null);
       } else {
-        console.error('Failed to fetch invoices:', res.status);
-        setInvoices([]);
+        setFetchError(true);
+        toast.error(t('account.invoices.loadError') || 'Failed to load invoices');
       }
-    } catch (error: unknown) {
-      console.error('Failed to fetch invoices:', error);
-      setInvoices([]);
+    } catch {
+      setFetchError(true);
+      toast.error(t('account.invoices.loadError') || 'Failed to load invoices');
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, t]);
 
   // Load invoices on mount and when filters change
   useEffect(() => {
@@ -282,6 +285,24 @@ export default function InvoicesPage() {
   }
 
   if (!session) return null;
+
+  if (fetchError && invoices.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-5xl block mb-4">⚠️</span>
+          <h2 className="text-xl font-bold text-red-700 mb-2">{t('account.invoices.loadError') || 'Failed to load invoices'}</h2>
+          <p className="text-neutral-500 mb-4">{t('account.invoices.loadErrorDesc') || 'Please check your connection and try again.'}</p>
+          <button
+            onClick={() => fetchInvoices(currentPage)}
+            className="px-6 py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600"
+          >
+            {t('common.retry') || 'Try Again'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

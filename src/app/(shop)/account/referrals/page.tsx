@@ -145,16 +145,21 @@ export default function ReferralsPage() {
     }
   }, [authStatus, router]);
 
+  const [fetchError, setFetchError] = useState(false);
+
   // Fetch referral stats
   const fetchStats = useCallback(async () => {
+    setFetchError(false);
     try {
       const res = await fetch('/api/referrals');
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+      } else {
+        setFetchError(true);
       }
-    } catch (error) {
-      console.error('Error fetching referral stats:', error);
+    } catch {
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -251,6 +256,24 @@ export default function ReferralsPage() {
   }
 
   if (!session) return null;
+
+  if (fetchError && !stats) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-5xl block mb-4">⚠️</span>
+          <h2 className="text-xl font-bold text-red-700 mb-2">{t('account.referrals.loadError') || 'Failed to load referral data'}</h2>
+          <p className="text-neutral-500 mb-4">{t('account.referrals.loadErrorDesc') || 'Please check your connection and try again.'}</p>
+          <button
+            onClick={fetchStats}
+            className="px-6 py-3 bg-[#CC5500] text-white rounded-lg font-medium hover:bg-[#AA4400]"
+          >
+            {t('common.retry') || 'Try Again'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const hasCode = !!stats?.referralCode;
 

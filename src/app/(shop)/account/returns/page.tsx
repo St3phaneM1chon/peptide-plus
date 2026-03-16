@@ -69,13 +69,19 @@ export default function ReturnsPage() {
     }
   }, [session]);
 
+  const [fetchError, setFetchError] = useState(false);
+
   const fetchData = async () => {
+    setFetchError(false);
     try {
       // Fetch return requests
       const returnsRes = await fetch('/api/account/returns');
       if (returnsRes.ok) {
         const returnsData = await returnsRes.json();
         setReturnRequests(returnsData);
+      } else {
+        setFetchError(true);
+        toast.error(t('toast.returns.loadFailed') || 'Failed to load return requests');
       }
 
       // Fetch orders to find eligible ones
@@ -91,9 +97,9 @@ export default function ReturnsPage() {
         });
         setEligibleOrders(eligible);
       }
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-      toast.error(t('toast.returns.loadFailed'));
+    } catch {
+      setFetchError(true);
+      toast.error(t('toast.returns.loadFailed') || 'Failed to load return requests');
     } finally {
       setLoading(false);
     }
@@ -179,6 +185,24 @@ export default function ReturnsPage() {
 
   if (!session) {
     return null;
+  }
+
+  if (fetchError && returnRequests.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-5xl block mb-4">⚠️</span>
+          <h2 className="text-xl font-bold text-red-700 mb-2">{t('account.returns.loadError') || 'Failed to load returns'}</h2>
+          <p className="text-neutral-500 mb-4">{t('account.returns.loadErrorDesc') || 'Please check your connection and try again.'}</p>
+          <button
+            onClick={fetchData}
+            className="px-6 py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600"
+          >
+            {t('common.retry') || 'Try Again'}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
