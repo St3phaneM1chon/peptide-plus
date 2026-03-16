@@ -5,6 +5,8 @@
 
 'use client';
 
+import { useI18n } from '@/i18n/client';
+
 interface Step {
   id: string;
   title: string;
@@ -19,6 +21,7 @@ interface TrackingTimelineProps {
 }
 
 export function TrackingTimeline({ steps }: TrackingTimelineProps) {
+  const { locale, t } = useI18n();
   return (
     <div style={{ position: 'relative' }}>
       {steps.map((step, index) => {
@@ -110,7 +113,7 @@ export function TrackingTimeline({ steps }: TrackingTimelineProps) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {formatTimestamp(step.timestamp)}
+                    {formatTimestamp(step.timestamp, locale, t)}
                   </span>
                 )}
               </div>
@@ -194,20 +197,20 @@ function StepIcon({ icon, completed }: { icon: string; completed: boolean }) {
   );
 }
 
-function formatTimestamp(date: Date): string {
+function formatTimestamp(date: Date, locale: string, t: (key: string) => string): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `Il y a ${minutes}min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  if (days === 1) return 'Hier';
-  if (days < 7) return `Il y a ${days} jours`;
+  if (minutes < 1) return t('tracking.justNow');
+  if (minutes < 60) return t('tracking.minutesAgo').replace('{count}', String(minutes));
+  if (hours < 24) return t('tracking.hoursAgo').replace('{count}', String(hours));
+  if (days === 1) return t('tracking.yesterday');
+  if (days < 7) return t('tracking.daysAgo').replace('{count}', String(days));
 
-  return date.toLocaleDateString('fr-CA', {
+  return date.toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',

@@ -194,7 +194,7 @@ function EstimateStatusBadge({ status, t }: { status: string; t: (key: string) =
 export default function EstimateClientPortalPage() {
   const params = useParams();
   const token = params?.token as string;
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
@@ -330,7 +330,7 @@ export default function EstimateClientPortalPage() {
     );
   }
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-CA', {
+  const formatDate = (d: string) => new Date(d).toLocaleDateString(locale, {
     year: 'numeric', month: 'long', day: 'numeric',
   });
 

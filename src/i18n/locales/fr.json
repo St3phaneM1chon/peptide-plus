@@ -11590,6 +11590,13 @@
     "customer": "Client",
     "guest": "Invite"
   },
+  "tracking": {
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {count}min",
+    "hoursAgo": "Il y a {count}h",
+    "yesterday": "Hier",
+    "daysAgo": "Il y a {count} jours"
+  },
   "orderFilters": {
     "searchPlaceholder": "Rechercher par n° de commande ou produit...",
     "allStatuses": "Tous les statuts",
