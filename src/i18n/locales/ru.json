@@ -11261,7 +11261,9 @@
       "openMenu": "Открыть меню",
       "resourcesMenu": "Меню ресурсов",
       "selectLanguage": "Выбрать язык: {language}",
-      "signIn": "Войти"
+      "signIn": "Войти",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "Статьи",
     "bundles": "Комплекты",

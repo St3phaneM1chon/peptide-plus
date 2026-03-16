@@ -11261,7 +11261,9 @@
       "openMenu": "ਮੀਨੂ ਖੋਲ੍ਹੋ",
       "resourcesMenu": "ਸਰੋਤ ਮੀਨੂ",
       "selectLanguage": "ਭਾਸ਼ਾ ਚੁਣੋ: {language}",
-      "signIn": "ਸਾਈਨ ਇਨ"
+      "signIn": "ਸਾਈਨ ਇਨ",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "ਲੇਖ",
     "bundles": "ਬੰਡਲ",

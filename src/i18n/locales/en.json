@@ -9598,7 +9598,17 @@
       "submitError": "Failed to submit your comment. Please try again.",
       "loginRequired": "You must be logged in to comment."
     },
-    "heroSubtitle": "Research, protocols and best practices in research peptides"
+    "heroSubtitle": "Research, protocols and best practices in research peptides",
+    "readTime": "min read",
+    "allCategories": "All"
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "subtitle": "Discover what our clients think about our products and services.",
+    "loading": "Loading testimonials...",
+    "noTestimonials": "No testimonials yet.",
+    "videoTitle": "Video testimonials",
+    "avgRating": "Average rating based on 2,500+ reviews"
   },
   "calculator": {
     "ariaClose": "Close calculator",
@@ -11425,7 +11435,9 @@
       "menu": "Menu",
       "mobileNavigation": "Mobile navigation",
       "openMenu": "Open menu",
+      "currencySelector": "Currency selector",
       "resourcesMenu": "Resources menu",
+      "selectCurrency": "Select currency: {currency}",
       "selectLanguage": "Select language: {language}",
       "signIn": "Sign in"
     },

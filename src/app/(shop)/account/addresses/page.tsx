@@ -365,8 +365,8 @@ export default function AddressesPage() {
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {/* Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('customerAddresses.addressType')}</label>
+                <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                  <legend className="block text-sm font-medium text-gray-700 mb-2">{t('customerAddresses.addressType')}</legend>
                   <div className="flex gap-4">
                     <label className="flex items-center">
                       <input
@@ -391,7 +391,7 @@ export default function AddressesPage() {
                       {t('customerAddresses.billing')}
                     </label>
                   </div>
-                </div>
+                </fieldset>
 
                 {/* Name */}
                 <div className="grid grid-cols-2 gap-4">

@@ -9598,7 +9598,17 @@
       "submitError": "Impossible d'envoyer votre commentaire. Veuillez réessayer.",
       "loginRequired": "Vous devez être connecté pour commenter."
     },
-    "heroSubtitle": "Recherche, protocoles et bonnes pratiques en peptides de recherche"
+    "heroSubtitle": "Recherche, protocoles et bonnes pratiques en peptides de recherche",
+    "readTime": "min de lecture",
+    "allCategories": "Tous"
+  },
+  "testimonials": {
+    "title": "Témoignages",
+    "subtitle": "Découvrez ce que nos clients pensent de nos formations et de notre accompagnement.",
+    "loading": "Chargement des témoignages...",
+    "noTestimonials": "Aucun témoignage pour le moment.",
+    "videoTitle": "Témoignages vidéo",
+    "avgRating": "Note moyenne basée sur 2,500+ avis"
   },
   "calculator": {
     "ariaClose": "Fermer le calculateur",
@@ -11465,8 +11475,10 @@
       "openMenu": "Ouvrir le menu",
       "cartItems": "Panier ({count} {count, plural, one {article} other {articles}})",
       "cartEmpty": "Panier (vide)",
+      "currencySelector": "Sélecteur de devise",
       "resourcesMenu": "Menu des ressources",
       "languageSelector": "Sélecteur de langue",
+      "selectCurrency": "Sélectionner la devise : {currency}",
       "selectLanguage": "Sélectionner la langue : {language}"
     }
   },

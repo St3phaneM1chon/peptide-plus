@@ -484,8 +484,8 @@ function SearchPageInner() {
               </div>
 
               {/* Purity Filter */}
-              <div>
-                <h3 className="font-semibold mb-3">{t('shop.purity')}</h3>
+              <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+                <legend className="font-semibold mb-3">{t('shop.purity')}</legend>
                 <div className="space-y-2">
                   {purityOptions.map((opt) => (
                     <label
@@ -509,7 +509,7 @@ function SearchPageInner() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Reset Filters */}
               {hasActiveFilters && (

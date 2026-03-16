@@ -11261,7 +11261,9 @@
       "openMenu": "Öppna meny",
       "resourcesMenu": "Resursmeny",
       "selectLanguage": "Välj språk: {language}",
-      "signIn": "Logga in"
+      "signIn": "Logga in",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "Artiklar",
     "bundles": "Paket",

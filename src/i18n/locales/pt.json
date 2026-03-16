@@ -11261,7 +11261,9 @@
       "openMenu": "Abrir menu",
       "resourcesMenu": "Menu de recursos",
       "selectLanguage": "Selecionar idioma: {language}",
-      "signIn": "Entrar"
+      "signIn": "Entrar",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "Artigos",
     "bundles": "Pacotes",

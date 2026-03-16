@@ -11261,7 +11261,9 @@
       "openMenu": "Mở menu",
       "resourcesMenu": "Menu tài nguyên",
       "selectLanguage": "Chọn ngôn ngữ: {language}",
-      "signIn": "Đăng nhập"
+      "signIn": "Đăng nhập",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "Bài Viết",
     "bundles": "Gói",

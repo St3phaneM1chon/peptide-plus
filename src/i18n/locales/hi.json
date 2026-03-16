@@ -11261,7 +11261,9 @@
       "openMenu": "मेनू खोलें",
       "resourcesMenu": "संसाधन मेनू",
       "selectLanguage": "भाषा चुनें: {language}",
-      "signIn": "साइन इन"
+      "signIn": "साइन इन",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "लेख",
     "bundles": "बंडल",

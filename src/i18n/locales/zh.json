@@ -11261,7 +11261,9 @@
       "openMenu": "打开菜单",
       "resourcesMenu": "资源菜单",
       "selectLanguage": "选择语言：{language}",
-      "signIn": "登录"
+      "signIn": "登录",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "文章",
     "bundles": "组合",

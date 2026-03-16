@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
 
 interface Testimonial {
   id: string;
@@ -21,6 +22,7 @@ interface Testimonial {
 }
 
 export default function TestimonialsPage() {
+  const { t } = useI18n();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,10 +56,10 @@ export default function TestimonialsPage() {
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            Temoignages
+            {t('testimonials.title') || 'Témoignages'}
           </h1>
           <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Decouvrez ce que nos clients pensent de nos formations et de notre accompagnement.
+            {t('testimonials.subtitle') || 'Découvrez ce que nos clients pensent de nos formations et de notre accompagnement.'}
           </p>
         </div>
       </section>
@@ -67,11 +69,11 @@ export default function TestimonialsPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {loading ? (
             <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '16px' }}>
-              Chargement des temoignages...
+              {t('testimonials.loading') || 'Chargement des témoignages...'}
             </p>
           ) : textTestimonials.length === 0 ? (
             <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: '16px' }}>
-              Aucun temoignage pour le moment.
+              {t('testimonials.noTestimonials') || 'Aucun témoignage pour le moment.'}
             </p>
           ) : (
             <div
@@ -157,7 +159,7 @@ export default function TestimonialsPage() {
         <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
           <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px', color: 'var(--gray-500)' }}>
-              Temoignages video
+              {t('testimonials.videoTitle') || 'Témoignages vidéo'}
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
               {videoTestimonials.map((video) => (
@@ -202,7 +204,7 @@ export default function TestimonialsPage() {
             4.8/5
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '8px' }}>
-            Note moyenne basee sur 2,500+ avis
+            {t('testimonials.avgRating') || 'Note moyenne basée sur 2,500+ avis'}
           </p>
           <div style={{ fontSize: '24px' }}>&#11088;&#11088;&#11088;&#11088;&#11088;</div>
         </div>

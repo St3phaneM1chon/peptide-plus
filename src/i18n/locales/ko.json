@@ -11261,7 +11261,9 @@
       "openMenu": "메뉴 열기",
       "resourcesMenu": "리소스 메뉴",
       "selectLanguage": "언어 선택: {language}",
-      "signIn": "로그인"
+      "signIn": "로그인",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "기사",
     "bundles": "번들",

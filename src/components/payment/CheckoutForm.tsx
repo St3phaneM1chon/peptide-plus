@@ -172,7 +172,8 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             >
               <p className="font-medium text-gray-900">{t('checkout.savedCard')}</p>
               {paymentMethod === 'saved-card' && (
-                <div className="mt-3 space-y-2">
+                <fieldset style={{ border: 'none', padding: 0, margin: 0 }} className="mt-3 space-y-2">
+                  <legend className="sr-only">{t('checkout.savedCard')}</legend>
                   {savedCards.map((card) => (
                     <label
                       key={card.id}
@@ -199,7 +200,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
                       </span>
                     </label>
                   ))}
-                </div>
+                </fieldset>
               )}
             </button>
           </div>
@@ -334,7 +335,7 @@ function StripeCheckoutForm({
       </label>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
         </div>
       )}
@@ -474,7 +475,7 @@ function SavedCardCheckout({
   return (
     <div>
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
         </div>
       )}

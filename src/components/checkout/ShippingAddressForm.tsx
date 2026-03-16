@@ -119,77 +119,82 @@ export function ShippingAddressForm({
         {t('checkout.shippingAddress')}
       </h2>
 
-      {/* Adresses sauvegardées */}
-      {savedAddresses.length > 0 && (
-        <div className="mb-5">
-          <p className="text-[13px] font-medium text-gray-500 mb-3">
-            {t('checkout.savedAddresses')}
-          </p>
-          <div className="flex flex-col gap-2">
-            {savedAddresses.map((address) => (
-              <label
-                key={address.id}
-                className={`flex items-start gap-3 p-3.5 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedAddressId === address.id ? 'border-gray-500' : 'border-gray-200'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="shippingAddress"
-                  value={address.id}
-                  checked={selectedAddressId === address.id}
-                  onChange={() => setSelectedAddressId(address.id)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-500">
-                      {address.recipientName}
-                    </span>
-                    {address.label && (
-                      <span className="text-[11px] px-2 py-0.5 bg-gray-100 rounded-full text-gray-400">
-                        {address.label}
-                      </span>
-                    )}
-                    {address.isDefault && (
-                      <span className="text-[11px] px-2 py-0.5 bg-green-50 rounded-full text-green-600">
-                        {t('checkout.defaultAddress')}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-gray-400">
-                    {address.addressLine1}
-                    {address.addressLine2 && `, ${address.addressLine2}`}
-                  </p>
-                  <p className="text-[13px] text-gray-400">
-                    {address.city}, {address.state} {address.postalCode}
-                  </p>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Shipping address selection */}
+      <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+        <legend className="sr-only">{t('checkout.shippingAddress')}</legend>
 
-      {/* Option nouvelle adresse */}
-      <label
-        className={`flex items-center gap-3 p-3.5 border-2 rounded-lg cursor-pointer ${
-          selectedAddressId === 'new' ? 'border-gray-500 mb-5' : 'border-gray-200 mb-0'
-        }`}
-      >
-        <input
-          type="radio"
-          name="shippingAddress"
-          value="new"
-          checked={selectedAddressId === 'new'}
-          onChange={() => setSelectedAddressId('new')}
-        />
-        <span className="text-sm text-gray-500">
-          {savedAddresses.length > 0
-            ? t('checkout.useNewAddress')
-            : t('checkout.enterAddress')}
-        </span>
-      </label>
+        {/* Adresses sauvegardées */}
+        {savedAddresses.length > 0 && (
+          <div className="mb-5">
+            <p className="text-[13px] font-medium text-gray-500 mb-3">
+              {t('checkout.savedAddresses')}
+            </p>
+            <div className="flex flex-col gap-2">
+              {savedAddresses.map((address) => (
+                <label
+                  key={address.id}
+                  className={`flex items-start gap-3 p-3.5 border-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedAddressId === address.id ? 'border-gray-500' : 'border-gray-200'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shippingAddress"
+                    value={address.id}
+                    checked={selectedAddressId === address.id}
+                    onChange={() => setSelectedAddressId(address.id)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-gray-500">
+                        {address.recipientName}
+                      </span>
+                      {address.label && (
+                        <span className="text-[11px] px-2 py-0.5 bg-gray-100 rounded-full text-gray-400">
+                          {address.label}
+                        </span>
+                      )}
+                      {address.isDefault && (
+                        <span className="text-[11px] px-2 py-0.5 bg-green-50 rounded-full text-green-600">
+                          {t('checkout.defaultAddress')}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-gray-400">
+                      {address.addressLine1}
+                      {address.addressLine2 && `, ${address.addressLine2}`}
+                    </p>
+                    <p className="text-[13px] text-gray-400">
+                      {address.city}, {address.state} {address.postalCode}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Option nouvelle adresse */}
+        <label
+          className={`flex items-center gap-3 p-3.5 border-2 rounded-lg cursor-pointer ${
+            selectedAddressId === 'new' ? 'border-gray-500 mb-5' : 'border-gray-200 mb-0'
+          }`}
+        >
+          <input
+            type="radio"
+            name="shippingAddress"
+            value="new"
+            checked={selectedAddressId === 'new'}
+            onChange={() => setSelectedAddressId('new')}
+          />
+          <span className="text-sm text-gray-500">
+            {savedAddresses.length > 0
+              ? t('checkout.useNewAddress')
+              : t('checkout.enterAddress')}
+          </span>
+        </label>
+      </fieldset>
 
       {/* Formulaire nouvelle adresse */}
       {selectedAddressId === 'new' && (

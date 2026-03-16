@@ -106,7 +106,8 @@ export default function SubscriptionOfferModal({
           </div>
 
           {/* Frequency options */}
-          <div className="space-y-2 mb-6">
+          <fieldset style={{ border: 'none', padding: 0, margin: 0 }} className="space-y-2 mb-6">
+            <legend className="sr-only">{t('subscriptions.deliveryFrequency') || 'Delivery Frequency'}</legend>
             {FREQUENCIES.map((freq) => {
               const price = currentPrice * (1 - freq.discount / 100);
               return (
@@ -138,7 +139,7 @@ export default function SubscriptionOfferModal({
                 </label>
               );
             })}
-          </div>
+          </fieldset>
 
           {/* Savings highlight */}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">

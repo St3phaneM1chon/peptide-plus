@@ -62,12 +62,12 @@ export default function FormatSelector({
   }, [formats, selectedFormat, onSelect]);
 
   return (
-    <div className="space-y-3">
-      <label id="format-selector-label" className="text-sm text-neutral-500 uppercase tracking-wider block">
+    <fieldset style={{ border: 'none', padding: 0, margin: 0 }} className="space-y-3">
+      <legend className="text-sm text-neutral-500 uppercase tracking-wider block">
         {t('shop.selectFormat')}:
-      </label>
+      </legend>
 
-      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="format-selector-label" onKeyDown={handleKeyDown}>
+      <div className="grid grid-cols-2 gap-3" role="radiogroup" onKeyDown={handleKeyDown}>
         {formats.map((format) => {
           // BUG-067 FIX: Use shared getFormatIcon utility for complete format coverage
           const formatIcon = getFormatIcon(format.type);
@@ -142,6 +142,6 @@ export default function FormatSelector({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }

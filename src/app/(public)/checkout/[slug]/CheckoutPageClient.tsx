@@ -107,12 +107,16 @@ export function CheckoutPageClient({
 
         {/* Étapes pour produits physiques */}
         {isPhysical && (
-          <div
+          <ol
+            aria-label="Checkout steps"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
               marginBottom: '32px',
+              listStyle: 'none',
+              padding: 0,
+              margin: '0 0 32px 0',
             }}
           >
             <StepIndicator
@@ -122,6 +126,7 @@ export function CheckoutPageClient({
               completed={currentStep === 'payment'}
             />
             <div
+              aria-hidden="true"
               style={{
                 flex: 1,
                 height: '2px',
@@ -135,7 +140,7 @@ export function CheckoutPageClient({
               active={currentStep === 'payment'}
               completed={false}
             />
-          </div>
+          </ol>
         )}
 
         <div
@@ -502,8 +507,12 @@ function StepIndicator({
   completed: boolean;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <li
+      style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+      aria-current={active ? 'step' : undefined}
+    >
       <div
+        aria-hidden="true"
         style={{
           width: '32px',
           height: '32px',
@@ -532,7 +541,7 @@ function StepIndicator({
       >
         {label}
       </span>
-    </div>
+    </li>
   );
 }
 

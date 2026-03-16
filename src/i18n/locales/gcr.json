@@ -11261,7 +11261,9 @@
       "openMenu": "Ouvri méni",
       "resourcesMenu": "Méni résous",
       "selectLanguage": "Chwazi lang: {language}",
-      "signIn": "Konèkté"
+      "signIn": "Konèkté",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "Atik",
     "bundles": "Pake",

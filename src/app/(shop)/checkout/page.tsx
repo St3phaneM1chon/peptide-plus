@@ -505,45 +505,45 @@ export default function CheckoutPage() {
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8" role="navigation" aria-label={t('checkout.aria.checkoutProgress')}>
-          <div className="flex items-center">
+        <nav className="flex items-center justify-center mb-8" aria-label={t('checkout.aria.checkoutProgress')}>
+          <ol className="flex items-center list-none p-0 m-0">
             {!session && !guestCheckout && (
               <>
-                <StepIndicator 
-                  number={1} 
+                <StepIndicator
+                  number={1}
                   label={t('checkout.account')}
-                  active={currentStep === 'auth'} 
-                  completed={currentStep !== 'auth'} 
+                  active={currentStep === 'auth'}
+                  completed={currentStep !== 'auth'}
                 />
-                <div className={`w-12 h-0.5 ${currentStep !== 'auth' ? 'bg-primary-500' : 'bg-gray-300'}`} />
+                <div className={`w-12 h-0.5 ${currentStep !== 'auth' ? 'bg-primary-500' : 'bg-gray-300'}`} aria-hidden="true" />
               </>
             )}
             {guestCheckout && (
               <>
-                <StepIndicator 
-                  number={1} 
-                  label={t('checkout.information')} 
-                  active={currentStep === 'info'} 
-                  completed={currentStep !== 'info' && currentStep !== 'auth'} 
+                <StepIndicator
+                  number={1}
+                  label={t('checkout.information')}
+                  active={currentStep === 'info'}
+                  completed={currentStep !== 'info' && currentStep !== 'auth'}
                 />
-                <div className={`w-12 h-0.5 ${currentStep !== 'info' && currentStep !== 'auth' ? 'bg-primary-500' : 'bg-gray-300'}`} />
+                <div className={`w-12 h-0.5 ${currentStep !== 'info' && currentStep !== 'auth' ? 'bg-primary-500' : 'bg-gray-300'}`} aria-hidden="true" />
               </>
             )}
-            <StepIndicator 
-              number={guestCheckout ? 2 : (session ? 1 : 2)} 
-              label={t('checkout.shipping')} 
-              active={currentStep === 'shipping'} 
-              completed={currentStep === 'payment'} 
+            <StepIndicator
+              number={guestCheckout ? 2 : (session ? 1 : 2)}
+              label={t('checkout.shipping')}
+              active={currentStep === 'shipping'}
+              completed={currentStep === 'payment'}
             />
-            <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-primary-500' : 'bg-gray-300'}`} />
-            <StepIndicator 
-              number={guestCheckout ? 3 : (session ? 2 : 3)} 
-              label={t('checkout.payment')} 
-              active={currentStep === 'payment'} 
-              completed={false} 
+            <div className={`w-12 h-0.5 ${currentStep === 'payment' ? 'bg-primary-500' : 'bg-gray-300'}`} aria-hidden="true" />
+            <StepIndicator
+              number={guestCheckout ? 3 : (session ? 2 : 3)}
+              label={t('checkout.payment')}
+              active={currentStep === 'payment'}
+              completed={false}
             />
-          </div>
-        </div>
+          </ol>
+        </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Section */}
@@ -1796,7 +1796,7 @@ function StepIndicator({ number, label, active, completed }: {
 }) {
   const stepStatus = completed ? 'completed' : active ? 'current' : 'upcoming';
   return (
-    <div className="flex items-center gap-2" aria-label={`Step ${number}: ${label} - ${stepStatus}`} aria-current={active ? 'step' : undefined}>
+    <li className="flex items-center gap-2" aria-label={`Step ${number}: ${label} - ${stepStatus}`} aria-current={active ? 'step' : undefined}>
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
         completed ? 'bg-primary-500 text-white' :
         active ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-500'
@@ -1810,6 +1810,6 @@ function StepIndicator({ number, label, active, completed }: {
       <span className={`text-sm ${active ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
         {label}
       </span>
-    </div>
+    </li>
   );
 }

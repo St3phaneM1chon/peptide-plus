@@ -11261,7 +11261,9 @@
       "openMenu": "மெனு திற",
       "resourcesMenu": "வளங்கள் மெனு",
       "selectLanguage": "மொழியைத் தேர்ந்தெடுக்கவும்: {language}",
-      "signIn": "உள்நுழைய"
+      "signIn": "உள்நுழைய",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "கட்டுரைகள்",
     "bundles": "கூட்டங்கள்",

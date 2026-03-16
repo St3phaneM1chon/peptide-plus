@@ -11261,7 +11261,9 @@
       "openMenu": "فتح القائمة",
       "resourcesMenu": "قائمة الموارد",
       "selectLanguage": "اختيار اللغة: {language}",
-      "signIn": "تسجيل الدخول"
+      "signIn": "تسجيل الدخول",
+      "currencySelector": "Currency selector",
+      "selectCurrency": "Select currency: {currency}"
     },
     "articles": "مقالات",
     "bundles": "حزم",

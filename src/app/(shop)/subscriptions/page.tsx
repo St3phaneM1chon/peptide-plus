@@ -307,8 +307,8 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">{t('subscriptions.deliveryFrequency') || 'Delivery Frequency'}</label>
+                    <fieldset style={{ border: 'none', padding: 0, margin: 0 }} className="mb-4">
+                      <legend className="block text-sm font-medium mb-2">{t('subscriptions.deliveryFrequency') || 'Delivery Frequency'}</legend>
                       <div className="space-y-2">
                         {frequencies.map((freq) => (
                           <label
@@ -333,7 +333,7 @@ export default function SubscriptionsPage() {
                           </label>
                         ))}
                       </div>
-                    </div>
+                    </fieldset>
 
                     <div className="mb-6">
                       <label className="block text-sm font-medium mb-2">{t('subscriptions.quantity') || 'Quantity'}</label>

@@ -151,8 +151,9 @@ export default async function BlogPage() {
   const otherPosts = featuredPost
     ? posts.filter((p) => p.id !== featuredPost.id)
     : [];
+  const allLabel = t('blog.allCategories') || 'Tous';
   const categories = [
-    'Tous',
+    allLabel,
     ...Array.from(new Set(posts.map((p) => p.category).filter(Boolean))),
   ] as string[];
 
@@ -328,7 +329,7 @@ export default async function BlogPage() {
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
                   {featuredPost.author} &bull; {formatDate(featuredPost.publishedAt)} &bull;{' '}
-                  {featuredPost.readTime} min de lecture
+                  {featuredPost.readTime} {t('blog.readTime') || 'min de lecture'}
                 </p>
               </div>
             </Link>
@@ -461,10 +462,10 @@ export default async function BlogPage() {
               color: 'var(--gray-500)',
             }}
           >
-            Restez informé
+            {t('blog.stayInformed') || 'Restez informé'}
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-            Recevez nos derniers articles directement dans votre boîte courriel.
+            {t('blog.newsletterCta') || 'Recevez nos derniers articles directement dans votre boîte courriel.'}
           </p>
         </div>
       </section>

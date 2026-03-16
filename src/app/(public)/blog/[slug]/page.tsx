@@ -11,7 +11,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
 import { prisma } from '@/lib/db';
-import { getStaticLocale } from '@/i18n/server';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 import { getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import BlogComments from '@/components/blog/BlogComments';
@@ -240,6 +241,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   // Apply translations
   const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
   let title = post.title;
   let excerpt = post.excerpt;
   let content = post.content;
@@ -301,7 +303,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         <p style={{ fontSize: '14px', opacity: 0.8 }}>
           {post.author && <span>{post.author} &bull; </span>}
           {formatDate(post.publishedAt)}
-          {post.readTime && <span> &bull; {post.readTime} min de lecture</span>}
+          {post.readTime && <span> &bull; {post.readTime} {t('blog.readTime') || 'min de lecture'}</span>}
         </p>
       </section>
 

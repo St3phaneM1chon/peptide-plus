@@ -197,16 +197,22 @@ export default function Header() {
               <div className="relative hidden md:block" data-dropdown="currency">
                 <button
                   onClick={() => toggleDropdown('currency')}
+                  aria-label={t('nav.aria.currencySelector')}
+                  aria-expanded={openDropdown === 'currency'}
+                  aria-haspopup="listbox"
                   className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded transition-colors"
                 >
                   {currency.code}
                   <ChevronIcon isOpen={openDropdown === 'currency'} small />
                 </button>
                 {openDropdown === 'currency' && (
-                  <div className="currency-dropdown absolute top-full end-0 mt-2 w-32 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
+                  <div role="listbox" aria-label={t('nav.aria.currencySelector')} className="currency-dropdown absolute top-full end-0 mt-2 w-32 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
                     {currencies.map((curr) => (
                       <button
                         key={curr.code}
+                        role="option"
+                        aria-selected={currency.code === curr.code}
+                        aria-label={t('nav.aria.selectCurrency', { currency: curr.code })}
                         onClick={() => { setCurrency(curr); setOpenDropdown(null); }}
                         className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 ${
                           currency.code === curr.code ? 'bg-primary-50 text-primary-600' : ''
@@ -353,6 +359,9 @@ export default function Header() {
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
+                <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                  {itemCount > 0 ? t('nav.aria.cartItems', { count: itemCount }) : t('nav.aria.cartEmpty')}
+                </span>
               </button>
 
               {/* Mobile Menu Toggle */}
@@ -398,12 +407,14 @@ export default function Header() {
                 </MobileNavLink>
                 
                 {/* Mobile Currency Selector */}
-                <div className="border-t border-gray-100 pt-3 mt-2 mb-2">
+                <div className="border-t border-gray-100 pt-3 mt-2 mb-2" role="group" aria-label={t('nav.aria.currencySelector')}>
                   <p className="text-xs text-gray-400 px-3 mb-1">{t('nav.currency') || 'Currency'}</p>
                   <div className="flex flex-wrap gap-1 px-3">
                     {currencies.map((curr) => (
                       <button
                         key={curr.code}
+                        aria-label={t('nav.aria.selectCurrency', { currency: curr.code })}
+                        aria-pressed={currency.code === curr.code}
                         onClick={() => { setCurrency(curr); setIsMobileMenuOpen(false); }}
                         className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                           currency.code === curr.code
