@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
           visitorLanguage: visitorLanguage || 'en',
           userId: session?.user?.id || null,
           currentPage: currentPage ? stripControlChars(stripHtml(String(currentPage))).trim().slice(0, 500) : null,
-          userAgent: userAgent ? String(userAgent).slice(0, 500) : null,
+          userAgent: userAgent ? stripControlChars(stripHtml(String(userAgent))).slice(0, 500) : null,
         },
         include: {
           messages: true,

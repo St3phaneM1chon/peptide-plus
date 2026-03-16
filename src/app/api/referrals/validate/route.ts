@@ -54,7 +54,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ valid: false, error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate with Zod
     const parsed = validateReferralSchema.safeParse(body);
