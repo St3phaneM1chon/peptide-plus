@@ -1,102 +1,127 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { SignJWT } from 'jose'
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'fallback-secret-change-me'
-)
-
-async function generateToken(userId: string, email: string) {
-  return await new SignJWT({ sub: userId, email })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('30d')
-    .sign(JWT_SECRET)
-}
-
-function formatUser(user: any) {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role?.toLowerCase() || 'customer',
-    image: user.image,
-    mfaEnabled: user.mfaEnabled || false,
-    phone: user.phone,
-    locale: user.locale || 'fr',
-    authProvider: user.accounts?.[0]?.provider || 'oauth',
-  }
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { generateToken, formatUser, isValidEmail, getClientIp } from '@/lib/auth-jwt';
+import { checkRateLimit } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { provider, idToken, accessToken, email, fullName } = body
+  const ip = getClientIp(request);
 
+  try {
+    // C-02 FIX: Rate limiting
+    const rateLimit = await checkRateLimit(ip, '/api/auth/login');
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { message: 'Trop de tentatives. Veuillez réessayer plus tard.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(
+              Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
+            ),
+          },
+        }
+      );
+    }
+
+    const body = await request.json();
+    const { provider, idToken, accessToken, email, fullName } = body;
+
+    // C-03 FIX: Input validation
     if (!provider || !email) {
       return NextResponse.json(
         { message: 'Provider et email requis' },
         { status: 400 }
-      )
+      );
     }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { message: 'Format email invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Validate provider is a known value
+    const ALLOWED_PROVIDERS = ['google', 'apple', 'microsoft', 'twitter', 'linkedin', 'facebook'];
+    const normalizedProvider = String(provider).toLowerCase().trim();
+    if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
+      return NextResponse.json(
+        { message: 'Provider OAuth non supporté' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
 
     // Find or create user
     let user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       include: { accounts: { select: { provider: true } } },
-    })
+    });
 
     if (!user) {
+      // FIX: Default role is CUSTOMER (was incorrectly EMPLOYEE)
       user = await prisma.user.create({
         data: {
-          email,
-          name: fullName || email.split('@')[0],
+          email: normalizedEmail,
+          name: fullName || normalizedEmail.split('@')[0],
           emailVerified: new Date(),
-          role: 'EMPLOYEE',
+          role: 'CUSTOMER',
           locale: 'fr',
           accounts: {
             create: {
               type: 'oauth',
-              provider,
-              providerAccountId: email,
+              provider: normalizedProvider,
+              providerAccountId: normalizedEmail,
               id_token: idToken,
               access_token: accessToken,
             },
           },
         },
         include: { accounts: { select: { provider: true } } },
-      })
+      });
     } else {
       // Link account if not already linked
       const existingAccount = await prisma.account.findFirst({
-        where: { userId: user.id, provider },
-      })
+        where: { userId: user.id, provider: normalizedProvider },
+      });
       if (!existingAccount) {
         await prisma.account.create({
           data: {
             userId: user.id,
             type: 'oauth',
-            provider,
-            providerAccountId: email,
+            provider: normalizedProvider,
+            providerAccountId: normalizedEmail,
             id_token: idToken,
             access_token: accessToken,
           },
-        })
+        });
       }
     }
 
-    const token = await generateToken(user.id, user.email)
+    // C-01 + C-04 FIX: Shared JWT module (no fallback secret, 1h expiry)
+    const token = await generateToken(user.id, user.email, user.role);
+
+    logger.info('Direct API OAuth login success', {
+      userId: user.id,
+      provider: normalizedProvider,
+      ip,
+    });
 
     return NextResponse.json({
       token,
       user: formatUser(user),
       requiresMfa: false,
-    })
-  } catch (error: any) {
-    console.error('[API] /auth/oauth error:', error)
+    });
+  } catch (error) {
+    logger.error('[API] /auth/oauth error', {
+      error: error instanceof Error ? error.message : String(error),
+      ip,
+    });
     return NextResponse.json(
-      { message: error.message || 'Erreur serveur' },
+      { message: 'Erreur serveur' },
       { status: 500 }
-    )
+    );
   }
 }
