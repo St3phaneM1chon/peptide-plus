@@ -58,6 +58,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         },
       },
       orderBy: { dueDate: 'asc' },
+      take: 100,
     });
 
     // Get upcoming deadlines from config (next 90 days)

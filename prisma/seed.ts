@@ -1,4 +1,5 @@
 import { PrismaClient, ProductType, FormatType, DiscountType, StockStatus } from '@prisma/client';
+import { hash } from 'bcryptjs';
 import { seedAccounting } from './seed-accounting';
 import { seedCustomerData } from './seed-customer-data';
 import { seedCrmPipeline } from './seed-crm';
@@ -1152,12 +1153,14 @@ async function main() {
   // =====================================================
   console.log('👤 Création de l\'utilisateur admin...');
 
+  const adminPassword = await hash('St3ph@ne1234', 12);
   await prisma.user.upsert({
     where: { email: 'admin@peptideplus.ca' },
-    update: {},
+    update: { password: adminPassword },
     create: {
       email: 'admin@peptideplus.ca',
       name: 'Admin Peptide Plus+',
+      password: adminPassword,
       role: 'OWNER',
       emailVerified: new Date(),
       locale: 'fr',

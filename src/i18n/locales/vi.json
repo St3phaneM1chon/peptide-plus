@@ -6863,6 +6863,7 @@
       "typeAccessory": "Phụ kiện",
       "typeBundle": "Gói",
       "typeCapsule": "Viên nang",
+      "typeLabSupply": "Vật tư phòng thí nghiệm",
       "typePeptide": "Peptide",
       "typeSupplement": "Thực phẩm bổ sung"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "Liên kết bên ngoài",
       "featured": "Nổi bật",
       "formatCreationError": "Lỗi khi tạo định dạng",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "Tên định dạng",
       "formatNumber": "Định dạng #{number}",
       "formatPhoto": "Ảnh/video định dạng",

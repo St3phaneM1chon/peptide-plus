@@ -6863,6 +6863,7 @@
       "typeAccessory": "एक्सेसरी",
       "typeBundle": "बंडल",
       "typeCapsule": "कैप्सूल",
+      "typeLabSupply": "प्रयोगशाला आपूर्ति",
       "typePeptide": "पेप्टाइड",
       "typeSupplement": "सप्लीमेंट"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "बाहरी लिंक",
       "featured": "विशेष रुप से प्रदर्शित",
       "formatCreationError": "फॉर्मेट बनाने में त्रुटि",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "फॉर्मेट नाम",
       "formatNumber": "फॉर्मेट #{number}",
       "formatPhoto": "फोटो/वीडियो प्रारूप",

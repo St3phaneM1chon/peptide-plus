@@ -641,6 +641,7 @@ model FixedAssetDepreciation {
   createdAt      DateTime   @default(now())
 
   @@unique([fixedAssetId, fiscalYear])
+  @@index([fixedAssetId])
   @@index([fiscalYear])
   @@index([journalEntryId])
   @@index([createdAt])

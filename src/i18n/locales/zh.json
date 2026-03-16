@@ -6863,6 +6863,7 @@
       "typeAccessory": "配件",
       "typeBundle": "捆绑",
       "typeCapsule": "胶囊",
+      "typeLabSupply": "实验室用品",
       "typePeptide": "肽",
       "typeSupplement": "补充剂"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "外部链接",
       "featured": "推荐",
       "formatCreationError": "创建格式时出错",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "格式名称",
       "formatNumber": "格式 #{number}",
       "formatPhoto": "格式照片/视频",

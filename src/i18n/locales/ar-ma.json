@@ -6863,6 +6863,7 @@
       "typeAccessory": "ملحق",
       "typeBundle": "حزمة",
       "typeCapsule": "كبسولة",
+      "typeLabSupply": "مستلزمات المختبر",
       "typePeptide": "بيبتيد",
       "typeSupplement": "مكمل"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "رابط خارجي",
       "featured": "مميز",
       "formatCreationError": "خطأ في إنشاء التنسيق",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "اسم الشكل",
       "formatNumber": "شكل #{number}",
       "formatPhoto": "تنسيق الصورة/الفيديو",

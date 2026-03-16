@@ -304,7 +304,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         }),
       });
       if (res.ok) {
-        const createdFormat = await res.json();
+        const { data: createdFormat } = await res.json();
         setFormats([...formats, createdFormat]);
         setEditingFormatId(createdFormat.id);
       }
@@ -321,7 +321,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     try {
       const checkRes = await fetch(`/api/products/${product.id}/formats/${format.id}`);
       if (checkRes.ok) {
-        const serverFormat = await checkRes.json();
+        const { data: serverFormat } = await checkRes.json();
         if (serverFormat.updatedAt && initialFormat.updatedAt && serverFormat.updatedAt !== initialFormat.updatedAt) {
           // Show ConfirmDialog instead of window.confirm for concurrent edit warning
           setConcurrentEditConfirm({ format, initialFormat });
@@ -353,7 +353,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       });
       if (res.ok) {
         // Replace optimistic data with confirmed server data (includes updatedAt, etc.)
-        const updatedFormat = await res.json();
+        const { data: updatedFormat } = await res.json();
         setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
       } else {
         // BUG-075: Revert optimistic update on server error
@@ -391,7 +391,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
-        const updatedFormat = await res.json();
+        const { data: updatedFormat } = await res.json();
         setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
       } else {
         setFormats(previousFormats);
@@ -416,6 +416,10 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       const res = await fetch(`/api/products/${product.id}/formats/${formatToDelete}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         setFormats(formats.filter(f => f.id !== formatToDelete));
+        toast.success(t('admin.productForm.formatDeleted'));
+      } else {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.error || t('admin.productForm.formatDeleteError'));
       }
     } catch {
       toast.error(t('admin.productForm.deletionError'));

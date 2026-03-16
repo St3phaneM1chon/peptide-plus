@@ -6863,6 +6863,7 @@
       "typeAccessory": "அணிகலம்",
       "typeBundle": "தொகுப்பு",
       "typeCapsule": "கேப்சூல்",
+      "typeLabSupply": "ஆய்வக பொருட்கள்",
       "typePeptide": "பெப்டைடு",
       "typeSupplement": "சூப்பிள்மெண்ட்"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "வெளியுறுப்பு",
       "featured": "முக்கியமானது",
       "formatCreationError": "வடிவத்தை உருவாக்குவதில் பிழை",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "வடிவத்தின் பெயர்",
       "formatNumber": "வடிவம் #{number}",
       "formatPhoto": "வடிவத்தின் புகைப்படம்/வீடியோ",

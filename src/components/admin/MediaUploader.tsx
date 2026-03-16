@@ -47,11 +47,14 @@ const PREVIEW_SIZES = {
 
 // Client-side image resize before upload — handles huge camera photos (50MB+)
 const MAX_CLIENT_DIMENSION = 2048; // Max px before upload (server further optimizes)
-const CLIENT_JPEG_QUALITY = 0.85;
+const CLIENT_QUALITY_STEPS = [0.85, 0.70, 0.55]; // Progressive quality reduction
+const MAX_OUTPUT_BYTES = 10 * 1024 * 1024; // 10MB target after resize
 
 async function resizeImageClientSide(file: File): Promise<File> {
   // Only resize images, not PDFs/videos
   if (!file.type.startsWith('image/')) return file;
+  // HEIC/HEIF: browsers other than Safari can't decode — return as-is (server will reject if too large)
+  if (file.type === 'image/heic' || file.type === 'image/heif') return file;
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -82,19 +85,33 @@ async function resizeImageClientSide(file: File): Promise<File> {
 
       ctx.drawImage(img, 0, 0, targetW, targetH);
 
-      // Output as JPEG (best size) or WebP
+      // PNG stays PNG; everything else → JPEG with progressive quality
       const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-      const quality = outputType === 'image/png' ? undefined : CLIENT_JPEG_QUALITY;
 
-      canvas.toBlob((blob) => {
-        if (!blob) { resolve(file); return; }
-        const ext = outputType === 'image/png' ? '.png' : '.jpg';
-        const name = file.name.replace(/\.[^.]+$/, ext);
-        resolve(new File([blob], name, { type: outputType }));
-      }, outputType, quality);
+      if (outputType === 'image/png') {
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.png'), { type: 'image/png' }));
+        }, 'image/png');
+      } else {
+        // Try progressively lower quality until output is under MAX_OUTPUT_BYTES
+        const tryQuality = (idx: number) => {
+          const q = CLIENT_QUALITY_STEPS[idx] ?? 0.45;
+          canvas.toBlob((blob) => {
+            if (!blob) { resolve(file); return; }
+            if (blob.size > MAX_OUTPUT_BYTES && idx < CLIENT_QUALITY_STEPS.length - 1) {
+              tryQuality(idx + 1);
+            } else {
+              const name = file.name.replace(/\.[^.]+$/, '.jpg');
+              resolve(new File([blob], name, { type: 'image/jpeg' }));
+            }
+          }, 'image/jpeg', q);
+        };
+        tryQuality(0);
+      }
     };
 
-    img.onerror = () => resolve(file); // Fallback to original on error
+    img.onerror = () => resolve(file); // Fallback to original on error (e.g. HEIC on non-Safari)
     img.src = URL.createObjectURL(file);
   });
 }

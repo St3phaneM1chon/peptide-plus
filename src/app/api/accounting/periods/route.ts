@@ -38,6 +38,7 @@ export const GET = withAdminGuard(async (request) => {
     const periods = await prisma.accountingPeriod.findMany({
       where,
       orderBy: { code: 'asc' },
+      take: 200,
     });
 
     return NextResponse.json({ periods });

@@ -181,6 +181,8 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
 
   return (
     <section
+      role="region"
+      aria-label="Hero carousel"
       className="relative text-white overflow-hidden min-h-[280px] md:min-h-[340px] flex items-center"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -237,7 +239,7 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
       ))}
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-14 sm:px-16 lg:px-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-14 sm:px-16 lg:px-20" aria-live="polite">
         <div className="max-w-5xl">
           {/* Badge */}
           {badgeText && (

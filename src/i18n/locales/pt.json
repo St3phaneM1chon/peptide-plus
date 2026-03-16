@@ -6863,6 +6863,7 @@
       "typeAccessory": "Acessório",
       "typeBundle": "Pacote",
       "typeCapsule": "Cápsula",
+      "typeLabSupply": "Material de laboratório",
       "typePeptide": "Peptídeo",
       "typeSupplement": "Suplemento"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "Link externo",
       "featured": "Destaque",
       "formatCreationError": "Erro ao criar formato",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "Nome do formato",
       "formatNumber": "Formato #{number}",
       "formatPhoto": "Foto/vídeo do formato",

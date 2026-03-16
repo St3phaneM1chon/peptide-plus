@@ -6863,6 +6863,7 @@
       "typeAccessory": "액세서리",
       "typeBundle": "번들",
       "typeCapsule": "캡슐",
+      "typeLabSupply": "실험실 용품",
       "typePeptide": "펩타이드",
       "typeSupplement": "보충제"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "외부 링크",
       "featured": "추천",
       "formatCreationError": "형식 생성 중 오류",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "형식 이름",
       "formatNumber": "형식 #{number}",
       "formatPhoto": "형식 사진/비디오",

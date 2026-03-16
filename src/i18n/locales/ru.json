@@ -6863,6 +6863,7 @@
       "typeAccessory": "Аксессуар",
       "typeBundle": "Комплект",
       "typeCapsule": "Капсула",
+      "typeLabSupply": "Лабораторные принадлежности",
       "typePeptide": "Пептид",
       "typeSupplement": "Добавка"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "Внешняя ссылка",
       "featured": "Рекомендуемый",
       "formatCreationError": "Ошибка при создании формата",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "Название формата",
       "formatNumber": "Формат #{number}",
       "formatPhoto": "Фото/видео формата",

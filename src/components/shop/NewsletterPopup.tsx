@@ -159,7 +159,7 @@ export default function NewsletterPopup() {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={t('newsletter.title')}
+        aria-labelledby="newsletter-dialog-title"
         className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
       >
         {/* Close Button */}
@@ -180,7 +180,7 @@ export default function NewsletterPopup() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
                 <span className="text-3xl">💊</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              <h2 id="newsletter-dialog-title" className="text-2xl md:text-3xl font-bold mb-2">
                 {t('newsletter.title')}
               </h2>
               <p className="text-primary-100">

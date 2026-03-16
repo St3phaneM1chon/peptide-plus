@@ -41,6 +41,7 @@ export const GET = withAdminGuard(async (request) => {
     // Fetch all chart-of-account details for mapping
     const accounts = await prisma.chartOfAccount.findMany({
       where: { isActive: true },
+      select: { id: true, code: true, name: true, type: true, normalBalance: true },
       orderBy: { code: 'asc' },
     });
     const accountMap = new Map(accounts.map((a) => [a.id, a]));

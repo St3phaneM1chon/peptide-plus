@@ -6863,6 +6863,7 @@
       "typeAccessory": "Tillbehör",
       "typeBundle": "Paket",
       "typeCapsule": "Kapsel",
+      "typeLabSupply": "Laboratorieförnödenheter",
       "typePeptide": "Peptid",
       "typeSupplement": "Tillskott"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "Extern länk",
       "featured": "Utvald",
       "formatCreationError": "Fel vid skapande av format",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "Formatnamn",
       "formatNumber": "Format #{number}",
       "formatPhoto": "Formatfoto/video",

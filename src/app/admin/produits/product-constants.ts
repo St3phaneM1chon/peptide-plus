@@ -24,6 +24,7 @@ export function getProductTypes(t: TranslateFn) {
     { value: 'ACCESSORY', label: t('admin.productConstants.typeAccessory') },
     { value: 'BUNDLE', label: t('admin.productConstants.typeBundle') },
     { value: 'CAPSULE', label: t('admin.productConstants.typeCapsule') },
+    { value: 'LAB_SUPPLY', label: t('admin.productConstants.typeLabSupply') },
   ];
 }
 

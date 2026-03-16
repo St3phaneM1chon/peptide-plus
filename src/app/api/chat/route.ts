@@ -52,6 +52,27 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
       }
 
+      // Defense-in-depth: verify access even though GET is admin-only
+      // Admin can see all, but if the guard above is ever relaxed, this protects data
+      const isAdminGet = ['OWNER', 'EMPLOYEE'].includes(session?.user?.role as string);
+      if (!isAdminGet) {
+        // Authenticated user must own the conversation
+        if (conversation.userId && session?.user?.id && conversation.userId !== session.user.id) {
+          return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        }
+        // If conversation belongs to an authenticated user but requester has no matching session
+        if (conversation.userId && !session?.user?.id) {
+          return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        }
+        // Visitor must match visitorId
+        if (!conversation.userId) {
+          const visitorId = request.headers.get('x-visitor-id') || '';
+          if (conversation.visitorId !== visitorId) {
+            return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+          }
+        }
+      }
+
       return NextResponse.json({ conversation });
     }
 
@@ -197,14 +218,17 @@ export async function POST(request: NextRequest) {
 
     // Vérification d'ownership : si une conversation existe, vérifier que l'appelant y a droit
     if (conversation && !isAdmin) {
-      // Si la conversation a un userId, vérifier qu'il correspond à l'utilisateur connecté
-      if (conversation.userId && session?.user?.id && conversation.userId !== session.user.id) {
-        return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-      }
-      // Si l'utilisateur est connecté mais la conversation n'a pas de userId,
-      // et que les visitorId ne correspondent pas, refuser l'accès
-      if (session?.user?.id && !conversation.userId && conversation.visitorId !== finalVisitorId) {
-        return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+      if (conversation.userId) {
+        // Conversation belongs to an authenticated user
+        // Requester must be that same authenticated user
+        if (!session?.user?.id || conversation.userId !== session.user.id) {
+          return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        }
+      } else {
+        // Visitor conversation (no userId) — verify visitorId matches
+        if (conversation.visitorId !== finalVisitorId) {
+          return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+        }
       }
     }
 

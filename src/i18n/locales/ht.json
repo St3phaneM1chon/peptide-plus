@@ -6863,6 +6863,7 @@
       "typeAccessory": "Aksesu",
       "typeBundle": "Pake",
       "typeCapsule": "Kapsil",
+      "typeLabSupply": "Founiti laboratwa",
       "typePeptide": "Peptide",
       "typeSupplement": "Sipleman"
     },
@@ -6904,6 +6905,8 @@
       "externalLink": "Lyen ekstèn",
       "featured": "Vedèt",
       "formatCreationError": "Erè pandan kreye fòma",
+      "formatDeleteError": "Error deleting format",
+      "formatDeleted": "Format deleted successfully",
       "formatName": "Non fòma",
       "formatNumber": "Fòma #{number}",
       "formatPhoto": "Foto/vidéo fòma",
