@@ -50,11 +50,13 @@ export async function GET(request: Request) {
     }
 
     const ip = getIp(request);
+    // Invalidate unsubscribe token after use to prevent replay attacks
     await prisma.mailingListSubscriber.update({
       where: { id: subscriber.id },
       data: {
         status: 'UNSUBSCRIBED',
         unsubscribedAt: new Date(),
+        unsubscribeToken: null,
       },
     });
 
@@ -130,11 +132,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    // Invalidate unsubscribe token after use to prevent replay attacks
     await prisma.mailingListSubscriber.update({
       where: { id: subscriber.id },
       data: {
         status: 'UNSUBSCRIBED',
         unsubscribedAt: new Date(),
+        unsubscribeToken: null,
       },
     });
 

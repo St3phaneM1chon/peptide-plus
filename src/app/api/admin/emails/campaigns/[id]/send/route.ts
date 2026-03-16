@@ -99,8 +99,9 @@ async function sendBatch(opts: SendBatchOptions): Promise<{ sent: number; failed
       const html = opts.campaign.htmlContent
         .replace(/\{\{prenom\}\}/g, safeName)
         .replace(/\{\{email\}\}/g, safeEmail);
-      const subject = opts.campaign.subject
-        .replace(/\{\{prenom\}\}/g, recipient.name || 'Client');
+      // Strip CRLF from subject to prevent email header injection
+      const subject = opts.campaign.subject.replace(/[\r\n]/g, '')
+        .replace(/\{\{prenom\}\}/g, (recipient.name || 'Client').replace(/[\r\n]/g, ''));
 
       // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
       const unsubscribeUrl = await generateUnsubscribeUrl(recipient.email, 'marketing', recipient.id).catch((err) => {

@@ -60,7 +60,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
       if (!template) {
         return NextResponse.json({ error: 'Template not found' }, { status: 404 });
       }
-      emailSubject = template.subject;
+      // Strip CRLF from template subject to prevent email header injection
+      emailSubject = template.subject.replace(/[\r\n]/g, '');
       html = template.htmlContent;
       if (variables && typeof variables === 'object') {
         for (const [key, value] of Object.entries(variables)) {
