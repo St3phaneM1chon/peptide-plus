@@ -18,6 +18,7 @@ import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 // shouldSuppressEmail replaced by batch query (N+1 fix)
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { maskEmail } from '@/lib/sanitize';
 
 import { escapeHtml } from '@/lib/email/templates/base-template';
 import { logger } from '@/lib/logger';
@@ -87,7 +88,7 @@ async function sendBatch(opts: SendBatchOptions): Promise<{ sent: number; failed
       // Frequency cap
       if (CAMPAIGN_FREQUENCY_CAP_HOURS > 0 && opts.frequencyCapEmails.has(recipient.email)) {
         logger.info('[Campaign Send] Frequency cap: skipping recipient', {
-          email: recipient.email,
+          email: maskEmail(recipient.email),
           campaignId: opts.campaignId,
         });
         continue;
@@ -106,7 +107,7 @@ async function sendBatch(opts: SendBatchOptions): Promise<{ sent: number; failed
       // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
       const unsubscribeUrl = await generateUnsubscribeUrl(recipient.email, 'marketing', recipient.id).catch((err) => {
         logger.warn('[EmailCampaignSend] Failed to generate unsubscribe URL', {
-          email: recipient.email,
+          email: maskEmail(recipient.email),
           campaignId: opts.campaignId,
           error: err instanceof Error ? err.message : String(err),
         });
@@ -156,7 +157,7 @@ async function sendBatch(opts: SendBatchOptions): Promise<{ sent: number; failed
       sent++;
     } catch (error) {
       logger.error('[EmailCampaignSend] Failed to send email to recipient', {
-        email: recipient.email,
+        email: maskEmail(recipient.email),
         campaignId: opts.campaignId,
         error: error instanceof Error ? error.message : String(error),
       });

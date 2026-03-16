@@ -53,7 +53,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       ...(agentId ? { performedById: agentId } : {}),
     };
 
-    // Fetch all activities in range
+    // Fetch activities in range (capped at 10,000 to prevent memory issues)
     const activities = await prisma.crmActivity.findMany({
       where,
       select: {
@@ -63,6 +63,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         performedBy: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 10000,
     });
 
     // Group by agent
