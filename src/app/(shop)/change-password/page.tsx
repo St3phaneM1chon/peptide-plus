@@ -263,9 +263,16 @@ export default function ChangePasswordPage() {
               <button
                 type="submit"
                 disabled={loading || !formData.currentPassword || !formData.newPassword || formData.newPassword !== formData.confirmPassword}
-                className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
-                {loading ? t('auth.changingPassword') : t('auth.changePasswordBtn')}
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t('auth.changingPassword')}
+                  </>
+                ) : (
+                  t('auth.changePasswordBtn')
+                )}
               </button>
             </div>
           </form>
