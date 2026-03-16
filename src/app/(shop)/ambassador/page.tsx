@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface AmbassadorStats {
   referrals: number;
@@ -86,6 +87,7 @@ const testimonials: { name: string; role: string; image: string; quote: string; 
 export default function AmbassadorPage() {
   const { data: session } = useSession();
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const ambassadorTiers = getAmbassadorTiers(t);
   const [activeTab, setActiveTab] = useState<'overview' | 'dashboard' | 'apply'>('overview');
   const [isApplying, setIsApplying] = useState(false);
@@ -365,7 +367,7 @@ export default function AmbassadorPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
                 <p className="text-sm text-neutral-500 mb-1">{t('ambassador.totalEarnings') || 'Total Earnings'}</p>
-                <p className="text-3xl font-bold text-green-600">${ambassadorStats.earnings.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-green-600">{formatPrice(ambassadorStats.earnings)}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
                 <p className="text-sm text-neutral-500 mb-1">{t('ambassador.totalReferrals') || 'Total Referrals'}</p>

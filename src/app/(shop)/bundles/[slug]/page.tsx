@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
 import { useCart } from '@/contexts/CartContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 
 interface BundleItem {
@@ -48,6 +49,7 @@ export default function BundleDetailPage() {
   const slug = params.slug as string;
   const { t } = useI18n();
   const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -205,7 +207,7 @@ export default function BundleDetailPage() {
             <div className="flex items-baseline justify-between mb-2">
               <span className="text-gray-600">{t('shop.originalPrice')}:</span>
               <span className="text-xl text-gray-500 line-through">
-                ${bundle.originalPrice.toFixed(2)}
+                {formatPrice(bundle.originalPrice)}
               </span>
             </div>
             <div className="flex items-baseline justify-between mb-2">
@@ -218,11 +220,11 @@ export default function BundleDetailPage() {
               <div className="flex items-baseline justify-between mb-2">
                 <span className="text-xl font-semibold text-gray-900">{t('shop.bundlePrice')}:</span>
                 <span className="text-3xl font-bold text-teal-600">
-                  ${bundle.bundlePrice.toFixed(2)}
+                  {formatPrice(bundle.bundlePrice)}
                 </span>
               </div>
               <div className="text-end text-green-600 font-medium">
-                {t('shop.youSaveAmount', { amount: `$${bundle.savings.toFixed(2)}` })}
+                {t('shop.youSaveAmount', { amount: formatPrice(bundle.savings) })}
               </div>
             </div>
           </div>
@@ -324,11 +326,11 @@ export default function BundleDetailPage() {
                         <span className="text-sm text-gray-600">{t('shop.qty')}: {item.quantity}</span>
                         <span className="text-sm text-gray-400">&times;</span>
                         <span className="text-sm font-semibold text-gray-900">
-                          ${item.itemPrice.toFixed(2)}
+                          {formatPrice(item.itemPrice)}
                         </span>
                         <span className="text-sm text-gray-400">=</span>
                         <span className="text-sm font-semibold text-teal-600">
-                          ${item.itemTotal.toFixed(2)}
+                          {formatPrice(item.itemTotal)}
                         </span>
                       </div>
                     </div>

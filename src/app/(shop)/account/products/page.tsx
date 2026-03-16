@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ProductHistoryItem {
   productId: string;
@@ -38,6 +39,7 @@ export default function ProductHistoryPage() {
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { t, locale } = useI18n();
+  const { formatPrice } = useCurrency();
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscriptionOffer, setSubscriptionOffer] = useState<ProductHistoryItem | null>(null);
@@ -244,7 +246,7 @@ export default function ProductHistoryPage() {
                           {/* Price + last order */}
                           <div className="flex items-center justify-between mb-4 text-sm">
                             <div>
-                              <p className="font-bold text-gray-900">${product.currentPrice.toFixed(2)}</p>
+                              <p className="font-bold text-gray-900">{formatPrice(product.currentPrice)}</p>
                               <p className="text-xs text-gray-400">{t('account.currentPrice')}</p>
                             </div>
                             <div className="text-end">

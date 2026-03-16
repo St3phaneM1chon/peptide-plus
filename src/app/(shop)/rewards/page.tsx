@@ -8,6 +8,7 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useLoyalty, LOYALTY_TIERS, LOYALTY_REWARDS } from '@/contexts/LoyaltyContext';
 import { LOYALTY_POINTS_CONFIG } from '@/lib/constants';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 // FIX F-024: Load loyalty config from API instead of hardcoded LOYALTY_CONFIG context
 interface LoyaltyConfigValues {
@@ -21,6 +22,7 @@ interface LoyaltyConfigValues {
 export default function RewardsPage() {
   const { data: session } = useSession();
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const {
     points,
     lifetimePoints,
@@ -135,7 +137,7 @@ export default function RewardsPage() {
               <p className="text-5xl font-bold">{points.toLocaleString()}</p>
               <p className="text-white/80 text-sm mt-1">
                 {/* FIX F-024: Use API-loaded pointsValue */}
-                &asymp; ${(points * loyaltyConfig.pointsValue).toFixed(2)} {t('rewards.inRewards') || 'in rewards'}
+                &asymp; {formatPrice(points * loyaltyConfig.pointsValue)} {t('rewards.inRewards') || 'in rewards'}
               </p>
             </div>
           </div>

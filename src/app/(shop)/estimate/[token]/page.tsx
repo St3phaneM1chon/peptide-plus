@@ -7,6 +7,7 @@ import {
   FileText, ArrowRight, Loader2,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -194,6 +195,7 @@ export default function EstimateClientPortalPage() {
   const params = useParams();
   const token = params?.token as string;
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
 
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -421,13 +423,13 @@ export default function EstimateClientPortalPage() {
                           )}
                         </td>
                         <td className="py-3 text-end text-gray-700">{item.quantity}</td>
-                        <td className="py-3 text-end text-gray-700">${item.unitPrice.toFixed(2)}</td>
+                        <td className="py-3 text-end text-gray-700">{formatPrice(item.unitPrice)}</td>
                         {estimate.items.some(i => i.discountPercent > 0) && (
                           <td className="py-3 text-end text-gray-700">
                             {item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}
                           </td>
                         )}
-                        <td className="py-3 text-end font-medium text-gray-900">${item.lineTotal.toFixed(2)}</td>
+                        <td className="py-3 text-end font-medium text-gray-900">{formatPrice(item.lineTotal)}</td>
                       </tr>
                     ))}
                 </tbody>
@@ -439,25 +441,25 @@ export default function EstimateClientPortalPage() {
               <div className="w-72">
                 <div className="flex justify-between py-1.5 text-sm">
                   <span className="text-gray-600">{t('estimate.subtotal')}</span>
-                  <span className="text-gray-900">${estimate.subtotal.toFixed(2)}</span>
+                  <span className="text-gray-900">{formatPrice(estimate.subtotal)}</span>
                 </div>
                 {estimate.discountAmount > 0 && (
                   <div className="flex justify-between py-1.5 text-sm text-primary-600">
                     <span>{t('estimate.discountLabel')} ({estimate.discountPercent}%)</span>
-                    <span>-${estimate.discountAmount.toFixed(2)}</span>
+                    <span>-{formatPrice(estimate.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between py-1.5 text-sm">
                   <span className="text-gray-500">{t('estimate.gst')}</span>
-                  <span className="text-gray-700">${estimate.taxGst.toFixed(2)}</span>
+                  <span className="text-gray-700">{formatPrice(estimate.taxGst)}</span>
                 </div>
                 <div className="flex justify-between py-1.5 text-sm">
                   <span className="text-gray-500">{t('estimate.qst')}</span>
-                  <span className="text-gray-700">${estimate.taxQst.toFixed(2)}</span>
+                  <span className="text-gray-700">{formatPrice(estimate.taxQst)}</span>
                 </div>
                 <div className="flex justify-between py-3 border-t-2 border-gray-200 text-lg font-bold">
                   <span className="text-gray-900">{t('estimate.total')}</span>
-                  <span className="text-indigo-600">${estimate.total.toFixed(2)} {estimate.currency}</span>
+                  <span className="text-indigo-600">{formatPrice(estimate.total)} {estimate.currency}</span>
                 </div>
               </div>
             </div>

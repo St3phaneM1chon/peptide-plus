@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import {
   Copy,
@@ -120,6 +121,7 @@ export default function ReferralsPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -529,7 +531,7 @@ export default function ReferralsPage() {
                           </td>
                           <td className="px-6 py-4 text-gray-700">
                             {referral.orderAmount
-                              ? `$${referral.orderAmount.toFixed(2)}`
+                              ? formatPrice(referral.orderAmount)
                               : '--'}
                           </td>
                           <td className="px-6 py-4">
