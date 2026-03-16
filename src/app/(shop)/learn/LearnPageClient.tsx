@@ -152,7 +152,7 @@ export default function LearnPage() {
             <div className="sticky top-24 space-y-6">
               {/* Categories */}
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">{t('learn.categories')}</h3>
                 <nav className="space-y-2">
                   {categories.map((cat) => (
                     <button
@@ -168,28 +168,28 @@ export default function LearnPage() {
 
               {/* Quick Links */}
               <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">{t('learn.quickLinks')}</h3>
                 <nav className="space-y-2">
                   <Link href="/faq" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
-                    <span>❓</span> FAQ
+                    <span>❓</span> {t('learn.faq')}
                   </Link>
                   <Link href="/#calculator" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
-                    <span>🧮</span> Peptide Calculator
+                    <span>🧮</span> {t('learn.calculator')}
                   </Link>
                   <Link href="/lab-results" className="flex items-center gap-2 text-gray-600 hover:text-primary-600">
-                    <span>🔬</span> Lab Results
+                    <span>🔬</span> {t('learn.labResults')}
                   </Link>
                 </nav>
               </div>
 
               {/* Newsletter CTA */}
               <div className="bg-primary-50 rounded-xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">Stay Updated</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('learn.stayUpdated')}</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Get the latest research insights and exclusive offers.
+                  {t('learn.stayUpdatedDesc')}
                 </p>
                 <button className="w-full py-2 px-4 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors">
-                  Subscribe
+                  {t('learn.subscribe')}
                 </button>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function LearnPage() {
 
           {/* Article Grid */}
           <div className="lg:col-span-3">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">All Articles</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{t('learn.allArticles')}</h2>
             <div className="space-y-6">
               {articles.map((article) => (
                 <Link
@@ -232,21 +232,20 @@ export default function LearnPage() {
         <section className="mt-16 bg-primary-500 rounded-2xl p-8 md:p-12 text-white">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">
-              📘 The Complete Guide to Peptide Research
+              {t('learn.guideTitle')}
             </h2>
             <p className="text-primary-100 mb-6">
-              Download our free comprehensive guide covering peptide fundamentals, storage, reconstitution, 
-              and research protocols. Perfect for researchers of all experience levels.
+              {t('learn.guideDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 transition-colors">
-                Download Free Guide (PDF)
+                {t('learn.downloadGuide')}
               </button>
               <Link
                 href="/faq"
                 className="px-8 py-3 border border-white/50 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
               >
-                View FAQ
+                {t('learn.viewFaq')}
               </Link>
             </div>
           </div>

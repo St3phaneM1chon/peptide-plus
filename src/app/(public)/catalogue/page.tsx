@@ -12,6 +12,8 @@ import Link from 'next/link';
 import { db as prisma } from '@/lib/db';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Product } from '@/types';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 
 export const metadata: Metadata = {
   title: 'Catalogue',
@@ -147,6 +149,8 @@ async function getCategories(): Promise<CategoryWithHierarchy[]> {
 
 export default async function CataloguePage({ searchParams }: CataloguePageProps) {
   const params = await searchParams;
+  const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
   const [products, categories] = await Promise.all([
     getProducts(params),
     getCategories(),
@@ -161,10 +165,10 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold font-heading text-gray-900 mb-2">
-            Catalogue des Produits
+            {t('catalogue.title')}
           </h1>
           <p className="text-gray-600">
-            {products.length} produit{products.length > 1 ? 's' : ''} disponible{products.length > 1 ? 's' : ''}
+            {t('catalogue.productsAvailable', { count: String(products.length) })}
           </p>
         </div>
       </section>
@@ -177,14 +181,14 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
               {/* Recherche */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rechercher
+                  {t('catalogue.search')}
                 </label>
                 <form method="GET">
                   <input
                     type="text"
                     name="search"
                     defaultValue={params.search}
-                    placeholder="Rechercher..."
+                    placeholder={t('catalogue.searchPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </form>
@@ -192,7 +196,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
 
               {/* Catégories hiérarchiques */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Catégories</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">{t('catalogue.categories')}</h3>
                 <ul className="space-y-1">
                   <li>
                     <Link
@@ -203,7 +207,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      Toutes les catégories
+                      {t('catalogue.allCategories')}
                     </Link>
                   </li>
                   {categories.map((parent) => {
@@ -267,7 +271,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      Tous les types
+                      {t('catalogue.allTypes')}
                     </Link>
                   </li>
                   {productTypes.map((type) => (
@@ -280,7 +284,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
-                        {type === 'PEPTIDE' ? 'Peptides' : type === 'SUPPLEMENT' ? 'Suppléments' : 'Accessoires'}
+                        {type === 'PEPTIDE' ? t('catalogue.peptides') : type === 'SUPPLEMENT' ? t('catalogue.supplements') : t('catalogue.accessories')}
                       </Link>
                     </li>
                   ))}
@@ -289,15 +293,15 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
 
               {/* Tri */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Trier par</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">{t('catalogue.sortBy')}</h3>
                 <select
                   defaultValue={params.sort || 'recent'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
-                  <option value="recent">Plus récent</option>
-                  <option value="name">Nom A-Z</option>
-                  <option value="price-asc">Prix croissant</option>
-                  <option value="price-desc">Prix décroissant</option>
+                  <option value="recent">{t('catalogue.sortRecent')}</option>
+                  <option value="name">{t('catalogue.sortName')}</option>
+                  <option value="price-asc">{t('catalogue.sortPriceAsc')}</option>
+                  <option value="price-desc">{t('catalogue.sortPriceDesc')}</option>
                 </select>
               </div>
             </div>
@@ -321,13 +325,13 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                   />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucun produit trouvé
+                  {t('catalogue.noProducts')}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Essayez de modifier vos critères de recherche
+                  {t('catalogue.noProductsHint')}
                 </p>
                 <Link href="/catalogue" className="inline-block px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600">
-                  Voir tous les produits
+                  {t('catalogue.viewAll')}
                 </Link>
               </div>
             ) : (
