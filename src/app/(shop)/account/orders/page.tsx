@@ -692,10 +692,11 @@ export default function OrdersPage() {
                 <div className="border-t border-gray-200 pt-4 mt-2">
                   <div className="flex flex-col md:flex-row gap-4 items-end">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="export-dateFrom" className="block text-sm font-medium text-gray-700 mb-1">
                         From Date (optional)
                       </label>
                       <input
+                        id="export-dateFrom"
                         type="date"
                         value={exportDateFrom}
                         onChange={(e) => setExportDateFrom(e.target.value)}
@@ -703,10 +704,11 @@ export default function OrdersPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="export-dateTo" className="block text-sm font-medium text-gray-700 mb-1">
                         To Date (optional)
                       </label>
                       <input
+                        id="export-dateTo"
                         type="date"
                         value={exportDateTo}
                         onChange={(e) => setExportDateTo(e.target.value)}
@@ -1108,26 +1110,30 @@ function EditAddressModal({
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-firstName" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.firstName') || 'First Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="order-firstName"
                   type="text"
                   value={addressForm.firstName}
                   onChange={(e) => handleChange('firstName', e.target.value)}
                   required
+                  autoComplete="given-name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-lastName" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.lastName') || 'Last Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="order-lastName"
                   type="text"
                   value={addressForm.lastName}
                   onChange={(e) => handleChange('lastName', e.target.value)}
                   required
+                  autoComplete="family-name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
@@ -1135,27 +1141,31 @@ function EditAddressModal({
 
             {/* Address Line 1 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="order-address1" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('checkout.address1') || 'Address Line 1'} <span className="text-red-500">*</span>
               </label>
               <input
+                id="order-address1"
                 type="text"
                 value={addressForm.address1}
                 onChange={(e) => handleChange('address1', e.target.value)}
                 required
+                autoComplete="address-line1"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
 
             {/* Address Line 2 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="order-address2" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('checkout.address2') || 'Address Line 2 (optional)'}
               </label>
               <input
+                id="order-address2"
                 type="text"
                 value={addressForm.address2}
                 onChange={(e) => handleChange('address2', e.target.value)}
+                autoComplete="address-line2"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
@@ -1163,22 +1173,25 @@ function EditAddressModal({
             {/* City, Province, Postal Code */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-city" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.city') || 'City'} <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="order-city"
                   type="text"
                   value={addressForm.city}
                   onChange={(e) => handleChange('city', e.target.value)}
                   required
+                  autoComplete="address-level2"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-province" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.province') || 'Province'} <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="order-province"
                   value={addressForm.province}
                   onChange={(e) => handleChange('province', e.target.value)}
                   required
@@ -1201,14 +1214,16 @@ function EditAddressModal({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.postalCode') || 'Postal Code'} <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="order-postalCode"
                   type="text"
                   value={addressForm.postalCode}
                   onChange={(e) => handleChange('postalCode', e.target.value.toUpperCase())}
                   required
+                  autoComplete="postal-code"
                   pattern="[A-Z][0-9][A-Z] ?[0-9][A-Z][0-9]"
                   placeholder={t('account.ordersSettings.placeholderPostalCode')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -1219,10 +1234,11 @@ function EditAddressModal({
             {/* Country and Phone */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-country" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.country') || 'Country'} <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="order-country"
                   value={addressForm.country}
                   onChange={(e) => handleChange('country', e.target.value)}
                   required
@@ -1233,13 +1249,15 @@ function EditAddressModal({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="order-phone" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('checkout.phone') || 'Phone (optional)'}
                 </label>
                 <input
+                  id="order-phone"
                   type="tel"
                   value={addressForm.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
+                  autoComplete="tel"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>

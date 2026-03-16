@@ -224,10 +224,11 @@ export default function ReturnsPage() {
             <form onSubmit={handleSubmitReturn} className="space-y-6">
               {/* Select Order */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="return-order" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('account.returnsPage.selectOrder')} *
                 </label>
                 <select
+                  id="return-order"
                   value={selectedOrder?.id || ''}
                   onChange={(e) => {
                     const order = eligibleOrders.find((o) => o.id === e.target.value);
@@ -249,10 +250,11 @@ export default function ReturnsPage() {
               {/* Select Item */}
               {selectedOrder && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="return-item" className="block text-sm font-medium text-gray-700 mb-2">
                     {t('account.returnsPage.selectItemToReturn')} *
                   </label>
                   <select
+                    id="return-item"
                     value={selectedItemId}
                     onChange={(e) => setSelectedItemId(e.target.value)}
                     required
@@ -270,10 +272,11 @@ export default function ReturnsPage() {
 
               {/* Reason */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="return-reason" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('account.returnsPage.reasonForReturn')} *
                 </label>
                 <select
+                  id="return-reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   required
@@ -290,10 +293,11 @@ export default function ReturnsPage() {
 
               {/* Details */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="return-details" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('account.returnsPage.additionalDetails')}
                 </label>
                 <textarea
+                  id="return-details"
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   rows={4}
