@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 
 async function getEmployeeStats() {
   const [
@@ -77,6 +79,8 @@ export default async function EmployeeDashboard() {
   }
 
   const stats = await getEmployeeStats();
+  const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,15 +89,15 @@ export default async function EmployeeDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Tableau de bord employé</h1>
-              <p className="text-gray-600">Gestion des clients et des étudiants</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.employee.title')}</h1>
+              <p className="text-gray-600">{t('dashboard.employee.subtitle')}</p>
             </div>
             <div className="flex space-x-3">
               <Link href="/dashboard/employee/clients/nouveau" className="btn-secondary">
-                + Nouveau client
+                {t('dashboard.employee.newClient')}
               </Link>
               <Link href="/admin/produits" className="btn-primary">
-                Gérer les produits
+                {t('dashboard.employee.manageProducts')}
               </Link>
             </div>
           </div>
@@ -104,31 +108,31 @@ export default async function EmployeeDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <StatCard
-            title="Clients (entreprises)"
+            title={t('dashboard.employee.statsClients')}
             value={stats.totalClients}
             icon="🏢"
             color="blue"
           />
           <StatCard
-            title="Clients actifs"
+            title={t('dashboard.employee.statsActiveClients')}
             value={stats.activeCompanies}
             icon="✅"
             color="green"
           />
           <StatCard
-            title="Étudiants"
+            title={t('dashboard.employee.statsStudents')}
             value={stats.totalCustomers}
             icon="👥"
             color="purple"
           />
           <StatCard
-            title="Ventes"
+            title={t('dashboard.employee.statsSales')}
             value={stats.totalPurchases}
             icon="📦"
             color="orange"
           />
           <StatCard
-            title="Revenus"
+            title={t('dashboard.employee.statsRevenue')}
             value={`${Number(stats.revenue).toFixed(0)} $`}
             icon="💰"
             color="emerald"
@@ -145,11 +149,11 @@ export default async function EmployeeDashboard() {
               🏢
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Gestion des clients</h3>
-              <p className="text-sm text-gray-500">Voir et gérer les entreprises clientes</p>
+              <h3 className="font-semibold text-gray-900">{t('dashboard.employee.manageClients')}</h3>
+              <p className="text-sm text-gray-500">{t('dashboard.employee.viewManageCompanies')}</p>
             </div>
           </Link>
-          
+
           <Link
             href="/dashboard/employee/customers"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all flex items-center"
@@ -158,11 +162,11 @@ export default async function EmployeeDashboard() {
               👥
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Tous les étudiants</h3>
-              <p className="text-sm text-gray-500">Liste complète des customers</p>
+              <h3 className="font-semibold text-gray-900">{t('dashboard.employee.allStudents')}</h3>
+              <p className="text-sm text-gray-500">{t('dashboard.employee.customersList')}</p>
             </div>
           </Link>
-          
+
           <Link
             href="/admin/chat"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all flex items-center"
@@ -171,8 +175,8 @@ export default async function EmployeeDashboard() {
               💬
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Support chat</h3>
-              <p className="text-sm text-gray-500">Répondre aux messages</p>
+              <h3 className="font-semibold text-gray-900">{t('dashboard.employee.chatSupport')}</h3>
+              <p className="text-sm text-gray-500">{t('dashboard.employee.answerMessages')}</p>
             </div>
           </Link>
         </div>
@@ -181,15 +185,15 @@ export default async function EmployeeDashboard() {
           {/* Liste des clients récents */}
           <section className="bg-white rounded-xl border border-gray-200">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Clients récents</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.employee.recentClients')}</h2>
               <Link href="/dashboard/employee/clients" className="text-blue-600 hover:underline text-sm">
-                Voir tout
+                {t('dashboard.viewAll')}
               </Link>
             </div>
             <div className="divide-y divide-gray-200">
               {stats.recentCompanies.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  Aucun client enregistré
+                  {t('dashboard.employee.noClientsRegistered')}
                 </div>
               ) : (
                 stats.recentCompanies.map((company) => (
@@ -203,7 +207,7 @@ export default async function EmployeeDashboard() {
                       <div className="ms-3">
                         <p className="font-medium text-gray-900">{company.name}</p>
                         <p className="text-sm text-gray-500">
-                          {company._count.customers} étudiant(s) • {company._count.purchases} achat(s)
+                          {company._count.customers} {t('dashboard.employee.studentsPurchases').replace('{purchases}', String(company._count.purchases))}
                         </p>
                       </div>
                     </div>
@@ -211,7 +215,7 @@ export default async function EmployeeDashboard() {
                       href={`/dashboard/employee/clients/${company.id}`}
                       className="text-blue-600 hover:underline text-sm"
                     >
-                      Gérer →
+                      {t('dashboard.employee.manage')}
                     </Link>
                   </div>
                 ))
@@ -222,15 +226,15 @@ export default async function EmployeeDashboard() {
           {/* Achats récents */}
           <section className="bg-white rounded-xl border border-gray-200">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Dernières ventes</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.employee.latestSales')}</h2>
               <Link href="/dashboard/employee/ventes" className="text-blue-600 hover:underline text-sm">
-                Voir tout
+                {t('dashboard.viewAll')}
               </Link>
             </div>
             <div className="divide-y divide-gray-200">
               {stats.recentPurchases.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  Aucune vente
+                  {t('dashboard.employee.noSales')}
                 </div>
               ) : (
                 stats.recentPurchases.map((purchase) => (
@@ -248,7 +252,7 @@ export default async function EmployeeDashboard() {
                           {Number(purchase.amount).toFixed(2)} $
                         </p>
                         <p className="text-xs text-gray-400">
-                          {new Date(purchase.createdAt).toLocaleDateString('fr-CA')}
+                          {new Date(purchase.createdAt).toLocaleDateString(locale)}
                         </p>
                       </div>
                     </div>

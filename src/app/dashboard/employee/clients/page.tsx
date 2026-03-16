@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 
 interface PageProps {
   searchParams: Promise<{ search?: string; page?: string; status?: string }>;
@@ -73,6 +75,8 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
     page,
     resolvedSearchParams.status
   );
+  const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -82,15 +86,15 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
           <div className="flex items-center justify-between">
             <div>
               <nav className="text-sm text-gray-500 mb-2">
-                <Link href="/dashboard/employee" className="hover:text-gray-700">Dashboard</Link>
+                <Link href="/dashboard/employee" className="hover:text-gray-700">{t('dashboard.employee.breadcrumbDashboard')}</Link>
                 {' / '}
-                <span className="text-gray-900">Clients</span>
+                <span className="text-gray-900">{t('dashboard.employee.breadcrumbClients')}</span>
               </nav>
-              <h1 className="text-2xl font-bold text-gray-900">Gestion des clients</h1>
-              <p className="text-gray-600">{total} entreprise(s) enregistrée(s)</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.employee.clientsTitle')}</h1>
+              <p className="text-gray-600">{t('dashboard.employee.companiesRegistered').replace('{count}', String(total))}</p>
             </div>
             <Link href="/dashboard/employee/clients/nouveau" className="btn-primary">
-              + Nouveau client
+              {t('dashboard.employee.newClient')}
             </Link>
           </div>
         </div>
@@ -105,23 +109,23 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                 type="text"
                 name="search"
                 defaultValue={resolvedSearchParams.search}
-                placeholder="Rechercher par nom ou email..."
+                placeholder={t('dashboard.employee.searchByNameEmail')}
                 className="form-input w-full"
               />
             </div>
             <div>
-              <select name="status" aria-label="Filtrer par statut" defaultValue={resolvedSearchParams.status || ''} className="form-input form-select">
-                <option value="">Tous les statuts</option>
-                <option value="active">Actifs</option>
-                <option value="inactive">Inactifs</option>
+              <select name="status" aria-label={t('dashboard.employee.filter')} defaultValue={resolvedSearchParams.status || ''} className="form-input form-select">
+                <option value="">{t('dashboard.employee.allStatuses')}</option>
+                <option value="active">{t('dashboard.employee.active')}</option>
+                <option value="inactive">{t('dashboard.employee.inactive')}</option>
               </select>
             </div>
             <button type="submit" className="btn-secondary">
-              Filtrer
+              {t('dashboard.employee.filter')}
             </button>
             {(resolvedSearchParams.search || resolvedSearchParams.status) && (
               <Link href="/dashboard/employee/clients" className="btn-outline text-gray-600">
-                Réinitialiser
+                {t('dashboard.employee.reset')}
               </Link>
             )}
           </form>
@@ -132,19 +136,19 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Entreprise</th>
-                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Contact</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Étudiants</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Achats</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
-                <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Actions</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thCompany')}</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thContact')}</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thStudents')}</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thPurchases')}</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thStatus')}</th>
+                <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">{t('dashboard.employee.thActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {companies.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    Aucun client trouvé
+                    {t('dashboard.employee.noClientsFound')}
                   </td>
                 </tr>
               ) : (
@@ -181,7 +185,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {company.isActive ? 'Actif' : 'Inactif'}
+                        {company.isActive ? t('dashboard.employee.statusActive') : t('dashboard.employee.statusInactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-end">
@@ -190,13 +194,13 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                           href={`/dashboard/employee/clients/${company.id}`}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
-                          Voir
+                          {t('dashboard.employee.view')}
                         </Link>
                         <Link
                           href={`/dashboard/employee/clients/${company.id}/edit`}
                           className="text-gray-600 hover:text-gray-800 text-sm font-medium"
                         >
-                          Modifier
+                          {t('dashboard.employee.edit')}
                         </Link>
                       </div>
                     </td>
@@ -210,7 +214,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                Page {currentPage} sur {totalPages} • {total} résultat(s)
+                {t('dashboard.employee.pagination').replace('{page}', String(currentPage)).replace('{total}', String(totalPages)).replace('{count}', String(total))}
               </p>
               <div className="flex space-x-2">
                 {currentPage > 1 && (
@@ -218,7 +222,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                     href={`/dashboard/employee/clients?page=${currentPage - 1}${resolvedSearchParams.search ? `&search=${resolvedSearchParams.search}` : ''}${resolvedSearchParams.status ? `&status=${resolvedSearchParams.status}` : ''}`}
                     className="btn-outline px-4 py-2 text-sm"
                   >
-                    ← Précédent
+                    {t('dashboard.employee.previous')}
                   </Link>
                 )}
                 {currentPage < totalPages && (
@@ -226,7 +230,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                     href={`/dashboard/employee/clients?page=${currentPage + 1}${resolvedSearchParams.search ? `&search=${resolvedSearchParams.search}` : ''}${resolvedSearchParams.status ? `&status=${resolvedSearchParams.status}` : ''}`}
                     className="btn-outline px-4 py-2 text-sm"
                   >
-                    Suivant →
+                    {t('dashboard.employee.next')}
                   </Link>
                 )}
               </div>

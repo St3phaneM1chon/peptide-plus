@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { getApiTranslator } from '@/i18n/server';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -125,7 +126,8 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const session = await auth();
-  const { t } = await getApiTranslator();
+  const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
 
   if (!session?.user) {
     redirect('/auth/signin');
@@ -150,9 +152,9 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/dashboard/employee" className="hover:text-gray-700">Dashboard</Link>
+            <Link href="/dashboard/employee" className="hover:text-gray-700">{t('dashboard.employee.breadcrumbDashboard')}</Link>
             {' / '}
-            <Link href="/dashboard/employee/clients" className="hover:text-gray-700">Clients</Link>
+            <Link href="/dashboard/employee/clients" className="hover:text-gray-700">{t('dashboard.employee.breadcrumbClients')}</Link>
             {' / '}
             <span className="text-gray-900">{company.name}</span>
           </nav>
@@ -187,12 +189,12 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-          <StatCard label="Étudiants" value={stats.totalStudents} />
-          <StatCard label="Formations actives" value={stats.totalCourses} />
-          <StatCard label="Terminées" value={stats.completedCourses} />
-          <StatCard label="Taux réussite" value={`${stats.completionRate}%`} />
-          <StatCard label="Achats" value={stats.totalPurchases} />
-          <StatCard label="Total investi" value={`${Number(stats.totalSpent).toFixed(0)} $`} />
+          <StatCard label={t('dashboard.employee.tabStudents')} value={stats.totalStudents} />
+          <StatCard label={t('dashboard.employee.activeCourses')} value={stats.totalCourses} />
+          <StatCard label={t('dashboard.employee.completedCourses')} value={stats.completedCourses} />
+          <StatCard label={t('dashboard.employee.successRate')} value={`${stats.completionRate}%`} />
+          <StatCard label={t('dashboard.employee.thPurchases')} value={stats.totalPurchases} />
+          <StatCard label={t('dashboard.employee.totalInvested')} value={`${Number(stats.totalSpent).toFixed(0)} $`} />
         </div>
 
         {/* Tabs */}
@@ -202,19 +204,19 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
               href={`/dashboard/employee/clients/${company.id}?tab=etudiants`}
               active={activeTab === 'etudiants'}
             >
-              👥 Étudiants ({company.customers.length})
+              👥 {t('dashboard.employee.tabStudents')} ({company.customers.length})
             </TabLink>
             <TabLink
               href={`/dashboard/employee/clients/${company.id}?tab=achats`}
               active={activeTab === 'achats'}
             >
-              📦 Achats ({company.purchases.length})
+              📦 {t('dashboard.employee.tabPurchases')} ({company.purchases.length})
             </TabLink>
             <TabLink
               href={`/dashboard/employee/clients/${company.id}?tab=infos`}
               active={activeTab === 'infos'}
             >
-              ℹ️ Informations
+              ℹ️ {t('dashboard.employee.tabInfo')}
             </TabLink>
           </nav>
         </div>
@@ -225,22 +227,22 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Étudiant</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Formations</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Complétées</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Ajouté le</th>
-                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Actions</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thStudent')}</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thCourses')}</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thCompleted')}</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thStatus')}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thAddedOn')}</th>
+                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">{t('dashboard.employee.thActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {company.customers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      Aucun étudiant associé à cette entreprise.
+                      {t('dashboard.employee.noStudentsAssociated')}
                       <br />
                       <Link href={`/dashboard/employee/clients/${company.id}/ajouter-etudiant`} className="text-blue-600 hover:underline">
-                        Ajouter un étudiant
+                        {t('dashboard.employee.addStudent')}
                       </Link>
                     </td>
                   </tr>
@@ -261,7 +263,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                             </div>
                             <div className="ms-3">
                               <p className="font-medium text-gray-900">
-                                {cc.user.name || 'Sans nom'}
+                                {cc.user.name || t('dashboard.employee.noName')}
                               </p>
                               <p className="text-sm text-gray-500">{cc.user.email}</p>
                             </div>
@@ -278,27 +280,27 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                         <td className="px-6 py-4 text-center">
                           {completed === total && total > 0 ? (
                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                              Certifié
+                              {t('dashboard.employee.certified')}
                             </span>
                           ) : hasActive ? (
                             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              En cours
+                              {t('dashboard.employee.inProgress')}
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
-                              Inactif
+                              {t('dashboard.employee.statusInactive')}
                             </span>
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(cc.addedAt).toLocaleDateString('fr-CA')}
+                          {new Date(cc.addedAt).toLocaleDateString(locale)}
                         </td>
                         <td className="px-6 py-4 text-end">
                           <Link
                             href={`/dashboard/employee/customers/${cc.customerId}`}
                             className="text-blue-600 hover:underline text-sm"
                           >
-                            Détails →
+                            {t('dashboard.employee.detailsArrow')}
                           </Link>
                         </td>
                       </tr>
@@ -316,18 +318,18 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Produit</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Acheteur</th>
-                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Montant</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Date</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thProduct')}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thBuyer')}</th>
+                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">{t('dashboard.employee.thAmount')}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">{t('dashboard.employee.thDate')}</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">{t('dashboard.employee.thStatus')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {company.purchases.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                      Aucun achat enregistré
+                      {t('dashboard.employee.noPurchasesRecorded')}
                     </td>
                   </tr>
                 ) : (
@@ -343,7 +345,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                         {Number(purchase.amount).toFixed(2)} $
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(purchase.createdAt).toLocaleDateString('fr-CA')}
+                        {new Date(purchase.createdAt).toLocaleDateString(locale)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 text-xs rounded-full ${
@@ -353,7 +355,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                             ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {purchase.status === 'COMPLETED' ? 'Payé' : purchase.status === 'PENDING' ? 'En attente' : 'Annulé'}
+                          {purchase.status === 'COMPLETED' ? t('dashboard.employee.statusPaid') : purchase.status === 'PENDING' ? t('dashboard.employee.statusPending') : t('dashboard.employee.statusCancelled')}
                         </span>
                       </td>
                     </tr>
@@ -369,43 +371,43 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Coordonnées</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.employee.sectionContact')}</h3>
                 <dl className="space-y-4">
                   <div>
-                    <dt className="text-sm text-gray-500">Nom de l'entreprise</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.companyName')}</dt>
                     <dd className="text-gray-900 font-medium">{company.name}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">Email de contact</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.contactEmail')}</dt>
                     <dd className="text-gray-900">{company.contactEmail}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">Téléphone</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.phone')}</dt>
                     <dd className="text-gray-900">{company.phone || '—'}</dd>
                   </div>
                 </dl>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Facturation</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.employee.sectionBilling')}</h3>
                 <dl className="space-y-4">
                   <div>
-                    <dt className="text-sm text-gray-500">Adresse</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.address')}</dt>
                     <dd className="text-gray-900">{company.billingAddress || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">Ville</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.city')}</dt>
                     <dd className="text-gray-900">
                       {company.billingCity ? `${company.billingCity}, ${company.billingState} ${company.billingPostal}` : '—'}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm text-gray-500">Pays</dt>
+                    <dt className="text-sm text-gray-500">{t('dashboard.employee.country')}</dt>
                     <dd className="text-gray-900">{company.billingCountry || '—'}</dd>
                   </div>
                 </dl>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Propriétaire du compte</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.employee.accountOwner')}</h3>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                     <span className="text-gray-600 font-semibold">
@@ -413,21 +415,21 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                     </span>
                   </div>
                   <div className="ms-3">
-                    <p className="font-medium text-gray-900">{company.owner.name || 'Sans nom'}</p>
+                    <p className="font-medium text-gray-900">{company.owner.name || t('dashboard.employee.noName')}</p>
                     <p className="text-sm text-gray-500">{company.owner.email}</p>
                   </div>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Statut</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.employee.statusSection')}</h3>
                 <div className="flex items-center space-x-4">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     company.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {company.isActive ? '✓ Actif' : '✕ Inactif'}
+                    {company.isActive ? t('dashboard.employee.activeStatus') : t('dashboard.employee.inactiveStatus')}
                   </span>
                   <span className="text-sm text-gray-500">
-                    Client depuis le {new Date(company.createdAt).toLocaleDateString('fr-CA')}
+                    {t('dashboard.employee.clientSince')} {new Date(company.createdAt).toLocaleDateString(locale)}
                   </span>
                 </div>
               </div>
