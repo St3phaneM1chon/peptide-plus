@@ -150,7 +150,7 @@ export async function POST(
         reason = parsed.data.reason;
       }
     } catch (bodyErr) {
-      console.error('[orders/cancel] Body parse failed, using default reason', { error: bodyErr instanceof Error ? bodyErr.message : String(bodyErr) });
+      logger.error('[orders/cancel] Body parse failed, using default reason', { error: bodyErr instanceof Error ? bodyErr.message : String(bodyErr) });
     }
 
     // ── PURCHASE-WORKFLOW FIX: If the order was PAID, initiate refund via the

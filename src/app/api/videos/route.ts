@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       }
     } catch (sessionErr) {
       // No session — public only (expected for unauthenticated visitors)
-      console.error('[videos] Session check failed', { error: sessionErr instanceof Error ? sessionErr.message : String(sessionErr) });
+      logger.warn('[videos] Session check failed', { error: sessionErr instanceof Error ? sessionErr.message : String(sessionErr) });
     }
 
     // Build where clause

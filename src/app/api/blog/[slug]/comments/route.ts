@@ -103,7 +103,7 @@ async function getComments(blogPostId: string): Promise<BlogComment[]> {
     );
     return comments;
   } catch (dbErr) {
-    console.error('[blog/comments] Failed to query comments (table may not exist)', { error: dbErr instanceof Error ? dbErr.message : String(dbErr) });
+    logger.error('[blog/comments] Failed to query comments (table may not exist)', { error: dbErr instanceof Error ? dbErr.message : String(dbErr) });
     return [];
   }
 }

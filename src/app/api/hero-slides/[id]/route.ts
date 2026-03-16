@@ -183,7 +183,7 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       newValue: slideData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[hero-slides/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[hero-slides/id] Non-blocking operation failed:', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({ slide: updated });
   } catch (error) {
@@ -222,7 +222,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
       previousValue: { title: existing.title, slug: existing.slug, backgroundUrl: existing.backgroundUrl },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((err) => { console.error('[hero-slides/id] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[hero-slides/id] Non-blocking operation failed:', { error: err instanceof Error ? err.message : String(err) }); });
 
     await prisma.heroSlide.delete({ where: { id } });
 

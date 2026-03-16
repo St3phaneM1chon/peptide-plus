@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(url, 302);
         }
       } catch (decodeErr) {
-        console.error('[click-tracking] URL decode/redirect fallback failed', { error: decodeErr instanceof Error ? decodeErr.message : String(decodeErr) });
+        logger.error('[click-tracking] URL decode/redirect fallback failed', { error: decodeErr instanceof Error ? decodeErr.message : String(decodeErr) });
       }
     }
     return NextResponse.json({ error: 'Tracking error' }, { status: 500 });

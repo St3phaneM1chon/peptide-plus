@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
           subscriber.quit();
         } catch (quitErr) {
           // Connection already closed — expected during SSE cleanup
-          console.error('[chat:stream] Redis subscriber quit failed', { error: quitErr instanceof Error ? quitErr.message : String(quitErr) });
+          logger.error('[chat:stream] Redis subscriber quit failed', { error: quitErr instanceof Error ? quitErr.message : String(quitErr) });
         }
       }
     };
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
             controller.enqueue(encoder.encode(': heartbeat\n\n'));
           } catch (hbErr) {
             // Controller already closed — expected during SSE cleanup
-            console.error('[chat:stream] Heartbeat enqueue failed (stream closed)', { error: hbErr instanceof Error ? hbErr.message : String(hbErr) });
+            logger.error('[chat:stream] Heartbeat enqueue failed (stream closed)', { error: hbErr instanceof Error ? hbErr.message : String(hbErr) });
           }
         }, 30000);
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
             controller.close();
           } catch (closeErr) {
             // Controller already closed — expected during SSE cleanup
-            console.error('[chat:stream] Controller close failed', { error: closeErr instanceof Error ? closeErr.message : String(closeErr) });
+            logger.error('[chat:stream] Controller close failed', { error: closeErr instanceof Error ? closeErr.message : String(closeErr) });
           }
         });
       },

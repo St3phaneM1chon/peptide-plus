@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
       userName: sender === 'ADMIN' ? (session?.user?.name || 'Support') : undefined,
       data: { message: savedMessage },
       timestamp: Date.now(),
-    }).catch((err) => { console.error('[chat/message] Non-blocking operation failed:', err); });
+    }).catch((err) => { logger.error('[chat/message] Non-blocking operation failed:', { error: err instanceof Error ? err.message : String(err) }); });
 
     // Si réponse du bot, la sauvegarder aussi
     // FIX: F-062 - Removed duplicate lastMessageAt update; the update above already covers this
@@ -365,7 +365,7 @@ export async function POST(request: NextRequest) {
         userName: 'BioCycle Assistant',
         data: { message: savedBotMessage, botMessage: true },
         timestamp: Date.now(),
-      }).catch((err) => { console.error('[chat/message] Non-blocking operation failed:', err); });
+      }).catch((err) => { logger.error('[chat/message] Non-blocking operation failed:', { error: err instanceof Error ? err.message : String(err) }); });
     }
 
     return NextResponse.json({
