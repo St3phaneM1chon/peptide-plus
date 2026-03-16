@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, FileText, RefreshCw } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 
 interface DashboardData {
   revenue: number;
@@ -13,11 +14,12 @@ interface DashboardData {
   recentTransactions: Array<{ id: string; description: string; date: string; amount: number; type: string }>;
 }
 
-function fmt(n: number) { return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(n); }
-
 export default function MobileDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t, locale } = useI18n();
+
+  const fmt = (n: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(n);
 
   const load = async () => {
     setLoading(true);
@@ -31,19 +33,19 @@ export default function MobileDashboard() {
   useEffect(() => { load(); }, []);
 
   if (loading) return <div className="flex items-center justify-center h-64"><RefreshCw className="w-6 h-6 animate-spin text-purple-600" /></div>;
-  if (!data) return <p className="text-center text-gray-500 mt-8">Impossible de charger le tableau de bord</p>;
+  if (!data) return <p className="text-center text-gray-500 mt-8">{t('mobile.dashboard.loadError')}</p>;
 
   const cards = [
-    { label: 'Revenus MTD', value: fmt(data.revenue), icon: TrendingUp, color: 'bg-green-50 text-green-700' },
-    { label: 'Dépenses MTD', value: fmt(data.expenses), icon: TrendingDown, color: 'bg-red-50 text-red-700' },
-    { label: 'Profit', value: fmt(data.profit), icon: DollarSign, color: data.profit >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' },
-    { label: 'Factures en attente', value: `${data.outstandingCount} (${fmt(data.outstandingTotal)})`, icon: FileText, color: 'bg-amber-50 text-amber-700' },
+    { label: t('mobile.dashboard.revenueMTD'), value: fmt(data.revenue), icon: TrendingUp, color: 'bg-green-50 text-green-700' },
+    { label: t('mobile.dashboard.expensesMTD'), value: fmt(data.expenses), icon: TrendingDown, color: 'bg-red-50 text-red-700' },
+    { label: t('mobile.dashboard.profit'), value: fmt(data.profit), icon: DollarSign, color: data.profit >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' },
+    { label: t('mobile.dashboard.outstanding'), value: `${data.outstandingCount} (${fmt(data.outstandingTotal)})`, icon: FileText, color: 'bg-amber-50 text-amber-700' },
   ];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Tableau de Bord</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('mobile.dashboard.title')}</h2>
         <button onClick={load} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Refresh"><RefreshCw className="w-4 h-4 text-gray-500" /></button>
       </div>
 
@@ -62,7 +64,7 @@ export default function MobileDashboard() {
 
       {/* Profit Margin */}
       <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-        <p className="text-sm text-purple-600 font-medium">Marge bénéficiaire</p>
+        <p className="text-sm text-purple-600 font-medium">{t('mobile.dashboard.profitMargin')}</p>
         <div className="flex items-end gap-2 mt-1">
           <span className="text-3xl font-bold text-purple-800">{data.profitMargin}%</span>
         </div>
@@ -73,20 +75,20 @@ export default function MobileDashboard() {
 
       {/* Recent Transactions */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-700 px-4 pt-3 pb-2">Transactions récentes</h3>
+        <h3 className="text-sm font-semibold text-gray-700 px-4 pt-3 pb-2">{t('mobile.dashboard.recentTransactions')}</h3>
         <div className="divide-y divide-gray-50">
-          {data.recentTransactions.map((t) => (
-            <div key={t.id} className="px-4 py-2.5 flex items-center justify-between">
+          {data.recentTransactions.map((tx) => (
+            <div key={tx.id} className="px-4 py-2.5 flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-800 truncate">{t.description}</p>
-                <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString('fr-CA')}</p>
+                <p className="text-sm text-gray-800 truncate">{tx.description}</p>
+                <p className="text-xs text-gray-400">{new Date(tx.date).toLocaleDateString(locale)}</p>
               </div>
-              <span className={`text-sm font-semibold ms-3 ${t.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'}`}>
-                {t.type === 'EXPENSE' ? '-' : '+'}{fmt(t.amount)}
+              <span className={`text-sm font-semibold ms-3 ${tx.type === 'EXPENSE' ? 'text-red-600' : 'text-green-600'}`}>
+                {tx.type === 'EXPENSE' ? '-' : '+'}{fmt(tx.amount)}
               </span>
             </div>
           ))}
-          {data.recentTransactions.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">Aucune transaction</p>}
+          {data.recentTransactions.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">{t('mobile.dashboard.noTransactions')}</p>}
         </div>
       </div>
     </div>

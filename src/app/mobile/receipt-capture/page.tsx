@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Camera, Upload, FileText, Check, Edit3 } from 'lucide-react';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useI18n } from '@/i18n/client';
 
 interface ParsedReceipt {
   vendor: string;
@@ -18,6 +19,7 @@ export default function ReceiptCapture() {
   const [parsed, setParsed] = useState<ParsedReceipt | null>(null);
   const [saved, setSaved] = useState(false);
   const [editing, setEditing] = useState(false);
+  const { t } = useI18n();
 
   const handleFile = async (file: File) => {
     const reader = new FileReader();
@@ -57,61 +59,61 @@ export default function ReceiptCapture() {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center"><Check className="w-8 h-8 text-green-600" /></div>
-        <p className="text-lg font-semibold text-green-700">Reçu enregistré!</p>
-        <button onClick={reset} className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-medium">Nouveau reçu</button>
+        <p className="text-lg font-semibold text-green-700">{t('mobile.receipts.savedSuccess')}</p>
+        <button onClick={reset} className="bg-purple-600 text-white px-6 py-2.5 rounded-xl font-medium">{t('mobile.receipts.newReceipt')}</button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900">Capture de Reçu</h2>
+      <h2 className="text-xl font-bold text-gray-900">{t('mobile.receipts.title')}</h2>
 
       {!imagePreview ? (
         <div className="space-y-3">
           <button onClick={() => fileRef.current?.click()} className="w-full bg-purple-600 text-white py-4 rounded-2xl flex items-center justify-center gap-3 text-lg font-semibold shadow-lg">
-            <Camera className="w-6 h-6" /> Prendre Photo
+            <Camera className="w-6 h-6" /> {t('mobile.receipts.takePhoto')}
           </button>
           <button onClick={() => fileRef.current?.click()} className="w-full bg-white text-purple-700 py-4 rounded-2xl flex items-center justify-center gap-3 text-lg font-semibold border-2 border-purple-200">
-            <Upload className="w-6 h-6" /> Téléverser
+            <Upload className="w-6 h-6" /> {t('mobile.receipts.upload')}
           </button>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" aria-label="Upload receipt photo" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-          <p className="text-center text-sm text-gray-400 mt-4">Prenez une photo de votre reçu pour extraction automatique</p>
+          <p className="text-center text-sm text-gray-400 mt-4">{t('mobile.receipts.helpText')}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {/* Preview */}
           <div className="bg-gray-100 rounded-xl overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imagePreview} alt="Reçu" className="w-full max-h-48 object-contain" />
+            <img src={imagePreview} alt={t('mobile.receipts.receiptImage')} className="w-full max-h-48 object-contain" />
           </div>
 
           {processing && (
             <div className="flex items-center justify-center gap-2 py-4">
               <FileText className="w-5 h-5 animate-pulse text-purple-600" />
-              <span className="text-purple-600 font-medium">Traitement OCR...</span>
+              <span className="text-purple-600 font-medium">{t('mobile.receipts.processing')}</span>
             </div>
           )}
 
           {/* Parsed fields */}
           {parsed && editing && (
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 space-y-3">
-              <div className="flex items-center gap-2 text-sm text-purple-600 font-medium mb-2"><Edit3 className="w-4 h-4" /> Vérifiez les informations</div>
+              <div className="flex items-center gap-2 text-sm text-purple-600 font-medium mb-2"><Edit3 className="w-4 h-4" /> {t('mobile.receipts.verifyInfo')}</div>
               <div>
-                <label className="text-xs text-gray-500">Fournisseur</label>
+                <label className="text-xs text-gray-500">{t('mobile.receipts.vendor')}</label>
                 <input type="text" value={parsed.vendor} onChange={e => setParsed({ ...parsed, vendor: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
               </div>
               <div>
-                <label className="text-xs text-gray-500">Montant ($)</label>
+                <label className="text-xs text-gray-500">{t('mobile.receipts.amountDollar')}</label>
                 <input type="number" value={parsed.amount} onChange={e => setParsed({ ...parsed, amount: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" inputMode="decimal" />
               </div>
               <div>
-                <label className="text-xs text-gray-500">Date</label>
+                <label className="text-xs text-gray-500">{t('mobile.receipts.date')}</label>
                 <input type="date" value={parsed.date} onChange={e => setParsed({ ...parsed, date: e.target.value })} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
               </div>
               <div className="flex gap-2 mt-4">
-                <button onClick={handleSave} disabled={processing} className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50">Sauvegarder</button>
-                <button onClick={reset} className="px-4 py-3 rounded-xl border border-gray-200 text-gray-600">Annuler</button>
+                <button onClick={handleSave} disabled={processing} className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50">{t('mobile.receipts.save')}</button>
+                <button onClick={reset} className="px-4 py-3 rounded-xl border border-gray-200 text-gray-600">{t('mobile.receipts.cancel')}</button>
               </div>
             </div>
           )}

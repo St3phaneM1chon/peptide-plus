@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Clock } from 'lucide-react';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useI18n } from '@/i18n/client';
 
 interface TimerData {
   running: { id: string; startTime: string; projectName: string | null; description: string } | null;
@@ -30,6 +31,7 @@ export default function MobileTimeTracker() {
   const [elapsed, setElapsed] = useState('00:00:00');
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout>();
+  const { t, locale } = useI18n();
 
   const load = async () => {
     try {
@@ -65,7 +67,7 @@ export default function MobileTimeTracker() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-gray-900">Chronomètre</h2>
+      <h2 className="text-xl font-bold text-gray-900">{t('mobile.timeTracker.title')}</h2>
 
       {/* Timer Display */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
@@ -74,40 +76,40 @@ export default function MobileTimeTracker() {
         <button onClick={toggleTimer} disabled={loading} className={`mt-6 w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg transition-all ${data?.running ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
           {data?.running ? <Square className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ms-1" />}
         </button>
-        <p className="text-xs text-gray-400 mt-3">{data?.running ? 'Appuyez pour arrêter' : 'Appuyez pour démarrer'}</p>
+        <p className="text-xs text-gray-400 mt-3">{data?.running ? t('mobile.timeTracker.pressToStop') : t('mobile.timeTracker.pressToStart')}</p>
       </div>
 
       {/* Today / Week Summary */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 text-center">
           <Clock className="w-4 h-4 text-purple-500 mx-auto mb-1" />
-          <p className="text-xs text-gray-500">Aujourd&apos;hui</p>
+          <p className="text-xs text-gray-500">{t('mobile.timeTracker.today')}</p>
           <p className="text-lg font-bold text-gray-900">{fmtDuration(data?.todayTotal || 0)}</p>
         </div>
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 text-center">
           <Clock className="w-4 h-4 text-indigo-500 mx-auto mb-1" />
-          <p className="text-xs text-gray-500">Cette semaine</p>
+          <p className="text-xs text-gray-500">{t('mobile.timeTracker.thisWeek')}</p>
           <p className="text-lg font-bold text-gray-900">{fmtDuration(data?.weekTotal || 0)}</p>
         </div>
       </div>
 
       {/* Today's Entries */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-700 px-4 pt-3 pb-2">Aujourd&apos;hui</h3>
+        <h3 className="text-sm font-semibold text-gray-700 px-4 pt-3 pb-2">{t('mobile.timeTracker.today')}</h3>
         <div className="divide-y divide-gray-50">
           {(data?.todayEntries || []).map(e => (
             <div key={e.id} className="px-4 py-2.5 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-800">{e.description || e.projectName || 'Sans projet'}</p>
+                <p className="text-sm text-gray-800">{e.description || e.projectName || t('mobile.timeTracker.noProject')}</p>
                 <p className="text-xs text-gray-400">
-                  {new Date(e.startTime).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
-                  {e.endTime && ` - ${new Date(e.endTime).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}`}
+                  {new Date(e.startTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                  {e.endTime && ` - ${new Date(e.endTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`}
                 </p>
               </div>
               {e.duration != null && <span className="text-sm font-semibold text-gray-600">{fmtDuration(e.duration)}</span>}
             </div>
           ))}
-          {(data?.todayEntries || []).length === 0 && <p className="px-4 py-4 text-sm text-gray-400 text-center">Aucune entrée aujourd&apos;hui</p>}
+          {(data?.todayEntries || []).length === 0 && <p className="px-4 py-4 text-sm text-gray-400 text-center">{t('mobile.timeTracker.noEntries')}</p>}
         </div>
       </div>
     </div>

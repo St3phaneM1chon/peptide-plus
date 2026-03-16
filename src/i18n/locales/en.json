@@ -11354,7 +11354,12 @@
       "expenses": "Expenses",
       "profit": "Profit",
       "outstanding": "Outstanding Invoices",
-      "recentTransactions": "Recent Transactions"
+      "recentTransactions": "Recent Transactions",
+      "loadError": "Unable to load dashboard",
+      "revenueMTD": "Revenue MTD",
+      "expensesMTD": "Expenses MTD",
+      "profitMargin": "Profit Margin",
+      "noTransactions": "No transactions"
     },
     "receipts": {
       "title": "Receipt Capture",
@@ -11365,7 +11370,14 @@
       "amount": "Amount",
       "date": "Date",
       "category": "Category",
-      "save": "Save"
+      "save": "Save",
+      "helpText": "Take a photo of your receipt for automatic extraction",
+      "receiptImage": "Receipt",
+      "verifyInfo": "Verify the information",
+      "amountDollar": "Amount ($)",
+      "cancel": "Cancel",
+      "savedSuccess": "Receipt saved!",
+      "newReceipt": "New receipt"
     },
     "expenses": {
       "title": "Expenses",
@@ -11376,7 +11388,24 @@
       "recent": "Recent",
       "today": "Today",
       "thisWeek": "This Week",
-      "thisMonth": "This Month"
+      "thisMonth": "This Month",
+      "newExpense": "New Expense",
+      "amountCAD": "Amount (CAD)",
+      "descriptionPlaceholder": "Description...",
+      "noteOptional": "Note (optional)",
+      "saving": "Saving...",
+      "save": "Save",
+      "noRecent": "No recent expenses",
+      "categories": {
+        "office": "Office",
+        "transport": "Transport",
+        "meals": "Meals",
+        "supplies": "Supplies",
+        "energy": "Energy",
+        "rent": "Rent",
+        "services": "Services",
+        "other": "Other"
+      }
     },
     "timeTracker": {
       "title": "Time Tracker",
@@ -11385,7 +11414,12 @@
       "project": "Project",
       "todayTotal": "Today Total",
       "weekTotal": "Week Total",
-      "noProject": "No Project"
+      "noProject": "No Project",
+      "pressToStop": "Tap to stop",
+      "pressToStart": "Tap to start",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "noEntries": "No entries today"
     },
     "settings": {
       "title": "Settings",
@@ -11396,7 +11430,15 @@
       "paymentReceived": "Payment Received",
       "offline": "Offline Mode",
       "storage": "Storage",
-      "clearCache": "Clear Cache"
+      "clearCache": "Clear Cache",
+      "enablePush": "Enable push notifications",
+      "status": "Status",
+      "online": "Online",
+      "offlineStatus": "Offline",
+      "pendingChanges": "Pending changes",
+      "lastSync": "Last sync",
+      "syncNow": "Sync now",
+      "used": "used"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -11409,7 +11451,9 @@
       "banner": "Offline Mode",
       "syncing": "Syncing...",
       "syncComplete": "Synced",
-      "pendingChanges": "pending changes"
+      "pendingChanges": "pending changes",
+      "syncMessage": "Changes will be synced when you reconnect",
+      "syncResult": "Synced: {succeeded} succeeded, {failed} failed"
     },
     "invoice": {
       "title": "New Invoice",
@@ -11419,8 +11463,20 @@
       "amount": "Amount",
       "tax": "Tax",
       "total": "Total",
-      "send": "Send"
-    }
+      "send": "Send",
+      "clientName": "Client name *",
+      "clientEmail": "Client email",
+      "lines": "Lines",
+      "taxLabel": "GST/QST (14.975%)",
+      "subtotal": "Subtotal",
+      "tps": "GST (5%)",
+      "tvq": "QST (9.975%)",
+      "createdSuccess": "Invoice created!",
+      "newInvoice": "New invoice",
+      "sending": "Sending...",
+      "create": "Create invoice"
+    },
+    "header": "BioCycle Accounting"
   },
   "nav": {
     "accessories": "Accessories",

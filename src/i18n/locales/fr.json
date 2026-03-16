@@ -11354,7 +11354,12 @@
       "expenses": "Dépenses",
       "profit": "Profit",
       "outstanding": "Factures en attente",
-      "recentTransactions": "Transactions récentes"
+      "recentTransactions": "Transactions récentes",
+      "loadError": "Impossible de charger le tableau de bord",
+      "revenueMTD": "Revenus MTD",
+      "expensesMTD": "Dépenses MTD",
+      "profitMargin": "Marge bénéficiaire",
+      "noTransactions": "Aucune transaction"
     },
     "receipts": {
       "title": "Capture Reçus",
@@ -11365,7 +11370,14 @@
       "amount": "Montant",
       "date": "Date",
       "category": "Catégorie",
-      "save": "Sauvegarder"
+      "save": "Sauvegarder",
+      "helpText": "Prenez une photo de votre reçu pour extraction automatique",
+      "receiptImage": "Reçu",
+      "verifyInfo": "Vérifiez les informations",
+      "amountDollar": "Montant ($)",
+      "cancel": "Annuler",
+      "savedSuccess": "Reçu enregistré!",
+      "newReceipt": "Nouveau reçu"
     },
     "expenses": {
       "title": "Dépenses",
@@ -11376,7 +11388,24 @@
       "recent": "Récentes",
       "today": "Aujourd'hui",
       "thisWeek": "Cette semaine",
-      "thisMonth": "Ce mois"
+      "thisMonth": "Ce mois",
+      "newExpense": "Nouvelle Dépense",
+      "amountCAD": "Montant (CAD)",
+      "descriptionPlaceholder": "Description...",
+      "noteOptional": "Note (optionnel)",
+      "saving": "Enregistrement...",
+      "save": "Sauvegarder",
+      "noRecent": "Aucune dépense récente",
+      "categories": {
+        "office": "Bureau",
+        "transport": "Transport",
+        "meals": "Repas",
+        "supplies": "Fournitures",
+        "energy": "Énergie",
+        "rent": "Loyer",
+        "services": "Services",
+        "other": "Autre"
+      }
     },
     "timeTracker": {
       "title": "Chronomètre",
@@ -11385,7 +11414,12 @@
       "project": "Projet",
       "todayTotal": "Total aujourd'hui",
       "weekTotal": "Total semaine",
-      "noProject": "Sans projet"
+      "noProject": "Sans projet",
+      "pressToStop": "Appuyez pour arrêter",
+      "pressToStart": "Appuyez pour démarrer",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "noEntries": "Aucune entrée aujourd'hui"
     },
     "settings": {
       "title": "Paramètres",
@@ -11396,7 +11430,15 @@
       "paymentReceived": "Paiement reçu",
       "offline": "Mode hors-ligne",
       "storage": "Stockage",
-      "clearCache": "Vider le cache"
+      "clearCache": "Vider le cache",
+      "enablePush": "Activer les notifications push",
+      "status": "État",
+      "online": "En ligne",
+      "offlineStatus": "Hors-ligne",
+      "pendingChanges": "Modifications en attente",
+      "lastSync": "Dernière sync",
+      "syncNow": "Synchroniser maintenant",
+      "used": "utilisé"
     },
     "nav": {
       "dashboard": "Tableau",
@@ -11409,7 +11451,9 @@
       "banner": "Mode hors-ligne",
       "syncing": "Synchronisation...",
       "syncComplete": "Synchronisé",
-      "pendingChanges": "changements en attente"
+      "pendingChanges": "changements en attente",
+      "syncMessage": "Les modifications seront synchronisées",
+      "syncResult": "Synchronisé: {succeeded} réussis, {failed} échoués"
     },
     "invoice": {
       "title": "Nouvelle Facture",
@@ -11419,8 +11463,20 @@
       "amount": "Montant",
       "tax": "Taxes",
       "total": "Total",
-      "send": "Envoyer"
-    }
+      "send": "Envoyer",
+      "clientName": "Nom du client *",
+      "clientEmail": "Email du client",
+      "lines": "Lignes",
+      "taxLabel": "TPS/TVQ (14.975%)",
+      "subtotal": "Sous-total",
+      "tps": "TPS (5%)",
+      "tvq": "TVQ (9.975%)",
+      "createdSuccess": "Facture créée!",
+      "newInvoice": "Nouvelle facture",
+      "sending": "Envoi...",
+      "create": "Créer la facture"
+    },
+    "header": "BioCycle Compta"
   },
   "nav": {
     "home": "Accueil",
