@@ -140,7 +140,9 @@ export default function ChangePasswordPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <fieldset disabled={loading}>
             {/* Current Password */}
+            <div className="space-y-6">
             <div>
               <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('account.currentPassword')}
@@ -281,6 +283,8 @@ export default function ChangePasswordPage() {
                 )}
               </button>
             </div>
+            </div>
+            </fieldset>
           </form>
         </div>
 

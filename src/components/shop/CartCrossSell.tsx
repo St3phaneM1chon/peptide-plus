@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
@@ -31,6 +31,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
   const [recommendations, setRecommendations] = useState<RecommendedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
+  const addingProductIdRef = useRef<string | null>(null);
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
   const { t, locale } = useI18n();
@@ -68,6 +69,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
 
   const handleAddToCart = async (product: RecommendedProduct) => {
     setAddingProductId(product.id);
+    addingProductIdRef.current = product.id;
 
     try {
       // Fetch product details to get first available format
@@ -108,7 +110,14 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
       console.error('Error adding to cart:', error);
       toast.error(t('shop.addToCartError') || 'Failed to add to cart');
     } finally {
-      setTimeout(() => setAddingProductId(null), 1000);
+      const capturedId = product.id;
+      setTimeout(() => {
+        // Only clear if this product is still the one showing as "adding"
+        if (addingProductIdRef.current === capturedId) {
+          setAddingProductId(null);
+          addingProductIdRef.current = null;
+        }
+      }, 1000);
     }
   };
 

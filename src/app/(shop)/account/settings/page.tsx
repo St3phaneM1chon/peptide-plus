@@ -104,7 +104,9 @@ function SettingsContent() {
             }));
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setMessage({ type: 'error', text: t('account.errorGeneric') || 'Failed to load profile data. Please try again.' });
+        });
       // Load saved address from localStorage or API
       const savedAddress = localStorage.getItem('shipping_address');
       if (savedAddress) {
@@ -359,6 +361,7 @@ function SettingsContent() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <form onSubmit={handleProfileSubmit} className="space-y-6">
+                <fieldset disabled={isLoading}>
                 <div>
                   <label htmlFor="settings-name" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.fullName') }
@@ -418,6 +421,7 @@ function SettingsContent() {
                   ) : (
                     t('account.saveChanges')                   )}
                 </button>
+                </fieldset>
               </form>
             )}
 
@@ -438,6 +442,8 @@ function SettingsContent() {
                   </div>
                 ) : (
                   <form onSubmit={handlePasswordSubmit} className="space-y-6">
+                    <fieldset disabled={isLoading}>
+                    <div className="space-y-6">
                     <div>
                       <label htmlFor="settings-currentPwd" className="block text-sm font-medium text-neutral-700 mb-2">
                         {t('account.currentPassword') }
@@ -503,6 +509,8 @@ function SettingsContent() {
                       ) : (
                         t('account.updatePassword')                       )}
                     </button>
+                    </div>
+                    </fieldset>
                   </form>
                 )}
               </>
@@ -511,6 +519,7 @@ function SettingsContent() {
             {/* Address Tab */}
             {activeTab === 'address' && (
               <form onSubmit={handleAddressSubmit} className="space-y-6">
+                <fieldset disabled={isLoading}>
                 <div>
                   <label htmlFor="settings-address" className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('account.streetAddress') }
@@ -601,6 +610,7 @@ function SettingsContent() {
                   ) : (
                     t('account.saveAddress')                   )}
                 </button>
+                </fieldset>
               </form>
             )}
             {/* Security / MFA Tab */}

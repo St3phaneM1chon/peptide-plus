@@ -285,6 +285,8 @@ export default function ProfilePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <fieldset disabled={saving}>
+            <div className="space-y-6">
             <div>
               <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('account.fullName')}
@@ -405,6 +407,8 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
+            </div>
+            </fieldset>
           </form>
         </div>
 

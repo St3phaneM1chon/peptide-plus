@@ -510,6 +510,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
               </div>
             ) : (
               <form onSubmit={handleSubmitReview} className="p-6 space-y-6">
+                <fieldset disabled={isSubmitting}>
                 <div>
                   <label className="block text-sm font-medium mb-2">{t('reviews.yourRating') || 'Your Rating'}</label>
                   <StarRating 
@@ -582,6 +583,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
                     t('reviews.submitReview') || 'Submit Review'
                   )}
                 </button>
+                </fieldset>
               </form>
             )}
           </div>

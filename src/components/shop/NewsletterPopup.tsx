@@ -12,6 +12,7 @@ export default function NewsletterPopup() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [marketingConsent, setMarketingConsent] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -113,6 +114,7 @@ export default function NewsletterPopup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setSubmitError('');
 
     try {
       // CASL-compliant: Use double opt-in endpoint
@@ -130,20 +132,22 @@ export default function NewsletterPopup() {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to subscribe');
       }
+
+      // Save subscription locally as backup
+      localStorage.setItem('newsletter_subscribed', 'true');
+      localStorage.setItem('newsletter_email', email);
+
+      // Generate discount code
+      const discountCode = `WELCOME10-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+      localStorage.setItem('discount_code', discountCode);
+
+      setIsSubmitted(true);
     } catch (error) {
       console.error('Newsletter subscription error:', error);
+      setSubmitError(t('newsletter.subscribeError') || 'Subscription failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Save subscription locally as backup
-    localStorage.setItem('newsletter_subscribed', 'true');
-    localStorage.setItem('newsletter_email', email);
-
-    // Generate discount code
-    const discountCode = `WELCOME10-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-    localStorage.setItem('discount_code', discountCode);
-
-    setIsLoading(false);
-    setIsSubmitted(true);
   };
 
   if (!isOpen) return null;
@@ -209,6 +213,10 @@ export default function NewsletterPopup() {
                     <p className="text-xs text-red-500 mt-1">{emailError}</p>
                   )}
                 </div>
+
+                {submitError && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{submitError}</p>
+                )}
 
                 {/* RGPD/LCAP: Explicit marketing consent checkbox (opt-in) */}
                 <div className="flex items-start gap-3">
