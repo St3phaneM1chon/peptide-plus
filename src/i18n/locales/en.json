@@ -9600,7 +9600,8 @@
     },
     "heroSubtitle": "Research, protocols and best practices in research peptides",
     "readTime": "min read",
-    "allCategories": "All"
+    "allCategories": "All",
+    "backToBlog": "Back to blog"
   },
   "testimonials": {
     "title": "Testimonials",
@@ -10047,6 +10048,7 @@
     "yes": "Yes",
     "yesterday": "Yesterday",
     "all": "All",
+    "notFoundDescription": "The page you are looking for does not exist or has been moved.",
     "add": "Add",
     "active": "Active",
     "inactive": "Inactive",
@@ -12398,6 +12400,7 @@
     "bundleAdded": "Bundle added to cart!",
     "bundleDiscount": "Bundle Discount",
     "bundleNotFound": "Bundle not found",
+    "categoryNotFound": "Category not found",
     "bundlePrice": "Bundle Price",
     "bundles": "Bundles & Kits",
     "bundlesDescription": "Save more with our pre-configured product bundles. Get everything you need at a discounted price.",

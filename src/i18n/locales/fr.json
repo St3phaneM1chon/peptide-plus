@@ -9600,7 +9600,8 @@
     },
     "heroSubtitle": "Recherche, protocoles et bonnes pratiques en peptides de recherche",
     "readTime": "min de lecture",
-    "allCategories": "Tous"
+    "allCategories": "Tous",
+    "backToBlog": "Retour au blog"
   },
   "testimonials": {
     "title": "Témoignages",
@@ -10046,6 +10047,7 @@
     "note": "Note",
     "opensInNewTab": "s'ouvre dans un nouvel onglet",
     "all": "Tout",
+    "notFoundDescription": "La page que vous cherchez n'existe pas ou a été déplacée.",
     "add": "Ajouter",
     "active": "Actif",
     "inactive": "Inactif",
@@ -12427,6 +12429,7 @@
     "noBundlesDesc": "Revenez bientôt pour des ensembles de produits excitants et des offres spéciales.",
     "bundleNotFound": "Ensemble non trouvé",
     "backToBundles": "Retour aux ensembles",
+    "categoryNotFound": "Catégorie non trouvée",
     "format": "Format",
     "qty": "Qté",
     "stockAlert": {
