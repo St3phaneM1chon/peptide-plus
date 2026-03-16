@@ -191,7 +191,7 @@ export const emailComponents = {
     </div>
   `,
   
-  orderItem: (name: string, quantity: number, price: string, imageUrl?: string) => {
+  orderItem: (name: string, quantity: number, price: string, imageUrl?: string, isFr: boolean = true) => {
     // AUDIT-FIX: Whitelist allowed image domains to prevent tracking pixel injection
     const ALLOWED_IMAGE_DOMAINS = ['biocyclepeptides.com', 'cdn.biocyclepeptides.com', 'biocyclepeptides.azurewebsites.net', 'localhost'];
     let safeImage: string | undefined;
@@ -210,7 +210,7 @@ export const emailComponents = {
             ${safeImage ? `<td width="60" style="padding-right: 12px;"><img src="${safeImage}" alt="${escapeHtml(name)}" width="60" height="60" style="border-radius: 8px; object-fit: cover;"></td>` : ''}
             <td>
               <p style="margin: 0; font-weight: 600; color: #1f2937;">${name}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Qty: ${quantity}</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">${isFr ? 'Qté' : 'Qty'}: ${quantity}</p>
             </td>
             <td align="right" style="font-weight: 600; color: #1f2937;">${price}</td>
           </tr>

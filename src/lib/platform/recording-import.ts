@@ -655,6 +655,7 @@ async function detectAndCreateConsent(
         clientEmail: client.email,
         consentToken: token,
         videoTitle: importRecord.meetingTitle,
+        locale: 'fr',
       });
     } catch (emailError) {
       logger.warn('[RecordingImport] Failed to send consent email', { to: maskEmail(client.email), error: emailError instanceof Error ? emailError.message : String(emailError) });

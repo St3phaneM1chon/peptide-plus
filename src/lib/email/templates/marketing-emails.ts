@@ -384,7 +384,7 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
             ${item.imageUrl && isSafeUrl(item.imageUrl) ? `<td width="60" style="padding-right: 12px;"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" width="60" height="60" style="border-radius: 8px;"></td>` : ''}
             <td>
               <p style="margin: 0; font-weight: 600; color: #1f2937;">${escapeHtml(item.name)}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Qty: ${item.quantity}</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">${isFr ? 'Qté' : 'Qty'}: ${item.quantity}</p>
             </td>
             <td align="right" style="font-weight: 600; color: #CC5500;">$${item.price.toFixed(2)}</td>
           </tr>

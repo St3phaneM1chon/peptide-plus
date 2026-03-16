@@ -78,7 +78,7 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
 
   // #26 Security fix: escape user-supplied item names to prevent HTML injection
   const itemsHtml = data.items.map(item =>
-    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl)
+    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl, isFr)
   ).join('');
 
   const content = `
@@ -572,7 +572,7 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
 
   // #26 Security fix: escape user-supplied item names to prevent HTML injection
   const itemsHtml = data.items.map(item =>
-    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl)
+    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl, isFr)
   ).join('');
 
   const content = `

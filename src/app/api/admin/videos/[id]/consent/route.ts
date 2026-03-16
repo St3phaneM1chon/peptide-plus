@@ -99,7 +99,7 @@ export const POST = withAdminGuard(async (request, { session, routeContext }) =>
       },
     });
 
-    // Send consent request email to client (non-blocking)
+    // Send consent request email to client (non-blocking, default fr for Quebec)
     sendConsentRequestEmail({
       clientName: client.name || 'Client',
       clientEmail: client.email,
@@ -107,6 +107,7 @@ export const POST = withAdminGuard(async (request, { session, routeContext }) =>
       videoTitle: video.title,
       templateName: template.name,
       requestedByName: session.user.name || null,
+      locale: 'fr',
     }).catch(err => logger.error('Consent request email failed', { error: err instanceof Error ? err.message : String(err) }));
 
     logAdminAction({

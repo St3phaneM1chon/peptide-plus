@@ -177,6 +177,10 @@ export async function POST(request: Request, context: RouteContext) {
       logger.error('Consent PDF generation failed', { consentId: consent.id, error: pdfErr instanceof Error ? pdfErr.message : String(pdfErr) });
     }
 
+    // Detect client locale from Accept-Language header (default fr for Quebec)
+    const acceptLang = request.headers.get('accept-language') || '';
+    const clientLocale = acceptLang.startsWith('en') ? 'en' : 'fr';
+
     // Send confirmation email to client (non-blocking)
     sendConsentConfirmationEmail({
       clientName: consent.client.name || 'Client',
@@ -184,9 +188,10 @@ export async function POST(request: Request, context: RouteContext) {
       videoTitle: consent.video?.title,
       templateName: consent.formTemplate?.name,
       pdfBytes,
+      locale: clientLocale,
     }).catch(err => logger.error('Consent confirmation email failed', { error: err instanceof Error ? err.message : String(err) }));
 
-    // Notify admin (non-blocking)
+    // Notify admin (non-blocking, admin default = fr)
     if (consent.requestedBy?.email) {
       sendConsentAdminNotification({
         adminEmail: consent.requestedBy.email,
@@ -195,6 +200,7 @@ export async function POST(request: Request, context: RouteContext) {
         action: 'granted',
         videoTitle: consent.video?.title,
         consentId: consent.id,
+        locale: 'fr',
       }).catch(err => logger.error('Consent admin notification failed', { error: err instanceof Error ? err.message : String(err) }));
     }
 
