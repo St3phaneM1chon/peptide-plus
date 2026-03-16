@@ -80,7 +80,17 @@
       "reorderError": "Erreur lors de l'ajout au panier",
       "reorderItemsAdded": "{count} article(s) ajouté(s) au panier",
       "reorderItemsUnavailable": "Certains articles sont indisponibles : {items}",
-      "reordering": "Ajout au panier..."
+      "reordering": "Ajout au panier...",
+      "loadError": "Impossible de charger les commandes",
+      "loadErrorDesc": "Veuillez vérifier votre connexion et réessayer."
+    },
+    "referrals": {
+      "loadError": "Impossible de charger les données de parrainage",
+      "loadErrorDesc": "Veuillez vérifier votre connexion et réessayer."
+    },
+    "returns": {
+      "loadError": "Impossible de charger les retours",
+      "loadErrorDesc": "Veuillez vérifier votre connexion et réessayer."
     },
     "settings": "Paramètres du compte",
     "signOut": "Déconnexion",
@@ -358,7 +368,9 @@
       "total": "Total",
       "tracking": "Suivi",
       "unitPrice": "Prix unitaire",
-      "view": "Voir"
+      "view": "Voir",
+      "loadError": "Impossible de charger les factures",
+      "loadErrorDesc": "Veuillez vérifier votre connexion et réessayer."
     },
     "removeFromWishlist": "Retirer de la liste de souhaits",
     "savedProducts": "Produits sauvegardés",
@@ -9354,7 +9366,8 @@
     "overview": "Aperçu",
     "dashboard": "Tableau de bord",
     "ambassadorLabel": "Ambassadeur",
-    "submitting": "Envoi en cours..."
+    "submitting": "Envoi en cours...",
+    "submitError": "Échec de l'envoi de la candidature. Veuillez réessayer."
   },
   "apiDocs": {
     "title": "API BioCycle Peptides",
@@ -11833,7 +11846,8 @@
     "subtitle": "Bienvenue dans votre portail de support",
     "ticketCreated": "Ticket cree avec succes",
     "ticketError": "Erreur lors de la creation du ticket",
-    "title": "Portail de support"
+    "title": "Portail de support",
+    "tabLoadError": "Impossible de charger les données. Veuillez réessayer."
   },
   "priceAlert": {
     "title": "Créer une alerte de prix",
@@ -12765,7 +12779,19 @@
     "pause": "Pause",
     "cancel": "Annuler",
     "cancelTitle": "Annuler l'abonnement",
-    "confirmCancelButton": "Confirmer l'annulation"
+    "confirmCancelButton": "Confirmer l'annulation",
+    "creating": "Création en cours...",
+    "created": "Abonnement créé avec succès !",
+    "createError": "Échec de la création de l'abonnement. Veuillez réessayer.",
+    "updateError": "Échec de la mise à jour de l'abonnement.",
+    "cancelError": "Échec de l'annulation de l'abonnement.",
+    "cancelled": "Abonnement annulé.",
+    "loadError": "Impossible de charger les produits",
+    "fetchError": "Impossible de charger les abonnements",
+    "noProducts": "Aucun produit disponible pour abonnement pour le moment.",
+    "statusActive": "Actif",
+    "statusPaused": "En pause",
+    "statusCancelled": "Annulé"
   },
   "theme": {
     "darkMode": "Mode sombre",
@@ -13147,7 +13173,9 @@
     "free": "Gratuit",
     "all": "Tous",
     "recordedFilter": "Enregistré",
-    "subscribe": "S'abonner"
+    "subscribe": "S'abonner",
+    "loadError": "Impossible de charger les webinaires",
+    "loadErrorDesc": "Veuillez vérifier votre connexion et réessayer."
   },
   "email": {
     "unsubscribe": "Se désabonner",

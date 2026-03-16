@@ -375,7 +375,7 @@ export default function SubscriptionsPage() {
                               />
                               <span>{freq.label}</span>
                             </div>
-                            <span className="text-green-600 font-medium text-sm">Save {freq.discount}%</span>
+                            <span className="text-green-600 font-medium text-sm">{t('subscriptions.youSave') || 'You save'} {freq.discount}%</span>
                           </label>
                         ))}
                       </div>
@@ -408,7 +408,7 @@ export default function SubscriptionsPage() {
                         </span>
                       </div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-green-600">Subscription Discount ({selectedFrequency.discount}%)</span>
+                        <span className="text-green-600">{t('subscriptions.subscriptionDiscount') || 'Subscription Discount'} ({selectedFrequency.discount}%)</span>
                         <span className="text-green-600">
                           -{formatPrice(selectedProduct.basePrice * quantity * selectedFrequency.discount / 100)}
                         </span>
@@ -419,7 +419,7 @@ export default function SubscriptionsPage() {
                           {formatPrice(calculatePrice(selectedProduct.basePrice * quantity, selectedFrequency.discount))}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-500 mt-1">per delivery</p>
+                      <p className="text-xs text-neutral-500 mt-1">{t('subscriptions.perDelivery') || 'per delivery'}</p>
                     </div>
 
                     {session ? (
@@ -431,7 +431,7 @@ export default function SubscriptionsPage() {
                         {isCreating ? (
                           <>
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Creating...
+                            {t('subscriptions.creating') || 'Creating...'}
                           </>
                         ) : (
                           <>
@@ -532,9 +532,9 @@ export default function SubscriptionsPage() {
                                 sub.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-700' :
                                 'bg-red-100 text-red-700'
                               }`}>
-                                {sub.status === 'ACTIVE' ? 'Actif' : sub.status === 'PAUSED' ? 'En pause' : 'Annule'}
+                                {sub.status === 'ACTIVE' ? (t('subscriptions.statusActive') || 'Active') : sub.status === 'PAUSED' ? (t('subscriptions.statusPaused') || 'Paused') : (t('subscriptions.statusCancelled') || 'Cancelled')}
                               </span>
-                              <span className="text-xs text-green-600">Economisez {sub.discountPercent}%</span>
+                              <span className="text-xs text-green-600">{t('subscriptions.save') || 'Save'} {sub.discountPercent}%</span>
                             </div>
                           </div>
                         </div>
@@ -544,7 +544,7 @@ export default function SubscriptionsPage() {
                             <p className="font-bold text-lg">
                               {formatPrice(sub.unitPrice * sub.quantity * (1 - sub.discountPercent / 100))}
                             </p>
-                            <p className="text-sm text-neutral-500">par livraison</p>
+                            <p className="text-sm text-neutral-500">{t('subscriptions.perDelivery') || 'per delivery'}</p>
                           </div>
                         </div>
                       </div>

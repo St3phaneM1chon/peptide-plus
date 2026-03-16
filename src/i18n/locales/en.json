@@ -178,7 +178,9 @@
       "total": "Total",
       "tracking": "Tracking",
       "unitPrice": "Unit Price",
-      "view": "View"
+      "view": "View",
+      "loadError": "Failed to load invoices",
+      "loadErrorDesc": "Please check your connection and try again."
     },
     "languageEnglish": "English",
     "languageFrench": "Français",
@@ -334,7 +336,17 @@
       "totalLabel": "Total",
       "trackPackage": "Track package",
       "tracking": "Tracking",
-      "viewInvoice": "View invoice"
+      "viewInvoice": "View invoice",
+      "loadError": "Failed to load orders",
+      "loadErrorDesc": "Please check your connection and try again."
+    },
+    "referrals": {
+      "loadError": "Failed to load referral data",
+      "loadErrorDesc": "Please check your connection and try again."
+    },
+    "returns": {
+      "loadError": "Failed to load returns",
+      "loadErrorDesc": "Please check your connection and try again."
     },
     "ordersSettings": {
       "placeholderPostalCode": "A1A 1A1"
@@ -9354,7 +9366,8 @@
     "viewDashboard": "View Dashboard",
     "websiteUrl": "Website or Blog URL",
     "whyJoin": "Why do you want to join our program?",
-    "yourReferralLink": "Your Referral Link"
+    "yourReferralLink": "Your Referral Link",
+    "submitError": "Failed to submit application. Please try again."
   },
   "apiDocs": {
     "title": "BioCycle Peptides API",
@@ -11833,7 +11846,8 @@
     "subtitle": "Welcome to your support portal",
     "ticketCreated": "Ticket created successfully",
     "ticketError": "Error creating ticket",
-    "title": "Support Portal"
+    "title": "Support Portal",
+    "tabLoadError": "Failed to load data. Please try again."
   },
   "priceAlert": {
     "currentPrice": "Current: ${price}",
@@ -12765,7 +12779,19 @@
     "youPay": "You Pay",
     "youSave": "You save",
     "cancelTitle": "Cancel Subscription",
-    "confirmCancelButton": "Confirm Cancellation"
+    "confirmCancelButton": "Confirm Cancellation",
+    "creating": "Creating...",
+    "created": "Subscription created successfully!",
+    "createError": "Failed to create subscription. Please try again.",
+    "updateError": "Failed to update subscription.",
+    "cancelError": "Failed to cancel subscription.",
+    "cancelled": "Subscription cancelled.",
+    "loadError": "Failed to load products",
+    "fetchError": "Failed to load subscriptions",
+    "noProducts": "No products available for subscription at this time.",
+    "statusActive": "Active",
+    "statusPaused": "Paused",
+    "statusCancelled": "Cancelled"
   },
   "theme": {
     "darkMode": "Dark mode",
@@ -13147,7 +13173,9 @@
     "title": "Webinars & Events",
     "tutorial": "Tutorial",
     "upcoming": "Upcoming",
-    "withWebinarLink": "with the webinar link."
+    "withWebinarLink": "with the webinar link.",
+    "loadError": "Failed to load webinars",
+    "loadErrorDesc": "Please check your connection and try again."
   },
   "email": {
     "unsubscribe": "Unsubscribe",
