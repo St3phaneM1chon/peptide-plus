@@ -283,6 +283,10 @@ export class StorageService {
     contentHash: string
   ): Promise<UploadResult> {
     const filePath = path.join(this.localUploadDir, blobPath);
+    // Prevent path traversal
+    if (!filePath.startsWith(this.localUploadDir)) {
+      throw new Error('Invalid upload path');
+    }
     const dir = path.dirname(filePath);
 
     if (!existsSync(dir)) {
@@ -301,7 +305,12 @@ export class StorageService {
 
   private async deleteFromLocal(url: string): Promise<void> {
     const relativePath = url.replace(/^\/uploads\//, '');
+    // Prevent path traversal: ensure resolved path stays within upload dir
     const filePath = path.join(this.localUploadDir, relativePath);
+    if (!filePath.startsWith(this.localUploadDir)) {
+      logger.warn('Path traversal attempt blocked in deleteFromLocal', { url: url.slice(0, 100) });
+      return;
+    }
 
     try {
       await unlink(filePath);
