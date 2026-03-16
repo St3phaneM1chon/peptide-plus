@@ -8,12 +8,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma, VideoSessionStatus } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createPlatformMeeting } from '@/lib/platform/meeting-creation';
 import { sendMeetingInvitationEmail } from '@/lib/email/meeting-invitation';
 import { type Platform } from '@/lib/platform/oauth';
-import { VideoSessionStatus } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
 const VIDEO_PLATFORMS = ['zoom', 'teams', 'google-meet', 'webex'] as const;
@@ -177,10 +177,9 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
     const skip = (page - 1) * limit;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
+    const where: Prisma.VideoSessionWhereInput = {};
     if (platform) where.platform = platform;
-    if (status) where.status = status;
+    if (status) where.status = status as VideoSessionStatus;
     if (clientId) where.clientId = clientId;
     if (search) {
       where.OR = [

@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
@@ -47,8 +48,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     const start = dateFrom ? new Date(dateFrom) : new Date(now.getTime() - 7 * 86400000);
     const end = dateTo ? new Date(dateTo + 'T23:59:59Z') : now;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {
+    const where: Prisma.CrmActivityWhereInput = {
       createdAt: { gte: start, lte: end },
       ...(agentId ? { performedById: agentId } : {}),
     };

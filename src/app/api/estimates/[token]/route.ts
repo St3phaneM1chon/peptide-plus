@@ -42,8 +42,7 @@ function mapEstimateForClient(est: Record<string, unknown>) {
     currency: est.currency,
     notes: est.notes,
     termsConditions: est.termsConditions,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: Array.isArray(est.items) ? (est.items as any[]).map((item: Record<string, unknown>) => ({
+    items: Array.isArray(est.items) ? (est.items as Record<string, unknown>[]).map((item: Record<string, unknown>) => ({
       productName: item.productName,
       description: item.description,
       quantity: Number(item.quantity),

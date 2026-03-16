@@ -30,7 +30,7 @@ export const POST = withAdminGuard(async (
 
     const identity = session.user!.id;
     const name = session.user!.name || session.user!.email || 'User';
-    const role = (session.user as any)?.role as string;
+    const role = session.user!.role;
     const isCreator = room.createdById === identity;
 
     const token = await generateToken(roomName, identity, {

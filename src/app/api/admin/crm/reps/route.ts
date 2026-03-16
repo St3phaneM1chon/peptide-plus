@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiPaginated, apiError } from '@/lib/api-response';
@@ -16,7 +17,7 @@ import { logger } from '@/lib/logger';
 // GET: List reps with counts
 // ---------------------------------------------------------------------------
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }: { session: any; params?: Promise<{ id: string }> }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { session }: { session: { user: { id: string } }; params?: Promise<{ id: string }> }) => {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search') || '';
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
@@ -25,7 +26,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }: { se
 
   try {
     // Build where clause: only EMPLOYEE and OWNER roles
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       role: { in: ['EMPLOYEE', 'OWNER'] },
     };
 

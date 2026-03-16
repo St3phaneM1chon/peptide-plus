@@ -52,8 +52,7 @@ export const POST = withAdminGuard(async (request) => {
     // Generate the WebRTC credential token via Telnyx API
     const result = await generateWebRtcToken(connectionId);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tokenData = result.data as any;
+    const tokenData = result.data as Record<string, unknown> | undefined;
 
     logger.info('[voip/webrtc-token] WebRTC token generated', {
       connectionId,

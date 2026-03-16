@@ -47,9 +47,9 @@ export async function GET(request: NextRequest, context: RouteParams) {
     // must return redirects (not JSON errors) and handle platform error/code params first.
     const session = await auth();
     const userId = session?.user?.id;
-    const userRole = (session?.user as any)?.role;
+    const userRole = session?.user?.role;
 
-    if (!userId || !['OWNER', 'EMPLOYEE'].includes(userRole)) {
+    if (!userId || !userRole || !['OWNER', 'EMPLOYEE'].includes(userRole)) {
       logger.warn('[OAuth Callback] Unauthorized access attempt', {
         event: 'oauth_callback_auth_denied',
         platform,

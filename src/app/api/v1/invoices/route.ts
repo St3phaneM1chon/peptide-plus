@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { Prisma, InvoiceStatus } from '@prisma/client';
 import { withApiAuth, jsonSuccess } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
 
@@ -24,12 +25,11 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   const sortBy = url.searchParams.get('sortBy') || 'invoiceDate';
   const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {
+  const where: Prisma.CustomerInvoiceWhereInput = {
     deletedAt: null, // Only non-deleted invoices
   };
 
-  if (status) where.status = status;
+  if (status) where.status = status as InvoiceStatus;
   if (customerId) where.customerId = customerId;
   if (dateFrom || dateTo) {
     where.invoiceDate = {};

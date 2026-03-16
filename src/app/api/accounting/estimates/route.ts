@@ -67,8 +67,7 @@ function mapEstimateToJson(est: Record<string, unknown>) {
       est.status as string,
       est.validUntil as Date
     ),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: Array.isArray(est.items) ? (est.items as any[]).map((item: Record<string, unknown>) => ({
+    items: Array.isArray(est.items) ? (est.items as Record<string, unknown>[]).map((item: Record<string, unknown>) => ({
       ...item,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),

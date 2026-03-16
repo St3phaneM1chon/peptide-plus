@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { withApiAuth, jsonSuccess, jsonError } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
 import { add, multiply } from '@/lib/decimal-calculator';
@@ -28,8 +29,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   const sortBy = url.searchParams.get('sortBy') || 'createdAt';
   const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: Prisma.OrderWhereInput = {};
 
   if (status) where.status = status;
   if (paymentStatus) where.paymentStatus = paymentStatus;

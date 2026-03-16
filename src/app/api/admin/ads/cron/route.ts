@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   if (!isCronAuth) {
     // If no valid cron secret, require an authenticated admin session
     const session = await auth();
-    if (!session?.user?.id || !['OWNER', 'EMPLOYEE'].includes((session.user as any).role)) {
+    if (!session?.user?.id || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
       logger.warn('[AdsCron] Unauthorized request', {
         event: 'cron_auth_denied',
         hasCronHeader: !!bearerToken,

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma, VideoContentType } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -38,10 +39,9 @@ export const GET = withAdminGuard(async (
     }
 
     // Build filter for video sessions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sessionWhere: any = { clientId };
+    const sessionWhere: Prisma.VideoSessionWhereInput = { clientId };
     if (contentTypeFilter) {
-      sessionWhere.contentType = contentTypeFilter;
+      sessionWhere.contentType = contentTypeFilter as VideoContentType;
     }
     if (search) {
       sessionWhere.OR = [
@@ -51,10 +51,9 @@ export const GET = withAdminGuard(async (
     }
 
     // Build filter for featured videos
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featuredWhere: any = { featuredClientId: clientId };
+    const featuredWhere: Prisma.VideoWhereInput = { featuredClientId: clientId };
     if (contentTypeFilter) {
-      featuredWhere.contentType = contentTypeFilter;
+      featuredWhere.contentType = contentTypeFilter as VideoContentType;
     }
     if (search) {
       featuredWhere.OR = [

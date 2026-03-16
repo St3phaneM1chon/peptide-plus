@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { Prisma, ProductType } from '@prisma/client';
 import { withApiAuth, jsonSuccess } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
 
@@ -27,8 +28,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   const sortOrder = url.searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
   // Build where clause
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: Prisma.ProductWhereInput = {};
 
   if (categoryId) where.categoryId = categoryId;
   if (isActive !== null && isActive !== undefined && isActive !== '') {
@@ -37,7 +37,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
     where.isActive = true; // Default: only active products
   }
   if (isFeatured === 'true') where.isFeatured = true;
-  if (productType) where.productType = productType;
+  if (productType) where.productType = productType as ProductType;
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },

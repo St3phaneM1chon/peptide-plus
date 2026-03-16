@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { markVoicemailRead, archiveVoicemail } from '@/lib/voip/voicemail-engine';
@@ -22,8 +23,7 @@ export const GET = withAdminGuard(async (request) => {
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
   const skip = (page - 1) * limit;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: Prisma.VoicemailWhereInput = {};
   if (extensionId) where.extensionId = extensionId;
   if (isRead !== null && isRead !== undefined) where.isRead = isRead === 'true';
   if (isArchived !== null && isArchived !== undefined) where.isArchived = isArchived === 'true';

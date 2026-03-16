@@ -179,8 +179,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     };
 
     if (action === 'scenarios') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod passthrough gives Record<string, unknown>; runtime validated
-      const scenarioList = (scenarios || STANDARD_SCENARIOS) as any;
+      const scenarioList = (scenarios || STANDARD_SCENARIOS) as typeof STANDARD_SCENARIOS;
       const results = runScenarioAnalysis(currentCashBalance, historicalArrays, scenarioList);
       return NextResponse.json({ results });
     }

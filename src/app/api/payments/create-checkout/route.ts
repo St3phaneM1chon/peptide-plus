@@ -600,8 +600,7 @@ export async function POST(request: NextRequest) {
           // Last item absorbs the remainder so total is exact
           discountCents = totalDiscountCents - distributedCents;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe line item type does not expose writable unit_amount
-        (li.price_data as any).unit_amount = originalAmount - discountCents;
+        (li.price_data as { unit_amount: number }).unit_amount = originalAmount - discountCents;
       });
     }
 

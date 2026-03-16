@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -93,8 +94,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { params }) => {
       return NextResponse.json({ error: 'Video session not found' }, { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {};
+    const updateData: Prisma.VideoSessionUncheckedUpdateInput = {};
 
     if (status) {
       updateData.status = status;

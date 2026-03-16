@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { withApiAuth, jsonSuccess } from '@/lib/api/api-auth.middleware';
 import { prisma } from '@/lib/db';
 
@@ -21,8 +22,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
   const categoryId = url.searchParams.get('categoryId');
   const search = url.searchParams.get('search');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {
+  const where: Prisma.ProductWhereInput = {
     isActive: true,
     trackInventory: true,
   };

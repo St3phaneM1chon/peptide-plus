@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
@@ -42,8 +43,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       : 1 - (percentage / 100);
 
     // Build product filter
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const productWhere: any = {};
+    const productWhere: Prisma.ProductWhereInput = {};
     if (categoryFilter) {
       productWhere.category = { slug: categoryFilter };
     }

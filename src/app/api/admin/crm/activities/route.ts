@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { prisma } from '@/lib/db';
@@ -75,8 +76,7 @@ export const POST = withAdminGuard(async (
         dealId: dealId || null,
         contactId: contactId || null,
         performedById: session.user.id,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: (metadata || undefined) as any,
+        metadata: (metadata || undefined) as Prisma.InputJsonValue | undefined,
       },
       include: {
         performedBy: { select: { id: true, name: true, email: true } },
