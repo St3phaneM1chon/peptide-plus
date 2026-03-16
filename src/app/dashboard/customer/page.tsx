@@ -8,6 +8,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { getStaticLocale, createServerTranslator } from '@/i18n/server';
+import type { Locale } from '@/i18n/config';
 
 async function getCustomerData(userId: string) {
   const [orders, user, recentlyViewed] = await Promise.all([
@@ -68,6 +70,8 @@ export default async function CustomerDashboard() {
     redirect('/auth/signin');
   }
 
+  const locale = getStaticLocale();
+  const t = createServerTranslator(locale as Locale);
   const { orders, user, recentTransactions, stats } = await getCustomerData(session.user.id);
 
   const tierColors: Record<string, string> = {
@@ -85,15 +89,15 @@ export default async function CustomerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Bonjour, {session.user.name || 'Client'}
+                {t('dashboard.hello')}, {session.user.name || t('dashboard.customer')}
               </h1>
-              <p className="text-gray-600">Bienvenue dans votre espace client BioCycle Peptides</p>
+              <p className="text-gray-600">{t('dashboard.welcomeMessage')}</p>
             </div>
             <Link
               href="/shop"
               className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Voir les produits
+              {t('dashboard.viewProducts')}
             </Link>
           </div>
         </div>
@@ -103,25 +107,25 @@ export default async function CustomerDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Commandes"
+            title={t('dashboard.orders')}
             value={stats.totalOrders}
             icon="📦"
             color="blue"
           />
           <StatCard
-            title="Livrées"
+            title={t('dashboard.delivered')}
             value={stats.deliveredOrders}
             icon="✅"
             color="green"
           />
           <StatCard
-            title="Points fidélité"
+            title={t('dashboard.loyaltyPoints')}
             value={user?.loyaltyPoints || 0}
             icon="🎁"
             color="orange"
           />
           <StatCard
-            title="Total dépensé"
+            title={t('dashboard.totalSpent')}
             value={`$${stats.totalSpent.toFixed(2)}`}
             icon="💰"
             color="purple"
@@ -130,11 +134,11 @@ export default async function CustomerDashboard() {
 
         {/* Navigation rapide */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <QuickLink href="/account/orders" icon="📦" title="Mes commandes" />
-          <QuickLink href="/account/inventory" icon="🔬" title="Mon inventaire" />
-          <QuickLink href="/rewards" icon="🎁" title="Mes récompenses" />
-          <QuickLink href="/account/profile" icon="👤" title="Mon profil" />
-          <QuickLink href="/shop" icon="🛒" title="Boutique" />
+          <QuickLink href="/account/orders" icon="📦" title={t('dashboard.myOrders')} />
+          <QuickLink href="/account/inventory" icon="🔬" title={t('dashboard.myInventory')} />
+          <QuickLink href="/rewards" icon="🎁" title={t('dashboard.myRewards')} />
+          <QuickLink href="/account/profile" icon="👤" title={t('dashboard.myProfile')} />
+          <QuickLink href="/shop" icon="🛒" title={t('dashboard.shop')} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -142,10 +146,10 @@ export default async function CustomerDashboard() {
           <section className="lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                Commandes récentes
+                {t('dashboard.recentOrders')}
               </h2>
               <Link href="/account/orders" className="text-primary-600 hover:underline text-sm">
-                Voir tout
+                {t('dashboard.viewAll')}
               </Link>
             </div>
 
@@ -154,16 +158,16 @@ export default async function CustomerDashboard() {
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                   <span className="text-3xl">📦</span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune commande</h3>
-                <p className="text-gray-600 mb-4">Commencez vos recherches avec nos peptides de haute qualité</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.noOrders')}</h3>
+                <p className="text-gray-600 mb-4">{t('dashboard.noOrdersHint')}</p>
                 <Link href="/shop" className="inline-block bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                  Découvrir les produits
+                  {t('dashboard.discoverProducts')}
                 </Link>
               </div>
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard key={order.id} order={order} t={t} locale={locale} />
                 ))}
               </div>
             )}
@@ -174,30 +178,30 @@ export default async function CustomerDashboard() {
             {/* Carte de fidélité */}
             <div className={`${tierColors[user?.loyaltyTier || 'BRONZE']} rounded-xl p-6 text-white`}>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm opacity-80">Niveau</span>
+                <span className="text-sm opacity-80">{t('dashboard.tier')}</span>
                 <span className="font-bold">{user?.loyaltyTier || 'BRONZE'}</span>
               </div>
               <div className="text-center mb-4">
                 <p className="text-4xl font-bold">{user?.loyaltyPoints || 0}</p>
-                <p className="text-sm opacity-80">points disponibles</p>
+                <p className="text-sm opacity-80">{t('dashboard.pointsAvailable')}</p>
               </div>
               <Link
                 href="/rewards"
                 className="block w-full bg-white/20 hover:bg-white/30 text-center py-2 rounded-lg text-sm font-medium transition-colors"
               >
-                Échanger mes points
+                {t('dashboard.redeemPoints')}
               </Link>
             </div>
 
             {/* Code de parrainage */}
             {user?.referralCode && (
               <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-2">🎁 Parrainez vos collègues</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('dashboard.referFriends')}</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Gagnez 500 points pour chaque ami parrainé!
+                  {t('dashboard.referFriendsDesc')}
                 </p>
                 <div className="bg-gray-100 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Votre code</p>
+                  <p className="text-xs text-gray-500 mb-1">{t('dashboard.yourCode')}</p>
                   <p className="font-mono font-bold text-primary-600 text-lg">{user.referralCode}</p>
                 </div>
               </div>
@@ -206,7 +210,7 @@ export default async function CustomerDashboard() {
             {/* Dernières activités fidélité */}
             {recentTransactions.length > 0 && (
               <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-4">Activité récente</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">{t('dashboard.recentActivity')}</h3>
                 <div className="space-y-3">
                   {recentTransactions.slice(0, 3).map((tx) => (
                     <div key={tx.id} className="flex items-center justify-between text-sm">
@@ -280,7 +284,7 @@ interface OrderWithRelations {
   currency?: { code: string; [key: string]: unknown } | null;
 }
 
-function OrderCard({ order }: { order: OrderWithRelations }) {
+function OrderCard({ order, t, locale }: { order: OrderWithRelations; t: (key: string) => string; locale: string }) {
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800',
     CONFIRMED: 'bg-blue-100 text-blue-800',
@@ -290,22 +294,13 @@ function OrderCard({ order }: { order: OrderWithRelations }) {
     CANCELLED: 'bg-red-100 text-red-800',
   };
 
-  const statusLabels: Record<string, string> = {
-    PENDING: 'En attente',
-    CONFIRMED: 'Confirmée',
-    PROCESSING: 'En préparation',
-    SHIPPED: 'Expédiée',
-    DELIVERED: 'Livrée',
-    CANCELLED: 'Annulée',
-  };
-
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="font-semibold text-gray-900">{order.orderNumber}</p>
           <p className="text-sm text-gray-500">
-            {new Date(order.createdAt).toLocaleDateString('fr-CA', {
+            {new Date(order.createdAt).toLocaleDateString(locale, {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -313,13 +308,13 @@ function OrderCard({ order }: { order: OrderWithRelations }) {
           </p>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
-          {statusLabels[order.status] || order.status}
+          {t(`dashboard.status.${order.status.toLowerCase()}`) || order.status}
         </span>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          {order.items.length} article{order.items.length > 1 ? 's' : ''}
+          {order.items.length} {order.items.length > 1 ? t('dashboard.items') : t('dashboard.item')}
         </p>
         <div className="flex items-center gap-4">
           <p className="font-semibold text-primary-600">
@@ -329,7 +324,7 @@ function OrderCard({ order }: { order: OrderWithRelations }) {
             href={`/account/orders/${order.id}`}
             className="text-sm text-primary-600 hover:underline"
           >
-            Détails →
+            {t('dashboard.details')}
           </Link>
         </div>
       </div>
