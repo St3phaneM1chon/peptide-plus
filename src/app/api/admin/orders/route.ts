@@ -29,7 +29,7 @@ import { validateTransition, ALL_ORDER_STATUSES, type OrderStatus } from '@/lib/
 import { logger } from '@/lib/logger';
 
 // Shared validation error helper
-function validationError(parsed: { error: { flatten: () => unknown } }) {
+function validationError(_parsed: { error: { flatten: () => unknown } }) {
   return NextResponse.json(
     { error: 'Validation error' },
     { status: 400 }

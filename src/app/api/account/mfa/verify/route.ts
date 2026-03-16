@@ -28,7 +28,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     const rl = await rateLimitMiddleware(ip, '/api/account/mfa/verify');
     if (!rl.success) {
       return NextResponse.json(
-        { error: 'Too many requests' || 'Too many attempts. Please try again later.' },
+        { error: 'Too many requests' },
         { status: 429 }
       );
     }
