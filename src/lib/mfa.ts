@@ -262,15 +262,31 @@ export async function verifyMFACode(
     const { valid, usedIndex } = await verifyBackupCode(code, hashedCodes, userId);
     
     if (valid) {
-      // Supprimer le code utilisé
-      hashedCodes.splice(usedIndex, 1);
-      const encryptedBackupCodes = await encrypt(JSON.stringify(hashedCodes));
-      
-      await prisma.user.update({
-        where: { id: userId },
-        data: { mfaBackupCodes: encryptedBackupCodes },
-      });
-      
+      // RACE CONDITION FIX: Use transaction with conditional update to prevent
+      // two concurrent requests from both consuming the same backup code.
+      // Re-read the backup codes inside the transaction; if they changed, abort.
+      try {
+        await prisma.$transaction(async (tx) => {
+          const freshUser = await tx.user.findUnique({
+            where: { id: userId },
+            select: { mfaBackupCodes: true },
+          });
+          if (!freshUser?.mfaBackupCodes) return;
+          const freshCodes: string[] = JSON.parse(await decrypt(freshUser.mfaBackupCodes));
+          // Verify the code is still in the list (not consumed by another request)
+          const freshIndex = freshCodes.indexOf(hashedCodes[usedIndex]);
+          if (freshIndex === -1) return; // Already consumed by another request
+          freshCodes.splice(freshIndex, 1);
+          const encryptedBackupCodes = await encrypt(JSON.stringify(freshCodes));
+          await tx.user.update({
+            where: { id: userId },
+            data: { mfaBackupCodes: encryptedBackupCodes },
+          });
+        });
+      } catch (txError) {
+        logger.error('[MFA] Backup code consumption transaction failed', { error: txError instanceof Error ? txError.message : String(txError) });
+      }
+
       return { valid: true, type: 'backup' };
     }
   }

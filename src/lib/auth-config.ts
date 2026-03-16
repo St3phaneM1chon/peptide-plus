@@ -215,6 +215,13 @@ const providers = [
           );
 
           if (!isValidMFA) {
+            // SECURITY: Log failed MFA attempts for brute-force detection
+            logger.warn('mfa_verification_failed', {
+              userId: user.id,
+              email: user.email?.replace(/^(.{2}).*(@.*)$/, '$1***$2'),
+              mfaType: 'totp',
+            });
+            await recordFailedAttempt(email, 'unknown', 'unknown');
             return null;
           }
         }
@@ -563,16 +570,13 @@ export const authConfig: NextAuthConfig = {
         // event even for existing users when allowDangerousEmailAccountLinking is enabled.
         // We must NOT overwrite an existing OWNER/EMPLOYEE role to CUSTOMER.
         if (user.id) {
-          const existingUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { role: true },
+          // RACE CONDITION FIX: Atomic conditional update — only sets CUSTOMER if
+          // role is not already a privileged role. Prevents downgrading OWNER/EMPLOYEE
+          // to CUSTOMER when createUser fires for linked-account users.
+          await prisma.user.updateMany({
+            where: { id: user.id, role: { notIn: ['OWNER', 'EMPLOYEE'] } },
+            data: { role: UserRole.CUSTOMER },
           });
-          if (!existingUser?.role || existingUser.role === 'CUSTOMER') {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { role: UserRole.CUSTOMER },
-            });
-          }
         }
         // FAILLE-021 FIX: mask email in logs
         const maskedNewEmail = user.email

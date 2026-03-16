@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateToken, formatUser, isValidEmail, getClientIp } from '@/lib/auth-jwt';
 import { checkRateLimit } from '@/lib/rate-limiter';
+import { encryptToken } from '@/lib/token-encryption';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
               type: 'oauth',
               provider: normalizedProvider,
               providerAccountId: normalizedEmail,
-              id_token: idToken,
-              access_token: accessToken,
+              id_token: await encryptToken(idToken),
+              access_token: await encryptToken(accessToken),
             },
           },
         },
@@ -93,8 +94,8 @@ export async function POST(request: NextRequest) {
             type: 'oauth',
             provider: normalizedProvider,
             providerAccountId: normalizedEmail,
-            id_token: idToken,
-            access_token: accessToken,
+            id_token: await encryptToken(idToken),
+            access_token: await encryptToken(accessToken),
           },
         });
       }
