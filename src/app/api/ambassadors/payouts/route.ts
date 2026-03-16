@@ -88,7 +88,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     const parsed = createPayoutSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { error: 'Validation error' },
         { status: 400 }
       );
     }

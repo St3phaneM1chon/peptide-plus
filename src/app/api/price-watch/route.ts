@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     const parsed = priceWatchPostSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid data', details: parsed.error.errors },
+        { error: 'Invalid data' },
         { status: 400 }
       );
     }
@@ -243,7 +243,7 @@ export async function DELETE(request: NextRequest) {
     const parsed = priceWatchDeleteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid data', details: parsed.error.errors },
+        { error: 'Invalid data' },
         { status: 400 }
       );
     }

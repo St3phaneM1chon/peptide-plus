@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const parsed = acceptInviteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
+        { error: 'Validation failed' },
         { status: 400 }
       );
     }

@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const parsed = demoRequestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Données invalides', details: parsed.error.flatten() },
+        { error: 'Données invalides' },
         { status: 400 }
       );
     }

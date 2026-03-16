@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const raw = await request.json();
     const parsed = teamsWebhookSchema.safeParse(raw);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
     // Idempotency check: skip if this notification was already processed (Redis-based, TTL 24h)
