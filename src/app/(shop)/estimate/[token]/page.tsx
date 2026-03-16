@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -250,7 +251,7 @@ export default function EstimateClientPortalPage() {
     try {
       const response = await fetch(`/api/estimates/${token}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'accept',
           acceptedBy: acceptedBy.trim(),
@@ -280,7 +281,7 @@ export default function EstimateClientPortalPage() {
     try {
       const response = await fetch(`/api/estimates/${token}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'decline',
           declineReason: declineReason.trim() || undefined,

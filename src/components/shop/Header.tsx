@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useI18n } from '@/i18n/client';
 import { locales, localeNames, localeFlags } from '@/i18n/config';
+import { addCSRFHeader } from '@/lib/csrf';
 import CartDrawer from './CartDrawer';
 import SearchModal from './SearchModal';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -91,7 +92,7 @@ export default function Header() {
     if (session?.user) {
       fetch('/api/user/locale', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ locale: code }),
       }).catch(() => {});
     }

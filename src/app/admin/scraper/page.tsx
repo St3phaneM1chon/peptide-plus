@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
+import { addCSRFHeader } from '@/lib/csrf';
 import MapProvider from '@/components/admin/scraper/MapProvider';
 import SearchPanel, { type SearchParams } from '@/components/admin/scraper/SearchPanel';
 import ResultsList from '@/components/admin/scraper/ResultsList';
@@ -109,7 +110,7 @@ export default function ScraperPage() {
       const payload = buildPayload(params);
       const res = await fetch('/api/admin/scraper/search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -134,7 +135,7 @@ export default function ScraperPage() {
       // Re-export current results via a lightweight approach - send cached results
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ results, locale }),
       });
       if (!res.ok) throw new Error('Export failed');
@@ -184,7 +185,7 @@ export default function ScraperPage() {
     try {
       const res = await fetch('/api/admin/scraper/add-to-crm', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ places }),
       });
       const data = await res.json();

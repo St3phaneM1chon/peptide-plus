@@ -26,6 +26,7 @@ import { PageHeader, Button, SectionCard, Modal } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -268,7 +269,7 @@ export default function RapportsPersonnalisesPage() {
       // Create a temporary report to run
       const createRes = await fetch('/api/accounting/reports/custom', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: builderName || `Preview - ${builderType}`,
           description: builderDescription || null,
@@ -284,6 +285,7 @@ export default function RapportsPersonnalisesPage() {
       // Run the report
       const runRes = await fetch(`/api/accounting/reports/custom/${created.id}/run`, {
         method: 'POST',
+        headers: addCSRFHeader({}),
       });
       if (!runRes.ok) throw new Error('Failed to run report');
       const runData = await runRes.json();
@@ -326,7 +328,7 @@ export default function RapportsPersonnalisesPage() {
       if (editingId) {
         const res = await fetch(`/api/accounting/reports/custom/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Failed to update');
@@ -334,7 +336,7 @@ export default function RapportsPersonnalisesPage() {
       } else {
         const res = await fetch('/api/accounting/reports/custom', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Failed to save');
@@ -360,6 +362,7 @@ export default function RapportsPersonnalisesPage() {
     try {
       const res = await fetch(`/api/accounting/reports/custom/${report.id}/run`, {
         method: 'POST',
+        headers: addCSRFHeader({}),
       });
       if (!res.ok) throw new Error('Failed to run');
       const data = await res.json();
@@ -415,7 +418,7 @@ export default function RapportsPersonnalisesPage() {
   const handleDeleteReport = async (id: string) => {
     if (!confirm(t('admin.customReports.confirmDelete'))) return;
     try {
-      const res = await fetch(`/api/accounting/reports/custom/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/accounting/reports/custom/${id}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success(t('admin.customReports.reportDeleted'));
       fetchSavedReports();

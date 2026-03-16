@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface SubscriptionProduct {
   id: string;
@@ -117,7 +118,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/account/subscriptions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           productId: selectedProduct.id,
           quantity,
@@ -145,7 +146,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/account/subscriptions', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: subId, action }),
       });
 
@@ -169,7 +170,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/account/subscriptions', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: subId, action: 'cancel' }),
       });
 

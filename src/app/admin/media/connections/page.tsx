@@ -9,6 +9,7 @@ import {
   ToggleLeft, ToggleRight, TestTube,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface PlatformInfo {
   platform: string;
@@ -212,7 +213,7 @@ export default function PlatformConnectionsPage() {
 
     setActionLoading(`disconnect-${platform}`);
     try {
-      const res = await fetch(`/api/admin/platform-connections/${platform}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/platform-connections/${platform}`, { method: 'DELETE', headers: addCSRFHeader({}) });
       if (res.ok) {
         toast.success(t('admin.platformConnections.disconnected', { platform }));
         loadData();
@@ -229,7 +230,7 @@ export default function PlatformConnectionsPage() {
   const handleTest = async (platform: string) => {
     setActionLoading(`test-${platform}`);
     try {
-      const res = await fetch(`/api/admin/platform-connections/${platform}/test`, { method: 'POST' });
+      const res = await fetch(`/api/admin/platform-connections/${platform}/test`, { method: 'POST', headers: addCSRFHeader({}) });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message || t('admin.platformConnections.testSuccess'));
@@ -251,7 +252,7 @@ export default function PlatformConnectionsPage() {
     try {
       const res = await fetch(`/api/admin/platform-connections/${platform}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ [field]: value }),
       });
       if (res.ok) {

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // Types
 interface LoyaltyLevel {
@@ -186,7 +187,7 @@ export default function RewardsPage() {
     try {
       const res = await fetch('/api/loyalty/redeem', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ rewardId: reward.id }),
       });
       if (!res.ok) {

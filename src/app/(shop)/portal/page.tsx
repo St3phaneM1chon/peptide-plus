@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   Ticket, Search, Plus, BookOpen, ShoppingBag,
   Clock, CheckCircle2, AlertTriangle, X, Send,
@@ -108,7 +109,7 @@ export default function CustomerPortalPage() {
     try {
       const res = await fetch('/api/portal/tickets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           subject: formSubject,
           description: formDescription,

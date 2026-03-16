@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface StockAlertButtonProps {
   productId: string;
@@ -42,9 +43,9 @@ export default function StockAlertButton({
     try {
       const response = await fetch('/api/stock-alerts', {
         method: 'POST',
-        headers: {
+        headers: addCSRFHeader({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({
           email,
           productId,

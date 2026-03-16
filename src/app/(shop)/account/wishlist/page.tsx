@@ -10,6 +10,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDropButton from '@/components/shop/PriceDropButton';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface WishlistProduct {
   name: string;
@@ -121,7 +122,7 @@ export default function WishlistPage() {
     try {
       const res = await fetch('/api/account/wishlists', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name: newListName.trim() }),
       });
 
@@ -148,7 +149,7 @@ export default function WishlistPage() {
     try {
       const res = await fetch('/api/account/wishlists', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ id: renameCollectionId, name: renameValue.trim() }),
       });
 
@@ -186,6 +187,7 @@ export default function WishlistPage() {
     try {
       const res = await fetch(`/api/account/wishlists?id=${id}`, {
         method: 'DELETE',
+        headers: addCSRFHeader({}),
       });
 
       if (res.ok) {
@@ -211,6 +213,7 @@ export default function WishlistPage() {
     try {
       const res = await fetch(`/api/account/wishlists/items?id=${itemId}`, {
         method: 'DELETE',
+        headers: addCSRFHeader({}),
       });
 
       if (res.ok) {
@@ -238,7 +241,7 @@ export default function WishlistPage() {
     try {
       const res = await fetch('/api/account/wishlists/items', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ itemId: moveItemId, newCollectionId: moveTargetId }),
       });
 

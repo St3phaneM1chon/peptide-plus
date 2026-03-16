@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 
 export default function ChangePasswordPage() {
   const { status } = useSession();
@@ -71,7 +72,7 @@ export default function ChangePasswordPage() {
     try {
       const res = await fetch('/api/user/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,

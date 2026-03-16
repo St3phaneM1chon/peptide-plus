@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface NotificationPreferences {
   orderUpdates: boolean;
@@ -86,7 +87,7 @@ export default function NotificationPreferencesPage() {
     try {
       const res = await fetch('/api/account/notifications', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(preferences),
       });
 
@@ -118,7 +119,7 @@ export default function NotificationPreferencesPage() {
     try {
       const res = await fetch('/api/account/notifications', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(newPreferences),
       });
 

@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface OrderItem {
   id: string;
@@ -131,6 +132,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/account/orders/${orderId}/reorder`, {
         method: 'POST',
+        headers: addCSRFHeader({}),
       });
 
       if (!res.ok) {
@@ -194,6 +196,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/account/orders/${order.id}/cancel`, {
         method: 'POST',
+        headers: addCSRFHeader({}),
       });
 
       if (!res.ok) {
@@ -515,7 +518,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/account/orders/${editingAddressOrderId}/update-address`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(addressForm),
       });
 

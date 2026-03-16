@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   Copy,
   Check,
@@ -169,7 +170,7 @@ export default function ReferralsPage() {
   const handleGenerateCode = async () => {
     setGenerating(true);
     try {
-      const res = await fetch('/api/referrals/generate', { method: 'POST' });
+      const res = await fetch('/api/referrals/generate', { method: 'POST', headers: addCSRFHeader({}) });
       const data = await res.json();
 
       if (res.ok && data.referralCode) {

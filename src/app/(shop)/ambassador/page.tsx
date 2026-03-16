@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface AmbassadorStats {
   referrals: number;
@@ -137,7 +138,7 @@ export default function AmbassadorPage() {
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: session.user.name || 'Ambassador Applicant',
           email: session.user.email,

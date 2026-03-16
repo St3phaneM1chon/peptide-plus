@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import { useI18n } from '@/i18n/client';
 
 interface PriceDropButtonProps {
@@ -83,7 +84,7 @@ export default function PriceDropButton({
       try {
         const res = await fetch('/api/price-watch', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ productId }),
         });
 
@@ -125,7 +126,7 @@ export default function PriceDropButton({
 
       const res = await fetch('/api/price-watch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           productId,
           targetPrice: target,

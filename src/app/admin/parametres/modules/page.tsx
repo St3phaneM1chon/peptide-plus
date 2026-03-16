@@ -10,6 +10,7 @@ import { useI18n } from '@/i18n/client';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import type { ModuleKey } from '@/lib/module-flags';
+import { addCSRFHeader } from '@/lib/csrf';
 
 const MODULE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   ecommerce: ShoppingCart,
@@ -78,7 +79,7 @@ export default function ModulesPage() {
 
       const res = await fetch('/api/admin/modules', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           modules: changed.map((m) => ({ key: m.key, enabled: m.enabled })),
         }),

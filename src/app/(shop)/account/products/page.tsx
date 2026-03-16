@@ -10,6 +10,7 @@ import { useUpsell } from '@/contexts/UpsellContext';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ProductHistoryItem {
   productId: string;
@@ -85,7 +86,7 @@ export default function ProductHistoryPage() {
       // Create subscription in DB
       await fetch('/api/account/subscriptions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           productId: subscriptionOffer.productId,
           formatId: subscriptionOffer.formatId,

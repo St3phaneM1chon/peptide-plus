@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useI18n } from '@/i18n/client';
 
@@ -55,7 +56,7 @@ export default function GiftCardRedeem() {
     try {
       const response = await fetch('/api/gift-cards/redeem', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ code }),
       });
 

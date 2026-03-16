@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ReturnRequest {
   id: string;
@@ -110,7 +111,7 @@ export default function ReturnsPage() {
     try {
       const res = await fetch('/api/account/returns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           orderId: selectedOrder.id,
           orderItemId: selectedItemId,

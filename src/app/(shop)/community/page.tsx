@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { useSearchParams } from 'next/navigation';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // --- Types matching API responses ---
 
@@ -296,7 +297,7 @@ function CommunityContent() {
     try {
       const res = await fetch('/api/community/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           title: newPost.title,
           content: newPost.content,
@@ -353,7 +354,7 @@ function CommunityContent() {
     try {
       const res = await fetch(`/api/community/posts/${postId}/vote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ value }),
       });
 

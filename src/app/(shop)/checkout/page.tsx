@@ -16,6 +16,7 @@ import { FormError } from '@/components/ui/FormError';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 import { useDiscountCode } from '@/hooks/useDiscountCode';
 import DOMPurify from 'dompurify';
+import { addCSRFHeader } from '@/lib/csrf';
 // Tax module — route-level code split already ensures this only loads on /checkout
 import {
   calculateTaxes,
@@ -175,7 +176,7 @@ export default function CheckoutPage() {
   const validatePromo = useCallback(async (code: string) => {
     const res = await fetch('/api/promo/validate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ code, subtotal }),
     });
     const data = await res.json();
@@ -235,7 +236,7 @@ export default function CheckoutPage() {
     if (promoApplied && subtotal > 0) {
       fetch('/api/promo/validate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ code: promoApplied, subtotal }),
       })
         .then((res) => res.json())
@@ -432,7 +433,7 @@ export default function CheckoutPage() {
         // Créer commande PayPal
         const response = await fetch('/api/payments/paypal/create-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(orderData),
         });
         
@@ -449,7 +450,7 @@ export default function CheckoutPage() {
         // Stripe (credit_card, interac, apple_pay, google_pay)
         const response = await fetch('/api/payments/create-checkout', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify(orderData),
         });
         

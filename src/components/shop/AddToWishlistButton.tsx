@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n/client';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface WishlistCollection {
   id: string;
@@ -113,7 +114,7 @@ export default function AddToWishlistButton({
         // Create default wishlist
         const createRes = await fetch('/api/account/wishlists', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ name: 'My Wishlist' }),
         });
 
@@ -135,7 +136,7 @@ export default function AddToWishlistButton({
     try {
       const res = await fetch('/api/account/wishlists/items', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ collectionId, productId }),
       });
 

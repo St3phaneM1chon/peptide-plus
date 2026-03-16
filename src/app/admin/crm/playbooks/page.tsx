@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   BookOpen,
   Plus,
@@ -253,7 +254,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
 
       const res = await fetch(url, {
         method: playbook ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,

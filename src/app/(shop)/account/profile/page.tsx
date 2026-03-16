@@ -14,6 +14,7 @@ import { useI18n } from '@/i18n/client';
 import { profileSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface UserProfile {
   name: string;
@@ -68,6 +69,7 @@ export default function ProfilePage() {
 
       const res = await fetch('/api/user/avatar', {
         method: 'POST',
+        headers: addCSRFHeader({}),
         body: formData,
       });
 
@@ -140,7 +142,7 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(formData),
       });
 

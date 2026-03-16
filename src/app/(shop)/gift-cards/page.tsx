@@ -5,6 +5,7 @@ import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { addCSRFHeader } from '@/lib/csrf';
 
 const PRESET_AMOUNTS = [25, 50, 100, 200];
 
@@ -54,7 +55,7 @@ export default function GiftCardsPage() {
     try {
       const response = await fetch('/api/gift-cards', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           amount: finalAmount,
           recipientEmail: recipientEmail || null,

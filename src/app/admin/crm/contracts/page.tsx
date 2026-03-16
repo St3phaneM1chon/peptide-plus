@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 import {
   FileText,
   Plus,
@@ -152,7 +153,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
 
       const res = await fetch(url, {
         method: contract ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           title: title.trim(),
           companyName: companyName.trim() || undefined,

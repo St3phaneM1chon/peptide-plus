@@ -9,6 +9,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 interface ImportRecord {
   id: string;
@@ -104,7 +105,7 @@ export default function RecordingImportsPage() {
     try {
       const res = await fetch('/api/admin/recording-imports/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({}),
       });
       if (res.ok) {
@@ -125,7 +126,7 @@ export default function RecordingImportsPage() {
   const handleImport = async (id: string) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/admin/recording-imports/${id}/import`, { method: 'POST' });
+      const res = await fetch(`/api/admin/recording-imports/${id}/import`, { method: 'POST', headers: addCSRFHeader({}) });
       const data = await res.json();
       if (data.success) {
         toast.success(t('admin.recordingImports.importSuccess'));
@@ -145,7 +146,7 @@ export default function RecordingImportsPage() {
     try {
       const res = await fetch(`/api/admin/recording-imports/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action }),
       });
       if (res.ok) {
@@ -164,7 +165,7 @@ export default function RecordingImportsPage() {
     try {
       const res = await fetch('/api/admin/recording-imports/bulk-import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ importIds: Array.from(selectedIds) }),
       });
       if (res.ok) {

@@ -9,6 +9,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -130,7 +131,7 @@ export default function VideoSessionsPage() {
     try {
       const res = await fetch(`/api/admin/video-sessions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: 'CANCELLED' }),
       });
       if (!res.ok) throw new Error();
@@ -426,7 +427,7 @@ function CreateSessionModal({
     try {
       const res = await fetch('/api/admin/video-sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           platform,
           topic,
