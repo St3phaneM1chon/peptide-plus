@@ -21,7 +21,8 @@ const acceptInviteSchema = z.object({
     .max(128)
     .regex(/[A-Z]/, 'Doit contenir au moins une majuscule')
     .regex(/[a-z]/, 'Doit contenir au moins une minuscule')
-    .regex(/[0-9]/, 'Doit contenir au moins un chiffre'),
+    .regex(/[0-9]/, 'Doit contenir au moins un chiffre')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Doit contenir au moins un caractère spécial'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',

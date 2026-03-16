@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       data: {
         termsAcceptedAt: now,
         termsVersion: stripControlChars(stripHtml(termsVersion)),
+        privacyVersion: privacyVersion ? stripControlChars(stripHtml(privacyVersion)) : undefined,
         privacyAcceptedAt: now,
       },
     });
