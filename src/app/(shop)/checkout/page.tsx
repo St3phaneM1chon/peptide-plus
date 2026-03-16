@@ -770,10 +770,11 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="checkout-phone" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.phone')}
                       </label>
                       <input
+                        id="checkout-phone"
                         type="tel"
                         autoComplete="tel"
                         value={contactInfo.phone}
@@ -914,10 +915,11 @@ export default function CheckoutPage() {
                       <FormError error={shippingErrors.address} id="error-address" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="checkout-apartment" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.apartment')}
                       </label>
                       <input
+                        id="checkout-apartment"
                         type="text"
                         autoComplete="shipping address-line2"
                         value={shippingInfo.apartment}
@@ -985,10 +987,11 @@ export default function CheckoutPage() {
                       {/* Postal Code - Only show if country uses postal codes */}
                       {addressFormat.postalCodeRequired || addressFormat.postalCodePlaceholder ? (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label htmlFor="checkout-postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                             {addressFormat.postalCodeLabel} {addressFormat.postalCodeRequired ? '*' : ''}
                           </label>
                           <input
+                            id="checkout-postalCode"
                             type="text"
                             autoComplete="shipping postal-code"
                             value={shippingInfo.postalCode}
@@ -1016,10 +1019,11 @@ export default function CheckoutPage() {
                       {/* Region/Province/State */}
                       {needsProvinceSelection ? (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label htmlFor="checkout-province" className="block text-sm font-medium text-gray-700 mb-1">
                             {addressFormat.regionLabel} {addressFormat.regionRequired ? '*' : ''}
                           </label>
                           <select
+                            id="checkout-province"
                             value={shippingInfo.province}
                             onChange={(e) => { setShippingInfo({ ...shippingInfo, province: e.target.value }); clearShippingError('province'); }}
                             className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${shippingErrors.province ? 'border-red-500' : 'border-gray-200'}`}
@@ -1036,10 +1040,11 @@ export default function CheckoutPage() {
                         </div>
                       ) : (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label htmlFor="checkout-provinceText" className="block text-sm font-medium text-gray-700 mb-1">
                             {addressFormat.regionLabel} {addressFormat.regionRequired ? '*' : ''}
                           </label>
                           <input
+                            id="checkout-provinceText"
                             type="text"
                             value={shippingInfo.province}
                             onChange={(e) => setShippingInfo({ ...shippingInfo, province: e.target.value })}
@@ -1061,10 +1066,11 @@ export default function CheckoutPage() {
                     {/* Additional fields for specific countries */}
                     {addressFormat.additionalFields?.colonia && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="checkout-colonia" className="block text-sm font-medium text-gray-700 mb-1">
                           {t('checkout.coloniaLabel')} *
                         </label>
                         <input
+                          id="checkout-colonia"
                           type="text"
                           value={shippingInfo.apartment}
                           onChange={(e) => setShippingInfo({ ...shippingInfo, apartment: e.target.value })}
@@ -1080,10 +1086,11 @@ export default function CheckoutPage() {
                     
                     {addressFormat.additionalFields?.district && shippingInfo.country !== 'HK' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="checkout-district" className="block text-sm font-medium text-gray-700 mb-1">
                           {t('checkout.districtLabel')} *
                         </label>
                         <input
+                          id="checkout-district"
                           type="text"
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder={t('checkout.districtPlaceholder')}
@@ -1146,10 +1153,11 @@ export default function CheckoutPage() {
                       <div className="space-y-4 animate-fade-in">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-firstName" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.firstName')} *
                             </label>
                             <input
+                              id="billing-firstName"
                               type="text"
                               autoComplete="billing given-name"
                               value={billingInfo.firstName}
@@ -1161,10 +1169,11 @@ export default function CheckoutPage() {
                             <FormError error={billingErrors.firstName} />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-lastName" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.lastName')} *
                             </label>
                             <input
+                              id="billing-lastName"
                               type="text"
                               autoComplete="billing family-name"
                               value={billingInfo.lastName}
@@ -1177,10 +1186,11 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label htmlFor="billing-address" className="block text-sm font-medium text-gray-700 mb-1">
                             {t('checkout.address')} *
                           </label>
                           <input
+                            id="billing-address"
                             type="text"
                             autoComplete="billing street-address"
                             value={billingInfo.address}
@@ -1192,10 +1202,11 @@ export default function CheckoutPage() {
                           <FormError error={billingErrors.address} />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label htmlFor="billing-apartment" className="block text-sm font-medium text-gray-700 mb-1">
                             {t('checkout.apartment')}
                           </label>
                           <input
+                            id="billing-apartment"
                             type="text"
                             autoComplete="billing address-line2"
                             value={billingInfo.apartment}
@@ -1205,10 +1216,11 @@ export default function CheckoutPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-city" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.city')} *
                             </label>
                             <input
+                              id="billing-city"
                               type="text"
                               autoComplete="billing address-level2"
                               value={billingInfo.city}
@@ -1220,10 +1232,11 @@ export default function CheckoutPage() {
                             <FormError error={billingErrors.city} />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-province" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.province')} *
                             </label>
                             <select
+                              id="billing-province"
                               value={billingInfo.province}
                               onChange={(e) => setBillingInfo({ ...billingInfo, province: e.target.value })}
                               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -1236,10 +1249,11 @@ export default function CheckoutPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.postalCode')} *
                             </label>
                             <input
+                              id="billing-postalCode"
                               type="text"
                               autoComplete="billing postal-code"
                               value={billingInfo.postalCode}
@@ -1252,10 +1266,11 @@ export default function CheckoutPage() {
                             <FormError error={billingErrors.postalCode} />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="billing-country" className="block text-sm font-medium text-gray-700 mb-1">
                               {t('checkout.country')} *
                             </label>
                             <select
+                              id="billing-country"
                               value={billingInfo.country}
                               onChange={(e) => setBillingInfo({ ...billingInfo, country: e.target.value })}
                               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
