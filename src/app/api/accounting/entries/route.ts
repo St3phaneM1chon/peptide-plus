@@ -234,8 +234,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const entry = await prisma.$transaction(async (tx) => {
       const entryNumber = await generateEntryNumber(tx, entryYear);
 
+      const userId = session.user.id;
       const linesToCreate = lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
-        accountId: accountMap.get(l.accountCode)!.id,
+        accountId: (accountMap.get(l.accountCode) ?? { id: '' }).id,
         debit: Number(l.debit) || 0,
         credit: Number(l.credit) || 0,
         description: l.description || null,
@@ -250,8 +251,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
           type: type || 'MANUAL',
           status: postImmediately ? 'POSTED' : 'DRAFT',
           reference,
-          createdBy: session.user.id!,
-          postedBy: postImmediately ? session.user.id! : undefined,
+          createdBy: userId,
+          postedBy: postImmediately ? userId : undefined,
           postedAt: postImmediately ? new Date() : undefined,
           lines: { create: linesToCreate },
         },

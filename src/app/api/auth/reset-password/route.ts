@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const rateLimit = await rateLimitMiddleware(ip, '/api/auth/reset-password');
     if (!rateLimit.success) {
       return NextResponse.json(
-        { error: rateLimit.error!.message },
+        { error: rateLimit.error?.message || 'Too many requests' },
         { status: 429, headers: rateLimit.headers }
       );
     }

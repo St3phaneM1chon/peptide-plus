@@ -9647,6 +9647,8 @@
     "promoCode": "Code promo",
     "apply": "Appliquer",
     "invalidPromoCode": "Code promo invalide",
+    "invalidGiftCard": "Carte-cadeau invalide ou expirée",
+    "giftCardValidationError": "Erreur lors de la validation de la carte-cadeau",
     "promoDiscount": "Rabais promo",
     "subtotal": "Sous-total",
     "shipping": "Livraison",

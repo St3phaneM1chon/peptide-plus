@@ -1226,6 +1226,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
 
   // 3. A5-P1-003: Revoke loyalty points awarded for this order on refund
   if (order.userId) {
+    const orderUserId = order.userId; // Narrow for async callback
     try {
       const earnTransactions = await prisma.loyaltyTransaction.findMany({
         where: {
@@ -1246,7 +1247,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         if (pointsToRevoke > 0) {
           await prisma.$transaction(async (tx) => {
             const updatedUser = await tx.user.update({
-              where: { id: order.userId! },
+              where: { id: orderUserId },
               data: {
                 loyaltyPoints: { decrement: pointsToRevoke },
               },
@@ -1255,7 +1256,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
             // Prevent negative balance
             if (updatedUser.loyaltyPoints < 0) {
               await tx.user.update({
-                where: { id: order.userId! },
+                where: { id: orderUserId },
                 data: { loyaltyPoints: 0 },
               });
             }
@@ -1264,7 +1265,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
 
             await tx.loyaltyTransaction.create({
               data: {
-                userId: order.userId!,
+                userId: orderUserId,
                 type: 'ADJUST',
                 points: -pointsToRevoke,
                 description: `Points revoked: order ${order.orderNumber} refunded via Stripe ($${refundAmount}${isFullRefund ? ' - full' : ' - partial'})`,

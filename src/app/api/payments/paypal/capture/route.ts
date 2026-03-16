@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
             taxPst,
             // SECURITY: Use PayPal's captured amount as source of truth
             total: Number(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || captureData.purchase_units?.[0]?.amount?.value || 0),
-            currencyId: currency!.id,
+            currencyId: currency.id,
             paymentMethod: 'PAYPAL',
             paymentStatus: 'PAID',
             status: 'CONFIRMED',

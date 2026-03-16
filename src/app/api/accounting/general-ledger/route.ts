@@ -24,7 +24,7 @@ export const GET = withAdminGuard(async (request) => {
       const startDate = from ? new Date(from) : null;
       const endDate = to ? new Date(to) : null;
 
-      if ((from && isNaN(startDate!.getTime())) || (to && isNaN(endDate!.getTime()))) {
+      if ((startDate && isNaN(startDate.getTime())) || (endDate && isNaN(endDate.getTime()))) {
         return NextResponse.json({ error: 'Format de date invalide. Utilisez le format ISO (YYYY-MM-DD)' }, { status: 400 });
       }
       if (startDate && endDate && startDate > endDate) {

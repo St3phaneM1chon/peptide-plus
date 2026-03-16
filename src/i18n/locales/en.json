@@ -9662,6 +9662,8 @@
     "freeShippingUnlocked": "You've unlocked free shipping!",
     "increaseQuantity": "Increase quantity",
     "invalidPromoCode": "Invalid promo code",
+    "invalidGiftCard": "Invalid or expired gift card",
+    "giftCardValidationError": "Failed to validate gift card",
     "item": "item",
     "itemTotal": "Item total",
     "items": "items",

@@ -255,9 +255,9 @@ export async function POST(request: NextRequest) {
     // Each format is looked up with its claimed productId, so a cheap format from product A
     // cannot be referenced as belonging to product B.
     const formatProductPairs = items
-      .filter((i: { formatId?: string }) => !!i.formatId)
-      .map((i: { formatId?: string; productId: string }) => ({
-        id: i.formatId!,
+      .filter((i: { formatId?: string }): i is { formatId: string; productId: string } => !!i.formatId)
+      .map((i) => ({
+        id: i.formatId,
         productId: i.productId,
       }));
     const uniqueFormatPairs = [...new Map(formatProductPairs.map(p => [`${p.id}:${p.productId}`, p])).values()];
@@ -583,10 +583,10 @@ export async function POST(request: NextRequest) {
     const totalItemDiscount = add(serverPromoDiscount, serverGiftCardDiscount);
     if (totalItemDiscount > 0) {
       const totalDiscountCents = toCents(convertCurrency(totalItemDiscount, exchangeRate));
-      const totalOriginalCents = lineItems.reduce((s, l) => s + l.price_data!.unit_amount!, 0);
+      const totalOriginalCents = lineItems.reduce((s, l) => s + (l.price_data?.unit_amount ?? 0), 0);
       let distributedCents = 0;
       lineItems.forEach((li, idx) => {
-        const originalAmount = li.price_data!.unit_amount!;
+        const originalAmount = li.price_data?.unit_amount ?? 0;
         let discountCents: number;
         if (idx < lineItems.length - 1) {
           // All items except the last: round DOWN to avoid over-distributing
@@ -685,8 +685,8 @@ export async function POST(request: NextRequest) {
         // BE-PAY-05: Idempotency key for duplicate prevention
         idempotencyKey: idempotencyKey || '',
         // Multi-currency metadata
-        currencyCode: dbCurrency!.code,
-        currencyId: dbCurrency!.id,
+        currencyCode: dbCurrency.code,
+        currencyId: dbCurrency.id,
         exchangeRate: String(exchangeRate),
         // Legal compliance: research consent
         researchConsentAccepted: String(body.researchConsentAccepted || false),

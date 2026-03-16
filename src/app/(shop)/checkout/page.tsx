@@ -201,7 +201,7 @@ export default function CheckoutPage() {
       const discountAmount = Math.min(data.balance, remainingTotal);
       return { valid: true, discount: discountAmount, code };
     }
-    return { valid: false, discount: 0, error: data.error || 'Invalid or expired gift card' };
+    return { valid: false, discount: 0, error: data.error || t('checkout.invalidGiftCard') };
   }, [subtotal, promo.discount]);
 
   const [giftCard, giftCardActions] = useDiscountCode({
@@ -209,8 +209,8 @@ export default function CheckoutPage() {
     onSuccess: (_code, amount) => toast.success(t('toast.checkout.giftCardApplied', { amount: formatPrice(amount) })),
     onError: () => toast.error(t('toast.checkout.giftCardInvalid')),
     onFail: () => toast.error(t('toast.checkout.giftCardFailed')),
-    defaultErrorMessage: 'Invalid or expired gift card',
-    failureErrorMessage: 'Failed to validate gift card',
+    defaultErrorMessage: t('checkout.invalidGiftCard'),
+    failureErrorMessage: t('checkout.giftCardValidationError'),
   });
 
   // Backward-compatible aliases for existing template references
