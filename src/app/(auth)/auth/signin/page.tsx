@@ -145,7 +145,7 @@ function SignInContent() {
 
         {/* Erreur */}
         {(error || formError) && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div id="signin-error" role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             <p className="text-sm">
               {error === 'OAuthSignin' && t('auth.errorOAuthSignin')}
               {error === 'OAuthCallback' && t('auth.errorOAuthCallback')}
@@ -262,6 +262,9 @@ function SignInContent() {
                     id="email"
                     type="email"
                     required
+                    aria-required="true"
+                    aria-invalid={!!(error || formError)}
+                    aria-describedby={(error || formError) ? 'signin-error' : undefined}
                     autoComplete="email"
                     value={formData.email}
                     onChange={(e) =>
@@ -283,6 +286,9 @@ function SignInContent() {
                     id="password"
                     type="password"
                     required
+                    aria-required="true"
+                    aria-invalid={!!(error || formError)}
+                    aria-describedby={(error || formError) ? 'signin-error' : undefined}
                     autoComplete="current-password"
                     value={formData.password}
                     onChange={(e) =>
@@ -308,6 +314,9 @@ function SignInContent() {
                   id="mfaCode"
                   type="text"
                   required
+                  aria-required="true"
+                  aria-invalid={!!(error || formError)}
+                  aria-describedby={(error || formError) ? 'signin-error' : undefined}
                   value={formData.mfaCode}
                   onChange={(e) =>
                     setFormData({ ...formData, mfaCode: e.target.value })
