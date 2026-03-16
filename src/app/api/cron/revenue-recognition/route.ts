@@ -84,7 +84,6 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: 'Erreur lors du traitement de la reconnaissance de revenus',
-          details: error instanceof Error ? error.message : String(error),
           durationMs: duration,
         },
         { status: 500 }

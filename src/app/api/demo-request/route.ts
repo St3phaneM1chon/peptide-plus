@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/demo-request — Create a CRM lead from demo request form
  *

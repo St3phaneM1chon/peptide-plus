@@ -115,8 +115,9 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
+      console.error('[cron/deal-rotting] Error:', error instanceof Error ? error.message : String(error));
       return NextResponse.json(
-        { error: 'Internal server error', message: error instanceof Error ? error.message : String(error) },
+        { error: 'Internal server error' },
         { status: 500 }
       );
     }
