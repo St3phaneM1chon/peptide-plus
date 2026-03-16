@@ -7,12 +7,16 @@ import { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useI18n } from '@/i18n/client';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
+  const { formatPrice } = useCurrency();
+  const { t } = useI18n();
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.round((1 - product.price / product.compareAtPrice!) * 100)
@@ -146,11 +150,11 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
         <div className="flex items-center justify-between">
           <div className="flex items-baseline space-x-2">
             <span className="text-2xl font-bold text-gray-900">
-              {product.price.toFixed(2)} $
+              {formatPrice(product.price)}
             </span>
             {hasDiscount && (
               <span className="text-sm text-gray-400 line-through">
-                {product.compareAtPrice!.toFixed(2)} $
+                {formatPrice(product.compareAtPrice!)}
               </span>
             )}
           </div>
@@ -160,13 +164,13 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
               href={`/cours/${product.slug}`}
               className="px-3 py-2 text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-medium transition-colors"
             >
-              En savoir plus
+              {t('common.learnMore') || 'En savoir plus'}
             </Link>
             <Link
               href={`/checkout/${product.slug}`}
               className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
             >
-              Acheter
+              {t('shop.buy') || 'Acheter'}
             </Link>
           </div>
         </div>

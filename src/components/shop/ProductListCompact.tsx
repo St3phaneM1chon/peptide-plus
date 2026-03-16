@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface CompactProduct {
   id: string;
@@ -20,6 +21,7 @@ interface ProductListCompactProps {
 
 export default function ProductListCompact({ products }: ProductListCompactProps) {
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
 
   if (!products.length) return null;
 
@@ -56,7 +58,7 @@ export default function ProductListCompact({ products }: ProductListCompactProps
               {product.name}
             </h4>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm font-semibold text-primary-700">${product.price.toFixed(2)}</span>
+              <span className="text-sm font-semibold text-primary-700">{formatPrice(product.price)}</span>
               {product.inStock !== false && (
                 <span className="text-xs text-primary-600">{t('shop.inStock') || 'In Stock'}</span>
               )}
