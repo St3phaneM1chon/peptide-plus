@@ -134,10 +134,12 @@ export default function DemoPage() {
                 </h2>
 
                 <form onSubmit={handleSubmit}>
+                  <fieldset disabled={sending} style={{ border: 'none', padding: 0, margin: 0 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div>
-                      <label className="form-label">{t('demo.firstName')} *</label>
+                      <label htmlFor="demo-firstName" className="form-label">{t('demo.firstName')} *</label>
                       <input
+                        id="demo-firstName"
                         type="text"
                         required
                         value={formData.firstName}
@@ -146,8 +148,9 @@ export default function DemoPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">{t('demo.lastName')} *</label>
+                      <label htmlFor="demo-lastName" className="form-label">{t('demo.lastName')} *</label>
                       <input
+                        id="demo-lastName"
                         type="text"
                         required
                         value={formData.lastName}
@@ -158,8 +161,9 @@ export default function DemoPage() {
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <label className="form-label">{t('demo.email')} *</label>
+                    <label htmlFor="demo-email" className="form-label">{t('demo.email')} *</label>
                     <input
+                      id="demo-email"
                       type="email"
                       required
                       value={formData.email}
@@ -171,8 +175,9 @@ export default function DemoPage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div>
-                      <label className="form-label">{t('demo.company')} *</label>
+                      <label htmlFor="demo-company" className="form-label">{t('demo.company')} *</label>
                       <input
+                        id="demo-company"
                         type="text"
                         required
                         value={formData.company}
@@ -181,8 +186,9 @@ export default function DemoPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">{t('demo.phone')}</label>
+                      <label htmlFor="demo-phone" className="form-label">{t('demo.phone')}</label>
                       <input
+                        id="demo-phone"
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -192,8 +198,9 @@ export default function DemoPage() {
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <label className="form-label">{t('demo.employees')} *</label>
+                    <label htmlFor="demo-employees" className="form-label">{t('demo.employees')} *</label>
                     <select
+                      id="demo-employees"
                       required
                       value={formData.employees}
                       onChange={(e) => setFormData({ ...formData, employees: e.target.value })}
@@ -209,8 +216,9 @@ export default function DemoPage() {
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <label className="form-label">{t('demo.needs')}</label>
+                    <label htmlFor="demo-needs" className="form-label">{t('demo.needs')}</label>
                     <select
+                      id="demo-needs"
                       value={formData.needs}
                       onChange={(e) => setFormData({ ...formData, needs: e.target.value })}
                       className="form-input form-select"
@@ -225,8 +233,9 @@ export default function DemoPage() {
                   </div>
 
                   <div style={{ marginBottom: '24px' }}>
-                    <label className="form-label">{t('demo.message')}</label>
+                    <label htmlFor="demo-message" className="form-label">{t('demo.message')}</label>
                     <textarea
+                      id="demo-message"
                       rows={3}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -237,7 +246,7 @@ export default function DemoPage() {
                   </div>
 
                   {error && (
-                    <p style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>
+                    <p id="demo-error" role="alert" style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>
                       {error}
                     </p>
                   )}
@@ -250,6 +259,7 @@ export default function DemoPage() {
                   >
                     {sending ? t('demo.sending') : t('demo.submit')}
                   </button>
+                  </fieldset>
 
                   <p style={{ fontSize: '12px', color: 'var(--gray-400)', textAlign: 'center', marginTop: '16px' }}>
                     {t('demo.privacyText')}{' '}

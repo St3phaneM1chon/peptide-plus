@@ -123,7 +123,7 @@ export default function ChangePasswordPage() {
 
         {/* Messages */}
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg ${
+          <div role="alert" className={`mb-6 p-4 rounded-lg ${
             message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
             {message.text}
@@ -142,15 +142,17 @@ export default function ChangePasswordPage() {
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Current Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('account.currentPassword')}
               </label>
               <div className="relative">
                 <input
+                  id="current-password"
                   type={showPasswords.current ? 'text' : 'password'}
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pe-12"
                 />
                 <button
@@ -165,15 +167,17 @@ export default function ChangePasswordPage() {
 
             {/* New Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('account.newPassword')}
               </label>
               <div className="relative">
                 <input
+                  id="new-password"
                   type={showPasswords.new ? 'text' : 'password'}
                   value={formData.newPassword}
                   onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                   required
+                  autoComplete="new-password"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pe-12"
                 />
                 <button
@@ -228,15 +232,17 @@ export default function ChangePasswordPage() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('account.confirmPassword')}
               </label>
               <div className="relative">
                 <input
+                  id="confirm-password"
                   type={showPasswords.confirm ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
+                  autoComplete="new-password"
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pe-12 ${
                     formData.confirmPassword && formData.confirmPassword !== formData.newPassword
                       ? 'border-red-300 bg-red-50'

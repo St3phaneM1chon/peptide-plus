@@ -452,8 +452,9 @@ export default function AmbassadorPage() {
                 
                 <form onSubmit={handleApply} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('ambassador.websiteUrl') || 'Website or Blog URL'}</label>
+                    <label htmlFor="amb-website" className="block text-sm font-medium mb-2">{t('ambassador.websiteUrl') || 'Website or Blog URL'}</label>
                     <input
+                      id="amb-website"
                       type="url"
                       value={applicationData.website}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, website: e.target.value }))}
@@ -463,8 +464,9 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('ambassador.socialProfiles') || 'Social Media Profiles'}</label>
+                    <label htmlFor="amb-social" className="block text-sm font-medium mb-2">{t('ambassador.socialProfiles') || 'Social Media Profiles'}</label>
                     <input
+                      id="amb-social"
                       type="text"
                       value={applicationData.socialMedia}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, socialMedia: e.target.value }))}
@@ -474,8 +476,9 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('ambassador.estimatedFollowers') || 'Estimated Total Followers/Audience'}</label>
+                    <label htmlFor="amb-followers" className="block text-sm font-medium mb-2">{t('ambassador.estimatedFollowers') || 'Estimated Total Followers/Audience'}</label>
                     <select
+                      id="amb-followers"
                       value={applicationData.followers}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, followers: e.target.value }))}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -491,8 +494,9 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('ambassador.whyJoin') || 'Why do you want to join our program?'}</label>
+                    <label htmlFor="amb-whyJoin" className="block text-sm font-medium mb-2">{t('ambassador.whyJoin') || 'Why do you want to join our program?'}</label>
                     <textarea
+                      id="amb-whyJoin"
                       value={applicationData.whyJoin}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, whyJoin: e.target.value }))}
                       placeholder={t('ambassador.placeholderAbout')}
@@ -503,8 +507,9 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('ambassador.promotionPlan') || 'How do you plan to promote our products?'}</label>
+                    <label htmlFor="amb-promotionPlan" className="block text-sm font-medium mb-2">{t('ambassador.promotionPlan') || 'How do you plan to promote our products?'}</label>
                     <textarea
+                      id="amb-promotionPlan"
                       value={applicationData.promotionPlan}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, promotionPlan: e.target.value }))}
                       placeholder={t('ambassador.placeholderContentTypes')}

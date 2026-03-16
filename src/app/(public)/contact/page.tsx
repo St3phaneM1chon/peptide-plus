@@ -247,7 +247,7 @@ export default function ContactPage() {
                 </p>
 
                 {error && (
-                  <div style={{
+                  <div role="alert" style={{
                     padding: '12px 16px',
                     backgroundColor: '#fef2f2',
                     border: '1px solid #fecaca',
@@ -261,6 +261,7 @@ export default function ContactPage() {
                 )}
 
                 <form onSubmit={handleSubmit}>
+                  <fieldset disabled={sending} style={{ border: 'none', padding: 0, margin: 0 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div>
                       <label htmlFor="contact-name" style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
@@ -418,6 +419,7 @@ export default function ContactPage() {
                   >
                     {sending ? t('contact.sending') : t('contact.sendForm')}
                   </button>
+                  </fieldset>
 
                   <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '16px', textAlign: 'center' }}>
                     {t('contact.privacyNote')}{' '}
