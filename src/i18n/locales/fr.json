@@ -12703,7 +12703,10 @@
     "showing": "Affichage de",
     "minPrice": "Prix minimum",
     "maxPrice": "Prix maximum",
-    "youSaveAmount": "Vous économisez {amount}!"
+    "youSaveAmount": "Vous économisez {amount}!",
+    "wishlistError": "Erreur lors de l'ajout à la liste de souhaits",
+    "addedToWishlist": "Ajouté à la liste de souhaits",
+    "alreadyInWishlist": "Déjà dans la liste de souhaits"
   },
   "subscriptions": {
     "title": "Abonnez-vous et économisez",

@@ -12514,7 +12514,10 @@
       "description": "المنتج الذي تبحث عنه غير موجود أو تمت إزالته.",
       "title": "المنتج غير موجود"
     },
-    "youSaveAmount": "توفر {amount}!"
+    "youSaveAmount": "توفر {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "متاحة للاشتراك",

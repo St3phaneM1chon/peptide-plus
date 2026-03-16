@@ -12514,7 +12514,10 @@
       "description": "நீங்கள் தேடும் தயாரிப்பு இல்லை அல்லது அகற்றப்பட்டுள்ளது.",
       "title": "தயாரிப்பு கிடைக்கவில்லை"
     },
-    "youSaveAmount": "{amount} சேமிக்கிறீர்கள்!"
+    "youSaveAmount": "{amount} சேமிக்கிறீர்கள்!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "சந்தாவிற்காக கிடைக்கிறது",

@@ -12514,7 +12514,10 @@
       "description": "Produkten du letar efter finns inte eller har tagits bort.",
       "title": "Produkten hittades inte"
     },
-    "youSaveAmount": "Du sparar {amount}!"
+    "youSaveAmount": "Du sparar {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Tillgängliga för Prenumeration",

@@ -12514,7 +12514,10 @@
       "description": "El producto que buscas no existe o ha sido eliminado.",
       "title": "Producto no encontrado"
     },
-    "youSaveAmount": "¡Ahorras {amount}!"
+    "youSaveAmount": "¡Ahorras {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Disponibles para suscripción",

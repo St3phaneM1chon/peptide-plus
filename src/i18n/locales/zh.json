@@ -12514,7 +12514,10 @@
       "description": "您查找的产品不存在或已被移除。",
       "title": "未找到产品"
     },
-    "youSaveAmount": "节省 {amount}！"
+    "youSaveAmount": "节省 {amount}！",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "可订阅产品",

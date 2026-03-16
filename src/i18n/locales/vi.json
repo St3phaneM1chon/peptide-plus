@@ -12514,7 +12514,10 @@
       "description": "Sản phẩm bạn tìm kiếm không tồn tại hoặc đã bị xóa.",
       "title": "Không tìm thấy sản phẩm"
     },
-    "youSaveAmount": "Bạn tiết kiệm {amount}!"
+    "youSaveAmount": "Bạn tiết kiệm {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Có Sẵn Để Đăng Ký",

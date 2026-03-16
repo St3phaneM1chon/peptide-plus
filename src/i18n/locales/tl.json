@@ -12514,7 +12514,10 @@
       "description": "Ang produktong hinahanap mo ay hindi umiiral o tinanggal na.",
       "title": "Hindi nahanap ang produkto"
     },
-    "youSaveAmount": "Nakatipid ka ng {amount}!"
+    "youSaveAmount": "Nakatipid ka ng {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Available para sa Subscription",

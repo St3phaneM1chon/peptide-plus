@@ -192,8 +192,16 @@ export const emailComponents = {
   `,
   
   orderItem: (name: string, quantity: number, price: string, imageUrl?: string) => {
-    // Faille MEDIUM: validate imageUrl is a safe http/https URL before embedding
-    const safeImage = imageUrl && /^https?:\/\//.test(imageUrl) ? imageUrl : undefined;
+    // AUDIT-FIX: Whitelist allowed image domains to prevent tracking pixel injection
+    const ALLOWED_IMAGE_DOMAINS = ['biocyclepeptides.com', 'cdn.biocyclepeptides.com', 'biocyclepeptides.azurewebsites.net', 'localhost'];
+    let safeImage: string | undefined;
+    if (imageUrl && /^https?:\/\//.test(imageUrl)) {
+      try {
+        const url = new URL(imageUrl);
+        safeImage = ALLOWED_IMAGE_DOMAINS.some(d => url.hostname === d || url.hostname.endsWith(`.${d}`))
+          ? imageUrl : undefined;
+      } catch { safeImage = undefined; }
+    }
     return `
     <tr>
       <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">

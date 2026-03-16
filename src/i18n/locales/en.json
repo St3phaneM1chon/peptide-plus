@@ -12703,7 +12703,10 @@
     "saved": "Saved",
     "showing": "Showing",
     "minPrice": "Minimum price",
-    "maxPrice": "Maximum price"
+    "maxPrice": "Maximum price",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Available for Subscription",

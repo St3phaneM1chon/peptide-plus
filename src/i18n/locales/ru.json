@@ -12514,7 +12514,10 @@
       "description": "Товар, который вы ищете, не существует или был удалён.",
       "title": "Товар не найден"
     },
-    "youSaveAmount": "Вы экономите {amount}!"
+    "youSaveAmount": "Вы экономите {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Доступно для подписки",

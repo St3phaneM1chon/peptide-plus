@@ -251,8 +251,19 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
   const config = await getEmailConfig();
   const provider = config.provider;
 
-  // Subject length validation (SMTP limit)
-  options.subject = options.subject.slice(0, MAX_SUBJECT_LENGTH);
+  // AUDIT-FIX: Validate recipient email format before sending (defense-in-depth)
+  // API routes use Zod validation, but cron jobs and internal callers may not
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const recipientList = Array.isArray(options.to) ? options.to : [options.to];
+  for (const r of recipientList) {
+    if (!r.email || !EMAIL_REGEX.test(r.email)) {
+      logger.warn('Invalid recipient email rejected by sendEmail', { requestId, email: r.email?.replace(/^(.{2}).*(@.*)$/, '$1***$2') });
+      return { success: false, error: 'Invalid recipient email address' };
+    }
+  }
+
+  // AUDIT-FIX: Strip CRLF from subject to prevent email header injection
+  options.subject = options.subject.replace(/[\r\n]/g, ' ').slice(0, MAX_SUBJECT_LENGTH);
 
   // Tags array type guard
   const safeTags = Array.isArray(options.tags) ? options.tags.slice(0, 5) : [];

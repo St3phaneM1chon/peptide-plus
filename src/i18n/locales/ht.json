@@ -12514,7 +12514,10 @@
       "description": "Pwodwi w ap chèche a pa egziste oswa li te retire.",
       "title": "Pwodwi pa jwenn"
     },
-    "youSaveAmount": "Ou ekonomize {amount}!"
+    "youSaveAmount": "Ou ekonomize {amount}!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "Disponib pou Abònman",

@@ -124,7 +124,7 @@ export default function AddToWishlistButton({
       }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
-      toast.error('Failed to add to wishlist');
+      toast.error(t('shop.wishlistError') || 'Failed to add to wishlist');
     } finally {
       setIsAdding(false);
     }
@@ -141,28 +141,28 @@ export default function AddToWishlistButton({
 
       if (res.ok) {
         const data = await res.json();
-        toast.success(data.message || 'Added to wishlist');
+        toast.success(data.message || t('shop.addedToWishlist') || 'Added to wishlist');
         setIsInAnyWishlist(true);
         setShowDropdown(false);
       } else {
         const data = await res.json();
         if (res.status === 200) {
-          toast.info(data.message || 'Already in wishlist');
+          toast.info(data.message || t('shop.alreadyInWishlist') || 'Already in wishlist');
         } else {
-          toast.error(data.error || 'Failed to add to wishlist');
+          toast.error(data.error || t('shop.wishlistError') || 'Failed to add to wishlist');
         }
       }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
-      toast.error('Failed to add to wishlist');
+      toast.error(t('shop.wishlistError') || 'Failed to add to wishlist');
     } finally {
       setIsAdding(false);
     }
   };
 
   const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
+    sm: 'w-11 h-11',
+    md: 'w-11 h-11',
     lg: 'w-12 h-12',
   };
 

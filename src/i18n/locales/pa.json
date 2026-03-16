@@ -12514,7 +12514,10 @@
       "description": "ਤੁਸੀਂ ਜੋ ਉਤਪਾਦ ਲੱਭ ਰਹੇ ਹੋ ਉਹ ਮੌਜੂਦ ਨਹੀਂ ਹੈ ਜਾਂ ਹਟਾ ਦਿੱਤਾ ਗਿਆ ਹੈ।",
       "title": "ਉਤਪਾਦ ਨਹੀਂ ਮਿਲਿਆ"
     },
-    "youSaveAmount": "ਤੁਸੀਂ {amount} ਬਚਾਉਂਦੇ ਹੋ!"
+    "youSaveAmount": "ਤੁਸੀਂ {amount} ਬਚਾਉਂਦੇ ਹੋ!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਲਈ ਉਪਲਬਧ",

@@ -12514,7 +12514,10 @@
       "description": "찾고 있는 제품이 존재하지 않거나 삭제되었습니다.",
       "title": "제품을 찾을 수 없습니다"
     },
-    "youSaveAmount": "{amount} 절약!"
+    "youSaveAmount": "{amount} 절약!",
+    "wishlistError": "Failed to add to wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "alreadyInWishlist": "Already in wishlist"
   },
   "subscriptions": {
     "availableProducts": "구독 가능 제품",
