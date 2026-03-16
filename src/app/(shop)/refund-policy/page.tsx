@@ -128,8 +128,8 @@ export default function RefundPolicyPage() {
               <span className="text-primary-500">⏱️</span>
               {t('legal.refund.refundTimelineTitle')}
             </h2>
-            <div className="bg-gray-50 rounded-lg overflow-hidden">
-              <table className="w-full">
+            <div className="bg-gray-50 rounded-lg overflow-x-auto">
+              <table className="w-full min-w-[400px]">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.refund.paymentMethod')}</th>

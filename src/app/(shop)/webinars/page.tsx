@@ -266,7 +266,7 @@ export default function WebinarsPage() {
               </span>
               <span className="font-medium">{webinars.find(w => w.status === 'live')?.title}</span>
             </div>
-            <button aria-label={`Join live webinar: ${webinars.find(w => w.status === 'live')?.title}`} className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600">
+            <button aria-label={`Join live webinar: ${webinars.find(w => w.status === 'live')?.title}`} className="px-4 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600">
               {t('webinars.joinNow') || 'Join Now'} →
             </button>
           </div>

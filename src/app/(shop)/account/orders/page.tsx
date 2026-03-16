@@ -1446,8 +1446,8 @@ function InvoiceModal({
             </div>
 
             {/* Items Table */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-              <table className="w-full">
+            <div className="border border-gray-200 rounded-lg overflow-hidden mb-6 overflow-x-auto">
+              <table className="w-full min-w-[500px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-start text-sm font-semibold text-gray-900">{t('account.orders.pdfDescription')}</th>

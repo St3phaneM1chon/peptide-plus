@@ -75,8 +75,8 @@ export default function LabResultsClient({ coaData }: LabResultsClientProps) {
               <p className="text-gray-500">{t('labResults.noResultsDesc') || 'Les certificats d\'analyse seront disponibles sous peu.'}</p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <table className="w-full">
+            <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">

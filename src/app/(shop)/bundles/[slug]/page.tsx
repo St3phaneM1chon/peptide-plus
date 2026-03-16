@@ -196,7 +196,7 @@ export default function BundleDetailPage() {
 
         {/* Right Column - Info */}
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{bundle.name}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">{bundle.name}</h1>
 
           {bundle.description && (
             <p className="text-lg text-gray-600 mb-6">{bundle.description}</p>

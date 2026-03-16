@@ -51,8 +51,8 @@ export default function ShippingPolicyPage() {
               <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
                 🇨🇦 {t('legal.shipping.options.canada')}
               </h3>
-              <div className="bg-gray-50 rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="bg-gray-50 rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[450px]">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.method')}</th>
@@ -86,8 +86,8 @@ export default function ShippingPolicyPage() {
               <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
                 🇺🇸 {t('legal.shipping.options.unitedStates')}
               </h3>
-              <div className="bg-gray-50 rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="bg-gray-50 rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[450px]">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.method')}</th>
@@ -116,8 +116,8 @@ export default function ShippingPolicyPage() {
               <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
                 🌍 {t('legal.shipping.options.international')}
               </h3>
-              <div className="bg-gray-50 rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="bg-gray-50 rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[450px]">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.region')}</th>

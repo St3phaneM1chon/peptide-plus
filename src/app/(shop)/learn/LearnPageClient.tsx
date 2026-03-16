@@ -188,7 +188,7 @@ export default function LearnPage() {
                 <p className="text-sm text-gray-600 mb-4">
                   {t('learn.stayUpdatedDesc')}
                 </p>
-                <button className="w-full py-2 px-4 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors">
+                <button className="w-full py-3 px-4 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors">
                   {t('learn.subscribe')}
                 </button>
               </div>
