@@ -40,10 +40,18 @@ export async function GET(
       }
     }
 
-    // Allow tier override via query param (for admin simulation / testing)
+    // Allow tier override via query param (admin only — prevents public pricing exposure)
     const overrideTier = new URL(request.url).searchParams.get('tier');
     if (overrideTier) {
-      tierName = overrideTier.toUpperCase();
+      const VALID_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'];
+      const normalizedTier = overrideTier.toUpperCase();
+      if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
+        return NextResponse.json({ error: 'Tier override requires admin authentication' }, { status: 403 });
+      }
+      if (!VALID_TIERS.includes(normalizedTier)) {
+        return NextResponse.json({ error: 'Invalid tier name' }, { status: 400 });
+      }
+      tierName = normalizedTier;
     }
 
     const result = await getEffectivePrice(productId, tierName);

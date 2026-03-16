@@ -119,7 +119,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (minRating) {
-      where.averageRating = { gte: parseFloat(minRating) };
+      const minRatingVal = parseFloat(minRating);
+      if (!isNaN(minRatingVal) && minRatingVal >= 0 && minRatingVal <= 5) {
+        where.averageRating = { gte: minRatingVal };
+      }
     }
 
     if (inStock === 'true') {

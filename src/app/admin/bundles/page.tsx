@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, Package, Pencil, Eye } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 
 interface Bundle {
@@ -21,6 +22,7 @@ interface Bundle {
 
 export default function AdminBundlesPage() {
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export default function AdminBundlesPage() {
       const json = await res.json();
       setBundles(json.data || json.bundles || []);
     } catch {
-      toast.error('Erreur chargement des bundles');
+      toast.error(t('admin.bundles.loadError'));
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ export default function AdminBundlesPage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
-            Nouveau bundle
+            {t('admin.bundles.new')}
           </Link>
         }
       />
@@ -63,13 +65,13 @@ export default function AdminBundlesPage() {
       ) : bundles.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
           <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 mb-4">Aucun bundle cree</p>
+          <p className="text-slate-500 mb-4">{t('admin.bundles.empty')}</p>
           <Link
             href="/admin/bundles/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
           >
             <Plus className="w-4 h-4" />
-            Creer un bundle
+            {t('admin.bundles.create')}
           </Link>
         </div>
       ) : (
@@ -86,19 +88,19 @@ export default function AdminBundlesPage() {
                 <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                   bundle.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
                 }`}>
-                  {bundle.isActive ? 'Actif' : 'Inactif'}
+                  {bundle.isActive ? t('common.active') : t('common.inactive')}
                 </span>
               </div>
 
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-lg font-bold text-slate-900">${Number(bundle.price).toFixed(2)}</span>
+                <span className="text-lg font-bold text-slate-900">{formatPrice(Number(bundle.price))}</span>
                 {bundle.comparePrice && Number(bundle.comparePrice) > Number(bundle.price) && (
-                  <span className="text-sm text-slate-400 line-through">${Number(bundle.comparePrice).toFixed(2)}</span>
+                  <span className="text-sm text-slate-400 line-through">{formatPrice(Number(bundle.comparePrice))}</span>
                 )}
               </div>
 
               {bundle._count && (
-                <p className="text-xs text-slate-500 mb-3">{bundle._count.items} produit(s)</p>
+                <p className="text-xs text-slate-500 mb-3">{bundle._count.items} {t('admin.bundles.products')}</p>
               )}
 
               <div className="flex items-center gap-2">
@@ -107,14 +109,14 @@ export default function AdminBundlesPage() {
                   className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  Voir
+                  {t('common.view')}
                 </Link>
                 <Link
                   href={`/admin/bundles/${bundle.id}/edit`}
                   className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50"
                 >
                   <Pencil className="w-3.5 h-3.5" />
-                  Modifier
+                  {t('common.edit')}
                 </Link>
               </div>
             </div>

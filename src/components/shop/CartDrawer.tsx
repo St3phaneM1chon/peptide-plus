@@ -192,7 +192,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         <div className="flex-1 overflow-y-auto p-4">
           {/* Free Shipping Progress Bar */}
           {items.length > 0 && (() => {
-            const FREE_SHIPPING_THRESHOLD = 100;
+            const FREE_SHIPPING_THRESHOLD = 150;
             const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
             const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
             const qualified = remaining <= 0;

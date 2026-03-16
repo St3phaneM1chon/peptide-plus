@@ -202,14 +202,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Price range filter
+    // Price range filter (validate NaN)
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) {
-        (where.price as Prisma.DecimalFilter).gte = parseFloat(minPrice);
+        const val = parseFloat(minPrice);
+        if (!isNaN(val) && val >= 0) (where.price as Prisma.DecimalFilter).gte = val;
       }
       if (maxPrice) {
-        (where.price as Prisma.DecimalFilter).lte = parseFloat(maxPrice);
+        const val = parseFloat(maxPrice);
+        if (!isNaN(val) && val >= 0) (where.price as Prisma.DecimalFilter).lte = val;
       }
     }
 
@@ -223,9 +225,12 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Purity filter
+    // Purity filter (validate NaN)
     if (purity) {
-      where.purity = { gte: parseFloat(purity) };
+      const val = parseFloat(purity);
+      if (!isNaN(val) && val >= 0) {
+        where.purity = { gte: val };
+      }
     }
 
     // Build orderBy

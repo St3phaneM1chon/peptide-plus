@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
  * API - CRUD Produit individuel (version enrichie)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
@@ -75,7 +75,7 @@ const updateProductSchema = z.object({
     isPrimary: z.boolean().optional(),
   })).optional(),
   formats: z.array(z.record(z.unknown())).optional(),
-}).passthrough();
+}).strict();
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -137,9 +137,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Strip internal/sensitive fields from public response
-    const session = await auth();
-    const isAdmin = session?.user?.role === UserRole.OWNER || session?.user?.role === UserRole.EMPLOYEE;
+    // Strip internal/sensitive fields from public response (reuse session from inactive check above)
+    const sessionForStrip = !product.isActive ? await Promise.resolve(await auth()) : await auth();
+    const isAdmin = sessionForStrip?.user?.role === UserRole.OWNER || sessionForStrip?.user?.role === UserRole.EMPLOYEE;
     if (!isAdmin) {
       const {
         stockQuantity: _sq, reorderPoint: _rp, lowStockThreshold: _lst,
@@ -171,12 +171,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Rate limiting
     const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products');
-    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+    if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
     // CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     // Item 12: Content-Type validation
@@ -414,23 +414,32 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Rate limiting
     const ip = getClientIpFromRequest(request);
     const rl = await rateLimitMiddleware(ip, '/api/products');
-    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+    if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
     // CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
-      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED);
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED, { request });
     }
 
     if (session.user.role !== UserRole.OWNER) {
-      return apiError('Accès refusé', ErrorCode.FORBIDDEN);
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN, { request });
+    }
+
+    // Verify product exists before soft-delete (prevent P2025 → generic 500)
+    const existingForDelete = await prisma.product.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!existingForDelete) {
+      return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
     }
 
     const deletedProduct = await prisma.product.update({

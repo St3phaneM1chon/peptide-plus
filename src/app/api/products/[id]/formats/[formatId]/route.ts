@@ -46,6 +46,34 @@ export async function GET(
     const { id, formatId } = await params;
     const format = await prisma.productFormat.findUnique({
       where: { id: formatId },
+      select: {
+        id: true,
+        productId: true,
+        formatType: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        price: true,
+        comparePrice: true,
+        dosageMg: true,
+        volumeMl: true,
+        unitCount: true,
+        weightGrams: true,
+        sku: true,
+        barcode: true,
+        stockQuantity: true,
+        inStock: true,
+        availability: true,
+        availableDate: true,
+        discontinuedAt: true,
+        isDefault: true,
+        isActive: true,
+        sortOrder: true,
+        trackInventory: true,
+        lowStockThreshold: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!format || format.productId !== id) {

@@ -16,13 +16,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const productViewSchema = z.object({
-  productId: z.string().min(1),
+  productId: z.string().min(1).regex(/^[a-z0-9]{20,30}$/, 'Invalid product ID format'),
 });
 
 const DEDUP_MINUTES = 5; // Don't log same product view within 5 minutes
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Dedup: skip if the same user viewed this product within the last N minutes
     const dedupWindow = new Date(Date.now() - DEDUP_MINUTES * 60 * 1000);
-    const recentView = await db.productView.findFirst({
+    const recentView = await prisma.productView.findFirst({
       where: {
         userId: session.user.id,
         productId,
@@ -71,7 +71,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Record the view
-    await db.productView.create({
+    // Verify product exists before recording view
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true },
+    });
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    await prisma.productView.create({
       data: {
         userId: session.user.id,
         productId,

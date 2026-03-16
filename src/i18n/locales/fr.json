@@ -9128,6 +9128,11 @@
       "title": "Gestion du Blog"
     },
     "bundles": {
+      "create": "Créer un bundle",
+      "empty": "Aucun bundle créé",
+      "loadError": "Erreur chargement des bundles",
+      "new": "Nouveau bundle",
+      "products": "produit(s)",
       "subtitle": "Creer et gerer les ensembles de produits",
       "title": "Gestion des Bundles"
     },

@@ -9257,6 +9257,11 @@
       "reopenInfo": "Pour rouvrir une periode, accedez a la page de cloture des periodes."
     },
     "bundles": {
+      "create": "Create a bundle",
+      "empty": "No bundles created",
+      "loadError": "Error loading bundles",
+      "new": "New bundle",
+      "products": "product(s)",
       "subtitle": "Create and gerer the ensembles of produits",
       "title": "Title"
     },

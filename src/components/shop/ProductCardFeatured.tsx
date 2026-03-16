@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ProductCardFeaturedProps {
   id: string;
@@ -31,6 +32,7 @@ export default function ProductCardFeatured({
   formats = [],
 }: ProductCardFeaturedProps) {
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const hasCompare = formats.some((f) => f.comparePrice && f.comparePrice > f.price);
   const lowestCompare = hasCompare
     ? Math.min(...formats.filter((f) => f.comparePrice).map((f) => f.comparePrice!))
@@ -52,7 +54,7 @@ export default function ProductCardFeatured({
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full" role="img" aria-label={name}>
             <svg className="w-20 h-20 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" />
             </svg>
@@ -60,7 +62,7 @@ export default function ProductCardFeatured({
         )}
         {/* Category ribbon */}
         {category && (
-          <span className="absolute top-4 left-4 px-3 py-1 bg-secondary-500 text-white text-xs font-semibold uppercase tracking-wider rounded-full">
+          <span className="absolute top-4 start-4 px-3 py-1 bg-secondary-500 text-white text-xs font-semibold uppercase tracking-wider rounded-full">
             {category}
           </span>
         )}
@@ -82,14 +84,13 @@ export default function ProductCardFeatured({
 
         <div className="flex items-baseline gap-3 mb-6">
           <span className="text-2xl font-bold text-primary-700">
-            ${price.toFixed(2)}
+            {formatPrice(price)}
           </span>
           {lowestCompare && (
             <span className="text-lg text-neutral-400 line-through">
-              ${lowestCompare.toFixed(2)}
+              {formatPrice(lowestCompare)}
             </span>
           )}
-          <span className="text-sm text-neutral-400">CAD</span>
         </div>
 
         <span className="inline-flex items-center gap-2 text-primary-600 font-semibold group-hover:gap-3 transition-all">

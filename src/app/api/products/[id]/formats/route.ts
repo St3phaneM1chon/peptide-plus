@@ -23,6 +23,33 @@ export async function GET(
     const formats = await prisma.productFormat.findMany({
       where: { productId: id, isActive: true },
       orderBy: { sortOrder: 'asc' },
+      select: {
+        id: true,
+        productId: true,
+        formatType: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        price: true,
+        comparePrice: true,
+        dosageMg: true,
+        volumeMl: true,
+        unitCount: true,
+        weightGrams: true,
+        sku: true,
+        barcode: true,
+        stockQuantity: true,
+        inStock: true,
+        availability: true,
+        availableDate: true,
+        isDefault: true,
+        isActive: true,
+        sortOrder: true,
+        trackInventory: true,
+        lowStockThreshold: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return apiSuccess(formats);
