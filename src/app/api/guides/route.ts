@@ -13,6 +13,7 @@ export async function GET() {
         fileUrl: true, thumbnailUrl: true, format: true, pageCount: true,
         isFeatured: true, downloadCount: true, locale: true,
       },
+      take: 200,
     });
     return NextResponse.json({ guides }, {
       headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },

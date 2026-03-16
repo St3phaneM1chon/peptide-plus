@@ -8,6 +8,7 @@ export async function GET() {
     const references = await prisma.clientReference.findMany({
       where: { isPublished: true },
       orderBy: [{ industry: 'asc' }, { sortOrder: 'asc' }],
+      take: 500,
     });
     // Group by industry
     const byIndustry: Record<string, typeof references> = {};

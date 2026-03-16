@@ -165,7 +165,8 @@ export default function PriceDropButton({
               ? 'bg-primary-50 border-primary-200 text-primary-600 hover:bg-primary-100'
               : 'bg-white border-neutral-300 text-neutral-600 hover:border-primary-300 hover:text-primary-500'
           } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-          title={isWatching ? 'Stop watching price' : 'Watch for price drops'}
+          title={isWatching ? t('priceAlert.stopWatching') : t('priceAlert.watchPrice')}
+        aria-label={isWatching ? t('priceAlert.stopWatching') : t('priceAlert.watchPrice')}
         >
           {isLoading ? (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -182,7 +183,7 @@ export default function PriceDropButton({
             </svg>
           )}
           <span className="text-sm font-medium">
-            {isWatching ? 'Watching Price' : 'Watch Price'}
+            {isWatching ? t('priceAlert.stopWatching') : t('priceAlert.watchPrice')}
           </span>
         </button>
 
@@ -190,16 +191,19 @@ export default function PriceDropButton({
         {showPopover && !isWatching && (
           <div
             ref={popoverRef}
+            role="dialog"
+            aria-label={t('priceAlert.title')}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowPopover(false); }}
             className="absolute top-full start-0 mt-2 z-50 bg-white rounded-lg shadow-xl border border-neutral-200 p-4 w-72"
           >
-            <h4 className="font-semibold text-sm mb-2">Set Price Alert</h4>
+            <h4 className="font-semibold text-sm mb-2">{t('priceAlert.title')}</h4>
             <p className="text-xs text-neutral-500 mb-3">
-              Get notified when the price drops below your target (optional)
+              {t('priceAlert.description')}
             </p>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-neutral-700 mb-1">
-                  Target Price (optional)
+                  {t('priceAlert.targetPrice')}
                 </label>
                 <div className="relative">
                   <span className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
@@ -215,7 +219,7 @@ export default function PriceDropButton({
                   />
                 </div>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Current: {fmtPrice(currentPrice)}
+                  {t('priceAlert.currentPrice').replace('${price}', fmtPrice(currentPrice))}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -223,14 +227,14 @@ export default function PriceDropButton({
                   onClick={() => setShowPopover(false)}
                   className="flex-1 px-3 py-2 text-sm border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleSetWatch}
                   disabled={isLoading}
                   className="flex-1 px-3 py-2 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
                 >
-                  {isLoading ? 'Setting...' : 'Set Alert'}
+                  {isLoading ? t('priceAlert.setting') : t('priceAlert.setAlert')}
                 </button>
               </div>
             </div>
@@ -251,7 +255,8 @@ export default function PriceDropButton({
             ? 'bg-primary-500 text-white hover:bg-primary-600'
             : 'bg-white/90 text-neutral-500 hover:bg-white hover:text-primary-500'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-        title={isWatching ? 'Stop watching price' : 'Watch for price drops'}
+        title={isWatching ? t('priceAlert.stopWatching') : t('priceAlert.watchPrice')}
+        aria-label={isWatching ? t('priceAlert.stopWatching') : t('priceAlert.watchPrice')}
       >
         {isLoading ? (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

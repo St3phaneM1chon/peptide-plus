@@ -82,8 +82,8 @@ export default function WishlistButton({
           ? 'bg-red-500 text-white hover:bg-red-600'
           : 'bg-white/90 text-neutral-500 hover:bg-white hover:text-red-500'
       } ${className}`}
-      title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-      aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+      title={inWishlist ? t('shop.aria.removeFromWishlist') : t('shop.aria.addToWishlist')}
+      aria-label={inWishlist ? t('shop.aria.removeFromWishlist') : t('shop.aria.addToWishlist')}
       aria-pressed={inWishlist}
     >
       <svg

@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     let faqs = await prisma.faq.findMany({
       where: { isPublished: true },
       orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
+      take: 500,
     });
 
     // Apply translations
