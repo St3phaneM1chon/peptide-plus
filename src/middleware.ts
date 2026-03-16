@@ -3,7 +3,7 @@
  * Gestion des locales, authentification et permissions granulaires
  *
  * TODO: FAILLE-082 - No DB schema verification at startup; add health check with prisma.$queryRaw for critical tables
- * TODO: FAILLE-089 - No helmet/next-secure-headers package; consider adding centralized security headers management
+ * FIXED: FAILLE-089 - CSP and all security headers now set in addSecurityHeaders() (aligned with next.config.js)
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -11,8 +11,9 @@ import { getToken } from 'next-auth/jwt';
 import { defaultLocale, isValidLocale, type Locale, getLocaleFromHeaders } from '@/i18n/config';
 import { roleHasPermission } from '@/lib/permission-constants';
 
-// Security headers applied to every response (AMELIORATION-002 / FAILLE-012 / FAILLE-017).
-// NOTE: CSP is defined in next.config.js headers() only (single source of truth).
+// Security headers applied to every response (AMELIORATION-002 / FAILLE-012 / FAILLE-017 / FAILLE-089).
+// CSP is also defined in next.config.js headers() for static routes; middleware ensures dynamic
+// routes are equally protected (Azure App Service may not merge next.config headers on middleware responses).
 function addSecurityHeaders(response: NextResponse): void {
   // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'DENY');
@@ -28,8 +29,28 @@ function addSecurityHeaders(response: NextResponse): void {
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
-  // CSP is defined in next.config.js headers() — NOT duplicated here to avoid conflicts.
-  // next.config.js has the stricter production CSP (no unsafe-eval in prod).
+  // Content-Security-Policy — aligned with next.config.js (FAILLE-089 FIX)
+  // unsafe-inline for scripts: required by Next.js inline scripts (nonce-based approach is a future improvement)
+  // unsafe-inline for styles: required by Next.js styled-jsx, Radix UI, and Tailwind
+  // unsafe-eval: only in development (needed for Next.js HMR/React Fast Refresh)
+  const cspDirectives = [
+    "default-src 'self'",
+    process.env.NODE_ENV === 'production'
+      ? "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com https://maps.googleapis.com"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com https://maps.googleapis.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 https://api.telnyx.com https://maps.googleapis.com",
+    "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com https://www.google.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self' https://accounts.google.com https://appleid.apple.com https://www.facebook.com https://x.com https://twitter.com",
+    "object-src 'none'",
+    "worker-src 'self'",
+    ...(process.env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
+  ];
+  response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
 }
 
 // FAILLE-099 FIX: Use crypto.getRandomValues fallback instead of Math.random

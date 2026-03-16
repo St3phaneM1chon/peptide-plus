@@ -2,17 +2,26 @@
  * PAGE PLAN DU SITE
  */
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Plan du site',
+export const metadata: Metadata = {
+  title: 'Plan du site | BioCycle Peptides',
   description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages produits, ressources et informations.',
+  alternates: {
+    canonical: 'https://biocyclepeptides.com/plan-du-site',
+  },
   openGraph: {
     title: 'Plan du site | BioCycle Peptides',
     description: 'Navigation complète du site BioCycle Peptides.',
     url: 'https://biocyclepeptides.com/plan-du-site',
     siteName: 'BioCycle Peptides',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Plan du site | BioCycle Peptides',
+    description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages.',
   },
 };
 
