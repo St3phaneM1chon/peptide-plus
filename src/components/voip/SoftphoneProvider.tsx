@@ -2,15 +2,17 @@
 
 /**
  * SoftphoneProvider
- * React context that wraps the useVoip hook for global access.
+ * React context that wraps the Telnyx WebRTC SDK for global softphone access.
  * Place in admin layout to make softphone state available everywhere.
  *
- * Auto-registers the softphone line when an EMPLOYEE or OWNER opens a session.
- * If the line fails to initialize, sends an email alert to all OWNERs.
+ * On mount: health check → fetch WebRTC JWT → connect TelnyxRTC.
+ * Bridges useTelnyxWebRTC into the UseVoipReturn interface expected by Softphone.tsx.
  */
 
-import React, { createContext, useContext, useEffect, useRef, useCallback, useState, type ReactNode } from 'react';
-import { useVoip, type UseVoipReturn } from '@/hooks/useVoip';
+import React, { createContext, useContext, useEffect, useRef, useCallback, useState, useMemo, type ReactNode } from 'react';
+import { useTelnyxWebRTC } from '@/hooks/useTelnyxWebRTC';
+import type { UseVoipReturn, VoipCall, VoipStatus, RegisteredExtension } from '@/hooks/useVoip';
+import { addCSRFHeader } from '@/lib/csrf';
 import { useI18n } from '@/i18n/client';
 
 export interface HealthInfo {
@@ -37,19 +39,78 @@ const MAX_AUTO_RETRIES = 2;
 /** Delay between retries (ms) */
 const RETRY_DELAY_MS = 5000;
 
+// No-op async for stubs
+const asyncNoop = async () => {};
+const noop = () => {};
+
 export function SoftphoneProvider({ children }: { children: ReactNode }) {
-  const voip = useVoip();
+  const telnyx = useTelnyxWebRTC();
   const { t } = useI18n();
   const [autoRegisterAttempted, setAutoRegisterAttempted] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthInfo, setHealthInfo] = useState<HealthInfo | null>(null);
+  const [regExtension, setRegExtension] = useState<RegisteredExtension | null>(null);
   const attemptCountRef = useRef(0);
   const alertSentRef = useRef(false);
   const mountedRef = useRef(true);
 
-  /** Send failure alert to all owners */
+  // ---- Derived VoIP status ----
+  const status: VoipStatus = useMemo(() => {
+    if (telnyx.error) return 'error';
+    if (telnyx.isRegistered) return 'registered';
+    if (telnyx.isConnecting) return 'connecting';
+    return 'disconnected';
+  }, [telnyx.isRegistered, telnyx.isConnecting, telnyx.error]);
+
+  // ---- Bridge TelnyxCallInfo → VoipCall ----
+  const currentCall: VoipCall | null = useMemo(() => {
+    if (telnyx.call.state === 'idle' || !telnyx.call.callId) return null;
+
+    // Map TelnyxCallInfo states to VoipCall CallState
+    let callState: VoipCall['state'] = 'idle';
+    switch (telnyx.call.state) {
+      case 'connecting':
+      case 'dialing':
+        callState = 'calling';
+        break;
+      case 'ringing':
+        callState = 'ringing';
+        break;
+      case 'active':
+        callState = 'in_progress';
+        break;
+      case 'held':
+        callState = 'on_hold';
+        break;
+      case 'ending':
+        callState = 'ended';
+        break;
+    }
+
+    return {
+      id: telnyx.call.callId,
+      direction: telnyx.call.direction || 'outbound',
+      remoteNumber: telnyx.call.callerNumber || '',
+      remoteName: telnyx.call.callerName || null,
+      state: callState,
+      startTime: callState !== 'idle' ? new Date() : null,
+      answerTime: callState === 'in_progress' ? new Date() : null,
+      isMuted: telnyx.call.isMuted,
+      isOnHold: telnyx.call.isHeld,
+      lineNumber: 1,
+      isParked: false,
+      parkOrbit: null,
+      cnamInfo: null,
+      isRecording: telnyx.call.isRecording,
+    };
+  }, [telnyx.call]);
+
+  const calls: VoipCall[] = useMemo(() => currentCall ? [currentCall] : [], [currentCall]);
+  const focusedCallId = currentCall?.id ?? null;
+
+  // ---- Send failure alert to all owners ----
   const sendFailureAlert = useCallback(async (errorMessage: string, checks?: Record<string, { ok: boolean; detail?: string }>) => {
-    if (alertSentRef.current) return; // Only alert once per session
+    if (alertSentRef.current) return;
     alertSentRef.current = true;
     try {
       await fetch('/api/admin/voip/alert-failure', {
@@ -62,8 +123,45 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  /** Attempt auto-registration with health check */
-  const attemptAutoRegister = useCallback(async () => {
+  // ---- Fetch WebRTC token and connect ----
+  const fetchTokenAndConnect = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/voip/webrtc-token', {
+        method: 'POST',
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: 'Token fetch failed' }));
+        throw new Error(errBody?.error || `Token request failed (${res.status})`);
+      }
+
+      const json = await res.json();
+      // apiSuccess wraps in { success, data, meta }
+      const tokenData = json.data || json;
+      const token = tokenData.token;
+
+      if (!token) {
+        throw new Error('No WebRTC token in response');
+      }
+
+      // Save extension info
+      if (tokenData.sip_username) {
+        setRegExtension({
+          extension: tokenData.sip_username,
+          sipDomain: 'sip.telnyx.com',
+        });
+      }
+
+      // Connect TelnyxRTC SDK
+      telnyx.connect(token);
+    } catch (err) {
+      throw err;
+    }
+  }, [telnyx]);
+
+  // ---- register(): health check → token → connect ----
+  const register = useCallback(async () => {
     if (!mountedRef.current) return;
 
     try {
@@ -85,16 +183,12 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
       });
 
       if (!health.canAutoRegister) {
-        // Identify specific failure reasons
         const reasons: string[] = [];
         if (health.database === 'error') reasons.push(t('voip.dbUnavailable'));
         if (!health.sipExtension?.configured) reasons.push(t('voip.noSipExtension'));
         if (!health.pbx?.provider) reasons.push(t('voip.noVoipConnection'));
 
-        const msg = reasons.length > 0
-          ? reasons.join('; ')
-          : t('voip.initFailed');
-
+        const msg = reasons.length > 0 ? reasons.join('; ') : t('voip.initFailed');
         setHealthError(msg);
         await sendFailureAlert(msg, health.checks);
         return;
@@ -102,26 +196,29 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
 
       setHealthError(null);
 
-      // 2. Register the softphone line
-      await voip.register();
+      // 2. Fetch WebRTC token and connect
+      await fetchTokenAndConnect();
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('voip.connectionFailed');
       setHealthError(msg);
       await sendFailureAlert(msg);
     }
-  }, [voip, sendFailureAlert, t]);
+  }, [fetchTokenAndConnect, sendFailureAlert, t]);
 
-  /** Auto-register on mount */
+  // ---- unregister ----
+  const unregister = useCallback(() => {
+    telnyx.disconnect();
+    setRegExtension(null);
+  }, [telnyx]);
+
+  // ---- Auto-register on mount ----
   useEffect(() => {
     mountedRef.current = true;
 
     const doAutoRegister = async () => {
-      // Small delay to let the session/layout fully initialize
       await new Promise((r) => setTimeout(r, 1500));
-
       if (!mountedRef.current) return;
-
-      await attemptAutoRegister();
+      await register();
       setAutoRegisterAttempted(true);
     };
 
@@ -130,48 +227,138 @@ export function SoftphoneProvider({ children }: { children: ReactNode }) {
     return () => {
       mountedRef.current = false;
     };
-    // Run only once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Watch for registration failure and retry */
+  // ---- Retry on registration failure ----
   useEffect(() => {
     if (!autoRegisterAttempted) return undefined;
 
-    if (voip.status === 'error' && attemptCountRef.current < MAX_AUTO_RETRIES) {
+    if (status === 'error' && attemptCountRef.current < MAX_AUTO_RETRIES) {
       attemptCountRef.current++;
       const timer = setTimeout(() => {
-        if (mountedRef.current) {
-          attemptAutoRegister();
-        }
+        if (mountedRef.current) register();
       }, RETRY_DELAY_MS);
       return () => clearTimeout(timer);
     }
 
-    // All retries exhausted, still in error — send alert
-    if (voip.status === 'error' && attemptCountRef.current >= MAX_AUTO_RETRIES) {
-      const msg = voip.error || t('voip.registrationFailed');
+    if (status === 'error' && attemptCountRef.current >= MAX_AUTO_RETRIES) {
+      const msg = telnyx.error || t('voip.registrationFailed');
       sendFailureAlert(msg);
     }
 
     return undefined;
-  }, [voip.status, voip.error, autoRegisterAttempted, attemptAutoRegister, sendFailureAlert, t]);
+  }, [status, telnyx.error, autoRegisterAttempted, register, sendFailureAlert, t]);
 
-  /** Manual retry */
+  // ---- Manual retry ----
   const retryRegister = useCallback(() => {
     attemptCountRef.current = 0;
     alertSentRef.current = false;
     setHealthError(null);
-    attemptAutoRegister();
-  }, [attemptAutoRegister]);
+    register();
+  }, [register]);
 
-  const value: SoftphoneContextValue = {
-    ...voip,
+  // ---- Bridged call controls ----
+  const makeCall = useCallback((number: string) => {
+    telnyx.makeCall(number);
+  }, [telnyx]);
+
+  const answerCall = useCallback((_callId?: string) => {
+    telnyx.answerCall();
+  }, [telnyx]);
+
+  const hangup = useCallback((_callId?: string) => {
+    telnyx.hangup();
+  }, [telnyx]);
+
+  const toggleMute = useCallback(() => {
+    telnyx.toggleMute();
+  }, [telnyx]);
+
+  const toggleHold = useCallback(() => {
+    telnyx.toggleHold();
+  }, [telnyx]);
+
+  const sendDtmf = useCallback((digit: string) => {
+    telnyx.sendDTMF(digit);
+  }, [telnyx]);
+
+  const transfer = useCallback((number: string) => {
+    telnyx.transfer(number);
+  }, [telnyx]);
+
+  // ---- Build the full UseVoipReturn-compatible context ----
+  const value: SoftphoneContextValue = useMemo(() => ({
+    // Core state
+    status,
+    calls,
+    focusedCallId,
+    currentCall,
+    error: telnyx.error || healthError,
+    registeredExtension: regExtension,
+
+    // Media features (not available via basic Telnyx WebRTC — stubbed)
+    noiseCancelEnabled: false,
+    isScreenSharing: false,
+    isVideoEnabled: false,
+    localVideoStream: null,
+    remoteVideoStream: null,
+    callQualityMetrics: null,
+    presenceStatus: 'available' as const,
+
+    // Connection
+    register,
+    unregister,
+
+    // Call management
+    makeCall,
+    answerCall,
+    hangup,
+    toggleMute,
+    toggleHold,
+    sendDtmf,
+    transfer,
+
+    // Multi-line (single-line via Telnyx SDK)
+    switchLine: noop,
+
+    // Parking (not implemented at SDK level)
+    parkCall: asyncNoop,
+    retrieveParkedCall: asyncNoop,
+
+    // Call flip (not implemented at SDK level)
+    flipCall: asyncNoop,
+
+    // Call pickup (not implemented at SDK level)
+    pickupCall: asyncNoop,
+    groupPickup: asyncNoop,
+
+    // Conference (not implemented at SDK level)
+    startConference: asyncNoop,
+
+    // Media features (not implemented at SDK level)
+    toggleNoiseCancel: noop,
+    toggleRecording: asyncNoop,
+    screenShare: asyncNoop,
+    stopScreenShare: noop,
+    toggleVideo: asyncNoop,
+
+    // Presence
+    setPresence: noop,
+
+    // Quality
+    getLastCallQualityHistory: () => null,
+
+    // Provider-specific
     autoRegisterAttempted,
     healthError,
     healthInfo,
     retryRegister,
-  };
+  }), [
+    status, calls, focusedCallId, currentCall, telnyx.error, healthError, regExtension,
+    register, unregister, makeCall, answerCall, hangup, toggleMute, toggleHold, sendDtmf, transfer,
+    autoRegisterAttempted, healthInfo, retryRegister,
+  ]);
 
   return (
     <SoftphoneContext.Provider value={value}>

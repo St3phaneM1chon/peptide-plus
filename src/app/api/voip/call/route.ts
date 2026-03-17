@@ -121,6 +121,34 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
 });
 
 /**
+ * PUT - In-call actions (recording, etc.)
+ */
+export const PUT = withAdminGuard(async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const action = body.action;
+    const callId = body.callId;
+
+    if (!action || !callId) {
+      return NextResponse.json({ error: 'action and callId required' }, { status: 400 });
+    }
+
+    if (action === 'start-recording' || action === 'stop-recording') {
+      // TODO: Implement Telnyx recording API when call control IDs are available
+      // For now, acknowledge the action (WebRTC-side recording is handled in the hook)
+      return NextResponse.json({ success: true, action, callId });
+    }
+
+    return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+  } catch (error) {
+    logger.error('[VoIP Call] PUT action failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return NextResponse.json({ error: 'Action failed' }, { status: 500 });
+  }
+});
+
+/**
  * Normalize a phone number to E.164 format.
  * Handles: 5145551234, 15145551234, +15145551234, (514) 555-1234
  */

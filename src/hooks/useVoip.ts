@@ -905,11 +905,29 @@ export function useVoip(): UseVoipReturn {
       const id = callId ?? focusedCallId;
       if (!id) return;
 
+      stopRingtone(id);
+
       const session = sessionsRef.current.get(id);
       if (session) {
-        stopRingtone(id);
-        session.terminate();
+        try {
+          session.terminate();
+        } catch {
+          // INVALID_STATE_ERROR when session never established — clean up anyway
+        }
+        sessionsRef.current.delete(id);
       }
+
+      // Clean up audio element
+      const audioEl = audioElementsRef.current.get(id);
+      if (audioEl) {
+        audioEl.srcObject = null;
+        audioEl.remove();
+        audioElementsRef.current.delete(id);
+      }
+
+      // Remove call from state and clear focus
+      setCalls((prev) => prev.filter((c) => c.id !== id));
+      setFocusedCallId((prev) => (prev === id ? null : prev));
     },
     [focusedCallId, stopRingtone],
   );
