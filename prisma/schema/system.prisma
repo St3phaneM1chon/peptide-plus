@@ -603,6 +603,35 @@ model ApiUsageLog {
   @@index([createdAt])
 }
 
+// =====================================================
+// AURELIA AI REQUEST TRACKING (Mobile App)
+// =====================================================
+model AureliaRequest {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @db.Text
+  priority      String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT, IMMEDIATE
+  status        String    @default("PENDING") // PENDING, QUEUED, IN_PROGRESS, COMPLETED, FAILED, CANCELLED
+  requestType   String    @default("TASK") // TASK, CODE, ANALYSIS, DEPLOY, AUDIT, RESEARCH, FIX, CREATE, OTHER
+  createdById   String
+  createdByName String?
+  assignedTo    String?
+  response      String?   @db.Text
+  scheduledFor  DateTime?
+  completedAt   DateTime?
+  todoMasterId  String?
+  tags          String[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([status])
+  @@index([priority])
+  @@index([requestType])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
 // --- 4I.2: IP Whitelist (L11) ---
 model IpWhitelist {
   id          String   @id @default(cuid())

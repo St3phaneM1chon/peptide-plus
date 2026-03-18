@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { getSessionFromBearerToken } from '@/lib/mobile-guard';
 import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
@@ -24,7 +25,14 @@ const createConversationSchema = z.object({
 // GET - Liste des conversations
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    // Try NextAuth session first (web), then Bearer token (mobile)
+    let session = await auth();
+    if (!session?.user) {
+      const mobileSession = await getSessionFromBearerToken(request);
+      if (mobileSession) {
+        session = { user: { ...mobileSession.user, name: mobileSession.user.name || '', image: null, mfaEnabled: false, mfaVerified: true, needsTerms: false } as never, expires: '' } as typeof session;
+      }
+    }
     const { t } = await getApiTranslator();
 
     if (!session?.user) {
@@ -114,12 +122,23 @@ export async function POST(request: NextRequest) {
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
     }
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    // Skip CSRF for mobile (Bearer token auth)
+    const isMobileRequest = request.headers.get('authorization')?.startsWith('Bearer ');
+    if (!isMobileRequest) {
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
     }
 
-    const session = await auth();
+    // Try NextAuth session first (web), then Bearer token (mobile)
+    let session = await auth();
+    if (!session?.user) {
+      const mobileSession = await getSessionFromBearerToken(request);
+      if (mobileSession) {
+        session = { user: { ...mobileSession.user, name: mobileSession.user.name || '', image: null, mfaEnabled: false, mfaVerified: true, needsTerms: false } as never, expires: '' } as typeof session;
+      }
+    }
     const { t } = await getApiTranslator();
 
     if (!session?.user) {
