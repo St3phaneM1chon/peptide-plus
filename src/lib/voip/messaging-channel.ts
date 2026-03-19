@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/db';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -187,9 +188,14 @@ export class MessagingChannel {
       ),
     };
 
-    // Add to conversation history
+    // Add to conversation history (in-memory cache)
     const conversationKey = direction === 'inbound' ? fromNumber : toNumber;
     this.addToConversation(conversationKey, message);
+
+    // Persist to database (non-blocking)
+    this.persistMessage(message).catch((err) =>
+      logger.warn('[Messaging] DB persist failed for inbound', { error: String(err) })
+    );
 
     logger.info('[Messaging] Processed incoming webhook', {
       eventType,
@@ -206,15 +212,54 @@ export class MessagingChannel {
 
   /**
    * Get conversation history for a specific phone number.
+   * Loads from database with in-memory fallback.
    */
   getConversation(phoneNumber: string): Message[] {
     return this.conversations.get(phoneNumber) || [];
   }
 
   /**
-   * Mark a conversation as read (removes unread indicator).
-   * In a production system this would update a database flag;
-   * here it logs the action for the in-memory store.
+   * Async version: loads conversation from database.
+   */
+  async getConversationFromDB(phoneNumber: string): Promise<Message[]> {
+    try {
+      const logs = await prisma.smsLog.findMany({
+        where: {
+          OR: [
+            { to: phoneNumber },
+            // For inbound messages, the sender's number is in 'to' with special status
+            { to: { contains: phoneNumber.slice(-10) } },
+          ],
+        },
+        orderBy: { sentAt: 'asc' },
+        take: 100,
+      });
+
+      if (logs.length > 0) {
+        const messages: Message[] = logs.map(log => ({
+          id: log.id,
+          from: log.status === 'received' ? log.to : (process.env.TELNYX_FROM_NUMBER || '+14388030370'),
+          to: log.status === 'received' ? (process.env.TELNYX_FROM_NUMBER || '+14388030370') : log.to,
+          body: log.body,
+          channel: 'sms' as const,
+          direction: log.status === 'received' ? 'inbound' as const : 'outbound' as const,
+          status: (log.status || 'sent') as Message['status'],
+          timestamp: log.sentAt || log.createdAt,
+        }));
+
+        // Update in-memory cache
+        this.conversations.set(phoneNumber, messages);
+        return messages;
+      }
+    } catch (err) {
+      logger.warn('[Messaging] DB load failed, using in-memory', { error: String(err) });
+    }
+
+    return this.conversations.get(phoneNumber) || [];
+  }
+
+  /**
+   * Mark a conversation as read.
    */
   markRead(phoneNumber: string): void {
     logger.info('[Messaging] Conversation marked as read', { phoneNumber });
@@ -225,6 +270,50 @@ export class MessagingChannel {
    */
   getAllConversations(): Map<string, Message[]> {
     return new Map(this.conversations);
+  }
+
+  /**
+   * Async version: loads all conversations from database.
+   */
+  async getAllConversationsFromDB(): Promise<Map<string, Message[]>> {
+    try {
+      const logs = await prisma.smsLog.findMany({
+        orderBy: { sentAt: 'desc' },
+        take: 500,
+      });
+
+      const grouped = new Map<string, Message[]>();
+      for (const log of logs) {
+        const key = log.to;
+        const message: Message = {
+          id: log.id,
+          from: log.status === 'received' ? log.to : (process.env.TELNYX_FROM_NUMBER || '+14388030370'),
+          to: log.status === 'received' ? (process.env.TELNYX_FROM_NUMBER || '+14388030370') : log.to,
+          body: log.body,
+          channel: 'sms' as const,
+          direction: log.status === 'received' ? 'inbound' as const : 'outbound' as const,
+          status: (log.status || 'sent') as Message['status'],
+          timestamp: log.sentAt || log.createdAt,
+        };
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key)!.push(message);
+      }
+
+      // Sort each conversation by time
+      for (const [, msgs] of grouped) {
+        msgs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      }
+
+      // Merge into in-memory cache
+      for (const [key, msgs] of grouped) {
+        this.conversations.set(key, msgs);
+      }
+
+      return grouped;
+    } catch (err) {
+      logger.warn('[Messaging] DB load failed, using in-memory', { error: String(err) });
+      return new Map(this.conversations);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -300,8 +389,13 @@ export class MessagingChannel {
       timestamp: new Date(),
     };
 
-    // Add to conversation history
+    // Add to conversation history (in-memory cache)
     this.addToConversation(options.to, message);
+
+    // Persist to database (non-blocking)
+    this.persistMessage(message).catch((err) =>
+      logger.warn('[Messaging] DB persist failed', { error: String(err) })
+    );
 
     logger.info('[Messaging] Message sent', {
       messageId: message.id,
@@ -326,5 +420,29 @@ export class MessagingChannel {
     }
 
     this.conversations.set(phoneNumber, existing);
+  }
+
+  /**
+   * Persist a message to the SmsLog database table.
+   */
+  private async persistMessage(message: Message): Promise<void> {
+    try {
+      await prisma.smsLog.create({
+        data: {
+          to: message.direction === 'outbound' ? message.to : message.from,
+          body: message.body,
+          status: message.direction === 'inbound' ? 'received' : (message.status || 'sent'),
+          provider: 'telnyx',
+          messageId: message.id,
+          sentAt: message.timestamp,
+        },
+      });
+    } catch (err) {
+      // Log but don't throw — DB persistence is best-effort
+      logger.warn('[Messaging] persistMessage failed', {
+        messageId: message.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 }

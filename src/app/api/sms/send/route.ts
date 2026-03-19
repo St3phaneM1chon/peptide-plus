@@ -58,7 +58,7 @@ export const POST = withMobileGuard(async (request, { session }) => {
       id: message.id,
       from: message.from,
       to: message.to,
-      body: message.text,
+      body: message.body,
       direction: 'OUTBOUND',
       status: 'SENT',
       createdAt: message.timestamp?.toISOString() || new Date().toISOString(),

@@ -29,14 +29,14 @@ export const GET = withMobileGuard(async (request, { session }) => {
     const messaging = getMessaging();
 
     if (phoneNumber) {
-      // Return messages for specific conversation
-      const messages = messaging.getConversation(phoneNumber);
+      // Return messages for specific conversation — load from DB
+      const messages = await messaging.getConversationFromDB(phoneNumber);
       const mapped = messages.map(mapMessage);
       return NextResponse.json(mapped);
     }
 
-    // Return all conversations as flat message list
-    const allConversations = messaging.getAllConversations();
+    // Return all conversations as flat message list — load from DB
+    const allConversations = await messaging.getAllConversationsFromDB();
     const allMessages: ReturnType<typeof mapMessage>[] = [];
 
     for (const [, messages] of allConversations) {
@@ -64,7 +64,7 @@ function mapMessage(msg: Message) {
     id: msg.id,
     from: msg.from,
     to: msg.to,
-    body: msg.text,
+    body: msg.body,
     direction: msg.direction?.toUpperCase() || 'OUTBOUND',
     status: msg.status?.toUpperCase() || 'SENT',
     createdAt: msg.timestamp?.toISOString() || new Date().toISOString(),

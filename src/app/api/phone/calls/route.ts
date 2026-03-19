@@ -39,6 +39,34 @@ export const GET = withMobileGuard(async (request, { session }) => {
       prisma.callLog.count(),
     ]);
 
+    // Fetch voicemails for missed/voicemail calls to expose their URLs
+    const voicemailCallerNumbers = calls
+      .filter(c => c.status === 'MISSED' || c.status === 'VOICEMAIL' || c.status === 'NO_ANSWER')
+      .map(c => c.fromNumber)
+      .filter(Boolean) as string[];
+
+    let voicemailMap = new Map<string, string>();
+    if (voicemailCallerNumbers.length > 0) {
+      try {
+        const voicemails = await prisma.voicemail.findMany({
+          where: {
+            callerNumber: { in: voicemailCallerNumbers },
+          },
+          select: { callerNumber: true, blobUrl: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        });
+        // Map caller number to most recent voicemail URL
+        for (const vm of voicemails) {
+          if (vm.blobUrl && !voicemailMap.has(vm.callerNumber)) {
+            voicemailMap.set(vm.callerNumber, vm.blobUrl);
+          }
+        }
+      } catch {
+        // Voicemail table might not exist yet — graceful fallback
+        logger.warn('[Phone Calls] Voicemail lookup failed, continuing without');
+      }
+    }
+
     // Map to iOS expected format
     const mapped = calls.map(call => ({
       id: call.id,
@@ -52,7 +80,7 @@ export const GET = withMobileGuard(async (request, { session }) => {
       startedAt: call.startedAt?.toISOString(),
       endedAt: call.endedAt?.toISOString() || null,
       recordingUrl: call.recording?.id ? `/api/recordings/${call.recording.id}` : null,
-      voicemailUrl: null,
+      voicemailUrl: voicemailMap.get(call.fromNumber || '') || null,
       extension: null,
     }));
 

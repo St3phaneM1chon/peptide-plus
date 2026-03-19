@@ -96,6 +96,45 @@ export async function GET(request: NextRequest) {
       prisma.conversation.count({ where }),
     ]);
 
+    // Detect mobile request (Bearer token) — return flat array with iOS-compatible fields
+    const isMobileRequest = request.headers.get('authorization')?.startsWith('Bearer ');
+    if (isMobileRequest) {
+      const mobileMapped = conversations.map((c: Record<string, unknown>) => {
+        const user = c.user as { id: string; name: string | null; email: string; image: string | null } | null;
+        const assignedTo = c.assignedTo as { id: string; name: string | null } | null;
+        const msgs = c.messages as Array<{ id: string; content: string; createdAt: Date | string; senderId: string }>;
+        const count = c._count as { messages: number } | undefined;
+
+        // Map backend status to iOS enum values
+        let mobileStatus = (c.status as string) || 'OPEN';
+        if (mobileStatus === 'OPEN' || mobileStatus === 'IN_PROGRESS') mobileStatus = 'ACTIVE';
+        else if (mobileStatus === 'CLOSED') mobileStatus = 'CLOSED';
+        else mobileStatus = 'WAITING';
+
+        return {
+          id: c.id,
+          customerName: user?.name || user?.email || 'Client',
+          customerEmail: user?.email || '',
+          subject: c.subject || null,
+          status: mobileStatus,
+          lastMessageAt: c.lastMessageAt ? (c.lastMessageAt instanceof Date ? c.lastMessageAt.toISOString() : c.lastMessageAt) : null,
+          unreadCount: count?.messages ?? 0,
+          assignedToId: c.assignedToId || null,
+          assignedToName: assignedTo?.name || null,
+          messages: msgs.map(m => ({
+            id: m.id,
+            content: m.content,
+            senderType: m.senderId === user?.id ? 'CUSTOMER' : 'AGENT',
+            senderName: m.senderId === user?.id ? (user?.name || 'Client') : (assignedTo?.name || 'Agent'),
+            createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
+            isRead: true,
+          })),
+        };
+      });
+      return NextResponse.json(mobileMapped);
+    }
+
+    // Web: keep the paginated format
     return NextResponse.json({
       conversations,
       pagination: {
