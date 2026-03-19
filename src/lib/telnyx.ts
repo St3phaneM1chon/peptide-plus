@@ -422,6 +422,71 @@ export async function sendSms(options: {
   });
 }
 
+// ── Media Fork (Voice AI) ─────────────────────────
+
+/**
+ * Start Media Fork — stream call audio to an external WebSocket.
+ * Used by Voice AI Engine to receive real-time caller audio.
+ */
+export async function mediaForkStart(callControlId: string, options: {
+  targetUrl: string;
+  streamType?: 'raw' | 'decrypted';
+  rxUrl?: string;
+  txUrl?: string;
+}) {
+  return telnyxFetch(`/calls/${callControlId}/actions/fork_start`, {
+    method: 'POST',
+    body: {
+      target: options.targetUrl,
+      stream_type: options.streamType || 'raw',
+      ...(options.rxUrl ? { rx: options.rxUrl } : {}),
+      ...(options.txUrl ? { tx: options.txUrl } : {}),
+    },
+  });
+}
+
+/**
+ * Stop Media Fork — stop streaming call audio.
+ */
+export async function mediaForkStop(callControlId: string) {
+  return telnyxFetch(`/calls/${callControlId}/actions/fork_stop`, {
+    method: 'POST',
+    body: {},
+  });
+}
+
+/**
+ * Play audio from a URL on the call.
+ * Used to inject ElevenLabs TTS audio back to the caller.
+ */
+export async function playAudioUrl(callControlId: string, audioUrl: string, options?: {
+  loop?: number;
+  overlay?: boolean;
+  targetLegs?: 'self' | 'opposite' | 'both';
+}) {
+  return telnyxFetch(`/calls/${callControlId}/actions/playback_start`, {
+    method: 'POST',
+    body: {
+      audio_url: audioUrl,
+      ...(options?.loop ? { loop: options.loop } : {}),
+      ...(options?.overlay !== undefined ? { overlay: options.overlay } : {}),
+      ...(options?.targetLegs ? { target_legs: options.targetLegs } : {}),
+    },
+  });
+}
+
+/**
+ * Stop audio playback on the call.
+ */
+export async function stopPlayback(callControlId: string) {
+  return telnyxFetch(`/calls/${callControlId}/actions/playback_stop`, {
+    method: 'POST',
+    body: {},
+  });
+}
+
+// ── Geographic Routing ─────────────────────────
+
 /**
  * Get geographic caller ID for a destination number.
  * Returns the best local number to show based on the callee's area code.

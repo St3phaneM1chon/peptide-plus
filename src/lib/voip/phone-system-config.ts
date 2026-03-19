@@ -1,7 +1,7 @@
 /**
  * Phone System Configuration — Central config for all DIDs, routing, and IVR
  *
- * This module defines the complete phone system configuration for BioCycle/Attitudes VIP.
+ * This module defines the complete phone system configuration for Attitudes VIP.
  * It is used by the setup script to seed the database and configure Telnyx.
  *
  * Numbers:
@@ -9,6 +9,10 @@
  *   +18735860370 — Gatineau (Forward to main)
  *   +14378880370 — Toronto (EN primary)
  *   +18443040370 — Toll-Free (Bilingual)
+ *
+ * Future (slots reserved, not purchased):
+ *   US number — TBD
+ *   EU number — TBD
  */
 
 // ─── Phone Number Definitions ────────────────────────────────────────────────
@@ -28,7 +32,7 @@ export interface PhoneNumberConfig {
 export const PHONE_NUMBERS: PhoneNumberConfig[] = [
   {
     number: '+14388030370',
-    displayName: 'BioCycle Peptides - Montréal',
+    displayName: 'Attitudes VIP - Montréal',
     country: 'CA',
     type: 'LOCAL',
     region: 'Montreal',
@@ -38,7 +42,7 @@ export const PHONE_NUMBERS: PhoneNumberConfig[] = [
   },
   {
     number: '+18735860370',
-    displayName: 'BioCycle Peptides - Gatineau',
+    displayName: 'Attitudes VIP - Gatineau',
     country: 'CA',
     type: 'LOCAL',
     region: 'Gatineau',
@@ -48,7 +52,7 @@ export const PHONE_NUMBERS: PhoneNumberConfig[] = [
   },
   {
     number: '+14378880370',
-    displayName: 'BioCycle Peptides - Toronto',
+    displayName: 'Attitudes VIP - Toronto',
     country: 'CA',
     type: 'LOCAL',
     region: 'Toronto',
@@ -67,6 +71,33 @@ export const PHONE_NUMBERS: PhoneNumberConfig[] = [
     monthlyCost: 2.00,
   },
 ];
+
+// ─── Future Numbers (reserved slots, not purchased yet) ─────────────────────
+// Uncomment and configure when ready to purchase:
+//
+// US Number:
+// {
+//   number: '+1XXXXXXXXXX',
+//   displayName: 'Attitudes VIP - USA',
+//   country: 'US',
+//   type: 'LOCAL',
+//   region: 'New York',
+//   language: 'en-US',
+//   routeToIvr: 'Main Menu EN',
+//   monthlyCost: 1.00,
+// },
+//
+// EU Number:
+// {
+//   number: '+33XXXXXXXXX',
+//   displayName: 'Attitudes VIP - Europe',
+//   country: 'FR',
+//   type: 'LOCAL',
+//   region: 'Paris',
+//   language: 'fr-FR',
+//   routeToIvr: 'Main Menu FR',
+//   monthlyCost: 2.00,
+// },
 
 // ─── IVR Menu Definitions ────────────────────────────────────────────────────
 
@@ -98,12 +129,13 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     language: 'fr-CA',
     timezone: 'America/Toronto',
     greetingText:
-      'Bienvenue chez Attitudes VIP et BioCycle Peptides. ' +
+      'Bienvenue chez Attitudes VIP. ' +
       'Cet appel peut être enregistré à des fins de qualité. ' +
-      'Pour les ventes et commandes, appuyez sur 1. ' +
-      'Pour le support et suivi de commande, appuyez sur 2. ' +
+      'Pour la réception, appuyez sur 0. ' +
+      'Pour les ventes, appuyez sur 1. ' +
+      'Pour le service à la clientèle, appuyez sur 2. ' +
       'Pour la facturation, appuyez sur 3. ' +
-      'Pour parler à un agent, appuyez sur 0. ' +
+      'Pour le soutien technique, appuyez sur 4. ' +
       'Pour laisser un message, appuyez sur 9.',
     businessHoursStart: '09:00',
     businessHoursEnd: '17:00',
@@ -111,10 +143,11 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     timeoutAction: 'voicemail',
     timeoutTarget: '1001', // Stephane's extension
     options: [
-      { digit: '1', label: 'Ventes', action: 'transfer_queue', target: 'sales-queue', announcement: 'Transfert au département des ventes. Veuillez patienter.' },
-      { digit: '2', label: 'Support', action: 'transfer_queue', target: 'support-queue', announcement: 'Transfert au support. Veuillez patienter.' },
-      { digit: '3', label: 'Facturation', action: 'transfer_queue', target: 'billing-queue', announcement: 'Transfert à la facturation. Veuillez patienter.' },
-      { digit: '0', label: 'Agent', action: 'transfer_queue', target: 'general-queue', announcement: 'Transfert à un agent. Veuillez patienter.' },
+      { digit: '0', label: 'Réception', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transfert à la réception. Veuillez patienter.' },
+      { digit: '1', label: 'Ventes', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transfert au département des ventes. Veuillez patienter.' },
+      { digit: '2', label: 'Service à la clientèle', action: 'transfer_queue', target: 'caroline-queue', announcement: 'Transfert au service à la clientèle. Veuillez patienter.' },
+      { digit: '3', label: 'Facturation', action: 'transfer_queue', target: 'caroline-queue', announcement: 'Transfert à la facturation. Veuillez patienter.' },
+      { digit: '4', label: 'Soutien technique', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transfert au soutien technique. Veuillez patienter.' },
       { digit: '9', label: 'Messagerie', action: 'voicemail', target: '1001' },
     ],
   },
@@ -126,10 +159,10 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     language: 'fr-CA',
     timezone: 'America/Toronto',
     greetingText:
-      'Merci d\'avoir appelé Attitudes VIP et BioCycle Peptides. ' +
+      'Merci d\'avoir appelé Attitudes VIP. ' +
       'Nos bureaux sont présentement fermés. Nos heures d\'ouverture sont du lundi au vendredi, de 9h à 17h, heure de l\'Est. ' +
       'Pour laisser un message vocal, appuyez sur 1. ' +
-      'Pour nous envoyer un courriel, visitez biocyclepeptides.com. ' +
+      'Pour nous envoyer un courriel, visitez attitudes.vip. ' +
       'Merci et à bientôt.',
     businessHoursStart: '00:00',
     businessHoursEnd: '23:59',
@@ -148,12 +181,13 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     language: 'en-US',
     timezone: 'America/Toronto',
     greetingText:
-      'Welcome to Attitudes VIP and BioCycle Peptides. ' +
+      'Welcome to Attitudes VIP. ' +
       'This call may be recorded for quality purposes. ' +
-      'For sales and orders, press 1. ' +
-      'For support and order tracking, press 2. ' +
+      'For reception, press 0. ' +
+      'For sales, press 1. ' +
+      'For customer service, press 2. ' +
       'For billing, press 3. ' +
-      'To speak with an agent, press 0. ' +
+      'For technical support, press 4. ' +
       'To leave a message, press 9.',
     businessHoursStart: '09:00',
     businessHoursEnd: '17:00',
@@ -161,10 +195,11 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     timeoutAction: 'voicemail',
     timeoutTarget: '1001',
     options: [
-      { digit: '1', label: 'Sales', action: 'transfer_queue', target: 'sales-queue', announcement: 'Transferring to sales. Please hold.' },
-      { digit: '2', label: 'Support', action: 'transfer_queue', target: 'support-queue', announcement: 'Transferring to support. Please hold.' },
-      { digit: '3', label: 'Billing', action: 'transfer_queue', target: 'billing-queue', announcement: 'Transferring to billing. Please hold.' },
-      { digit: '0', label: 'Agent', action: 'transfer_queue', target: 'general-queue', announcement: 'Transferring to an agent. Please hold.' },
+      { digit: '0', label: 'Reception', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transferring to reception. Please hold.' },
+      { digit: '1', label: 'Sales', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transferring to sales. Please hold.' },
+      { digit: '2', label: 'Customer Service', action: 'transfer_queue', target: 'caroline-queue', announcement: 'Transferring to customer service. Please hold.' },
+      { digit: '3', label: 'Billing', action: 'transfer_queue', target: 'caroline-queue', announcement: 'Transferring to billing. Please hold.' },
+      { digit: '4', label: 'Technical Support', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transferring to technical support. Please hold.' },
       { digit: '9', label: 'Voicemail', action: 'voicemail', target: '1001' },
     ],
   },
@@ -176,10 +211,10 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     language: 'en-US',
     timezone: 'America/Toronto',
     greetingText:
-      'Thank you for calling Attitudes VIP and BioCycle Peptides. ' +
+      'Thank you for calling Attitudes VIP. ' +
       'Our offices are currently closed. Business hours are Monday to Friday, 9 AM to 5 PM Eastern. ' +
       'To leave a voicemail, press 1. ' +
-      'To reach us by email, visit biocyclepeptides.com. ' +
+      'To reach us by email, visit attitudes.vip. ' +
       'Thank you and have a great day.',
     businessHoursStart: '00:00',
     businessHoursEnd: '23:59',
@@ -208,7 +243,7 @@ export const IVR_MENUS: IvrMenuConfig[] = [
     options: [
       { digit: '1', label: 'Français', action: 'sub_menu', target: 'Main Menu FR', announcement: 'Service en français.' },
       { digit: '2', label: 'English', action: 'sub_menu', target: 'Main Menu EN', announcement: 'Service in English.' },
-      { digit: '0', label: 'Agent', action: 'transfer_queue', target: 'general-queue', announcement: 'Transfert à un agent. Transferring to an agent.' },
+      { digit: '0', label: 'Agent', action: 'transfer_queue', target: 'stephane-queue', announcement: 'Transfert à un agent. Transferring to an agent.' },
     ],
   },
 
@@ -241,6 +276,53 @@ export const BUSINESS_HOURS = {
   weekendAndNight: { voicemailOnly: true },
 };
 
+// ─── Feature Flags ──────────────────────────────────────────────────────────
+export const FEATURE_FLAGS = {
+  /** Enable GPT-powered conversational IVR (instead of DTMF-only) */
+  useConversationalIvr: false, // Set to true to activate
+  /** Enable VIP priority routing based on loyalty tier */
+  useVipRouting: true,
+  /** Enable automatic follow-up SMS for missed calls */
+  useMissedCallSms: true,
+  /** Enable post-call AI summary generation */
+  useAutoSummary: true,
+  /** Enable smart routing to last agent based on call history */
+  useSmartRouting: true,
+
+  // ── Voice AI (Phase 1) ──
+  /** Enable Voice AI engine (STT→LLM→TTS pipeline instead of DTMF IVR) */
+  useVoiceAI: false, // Set to true to activate Voice AI
+  /** Enable Knowledge Base RAG for Voice AI (product/FAQ/Aurelia KB lookup) */
+  useVoiceAIKnowledgeBase: true,
+  /** Fallback to DTMF IVR if Voice AI is unavailable (API keys missing) */
+  voiceAIFallbackToDTMF: true,
+};
+
+// ─── Voice AI Configuration ─────────────────────────────────────────────────
+export const VOICE_AI_CONFIG = {
+  /** LLM model for voice conversations */
+  llmModel: 'gpt-4o',
+  /** Max tokens per LLM response (keep short for natural speech) */
+  maxTokens: 150,
+  /** LLM temperature (lower = more factual, less creative) */
+  temperature: 0.3,
+  /** Max conversation turns before suggesting transfer to agent */
+  maxTurns: 15,
+  /** Deepgram STT model */
+  sttModel: 'nova-2',
+  /** ElevenLabs TTS model */
+  ttsModel: 'eleven_turbo_v2_5',
+  /** Language detection: auto-detect from speech vs from dialed number */
+  autoDetectLanguage: true,
+  /** Language mapping by dialed number (pre-detection hint) */
+  languageByNumber: {
+    '+14388030370': 'fr-CA',  // Montreal
+    '+18735860370': 'fr-CA',  // Gatineau
+    '+14378880370': 'en-CA',  // Toronto
+    '+18443040370': '',        // Toll-Free: auto-detect
+  } as Record<string, string>,
+};
+
 // ─── Staff Configuration ─────────────────────────────────────────────────────
 
 export const STAFF = {
@@ -261,32 +343,20 @@ export const STAFF = {
 // ─── Queue Ring Strategy ─────────────────────────────────────────────────────
 
 export const QUEUE_CONFIG = {
-  'general-queue': {
-    name: 'Général',
-    strategy: 'ring_all', // Ring Stephane + Caroline simultaneously
-    agents: ['1001', '1002'],
+  'stephane-queue': {
+    name: 'Stéphane',
+    strategy: 'ring_all',
+    agents: ['1001'], // Stéphane only
     ringTimeout: 20, // seconds before voicemail
+    overflowVoicemail: '1001', // voicemail Stéphane
     holdMusic: 'default',
   },
-  'sales-queue': {
-    name: 'Ventes',
+  'caroline-queue': {
+    name: 'Caroline',
     strategy: 'ring_all',
-    agents: ['1001', '1002'],
+    agents: ['1002'], // Caroline only
     ringTimeout: 20,
-    holdMusic: 'default',
-  },
-  'support-queue': {
-    name: 'Support',
-    strategy: 'ring_all',
-    agents: ['1001', '1002'],
-    ringTimeout: 20,
-    holdMusic: 'default',
-  },
-  'billing-queue': {
-    name: 'Facturation',
-    strategy: 'ring_all',
-    agents: ['1001'],
-    ringTimeout: 25,
+    overflowVoicemail: '1002', // voicemail Caroline
     holdMusic: 'default',
   },
 };

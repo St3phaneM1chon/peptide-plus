@@ -16,7 +16,27 @@ import { resolveIvrMenu, playIvrMenu, handleIvrInput, handleIvrTimeout } from '.
 import { routeToQueue, removeFromQueue } from './queue-engine';
 import { handleVoicemailSaved, isVoicemailActive, cleanupVoicemail, startVoicemail } from './voicemail-engine';
 import { cleanupTransferState } from './transfer-engine';
+import { createPostCallActivity } from './crm-integration';
 import { VoipStateMap } from './voip-state';
+import type { AgentAssist } from './agent-assist';
+import type { ConversationalIVR } from './conversational-ivr';
+import { LiveCallScorer, saveScorecard } from './live-scoring';
+import { LiveSentimentAnalyzer, saveSentiment } from './live-sentiment';
+import { executePostCallWorkflow } from './post-call-workflow';
+import { FEATURE_FLAGS } from './phone-system-config';
+
+// Active Agent Assist instances per call (for live AI suggestions)
+const activeAgentAssist = new Map<string, AgentAssist>();
+
+// Active Live Scoring instances per call (quality scorecard)
+const activeScorers = new Map<string, LiveCallScorer>();
+
+// Active Sentiment Analyzer instances per call (real-time sentiment)
+const activeSentiment = new Map<string, LiveSentimentAnalyzer>();
+
+// Active Conversational IVR instances per call (GPT-powered, stored separately
+// because ConversationalIVR is a class instance that cannot be serialized into VoipStateMap)
+const activeConversationalIVR = new Map<string, ConversationalIVR>();
 
 // Event payload shape from webhook handler
 export interface CallEventPayload {
@@ -210,11 +230,18 @@ async function handleCallAnswered(payload: CallEventPayload) {
       format: 'wav',
     });
   }
+
+  // Initialize live scoring and sentiment analysis for the call
+  if (!state?.isVoicemail) {
+    activeScorers.set(callControlId, new LiveCallScorer({ updateInterval: 30 }));
+    activeSentiment.set(callControlId, new LiveSentimentAnalyzer({ minTextLength: 15 }));
+  }
 }
 
 async function handleCallHangup(payload: CallEventPayload) {
   const { callControlId, hangupCause } = payload;
   const state = activeCallStates.get(callControlId);
+  let isCompletedCall = false;
 
   if (state?.callLogId) {
     const callLog = await prisma.callLog.findUnique({
@@ -229,22 +256,123 @@ async function handleCallHangup(payload: CallEventPayload) {
       ? Math.round((endedAt.getTime() - callLog.answeredAt.getTime()) / 1000)
       : 0;
 
+    const finalStatus = callLog?.answeredAt ? 'COMPLETED' : 'MISSED';
+    isCompletedCall = finalStatus === 'COMPLETED';
+
     await prisma.callLog.update({
       where: { id: state.callLogId },
       data: {
-        status: callLog?.answeredAt ? 'COMPLETED' : 'MISSED',
+        status: finalStatus,
         endedAt,
         duration,
         billableSec,
         hangupCause,
       },
     });
+
+    // Create CRM Activity for client timeline (fire-and-forget, non-blocking)
+    createPostCallActivity({
+      id: state.callLogId,
+      clientId: callLog?.clientId,
+      agentId: callLog?.agentId,
+      direction: callLog?.direction as string || 'OUTBOUND',
+      duration,
+      status: finalStatus,
+      callerNumber: callLog?.callerNumber || 'unknown',
+      calledNumber: callLog?.calledNumber || 'unknown',
+      agentNotes: callLog?.agentNotes,
+      disposition: callLog?.disposition,
+      tags: callLog?.tags,
+    }).catch(() => {}); // Fire-and-forget
+
+    // Follow-up for missed calls without voicemail (non-blocking, fire-and-forget)
+    if (finalStatus === 'MISSED' && !state.isVoicemail && callLog) {
+      import('./missed-call-followup').then(({ handleMissedCallFollowup }) => {
+        handleMissedCallFollowup({
+          id: state.callLogId!,
+          callerNumber: callLog.callerNumber,
+          calledNumber: callLog.calledNumber,
+          clientId: callLog.clientId,
+          direction: callLog.direction,
+        }).catch(() => {});
+      }).catch(() => {});
+    }
+
+    // Execute post-call workflow based on disposition (non-blocking, fire-and-forget)
+    if (callLog?.disposition) {
+      // Resolve agent's userId from SipExtension (agentId is the SipExtension ID)
+      let agentUserId: string | null = null;
+      if (callLog.agentId) {
+        const ext = await prisma.sipExtension.findUnique({
+          where: { id: callLog.agentId },
+          select: { userId: true },
+        });
+        agentUserId = ext?.userId || null;
+      }
+
+      executePostCallWorkflow({
+        callLogId: state.callLogId,
+        clientId: callLog.clientId,
+        agentUserId,
+        disposition: callLog.disposition,
+        agentNotes: callLog.agentNotes,
+        callerNumber: callLog.callerNumber || 'unknown',
+        calledNumber: callLog.calledNumber || 'unknown',
+        duration,
+        status: finalStatus,
+        tags: callLog.tags,
+      }).catch(() => {}); // Fire-and-forget
+    }
+  }
+
+  // Generate AI call summary for completed calls (non-blocking, fire-and-forget)
+  if (state?.callLogId && isCompletedCall) {
+    generateAutoSummary(state.callLogId).catch(() => {});
+  }
+
+  // Persist live scoring and sentiment analysis (non-blocking, fire-and-forget)
+  if (state?.callLogId) {
+    const scorer = activeScorers.get(callControlId);
+    if (scorer) {
+      scorer.getFinalScorecard()
+        .then((scorecard) => saveScorecard(state.callLogId!, scorecard))
+        .catch((err) => {
+          logger.warn('[CallControl] Live scoring persistence failed', {
+            callLogId: state.callLogId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+    }
+
+    const sentiment = activeSentiment.get(callControlId);
+    if (sentiment) {
+      const overall = sentiment.getOverallSentiment();
+      saveSentiment(state.callLogId, overall).catch((err) => {
+        logger.warn('[CallControl] Sentiment persistence failed', {
+          callLogId: state.callLogId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
+    }
   }
 
   // Cleanup all engine states
   removeFromQueue(callControlId);
   cleanupVoicemail(callControlId);
   cleanupTransferState(callControlId);
+  activeAgentAssist.delete(callControlId);
+  activeConversationalIVR.delete(callControlId);
+  activeScorers.delete(callControlId);
+  activeSentiment.delete(callControlId);
+
+  // Cleanup Voice AI session (non-blocking)
+  import('./voice-ai-engine').then(({ getVoiceAIEngine }) => {
+    const engine = getVoiceAIEngine();
+    if (engine.isSessionActive(callControlId)) {
+      engine.stopSession(callControlId).catch(() => {});
+    }
+  }).catch(() => {});
+
   activeCallStates.delete(callControlId);
 }
 
@@ -378,6 +506,98 @@ async function handleTranscription(payload: CallEventPayload) {
   const state = activeCallStates.get(callControlId);
 
   if (transcriptionData?.is_final && state?.callLogId) {
+    // ── Voice AI: intercept speech for STT→LLM→TTS pipeline ──────────────
+    try {
+      const { getVoiceAIEngine } = await import('./voice-ai-engine');
+      const engine = getVoiceAIEngine();
+
+      if (engine.isSessionActive(callControlId) && transcriptionData.text.trim().length > 0) {
+        // Feed the transcription to Voice AI engine (it handles LLM + TTS)
+        engine.processAudio(callControlId, Buffer.from(transcriptionData.text));
+        // Don't return — still save the transcript and feed other engines below
+      }
+    } catch {
+      // Voice AI not loaded — continue with normal flow
+    }
+    // ── Conversational IVR: intercept speech for GPT-powered routing ────────
+    const civr = activeConversationalIVR.get(callControlId);
+    if (civr && transcriptionData.text.trim().length > 0) {
+      try {
+        const action = await civr.processInput(transcriptionData.text);
+        const civrLanguage = state.language || 'fr-CA';
+
+        switch (action.type) {
+          case 'speak': {
+            // GPT is asking a follow-up question — speak and continue listening
+            const text = action.data.text as string;
+            await telnyx.speakText(callControlId, text, { language: civrLanguage });
+            break;
+          }
+          case 'transfer': {
+            // Intent detected — transfer to the appropriate queue
+            const destination = action.data.destination as string;
+            const message = action.data.message as string | undefined;
+            if (message) {
+              await telnyx.speakText(callControlId, message, { language: civrLanguage });
+            }
+            activeConversationalIVR.delete(callControlId);
+            await routeToQueue(callControlId, destination);
+            break;
+          }
+          case 'voicemail': {
+            // Caller wants voicemail
+            const vmMessage = action.data.message as string | undefined;
+            if (vmMessage) {
+              await telnyx.speakText(callControlId, vmMessage, { language: civrLanguage });
+            }
+            activeConversationalIVR.delete(callControlId);
+            await startVoicemail(callControlId, '1001', {
+              from: state.callerNumber,
+              language: civrLanguage,
+            });
+            break;
+          }
+          case 'collect_input': {
+            // Fallback to DTMF keypad
+            const prompt = action.data.text as string;
+            activeConversationalIVR.delete(callControlId);
+            await telnyx.gatherDtmf(callControlId, {
+              prompt,
+              language: civrLanguage,
+              maxDigits: (action.data.maxDigits as number) || 1,
+              timeoutSecs: (action.data.timeoutSecs as number) || 10,
+            });
+            break;
+          }
+          case 'hangup': {
+            activeConversationalIVR.delete(callControlId);
+            await telnyx.hangupCall(callControlId);
+            break;
+          }
+          default:
+            break;
+        }
+
+        logger.info('[CallControl] CIVR action executed', {
+          callControlId,
+          actionType: action.type,
+          callerText: transcriptionData.text.substring(0, 80),
+        });
+      } catch (error) {
+        logger.error('[CallControl] CIVR processing failed, transferring to agent', {
+          callControlId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // On CIVR failure, transfer to default queue
+        activeConversationalIVR.delete(callControlId);
+        await routeToQueue(callControlId, 'stephane-queue');
+      }
+      // Still save the transcript below (don't return — the speech is valuable data)
+    }
+
+    // Use the language from call state (derived from PhoneNumber config), fallback to 'fr'
+    const callLanguage = state.language ? state.language.split('-')[0] : 'fr';
+
     const existing = await prisma.callTranscription.findUnique({
       where: { callLogId: state.callLogId },
     });
@@ -396,10 +616,98 @@ async function handleTranscription(payload: CallEventPayload) {
           fullText: transcriptionData.text,
           engine: 'telnyx',
           confidence: transcriptionData.confidence,
-          language: 'fr',
+          language: callLanguage,
         },
       });
     }
+
+    // Feed live scoring engine (non-blocking)
+    const scorer = activeScorers.get(callControlId);
+    if (scorer) {
+      scorer.feedTranscript(transcriptionData.text, 'agent').catch(() => {});
+    }
+
+    // Feed live sentiment analyzer (non-blocking)
+    const sentimentAnalyzer = activeSentiment.get(callControlId);
+    if (sentimentAnalyzer) {
+      sentimentAnalyzer.feedText(transcriptionData.text).catch(() => {});
+    }
+
+    // Feed Agent Assist for live AI suggestions (non-blocking)
+    try {
+      let assist = activeAgentAssist.get(callControlId);
+      if (!assist) {
+        const { AgentAssist: AgentAssistClass } = await import('./agent-assist');
+        assist = new AgentAssistClass();
+        activeAgentAssist.set(callControlId, assist);
+      }
+      // Treat live transcription as customer speech (suggestions are most useful for customer utterances)
+      assist.feedTranscript('customer', transcriptionData.text).then((suggestions) => {
+        if (suggestions.length > 0) {
+          logger.info('[CallControl] Agent Assist suggestions generated', {
+            callLogId: state?.callLogId,
+            count: suggestions.length,
+            types: suggestions.map((s) => s.type),
+          });
+        }
+      }).catch(() => {});
+    } catch {
+      // Agent Assist is non-critical — never interrupt transcription flow
+    }
+  }
+}
+
+// ── Post-Call Auto Summary ─────────────────────────
+
+/**
+ * Generate an AI summary of the call after hangup.
+ * Waits briefly for the final transcription segments to be saved,
+ * then calls generateCallSummary() and stores the result.
+ * Non-blocking — errors are logged but never propagated.
+ */
+async function generateAutoSummary(callLogId: string): Promise<void> {
+  try {
+    // Wait for transcription to be fully saved (last segments may still be writing)
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const transcription = await prisma.callTranscription.findUnique({
+      where: { callLogId },
+      select: { id: true, fullText: true, language: true },
+    });
+
+    if (!transcription?.fullText || transcription.fullText.length < 50) return;
+
+    const { generateCallSummary } = await import('./transcription');
+    const result = await generateCallSummary(transcription.fullText, {
+      language: transcription.language || 'fr',
+    });
+
+    if (!result.summary) return;
+
+    // Save summary into the individual CallTranscription fields
+    await prisma.callTranscription.update({
+      where: { id: transcription.id },
+      data: {
+        summary: result.summary,
+        sentiment: result.sentiment,
+        keywords: result.keyTopics,
+        actionItems: result.actionItems.length > 0
+          ? JSON.stringify(result.actionItems)
+          : null,
+      },
+    });
+
+    logger.info('[CallControl] Auto-summary generated', {
+      callLogId,
+      sentiment: result.sentiment,
+      topicCount: result.keyTopics.length,
+      actionItemCount: result.actionItems.length,
+    });
+  } catch (error) {
+    logger.warn('[CallControl] Auto-summary failed', {
+      callLogId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -407,9 +715,12 @@ async function handleTranscription(payload: CallEventPayload) {
 
 /**
  * Route an inbound call based on the dialed number's configuration.
- * Priority: IVR → Queue → Extension → Default simultaneous ring
+ * Priority: VIP → Smart Route → Conversational IVR → DTMF IVR → Queue → Extension → Default
  *
  * Enhanced features:
+ * - VIP priority routing: GOLD/PLATINUM/VIP clients skip IVR entirely
+ * - Smart routing: returning callers reconnected to their last agent (7-day window)
+ * - Conversational IVR: GPT-powered natural language routing (feature-flagged)
  * - Multi-language support (greetings in the number's language)
  * - Forwarding already handled in handleCallInitiated
  * - Simultaneous ring to all staff as fallback
@@ -426,16 +737,232 @@ async function routeInboundCall(callControlId: string, payload: CallEventPayload
   }) : null;
 
   if (!phoneNumber) {
-    // Unknown number — play bilingual greeting and route to general queue
+    // Unknown number — play bilingual greeting and route to default queue (Stéphane)
     await telnyx.speakText(callControlId,
       "Merci d'avoir appelé Attitudes VIP. Thank you for calling Attitudes VIP. " +
       "Veuillez patienter. Please hold.",
       { language: 'fr-CA' });
-    await routeToQueue(callControlId, 'general-queue');
+    await routeToQueue(callControlId, 'stephane-queue');
     return;
   }
 
-  // Route 1: IVR Menu (primary routing method)
+  // ── VIP Priority Routing ──────────────────────────────────────────────────
+  // Recognize VIP/PLATINUM/GOLD clients by phone number and skip IVR entirely
+  if (FEATURE_FLAGS.useVipRouting) {
+    const callerNumber = state?.callerNumber || payload.from || '';
+    // Normalize to last 10 digits for flexible matching
+    const normalizedCaller = callerNumber.replace(/^\+?1/, '').slice(-10);
+
+    if (normalizedCaller.length >= 10) {
+      try {
+        const vipClient = await prisma.user.findFirst({
+          where: {
+            phone: { contains: normalizedCaller },
+            loyaltyTier: { in: ['VIP', 'PLATINUM', 'GOLD'] },
+          },
+          select: { id: true, name: true, loyaltyTier: true },
+        });
+
+        if (vipClient) {
+          const firstName = vipClient.name?.split(' ')[0] || '';
+          const vipMsg = isFrench
+            ? `Merci d'être un membre ${vipClient.loyaltyTier} d'Attitudes VIP${firstName ? `, ${firstName}` : ''}. Vous êtes transféré en priorité.`
+            : `Thank you for being a ${vipClient.loyaltyTier} member of Attitudes VIP${firstName ? `, ${firstName}` : ''}. Transferring you now.`;
+
+          await telnyx.speakText(callControlId, vipMsg, { language });
+          logRecordingConsent(callControlId, 'vip_greeting').catch(() => {});
+
+          logger.info('[CallControl] VIP routing activated', {
+            callControlId,
+            clientId: vipClient.id,
+            tier: vipClient.loyaltyTier,
+          });
+
+          // Route directly to Stéphane (skip IVR for VIPs)
+          await routeToQueue(callControlId, 'stephane-queue');
+          return;
+        }
+      } catch (error) {
+        // VIP lookup is non-critical — fall through to normal routing
+        logger.warn('[CallControl] VIP lookup failed, continuing normal routing', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  // ── Smart Routing: Route to last agent if recent interaction ───────────────
+  // If the caller spoke with an agent in the last 7 days, try to reconnect them
+  if (FEATURE_FLAGS.useSmartRouting) {
+    const callerNumber = state?.callerNumber || payload.from || '';
+    const normalizedCaller = callerNumber.replace(/^\+?1/, '').slice(-10);
+
+    if (normalizedCaller.length >= 10) {
+      try {
+        const lastCall = await prisma.callLog.findFirst({
+          where: {
+            callerNumber: { contains: normalizedCaller },
+            status: 'COMPLETED',
+            agentId: { not: null },
+            startedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+          orderBy: { startedAt: 'desc' },
+          select: {
+            agentId: true,
+            agent: { select: { extension: true, userId: true } },
+          },
+        });
+
+        if (lastCall?.agent) {
+          // Check if the agent is currently online
+          const agentPresence = await prisma.presenceStatus.findFirst({
+            where: {
+              userId: lastCall.agent.userId,
+              status: 'ONLINE',
+            },
+          });
+
+          if (agentPresence) {
+            // Map extension to the correct queue
+            const targetQueue = lastCall.agent.extension === '1002'
+              ? 'caroline-queue'
+              : 'stephane-queue';
+
+            const continuityMsg = isFrench
+              ? "Nous vous mettons en communication avec votre interlocuteur habituel."
+              : "Connecting you with your usual contact.";
+            await telnyx.speakText(callControlId, continuityMsg, { language });
+            logRecordingConsent(callControlId, 'smart_routing').catch(() => {});
+
+            logger.info('[CallControl] Smart routing to last agent', {
+              callControlId,
+              extension: lastCall.agent.extension,
+              targetQueue,
+            });
+
+            await routeToQueue(callControlId, targetQueue);
+            return;
+          }
+        }
+      } catch (error) {
+        // Smart routing is non-critical — fall through to normal routing
+        logger.warn('[CallControl] Smart routing lookup failed, continuing normal routing', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  // ── Voice AI Engine (highest priority after VIP/Smart) ──────────────────────
+  // Full STT→LLM→TTS pipeline with RAG knowledge base.
+  // Replaces both DTMF and Conversational IVR with natural voice conversation.
+  // Falls back to DTMF IVR if Voice AI is unavailable.
+  if (FEATURE_FLAGS.useVoiceAI) {
+    try {
+      const { getVoiceAIEngine, isVoiceAIAvailable } = await import('./voice-ai-engine');
+
+      if (isVoiceAIAvailable()) {
+        const engine = getVoiceAIEngine();
+        const callerNumber = state?.callerNumber || payload.from || '';
+
+        // Start Voice AI session
+        const session = await engine.startSession(
+          callControlId,
+          callerNumber,
+          to || '',
+          language
+        );
+
+        // Handle transfer requests from Voice AI
+        engine.on('transfer', async (data: {
+          callControlId: string;
+          reason: string;
+          language: string;
+        }) => {
+          if (data.callControlId === callControlId) {
+            logger.info('[CallControl] Voice AI requesting transfer', {
+              callControlId,
+              reason: data.reason.substring(0, 100),
+            });
+            await routeToQueue(callControlId, 'stephane-queue');
+          }
+        });
+
+        // Start Telnyx transcription to feed the Voice AI STT
+        await telnyx.startTranscription(callControlId, {
+          language: session.language.split('-')[0] || 'fr',
+        });
+
+        logRecordingConsent(callControlId, 'voiceai_greeting').catch(() => {});
+
+        // Store the Voice AI session reference in call state
+        activeCallStates.set(callControlId, {
+          ...state,
+          language: session.language,
+        });
+
+        logger.info('[CallControl] Voice AI activated', {
+          callControlId,
+          language: session.language,
+          clientIdentified: !!session.clientContext,
+        });
+        return;
+      } else if (!FEATURE_FLAGS.voiceAIFallbackToDTMF) {
+        logger.warn('[CallControl] Voice AI unavailable and fallback disabled');
+      }
+      // Fall through to DTMF/CIVR if Voice AI not available
+    } catch (error) {
+      logger.warn('[CallControl] Voice AI init failed, falling back', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Fall through to DTMF IVR
+    }
+  }
+
+  // Route 1a: Conversational IVR (GPT-powered, if enabled)
+  // When active, replaces the DTMF-only IVR with natural language understanding.
+  // Requires Telnyx Media Streaming for real-time speech-to-text — the CIVR
+  // processes transcription events via handleTranscription() and speaks back.
+  // Falls back to DTMF-only IVR if the feature flag is off or CIVR init fails.
+  if (phoneNumber.routeToIvr && FEATURE_FLAGS.useConversationalIvr) {
+    try {
+      const { ConversationalIVR: CIVRClass } = await import('./conversational-ivr');
+      const civr = new CIVRClass({
+        language: language.startsWith('fr') ? 'fr' : 'en',
+      });
+
+      // Play the GPT greeting
+      const greeting = civr.getGreeting();
+      await telnyx.speakText(callControlId, greeting, { language });
+
+      // Store CIVR instance for subsequent transcription turns
+      activeConversationalIVR.set(callControlId, civr);
+
+      // Enable streaming transcription so caller speech is captured.
+      // The handleTranscription() handler will detect the active CIVR
+      // and route speech text through civr.processInput() instead of
+      // simply appending to the transcript.
+      await telnyx.startRecording(callControlId, {
+        channels: 'dual',
+        format: 'wav',
+      });
+
+      logRecordingConsent(callControlId, 'civr_greeting').catch(() => {});
+
+      logger.info('[CallControl] Conversational IVR activated', {
+        callControlId,
+        language,
+      });
+      return;
+    } catch (error) {
+      // CIVR init failed — fall through to standard DTMF IVR
+      logger.warn('[CallControl] Conversational IVR init failed, falling back to DTMF', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  // Route 1: IVR Menu (DTMF-only, primary routing method)
   if (phoneNumber.routeToIvr) {
     const menu = await resolveIvrMenu(phoneNumber);
     if (menu) {
@@ -446,6 +973,8 @@ async function routeInboundCall(callControlId: string, payload: CallEventPayload
         language: menu.language || language,
       });
       await playIvrMenu(callControlId, menu);
+      // IVR greeting includes recording consent notice — log it (non-blocking)
+      logRecordingConsent(callControlId, 'ivr_greeting').catch(() => {});
       return;
     }
   }
@@ -456,6 +985,8 @@ async function routeInboundCall(callControlId: string, payload: CallEventPayload
       ? "Cet appel peut être enregistré à des fins de qualité. Veuillez patienter."
       : "This call may be recorded for quality purposes. Please hold.";
     await telnyx.speakText(callControlId, consentMsg, { language });
+    // Log recording consent (PIPEDA compliance) — non-blocking
+    logRecordingConsent(callControlId, 'queue_greeting').catch(() => {});
     await routeToQueue(callControlId, phoneNumber.routeToQueue);
     return;
   }
@@ -470,17 +1001,65 @@ async function routeInboundCall(callControlId: string, payload: CallEventPayload
         ? "Cet appel peut être enregistré à des fins de qualité. Transfert en cours."
         : "This call may be recorded for quality purposes. Transferring now.";
       await telnyx.speakText(callControlId, transferMsg, { language });
+      // Log recording consent (PIPEDA compliance) — non-blocking
+      logRecordingConsent(callControlId, 'extension_greeting').catch(() => {});
       await telnyx.transferCall(callControlId, `sip:${ext.sipUsername}@sip.telnyx.com`);
       return;
     }
   }
 
-  // Default: Route to general queue (ring all agents simultaneously)
+  // Default: Route to Stéphane queue as fallback
   const defaultMsg = isFrench
     ? "Cet appel peut être enregistré à des fins de qualité. Veuillez patienter pendant que nous vous mettons en communication."
     : "This call may be recorded for quality purposes. Please hold while we connect you.";
   await telnyx.speakText(callControlId, defaultMsg, { language });
-  await routeToQueue(callControlId, 'general-queue');
+  // Log recording consent (PIPEDA compliance) — non-blocking
+  logRecordingConsent(callControlId, 'default_greeting').catch(() => {});
+  await routeToQueue(callControlId, 'stephane-queue');
+}
+
+// ── Recording Consent Logging (PIPEDA compliance) ─────────────────────────
+
+/**
+ * Log that the recording consent notice was played to the caller.
+ * Stores the consent timestamp in CallLog.metadata for PIPEDA compliance.
+ * Non-blocking — errors are logged but don't interrupt the call flow.
+ */
+async function logRecordingConsent(callControlId: string, method: string = 'ivr_prompt'): Promise<void> {
+  const state = activeCallStates.get(callControlId);
+  if (!state?.callLogId) return;
+
+  try {
+    const callLog = await prisma.callLog.findUnique({
+      where: { id: state.callLogId },
+      select: { metadata: true },
+    });
+
+    const existingMetadata = (callLog?.metadata as Record<string, unknown>) || {};
+
+    await prisma.callLog.update({
+      where: { id: state.callLogId },
+      data: {
+        metadata: {
+          ...existingMetadata,
+          recordingConsent: true,
+          consentTimestamp: new Date().toISOString(),
+          consentMethod: method,
+        },
+      },
+    });
+
+    logger.debug('[CallControl] Recording consent logged', {
+      callLogId: state.callLogId,
+      method,
+    });
+  } catch (error) {
+    // Non-critical: don't interrupt the call flow if consent logging fails
+    logger.warn('[CallControl] Failed to log recording consent', {
+      callLogId: state?.callLogId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 // ── Outbound Dialer ─────────────────────────
