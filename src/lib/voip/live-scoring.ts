@@ -358,3 +358,59 @@ export class LiveCallScorer {
     this.scoring = false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Persistence
+// ---------------------------------------------------------------------------
+
+/**
+ * Save the final scorecard to the database.
+ * Called at the end of a call to persist quality scores in CallLog.metadata.
+ */
+export async function saveScorecard(
+  callLogId: string,
+  scorecard: Awaited<ReturnType<LiveCallScorer['getFinalScorecard']>>
+): Promise<void> {
+  try {
+    const { prisma } = await import('@/lib/db');
+
+    const callLog = await prisma.callLog.findUnique({
+      where: { id: callLogId },
+      select: { metadata: true },
+    });
+
+    const existingMetadata = (callLog?.metadata as Record<string, unknown>) || {};
+
+    await prisma.callLog.update({
+      where: { id: callLogId },
+      data: {
+        metadata: {
+          ...existingMetadata,
+          qualityScore: {
+            overall: scorecard.score.overall,
+            categories: scorecard.score.categories.map((c) => ({
+              name: c.name,
+              score: c.score,
+              weight: c.weight,
+              details: c.details,
+            })),
+            callDuration: scorecard.score.callDuration,
+            summary: scorecard.summary,
+            improvements: scorecard.improvements,
+            scoredAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+
+    logger.info('[LiveScoring] Scorecard saved', {
+      callLogId,
+      overall: scorecard.score.overall,
+    });
+  } catch (error) {
+    logger.error('[LiveScoring] Failed to save scorecard', {
+      callLogId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}

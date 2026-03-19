@@ -65,7 +65,7 @@ interface ChatCompletionResponse {
 // Default system prompt
 // ---------------------------------------------------------------------------
 
-const DEFAULT_SYSTEM_PROMPT = `You are a professional phone IVR assistant for BioCycle Peptides, a research peptide company.
+const DEFAULT_SYSTEM_PROMPT = `You are a professional phone IVR assistant for Attitudes VIP.
 Your role is to understand what the caller needs and route them appropriately.
 
 IMPORTANT RULES:
@@ -76,12 +76,13 @@ IMPORTANT RULES:
 - If you detect entities (name, order number, etc.), include them as [ENTITY:key=value].
 
 Available intents:
-- sales: Caller wants to place an order or learn about products
-- support: Caller has a question or problem with an existing order
-- billing: Caller has a billing or payment question
-- shipping: Caller is asking about shipping or delivery status
-- returns: Caller wants to return a product or get a refund
-- speak_agent: Caller explicitly asks to speak with a person
+- sales: Caller wants to place an order or learn about products → Stéphane
+- support: Caller has a question or problem with an existing order → Caroline
+- billing: Caller has a billing or payment question → Caroline
+- tech_support: Caller has a technical issue or needs technical help → Stéphane
+- shipping: Caller is asking about shipping or delivery status → Caroline
+- returns: Caller wants to return a product or get a refund → Caroline
+- speak_agent: Caller explicitly asks to speak with a person → Stéphane
 - voicemail: Caller wants to leave a message
 - hours: Caller is asking about business hours
 - unknown: You cannot determine what the caller needs
@@ -106,12 +107,13 @@ export class ConversationalIVR {
       language: config?.language || 'fr',
       fallbackToKeypad: config?.fallbackToKeypad ?? true,
       transferRules: config?.transferRules || [
-        { intent: 'sales', destination: 'sales-queue' },
-        { intent: 'support', destination: 'support-queue' },
-        { intent: 'billing', destination: 'billing-queue' },
-        { intent: 'shipping', destination: 'support-queue' },
-        { intent: 'returns', destination: 'support-queue' },
-        { intent: 'speak_agent', destination: 'general-queue' },
+        { intent: 'sales', destination: 'stephane-queue' },
+        { intent: 'support', destination: 'caroline-queue' },
+        { intent: 'billing', destination: 'caroline-queue' },
+        { intent: 'tech_support', destination: 'stephane-queue' },
+        { intent: 'shipping', destination: 'caroline-queue' },
+        { intent: 'returns', destination: 'caroline-queue' },
+        { intent: 'speak_agent', destination: 'stephane-queue' },
         { intent: 'voicemail', destination: 'voicemail' },
       ],
     };
@@ -140,7 +142,7 @@ export class ConversationalIVR {
       return {
         type: 'transfer',
         data: {
-          destination: 'general-queue',
+          destination: 'stephane-queue',
           reason: 'max_turns_exceeded',
           message: "Je vous transfère à un agent qui pourra mieux vous aider.",
         },
@@ -352,11 +354,11 @@ export class ConversationalIVR {
    */
   getGreeting(): string {
     if (this.config.language === 'fr') {
-      return "Bienvenue chez BioCycle Peptides. Comment puis-je vous aider aujourd'hui? " +
+      return "Bienvenue chez Attitudes VIP. Comment puis-je vous aider aujourd'hui? " +
         "Vous pouvez me parler naturellement ou appuyer sur 0 pour un agent.";
     }
 
-    return "Welcome to BioCycle Peptides. How can I help you today? " +
+    return "Welcome to Attitudes VIP. How can I help you today? " +
       "You can speak naturally or press 0 for an agent.";
   }
 
@@ -399,7 +401,7 @@ export class ConversationalIVR {
     return {
       type: 'transfer',
       data: {
-        destination: 'general-queue',
+        destination: 'stephane-queue',
         reason: 'timeout',
         message: this.config.language === 'fr'
           ? "Je vous transfère à un agent. Veuillez patienter."
@@ -437,7 +439,7 @@ export class ConversationalIVR {
         : "Transferring you to an agent. Please hold.",
       action: {
         type: 'transfer',
-        data: { destination: 'general-queue', reason: 'gpt_unavailable' },
+        data: { destination: 'stephane-queue', reason: 'gpt_unavailable' },
       },
     };
   }

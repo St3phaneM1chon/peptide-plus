@@ -85,7 +85,7 @@ export async function resolveIvrMenu(phoneNumber: { routeToIvr: string | null })
  */
 export function buildGreetingText(
   options: Array<{ digit: string; label: string }>,
-  companyName = 'BioCycle',
+  companyName = 'Attitudes VIP',
   language = 'fr-CA'
 ): string {
   const isFrench = language.startsWith('fr');

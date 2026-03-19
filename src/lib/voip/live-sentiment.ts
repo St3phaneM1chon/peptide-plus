@@ -264,3 +264,157 @@ export class LiveSentimentAnalyzer {
     this.analyzing = false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Persistence
+// ---------------------------------------------------------------------------
+
+/**
+ * Save overall sentiment to CallLog.metadata.
+ * If the sentiment is negative, checks for consecutive negative calls from
+ * the same client and creates a CrmTask for retention follow-up.
+ */
+export async function saveSentiment(
+  callLogId: string,
+  sentiment: ReturnType<LiveSentimentAnalyzer['getOverallSentiment']>
+): Promise<void> {
+  try {
+    const { prisma } = await import('@/lib/db');
+
+    const callLog = await prisma.callLog.findUnique({
+      where: { id: callLogId },
+      select: { metadata: true, clientId: true, callerNumber: true },
+    });
+
+    const existingMetadata = (callLog?.metadata as Record<string, unknown>) || {};
+
+    await prisma.callLog.update({
+      where: { id: callLogId },
+      data: {
+        metadata: {
+          ...existingMetadata,
+          sentiment: {
+            overall: sentiment.sentiment,
+            score: sentiment.score,
+            trend: sentiment.trend,
+            analyzedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+
+    logger.info('[Sentiment] Saved to CallLog', {
+      callLogId,
+      overall: sentiment.sentiment,
+      score: sentiment.score,
+    });
+
+    // ── Retention alert: 2+ consecutive negative calls from same client ──
+    if (sentiment.sentiment === 'negative' && callLog?.clientId) {
+      await checkNegativeSentimentRetention(prisma, callLogId, callLog.clientId);
+    }
+  } catch (error) {
+    logger.error('[Sentiment] Failed to save', {
+      callLogId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
+ * Check if the previous call from the same client also had negative sentiment.
+ * If so, create a CrmTask "Appeler pour retention" with HIGH priority.
+ */
+async function checkNegativeSentimentRetention(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prisma: any,
+  currentCallLogId: string,
+  clientId: string
+): Promise<void> {
+  try {
+    // Find the most recent *other* call from this client that has sentiment data
+    const previousCalls = await prisma.callLog.findMany({
+      where: {
+        clientId,
+        id: { not: currentCallLogId },
+        metadata: { not: null },
+      },
+      orderBy: { startedAt: 'desc' },
+      take: 1,
+      select: { id: true, metadata: true },
+    });
+
+    if (previousCalls.length === 0) return;
+
+    const prevMeta = previousCalls[0].metadata as Record<string, unknown> | null;
+    const prevSentiment = prevMeta?.sentiment as { overall?: string } | undefined;
+
+    if (prevSentiment?.overall !== 'negative') return;
+
+    // Two consecutive negative calls — check if a retention task already exists recently
+    const existingTask = await prisma.crmTask.findFirst({
+      where: {
+        contactId: clientId,
+        title: { contains: 'rétention' },
+        status: { in: ['PENDING', 'IN_PROGRESS'] },
+      },
+    });
+
+    if (existingTask) {
+      logger.debug('[Sentiment] Retention task already exists', {
+        clientId,
+        taskId: existingTask.id,
+      });
+      return;
+    }
+
+    // Find a default assignee (first admin or the client's most recent agent)
+    const recentAgentCall = await prisma.callLog.findFirst({
+      where: { clientId, agentId: { not: null } },
+      orderBy: { startedAt: 'desc' },
+      select: { agent: { select: { userId: true } } },
+    });
+
+    let assigneeId = recentAgentCall?.agent?.userId;
+
+    if (!assigneeId) {
+      // Fallback: first admin user
+      const admin = await prisma.user.findFirst({
+        where: { role: 'ADMIN' },
+        select: { id: true },
+      });
+      assigneeId = admin?.id;
+    }
+
+    if (!assigneeId) {
+      logger.warn('[Sentiment] No assignee found for retention task', { clientId });
+      return;
+    }
+
+    await prisma.crmTask.create({
+      data: {
+        title: 'Appeler pour rétention — sentiment négatif consécutif',
+        description:
+          `Le client a eu 2 appels consécutifs avec un sentiment négatif. ` +
+          `Dernier appel: ${currentCallLogId}. Action de rétention recommandée.`,
+        type: 'CALL',
+        priority: 'HIGH',
+        status: 'PENDING',
+        contactId: clientId,
+        assignedToId: assigneeId,
+        dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Due in 24h
+      },
+    });
+
+    logger.info('[Sentiment] Retention CrmTask created', {
+      clientId,
+      reason: '2 consecutive negative sentiment calls',
+    });
+  } catch (error) {
+    // Non-blocking — don't fail the call flow for retention logic
+    logger.error('[Sentiment] Failed to check/create retention task', {
+      clientId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}

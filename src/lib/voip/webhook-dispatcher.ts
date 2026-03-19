@@ -158,7 +158,7 @@ export class WebhookDispatcher {
     // Build headers
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'BioCycle-Webhook/1.0',
+      'User-Agent': 'AttitudesVIP-Webhook/1.0',
       'X-Webhook-Event': payload.event,
       'X-Webhook-Timestamp': payload.timestamp,
       ...(webhook.headers || {}),

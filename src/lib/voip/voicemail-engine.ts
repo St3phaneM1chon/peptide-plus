@@ -20,6 +20,7 @@ const activeVoicemails = new VoipStateMap<{
   extensionId: string;
   callerNumber: string;
   callerName?: string;
+  language?: string; // Language from IVR/PhoneNumber for transcription hint
 }>('voip:voicemail:');
 
 /**
@@ -62,11 +63,12 @@ export async function startVoicemail(
 
   await telnyx.speakText(callControlId, greeting, { language: lang });
 
-  // Track the voicemail
+  // Track the voicemail (including language for transcription hint)
   activeVoicemails.set(callControlId, {
     extensionId,
     callerNumber: callerInfo?.from || 'unknown',
     callerName: callerInfo?.callerName,
+    language: callerInfo?.language,
   });
 
   // Start recording (single channel for voicemail)
@@ -138,8 +140,9 @@ export async function handleVoicemailSaved(
   });
 
   // Trigger transcription in background (will send updated push when done)
+  // Pass through the language from IVR/PhoneNumber for Whisper hint
   if (blobUrl) {
-    transcribeVoicemail(voicemail.id, blobUrl).catch(err => {
+    transcribeVoicemail(voicemail.id, blobUrl, vmInfo.language).catch(err => {
       logger.error('[Voicemail] Transcription failed', {
         voicemailId: voicemail.id,
         error: err instanceof Error ? err.message : String(err),
@@ -155,8 +158,8 @@ export async function handleVoicemailSaved(
  * Transcribe a voicemail recording using OpenAI Whisper.
  * Downloads the audio, transcribes via Whisper, updates the Voicemail record.
  */
-async function transcribeVoicemail(voicemailId: string, audioUrl: string): Promise<void> {
-  logger.info('[Voicemail] Starting Whisper transcription', { voicemailId, audioUrl });
+async function transcribeVoicemail(voicemailId: string, audioUrl: string, language?: string): Promise<void> {
+  logger.info('[Voicemail] Starting Whisper transcription', { voicemailId, audioUrl, language });
 
   try {
     // Lazy-load OpenAI to avoid top-level init (KB-PP-BUILD-002)
@@ -179,13 +182,21 @@ async function transcribeVoicemail(voicemailId: string, audioUrl: string): Promi
     // Create a File-like object for Whisper API
     const audioFile = new File([audioBuffer], 'voicemail.wav', { type: 'audio/wav' });
 
-    // Transcribe with Whisper
-    const transcription = await openai.audio.transcriptions.create({
+    // Transcribe with Whisper.
+    // If a language is known (from IVR/PhoneNumber config), pass it as a hint.
+    // Otherwise let Whisper auto-detect — handles both FR (Montreal) and EN (Toronto).
+    const whisperParams: { file: File; model: string; response_format: 'text'; language?: string } = {
       file: audioFile,
       model: 'whisper-1',
-      language: 'fr', // French-first (Quebec business)
       response_format: 'text',
-    });
+    };
+
+    if (language) {
+      // Extract ISO 639-1 code from locale (e.g. "fr-CA" → "fr", "en-CA" → "en")
+      whisperParams.language = language.split('-')[0];
+    }
+
+    const transcription = await openai.audio.transcriptions.create(whisperParams);
 
     const transcriptText = typeof transcription === 'string'
       ? transcription

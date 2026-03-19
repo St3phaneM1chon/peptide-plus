@@ -49,9 +49,15 @@ function getOpenAI(): OpenAIClient {
 
 /**
  * Transcribe a call recording and store results.
+ *
+ * @param recordingId - The ID of the CallRecording to transcribe
+ * @param options - Optional settings
+ * @param options.language - ISO language hint for Whisper (e.g. 'fr', 'en').
+ *   If omitted, Whisper auto-detects the language — preferred for multilingual lines.
  */
 export async function transcribeRecording(
-  recordingId: string
+  recordingId: string,
+  options?: { language?: string }
 ): Promise<TranscriptionResult | null> {
   const recording = await prisma.callRecording.findUnique({
     where: { id: recordingId },
@@ -96,12 +102,19 @@ export async function transcribeRecording(
       type: recording.format === 'mp3' ? 'audio/mpeg' : 'audio/wav',
     });
 
-    const transcriptionResponse = await openai.audio.transcriptions.create({
+    const whisperParams: Parameters<typeof openai.audio.transcriptions.create>[0] = {
       file: audioFile,
       model: 'whisper-1',
-      language: 'fr',
       response_format: 'text',
-    });
+    };
+
+    // Only pass language hint if explicitly provided.
+    // When omitted, Whisper auto-detects — better for multilingual lines (e.g. Toronto EN + Montreal FR).
+    if (options?.language) {
+      whisperParams.language = options.language;
+    }
+
+    const transcriptionResponse = await openai.audio.transcriptions.create(whisperParams);
 
     // With response_format: 'text', the API returns a string directly
     const fullText = String(transcriptionResponse || '');
@@ -231,11 +244,12 @@ Respond ONLY with valid JSON, no markdown.`,
  * Video recordings are stored the same way as audio recordings in CallRecording.
  */
 export async function transcribeVideoRecording(
-  recordingId: string
+  recordingId: string,
+  options?: { language?: string }
 ): Promise<TranscriptionResult | null> {
   // Video recordings are stored as CallRecording with format = 'webm' or 'mp4'
   // The Whisper API can process audio tracks from video files directly
-  return transcribeRecording(recordingId);
+  return transcribeRecording(recordingId, options);
 }
 
 // ---------------------------------------------------------------------------
@@ -371,14 +385,29 @@ export async function processPendingTranscriptions(
       isTranscribed: false,
       blobUrl: { not: null },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      callLog: {
+        select: {
+          phoneNumber: {
+            select: { language: true },
+          },
+        },
+      },
+    },
     take: limit,
     orderBy: { createdAt: 'asc' },
   });
 
   let processed = 0;
   for (const rec of pending) {
-    const result = await transcribeRecording(rec.id);
+    // Derive the Whisper language hint from the PhoneNumber's configured language.
+    // PhoneNumber.language is a locale like "fr-CA" or "en-CA" — extract the ISO 639-1 code.
+    // If no language is configured, omit the hint so Whisper auto-detects.
+    const phoneLanguage = rec.callLog?.phoneNumber?.language;
+    const langHint = phoneLanguage ? phoneLanguage.split('-')[0] : undefined;
+
+    const result = await transcribeRecording(rec.id, { language: langHint });
     if (result) processed++;
   }
 

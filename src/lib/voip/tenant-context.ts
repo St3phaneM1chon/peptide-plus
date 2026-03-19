@@ -234,9 +234,9 @@ export const BRAND_CONFIGS: Record<string, {
   defaultCallerIdHint: string;
   features: string[];
 }> = {
-  'attitudes-vip': {
-    name: 'AttitudesVIP',
-    slug: 'attitudes-vip',
+  'attitudes-holding': {
+    name: 'Attitudes VIP Holding',
+    slug: 'attitudes-holding',
     description: 'Compagnie mère, holding',
     defaultCallerIdHint: '+14388030370',
     features: ['ivr', 'queues', 'recording', 'conference', 'coaching', 'dialer'],
@@ -248,32 +248,32 @@ export const BRAND_CONFIGS: Record<string, {
     defaultCallerIdHint: '+18735860370',
     features: ['ivr', 'queues', 'recording', 'conference', 'coaching'],
   },
-  'biocycle-peptides': {
-    name: 'BioCyclePeptides',
-    slug: 'biocycle-peptides',
-    description: 'E-commerce peptides recherche',
-    defaultCallerIdHint: '+14388030370', // TODO: Shared with attitudes-vip — needs dedicated DID
+  'attitudes-vip': {
+    name: 'Attitudes VIP',
+    slug: 'attitudes-vip',
+    description: 'Attitudes VIP — E-commerce peptides recherche',
+    defaultCallerIdHint: '+14388030370',
     features: ['ivr', 'queues', 'recording', 'dialer', 'crm'],
   },
-  'biocycle-supplements': {
-    name: 'BiocycleSupplements',
-    slug: 'biocycle-supplements',
+  'attitudes-supplements': {
+    name: 'Attitudes Supplements',
+    slug: 'attitudes-supplements',
     description: 'E-commerce suppléments santé',
     defaultCallerIdHint: '+14378880370',
     features: ['ivr', 'queues', 'recording', 'dialer', 'crm'],
   },
-  'biocycle-bienetre': {
-    name: 'BiocycleBienêtre',
-    slug: 'biocycle-bienetre',
+  'attitudes-bienetre': {
+    name: 'Attitudes Bien-être',
+    slug: 'attitudes-bienetre',
     description: 'Bien-être, coaching santé',
     defaultCallerIdHint: '+18443040370',
     features: ['ivr', 'queues', 'recording', 'coaching'],
   },
-  'biocycle-media': {
-    name: 'BiocycleMedia',
-    slug: 'biocycle-media',
+  'attitudes-media': {
+    name: 'Attitudes Media',
+    slug: 'attitudes-media',
     description: 'Contenu média, marketing',
-    defaultCallerIdHint: '+18443040370', // TODO: Shared with biocycle-bienetre — needs dedicated DID
+    defaultCallerIdHint: '+18443040370',
     features: ['ivr', 'recording', 'conference'],
   },
   'business-in-a-box': {
