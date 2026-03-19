@@ -134,11 +134,14 @@ async function handleCallInitiated(payload: CallEventPayload) {
       await telnyx.answerCall(callControlId);
       logger.info('[CallControl] Call answered', { callControlId, from, to });
     } catch (answerError) {
-      logger.error('[CallControl] answerCall failed', {
-        callControlId,
-        error: answerError instanceof Error ? answerError.message : String(answerError),
-      });
-      return; // Can't proceed if we can't answer
+      const errMsg = answerError instanceof Error ? answerError.message : String(answerError);
+      logger.error('[CallControl] answerCall FAILED', { callControlId, error: errMsg });
+      // Save the error to DB for debugging (fire-and-forget)
+      prisma.callLog.updateMany({
+        where: { pbxUuid: callControlId },
+        data: { hangupCause: `answer_failed: ${errMsg.slice(0, 200)}`, status: 'MISSED' },
+      }).catch(() => {});
+      return;
     }
   }
 
