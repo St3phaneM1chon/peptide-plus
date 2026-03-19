@@ -232,7 +232,32 @@ async function handleCallInitiated(payload: CallEventPayload) {
 
 async function handleCallAnswered(payload: CallEventPayload) {
   const { callControlId } = payload;
-  const state = activeCallStates.get(callControlId);
+  let state = activeCallStates.get(callControlId);
+
+  // CRITICAL FIX: If state is not in memory (Azure serverless — no shared state between
+  // webhook requests when Redis is unavailable), look up the CallLog directly from DB.
+  if (!state?.callLogId) {
+    logger.warn('[CallControl] State not found in memory, looking up from DB', { callControlId });
+    const callLog = await prisma.callLog.findFirst({
+      where: { pbxUuid: callControlId },
+      select: { id: true, callerNumber: true, calledNumber: true },
+    });
+    if (callLog) {
+      // Lookup phone number for language
+      const phoneNumber = callLog.calledNumber ? await prisma.phoneNumber.findUnique({
+        where: { number: callLog.calledNumber },
+      }) : null;
+
+      state = {
+        callLogId: callLog.id,
+        callerNumber: callLog.callerNumber,
+        callerName: undefined,
+        dialedNumber: callLog.calledNumber,
+        language: phoneNumber?.language || 'fr-CA',
+      };
+      activeCallStates.set(callControlId, state);
+    }
+  }
 
   if (state?.callLogId) {
     await prisma.callLog.update({
@@ -256,10 +281,14 @@ async function handleCallAnswered(payload: CallEventPayload) {
 
   // Start recording (consent announced in IVR greeting)
   if (!state?.isVoicemail) {
-    await telnyx.startRecording(callControlId, {
-      channels: 'dual',
-      format: 'wav',
-    });
+    try {
+      await telnyx.startRecording(callControlId, {
+        channels: 'dual',
+        format: 'wav',
+      });
+    } catch {
+      // Recording is non-critical — don't crash the call flow
+    }
   }
 
   // Initialize live scoring and sentiment analysis for the call
@@ -271,8 +300,23 @@ async function handleCallAnswered(payload: CallEventPayload) {
 
 async function handleCallHangup(payload: CallEventPayload) {
   const { callControlId, hangupCause } = payload;
-  const state = activeCallStates.get(callControlId);
+  let state = activeCallStates.get(callControlId);
   let isCompletedCall = false;
+
+  // CRITICAL FIX: Recover state from DB if not in memory (Azure serverless)
+  if (!state?.callLogId) {
+    const callLog = await prisma.callLog.findFirst({
+      where: { pbxUuid: callControlId },
+      select: { id: true, callerNumber: true, calledNumber: true },
+    });
+    if (callLog) {
+      state = {
+        callLogId: callLog.id,
+        callerNumber: callLog.callerNumber,
+        dialedNumber: callLog.calledNumber,
+      };
+    }
+  }
 
   if (state?.callLogId) {
     const callLog = await prisma.callLog.findUnique({
