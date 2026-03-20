@@ -6554,7 +6554,9 @@
       "crmDashboardBuilder": "Dashboard Builder",
       "modules": "Modules",
       "crmReps360": "Rep 360°",
-      "voipConference": "Conference"
+      "voipConference": "Conference",
+      "help": "Help",
+      "tutorials": "Tutorials"
     },
     "newsletter": {
       "activeSubscribers": "Assinantes ativos",
@@ -9294,6 +9296,19 @@
     "blog": {
       "title": "Title",
       "subtitle": "Create and gerer the articles du blog"
+    },
+    "tutorials": {
+      "title": "Tutorials",
+      "subtitle": "Complete user guide for the Koraline Suite",
+      "searchPlaceholder": "Search tutorials...",
+      "sectionCount": "{sections} sections, {pages} pages",
+      "notFound": "This tutorial is not yet available.",
+      "loadError": "Error loading tutorial.",
+      "noResults": "No tutorials match your search.",
+      "welcomeTitle": "User Guide",
+      "welcomeDesc": "Select a tutorial from the sidebar to view the documentation.",
+      "errorTitle": "Loading Error",
+      "errorDesc": "Unable to load tutorials. Please try again."
     }
   },
   "ambassador": {

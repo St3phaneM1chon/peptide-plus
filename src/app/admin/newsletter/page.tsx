@@ -21,6 +21,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
@@ -554,6 +555,7 @@ export default function NewsletterPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.newsletter.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.newsletter.subtitle')}</p>
+            <TutorialLink guideSlug="04-marketing/03-newsletter" magazineSlug="Section_04_Marketing" compact />
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" icon={Download} size="sm" onClick={() => {

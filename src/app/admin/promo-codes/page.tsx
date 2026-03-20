@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Shuffle, Tag, CheckCircle, BarChart3, ShoppingCart, Loader2, Briefcase, Package } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { FormField, Input } from '@/components/admin/FormField';
@@ -532,6 +533,7 @@ export default function PromoCodesPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.promoCodes.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.promoCodes.subtitle')}</p>
+            <TutorialLink guideSlug="04-marketing/01-promo-codes" magazineSlug="Section_04_Marketing" compact />
           </div>
           <Button
             variant="primary"

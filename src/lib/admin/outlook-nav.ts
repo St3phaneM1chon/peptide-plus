@@ -17,7 +17,7 @@ import {
   Phone, PhoneCall, Voicemail, Headphones, BarChart3, GitBranch,
   Workflow, ClipboardList, Mic, ArrowRightLeft, PhoneForwarded,
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
-  ToggleRight, Bot, Building2, Palette, Boxes,
+  ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -615,6 +615,14 @@ export const folderSections: Record<string, NavFolderSection> = {
         collapsible: true,
         defaultOpen: true,
       },
+      {
+        labelKey: 'admin.nav.help',
+        items: [
+          { href: '/admin/tutoriels', labelKey: 'admin.nav.tutorials', icon: GraduationCap },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
     ],
   },
 };
@@ -633,6 +641,6 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/media')) return 'media';
   if (pathname.startsWith('/admin/telephonie')) return 'telephony';
   if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper')) return 'crm';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/analytics') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/system')) return 'system';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/audits') || pathname.startsWith('/admin/backups') || pathname.startsWith('/admin/mots-magiques') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur') || pathname.startsWith('/admin/diagnostics') || pathname.startsWith('/admin/analytics') || pathname.startsWith('/admin/monitoring') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/system') || pathname.startsWith('/admin/tutoriels')) return 'system';
   return 'dashboard';
 }

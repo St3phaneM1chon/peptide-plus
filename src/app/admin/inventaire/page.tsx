@@ -29,6 +29,7 @@ import {
   Scale,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { Input } from '@/components/admin/FormField';
@@ -157,11 +158,11 @@ function SuppliersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Suppliers</h2>
-          <p className="text-sm text-slate-500">{suppliers.length} supplier(s)</p>
+          <h2 className="text-lg font-semibold text-slate-900">{t('admin.inventory.tabSuppliers')}</h2>
+          <p className="text-sm text-slate-500">{suppliers.length} {t('admin.inventory.supplierCount')}</p>
         </div>
         <Button variant="primary" icon={Plus} size="sm" onClick={() => setShowForm(true)}>
-          Add Supplier
+          {t('admin.inventory.addSupplier')}
         </Button>
       </div>
 
@@ -389,7 +390,7 @@ function PurchaseOrdersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Purchase Orders</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t('admin.inventory.tabPurchaseOrders')}</h2>
           <p className="text-sm text-slate-500">{orders.length} order(s)</p>
         </div>
         <Button variant="primary" icon={Plus} size="sm" onClick={() => setShowForm(true)}>
@@ -1207,14 +1208,15 @@ export default function InventairePage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.inventory.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.inventory.subtitle')}</p>
+            <TutorialLink guideSlug="02-commerce/05-inventaire" magazineSlug="Section_02_Commerce" compact />
           </div>
         </div>
         <div className="flex gap-1 border-b border-slate-200 mb-4">
           {([
-            { key: 'stock' as InventoryTab, label: 'Stock', icon: Package },
-            { key: 'suppliers' as InventoryTab, label: 'Suppliers', icon: Building2 },
-            { key: 'purchase-orders' as InventoryTab, label: 'Purchase Orders', icon: ClipboardList },
-            { key: 'reconciliation' as InventoryTab, label: 'Reconciliation', icon: Scale },
+            { key: 'stock' as InventoryTab, label: t('admin.inventory.tabStock'), icon: Package },
+            { key: 'suppliers' as InventoryTab, label: t('admin.inventory.tabSuppliers'), icon: Building2 },
+            { key: 'purchase-orders' as InventoryTab, label: t('admin.inventory.tabPurchaseOrders'), icon: ClipboardList },
+            { key: 'reconciliation' as InventoryTab, label: t('admin.inventory.tabReconciliation'), icon: Scale },
           ]).map(tab => (
             <button
               key={tab.key}

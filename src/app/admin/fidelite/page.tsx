@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, Loader2, Trash2, Trophy, Award, Flame, Target, Gift, Clock, Star, Zap } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -477,6 +478,10 @@ export default function FidelitePage() {
           </Button>
         }
       />
+
+      <div className="-mt-4 mb-2">
+        <TutorialLink guideSlug="06-fidelite/01-fidelite" magazineSlug="Section_06_Fidelite" />
+      </div>
 
       {/* Basic Settings */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">

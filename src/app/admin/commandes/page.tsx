@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
@@ -1394,6 +1395,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.commandes.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.commandes.subtitle')}</p>
+            <TutorialLink guideSlug="02-commerce/01-commandes" magazineSlug="Section_02_Commerce" compact />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant="secondary" icon={Download} size="sm" onClick={handleExportCsv}>

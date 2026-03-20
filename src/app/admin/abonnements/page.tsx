@@ -13,6 +13,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { FormField, Input } from '@/components/admin/FormField';
@@ -433,6 +434,7 @@ export default function AbonnementsPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.subscriptions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.subscriptions.subtitle')}</p>
+            <TutorialLink guideSlug="02-commerce/04-abonnements" magazineSlug="Section_02_Commerce" compact />
           </div>
           <Button variant="primary" icon={Settings} onClick={() => setShowConfigModal(true)}>
             {t('admin.subscriptions.configureOptions')}

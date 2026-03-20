@@ -30,6 +30,7 @@ import {
   MediaUploader,
   type Column,
 } from '@/components/admin';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -576,6 +577,10 @@ export default function CategoriesPage() {
           </div>
         }
       />
+
+      <div className="px-6 -mt-4 mb-2">
+        <TutorialLink guideSlug="03-catalogue/02-categories" magazineSlug="Section_03_Catalogue" />
+      </div>
 
       {/* Error Banner */}
       {error && !showForm && (

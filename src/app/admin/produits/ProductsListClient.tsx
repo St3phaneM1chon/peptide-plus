@@ -25,6 +25,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { Button, StatusBadge, Modal } from '@/components/admin';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import {
   ContentList,
   DetailPane,
@@ -632,6 +633,7 @@ export default function ProductsListClient({
             <p className="text-sm text-slate-500 mt-0.5">
               {t('admin.products.subtitle', { total: stats.total, active: stats.active, featured: stats.featured })}
             </p>
+            <TutorialLink guideSlug="03-catalogue/01-produits" magazineSlug="Section_03_Catalogue" compact />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {/* View Toggle */}

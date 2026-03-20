@@ -15,6 +15,7 @@ import {
   Star,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { Modal } from '@/components/admin/Modal';
 import {
   ContentList,
@@ -359,6 +360,7 @@ export default function FournisseursPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">{t('admin.suppliers.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.suppliers.subtitle')}</p>
+            <TutorialLink guideSlug="02-commerce/06-fournisseurs" magazineSlug="Section_02_Commerce" compact />
           </div>
           <Button variant="primary" icon={Plus} onClick={openCreate}>
             {t('admin.suppliers.addSupplier')}

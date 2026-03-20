@@ -959,6 +959,18 @@ export const ribbonConfigs: Record<string, RibbonConfig> = {
     },
   },
 
+  'system.tutorials': {
+    tabs: dashboardNavTabs,
+    actions: {
+      home: [
+        { key: 'print', labelKey: 'admin.ribbon.print', icon: Printer, variant: 'primary' },
+        { key: 'exportPdf', labelKey: 'admin.ribbon.exportPdf', icon: Download, separator: true },
+        { key: 'search', labelKey: 'admin.ribbon.search', icon: Search },
+      ],
+      view: [],
+    },
+  },
+
   // ═══════════════════════════════════════════════════════════
   // TELEPHONIE / VOIP - Section fallback
   // ═══════════════════════════════════════════════════════════
@@ -1520,6 +1532,9 @@ export function getSubSectionId(
     pathname.startsWith('/admin/navigateur') ||
     pathname.startsWith('/admin/parametres')
   ) return 'system.tools';
+  if (
+    pathname.startsWith('/admin/tutoriels')
+  ) return 'system.tutorials';
 
   return null;
 }
