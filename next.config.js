@@ -219,6 +219,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '**.blob.core.windows.net',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.unsplash.com',
       },
       {
