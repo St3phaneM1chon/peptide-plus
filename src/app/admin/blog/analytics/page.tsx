@@ -66,7 +66,7 @@ interface BlogAnalytics {
 // ── Main Component ────────────────────────────────────────────
 
 export default function BlogAnalyticsPage() {
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<BlogAnalytics | null>(null);
 
@@ -84,17 +84,17 @@ export default function BlogAnalyticsPage() {
     try {
       const res = await fetch('/api/admin/blog/analytics');
       if (!res.ok) {
-        toast.error('Failed to fetch blog analytics');
+        toast.error(t('admin.blogAnalytics.fetchError'));
         return;
       }
       const json = await res.json();
       setData(json);
     } catch {
-      toast.error('Network error');
+      toast.error(t('common.networkError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -105,9 +105,9 @@ export default function BlogAnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Blog Analytics</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t('admin.blogAnalytics.title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Overview of blog posts, categories, and publishing activity
+            {t('admin.blogAnalytics.subtitle')}
           </p>
         </div>
         <Button
@@ -117,7 +117,7 @@ export default function BlogAnalyticsPage() {
           onClick={fetchAnalytics}
           loading={loading}
         >
-          Refresh
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -133,11 +133,11 @@ export default function BlogAnalyticsPage() {
         <>
           {/* Overview Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatCard label="Total Posts" value={data.overview.totalPosts} icon={FileText} />
-            <StatCard label="Published" value={data.overview.publishedPosts} icon={Eye} />
-            <StatCard label="Drafts" value={data.overview.draftPosts} icon={PenLine} />
-            <StatCard label="Featured" value={data.overview.featuredPosts} icon={Star} />
-            <StatCard label="Publish Rate" value={`${data.overview.publishRate}%`} icon={TrendingUp} />
+            <StatCard label={t('admin.blogAnalytics.totalPosts')} value={data.overview.totalPosts} icon={FileText} />
+            <StatCard label={t('admin.blogAnalytics.published')} value={data.overview.publishedPosts} icon={Eye} />
+            <StatCard label={t('admin.blogAnalytics.drafts')} value={data.overview.draftPosts} icon={PenLine} />
+            <StatCard label={t('admin.blogAnalytics.featured')} value={data.overview.featuredPosts} icon={Star} />
+            <StatCard label={t('admin.blogAnalytics.publishRate')} value={`${data.overview.publishRate}%`} icon={TrendingUp} />
           </div>
 
           {/* Activity */}
@@ -145,16 +145,16 @@ export default function BlogAnalyticsPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-semibold text-slate-900">Publishing Activity</h3>
+                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.publishingActivity')}</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-indigo-50 rounded-lg">
                   <p className="text-2xl font-bold text-indigo-700">{data.activity.postsThisWeek}</p>
-                  <p className="text-sm text-indigo-600 mt-1">This Week</p>
+                  <p className="text-sm text-indigo-600 mt-1">{t('admin.blogAnalytics.thisWeek')}</p>
                 </div>
                 <div className="text-center p-4 bg-indigo-50 rounded-lg">
                   <p className="text-2xl font-bold text-indigo-700">{data.activity.postsThisMonth}</p>
-                  <p className="text-sm text-indigo-600 mt-1">This Month</p>
+                  <p className="text-sm text-indigo-600 mt-1">{t('admin.blogAnalytics.thisMonth')}</p>
                 </div>
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function BlogAnalyticsPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Tag className="w-5 h-5 text-purple-600" />
-                <h3 className="text-base font-semibold text-slate-900">Categories</h3>
+                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.categories')}</h3>
               </div>
               {data.categories.length > 0 ? (
                 <div className="space-y-2">
@@ -187,7 +187,7 @@ export default function BlogAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">No categories found</p>
+                <p className="text-sm text-slate-500">{t('admin.blogAnalytics.noCategories')}</p>
               )}
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function BlogAnalyticsPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-semibold text-slate-900">Authors</h3>
+                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.authors')}</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {data.authors.map((author) => (
@@ -213,19 +213,19 @@ export default function BlogAnalyticsPage() {
           {/* Recent Posts Table */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="text-base font-semibold text-slate-900">Recent Posts</h3>
-              <p className="text-sm text-slate-500">Latest 10 posts by publish date</p>
+              <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.recentPosts')}</h3>
+              <p className="text-sm text-slate-500">{t('admin.blogAnalytics.recentPostsDesc')}</p>
             </div>
             {data.recentPosts.length > 0 ? (
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Title</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Category</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Author</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Status</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Published</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Read Time</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colTitle')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colCategory')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colAuthor')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colStatus')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colPublished')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colReadTime')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -243,7 +243,7 @@ export default function BlogAnalyticsPage() {
                       </td>
                       <td className="px-6 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                          {post.category || 'Uncategorized'}
+                          {post.category || t('admin.blogAnalytics.uncategorized')}
                         </span>
                       </td>
                       <td className="px-6 py-3 text-slate-600">{post.author || '---'}</td>
@@ -253,7 +253,7 @@ export default function BlogAnalyticsPage() {
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-slate-100 text-slate-600'
                         }`}>
-                          {post.isPublished ? 'Published' : 'Draft'}
+                          {post.isPublished ? t('admin.blogAnalytics.statusPublished') : t('admin.blogAnalytics.statusDraft')}
                         </span>
                       </td>
                       <td className="px-6 py-3 text-slate-600">{formatDate(post.publishedAt)}</td>
@@ -267,8 +267,8 @@ export default function BlogAnalyticsPage() {
             ) : (
               <div className="p-12 text-center">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">No posts yet</h3>
-                <p className="text-sm text-slate-500">Blog posts will appear here once created.</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.blogAnalytics.noPosts')}</h3>
+                <p className="text-sm text-slate-500">{t('admin.blogAnalytics.noPostsDesc')}</p>
               </div>
             )}
           </div>
@@ -279,9 +279,9 @@ export default function BlogAnalyticsPage() {
       {!loading && !data && (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
           <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">Could not load analytics</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.blogAnalytics.loadError')}</h3>
           <p className="text-sm text-slate-500 mb-4">
-            Click Refresh to try again.
+            {t('admin.blogAnalytics.loadErrorDesc')}
           </p>
         </div>
       )}

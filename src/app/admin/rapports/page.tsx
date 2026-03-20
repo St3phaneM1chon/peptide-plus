@@ -431,9 +431,9 @@ export default function RapportsPage() {
         </div>
       </div>
 
-      {/* Revenue Distribution by Region */}
+      {/* Revenue Distribution by Region (percentage breakdown) */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h4 className="font-semibold text-slate-900 mb-3">{t('admin.reports.salesByRegion')}</h4>
+        <h4 className="font-semibold text-slate-900 mb-3">{t('admin.reports.revenueDistribution')}</h4>
         {regionData.length === 0 ? (
           <div className="py-4 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
         ) : (

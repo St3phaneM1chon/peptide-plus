@@ -60,7 +60,17 @@ function statusBadgeVariant(status: string): 'success' | 'warning' | 'error' | '
   }
 }
 
-function statusLabel(status: string): string {
+const STATUS_LABELS: Record<string, { fr: string; en: string }> = {
+  DRAFT: { fr: 'Brouillon', en: 'Draft' },
+  SCHEDULED: { fr: 'Planifié', en: 'Scheduled' },
+  LIVE: { fr: 'En direct', en: 'Live' },
+  COMPLETED: { fr: 'Terminé', en: 'Completed' },
+  CANCELLED: { fr: 'Annulé', en: 'Cancelled' },
+};
+
+function statusLabel(status: string, locale?: string): string {
+  const labels = STATUS_LABELS[status];
+  if (labels) return locale?.startsWith('fr') ? labels.fr : labels.en;
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
@@ -299,7 +309,7 @@ export default function WebinairesPage() {
     { key: 'all', label: t('admin.webinars.title'), count: webinars.length },
     { key: 'SCHEDULED', label: t('admin.webinars.upcoming'), count: stats.upcoming },
     { key: 'COMPLETED', label: t('admin.webinars.completed'), count: stats.completed },
-    { key: 'DRAFT', label: 'Draft', count: webinars.filter(w => w.status === 'DRAFT').length },
+    { key: 'DRAFT', label: t('admin.webinars.draft'), count: webinars.filter(w => w.status === 'DRAFT').length },
   ], [t, webinars, stats]);
 
   const listItems: ContentListItem[] = useMemo(() => {
@@ -313,7 +323,7 @@ export default function WebinairesPage() {
       preview: `${w.registeredCount}/${w.maxAttendees} ${t('admin.webinars.registered')} - ${w.duration} min`,
       timestamp: w.scheduledAt || w.createdAt,
       badges: [
-        { text: statusLabel(w.status), variant: statusBadgeVariant(w.status) },
+        { text: statusLabel(w.status, locale), variant: statusBadgeVariant(w.status) },
         ...(w.recordingUrl
           ? [{ text: 'Replay', variant: 'info' as const }]
           : []),
@@ -496,7 +506,7 @@ export default function WebinairesPage() {
                       selectedWebinar.status === 'CANCELLED' ? 'bg-slate-100 text-slate-700' :
                       'bg-slate-100 text-slate-600'
                     }`}>
-                      {selectedWebinar.status}
+                      {statusLabel(selectedWebinar.status, locale)}
                     </span>
                   </div>
 

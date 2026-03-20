@@ -637,7 +637,7 @@ export default function NewsletterPage() {
                   <span className="w-2 h-2 rounded-full bg-violet-400" />
                   <p className="text-sm font-medium text-slate-800">{segment.nameFr}</p>
                 </div>
-                <p className="text-[11px] text-slate-500 line-clamp-2">{segment.description}</p>
+                <p className="text-[11px] text-slate-500 line-clamp-2">{locale.startsWith('fr') ? segment.descriptionFr : segment.description}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {segment.criteria.map((c, idx) => (
                     <span key={idx} className="inline-flex items-center px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded text-[10px] font-medium">

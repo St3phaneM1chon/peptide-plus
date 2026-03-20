@@ -8,6 +8,7 @@ export interface Segment {
   name: string;
   nameFr: string;
   description: string;
+  descriptionFr: string;
   criteria: SegmentCriterion[];
   estimatedSize?: number;
 }
@@ -25,6 +26,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'VIP Customers',
     nameFr: 'Clients VIP',
     description: 'Customers with 5+ orders or $1000+ total spent',
+    descriptionFr: 'Clients avec 5+ commandes ou 1000 $+ de dépenses totales',
     criteria: [
       { field: 'totalOrders', operator: 'gte', value: 5, label: '5+ commandes' },
     ],
@@ -34,6 +36,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'New Customers',
     nameFr: 'Nouveaux clients',
     description: 'Registered in the last 30 days',
+    descriptionFr: 'Inscrits dans les 30 derniers jours',
     criteria: [
       { field: 'createdDaysAgo', operator: 'lte', value: 30, label: 'Inscrit < 30 jours' },
     ],
@@ -43,6 +46,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'At Risk',
     nameFr: 'À risque',
     description: 'No order in 60+ days, previously active',
+    descriptionFr: 'Aucune commande depuis 60+ jours, précédemment actif',
     criteria: [
       { field: 'lastOrderDaysAgo', operator: 'gte', value: 60, label: 'Dernière commande > 60j' },
       { field: 'totalOrders', operator: 'gte', value: 1, label: 'Au moins 1 commande' },
@@ -53,6 +57,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'High Spenders',
     nameFr: 'Gros acheteurs',
     description: 'Average order value > $200',
+    descriptionFr: 'Valeur moyenne de commande > 200 $',
     criteria: [
       { field: 'avgOrderValue', operator: 'gt', value: 200, label: 'AOV > $200' },
     ],
@@ -62,6 +67,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'Quebec Customers',
     nameFr: 'Clients Québec',
     description: 'Customers from Quebec province',
+    descriptionFr: 'Clients de la province du Québec',
     criteria: [
       { field: 'province', operator: 'eq', value: 'QC', label: 'Province = QC' },
     ],
@@ -71,6 +77,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'Engaged Subscribers',
     nameFr: 'Abonnés engagés',
     description: 'Opened email in last 30 days',
+    descriptionFr: 'Email ouvert dans les 30 derniers jours',
     criteria: [
       { field: 'lastEmailOpenDaysAgo', operator: 'lte', value: 30, label: 'Email ouvert < 30j' },
     ],
@@ -80,6 +87,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'Repeat Buyers',
     nameFr: 'Acheteurs récurrents',
     description: 'Customers with 2+ orders',
+    descriptionFr: 'Clients avec 2+ commandes',
     criteria: [
       { field: 'totalOrders', operator: 'gte', value: 2, label: '2+ commandes' },
     ],
@@ -89,6 +97,7 @@ export const BUILT_IN_SEGMENTS: Segment[] = [
     name: 'Cart Abandoners',
     nameFr: 'Paniers abandonnés',
     description: 'Abandoned cart in last 7 days',
+    descriptionFr: 'Panier abandonné dans les 7 derniers jours',
     criteria: [
       { field: 'abandonedCartDaysAgo', operator: 'lte', value: 7, label: 'Panier abandonné < 7j' },
     ],

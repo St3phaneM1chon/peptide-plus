@@ -122,13 +122,13 @@ export default function LeaderboardPage() {
             <div className="grid grid-cols-3 gap-4 mb-8">
               {/* 2nd place */}
               <PodiumCard agent={agents[1]} metric={metric} formatCurrency={formatCurrency}
-                bgColor="bg-gray-50" borderColor="border-gray-200" medal={<Medal className="h-8 w-8 text-gray-400" />} />
+                bgColor="bg-gray-50" borderColor="border-gray-200" medal={<Medal className="h-8 w-8 text-gray-400" />} t={t} />
               {/* 1st place */}
               <PodiumCard agent={agents[0]} metric={metric} formatCurrency={formatCurrency}
-                bgColor="bg-yellow-50" borderColor="border-yellow-300" medal={<Crown className="h-8 w-8 text-yellow-500" />} featured />
+                bgColor="bg-yellow-50" borderColor="border-yellow-300" medal={<Crown className="h-8 w-8 text-yellow-500" />} featured t={t} />
               {/* 3rd place */}
               <PodiumCard agent={agents[2]} metric={metric} formatCurrency={formatCurrency}
-                bgColor="bg-orange-50" borderColor="border-orange-200" medal={<Award className="h-8 w-8 text-orange-400" />} />
+                bgColor="bg-orange-50" borderColor="border-orange-200" medal={<Award className="h-8 w-8 text-orange-400" />} t={t} />
             </div>
           )}
 
@@ -173,9 +173,10 @@ export default function LeaderboardPage() {
   );
 }
 
-function PodiumCard({ agent, metric, formatCurrency, bgColor, borderColor, medal, featured }: {
+function PodiumCard({ agent, metric, formatCurrency, bgColor, borderColor, medal, featured, t }: {
   agent: AgentRank; metric: string; formatCurrency: (v: number) => string;
   bgColor: string; borderColor: string; medal: React.ReactNode; featured?: boolean;
+  t: (key: string) => string;
 }) {
   const mainValue = metric === 'revenue' ? formatCurrency(agent.revenue)
     : metric === 'calls' ? agent.callsMade.toString()
@@ -190,8 +191,8 @@ function PodiumCard({ agent, metric, formatCurrency, bgColor, borderColor, medal
       <p className="font-bold text-gray-900">{agent.name}</p>
       <p className={`text-2xl font-bold mt-2 ${featured ? 'text-yellow-600' : 'text-gray-700'}`}>{mainValue}</p>
       <div className="flex justify-center gap-4 mt-2 text-xs text-gray-500">
-        <span>{agent.callsMade} calls</span>
-        <span>{agent.contactRate}% rate</span>
+        <span>{agent.callsMade} {t('admin.crm.calls')}</span>
+        <span>{agent.contactRate}% {t('admin.crm.contactRate')}</span>
       </div>
       {agent.badges.length > 0 && (
         <div className="flex justify-center gap-1 mt-2">
@@ -207,6 +208,7 @@ function PodiumCard({ agent, metric, formatCurrency, bgColor, borderColor, medal
 }
 
 function getBadges(stats: { callsMade: number; conversions: number; revenue: number; callsAnswered: number }): string[] {
+  // Badge labels are kept as identifiers - they display as-is in the UI
   const badges: string[] = [];
   if (stats.callsMade >= 100) badges.push('Power Caller');
   if (stats.conversions >= 20) badges.push('Closer');

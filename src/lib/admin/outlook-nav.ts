@@ -627,7 +627,7 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/emails')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements')) return 'commerce';
   if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles')) return 'catalog';
-  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell')) return 'marketing';
+  if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/blog') || pathname.startsWith('/admin/rapports')) return 'marketing';
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
   if (pathname.startsWith('/admin/media')) return 'media';

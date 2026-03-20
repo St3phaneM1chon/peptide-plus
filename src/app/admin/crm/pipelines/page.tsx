@@ -36,7 +36,7 @@ export default function PipelinesPage() {
       const json = await res.json();
       setPipelines(json.data || json.pipelines || []);
     } catch {
-      toast.error('Failed to load pipelines');
+      toast.error(t('admin.crm.pipelineLoadError'));
     } finally {
       setLoading(false);
     }
@@ -51,11 +51,11 @@ export default function PipelinesPage() {
         subtitle={t('admin.crm.pipelinesDesc')}
         actions={
           <button
-            onClick={() => toast.info('Creation de pipeline a venir')}
+            onClick={() => toast.info(t('admin.crm.pipelineCreateSoon'))}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
-            Nouveau pipeline
+            {t('admin.crm.pipelineNew')}
           </button>
         }
       />
@@ -67,8 +67,8 @@ export default function PipelinesPage() {
       ) : pipelines.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
           <Settings className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 mb-2">Aucun pipeline configure</p>
-          <p className="text-xs text-slate-400">Les pipelines permettent de suivre vos opportunites de vente par etapes</p>
+          <p className="text-slate-500 mb-2">{t('admin.crm.pipelineNone')}</p>
+          <p className="text-xs text-slate-400">{t('admin.crm.pipelineNoneDesc')}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -81,7 +81,7 @@ export default function PipelinesPage() {
                     <h3 className="font-semibold text-slate-900">{pipeline.name}</h3>
                     {pipeline.isDefault && (
                       <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
-                        Par defaut
+                        {t('admin.crm.pipelineDefault')}
                       </span>
                     )}
                   </div>

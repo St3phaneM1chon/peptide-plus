@@ -47,16 +47,18 @@ export const GET = withMobileGuard(async (request, { session }) => {
     // Map to iOS expected format — use real toEmail instead of hardcoded info@
     const messages = conversations.map(conv => {
       const latestEmail = conv.inboundEmails[0];
-      // Determine real recipient: use toEmail from inbound, fallback to info@
-      const toEmail = (latestEmail as any)?.toEmail || 'info@biocyclepeptides.com';
+      // Determine real recipient: use 'to' field from InboundEmail, fallback to info@
+      const toEmail = latestEmail?.to || 'info@biocyclepeptides.com';
       return {
         id: conv.id,
-        subject: conv.subject || '(No subject)',
+        subject: conv.subject || '(Sans objet)',
         from: {
           email: latestEmail?.from || 'unknown@unknown.com',
           name: latestEmail?.fromName || null,
         },
         to: [{ email: toEmail, name: null }],
+        cc: [],
+        bcc: [],
         body: latestEmail?.textBody || '',
         bodyHtml: latestEmail?.htmlBody || null,
         isRead: conv.status !== 'NEW',
