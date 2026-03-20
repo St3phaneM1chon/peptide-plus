@@ -300,6 +300,7 @@ export function MediaUploader({
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 300px"
+                unoptimized={value.includes('blob.core.windows.net')}
               />
             ) : mediaType === 'video' ? (
               <div className="w-full h-full flex items-center justify-center bg-neutral-900/5">
