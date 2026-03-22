@@ -49,7 +49,7 @@ export default class RaceConditionsAuditor extends BaseAuditor {
         /increment\s*:\s*\{[^}]*quantity/i,
         /decrement\s*:\s*\{[^}]*quantity/i,
         /\.update\(\s*\{[\s\S]{0,400}stockQuantity\s*:/i,
-        /productFormat\.update/i,  // ProductFormat updates often touch stock
+        /productOption\.update/i,  // ProductOption updates often touch stock
       ];
 
       const hasStockUpdate = stockMutationPatterns.some((p) => p.test(content));

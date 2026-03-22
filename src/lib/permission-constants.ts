@@ -7,7 +7,7 @@
 
 // All permission codes (must match PERMISSIONS object in permissions.ts)
 export const EMPLOYEE_DEFAULT_PERMISSIONS: ReadonlySet<string> = new Set([
-  'products.view', 'products.create', 'products.edit', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory',
+  'products.view', 'products.create', 'products.edit', 'products.manage_options', 'products.manage_images', 'products.manage_inventory',
   'categories.view', 'categories.create', 'categories.edit',
   'orders.view', 'orders.edit', 'orders.export',
   'users.view',

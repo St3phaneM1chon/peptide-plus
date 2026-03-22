@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { logger } from '@/lib/logger';
 import { validateBody } from '@/lib/api-validation';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 const convertToInvoiceSchema = z.object({
   invoiceNumber: z.string().min(1).max(50).optional(),
@@ -76,11 +77,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
     // Generate supplier invoice number
     const year = new Date().getFullYear();
     const siPrefix = `FF-${year}-`;
-    const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-      SELECT MAX("invoiceNumber") as max_num
-      FROM "SupplierInvoice"
-      WHERE "invoiceNumber" LIKE ${siPrefix + '%'}
-    `;
+    const maxRows = await tenantQueryRaw<{ max_num: string | null }>(
+      `SELECT MAX("invoiceNumber") as max_num FROM "SupplierInvoice" WHERE "invoiceNumber" LIKE $1`,
+      siPrefix + '%'
+    );
+    const maxRow = maxRows[0];
     let nextNum = 1;
     if (maxRow?.max_num) {
       const num = parseInt(maxRow.max_num.split('-').pop() || '0');

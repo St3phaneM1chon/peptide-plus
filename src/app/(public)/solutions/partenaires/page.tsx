@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Programme partenaires et revendeurs peptides | BioCycle Peptides',
   description: 'Devenez partenaire BioCycle Peptides. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche au Canada et a l\'international.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/solutions/partenaires',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/partenaires`,
   },
   openGraph: {
     title: 'Programme partenaires et revendeurs peptides | BioCycle Peptides',
     description: 'Devenez partenaire BioCycle Peptides. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche.',
-    url: 'https://biocyclepeptides.com/solutions/partenaires',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/partenaires`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

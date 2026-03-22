@@ -34,10 +34,10 @@ interface ApiProduct {
     isPrimary?: boolean;
     sortOrder: number;
   }>;
-  formats: Array<{
+  options: Array<{
     id: string;
     name: string;
-    formatType?: string;
+    optionType?: string;
     price: number | string;
     comparePrice?: number | string;
     isActive: boolean;
@@ -119,7 +119,7 @@ function SearchPageInner() {
     if (products.length === 0) return 500;
     let max = 0;
     for (const p of products) {
-      for (const f of p.formats) {
+      for (const f of p.options) {
         const price = Number(f.price);
         if (price > max) max = price;
       }
@@ -135,12 +135,12 @@ function SearchPageInner() {
   // Map, filter, and sort products
   const filteredProducts = useMemo(() => {
     let result = products.map((p) => {
-      const activeFormats = p.formats.filter((f) => f.isActive);
+      const activeOptions = p.options.filter((f) => f.isActive);
       const lowestPrice =
-        activeFormats.length > 0
-          ? Math.min(...activeFormats.map((f) => Number(f.price)))
+        activeOptions.length > 0
+          ? Math.min(...activeOptions.map((f) => Number(f.price)))
           : 0;
-      const hasStock = activeFormats.some((f) => f.stockQuantity > 0);
+      const hasStock = activeOptions.some((f) => f.stockQuantity > 0);
       const primaryImage =
         p.images?.find((img) => img.isPrimary) || p.images?.[0];
       const productImageUrl = primaryImage?.url || p.imageUrl || undefined;
@@ -159,7 +159,7 @@ function SearchPageInner() {
           new Date(p.createdAt) >
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         isBestseller: p.isFeatured,
-        formats: activeFormats.map((f) => ({
+        options: activeOptions.map((f) => ({
           id: f.id,
           name: f.name,
           price: Number(f.price),

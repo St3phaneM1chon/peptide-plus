@@ -15,6 +15,8 @@
 
 import { baseTemplate } from '@/lib/email/templates/base-template';
 
+const COMPANY_NAME = process.env.BUSINESS_NAME || 'Attitudes VIP';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -79,8 +81,8 @@ export async function generateBreachNotification(
   });
 
   const userEmailSubject = isFr
-    ? 'Notification de violation de donnees - BioCycle Peptides'
-    : 'Data Breach Notification - BioCycle Peptides';
+    ? `Notification de violation de donnees - ${COMPANY_NAME}`
+    : `Data Breach Notification - ${COMPANY_NAME}`;
 
   // Regulatory notification
   const regulatoryEmailContent = isFr
@@ -96,8 +98,8 @@ export async function generateBreachNotification(
   });
 
   const regulatoryEmailSubject = isFr
-    ? `Declaration de violation de donnees - BioCycle Peptides Inc. - ${formattedDate}`
-    : `Data Breach Report - BioCycle Peptides Inc. - ${formattedDate}`;
+    ? `Declaration de violation de donnees - ${COMPANY_NAME} - ${formattedDate}`
+    : `Data Breach Report - ${COMPANY_NAME} - ${formattedDate}`;
 
   return {
     userEmailHtml,
@@ -150,7 +152,7 @@ function buildUserEmailEn(date: string, dataTypes: string, description: string):
 
     <p>We sincerely apologize for any inconvenience this may cause and are committed to protecting your personal information.</p>
 
-    <p>Sincerely,<br><strong>BioCycle Peptides Inc.</strong></p>
+    <p>Sincerely,<br><strong>${COMPANY_NAME}</strong></p>
   `;
 }
 
@@ -193,7 +195,7 @@ function buildUserEmailFr(date: string, dataTypes: string, description: string):
 
     <p>Nous nous excusons sincerement pour tout desagrement que cela pourrait causer et nous engageons a proteger vos informations personnelles.</p>
 
-    <p>Cordialement,<br><strong>BioCycle Peptides Inc.</strong></p>
+    <p>Cordialement,<br><strong>${COMPANY_NAME}</strong></p>
   `;
 }
 
@@ -212,13 +214,13 @@ function buildRegulatoryEmailEn(
 
     <p>To the Office of the Privacy Commissioner of Canada,</p>
 
-    <p>In accordance with the Personal Information Protection and Electronic Documents Act (PIPEDA), Section 10.1, BioCycle Peptides Inc. hereby reports a breach of security safeguards involving personal information.</p>
+    <p>In accordance with the Personal Information Protection and Electronic Documents Act (PIPEDA), Section 10.1, ${COMPANY_NAME} hereby reports a breach of security safeguards involving personal information.</p>
 
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
 
     <h3 style="color:#1f2937;">1. Organization Information</h3>
     <table style="width:100%;border-collapse:collapse;">
-      <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organization:</td><td style="padding:4px 8px;color:#1f2937;"><strong>BioCycle Peptides Inc.</strong></td></tr>
+      <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organization:</td><td style="padding:4px 8px;color:#1f2937;"><strong>${COMPANY_NAME}</strong></td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Address:</td><td style="padding:4px 8px;color:#1f2937;">Montreal, Quebec, Canada</td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Contact:</td><td style="padding:4px 8px;color:#1f2937;">privacy@biocyclepeptides.com</td></tr>
     </table>
@@ -254,7 +256,7 @@ function buildRegulatoryEmailEn(
 
     <p>We remain available for any questions or additional information you may require.</p>
 
-    <p>Respectfully,<br><strong>BioCycle Peptides Inc.</strong><br>Data Protection Officer<br>privacy@biocyclepeptides.com</p>
+    <p>Respectfully,<br><strong>${COMPANY_NAME}</strong><br>Data Protection Officer<br>privacy@biocyclepeptides.com</p>
   `;
 }
 
@@ -269,13 +271,13 @@ function buildRegulatoryEmailFr(
 
     <p>Au Commissariat a la protection de la vie privee du Canada,</p>
 
-    <p>Conformement a la Loi sur la protection des renseignements personnels et les documents electroniques (LPRPDE), article 10.1, BioCycle Peptides Inc. declare par la presente une atteinte aux mesures de securite concernant des renseignements personnels.</p>
+    <p>Conformement a la Loi sur la protection des renseignements personnels et les documents electroniques (LPRPDE), article 10.1, ${COMPANY_NAME} declare par la presente une atteinte aux mesures de securite concernant des renseignements personnels.</p>
 
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
 
     <h3 style="color:#1f2937;">1. Renseignements sur l'organisation</h3>
     <table style="width:100%;border-collapse:collapse;">
-      <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organisation :</td><td style="padding:4px 8px;color:#1f2937;"><strong>BioCycle Peptides Inc.</strong></td></tr>
+      <tr><td style="padding:4px 8px;color:#6b7280;width:200px;">Organisation :</td><td style="padding:4px 8px;color:#1f2937;"><strong>${COMPANY_NAME}</strong></td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Adresse :</td><td style="padding:4px 8px;color:#1f2937;">Montreal, Quebec, Canada</td></tr>
       <tr><td style="padding:4px 8px;color:#6b7280;">Contact :</td><td style="padding:4px 8px;color:#1f2937;">privacy@biocyclepeptides.com</td></tr>
     </table>
@@ -311,7 +313,7 @@ function buildRegulatoryEmailFr(
 
     <p>Nous demeurons disponibles pour toute question ou information supplementaire que vous pourriez requirir.</p>
 
-    <p>Respectueusement,<br><strong>BioCycle Peptides Inc.</strong><br>Responsable de la protection des donnees<br>privacy@biocyclepeptides.com</p>
+    <p>Respectueusement,<br><strong>${COMPANY_NAME}</strong><br>Responsable de la protection des donnees<br>privacy@biocyclepeptides.com</p>
   `;
 }
 

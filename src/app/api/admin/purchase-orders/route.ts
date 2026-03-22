@@ -19,7 +19,7 @@ const purchaseOrderItemSchema = z.object({
   quantity: z.number().positive('Each item must have a positive quantity'),
   unitCost: z.number().min(0, 'Each item must have a non-negative unitCost'),
   productId: z.string().optional().nullable(),
-  formatId: z.string().optional().nullable(),
+  optionId: z.string().optional().nullable(),
   sku: z.string().optional().nullable(),
 });
 
@@ -128,7 +128,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
               id: true,
               description: true,
               productId: true,
-              formatId: true,
+              optionId: true,
               sku: true,
               quantity: true,
               unitCost: true,
@@ -208,7 +208,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         id: crypto.randomUUID(),
         description: item.description as string,
         productId: (item.productId as string) || null,
-        formatId: (item.formatId as string) || null,
+        optionId: (item.optionId as string) || null,
         sku: (item.sku as string) || null,
         quantity: qty,
         unitCost: cost,

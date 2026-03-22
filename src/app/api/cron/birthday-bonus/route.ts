@@ -25,6 +25,7 @@ import { sendEmail } from '@/lib/email/email-service';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { generateUnsubscribeUrl } from '@/lib/email';
 import { baseTemplate, emailComponents } from '@/lib/email/templates/base-template';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const BATCH_SIZE = 20;
 const DEFAULT_BONUS_POINTS = LOYALTY_POINTS_CONFIG.birthdayBonus;
@@ -100,7 +101,7 @@ async function sendBirthdayBonusEmail(params: BirthdayBonusEmailParams): Promise
 
     ${emailComponents.button(
       isFr ? '🛒 Utiliser mes points' : '🛒 Use my points',
-      `${process.env.NEXTAUTH_URL ?? 'https://biocyclepeptides.com'}/account/loyalty`
+      `${process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://attitudes.vip'}/account/loyalty`
     )}
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
@@ -166,7 +167,10 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       // Load configurable bonus from SiteSetting (if set)
+      // Prisma middleware auto-filters by tenant
       const configEntry = await prisma.siteSetting.findUnique({
         where: { key: 'birthday_email.bonus_points' },
         select: { value: true },
@@ -215,6 +219,7 @@ export async function GET(request: NextRequest) {
       });
 
       logger.info('Birthday bonus cron: found users', {
+        tenantSlug: tenant.slug,
         count: birthdayUsers.length,
         date: `${currentMonth}/${currentDay}`,
       });
@@ -227,10 +232,6 @@ export async function GET(request: NextRequest) {
         SILVER: 1,
         BRONZE: 1,
       };
-
-      let successCount = 0;
-      let skipCount = 0;
-      let failCount = 0;
 
       // Process in batches
       for (let i = 0; i < birthdayUsers.length; i += BATCH_SIZE) {
@@ -265,7 +266,6 @@ export async function GET(request: NextRequest) {
                   where: { id: user.id },
                   data: { lastBirthdayEmail: new Date() },
                 });
-                skipCount++;
                 return;
               }
 
@@ -291,7 +291,6 @@ export async function GET(request: NextRequest) {
               });
 
               pointsAwarded = true;
-              successCount++;
             });
 
             // Audit log (non-blocking)
@@ -308,7 +307,6 @@ export async function GET(request: NextRequest) {
               }).catch((err) => { logger.error('[cron/birthday-bonus] Non-blocking operation failed:', err); });
 
               // Send birthday bonus email (non-blocking, best-effort)
-              // Only sent when points are actually awarded to avoid duplicate emails
               sendBirthdayBonusEmail({
                 userId: user.id,
                 email: user.email,
@@ -324,8 +322,8 @@ export async function GET(request: NextRequest) {
               });
             }
           } catch (error) {
-            failCount++;
             logger.error('Birthday bonus cron: failed for user', {
+              tenantSlug: tenant.slug,
               userId: user.id,
               error: error instanceof Error ? error.message : String(error),
             });
@@ -334,24 +332,19 @@ export async function GET(request: NextRequest) {
 
         await Promise.allSettled(batchPromises);
       }
+      });
 
       const duration = Date.now() - startTime;
 
       logger.info('Birthday bonus cron: complete', {
-        processed: birthdayUsers.length,
-        awarded: successCount,
-        skipped: skipCount,
-        failed: failCount,
+        tenants: tenantResult,
         durationMs: duration,
       });
 
       return NextResponse.json({
         success: true,
-        date: today.toISOString(),
-        processed: birthdayUsers.length,
-        awarded: successCount,
-        skipped: skipCount,
-        failed: failCount,
+        date: new Date().toISOString(),
+        tenants: tenantResult,
         durationMs: duration,
       });
     } catch (error) {

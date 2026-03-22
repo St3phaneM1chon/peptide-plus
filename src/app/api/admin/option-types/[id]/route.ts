@@ -15,7 +15,7 @@ const updateSchema = z.object({
 export const PUT = withAdminGuard(async (request, { params }) => {
   const { id } = await params;
 
-  const existing = await prisma.formatTypeOption.findUnique({ where: { id } });
+  const existing = await prisma.optionTypeOption.findUnique({ where: { id } });
   if (!existing) {
     return apiError('Format type not found', 404);
   }
@@ -26,7 +26,7 @@ export const PUT = withAdminGuard(async (request, { params }) => {
     return apiError('Validation error', 400, { details: parsed.error.flatten().fieldErrors });
   }
 
-  const updated = await prisma.formatTypeOption.update({
+  const updated = await prisma.optionTypeOption.update({
     where: { id },
     data: parsed.data,
   });
@@ -38,21 +38,21 @@ export const PUT = withAdminGuard(async (request, { params }) => {
 export const DELETE = withAdminGuard(async (request, { params }) => {
   const { id } = await params;
 
-  const existing = await prisma.formatTypeOption.findUnique({ where: { id } });
+  const existing = await prisma.optionTypeOption.findUnique({ where: { id } });
   if (!existing) {
     return apiError('Format type not found', 404);
   }
 
-  // Check if any ProductFormat uses this type
-  const usageCount = await prisma.productFormat.count({
-    where: { formatType: existing.value },
+  // Check if any ProductOption uses this type
+  const usageCount = await prisma.productOption.count({
+    where: { optionType: existing.value },
   });
 
   if (usageCount > 0) {
     return apiError(`Ce type est utilisé par ${usageCount} format(s). Désactivez-le plutôt.`, 409);
   }
 
-  await prisma.formatTypeOption.delete({ where: { id } });
+  await prisma.optionTypeOption.delete({ where: { id } });
 
   return apiSuccess({ deleted: true }, { request });
 }, { requiredPermission: 'manage_products' });

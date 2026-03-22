@@ -94,7 +94,7 @@ export const POST = withAdminGuard(async (request) => {
 });
 
 /**
- * Generic CSV parser for unknown bank formats
+ * Generic CSV parser for unknown bank options
  */
 function parseGenericCSV(csvContent: string) {
   const lines = csvContent.split('\n').filter((l) => l.trim());

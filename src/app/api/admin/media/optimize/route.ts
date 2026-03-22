@@ -86,7 +86,7 @@ export const POST = withAdminGuard(async (request: Request) => {
           results.push({ id: media.id, name: media.originalName, status: 'error', error: 'Invalid URL' });
           continue;
         }
-        const trustedHosts = ['blob.core.windows.net', 'azurewebsites.net', 'biocyclepeptides.com'];
+        const trustedHosts = ['blob.core.windows.net', 'azurewebsites.net', 'attitudes.vip', 'biocyclepeptides.com'];
         const isTrusted = trustedHosts.some(h => parsedUrl.hostname.endsWith(h));
         if (!isTrusted && parsedUrl.hostname !== 'localhost') {
           results.push({ id: media.id, name: media.originalName, status: 'error', error: 'Untrusted URL domain' });

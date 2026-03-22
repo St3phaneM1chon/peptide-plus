@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Notre mission | BioCycle Peptides',
   description: 'Découvrez la mission de BioCycle Peptides : fournir des peptides de recherche de haute pureté testés en laboratoire pour faire avancer la science au Canada.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/a-propos/mission',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/mission`,
   },
   openGraph: {
     title: 'Notre mission | BioCycle Peptides',
     description: 'Découvrez la mission de BioCycle Peptides : fournir des peptides de recherche de haute pureté testés en laboratoire pour faire avancer la science au Canada.',
-    url: 'https://biocyclepeptides.com/a-propos/mission',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/mission`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

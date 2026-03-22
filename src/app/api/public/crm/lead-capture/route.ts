@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     let safeRedirectUrl: string | undefined;
     if (form?.redirectUrl) {
       try {
-        const u = new URL(form.redirectUrl, 'https://biocyclepeptides.com');
+        const u = new URL(form.redirectUrl, process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip');
         if (u.protocol === 'https:' || u.protocol === 'http:') {
           safeRedirectUrl = form.redirectUrl;
         }

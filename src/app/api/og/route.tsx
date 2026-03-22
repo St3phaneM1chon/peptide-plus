@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
             BC
           </div>
           <div style={{ color: '#94a3b8', fontSize: '22px', fontWeight: 500 }}>
-            biocyclepeptides.com
+            attitudes.vip
           </div>
         </div>
 

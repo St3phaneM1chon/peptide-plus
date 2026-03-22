@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 export interface CartShareItem {
   productId: string;
-  formatId?: string;
+  optionId?: string;
   name: string;
   price: number;
   quantity: number;
@@ -49,7 +49,7 @@ export function useCartShare(): UseCartShareReturn {
         body: JSON.stringify({
           items: items.map((item) => ({
             productId: item.productId,
-            formatId: item.formatId ?? null,
+            optionId: item.optionId ?? null,
             name: item.name,
             price: item.price,
             quantity: item.quantity,

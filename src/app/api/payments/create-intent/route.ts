@@ -18,7 +18,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createIntentSchema = z.object({
   productId: z.string().min(1, 'Product ID requis'),
-  formatId: z.string().optional(), // COMMERCE-005: Accept formatId for stock validation
+  optionId: z.string().optional(), // COMMERCE-005: Accept optionId for stock validation
   quantity: z.number().int().min(1).max(100).optional().default(1),
   saveCard: z.boolean().optional(),
   companyId: z.string().optional(),
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
-    const { productId, formatId, quantity, saveCard, companyId, province: reqProvince, country: reqCountry } = parsed.data;
+    const { productId, optionId, quantity, saveCard, companyId, province: reqProvince, country: reqCountry } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({
@@ -86,9 +86,9 @@ export async function POST(request: NextRequest) {
 
     // COMMERCE-005 FIX: Validate stock at format level before creating payment intent
     let unitPrice = Number(product.price);
-    if (formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await prisma.productOption.findUnique({
+        where: { id: optionId },
         select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
       });
       if (!format) {

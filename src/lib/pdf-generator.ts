@@ -68,7 +68,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
 <body>
 <div class="header">
   <div>
-    <div class="company">${data.companyName || 'BioCycle Peptides Inc.'}</div>
+    <div class="company">${data.companyName || process.env.BUSINESS_NAME || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}</div>
     <div class="company-details">${data.companyAddress || 'Montr\u00e9al, QC, Canada'}</div>
     ${data.tpsNumber ? `<div class="tax-numbers">TPS: ${data.tpsNumber}</div>` : ''}
     ${data.tvqNumber ? `<div class="tax-numbers">TVQ: ${data.tvqNumber}</div>` : ''}
@@ -121,7 +121,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
 </table>
 
 <div class="footer">
-  Merci pour votre commande! | ${data.companyName || 'BioCycle Peptides Inc.'} | biocyclepeptides.com
+  Merci pour votre commande! | ${data.companyName || process.env.BUSINESS_NAME || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'} | ${process.env.NEXT_PUBLIC_DOMAIN || 'attitudes.vip'}
 </div>
 </body>
 </html>`;

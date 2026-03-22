@@ -4,13 +4,13 @@ export const dynamic = 'force-dynamic';
  * API Saved Items (Save for Later)
  *
  * Uses the existing `Wishlist` model from the Prisma schema which stores
- * { userId, productId } pairs. The `formatId` parameter is accepted in
+ * { userId, productId } pairs. The `optionId` parameter is accepted in
  * POST/DELETE requests for API compatibility but is not persisted separately,
  * as the Wishlist model tracks saves at the product level.
  *
  * GET    /api/account/saved-items          - List saved items for the authenticated user
- * POST   /api/account/saved-items          - Save an item { productId, formatId? }
- * DELETE /api/account/saved-items          - Remove a saved item { productId, formatId? }
+ * POST   /api/account/saved-items          - Save an item { productId, optionId? }
+ * DELETE /api/account/saved-items          - Remove a saved item { productId, optionId? }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -24,7 +24,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 
 const savedItemSchema = z.object({
   productId: z.string().min(1, 'productId is required'),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
 });
 
 /**
@@ -54,7 +54,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
           take: 1,
           select: { url: true },
         },
-        formats: {
+        options: {
           where: { isActive: true },
           orderBy: { price: 'asc' },
           take: 1,
@@ -82,7 +82,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
         if (!product) return null;
 
         const primaryImage = product.images[0];
-        const lowestFormat = product.formats[0];
+        const lowestFormat = product.options[0];
 
         return {
           id: saved.id,
@@ -127,9 +127,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 /**
  * POST /api/account/saved-items
  * Save a product for later.
- * Body: { productId: string, formatId?: string }
+ * Body: { productId: string, optionId?: string }
  *
- * Note: formatId is accepted for API compatibility but the Wishlist model
+ * Note: optionId is accepted for API compatibility but the Wishlist model
  * tracks saves at the product level (userId + productId unique constraint).
  */
 export const POST = withUserGuard(async (request: NextRequest, { session }) => {
@@ -215,7 +215,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
 /**
  * DELETE /api/account/saved-items
  * Remove a saved item.
- * Body: { productId: string, formatId?: string }
+ * Body: { productId: string, optionId?: string }
  */
 export const DELETE = withUserGuard(async (request: NextRequest, { session }) => {
   try {

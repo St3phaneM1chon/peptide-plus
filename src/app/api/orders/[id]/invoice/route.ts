@@ -72,7 +72,7 @@ export async function GET(
 
     const itemsHtml = order.items.map(item => `
       <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(item.productName)}${item.formatName ? ` (${escapeHtml(item.formatName)})` : ''}</td>
+        <td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(item.productName)}${item.optionName ? ` (${escapeHtml(item.optionName)})` : ''}</td>
         <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
         <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${currencySymbol}${Number(item.unitPrice).toFixed(2)}</td>
         <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${currencySymbol}${Number(item.total).toFixed(2)}</td>

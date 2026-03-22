@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Tarifs | BioCycle Peptides',
     description: 'Prix compétitifs sur les peptides de recherche premium avec rabais de volume.',
-    url: 'https://biocyclepeptides.com/tarifs',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/tarifs`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

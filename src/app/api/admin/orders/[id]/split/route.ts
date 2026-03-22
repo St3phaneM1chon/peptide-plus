@@ -198,9 +198,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
             data: {
               orderId: childOrder.id,
               productId: parentItem.productId,
-              formatId: parentItem.formatId,
+              optionId: parentItem.optionId,
               productName: parentItem.productName,
-              formatName: parentItem.formatName,
+              optionName: parentItem.optionName,
               sku: parentItem.sku,
               quantity: splitQuantity,
               unitPrice: parentItem.unitPrice,

@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/estimates/next-number
@@ -15,11 +15,11 @@ export const GET = withAdminGuard(async () => {
     const year = new Date().getFullYear();
     const prefix = `EST-${year}-`;
 
-    const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-      SELECT MAX("estimateNumber") as max_num
-      FROM "Estimate"
-      WHERE "estimateNumber" LIKE ${prefix + '%'}
-    `;
+    const maxRows = await tenantQueryRaw<{ max_num: string | null }>(
+      `SELECT MAX("estimateNumber") as max_num FROM "Estimate" WHERE "estimateNumber" LIKE $1`,
+      prefix + '%'
+    );
+    const maxRow = maxRows[0];
 
     let nextNum = 1;
     if (maxRow?.max_num) {

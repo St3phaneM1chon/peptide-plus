@@ -13,27 +13,27 @@ import { logger } from '@/lib/logger';
  * Creates InventoryReservation records and temporarily holds stock
  */
 export async function reserveStock(
-  items: { productId: string; formatId?: string; quantity: number }[],
+  items: { productId: string; optionId?: string; quantity: number }[],
   cartId: string,
   ttlMinutes = 30
 ): Promise<string[]> {
   const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-  // E-19 FIX: Self-healing — release expired reservations for the requested products/formats
+  // E-19 FIX: Self-healing — release expired reservations for the requested products/options
   // before checking available stock. This prevents permanently locked inventory if the
   // cron job (releaseExpiredReservations) stops running.
   // N+1 FIX: Release all expired reservations for all requested items in a single query
   // instead of one query per item.
   const now = new Date();
-  const formatItemIds = items.filter(i => i.formatId).map(i => i.formatId!);
-  const productOnlyItemIds = items.filter(i => !i.formatId).map(i => i.productId);
+  const formatItemIds = items.filter(i => i.optionId).map(i => i.optionId!);
+  const productOnlyItemIds = items.filter(i => !i.optionId).map(i => i.productId);
 
   const releaseConditions: Array<Record<string, unknown>> = [];
   if (formatItemIds.length > 0) {
-    releaseConditions.push({ formatId: { in: formatItemIds } });
+    releaseConditions.push({ optionId: { in: formatItemIds } });
   }
   if (productOnlyItemIds.length > 0) {
-    releaseConditions.push({ productId: { in: productOnlyItemIds }, formatId: null });
+    releaseConditions.push({ productId: { in: productOnlyItemIds }, optionId: null });
   }
 
   if (releaseConditions.length > 0) {
@@ -48,7 +48,7 @@ export async function reserveStock(
     if (released.count > 0) {
       logger.info('[reserveStock] E-19 self-healing: released expired reservations', {
         releasedCount: released.count,
-        formatIds: formatItemIds,
+        optionIds: formatItemIds,
         productIds: productOnlyItemIds,
       });
     }
@@ -60,13 +60,13 @@ export async function reserveStock(
 
     // N+1 FIX: Batch-fetch all format and product stock data before the loop
     // instead of individual findUnique per item (was 2-5 queries per item, now 2 queries total)
-    const formatIdsToCheck = items.filter(i => i.formatId).map(i => i.formatId!);
-    const productIdsToCheck = items.filter(i => !i.formatId).map(i => i.productId);
+    const optionIdsToCheck = items.filter(i => i.optionId).map(i => i.optionId!);
+    const productIdsToCheck = items.filter(i => !i.optionId).map(i => i.productId);
 
     const [allFormats, allProducts] = await Promise.all([
-      formatIdsToCheck.length > 0
-        ? tx.productFormat.findMany({
-            where: { id: { in: formatIdsToCheck } },
+      optionIdsToCheck.length > 0
+        ? tx.productOption.findMany({
+            where: { id: { in: optionIdsToCheck } },
             select: { id: true, stockQuantity: true, trackInventory: true },
           })
         : [],
@@ -81,12 +81,12 @@ export async function reserveStock(
     const formatMap = new Map(allFormats.map(f => [f.id, f]));
     const productMap = new Map(allProducts.map(p => [p.id, p]));
 
-    // Batch-fetch all existing reservations for all requested formats and products
-    const allFormatReservations = formatIdsToCheck.length > 0
+    // Batch-fetch all existing reservations for all requested options and products
+    const allFormatReservations = optionIdsToCheck.length > 0
       ? await tx.inventoryReservation.groupBy({
-          by: ['formatId'],
+          by: ['optionId'],
           where: {
-            formatId: { in: formatIdsToCheck },
+            optionId: { in: optionIdsToCheck },
             status: 'RESERVED',
             expiresAt: { gt: new Date() },
           },
@@ -98,7 +98,7 @@ export async function reserveStock(
           by: ['productId'],
           where: {
             productId: { in: productIdsToCheck },
-            formatId: null,
+            optionId: null,
             status: 'RESERVED',
             expiresAt: { gt: new Date() },
           },
@@ -106,25 +106,25 @@ export async function reserveStock(
         })
       : [];
 
-    const formatReservedMap = new Map(allFormatReservations.map(r => [r.formatId, r._sum.quantity || 0]));
+    const formatReservedMap = new Map(allFormatReservations.map(r => [r.optionId, r._sum.quantity || 0]));
     const productReservedMap = new Map(allProductReservations.map(r => [r.productId, r._sum.quantity || 0]));
 
     for (const item of items) {
       // Check available stock using pre-fetched data
-      if (item.formatId) {
-        const format = formatMap.get(item.formatId);
+      if (item.optionId) {
+        const format = formatMap.get(item.optionId);
 
         if (format?.trackInventory) {
-          const reservedQty = formatReservedMap.get(item.formatId) || 0;
+          const reservedQty = formatReservedMap.get(item.optionId) || 0;
           const available = format.stockQuantity - reservedQty;
           if (available < item.quantity) {
             throw new Error(
-              `Stock insuffisant pour format ${item.formatId}: demandé ${item.quantity}, disponible ${available}`
+              `Stock insuffisant pour format ${item.optionId}: demandé ${item.quantity}, disponible ${available}`
             );
           }
         }
       } else {
-        // E-07 FIX: Check stock for base products (no formatId)
+        // E-07 FIX: Check stock for base products (no optionId)
         const product = productMap.get(item.productId);
 
         if (product?.trackInventory) {
@@ -141,7 +141,7 @@ export async function reserveStock(
       const reservation = await tx.inventoryReservation.create({
         data: {
           productId: item.productId,
-          formatId: item.formatId || null,
+          optionId: item.optionId || null,
           quantity: item.quantity,
           cartId,
           expiresAt,
@@ -205,24 +205,24 @@ export async function consumeReservation(
 
     // N+1 FIX: Batch-fetch WAC for all product/format pairs before the loop
     // instead of individual findFirst per reservation (was 1 query per reservation, now 1 query total)
-    const wacPairs = reservations.map(r => ({ productId: r.productId, formatId: r.formatId }));
+    const wacPairs = reservations.map(r => ({ productId: r.productId, optionId: r.optionId }));
     const uniquePairs = Array.from(
-      new Map(wacPairs.map(p => [`${p.productId}:${p.formatId || 'null'}`, p])).values()
+      new Map(wacPairs.map(p => [`${p.productId}:${p.optionId || 'null'}`, p])).values()
     );
     const allWacTransactions = await tx.inventoryTransaction.findMany({
       where: {
         OR: uniquePairs.map(p => ({
           productId: p.productId,
-          formatId: p.formatId,
+          optionId: p.optionId,
         })),
       },
       orderBy: { createdAt: 'desc' },
-      select: { productId: true, formatId: true, runningWAC: true, createdAt: true },
+      select: { productId: true, optionId: true, runningWAC: true, createdAt: true },
     });
     // Build WAC map: keep only the most recent transaction per product/format pair
     const wacMap = new Map<string, number>();
     for (const wt of allWacTransactions) {
-      const key = `${wt.productId}:${wt.formatId || 'null'}`;
+      const key = `${wt.productId}:${wt.optionId || 'null'}`;
       if (!wacMap.has(key)) {
         wacMap.set(key, Number(wt.runningWAC));
       }
@@ -231,21 +231,21 @@ export async function consumeReservation(
     // Process stock decrements and inventory transactions for each reservation
     for (const reservation of reservations) {
       // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
-      if (reservation.formatId) {
+      if (reservation.optionId) {
         const rowsAffected: number = await tx.$executeRaw`
-          UPDATE "ProductFormat"
+          UPDATE "ProductOption"
           SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
               "updatedAt" = NOW()
-          WHERE id = ${reservation.formatId}
+          WHERE id = ${reservation.optionId}
             AND "stockQuantity" >= ${reservation.quantity}
         `;
         if (rowsAffected === 0) {
-          logger.error('[consumeReservation] CRITICAL: Insufficient stock — skipping sale transaction', { formatId: reservation.formatId, requested: reservation.quantity, orderId });
+          logger.error('[consumeReservation] CRITICAL: Insufficient stock — skipping sale transaction', { optionId: reservation.optionId, requested: reservation.quantity, orderId });
           // Skip this reservation's inventory transaction — do NOT record a SALE for stock that wasn't decremented
           continue;
         }
       } else {
-        // E-07 FIX: Decrement stock for base products (no formatId)
+        // E-07 FIX: Decrement stock for base products (no optionId)
         const rowsAffected: number = await tx.$executeRaw`
           UPDATE "Product"
           SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
@@ -261,14 +261,14 @@ export async function consumeReservation(
       }
 
       // Get current WAC from pre-fetched map
-      const wacKey = `${reservation.productId}:${reservation.formatId || 'null'}`;
+      const wacKey = `${reservation.productId}:${reservation.optionId || 'null'}`;
       const wac = wacMap.get(wacKey) || 0;
 
       // Create inventory transaction
       await tx.inventoryTransaction.create({
         data: {
           productId: reservation.productId,
-          formatId: reservation.formatId,
+          optionId: reservation.optionId,
           type: 'SALE',
           quantity: -reservation.quantity,
           unitCost: wac,
@@ -287,7 +287,7 @@ export async function consumeReservation(
 export async function purchaseStock(
   items: {
     productId: string;
-    formatId?: string;
+    optionId?: string;
     quantity: number;
     unitCost: number;
   }[],
@@ -296,13 +296,13 @@ export async function purchaseStock(
 ): Promise<void> {
   // N+1 FIX: Batch-fetch old stock values for audit logging instead of individual lookups per item
   const oldQuantities: Map<string, number> = new Map();
-  const formatIds = items.filter(i => i.formatId).map(i => i.formatId!);
-  const productOnlyIds = items.filter(i => !i.formatId).map(i => i.productId);
+  const optionIds = items.filter(i => i.optionId).map(i => i.optionId!);
+  const productOnlyIds = items.filter(i => !i.optionId).map(i => i.productId);
 
-  const [formats, products] = await Promise.all([
-    formatIds.length > 0
-      ? prisma.productFormat.findMany({
-          where: { id: { in: formatIds } },
+  const [options, products] = await Promise.all([
+    optionIds.length > 0
+      ? prisma.productOption.findMany({
+          where: { id: { in: optionIds } },
           select: { id: true, stockQuantity: true },
         })
       : [],
@@ -314,19 +314,19 @@ export async function purchaseStock(
       : [],
   ]);
 
-  for (const fmt of formats) oldQuantities.set(fmt.id, fmt.stockQuantity);
+  for (const fmt of options) oldQuantities.set(fmt.id, fmt.stockQuantity);
   for (const prod of products) oldQuantities.set(prod.id, prod.stockQuantity);
 
   // Wrap ALL items in a single transaction for atomicity
   await prisma.$transaction(async (tx) => {
     // N+1 FIX: Batch-fetch current stock quantities and WAC for all items before the loop
     // instead of individual findUnique + findFirst per item (was 3 queries per item, now 3 queries total)
-    const txFormatIds = items.filter(i => i.formatId).map(i => i.formatId!);
-    const txProductOnlyIds = items.filter(i => !i.formatId).map(i => i.productId);
+    const txFormatIds = items.filter(i => i.optionId).map(i => i.optionId!);
+    const txProductOnlyIds = items.filter(i => !i.optionId).map(i => i.productId);
 
     const [txFormats, txProducts] = await Promise.all([
       txFormatIds.length > 0
-        ? tx.productFormat.findMany({
+        ? tx.productOption.findMany({
             where: { id: { in: txFormatIds } },
             select: { id: true, stockQuantity: true },
           })
@@ -343,23 +343,23 @@ export async function purchaseStock(
     const txProductQtyMap = new Map(txProducts.map(p => [p.id, p.stockQuantity]));
 
     // Batch-fetch WAC for all product/format pairs
-    const wacPairs = items.map(i => ({ productId: i.productId, formatId: i.formatId || null }));
+    const wacPairs = items.map(i => ({ productId: i.productId, optionId: i.optionId || null }));
     const uniqueWacPairs = Array.from(
-      new Map(wacPairs.map(p => [`${p.productId}:${p.formatId || 'null'}`, p])).values()
+      new Map(wacPairs.map(p => [`${p.productId}:${p.optionId || 'null'}`, p])).values()
     );
     const allWacTransactions = await tx.inventoryTransaction.findMany({
       where: {
         OR: uniqueWacPairs.map(p => ({
           productId: p.productId,
-          formatId: p.formatId,
+          optionId: p.optionId,
         })),
       },
       orderBy: { createdAt: 'desc' },
-      select: { productId: true, formatId: true, runningWAC: true, createdAt: true },
+      select: { productId: true, optionId: true, runningWAC: true, createdAt: true },
     });
     const txWacMap = new Map<string, number>();
     for (const wt of allWacTransactions) {
-      const key = `${wt.productId}:${wt.formatId || 'null'}`;
+      const key = `${wt.productId}:${wt.optionId || 'null'}`;
       if (!txWacMap.has(key)) {
         txWacMap.set(key, Number(wt.runningWAC));
       }
@@ -369,13 +369,13 @@ export async function purchaseStock(
       // Get current stock quantity and WAC from pre-fetched maps
       let currentQty = 0;
 
-      if (item.formatId) {
-        currentQty = txFormatQtyMap.get(item.formatId) || 0;
+      if (item.optionId) {
+        currentQty = txFormatQtyMap.get(item.optionId) || 0;
       } else {
         currentQty = txProductQtyMap.get(item.productId) || 0;
       }
 
-      const wacKey = `${item.productId}:${(item.formatId || null) || 'null'}`;
+      const wacKey = `${item.productId}:${(item.optionId || null) || 'null'}`;
       const currentWAC = txWacMap.get(wacKey) || 0;
 
       // Calculate new WAC
@@ -387,9 +387,9 @@ export async function purchaseStock(
         : item.unitCost;
 
       // Increment stock
-      if (item.formatId) {
-        await tx.productFormat.update({
-          where: { id: item.formatId },
+      if (item.optionId) {
+        await tx.productOption.update({
+          where: { id: item.optionId },
           data: { stockQuantity: { increment: item.quantity } },
         });
       } else {
@@ -403,7 +403,7 @@ export async function purchaseStock(
       await tx.inventoryTransaction.create({
         data: {
           productId: item.productId,
-          formatId: item.formatId || null,
+          optionId: item.optionId || null,
           type: 'PURCHASE',
           quantity: item.quantity,
           unitCost: item.unitCost,
@@ -417,11 +417,11 @@ export async function purchaseStock(
 
   // Fire-and-forget audit logs after successful transaction
   for (const item of items) {
-    const key = item.formatId || item.productId;
+    const key = item.optionId || item.productId;
     const oldQty = oldQuantities.get(key) || 0;
     logStockChange({
       productId: item.productId,
-      formatId: item.formatId || null,
+      optionId: item.optionId || null,
       changeType: 'PURCHASE',
       oldQuantity: oldQty,
       newQuantity: oldQty + item.quantity,
@@ -440,7 +440,7 @@ export async function purchaseStock(
  */
 export function logStockChange(params: {
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   changeType: string;
   oldQuantity: number;
   newQuantity: number;
@@ -448,18 +448,18 @@ export function logStockChange(params: {
   reason: string;
   changedBy: string | null;
 }): void {
-  const { productId, formatId, changeType, oldQuantity, newQuantity, quantity, reason, changedBy } = params;
+  const { productId, optionId, changeType, oldQuantity, newQuantity, quantity, reason, changedBy } = params;
 
   prisma.auditLog
     .create({
       data: {
         userId: changedBy,
         action: 'INVENTORY_CHANGE',
-        entityType: 'ProductFormat',
-        entityId: formatId || productId,
+        entityType: 'ProductOption',
+        entityId: optionId || productId,
         details: JSON.stringify({
           productId,
-          formatId,
+          optionId,
           changeType,
           oldQuantity,
           newQuantity,
@@ -474,7 +474,7 @@ export function logStockChange(params: {
       logger.error('[logStockChange] Failed to write audit log', {
         error: err instanceof Error ? err.message : String(err),
         productId,
-        formatId,
+        optionId,
       });
     });
 }
@@ -485,16 +485,16 @@ export function logStockChange(params: {
  */
 export async function adjustStock(
   productId: string,
-  formatId: string | null,
+  optionId: string | null,
   quantity: number,
   reason: string,
   createdBy?: string
 ): Promise<void> {
   // Capture old stock value for audit logging
   let oldQuantity = 0;
-  if (formatId) {
-    const format = await prisma.productFormat.findUnique({
-      where: { id: formatId },
+  if (optionId) {
+    const format = await prisma.productOption.findUnique({
+      where: { id: optionId },
       select: { stockQuantity: true },
     });
     oldQuantity = format?.stockQuantity || 0;
@@ -507,28 +507,28 @@ export async function adjustStock(
   }
 
   await prisma.$transaction(async (tx) => {
-    if (formatId) {
+    if (optionId) {
       if (quantity > 0) {
-        await tx.productFormat.update({
-          where: { id: formatId },
+        await tx.productOption.update({
+          where: { id: optionId },
           data: { stockQuantity: { increment: quantity } },
         });
       } else {
         // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
         const absQuantity = Math.abs(quantity);
         const rowsAffected: number = await tx.$executeRaw`
-          UPDATE "ProductFormat"
+          UPDATE "ProductOption"
           SET "stockQuantity" = "stockQuantity" - ${absQuantity},
               "updatedAt" = NOW()
-          WHERE id = ${formatId}
+          WHERE id = ${optionId}
             AND "stockQuantity" >= ${absQuantity}
         `;
         if (rowsAffected === 0) {
-          logger.warn('[adjustStock] Insufficient stock', { formatId, requested: absQuantity });
+          logger.warn('[adjustStock] Insufficient stock', { optionId, requested: absQuantity });
         }
       }
     } else {
-      // E-07 FIX: Adjust stock for base products (no formatId)
+      // E-07 FIX: Adjust stock for base products (no optionId)
       if (quantity > 0) {
         await tx.product.update({
           where: { id: productId },
@@ -551,7 +551,7 @@ export async function adjustStock(
     }
 
     const lastTransaction = await tx.inventoryTransaction.findFirst({
-      where: { productId, formatId },
+      where: { productId, optionId },
       orderBy: { createdAt: 'desc' },
       select: { runningWAC: true },
     });
@@ -560,7 +560,7 @@ export async function adjustStock(
     await tx.inventoryTransaction.create({
       data: {
         productId,
-        formatId,
+        optionId,
         type: 'ADJUSTMENT',
         quantity,
         unitCost: wac,
@@ -578,7 +578,7 @@ export async function adjustStock(
 
   logStockChange({
     productId,
-    formatId,
+    optionId,
     changeType: 'ADJUSTMENT',
     oldQuantity,
     newQuantity: expectedNew,
@@ -680,7 +680,7 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
  * Get inventory summary for admin
  */
 export async function getInventorySummary() {
-  const formats = await prisma.productFormat.findMany({
+  const options = await prisma.productOption.findMany({
     where: { trackInventory: true, isActive: true },
     include: {
       product: {
@@ -690,13 +690,13 @@ export async function getInventorySummary() {
     orderBy: { stockQuantity: 'asc' },
   });
 
-  return formats.map((f) => {
+  return options.map((f) => {
     // Get the latest WAC (would be cached in production)
     return {
       id: f.id,
       productId: f.productId,
       productName: f.product.name,
-      formatName: f.name,
+      optionName: f.name,
       sku: f.sku,
       stockQuantity: f.stockQuantity,
       lowStockThreshold: f.lowStockThreshold,

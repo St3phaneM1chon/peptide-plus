@@ -57,7 +57,7 @@ interface Product {
     name: string;
     slug: string;
   };
-  formats?: {
+  options?: {
     id: string;
     name: string;
     price: number;
@@ -99,9 +99,9 @@ function computeABCClassification(products: Product[]): Record<string, 'A' | 'B'
 
   // Estimate revenue as price * purchaseCount for each product
   const withRevenue = products.map((p) => {
-    const activeFormats = (p.formats || []).filter(f => f.isActive);
-    const avgPrice = activeFormats.length > 0
-      ? activeFormats.reduce((sum, f) => sum + Number(f.price), 0) / activeFormats.length
+    const activeOptions = (p.options || []).filter(f => f.isActive);
+    const avgPrice = activeOptions.length > 0
+      ? activeOptions.reduce((sum, f) => sum + Number(f.price), 0) / activeOptions.length
       : Number(p.price);
     return {
       id: p.id,
@@ -134,8 +134,8 @@ function computeABCClassification(products: Product[]): Record<string, 'A' | 'B'
 /** Get products that are below their reorder point */
 function getReorderAlerts(products: Product[]): Product[] {
   return products.filter((p) => {
-    if (!p.reorderPoint || !p.formats || p.formats.length === 0) return false;
-    const totalStock = p.formats
+    if (!p.reorderPoint || !p.options || p.options.length === 0) return false;
+    const totalStock = p.options
       .filter(f => f.isActive)
       .reduce((sum, f) => sum + f.stockQuantity, 0);
     return totalStock <= p.reorderPoint;
@@ -143,21 +143,21 @@ function getReorderAlerts(products: Product[]): Product[] {
 }
 
 function getProductStockStatus(product: Product, t: (key: string, params?: Record<string, string | number>) => string) {
-  if (!product.formats || product.formats.length === 0) {
+  if (!product.options || product.options.length === 0) {
     return { label: t('admin.products.noFormats'), variant: 'neutral' as const };
   }
 
-  const activeFormats = product.formats.filter((f) => f.isActive);
-  const outOfStock = activeFormats.filter(
+  const activeOptions = product.options.filter((f) => f.isActive);
+  const outOfStock = activeOptions.filter(
     (f) => f.availability === 'OUT_OF_STOCK' || f.availability === 'DISCONTINUED'
   );
-  const lowStock = activeFormats.filter((f) => f.stockQuantity > 0 && f.stockQuantity <= 10);
+  const lowStock = activeOptions.filter((f) => f.stockQuantity > 0 && f.stockQuantity <= 10);
 
-  if (outOfStock.length === activeFormats.length) {
+  if (outOfStock.length === activeOptions.length) {
     return { label: t('admin.products.allOutOfStock'), variant: 'error' as const };
   }
   if (outOfStock.length > 0) {
-    return { label: t('admin.products.partialOutOfStock', { out: outOfStock.length, total: activeFormats.length }), variant: 'warning' as const };
+    return { label: t('admin.products.partialOutOfStock', { out: outOfStock.length, total: activeOptions.length }), variant: 'warning' as const };
   }
   if (lowStock.length > 0) {
     return { label: t('admin.products.lowStockCount', { count: lowStock.length }), variant: 'warning' as const };
@@ -478,9 +478,9 @@ export default function ProductsListClient({
     // Generate a client-side CSV catalog of all products
     const headers = ['ID', 'Name', 'SKU', 'Price', 'Category', 'Type', 'Active', 'Featured'];
     const rows = products.map(p => {
-      const activeFormats = (p.formats || []).filter(f => f.isActive);
-      const minPrice = activeFormats.length > 0
-        ? Math.min(...activeFormats.map(f => Number(f.price)))
+      const activeOptions = (p.options || []).filter(f => f.isActive);
+      const minPrice = activeOptions.length > 0
+        ? Math.min(...activeOptions.map(f => Number(f.price)))
         : Number(p.price);
       return [
         p.id,
@@ -584,10 +584,10 @@ export default function ProductsListClient({
       }
 
       // FIX: BUG-070 - Show format price range instead of base product price
-      const activeFormats = (p.formats || []).filter((f: { isActive: boolean; price: unknown }) => f.isActive);
+      const activeOptions = (p.options || []).filter((f: { isActive: boolean; price: unknown }) => f.isActive);
       let priceDisplay: string;
-      if (activeFormats.length > 0) {
-        const prices = activeFormats.map((f: { price: unknown }) => Number(f.price));
+      if (activeOptions.length > 0) {
+        const prices = activeOptions.map((f: { price: unknown }) => Number(f.price));
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         priceDisplay = minPrice === maxPrice
@@ -602,8 +602,8 @@ export default function ProductsListClient({
         avatar: p.imageUrl ? { text: p.name, imageUrl: p.imageUrl } : { text: p.name },
         title: p.name,
         subtitle: `${p.category.name} · ${priceDisplay}`,
-        preview: p.formats
-          ? tp('admin.products.formatCount', p.formats.length)
+        preview: p.options
+          ? tp('admin.products.optionCount', p.options.length)
           : t('admin.products.noFormats'),
         timestamp: p.createdAt,
         badges,
@@ -708,7 +708,7 @@ export default function ProductsListClient({
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {reorderAlerts.slice(0, 5).map((p) => {
-                    const totalStock = (p.formats || [])
+                    const totalStock = (p.options || [])
                       .filter(f => f.isActive)
                       .reduce((sum, f) => sum + f.stockQuantity, 0);
                     return (
@@ -847,7 +847,7 @@ export default function ProductsListClient({
                         <p className="text-xs text-slate-500">{t('admin.products.colPrice')}</p>
                         {/* BUG-070 FIX: Show format price range instead of base price */}
                         {(() => {
-                          const af = (selectedProduct.formats || []).filter(f => f.isActive);
+                          const af = (selectedProduct.options || []).filter(f => f.isActive);
                           if (af.length > 0) {
                             const prices = af.map(f => Number(f.price));
                             const minP = Math.min(...prices);
@@ -921,10 +921,10 @@ export default function ProductsListClient({
                     </div>
 
                     {/* Formats Table */}
-                    {selectedProduct.formats && selectedProduct.formats.length > 0 && (
+                    {selectedProduct.options && selectedProduct.options.length > 0 && (
                       <div>
                         <h3 className="font-semibold text-slate-900 mb-3">
-                          {t('admin.products.colFormats')} ({selectedProduct.formats.length})
+                          {t('admin.products.colOptions')} ({selectedProduct.options.length})
                         </h3>
                         <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
                           <table className="w-full">
@@ -937,7 +937,7 @@ export default function ProductsListClient({
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                              {selectedProduct.formats.map((fmt) => (
+                              {selectedProduct.options.map((fmt) => (
                                 <tr key={fmt.id}>
                                   <td className="px-3 py-2 text-sm text-slate-900 truncate max-w-[160px]">{fmt.name}</td>
                                   <td className="px-3 py-2 text-sm text-end text-slate-700">{formatCurrency(Number(fmt.price))}</td>
@@ -1033,10 +1033,10 @@ export default function ProductsListClient({
               {filteredProducts.map((product) => {
                 const stockStatus = getProductStockStatus(product, t);
                 const abc = abcClassification[product.id];
-                const activeFormats = (product.formats || []).filter(f => f.isActive);
+                const activeOptions = (product.options || []).filter(f => f.isActive);
                 let priceDisplay: string;
-                if (activeFormats.length > 0) {
-                  const prices = activeFormats.map(f => Number(f.price));
+                if (activeOptions.length > 0) {
+                  const prices = activeOptions.map(f => Number(f.price));
                   const minPrice = Math.min(...prices);
                   const maxPrice = Math.max(...prices);
                   priceDisplay = minPrice === maxPrice
@@ -1045,7 +1045,7 @@ export default function ProductsListClient({
                 } else {
                   priceDisplay = formatCurrency(Number(product.price));
                 }
-                const totalStock = activeFormats.reduce((sum, f) => sum + f.stockQuantity, 0);
+                const totalStock = activeOptions.reduce((sum, f) => sum + f.stockQuantity, 0);
 
                 return (
                   <div
@@ -1112,9 +1112,9 @@ export default function ProductsListClient({
                       </div>
 
                       {/* Format count */}
-                      {product.formats && product.formats.length > 0 && (
+                      {product.options && product.options.length > 0 && (
                         <p className="text-xs text-slate-400 mt-1.5">
-                          {tp('admin.products.formatCount', product.formats.length)}
+                          {tp('admin.products.optionCount', product.options.length)}
                         </p>
                       )}
                     </div>

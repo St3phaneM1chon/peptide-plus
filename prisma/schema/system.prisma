@@ -1,5 +1,6 @@
 model AuditLog {
   id           String   @id @default(cuid())
+  tenantId     String?
   userId       String?
   action       String
   entityType   String
@@ -20,10 +21,12 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([userId])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Permission {
   id               String                      @id @default(cuid())
+  tenantId         String?
   code             String                      @unique
   name             String
   description      String?
@@ -37,10 +40,12 @@ model Permission {
 
   @@index([module])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model PermissionGroup {
   id          String                      @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   color       String?
@@ -51,10 +56,12 @@ model PermissionGroup {
   users       UserPermissionGroup[]
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PermissionGroupPermission {
   id           String          @id @default(cuid())
+  tenantId     String?
   groupId      String
   permissionId String
   createdAt    DateTime        @default(now())
@@ -65,6 +72,7 @@ model PermissionGroupPermission {
   @@index([groupId])
   @@index([permissionId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +94,7 @@ model PermissionGroupPermission {
 
 model SiteSetting {
   id          String   @id @default(cuid())
+  tenantId    String?
   key         String   @unique
   value       String
   type        String   @default("text")
@@ -98,10 +107,12 @@ model SiteSetting {
   @@index([module])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model SiteSettings {
   id                    String   @id @default("default")
+  tenantId              String?
   companyName           String   @default("BioCycle Peptides")
   companyLegalName      String?
   companyDescription    String?
@@ -143,10 +154,12 @@ model SiteSettings {
   statsJson             String?
   updatedAt             DateTime @updatedAt
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model UatTestCase {
   id            String         @id @default(cuid())
+  tenantId      String?
   runId         String
   scenarioCode  String
   scenarioName  String
@@ -170,10 +183,12 @@ model UatTestCase {
   @@index([scenarioCode])
   @@index([orderId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model UatTestError {
   id         String      @id @default(cuid())
+  tenantId   String?
   testCaseId String
   category   String
   severity   String      @default("ERROR")
@@ -188,10 +203,12 @@ model UatTestError {
   @@index([category])
   @@index([testCaseId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model UatTestRun {
   id             String        @id @default(cuid())
+  tenantId       String?
   runNumber      Int           @unique @default(autoincrement())
   status         String        @default("RUNNING")
   canadaOnly     Boolean       @default(true)
@@ -208,10 +225,12 @@ model UatTestRun {
   testCases      UatTestCase[]
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model WebhookEvent {
   id             String             @id @default(cuid())
+  tenantId       String?
   eventId        String             @unique
   provider       String
   eventType      String
@@ -229,6 +248,7 @@ model WebhookEvent {
   @@index([provider])
   @@index([status])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =====================================================
@@ -236,6 +256,7 @@ model WebhookEvent {
 // =====================================================
 model SearchLog {
   id          String   @id @default(cuid())
+  tenantId    String?
   query       String
   resultCount Int      @default(0)
   userId      String?
@@ -248,6 +269,7 @@ model SearchLog {
   @@index([createdAt])
   @@index([userId])
   @@index([resultCount])
+  @@index([tenantId])
 }
 
 // =====================================================
@@ -255,6 +277,7 @@ model SearchLog {
 // =====================================================
 model WebhookEndpoint {
   id         String            @id @default(cuid())
+  tenantId   String?
   url        String
   events     String[]
   secret     String
@@ -267,10 +290,12 @@ model WebhookEndpoint {
   @@index([active])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model WebhookDelivery {
   id          String          @id @default(cuid())
+  tenantId    String?
   endpointId  String
   event       String
   payload     Json
@@ -286,6 +311,7 @@ model WebhookDelivery {
   @@index([event])
   @@index([status])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =====================================================
@@ -293,6 +319,7 @@ model WebhookDelivery {
 // =====================================================
 model AuditTrail {
   id         String   @id @default(cuid())
+  tenantId   String?
   entityType String // e.g. "JournalEntry", "CustomerInvoice", "CreditNote"
   entityId   String
   action     String // CREATE, UPDATE, DELETE, POST, VOID, etc.
@@ -311,11 +338,13 @@ model AuditTrail {
   @@index([createdAt])
   @@index([action]) // Phase 9: Index for action-based filtering
   @@index([action, createdAt]) // Phase 9: Composite for action + time range queries
+  @@index([tenantId])
 }
 
 // ── Admin Navigation (Web Navigator) ────────────────────────────
 model AdminNavSection {
   id          String              @id @default(cuid())
+  tenantId    String?
   railId      String
   title       String
   subtitle    String?
@@ -330,10 +359,12 @@ model AdminNavSection {
   @@index([sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AdminNavSubSection {
   id        String           @id @default(cuid())
+  tenantId  String?
   sectionId String
   title     String
   subtitle  String?
@@ -349,10 +380,12 @@ model AdminNavSubSection {
   @@index([sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AdminNavPage {
   id           String              @id @default(cuid())
+  tenantId     String?
   subSectionId String
   title        String
   subtitle     String?
@@ -369,6 +402,7 @@ model AdminNavPage {
   @@index([sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -376,6 +410,7 @@ model AdminNavPage {
 // =============================================
 model AuditFunction {
   id            String         @id @default(cuid())
+  tenantId      String?
   name          String
   filePath      String
   type          String // api_handler, page, component, hook, lib, middleware
@@ -395,10 +430,12 @@ model AuditFunction {
   @@index([filePath])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AuditType {
   id          String     @id @default(cuid())
+  tenantId    String?
   code        String     @unique // e.g. AUTH-SESSION, AUTHZ-RBAC
   name        String
   nameFr      String?
@@ -418,10 +455,12 @@ model AuditType {
   @@index([sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AuditRun {
   id             String         @id @default(cuid())
+  tenantId       String?
   auditTypeId    String
   auditType      AuditType      @relation(fields: [auditTypeId], references: [id], onDelete: Cascade)
   status         String         @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
@@ -441,10 +480,12 @@ model AuditRun {
   @@index([status])
   @@index([startedAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model AuditFinding {
   id              String        @id @default(cuid())
+  tenantId        String?
   auditRunId      String
   auditRun        AuditRun      @relation(fields: [auditRunId], references: [id], onDelete: Cascade)
   functionId      String?
@@ -472,11 +513,13 @@ model AuditFinding {
   @@index([checkId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-006: Workflow automation engine
 model Workflow {
   id          String        @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   trigger     String        // ORDER_CREATED, ORDER_PAID, CART_ABANDONED, USER_REGISTERED, etc.
@@ -495,10 +538,12 @@ model Workflow {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model WorkflowRun {
   id          String         @id @default(cuid())
+  tenantId    String?
   workflowId  String
   workflow    Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   status      String         @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
@@ -514,10 +559,12 @@ model WorkflowRun {
   @@index([status])
   @@index([startedAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model WorkflowStep {
   id          String      @id @default(cuid())
+  tenantId    String?
   runId       String
   run         WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   stepIndex   Int
@@ -533,11 +580,13 @@ model WorkflowStep {
   @@index([runId])
   @@index([status])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // DB-008: Performance monitoring log
 model PerformanceLog {
   id         String   @id @default(cuid())
+  tenantId   String?
   route      String
   method     String   @default("GET")
   duration   Int      // milliseconds
@@ -556,6 +605,7 @@ model PerformanceLog {
   @@index([userId])
   @@index([timestamp])
   @@index([route, timestamp])
+  @@index([tenantId])
 }
 
 // =============================================================================
@@ -563,6 +613,7 @@ model PerformanceLog {
 // =============================================================================
 model ApiKey {
   id          String    @id @default(cuid())
+  tenantId    String?
   name        String
   keyHash     String    @unique // SHA-256 hash of the actual key
   keyPrefix   String    // First 8 chars for identification (e.g., "bp_live_a1b2c3d4")
@@ -583,10 +634,12 @@ model ApiKey {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ApiUsageLog {
   id         String   @id @default(cuid())
+  tenantId   String?
   apiKeyId   String
   endpoint   String
   method     String
@@ -601,6 +654,7 @@ model ApiUsageLog {
   @@index([apiKeyId])
   @@index([endpoint])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =====================================================
@@ -608,6 +662,7 @@ model ApiUsageLog {
 // =====================================================
 model AureliaRequest {
   id            String    @id @default(cuid())
+  tenantId      String?
   title         String
   description   String    @db.Text
   priority      String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT, IMMEDIATE
@@ -630,11 +685,13 @@ model AureliaRequest {
   @@index([requestType])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // --- 4I.2: IP Whitelist (L11) ---
 model IpWhitelist {
   id          String   @id @default(cuid())
+  tenantId    String?
   ipAddress   String   // supports CIDR notation: 192.168.1.0/24
   label       String?
   isActive    Boolean  @default(true)
@@ -645,5 +702,5 @@ model IpWhitelist {
   @@unique([ipAddress])
   @@index([createdById])
   @@index([isActive])
+  @@index([tenantId])
 }
-

@@ -65,7 +65,7 @@ interface QueueJob {
 
 const MODEL_KEYS: Record<string, string> = {
   Product: 'modelProduct',
-  ProductFormat: 'modelProductFormat',
+  ProductOption: 'modelProductOption',
   Category: 'modelCategory',
   Article: 'modelArticle',
   BlogPost: 'modelBlogPost',
@@ -76,7 +76,7 @@ const MODEL_KEYS: Record<string, string> = {
 
 const MODEL_ICONS: Record<string, string> = {
   Product: '🧪',
-  ProductFormat: '📦',
+  ProductOption: '📦',
   Category: '📂',
   Article: '📄',
   BlogPost: '✍️',
@@ -85,7 +85,7 @@ const MODEL_ICONS: Record<string, string> = {
   QuickReply: '💬',
 };
 
-const ALL_MODELS = ['Product', 'ProductFormat', 'Category', 'Article', 'BlogPost', 'Video', 'Webinar', 'QuickReply'];
+const ALL_MODELS = ['Product', 'ProductOption', 'Category', 'Article', 'BlogPost', 'Video', 'Webinar', 'QuickReply'];
 
 // ---------------------------------------------------------------------------
 // Translation Wizard (3 steps)

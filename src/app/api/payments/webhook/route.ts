@@ -336,10 +336,10 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   // BUG E-14 FIX: Safe parsing of cartItems metadata.
   // Stripe metadata values are capped at 500 chars. If the JSON was truncated,
   // JSON.parse would throw and the order would be created with 0 items.
-  // We now handle 3 formats:
+  // We now handle 3 options:
   //   1. 'compact' — short keys: [{p, f, q, $}, ...] (names looked up from DB)
   //   2. 'ref'     — {ref, count} reference; items recovered from InventoryReservation + DB
-  //   3. legacy    — full objects with productId, name, formatName, quantity, price
+  //   3. legacy    — full objects with productId, name, optionName, quantity, price
   let cartItems: Record<string, unknown>[] = [];
   const cartItemsFormat = metadata.cartItemsFormat || 'legacy';
 
@@ -355,12 +355,12 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         // Format 'compact': short keys {p, f, q, $} — need DB lookup for names
         cartItems = parsed.map((item: { p: string; f: string | null; q: number; $: number }) => ({
           productId: item.p,
-          formatId: item.f,
+          optionId: item.f,
           quantity: item.q,
           price: item.$,
-          // name and formatName will be filled from DB below
+          // name and optionName will be filled from DB below
           name: null,
-          formatName: null,
+          optionName: null,
         }));
       } else if (Array.isArray(parsed)) {
         // Legacy format: full objects
@@ -437,7 +437,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     if (cartIdForLookup) {
       const reservations = await prisma.inventoryReservation.findMany({
         where: { cartId: cartIdForLookup, status: 'RESERVED' },
-        select: { productId: true, formatId: true, quantity: true },
+        select: { productId: true, optionId: true, quantity: true },
       });
       if (reservations.length > 0) {
         // Look up product names and prices
@@ -448,25 +448,25 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         });
         const productMap = new Map(products.map(p => [p.id, p]));
 
-        const formatIds = reservations.map(r => r.formatId).filter((f): f is string => !!f);
-        const formats = formatIds.length > 0
-          ? await prisma.productFormat.findMany({
-              where: { id: { in: formatIds } },
+        const optionIds = reservations.map(r => r.optionId).filter((f): f is string => !!f);
+        const options = optionIds.length > 0
+          ? await prisma.productOption.findMany({
+              where: { id: { in: optionIds } },
               select: { id: true, name: true, price: true },
             })
           : [];
-        const formatMap = new Map(formats.map(f => [f.id, f]));
+        const formatMap = new Map(options.map(f => [f.id, f]));
 
         cartItems = reservations.map(r => {
           const product = productMap.get(r.productId);
-          const format = r.formatId ? formatMap.get(r.formatId) : null;
+          const format = r.optionId ? formatMap.get(r.optionId) : null;
           return {
             productId: r.productId,
-            formatId: r.formatId,
+            optionId: r.optionId,
             quantity: r.quantity,
             price: format ? Number(format.price) : (product ? Number(product.price) : 0),
             name: product?.name || 'Unknown product',
-            formatName: format?.name || null,
+            optionName: format?.name || null,
           };
         });
         logger.info('[Webhook] E-14: Recovered cart items from InventoryReservation', {
@@ -496,14 +496,14 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     });
     const productMap = new Map(products.map(p => [p.id, p]));
 
-    const formatIds = itemsMissingNames.map(i => i.formatId).filter((f): f is string => typeof f === 'string' && !!f);
-    const formats = formatIds.length > 0
-      ? await prisma.productFormat.findMany({
-          where: { id: { in: formatIds } },
+    const optionIds = itemsMissingNames.map(i => i.optionId).filter((f): f is string => typeof f === 'string' && !!f);
+    const options = optionIds.length > 0
+      ? await prisma.productOption.findMany({
+          where: { id: { in: optionIds } },
           select: { id: true, name: true, price: true },
         })
       : [];
-    const formatMap = new Map(formats.map(f => [f.id, f]));
+    const formatMap = new Map(options.map(f => [f.id, f]));
 
     for (const item of cartItems) {
       if (!item.name) {
@@ -513,9 +513,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           item.price = Number(product.price);
         }
       }
-      if (!item.formatName && item.formatId) {
-        const format = formatMap.get(String(item.formatId));
-        item.formatName = format?.name || null;
+      if (!item.optionName && item.optionId) {
+        const format = formatMap.get(String(item.optionId));
+        item.optionName = format?.name || null;
         if (!item.price && format) {
           item.price = Number(format.price);
         }
@@ -581,9 +581,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         items: cartItems.length > 0 ? {
           create: cartItems.map((item: Record<string, unknown>) => ({
             productId: String(item.productId),
-            formatId: item.formatId ? String(item.formatId) : null,
+            optionId: item.optionId ? String(item.optionId) : null,
             productName: String(item.name || 'Unknown product'),
-            formatName: item.formatName ? String(item.formatName) : null,
+            optionName: item.optionName ? String(item.optionName) : null,
             sku: item.sku ? String(item.sku) : null,
             quantity: Number(item.quantity),
             unitPrice: Number(item.price),
@@ -609,18 +609,18 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
       });
 
-      // N+1 FIX: Batch-fetch latest WAC for all unique (productId, formatId) combos
-      const wacKeys = reservations.map(r => ({ productId: r.productId, formatId: r.formatId }));
-      const uniqueWacKeys = [...new Map(wacKeys.map(k => [`${k.productId}-${k.formatId}`, k])).values()];
+      // N+1 FIX: Batch-fetch latest WAC for all unique (productId, optionId) combos
+      const wacKeys = reservations.map(r => ({ productId: r.productId, optionId: r.optionId }));
+      const uniqueWacKeys = [...new Map(wacKeys.map(k => [`${k.productId}-${k.optionId}`, k])).values()];
       const wacMap = new Map<string, number>();
       if (uniqueWacKeys.length > 0) {
         for (const key of uniqueWacKeys) {
           const lastTx = await tx.inventoryTransaction.findFirst({
-            where: { productId: key.productId, formatId: key.formatId },
+            where: { productId: key.productId, optionId: key.optionId },
             orderBy: { createdAt: 'desc' },
             select: { runningWAC: true },
           });
-          wacMap.set(`${key.productId}-${key.formatId}`, lastTx ? Number(lastTx.runningWAC) : 0);
+          wacMap.set(`${key.productId}-${key.optionId}`, lastTx ? Number(lastTx.runningWAC) : 0);
         }
       }
 
@@ -629,20 +629,20 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         // Uses a single UPDATE with a WHERE guard so the row is only modified when
         // sufficient stock exists.  The returned row-count tells us if the decrement
         // actually happened (race-condition-safe, no read-then-write gap).
-        if (reservation.formatId) {
+        if (reservation.optionId) {
           const rowsAffected: number = await tx.$executeRaw`
-            UPDATE "ProductFormat"
+            UPDATE "ProductOption"
             SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
                 "updatedAt" = NOW()
-            WHERE id = ${reservation.formatId}
+            WHERE id = ${reservation.optionId}
               AND "stockQuantity" >= ${reservation.quantity}
           `;
           if (rowsAffected === 0) {
             // Stock was insufficient — log and continue (order is already paid)
-            logger.warn(`[Stripe webhook] Insufficient stock for format ${reservation.formatId}: wanted ${reservation.quantity}, atomic UPDATE matched 0 rows`);
+            logger.warn(`[Stripe webhook] Insufficient stock for format ${reservation.optionId}: wanted ${reservation.quantity}, atomic UPDATE matched 0 rows`);
           }
         } else {
-          // E-07 FIX: Also decrement stock for base products (no formatId)
+          // E-07 FIX: Also decrement stock for base products (no optionId)
           const rowsAffected: number = await tx.$executeRaw`
             UPDATE "Product"
             SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
@@ -656,13 +656,13 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           }
         }
 
-        const wac = wacMap.get(`${reservation.productId}-${reservation.formatId}`) ?? 0;
+        const wac = wacMap.get(`${reservation.productId}-${reservation.optionId}`) ?? 0;
 
         // Create inventory transaction
         await tx.inventoryTransaction.create({
           data: {
             productId: reservation.productId,
-            formatId: reservation.formatId,
+            optionId: reservation.optionId,
             type: 'SALE',
             quantity: -reservation.quantity,
             unitCost: wac,
@@ -1149,13 +1149,13 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       // N+1 FIX: Batch-create all RETURN transactions using individual creates
       // (stock increments must still be per-format for atomicity)
       for (const saleTx of saleTxs) {
-        if (saleTx.formatId) {
-          await tx.productFormat.update({
-            where: { id: saleTx.formatId },
+        if (saleTx.optionId) {
+          await tx.productOption.update({
+            where: { id: saleTx.optionId },
             data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
           });
         } else {
-          // E-07 FIX: Restore stock for base products (no formatId)
+          // E-07 FIX: Restore stock for base products (no optionId)
           await tx.product.update({
             where: { id: saleTx.productId },
             data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
@@ -1167,7 +1167,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         await tx.inventoryTransaction.createMany({
           data: saleTxs.map(saleTx => ({
             productId: saleTx.productId,
-            formatId: saleTx.formatId,
+            optionId: saleTx.optionId,
             type: 'RETURN' as const,
             quantity: Math.abs(saleTx.quantity),
             unitCost: saleTx.unitCost,

@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Plan du site | BioCycle Peptides',
   description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages produits, ressources et informations.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/plan-du-site',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/plan-du-site`,
   },
   openGraph: {
     title: 'Plan du site | BioCycle Peptides',
     description: 'Navigation complète du site BioCycle Peptides.',
-    url: 'https://biocyclepeptides.com/plan-du-site',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/plan-du-site`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

@@ -40,7 +40,7 @@ export const paymentStatusEnum = z.enum([
 
 const orderItemSchema = z.object({
   productId: uuidSchema,
-  formatId: uuidSchema.optional().nullable(),
+  optionId: uuidSchema.optional().nullable(),
   quantity: quantitySchema,
 }).strict(); // Item 25
 

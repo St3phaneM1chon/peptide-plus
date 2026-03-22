@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
 
     // In-stock filter (moved into Prisma where clause for efficiency)
     if (inStock === 'true') {
-      where.formats = {
+      where.options = {
         some: {
           isActive: true,
           stockQuantity: { gt: 0 },
@@ -299,13 +299,13 @@ export async function GET(request: NextRequest) {
               orderBy: { sortOrder: 'asc' },
               select: { id: true, url: true, alt: true, caption: true, sortOrder: true, isPrimary: true },
             },
-            formats: {
+            options: {
               where: { isActive: true },
               orderBy: { sortOrder: 'asc' },
               select: {
                 id: true,
                 name: true,
-                formatType: true,
+                optionType: true,
                 price: true,
                 comparePrice: true,
                 sku: true,

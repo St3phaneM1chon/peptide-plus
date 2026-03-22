@@ -400,9 +400,9 @@ export default function CheckoutPage() {
       const orderData = {
         items: items.map(item => ({
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
           name: item.name,
-          format: item.formatName,
+          format: item.optionName,
           price: item.price,
           quantity: item.quantity,
           sku: item.sku,
@@ -1576,7 +1576,7 @@ export default function CheckoutPage() {
               {/* Cart Items */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={`${item.productId}-${item.formatId || 'default'}`} className="flex gap-3">
+                  <div key={`${item.productId}-${item.optionId || 'default'}`} className="flex gap-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 relative">
                       {item.image && (
                         <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover rounded-lg" />
@@ -1587,7 +1587,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-grow">
                       <p className="font-medium text-sm">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.formatName}</p>
+                      <p className="text-xs text-gray-500">{item.optionName}</p>
                     </div>
                     <p className="font-medium text-sm">{formatPrice(item.price * item.quantity)}</p>
                   </div>

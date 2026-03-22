@@ -50,16 +50,16 @@ function getFileIcon(mimeType: string) {
   if (mimeType.startsWith('video/')) return <Film className="w-5 h-5 text-red-500" />;
   if (mimeType.startsWith('audio/')) return <Music className="w-5 h-5 text-purple-500" />;
   if (mimeType === 'application/pdf') return <FileText className="w-5 h-5 text-orange-500" />;
-  // A76: Spreadsheet formats (Excel, CSV, ODS)
+  // A76: Spreadsheet options (Excel, CSV, ODS)
   if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv')
     return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
-  // A76: Word/document formats (DOC, DOCX, ODT)
+  // A76: Word/document options (DOC, DOCX, ODT)
   if (mimeType.includes('wordprocessing') || mimeType.includes('msword'))
     return <FileType className="w-5 h-5 text-indigo-600" />;
-  // A76: Archive formats (ZIP, RAR, TAR, GZ)
+  // A76: Archive options (ZIP, RAR, TAR, GZ)
   if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar') || mimeType.includes('gzip') || mimeType.includes('compressed'))
     return <FileArchive className="w-5 h-5 text-amber-600" />;
-  // A76: Code/text formats (JSON, XML, HTML, JS, CSS)
+  // A76: Code/text options (JSON, XML, HTML, JS, CSS)
   if (mimeType.includes('json') || mimeType.includes('xml') || mimeType.includes('javascript') || mimeType.includes('html') || mimeType.includes('css'))
     return <FileCode className="w-5 h-5 text-cyan-600" />;
   return <FileText className="w-5 h-5 text-slate-400" />;

@@ -109,8 +109,8 @@ export async function renderSignature(templateId: string, agentData: AgentData):
   html = html.replace(/\{\{phone\}\}/g, agentData.phone || '');
   html = html.replace(/\{\{email\}\}/g, agentData.email || '');
   html = html.replace(/\{\{photo\}\}/g, agentData.photo || '');
-  html = html.replace(/\{\{company\}\}/g, agentData.company || 'BioCycle Peptides');
-  html = html.replace(/\{\{website\}\}/g, agentData.website || 'https://biocyclepeptides.com');
+  html = html.replace(/\{\{company\}\}/g, agentData.company || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP');
+  html = html.replace(/\{\{website\}\}/g, agentData.website || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip');
 
   return html;
 }

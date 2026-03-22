@@ -3,7 +3,7 @@
  *
  * Aggregates knowledge from multiple sources:
  * 1. Aurelia Knowledge Islands (904 items, 28 domains)
- * 2. Product catalog (Prisma DB — products, formats, prices)
+ * 2. Product catalog (Prisma DB — products, options, prices)
  * 3. FAQ database
  * 4. Articles & guides
  * 5. CRM client context (per-call)

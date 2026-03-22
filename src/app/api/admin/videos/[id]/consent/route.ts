@@ -122,7 +122,7 @@ export const POST = withAdminGuard(async (request, { session, routeContext }) =>
 
     return NextResponse.json({
       consent,
-      consentUrl: `${process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com'}/consent/${token}`,
+      consentUrl: `${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/consent/${token}`,
     }, { status: 201 });
   } catch (error) {
     logger.error('Admin video consent POST error', { error: error instanceof Error ? error.message : String(error) });

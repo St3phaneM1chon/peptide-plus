@@ -30,7 +30,7 @@ export function generateProductGridHTML(products: ProductRecommendation[], maxIt
   <tr>
     ${items.map(p => `
     <td style="width:${100/items.length}%;padding:8px;text-align:center;vertical-align:top">
-      <a href="https://biocyclepeptides.com/products/${encodeURIComponent(p.productId)}" style="text-decoration:none;color:#1e293b">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/products/${encodeURIComponent(p.productId)}" style="text-decoration:none;color:#1e293b">
         <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" style="width:100%;max-width:150px;border-radius:8px;margin-bottom:8px" />
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">${escapeHtml(p.name)}</div>
         <div style="font-size:16px;color:#059669;font-weight:700">${fmt(p.price)}</div>

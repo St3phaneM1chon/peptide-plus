@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 /**
  * API - CRUD Produits (version enrichie)
  * Gère: formations, produits physiques, hybrides
- * Avec: images multiples, formats, certificats, fiche technique
+ * Avec: images multiples, options, certificats, fiche technique
  * Supporte: ?locale=fr pour contenu traduit
  */
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Item 11: Optional field selection via ?fields=name,price,slug
     // NOTE: parseFieldSelection() from api-response.ts produces a Prisma `select` object,
-    // but this route uses `include` for relations (category, formats, etc.). Prisma does not
+    // but this route uses `include` for relations (category, options, etc.). Prisma does not
     // allow mixing `select` and `include` at the same level. To implement field selection,
     // either strip unwanted keys from the response after fetch, or refactor to use nested
     // `select` with explicit relation fields. Deferred for now.
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (inStock === 'true') {
-      where.formats = { some: { isActive: true, stockQuantity: { gt: 0 } } };
+      where.options = { some: { isActive: true, stockQuantity: { gt: 0 } } };
     }
 
     if (categoryIds) {
@@ -191,14 +191,14 @@ export async function GET(request: NextRequest) {
               take: 1,
               select: { url: true, alt: true },
             },
-            // Include active formats with minimal fields for price/stock display in shop grid
-            formats: {
+            // Include active options with minimal fields for price/stock display in shop grid
+            options: {
               where: { isActive: true },
               orderBy: { sortOrder: 'asc' },
               select: {
                 id: true,
                 name: true,
-                formatType: true,
+                optionType: true,
                 price: true,
                 comparePrice: true,
                 isActive: true,
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
               },
             },
             _count: {
-              select: { formats: true },
+              select: { options: true },
             },
           },
           orderBy: { createdAt: 'desc' },
@@ -423,7 +423,7 @@ export async function POST(request: NextRequest) {
       isActive,
       // Relations
       images,
-      formats,
+      options,
     } = validation.data;
 
     // BE-SEC-03: Sanitize product name (strip HTML to prevent stored XSS in admin views)
@@ -500,9 +500,9 @@ export async function POST(request: NextRequest) {
           })),
         } : undefined,
         // Formats
-        formats: formats && formats.length > 0 ? {
-          create: formats.map((f: Record<string, unknown>, index: number) => ({
-            formatType: String(f.formatType || 'VIAL_2ML'),
+        options: options && options.length > 0 ? {
+          create: options.map((f: Record<string, unknown>, index: number) => ({
+            optionType: String(f.optionType || 'VIAL_2ML'),
             name: String(f.name),
             description: String(f.description || ''),
             imageUrl: f.imageUrl ? String(f.imageUrl) : null,
@@ -527,7 +527,7 @@ export async function POST(request: NextRequest) {
       include: { 
         category: true,
         images: true,
-        formats: true,
+        options: true,
       },
     });
 

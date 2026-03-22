@@ -3,6 +3,8 @@
  * Generate tags and alt text from filename and context
  */
 
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+
 const PRODUCT_KEYWORDS: Record<string, string[]> = {
   peptide: ['research peptide', 'laboratory', 'science', 'biochemistry'],
   bpc: ['bpc-157', 'healing', 'recovery', 'research'],
@@ -48,13 +50,13 @@ export function generateTags(filename: string, productName?: string, category?: 
 
 export function generateAltText(filename: string, productName?: string): string {
   if (productName) {
-    return `${productName} - BioCycle Peptides research product`;
+    return `${productName} - ${SITE_NAME} research product`;
   }
   const cleaned = filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
-  return `${cleaned} - BioCycle Peptides`.substring(0, 125);
+  return `${cleaned} - ${SITE_NAME}`.substring(0, 125);
 }
 
 export function suggestMetaDescription(productName: string, tags: string[]): string {
   const tagText = tags.slice(0, 3).join(', ');
-  return `${productName} by BioCycle Peptides. ${tagText}. High-quality research peptides with Certificate of Analysis.`.substring(0, 160);
+  return `${productName} by ${SITE_NAME}. ${tagText}. High-quality research peptides with Certificate of Analysis.`.substring(0, 160);
 }

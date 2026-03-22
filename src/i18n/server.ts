@@ -159,7 +159,7 @@ export function formatDateTimeServer(
 /**
  * Formatage de nombre côté serveur
  */
-export function formatNumberServer(amount: number, locale: Locale = 'fr'): string {
+export function optionNumberServer(amount: number, locale: Locale = 'fr'): string {
   return new Intl.NumberFormat(locale).format(amount);
 }
 
@@ -175,7 +175,7 @@ export async function getApiTranslator() {
       formatDateServer(date, locale, options),
     formatDateTime: (date: Date | string) => 
       formatDateTimeServer(date, locale),
-    formatNumber: (amount: number) => 
-      formatNumberServer(amount, locale),
+    optionNumber: (amount: number) => 
+      optionNumberServer(amount, locale),
   };
 }

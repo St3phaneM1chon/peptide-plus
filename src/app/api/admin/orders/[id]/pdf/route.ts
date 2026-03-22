@@ -81,7 +81,7 @@ function buildInvoiceHTML(params: {
   billingSameAsShipping: boolean;
   items: Array<{
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
     sku: string | null;
     quantity: number;
     unitPrice: number;
@@ -133,7 +133,7 @@ function buildInvoiceHTML(params: {
 
   const itemRows = params.items
     .map((item) => {
-      const name = esc(item.productName) + (item.formatName ? ` <span style="color:#64748b">— ${esc(item.formatName)}</span>` : '');
+      const name = esc(item.productName) + (item.optionName ? ` <span style="color:#64748b">— ${esc(item.optionName)}</span>` : '');
       const lineDiscount = item.discount > 0
         ? `<br><span style="font-size:11px;color:#16a34a">−${f(item.discount)}</span>`
         : '';
@@ -280,7 +280,7 @@ ${trackingInfo}
 
 <div class="footer">
   Merci pour votre commande !<br>
-  ${esc(params.companyName)} &bull; biocyclepeptides.com
+  ${esc(params.companyName)} &bull; attitudes.vip
   ${params.tpsNumber ? `<br>TPS/GST : ${esc(params.tpsNumber)}` : ''}
   ${params.tvqNumber ? ` &bull; TVQ/QST : ${esc(params.tvqNumber)}` : ''}
 </div>
@@ -363,7 +363,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       billingSameAsShipping: order.billingSameAsShipping,
       items: order.items.map((item) => ({
         productName: item.productName,
-        formatName: item.formatName ?? null,
+        optionName: item.optionName ?? null,
         sku: item.sku ?? null,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),

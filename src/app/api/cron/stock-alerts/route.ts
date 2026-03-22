@@ -10,6 +10,7 @@ import { type Locale } from '@/i18n/config';
 import { withJobLock } from '@/lib/cron-lock';
 // FLAW-059 FIX: Use structured logger instead of raw console.log/console.error
 import { logger } from '@/lib/logger';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 /**
  * POST /api/cron/stock-alerts
@@ -50,9 +51,10 @@ export async function POST(request: NextRequest) {
 
   return withJobLock('stock-alerts', async () => {
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       // Find all non-notified alerts
-    // PERF 91: Select only needed product fields (name, slug, imageUrl) and
-    // only the formats relevant to the alerts instead of ALL formats.
+    // Prisma middleware auto-filters by tenant
     const pendingAlerts = await prisma.stockAlert.findMany({
       where: {
         notified: false,
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
             slug: true,
             price: true,
             imageUrl: true,
-            formats: {
+            options: {
               select: {
                 id: true,
                 name: true,
@@ -109,22 +111,22 @@ export async function POST(request: NextRequest) {
           try {
             // Determine if product/format is back in stock
             let isBackInStock = false;
-            let formatName: string | undefined;
+            let optionName: string | undefined;
             let price: number = 0;
             let imageUrl: string | undefined;
 
-            if (alert.formatId) {
+            if (alert.optionId) {
               // Check specific format
-              const format = alert.product.formats.find(f => f.id === alert.formatId);
+              const format = alert.product.options.find(f => f.id === alert.optionId);
               if (format && format.stockQuantity > 0 && format.inStock) {
                 isBackInStock = true;
-                formatName = format.name;
+                optionName = format.name;
                 price = Number(format.price);
                 imageUrl = format.imageUrl || alert.product.imageUrl || undefined;
               }
             } else {
               // Check if any format is back in stock
-              const anyInStock = alert.product.formats.some(
+              const anyInStock = alert.product.options.some(
                 f => f.stockQuantity > 0 && f.inStock
               );
               if (anyInStock) {
@@ -156,7 +158,7 @@ export async function POST(request: NextRequest) {
               {
                 productName: alert.product.name,
                 productSlug: alert.product.slug,
-                formatName,
+                optionName,
                 price,
                 currency: 'CAD',
                 imageUrl,
@@ -209,12 +211,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    logger.info(`[stock-alerts] Tenant ${tenant.slug}: processed ${processedCount}, sent ${sentCount}, errors ${errorCount}`);
+      });
+
       return NextResponse.json({
         success: true,
-        processed: processedCount,
-        sent: sentCount,
-        errors: errorCount,
-        message: `Processed ${processedCount} alerts, sent ${sentCount} emails, ${errorCount} errors`,
+        tenants: tenantResult,
       });
     } catch (error) {
       logger.error('Stock alerts cron error', { error: error instanceof Error ? error.message : String(error) });

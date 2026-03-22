@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  *   - Referrals, return requests, product questions
  *   - Chat conversations, consent records
  *
- * Supports JSON (default) and CSV formats via ?format=csv query parameter.
+ * Supports JSON (default) and CSV options via ?format=csv query parameter.
  * Rate limited: 1 export per day per user.
  */
 
@@ -131,7 +131,7 @@ function jsonToCsv(data: Record<string, unknown>): string {
 
     // Order items sub-table
     sections.push('\n=== ORDER ITEMS ===');
-    sections.push('orderId,productName,formatName,quantity,unitPrice,total');
+    sections.push('orderId,productName,optionName,quantity,unitPrice,total');
     for (const order of orders) {
       const items = order.items as Array<Record<string, unknown>> | undefined;
       if (items?.length) {
@@ -140,7 +140,7 @@ function jsonToCsv(data: Record<string, unknown>): string {
             [
               escapeCsvValue(order.id),
               escapeCsvValue(item.productName),
-              escapeCsvValue(item.formatName),
+              escapeCsvValue(item.optionName),
               escapeCsvValue(item.quantity),
               escapeCsvValue(item.unitPrice),
               escapeCsvValue(item.total),
@@ -259,7 +259,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
               select: {
                 id: true,
                 productName: true,
-                formatName: true,
+                optionName: true,
                 quantity: true,
                 unitPrice: true,
                 total: true,
@@ -417,7 +417,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
         },
         items: order.items.map((item) => ({
           productName: item.productName,
-          formatName: item.formatName,
+          optionName: item.optionName,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           total: Number(item.total),

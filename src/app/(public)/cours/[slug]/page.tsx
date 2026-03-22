@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     openGraph: {
       title: `${title} | BioCycle Peptides`,
       description,
-      url: `https://biocyclepeptides.com/cours/${slug}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/cours/${slug}`,
       siteName: 'BioCycle Peptides',
       type: 'website',
     },

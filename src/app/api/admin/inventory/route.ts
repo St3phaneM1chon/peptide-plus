@@ -14,12 +14,13 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { purchaseStock, adjustStock } from '@/lib/inventory';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 // Zod schema for POST /api/admin/inventory (receive stock)
 const receiveStockSchema = z.object({
   items: z.array(z.object({
     productId: z.string().min(1, 'productId is required'),
-    formatId: z.string().optional(),
+    optionId: z.string().optional(),
     quantity: z.number().int().positive('Quantity must be positive'),
     unitCost: z.number().positive('Unit cost must be greater than zero'),
   })).min(1, 'Items array must not be empty'),
@@ -29,7 +30,7 @@ const receiveStockSchema = z.object({
 // Zod schema for PUT /api/admin/inventory (adjust stock)
 const adjustStockSchema = z.object({
   productId: z.string().min(1, 'productId is required'),
-  formatId: z.string().nullable().optional(),
+  optionId: z.string().nullable().optional(),
   quantity: z.number().int().refine((v) => v !== 0, 'Quantity must be non-zero'),
   reason: z.string().min(1, 'Reason is required for stock adjustments'),
 }).strict();
@@ -46,12 +47,12 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     // DI-69: Use raw WHERE for low stock filter instead of JS post-filtering
     let lowStockIds: string[] | null = null;
     if (lowStockOnly) {
-      const lowStockFormats = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT "id" FROM "ProductFormat"
+      const lowStockFormats = await tenantQueryRaw<{ id: string }>(
+        `SELECT "id" FROM "ProductOption"
         WHERE "isActive" = true
           AND "trackInventory" = true
-          AND "stockQuantity" <= "lowStockThreshold"
-      `;
+          AND "stockQuantity" <= "lowStockThreshold"`
+      );
       lowStockIds = lowStockFormats.map((f) => f.id);
     }
 
@@ -61,14 +62,14 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       ...(lowStockIds !== null ? { id: { in: lowStockIds } } : {}),
     };
 
-    const [formats, total] = await Promise.all([
-      prisma.productFormat.findMany({
+    const [options, total] = await Promise.all([
+      prisma.productOption.findMany({
         where: formatWhere,
         select: {
           id: true,
           productId: true,
           name: true,
-          formatType: true,
+          optionType: true,
           sku: true,
           price: true,
           stockQuantity: true,
@@ -89,42 +90,42 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         skip,
         take: limit,
       }),
-      prisma.productFormat.count({ where: formatWhere }),
+      prisma.productOption.count({ where: formatWhere }),
     ]);
 
-    // Batch query: fetch the latest WAC for ALL formats at once
-    // Uses raw SQL with DISTINCT ON to get the most recent transaction per (productId, formatId)
-    const latestTransactions = await prisma.$queryRaw<
-      { productId: string; formatId: string | null; runningWAC: number }[]
-    >`
-      SELECT DISTINCT ON ("productId", "formatId")
-        "productId", "formatId", "runningWAC"
+    // Batch query: fetch the latest WAC for ALL options at once
+    // Uses raw SQL with DISTINCT ON to get the most recent transaction per (productId, optionId)
+    const latestTransactions = await tenantQueryRaw<
+      { productId: string; optionId: string | null; runningWAC: number }
+    >(
+      `SELECT DISTINCT ON ("productId", "optionId")
+        "productId", "optionId", "runningWAC"
       FROM "InventoryTransaction"
-      ORDER BY "productId", "formatId", "createdAt" DESC
-    `;
+      ORDER BY "productId", "optionId", "createdAt" DESC`
+    );
 
-    // Build a lookup map: "productId:formatId" -> runningWAC
+    // Build a lookup map: "productId:optionId" -> runningWAC
     const wacMap = new Map<string, number>();
     for (const tx of latestTransactions) {
-      const key = `${tx.productId}:${tx.formatId ?? ''}`;
+      const key = `${tx.productId}:${tx.optionId ?? ''}`;
       wacMap.set(key, Number(tx.runningWAC));
     }
 
-    const inventoryItems = formats.map((format) => {
+    const inventoryItems = options.map((format) => {
       const key = `${format.productId}:${format.id}`;
       const wac = wacMap.get(key) ?? 0;
 
       return {
-        id: format.id,           // frontend uses item.id (= ProductFormat id)
-        formatId: format.id,     // keep for backward compat
+        id: format.id,           // frontend uses item.id (= ProductOption id)
+        optionId: format.id,     // keep for backward compat
         productId: format.productId,
         productName: format.product.name,
         productSlug: format.product.slug,
         productSku: format.product.sku,
         productImageUrl: format.product.imageUrl,
         productActive: format.product.isActive,
-        formatName: format.name,
-        formatType: format.formatType,
+        optionName: format.name,
+        optionType: format.optionType,
         sku: format.sku,         // frontend expects "sku" not "formatSku"
         formatSku: format.sku,   // keep for backward compat
         stockQuantity: format.stockQuantity,
@@ -176,7 +177,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     await purchaseStock(
       items.map((item: Record<string, unknown>) => ({
         productId: item.productId as string,
-        formatId: (item.formatId as string) || undefined,
+        optionId: (item.optionId as string) || undefined,
         quantity: item.quantity as number,
         unitCost: item.unitCost as number,
       })),
@@ -223,11 +224,11 @@ export const PUT = withAdminGuard(async (request, { session }) => {
         { status: 400 }
       );
     }
-    const { productId, formatId, quantity, reason } = parsed.data;
+    const { productId, optionId, quantity, reason } = parsed.data;
 
     await adjustStock(
       productId,
-      formatId || null,
+      optionId || null,
       quantity,
       reason,
       session.user.id
@@ -238,7 +239,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       action: 'ADJUST_STOCK',
       targetType: 'Inventory',
       targetId: productId,
-      newValue: { productId, formatId, quantity, reason },
+      newValue: { productId, optionId, quantity, reason },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch((err) => { logger.error('[admin/inventory] Non-blocking operation failed:', err); });

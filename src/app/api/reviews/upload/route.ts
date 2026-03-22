@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       const header = buffer.subarray(0, 4);
       const isJpeg = header[0] === 0xFF && header[1] === 0xD8;
       const isPng = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47;
-      // WebP: RIFF header (bytes 0-3) + "WEBP" marker (bytes 8-11) to distinguish from other RIFF formats (WAV, AVI)
+      // WebP: RIFF header (bytes 0-3) + "WEBP" marker (bytes 8-11) to distinguish from other RIFF options (WAV, AVI)
       const isWebp = header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46
         && buffer.length >= 12 && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
       if (!isJpeg && !isPng && !isWebp) {

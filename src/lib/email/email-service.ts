@@ -525,7 +525,7 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
       },
       signal: controller.signal,
       body: JSON.stringify({
-        from: `${sanitizeName(options.from?.name || 'BioCycle Peptides')} <${options.from?.email}>`,
+        from: `${sanitizeName(options.from?.name || EMAIL_SENDER_NAME)} <${options.from?.email}>`,
         to: Array.isArray(options.to)
           ? options.to.map(r => r.email)
           : [options.to.email],

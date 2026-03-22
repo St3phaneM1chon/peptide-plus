@@ -1,5 +1,6 @@
 model Account {
   id                String  @id @default(cuid())
+  tenantId          String?
   userId            String
   type              String
   provider          String
@@ -17,10 +18,12 @@ model Account {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model NotificationPreference {
   id             String   @id @default(cuid())
+  tenantId       String?
   userId         String   @unique
   orderUpdates   Boolean  @default(true)
   promotions     Boolean  @default(true)
@@ -38,11 +41,13 @@ model NotificationPreference {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 /// Mobile device tokens for APNs push notifications
 model UserDevice {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String
   token     String   @unique // APNs device token or VoIP token
   platform  String   @default("ios") // ios, ios-voip, android
@@ -57,10 +62,12 @@ model UserDevice {
   @@index([token])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PasswordHistory {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String
   password  String
   createdAt DateTime @default(now())
@@ -68,10 +75,12 @@ model PasswordHistory {
 
   @@index([createdAt])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model SavedCard {
   id                    String   @id @default(cuid())
+  tenantId              String?
   userId                String
   stripePaymentMethodId String   @unique
   brand                 String
@@ -84,10 +93,12 @@ model SavedCard {
 
   @@index([userId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Session {
   id           String   @id @default(cuid())
+  tenantId     String?
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -95,10 +106,12 @@ model Session {
 
   @@index([userId])
   @@index([expires])
+  @@index([tenantId])
 }
 
 model User {
   id                     String                  @id @default(cuid())
+  tenantId               String?
   email                  String                  @unique
   emailVerified          DateTime?
   name                   String?
@@ -292,10 +305,12 @@ model User {
   @@index([loyaltyTier, createdAt])
   @@index([resetToken])
   @@index([isBanned])
+  @@index([tenantId])
 }
 
 model Authenticator {
   credentialID         String    @unique
+  tenantId             String?
   userId               String
   providerAccountId    String    @default("")
   credentialPublicKey  String
@@ -314,10 +329,12 @@ model Authenticator {
   @@index([providerAccountId])
   @@index([createdAt])
   @@index([lastUsedAt])
+  @@index([tenantId])
 }
 
 model UserAddress {
   id            String   @id @default(cuid())
+  tenantId      String?
   userId        String
   label         String?
   recipientName String
@@ -336,10 +353,12 @@ model UserAddress {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model UserPermissionGroup {
   id         String          @id @default(cuid())
+  tenantId   String?
   userId     String
   groupId    String
   assignedBy String?
@@ -349,10 +368,12 @@ model UserPermissionGroup {
   @@unique([userId, groupId])
   @@index([groupId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model UserPermissionOverride {
   id             String    @id @default(cuid())
+  tenantId       String?
   userId         String?
   permissionCode String
   granted        Boolean
@@ -371,6 +392,7 @@ model UserPermissionOverride {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model VerificationToken {
@@ -381,4 +403,3 @@ model VerificationToken {
   @@unique([identifier, token])
   @@index([expires])
 }
-

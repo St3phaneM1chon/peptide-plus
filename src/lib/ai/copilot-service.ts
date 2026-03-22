@@ -13,6 +13,8 @@
 import { prisma } from '@/lib/db';
 import { maskEmail } from '@/lib/sanitize';
 
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+
 // ---------------------------------------------------------------------------
 // Unified AI completion layer (Claude preferred, OpenAI fallback)
 // ---------------------------------------------------------------------------
@@ -131,7 +133,7 @@ export interface CopilotResponse {
 // System prompts
 // ---------------------------------------------------------------------------
 
-const SYSTEM_BASE = `You are the AI Copilot for BioCycle Peptides admin dashboard.
+const SYSTEM_BASE = `You are the AI Copilot for ${SITE_NAME} admin dashboard.
 You help admin users be more productive by providing insights, summaries, and suggestions.
 
 RULES:
@@ -262,7 +264,7 @@ export async function getDashboardInsights(locale: string): Promise<CopilotRespo
     prisma.order.count({ where: { createdAt: { gte: prevWeekStart, lt: lastWeekStart } } }),
     prisma.order.aggregate({ where: { createdAt: { gte: thisMonthStart }, paymentStatus: 'PAID' }, _sum: { total: true } }),
     prisma.order.aggregate({ where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart }, paymentStatus: 'PAID' }, _sum: { total: true } }),
-    prisma.productFormat.count({ where: { stockQuantity: { lte: 5 }, product: { isActive: true } } }),
+    prisma.productOption.count({ where: { stockQuantity: { lte: 5 }, product: { isActive: true } } }),
     prisma.order.count({ where: { status: 'PENDING' } }),
     prisma.user.count({ where: { createdAt: { gte: lastWeekStart }, role: 'CUSTOMER' } }),
     prisma.user.count({ where: { createdAt: { gte: prevWeekStart, lt: lastWeekStart }, role: 'CUSTOMER' } }),
@@ -379,7 +381,7 @@ export async function draftEmail(
       role: 'system',
       content: `${SYSTEM_BASE}
 
-Draft a professional email for BioCycle Peptides. The sender is a BioCycle admin team member.
+Draft a professional email for ${SITE_NAME}. The sender is a ${SITE_NAME} admin team member.
 
 Include:
 - Subject line
@@ -506,7 +508,7 @@ export async function getSeoSuggestions(
       role: 'system',
       content: `${SYSTEM_BASE}
 
-You're an SEO expert for BioCycle Peptides, a Canadian research peptide supplier.
+You're an SEO expert for ${SITE_NAME}.
 Analyze the provided ${entityType} data and provide actionable SEO recommendations:
 
 1. **Meta Title** — Suggest an optimized title (50-60 chars, include primary keyword)
@@ -616,7 +618,7 @@ export async function getMorningBriefing(locale: string): Promise<CopilotRespons
   ] = await Promise.all([
     prisma.order.count({ where: { status: 'PENDING' } }),
     prisma.order.count({ where: { createdAt: { gte: yesterday, lt: today } } }),
-    prisma.productFormat.count({ where: { stockQuantity: { lte: 3 }, product: { isActive: true } } }),
+    prisma.productOption.count({ where: { stockQuantity: { lte: 3 }, product: { isActive: true } } }),
     prisma.crmDeal.count({
       where: { expectedCloseDate: { lt: today }, actualCloseDate: null },
     }),
@@ -776,7 +778,7 @@ export async function generateReport(
       role: 'system',
       content: `${SYSTEM_BASE}
 
-Generate a professional business report for BioCycle Peptides based on real data.
+Generate a professional business report for ${SITE_NAME} based on real data.
 
 The user will tell you what kind of report they want. Use the business data provided to write it.
 
@@ -817,8 +819,8 @@ export async function generateVariants(
     select: {
       id: true, name: true, description: true, productType: true, price: true,
       sku: true, manufacturer: true,
-      formats: {
-        select: { name: true, price: true, dosageMg: true, formatType: true, sku: true },
+      options: {
+        select: { name: true, price: true, dosageMg: true, optionType: true, sku: true },
         orderBy: { sortOrder: 'asc' },
       },
       category: { select: { name: true } },
@@ -836,9 +838,9 @@ export async function generateVariants(
     description: product.description?.slice(0, 300),
     basePrice: Number(product.price),
     manufacturer: product.manufacturer,
-    existingFormats: product.formats.map(f => ({
+    existingFormats: product.options.map(f => ({
       name: f.name,
-      type: f.formatType,
+      type: f.optionType,
       price: Number(f.price),
       dosageMg: f.dosageMg ? Number(f.dosageMg) : null,
     })),
@@ -863,7 +865,7 @@ For each suggested variant, provide:
 Consider:
 - Common dosage ranges for peptides (1mg, 2mg, 5mg, 10mg, 15mg, 30mg)
 - Market trends (nasal sprays, pre-mixed cartridges, starter kits)
-- Bundle opportunities with existing formats
+- Bundle opportunities with existing options
 - Price laddering strategy (entry → mid → premium)
 
 Suggest 3-5 variants that don't already exist. Be specific and practical.
@@ -949,7 +951,7 @@ export async function predictStock(locale: string): Promise<CopilotResponse> {
     select: {
       id: true,
       name: true,
-      formats: {
+      options: {
         where: { isActive: true },
         select: { id: true, name: true, stockQuantity: true, price: true },
       },
@@ -979,7 +981,7 @@ export async function predictStock(locale: string): Promise<CopilotResponse> {
 
   const stockAnalysis = productsWithStock
     .map(p => {
-      const totalStock = p.formats.reduce((sum, f) => sum + f.stockQuantity, 0);
+      const totalStock = p.options.reduce((sum, f) => sum + f.stockQuantity, 0);
       const sold30 = salesMap30.get(p.id) || 0;
       const soldPrev = salesMapPrev.get(p.id) || 0;
       const dailyVelocity = sold30 / 30;
@@ -994,7 +996,7 @@ export async function predictStock(locale: string): Promise<CopilotResponse> {
         dailyVelocity: Math.round(dailyVelocity * 10) / 10,
         daysRemaining,
         trend: Math.round(trend),
-        formats: p.formats.map(f => ({ name: f.name, stock: f.stockQuantity })),
+        options: p.options.map(f => ({ name: f.name, stock: f.stockQuantity })),
       };
     })
     .filter(p => p.sold30d > 0 || p.stock < 10)
@@ -1005,7 +1007,7 @@ export async function predictStock(locale: string): Promise<CopilotResponse> {
       role: 'system',
       content: `${SYSTEM_BASE}
 
-You are a supply chain analyst for BioCycle Peptides. Analyze stock data and predict reorder needs.
+You are a supply chain analyst for ${SITE_NAME}. Analyze stock data and predict reorder needs.
 
 For each product, provide:
 1. **Stock status** — critical (< 7 days), warning (7-21 days), healthy (21+ days)
@@ -1108,7 +1110,7 @@ export async function getChurnAlerts(locale: string): Promise<CopilotResponse> {
       role: 'system',
       content: `${SYSTEM_BASE}
 
-You are a customer retention analyst for BioCycle Peptides. Analyze churn risk data and provide actionable insights.
+You are a customer retention analyst for ${SITE_NAME}. Analyze churn risk data and provide actionable insights.
 
 Provide:
 1. **Summary** — total at-risk customers, high vs medium risk, potential revenue at stake
@@ -1229,7 +1231,7 @@ export async function nliSearch(
       role: 'system',
       content: `${SYSTEM_BASE}
 
-You are a natural language search interface for BioCycle Peptides admin.
+You are a natural language search interface for ${SITE_NAME} admin.
 
 The user asks a question in natural language. You have searched the database and found results.
 

@@ -23,7 +23,7 @@ interface ProductGallerySectionProps {
     reviewCount?: number;
     price: number;
     compareAtPrice?: number;
-    formats: Array<{ stockQuantity: number; inStock: boolean }>;
+    options: Array<{ stockQuantity: number; inStock: boolean }>;
   };
 }
 

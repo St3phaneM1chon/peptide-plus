@@ -54,14 +54,14 @@ export const GET = withAdminGuard(async (_request, { params }) => {
 
     // Get format info if format still exists
     let format = null;
-    if (subscription.formatId) {
+    if (subscription.optionId) {
       try {
-        format = await prisma.productFormat.findUnique({
-          where: { id: subscription.formatId },
-          select: { id: true, name: true, formatType: true, price: true },
+        format = await prisma.productOption.findUnique({
+          where: { id: subscription.optionId },
+          select: { id: true, name: true, optionType: true, price: true },
         });
       } catch (error) {
-        logger.error('[AdminSubscriptions] Failed to fetch format (may have been deleted)', { formatId: subscription.formatId, error: error instanceof Error ? error.message : String(error) });
+        logger.error('[AdminSubscriptions] Failed to fetch format (may have been deleted)', { optionId: subscription.optionId, error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -77,10 +77,10 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         productName: subscription.productName,
         productSlug: product?.slug || null,
         productImage: product?.imageUrl || null,
-        formatId: subscription.formatId,
-        formatName: subscription.formatName || '',
+        optionId: subscription.optionId,
+        optionName: subscription.optionName || '',
         formatDetails: format
-          ? { name: format.name, formatType: format.formatType, price: Number(format.price) }
+          ? { name: format.name, optionType: format.optionType, price: Number(format.price) }
           : null,
         quantity: subscription.quantity,
         frequency: subscription.frequency,

@@ -3,7 +3,7 @@
  * Generate IIF (Intuit Interchange Format) and CSV compatible files
  * for importing journal entries into external accounting software.
  *
- * Supported formats:
+ * Supported options:
  * - QuickBooks Desktop IIF (Intuit Interchange Format)
  * - Xero Manual Journal CSV
  * - Generic CSV (any accounting software)

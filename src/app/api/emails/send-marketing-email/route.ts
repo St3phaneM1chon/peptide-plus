@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
       case 'back-in-stock': {
         const productName = (data?.productName as string) || 'Produit';
         const productPrice = (data?.productPrice as number) || 0;
-        const productUrl = (data?.productUrl as string) || 'https://biocyclepeptides.com/shop';
+        const productUrl = (data?.productUrl as string) || `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/shop`;
 
         emailContent = backInStockEmail({
           customerName: user.name || 'Client',

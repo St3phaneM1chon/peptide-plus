@@ -74,9 +74,9 @@ export const GET = withApiAuth(async (_request: NextRequest, { params, apiKey })
         select: {
           id: true,
           productId: true,
-          formatId: true,
+          optionId: true,
           productName: true,
-          formatName: true,
+          optionName: true,
           sku: true,
           quantity: true,
           unitPrice: true,

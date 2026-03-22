@@ -67,7 +67,7 @@ let COLOR_LIGHT_GRAY: RGB;
 let COLOR_ORANGE: RGB;
 let COLOR_SEPARATOR: RGB;
 
-const COMPANY_NAME = 'BioCycle Peptides';
+const COMPANY_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 // ---------------------------------------------------------------------------
 // Helpers

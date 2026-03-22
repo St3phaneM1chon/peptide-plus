@@ -1,5 +1,6 @@
 model Media {
   id           String   @id @default(cuid())
+  tenantId     String?
   filename     String
   originalName String
   mimeType     String
@@ -23,10 +24,12 @@ model Media {
   @@index([createdAt])
   @@index([updatedAt])
   @@index([originalName]) // F-56: Search by filename
+  @@index([tenantId])
 }
 
 model Video {
   id           String             @id @default(cuid())
+  tenantId     String?
   title        String
   slug         String             @unique
   description  String?
@@ -83,10 +86,12 @@ model Video {
   @@index([createdById])
   @@index([featuredClientId])
   @@index([platformMeetingId])
+  @@index([tenantId])
 }
 
 model VideoTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   videoId      String
   locale       String
   title        String?
@@ -104,6 +109,7 @@ model VideoTranslation {
   @@index([videoId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -111,6 +117,7 @@ model VideoTranslation {
 // =============================================
 model DocumentAttachment {
   id           String   @id @default(cuid())
+  tenantId     String?
   // Entity reference (polymorphic)
   entityType   String // journal_entry, customer_invoice, supplier_invoice, expense, fixed_asset, etc.
   entityId     String
@@ -127,11 +134,13 @@ model DocumentAttachment {
 
   @@index([entityType, entityId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // Video categories managed by OWNER (CRUD)
 model VideoCategory {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   slug        String   @unique
   description String?
@@ -153,10 +162,12 @@ model VideoCategory {
   @@index([sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model VideoCategoryTranslation {
   id              String             @id @default(cuid())
+  tenantId        String?
   videoCategoryId String
   locale          String
   name            String?
@@ -175,11 +186,13 @@ model VideoCategoryTranslation {
   @@index([videoCategoryId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // Where a video is displayed on the site
 model VideoPlacement {
   id          String           @id @default(cuid())
+  tenantId    String?
   videoId     String
   placement   ContentPlacement
   sortOrder   Int              @default(0)
@@ -198,11 +211,13 @@ model VideoPlacement {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // M:N relation between Video and Product
 model VideoProductLink {
   id        String   @id @default(cuid())
+  tenantId  String?
   videoId   String
   productId String
   sortOrder Int      @default(0)
@@ -217,24 +232,28 @@ model VideoProductLink {
   @@index([productId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // Normalized video tags
 model VideoTag {
-  id      String @id @default(cuid())
-  videoId String
-  tag     String
+  id       String @id @default(cuid())
+  tenantId String?
+  videoId  String
+  tag      String
 
   video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@unique([videoId, tag])
   @@index([videoId])
   @@index([tag])
+  @@index([tenantId])
 }
 
 // Tracks ALL content consents for the site (only required when publishing video publicly)
 model SiteConsent {
   id       String               @id @default(cuid())
+  tenantId String?
   clientId String
   type     ContentConsentType   @default(VIDEO_APPEARANCE)
   status   ContentConsentStatus @default(PENDING)
@@ -283,11 +302,13 @@ model SiteConsent {
   @@index([revokedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // Configurable consent form templates
 model ConsentFormTemplate {
   id          String              @id @default(cuid())
+  tenantId    String?
   name        String
   slug        String              @unique
   description String?
@@ -306,10 +327,12 @@ model ConsentFormTemplate {
   @@index([type])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ConsentFormTranslation {
   id               String             @id @default(cuid())
+  tenantId         String?
   formTemplateId   String
   locale           String
   name             String?
@@ -330,6 +353,7 @@ model ConsentFormTranslation {
   @@index([formTemplateId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // ==========================================
@@ -337,6 +361,7 @@ model ConsentFormTranslation {
 // ==========================================
 model PlatformConnection {
   id             String   @id @default(cuid())
+  tenantId       String?
   platform       String   @unique // "zoom", "teams", "google-meet", "webex", "youtube"
 
   // OAuth tokens (encrypted at rest via lib/platform/crypto.ts)
@@ -382,10 +407,12 @@ model PlatformConnection {
   @@index([externalUserId])
   @@index([webhookId])
   @@index([syncStatus])
+  @@index([tenantId])
 }
 
 model RecordingImport {
   id           String @id @default(cuid())
+  tenantId     String?
   connectionId String
 
   // Source info
@@ -425,6 +452,7 @@ model RecordingImport {
   @@index([externalId])
   @@index([meetingId])
   @@index([videoId])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -432,6 +460,7 @@ model RecordingImport {
 // ---------------------------------------------------------------------------
 model VideoSession {
   id          String              @id @default(cuid())
+  tenantId    String?
   platform    String              // zoom, teams, google-meet, webex
   topic       String
   contentType VideoContentType    @default(OTHER)
@@ -471,6 +500,7 @@ model VideoSession {
   @@index([createdById])
   @@index([scheduledAt])
   @@index([meetingId])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -478,6 +508,7 @@ model VideoSession {
 // ---------------------------------------------------------------------------
 model ContentInteraction {
   id          String   @id @default(cuid())
+  tenantId    String?
   contentId   String   // FK to Video.id, Media.id, or SocialPost.id
   contentType String   // "video", "social_post", "media"
   action      String   // "view", "click", "share", "conversion"
@@ -495,11 +526,13 @@ model ContentInteraction {
   @@index([contentId, action, createdAt])
   @@index([sessionId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // --- VideoRoom: Multi-participant video conference rooms (LiveKit) ---
 model VideoRoom {
   id              String          @id @default(cuid())
+  tenantId        String?
   name            String          @unique
   displayName     String
   createdById     String
@@ -517,5 +550,5 @@ model VideoRoom {
 
   @@index([status])
   @@index([createdById])
+  @@index([tenantId])
 }
-

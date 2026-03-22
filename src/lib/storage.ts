@@ -255,7 +255,7 @@ export class StorageService {
     url: string
   ): Promise<void> {
     // FIX (F18): Parse URL properly instead of fragile split('/')
-    // Handles query parameters and unexpected URL formats
+    // Handles query parameters and unexpected URL options
     let blobName: string;
     try {
       const parsed = new URL(url);

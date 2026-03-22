@@ -19,7 +19,7 @@ import CountdownTimer from '@/components/ui/CountdownTimer';
 
 // BUG-063: Extracted sub-components
 import ProductGallerySection from './ProductGallerySection';
-import ProductFormatSelector from './ProductFormatSelector';
+import ProductOptionSelector from './ProductOptionSelector';
 import ProductQuantitySelector from './ProductQuantitySelector';
 import ProductActions from './ProductActions';
 import ProductTabs from './ProductTabs';
@@ -29,7 +29,7 @@ const ProductQA = dynamic(() => import('@/components/shop/ProductQA'), { ssr: fa
 const RecentlyViewed = dynamic(() => import('@/components/shop/RecentlyViewed'), { ssr: false });
 const VideoPlacementWidget = dynamic(() => import('@/components/content/VideoPlacementWidget'), { ssr: false });
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
   name: string;
   nameKey?: string;
@@ -99,7 +99,7 @@ interface Product {
   productImage?: string;
   videoUrl?: string;
   images?: ProductImage[];
-  formats: ProductFormat[];
+  options: ProductOption[];
   relatedProducts: RelatedProduct[];
   quantityDiscounts?: QuantityDiscount[];
   createdAt?: Date | string;
@@ -125,11 +125,11 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     addViewed(product.slug);
   }, [product.slug, addViewed]);
 
-  // FIX: BUG-089 - Show ALL formats (including out-of-stock) but mark out-of-stock as disabled/grayed
-  const availableFormats = product.formats;
+  // FIX: BUG-089 - Show ALL options (including out-of-stock) but mark out-of-stock as disabled/grayed
+  const availableOptions = product.options;
 
-  // Fallback format when product has no formats (e.g. single-price products)
-  const fallbackFormat: ProductFormat = {
+  // Fallback format when product has no options (e.g. single-price products)
+  const fallbackFormat: ProductOption = {
     id: 'default',
     name: product.name,
     type: 'vial_2ml',
@@ -140,8 +140,8 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     stockQuantity: 0,
   };
 
-  const [selectedFormat, setSelectedFormat] = useState<ProductFormat>(
-    availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0] || fallbackFormat
+  const [selectedFormat, setSelectedFormat] = useState<ProductOption>(
+    availableOptions.find(f => f.inStock) || availableOptions[0] || product.options[0] || fallbackFormat
   );
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -161,9 +161,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   const categoryName = product.categoryKey ? t(`categories.${product.categoryKey}`) : product.categoryName;
 
   // Get translated format name
-  const getFormatName = (format: ProductFormat) => {
+  const getOptionName = (format: ProductOption) => {
     if (format.nameKey) {
-      return t(`formats.${format.nameKey}`);
+      return t(`options.${format.nameKey}`);
     }
     return format.name;
   };
@@ -203,7 +203,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     [selectedFormat.price, quantity, quantityDiscountsKey]
   );
 
-  const handleFormatSelect = (format: ProductFormat) => {
+  const handleFormatSelect = (format: ProductOption) => {
     setSelectedFormat(format);
     setQuantity(1);
     setIsDropdownOpen(false);
@@ -216,14 +216,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   const handleAddToCart = () => {
     if (!selectedFormat.inStock) return;
 
-    const formatName = getFormatName(selectedFormat);
-    const fullProductName = `${productName} ${formatName}`;
+    const optionName = getOptionName(selectedFormat);
+    const fullProductName = `${productName} ${optionName}`;
 
     addItemWithUpsell({
       productId: product.id,
-      formatId: selectedFormat.id,
+      optionId: selectedFormat.id,
       name: fullProductName,
-      formatName: formatName,
+      optionName: optionName,
       price: effectivePrice, // Use the discounted price
       comparePrice: effectivePrice < selectedFormat.price ? selectedFormat.price : selectedFormat.comparePrice,
       sku: selectedFormat.sku,
@@ -244,7 +244,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
         productName={productName}
         price={effectivePrice}
         formattedPrice={formatPrice(effectivePrice)}
-        selectedFormat={getFormatName(selectedFormat)}
+        selectedFormat={getOptionName(selectedFormat)}
         onAddToCart={handleAddToCart}
         isOutOfStock={!selectedFormat.inStock}
         addedToCart={addedToCart}
@@ -279,7 +279,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               reviewCount: product.reviewCount,
               price: selectedFormat.price,
               compareAtPrice: selectedFormat.comparePrice,
-              formats: availableFormats,
+              options: availableOptions,
             }}
           />
 
@@ -292,7 +292,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
             {/* Title - adapts with selected format */}
             <h1 className="text-2xl lg:text-3xl font-bold text-black mb-2">
-              {productName} {getFormatName(selectedFormat)}
+              {productName} {getOptionName(selectedFormat)}
             </h1>
 
             {/* Subtitle */}
@@ -358,14 +358,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
             </p>
 
             {/* Format Selector */}
-            <ProductFormatSelector
+            <ProductOptionSelector
               productName={productName}
               selectedFormat={selectedFormat}
-              availableFormats={availableFormats}
+              availableOptions={availableOptions}
               isDropdownOpen={isDropdownOpen}
               setIsDropdownOpen={setIsDropdownOpen}
               onFormatSelect={handleFormatSelect}
-              getFormatName={getFormatName}
+              getOptionName={getOptionName}
             />
 
             {/* Quantity Discounts / Bulk Pricing */}
@@ -397,7 +397,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 selectedFormatPrice={selectedFormat.price}
                 selectedFormatInStock={selectedFormat.inStock}
                 selectedFormatStockQuantity={selectedFormat.stockQuantity}
-                selectedFormatName={getFormatName(selectedFormat)}
+                selectedFormatName={getOptionName(selectedFormat)}
                 effectivePrice={effectivePrice}
                 quantity={quantity}
                 addedToCart={addedToCart}

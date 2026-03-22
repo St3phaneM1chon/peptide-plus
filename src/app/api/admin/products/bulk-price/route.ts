@@ -60,8 +60,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       return NextResponse.json({ updated: 0, message: 'No products found matching filter' });
     }
 
-    // Get all active formats for preview
-    const formats = await prisma.productFormat.findMany({
+    // Get all active options for preview
+    const options = await prisma.productOption.findMany({
       where: { productId: { in: productIds }, isActive: true },
       select: { id: true, name: true, price: true, productId: true },
     });
@@ -73,7 +73,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         name: p.name,
         currentPrice: Number(p.price),
         newPrice: Math.round(Number(p.price) * multiplier * 100) / 100,
-        formats: formats
+        options: options
           .filter(f => f.productId === p.id)
           .map(f => ({
             id: f.id,
@@ -88,15 +88,15 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         direction,
         percentage,
         productsAffected: products.length,
-        formatsAffected: formats.length,
+        optionsAffected: options.length,
         preview,
       });
     }
 
     // Use a transaction to ensure format + product price updates are atomic
     const result = await prisma.$transaction(async (tx) => {
-      // Update all active formats for these products
-      const formatResult = await tx.productFormat.updateMany({
+      // Update all active options for these products
+      const formatResult = await tx.productOption.updateMany({
         where: {
           productId: { in: productIds },
           isActive: true,
@@ -130,7 +130,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       multiplier,
       categoryFilter: categoryFilter || 'all',
       productsAffected: productIds.length,
-      formatsUpdated: result.count,
+      optionsUpdated: result.count,
       sampleChanges: products.slice(0, 5).map(p => ({
         id: p.id,
         name: p.name,
@@ -154,12 +154,12 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       percentage,
       categoryFilter: categoryFilter || 'all',
       productsAffected: productIds.length,
-      formatsUpdated: result.count,
+      optionsUpdated: result.count,
     });
 
     return NextResponse.json({
       updated: productIds.length,
-      formatsUpdated: result.count,
+      optionsUpdated: result.count,
       direction,
       percentage,
     });

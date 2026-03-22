@@ -7,9 +7,9 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface CartItemParams {
   productId: string;
-  formatId?: string;
+  optionId?: string;
   name: string;
-  formatName?: string;
+  optionName?: string;
   price: number;
   comparePrice?: number;
   quantity?: number;

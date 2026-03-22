@@ -18,7 +18,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const paypalCreateSchema = z.object({
   productId: z.string().min(1, 'Product ID requis'),
-  formatId: z.string().optional(), // COMMERCE-023: Accept formatId for stock validation
+  optionId: z.string().optional(), // COMMERCE-023: Accept optionId for stock validation
   companyId: z.string().optional(),
   province: z.string().max(2).optional(),
 });
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
-    const { productId, formatId, companyId, province: reqProvince } = parsed.data;
+    const { productId, optionId, companyId, province: reqProvince } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({
@@ -83,9 +83,9 @@ export async function POST(request: NextRequest) {
 
     // COMMERCE-023 FIX: Validate stock at format level before creating PayPal order
     let unitPrice = Number(product.price);
-    if (formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await prisma.productOption.findUnique({
+        where: { id: optionId },
         select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
       });
       if (!format) {

@@ -29,7 +29,7 @@ async function getNotificationCounts() {
     prisma.chatConversation.count({
       where: { status: { in: ['ACTIVE', 'WAITING_ADMIN'] } },
     }).catch(() => 0),
-    prisma.productFormat.count({
+    prisma.productOption.count({
       where: {
         isActive: true,
         stockQuantity: { lte: 5 },

@@ -1,9 +1,10 @@
-import { logger } from '@/lib/logger';
-
 /**
  * Fetch wrapper with automatic retry for transient server errors.
  * Only retries on 5xx errors and network failures.
  * Does NOT retry on 4xx (client errors).
+ *
+ * NOTE: This module is imported by Client Components ('use client'),
+ * so it MUST NOT import server-only modules like winston/logger.
  */
 export async function fetchWithRetry(
   url: string,
@@ -25,7 +26,7 @@ export async function fetchWithRetry(
       }
       return res; // Return the error response on last attempt
     } catch (err) {
-      logger.error('[FetchWithRetry] Fetch attempt failed', { url, error: err instanceof Error ? err.message : String(err) });
+      console.error('[FetchWithRetry] Fetch attempt failed', { url, error: err instanceof Error ? err.message : String(err) });
       lastError = err instanceof Error ? err : new Error(String(err));
       if (attempt < retries) {
         await new Promise(r => setTimeout(r, baseDelay * (attempt + 1)));

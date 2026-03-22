@@ -8,7 +8,7 @@ import ProductEditClient from './ProductEditClient';
 
 export const metadata = {
   title: 'Modifier le produit | Admin',
-  description: 'Modifier les informations et formats du produit.',
+  description: 'Modifier les informations et options du produit.',
 };
 
 export default async function AdminProductEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +30,7 @@ export default async function AdminProductEditPage({ params }: { params: Promise
       images: {
         orderBy: { sortOrder: 'asc' },
       },
-      formats: {
+      options: {
         orderBy: { sortOrder: 'asc' },
       },
     },

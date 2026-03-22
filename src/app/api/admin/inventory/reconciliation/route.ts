@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 /**
  * Admin Inventory Reconciliation API
  * GET  - Compare calculated stock (sum of InventoryTransaction quantities)
- *        vs recorded stock (ProductFormat.stockQuantity / Product.stockQuantity)
+ *        vs recorded stock (ProductOption.stockQuantity / Product.stockQuantity)
  * POST - Apply a reconciliation adjustment to align stock
  */
 
@@ -14,6 +14,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logStockChange } from '@/lib/inventory';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 // ---------------------------------------------------------------------------
 // GET - Reconciliation report
@@ -21,56 +22,52 @@ import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (_request: NextRequest) => {
   try {
-    // ── 1-4. Single query: formats with calculated stock via LEFT JOIN ──
+    // ── 1-4. Single query: options with calculated stock via LEFT JOIN ──
     // Combines format fetch + inventory transaction sum into one round-trip
-    const formatReconciliation = await prisma.$queryRaw<
-      Array<{
-        productId: string;
-        productName: string;
-        formatId: string;
-        formatName: string;
-        recordedStock: number;
-        calculatedStock: number;
-      }>
-    >`
-      SELECT
+    const formatReconciliation = await tenantQueryRaw<{
+      productId: string;
+      productName: string;
+      optionId: string;
+      optionName: string;
+      recordedStock: number;
+      calculatedStock: number;
+    }>(
+      `SELECT
         pf."productId",
         p.name AS "productName",
-        pf.id AS "formatId",
-        pf.name AS "formatName",
+        pf.id AS "optionId",
+        pf.name AS "optionName",
         pf."stockQuantity"::int AS "recordedStock",
         COALESCE(SUM(it.quantity), 0)::int AS "calculatedStock"
-      FROM "ProductFormat" pf
+      FROM "ProductOption" pf
       JOIN "Product" p ON pf."productId" = p.id
       LEFT JOIN "InventoryTransaction" it
-        ON pf."productId" = it."productId" AND pf.id = it."formatId"
+        ON pf."productId" = it."productId" AND pf.id = it."optionId"
       WHERE pf."isActive" = true AND pf."trackInventory" = true
       GROUP BY pf.id, pf."productId", p.name, pf.name, pf."stockQuantity"
       ORDER BY p.name ASC
-      LIMIT 10000
-    `;
+      LIMIT 10000`
+    );
 
     // ── Base products (no format) with calculated stock via LEFT JOIN ──
-    const baseReconciliation = await prisma.$queryRaw<
-      Array<{
-        productId: string;
-        productName: string;
-        recordedStock: number;
-        calculatedStock: number;
-      }>
-    >`
-      SELECT
+    const baseReconciliation = await tenantQueryRaw<{
+      productId: string;
+      productName: string;
+      recordedStock: number;
+      calculatedStock: number;
+    }>(
+      `SELECT
         p.id AS "productId",
         p.name AS "productName",
         p."stockQuantity"::int AS "recordedStock",
         COALESCE(SUM(it.quantity), 0)::int AS "calculatedStock"
       FROM "Product" p
       LEFT JOIN "InventoryTransaction" it
-        ON p.id = it."productId" AND it."formatId" IS NULL
+        ON p.id = it."productId" AND it."optionId" IS NULL
       WHERE p."isActive" = true AND p."trackInventory" = true
       GROUP BY p.id, p.name, p."stockQuantity"
-      LIMIT 10000
-    `;
+      LIMIT 10000`
+    );
 
     // ── Get last reconciliation date (latest ADJUSTMENT transaction) ─
     const lastAdjustment = await prisma.inventoryTransaction.findFirst({
@@ -92,8 +89,8 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
       return {
         productId: row.productId,
         productName: row.productName,
-        formatId: row.formatId,
-        formatName: row.formatName,
+        optionId: row.optionId,
+        optionName: row.optionName,
         recordedStock: row.recordedStock,
         calculatedStock: row.calculatedStock,
         discrepancy,
@@ -112,8 +109,8 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
         items.push({
           productId: row.productId,
           productName: row.productName,
-          formatId: '',
-          formatName: '(base product)',
+          optionId: '',
+          optionName: '(base product)',
           recordedStock: row.recordedStock,
           calculatedStock: row.calculatedStock,
           discrepancy,
@@ -148,7 +145,7 @@ export const GET = withAdminGuard(async (_request: NextRequest) => {
 
 const reconcileSchema = z.object({
   productId: z.string().min(1, 'productId is required'),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   adjustedStock: z.number().int().min(0, 'adjustedStock must be >= 0'),
   reason: z.string().min(1, 'reason is required'),
 });
@@ -165,13 +162,13 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       );
     }
 
-    const { productId, formatId, adjustedStock, reason } = parsed.data;
-    const effectiveFormatId = formatId || null;
+    const { productId, optionId, adjustedStock, reason } = parsed.data;
+    const effectiveFormatId = optionId || null;
 
     // ── 1. Get current recorded stock ──────────────────────────────────
     let currentStock = 0;
     if (effectiveFormatId) {
-      const format = await prisma.productFormat.findUnique({
+      const format = await prisma.productOption.findUnique({
         where: { id: effectiveFormatId },
         select: { stockQuantity: true },
       });
@@ -209,7 +206,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
 
     // ── 3. Get current WAC for the inventory transaction ───────────────
     const lastTransaction = await prisma.inventoryTransaction.findFirst({
-      where: { productId, formatId: effectiveFormatId },
+      where: { productId, optionId: effectiveFormatId },
       orderBy: { createdAt: 'desc' },
       select: { runningWAC: true },
     });
@@ -219,7 +216,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
     await prisma.$transaction(async (tx) => {
       // Update stock directly to the adjusted value
       if (effectiveFormatId) {
-        await tx.productFormat.update({
+        await tx.productOption.update({
           where: { id: effectiveFormatId },
           data: { stockQuantity: adjustedStock },
         });
@@ -234,7 +231,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       await tx.inventoryTransaction.create({
         data: {
           productId,
-          formatId: effectiveFormatId,
+          optionId: effectiveFormatId,
           type: 'ADJUSTMENT',
           quantity: delta,
           unitCost: wac,
@@ -248,7 +245,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
     // ── 5. Audit log (fire-and-forget) ─────────────────────────────────
     logStockChange({
       productId,
-      formatId: effectiveFormatId,
+      optionId: effectiveFormatId,
       changeType: 'RECONCILIATION',
       oldQuantity: currentStock,
       newQuantity: adjustedStock,
@@ -262,14 +259,14 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       action: 'RECONCILE_STOCK',
       targetType: 'Inventory',
       targetId: effectiveFormatId || productId,
-      newValue: { productId, formatId: effectiveFormatId, oldStock: currentStock, adjustedStock, delta, reason },
+      newValue: { productId, optionId: effectiveFormatId, oldStock: currentStock, adjustedStock, delta, reason },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch((err) => { logger.error('[admin/inventory/reconciliation] Non-blocking operation failed:', err); });
 
     logger.info('Inventory reconciliation applied', {
       productId,
-      formatId: effectiveFormatId,
+      optionId: effectiveFormatId,
       oldStock: currentStock,
       adjustedStock,
       delta,

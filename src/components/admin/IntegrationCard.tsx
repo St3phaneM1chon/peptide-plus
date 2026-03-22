@@ -146,7 +146,7 @@ export function IntegrationCard({
               />
               {/* F94 FIX: Show pattern validation error inline */}
               {patternError && (
-                <p className="mt-1 text-xs text-red-500">{field.patternMessage || t('admin.integrations.invalidFormat') || 'Invalid format'}</p>
+                <p className="mt-1 text-xs text-red-500">{field.patternMessage || t('admin.integrations.invalidOption') || 'Invalid format'}</p>
               )}
               {field.hint && !patternError && <p className="mt-1 text-xs text-slate-400">{field.hint}</p>}
             </div>

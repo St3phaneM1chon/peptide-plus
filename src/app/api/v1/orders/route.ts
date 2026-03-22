@@ -89,7 +89,7 @@ export const GET = withApiAuth(async (request: NextRequest, { apiKey }) => {
             id: true,
             productId: true,
             productName: true,
-            formatName: true,
+            optionName: true,
             sku: true,
             quantity: true,
             unitPrice: true,
@@ -135,7 +135,7 @@ const createOrderSchema = z.object({
   customerNotes: z.string().max(2000).optional(),
   items: z.array(z.object({
     productId: z.string().min(1),
-    formatId: z.string().optional(),
+    optionId: z.string().optional(),
     quantity: z.number().int().positive(),
   })).min(1, 'Order must contain at least one item'),
 });
@@ -169,7 +169,7 @@ export const POST = withApiAuth(async (request: NextRequest) => {
       price: true,
       sku: true,
       isActive: true,
-      formats: {
+      options: {
         select: {
           id: true,
           name: true,
@@ -186,9 +186,9 @@ export const POST = withApiAuth(async (request: NextRequest) => {
   let subtotal = 0;
   const orderItems: Array<{
     productId: string;
-    formatId: string | null;
+    optionId: string | null;
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
     sku: string | null;
     quantity: number;
     unitPrice: number;
@@ -204,19 +204,19 @@ export const POST = withApiAuth(async (request: NextRequest) => {
     }
 
     let unitPrice = Number(product.price);
-    let formatName: string | null = null;
+    let optionName: string | null = null;
     let sku = product.sku;
 
-    if (item.formatId && product.formats.length > 0) {
-      const format = product.formats.find((f) => f.id === item.formatId);
+    if (item.optionId && product.options.length > 0) {
+      const format = product.options.find((f) => f.id === item.optionId);
       if (!format) {
-        return jsonError(`Format ${item.formatId} not found for product ${item.productId}`, 400);
+        return jsonError(`Format ${item.optionId} not found for product ${item.productId}`, 400);
       }
       if (!format.inStock) {
-        return jsonError(`Format ${item.formatId} is out of stock`, 400);
+        return jsonError(`Format ${item.optionId} is out of stock`, 400);
       }
       unitPrice = Number(format.price);
-      formatName = format.name;
+      optionName = format.name;
       sku = format.sku || sku;
     }
 
@@ -225,9 +225,9 @@ export const POST = withApiAuth(async (request: NextRequest) => {
 
     orderItems.push({
       productId: item.productId,
-      formatId: item.formatId || null,
+      optionId: item.optionId || null,
       productName: product.name,
-      formatName,
+      optionName,
       sku: sku || null,
       quantity: item.quantity,
       unitPrice,
@@ -308,7 +308,7 @@ export const POST = withApiAuth(async (request: NextRequest) => {
           select: {
             id: true,
             productName: true,
-            formatName: true,
+            optionName: true,
             quantity: true,
             unitPrice: true,
             total: true,

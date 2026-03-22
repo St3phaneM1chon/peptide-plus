@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Guides de recherche | BioCycle Peptides',
     description: 'Guides complets sur la manipulation, le stockage et la reconstitution des peptides.',
-    url: 'https://biocyclepeptides.com/ressources/guides',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/ressources/guides`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

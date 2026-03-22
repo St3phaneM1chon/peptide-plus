@@ -263,19 +263,19 @@ async function verifyInventoryConsumed(orderId: string, testCaseId: string): Pro
 
   // Verify quantity matches
   for (const item of orderItems) {
-    const tx = transactions.find(t => t.formatId === item.formatId);
+    const tx = transactions.find(t => t.optionId === item.optionId);
     if (!tx) {
       await createError(testCaseId, 'INVENTORY_ERROR', 'ERROR',
-        `Pas de transaction inventaire pour le format ${item.formatId}`,
+        `Pas de transaction inventaire pour le format ${item.optionId}`,
         'Transaction SALE', 'ABSENT',
-        { orderId, formatId: item.formatId, productName: item.productName });
+        { orderId, optionId: item.optionId, productName: item.productName });
       return false;
     }
     if (Math.abs(tx.quantity) !== item.quantity) {
       await createError(testCaseId, 'INVENTORY_ERROR', 'ERROR',
         `Quantite inventaire incorrecte pour ${item.productName}`,
         String(item.quantity), String(Math.abs(tx.quantity)),
-        { orderId, formatId: item.formatId });
+        { orderId, optionId: item.optionId });
       return false;
     }
   }

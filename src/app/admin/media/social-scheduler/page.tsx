@@ -212,7 +212,7 @@ export default function SocialSchedulerPage() {
     const captions = [
       '🧬 Peptides de recherche de qualité supérieure, maintenant disponibles chez BioCycle Peptides! Certificat d\'analyse inclus avec chaque commande. #peptides #research #quality',
       '🔬 Vous cherchez des peptides de recherche fiables? Notre laboratoire garantit une pureté de 98%+ sur chaque lot. Découvrez notre catalogue! #biocycle #science',
-      '💎 Livraison gratuite sur les commandes de 150$+! Profitez de nos peptides certifiés avec analyse HPLC. biocyclepeptides.com #research #peptides',
+      '💎 Livraison gratuite sur les commandes de 150$+! Profitez de nos peptides certifiés avec analyse HPLC. attitudes.vip #research #peptides',
     ];
     setNewPost(prev => ({ ...prev, content: captions[Math.floor(Math.random() * captions.length)] }));
     toast.success(t('admin.media.socialScheduler.aiCaptionGenerated'));

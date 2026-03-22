@@ -57,7 +57,7 @@ export async function generatePlaceholderThumbnail(
         </text>
         <text x="50%" y="60%" font-family="Inter,Arial,sans-serif" font-size="24"
               fill="rgba(255,255,255,0.7)" text-anchor="middle">
-          BioCycle Peptides
+          ${process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}
         </text>
         <circle cx="${width / 2}" cy="${height / 2 + 80}" r="30" fill="rgba(255,255,255,0.3)" />
         <polygon points="${width / 2 - 10},${height / 2 + 65} ${width / 2 - 10},${height / 2 + 95} ${width / 2 + 18},${height / 2 + 80}"

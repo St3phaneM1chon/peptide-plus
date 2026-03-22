@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Send double opt-in confirmation email (CASL requirement)
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip');
     const confirmUrl = `${baseUrl}/api/mailing-list/confirm?token=${confirmToken}`;
 
     const unsubscribeUrl = `${baseUrl}/api/mailing-list/unsubscribe?token=${unsubscribeToken}`;
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;" />
           <p style="font-size:12px;color:#666;">
             <strong>Avis LCAP/CASL (Loi canadienne anti-pourriel) :</strong><br/>
-            Ce courriel vous est envoy\u00e9 suite \u00e0 votre demande d'inscription sur biocyclepeptides.com.
+            Ce courriel vous est envoy\u00e9 suite \u00e0 votre demande d'inscription sur attitudes.vip.
             Si vous n'avez pas fait cette demande, ignorez simplement ce message.
           </p>
           <p style="font-size:12px;color:#666;">

@@ -1,7 +1,7 @@
 /**
  * BI Connector Service (J14 - PowerBI / Tableau Connector)
  * Export API for BI tools (PowerBI, Tableau, Looker, etc.).
- * Provides dataset export in CSV/JSON/Parquet formats,
+ * Provides dataset export in CSV/JSON/Parquet options,
  * OData-compatible endpoints, scheduled exports, and data dictionary.
  */
 
@@ -327,7 +327,7 @@ export function generateODataEndpoint(dataset: string): ODataEndpoint {
     throw new Error(`Dataset "${dataset}" not found`);
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   const entitySet = dataset.charAt(0).toUpperCase() + dataset.slice(1);
 
   return {

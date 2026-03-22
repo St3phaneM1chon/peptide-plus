@@ -16,7 +16,7 @@ import * as telnyx from '@/lib/telnyx';
 
 const TELNYX_CONNECTION_ID = process.env.TELNYX_CONNECTION_ID || '';
 const DEFAULT_CALLER_ID = process.env.TELNYX_DEFAULT_CALLER_ID || '+14388030370';
-const WEBHOOK_BASE_URL = process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+const WEBHOOK_BASE_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 /**
  * POST - Initiate an outbound call via Telnyx Call Control.

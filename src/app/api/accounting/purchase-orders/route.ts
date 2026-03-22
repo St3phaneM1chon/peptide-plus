@@ -6,6 +6,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 // ---------------------------------------------------------------------------
 // Zod schemas
@@ -154,11 +155,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Generate PO number
     const year = new Date().getFullYear();
     const prefix = `PO-${year}-`;
-    const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-      SELECT MAX("poNumber") as max_num
-      FROM "PurchaseOrder"
-      WHERE "poNumber" LIKE ${prefix + '%'}
-    `;
+    const maxRows = await tenantQueryRaw<{ max_num: string | null }>(
+      `SELECT MAX("poNumber") as max_num FROM "PurchaseOrder" WHERE "poNumber" LIKE $1`,
+      prefix + '%'
+    );
+    const maxRow = maxRows[0];
     let nextNum = 1;
     if (maxRow?.max_num) {
       const num = parseInt(maxRow.max_num.split('-').pop() || '0');

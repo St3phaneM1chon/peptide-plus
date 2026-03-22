@@ -38,7 +38,7 @@ interface Subscription {
   userEmail: string;
   productId: string;
   productName: string;
-  formatName: string;
+  optionName: string;
   quantity: number;
   frequency: 'EVERY_2_MONTHS' | 'EVERY_4_MONTHS' | 'EVERY_6_MONTHS' | 'EVERY_12_MONTHS';
   price: number;
@@ -285,7 +285,7 @@ export default function AbonnementsPage() {
       avatar: { text: sub.userName || 'S' },
       title: sub.productName,
       subtitle: sub.userName,
-      preview: `${sub.formatName} x${sub.quantity} - ${frequencyLabels[sub.frequency]} - ${formatCurrency(sub.price * (1 - sub.discount / 100))}`,
+      preview: `${sub.optionName} x${sub.quantity} - ${frequencyLabels[sub.frequency]} - ${formatCurrency(sub.price * (1 - sub.discount / 100))}`,
       timestamp: sub.createdAt,
       badges: [
         { text: statusLabels[sub.status] || sub.status, variant: statusBadgeVariant(sub.status) },
@@ -383,7 +383,7 @@ export default function AbonnementsPage() {
       s.userName,
       s.userEmail,
       s.productName,
-      s.formatName,
+      s.optionName,
       String(s.quantity),
       frequencyLabels[s.frequency] || s.frequency,
       String(s.price),
@@ -584,7 +584,7 @@ export default function AbonnementsPage() {
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.format')}</p>
-                      <p className="font-medium text-slate-900">{selectedSub.formatName} x {selectedSub.quantity}</p>
+                      <p className="font-medium text-slate-900">{selectedSub.optionName} x {selectedSub.quantity}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.frequency')}</p>
@@ -715,7 +715,7 @@ export default function AbonnementsPage() {
           {selectedSub && (
             <div className="bg-slate-50 rounded-lg p-3 mb-2">
               <p className="font-medium text-slate-900">{selectedSub.productName}</p>
-              <p className="text-sm text-slate-500">{selectedSub.formatName}</p>
+              <p className="text-sm text-slate-500">{selectedSub.optionName}</p>
             </div>
           )}
           <FormField label={t('admin.subscriptions.modifyFrequency')}>

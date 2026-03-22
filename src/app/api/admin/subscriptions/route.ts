@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger';
 const createSubscriptionSchema = z.object({
   userId: z.string().min(1, 'userId is required'),
   productId: z.string().min(1, 'productId is required'),
-  formatId: z.string().nullish(),
+  optionId: z.string().nullish(),
   quantity: z.number().int().min(1).nullish(),
   frequency: z.string().min(1, 'frequency is required'),
   discountPercent: z.number().min(0).max(100).nullish(),
@@ -72,7 +72,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
           userId: true,
           productId: true,
           productName: true,
-          formatName: true,
+          optionName: true,
           quantity: true,
           frequency: true,
           unitPrice: true,
@@ -104,7 +104,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         userEmail: user?.email || '',
         productId: sub.productId,
         productName: sub.productName,
-        formatName: sub.formatName || '',
+        optionName: sub.optionName || '',
         quantity: sub.quantity,
         frequency: sub.frequency,
         price: Number(sub.unitPrice),
@@ -163,7 +163,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         { status: 400 }
       );
     }
-    const { userId, productId, formatId, quantity, frequency, discountPercent } = parsed.data;
+    const { userId, productId, optionId, quantity, frequency, discountPercent } = parsed.data;
 
     const freq = frequency.toUpperCase();
     if (!VALID_FREQUENCIES.includes(freq)) {
@@ -194,12 +194,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
     }
 
     // Fetch format info if provided
-    let formatName: string | null = null;
+    let optionName: string | null = null;
     let unitPrice = Number(product.price);
 
-    if (formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await prisma.productOption.findUnique({
+        where: { id: optionId },
         select: { id: true, name: true, price: true, isActive: true },
       });
 
@@ -207,7 +207,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         return NextResponse.json({ error: 'Format not found' }, { status: 404 });
       }
 
-      formatName = format.name;
+      optionName = format.name;
       unitPrice = Number(format.price);
     }
 
@@ -229,9 +229,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
       data: {
         userId,
         productId,
-        formatId: formatId || null,
+        optionId: optionId || null,
         productName: product.name,
-        formatName,
+        optionName,
         quantity: quantity && quantity >= 1 ? quantity : 1,
         frequency: freq,
         discountPercent: discount,
@@ -259,7 +259,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         userEmail: user.email || '',
         productId: subscription.productId,
         productName: subscription.productName,
-        formatName: subscription.formatName || '',
+        optionName: subscription.optionName || '',
         quantity: subscription.quantity,
         frequency: subscription.frequency,
         price: Number(subscription.unitPrice),

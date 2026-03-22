@@ -56,7 +56,7 @@ function getPrismaDelegate(modelName: string): any {
 
 export type TranslatableModel =
   | 'Product'
-  | 'ProductFormat'
+  | 'ProductOption'
   | 'Category'
   | 'Article'
   | 'BlogPost'
@@ -110,7 +110,7 @@ function translationCacheKey(model: string, entityId: string, locale: string): s
 function getContextForModel(model: TranslatableModel): TranslationContext {
   switch (model) {
     case 'Product':
-    case 'ProductFormat':
+    case 'ProductOption':
     case 'Category':
       return 'product';
     case 'Article':
@@ -128,7 +128,7 @@ function getContextForModel(model: TranslatableModel): TranslationContext {
 /** Fields that should be translated for each model type */
 export const TRANSLATABLE_FIELDS: Record<TranslatableModel, string[]> = {
   Product: ['name', 'subtitle', 'shortDescription', 'description', 'fullDetails', 'specifications', 'metaTitle', 'metaDescription', 'researchSays', 'relatedResearch', 'participateResearch'],
-  ProductFormat: ['name', 'description'],
+  ProductOption: ['name', 'description'],
   Category: ['name', 'description'],
   Article: ['title', 'excerpt', 'content', 'metaTitle', 'metaDescription'],
   BlogPost: ['title', 'excerpt', 'content', 'metaTitle', 'metaDescription'],
@@ -141,7 +141,7 @@ export const TRANSLATABLE_FIELDS: Record<TranslatableModel, string[]> = {
 /** Prisma model name to translation table mapping */
 const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Product: 'productTranslation',
-  ProductFormat: 'productFormatTranslation',
+  ProductOption: 'productOptionTranslation',
   Category: 'categoryTranslation',
   Article: 'articleTranslation',
   BlogPost: 'blogPostTranslation',
@@ -154,7 +154,7 @@ const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
 /** Foreign key field name in translation table */
 const FK_FIELD_MAP: Record<TranslatableModel, string> = {
   Product: 'productId',
-  ProductFormat: 'formatId',
+  ProductOption: 'optionId',
   Category: 'categoryId',
   Article: 'articleId',
   BlogPost: 'blogPostId',
@@ -260,7 +260,7 @@ export async function translateEntity(
   const context = getContextForModel(model);
 
   // 1. Fetch source entity
-  const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
+  const sourceModel = model === 'ProductOption' ? 'productOption' : model.charAt(0).toLowerCase() + model.slice(1);
   const prismaModel = getPrismaDelegate(sourceModel);
   const entity = await prismaModel.findUnique({
     where: { id: entityId },
@@ -604,7 +604,7 @@ export async function getModelTranslationCoverage(model: TranslatableModel): Pro
   untranslated: number;
   coveragePercent: number;
 }> {
-  const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
+  const sourceModel = model === 'ProductOption' ? 'productOption' : model.charAt(0).toLowerCase() + model.slice(1);
   const tableName = TRANSLATION_TABLE_MAP[model];
   const fkField = FK_FIELD_MAP[model];
   const targetLocaleCount = locales.length - 1; // Exclude default
@@ -659,7 +659,7 @@ export async function batchTranslateModel(
   } = {}
 ): Promise<{ translated: number; errors: number }> {
   const { batchSize = 10, concurrency = 2, force = false, onProgress } = options;
-  const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
+  const sourceModel = model === 'ProductOption' ? 'productOption' : model.charAt(0).toLowerCase() + model.slice(1);
 
   // Get all entity IDs
   const entities = await getPrismaDelegate(sourceModel).findMany({

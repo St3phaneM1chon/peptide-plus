@@ -31,7 +31,7 @@ interface FeaturedProduct {
     url: string;
     isPrimary: boolean;
   }>;
-  formats?: Array<{
+  options?: Array<{
     price: number;
   }>;
 }
@@ -269,7 +269,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                 <div className="grid grid-cols-1 gap-4">
                   {featuredProducts.map((product) => {
                     const primaryImage = product.images?.find(img => img.isPrimary);
-                    const lowestFormat = product.formats?.[0];
+                    const lowestFormat = product.options?.[0];
                     const displayPrice = lowestFormat ? lowestFormat.price : product.price;
 
                     return (

@@ -1,18 +1,18 @@
 /**
- * ProductFormat Zod Validation Schemas
+ * ProductOption Zod Validation Schemas
  *
  * Extracted from:
- *   - src/app/api/products/[id]/formats/route.ts (createFormatSchema)
+ *   - src/app/api/products/[id]/options/route.ts (createOptionSchema)
  */
 
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
-// Create product format (admin - standalone endpoint)
+// Create product option (admin - standalone endpoint)
 // ---------------------------------------------------------------------------
 
-export const createFormatSchema = z.object({
-  formatType: z.string().min(1),
+export const createOptionSchema = z.object({
+  optionType: z.string().min(1),
   name: z.string().min(1, 'Name is required').max(200),
   description: z.string().max(2000).optional(),
   imageUrl: z.string().url().optional().nullable(),
@@ -33,4 +33,4 @@ export const createFormatSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export type CreateFormatInput = z.infer<typeof createFormatSchema>;
+export type CreateOptionInput = z.infer<typeof createOptionSchema>;

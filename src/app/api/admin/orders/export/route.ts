@@ -107,7 +107,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
         items: {
           select: {
             productName: true,
-            formatName: true,
+            optionName: true,
             sku: true,
             quantity: true,
             unitPrice: true,
@@ -162,7 +162,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       const itemsSummary = order.items
         .map((item) => {
           const name = item.sku || item.productName;
-          const format = item.formatName ? ` (${item.formatName})` : '';
+          const format = item.optionName ? ` (${item.optionName})` : '';
           return `${name}${format} x ${item.quantity}`;
         })
         .join('; ');

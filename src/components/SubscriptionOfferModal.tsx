@@ -5,9 +5,9 @@ import { useI18n } from '@/i18n/client';
 
 interface SubscriptionOfferModalProps {
   productId: string;
-  formatId?: string | null;
+  optionId?: string | null;
   productName: string;
-  formatName?: string | null;
+  optionName?: string | null;
   currentPrice: number;
   onAccept: (frequency: string, discountPercent: number) => void;
   onDecline: () => void;
@@ -15,7 +15,7 @@ interface SubscriptionOfferModalProps {
 
 export default function SubscriptionOfferModal({
   productName,
-  formatName,
+  optionName,
   currentPrice,
   onAccept,
   onDecline,
@@ -94,7 +94,7 @@ export default function SubscriptionOfferModal({
           <h2 className="text-xl font-bold">{t('subscriptions.offerTitle')}</h2>
           <p className="text-sm text-white/80 mt-1">
             {productName}
-            {formatName ? ` — ${formatName}` : ''}
+            {optionName ? ` — ${optionName}` : ''}
           </p>
         </div>
 

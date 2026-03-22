@@ -17,7 +17,7 @@ import { addCSRFHeader } from '@/lib/csrf';
 interface OrderItem {
   id: string;
   productName: string;
-  formatName?: string;
+  optionName?: string;
   quantity: number;
   unitPrice: number;
   sku?: string;
@@ -148,10 +148,10 @@ export default function OrdersPage() {
       const { items, unavailable } = data as {
         items: Array<{
           productId: string;
-          formatId: string | null;
+          optionId: string | null;
           slug: string;
           name: string;
-          formatName: string | null;
+          optionName: string | null;
           quantity: number;
           price: number;
           image: string | null;
@@ -168,9 +168,9 @@ export default function OrdersPage() {
       for (const item of items) {
         addItem({
           productId: item.productId,
-          formatId: item.formatId || undefined,
+          optionId: item.optionId || undefined,
           name: item.name,
-          formatName: item.formatName || undefined,
+          optionName: item.optionName || undefined,
           price: item.price,
           quantity: item.quantity,
           image: item.image || undefined,
@@ -862,7 +862,7 @@ export default function OrdersPage() {
                           <div>
                             <p className="font-medium text-gray-900">
                               {item.productName}
-                              {item.formatName ? ` — ${item.formatName}` : ''}
+                              {item.optionName ? ` — ${item.optionName}` : ''}
                             </p>
                             <p className="text-sm text-gray-500">
                               {t('account.orders.qty')}: {item.quantity} × {fmtPrice(item.unitPrice)}
@@ -1462,7 +1462,7 @@ function InvoiceModal({
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">
                           {item.productName}
-                          {item.formatName ? ` — ${item.formatName}` : ''}
+                          {item.optionName ? ` — ${item.optionName}` : ''}
                         </p>
                         {item.sku && <p className="text-xs text-gray-500">SKU: {item.sku}</p>}
                       </td>

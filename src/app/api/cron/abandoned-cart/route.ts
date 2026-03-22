@@ -47,6 +47,7 @@ import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 import { multiply, add } from '@/lib/decimal-calculator';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const BATCH_SIZE = 10;
 const MIN_ABANDONMENT_MINUTES = 60; // 1 hour minimum
@@ -82,6 +83,8 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       const now = new Date();
 
     // Time window: updated between 1 hour ago and 48 hours ago
@@ -89,6 +92,7 @@ export async function GET(request: NextRequest) {
     const fortyEightHoursAgo = new Date(now.getTime() - MAX_ABANDONMENT_HOURS * 60 * 60 * 1000);
 
     // Find carts with items that were updated within the window and belong to logged-in users
+    // Prisma middleware auto-filters by tenant
     const abandonedCarts = await db.cart.findMany({
       where: {
         userId: { not: null },
@@ -110,6 +114,7 @@ export async function GET(request: NextRequest) {
     });
 
     logger.info('Abandoned cart cron: found potentially abandoned carts', {
+      tenantSlug: tenant.slug,
       count: abandonedCarts.length,
     });
 
@@ -204,18 +209,9 @@ export async function GET(request: NextRequest) {
     }
 
     logger.info('Abandoned cart cron: eligible carts after filtering', {
+      tenantSlug: tenant.slug,
       eligibleCount: eligibleCarts.length,
     });
-
-    const results: Array<{
-      cartId: string;
-      userId: string;
-      email: string;
-      itemCount: number;
-      success: boolean;
-      messageId?: string;
-      error?: string;
-    }> = [];
 
     // Collect all product IDs we need to look up
     const allProductIds = new Set<string>();
@@ -243,7 +239,7 @@ export async function GET(request: NextRequest) {
           // FLAW-064 FIX: Check bounce suppression before sending
           const { suppressed } = await shouldSuppressEmail(user.email);
           if (suppressed) {
-            return { userId: user.id, email: user.email, cartId: cart.id, itemCount: cart.items.length, success: false, error: 'bounce_suppressed' };
+            return;
           }
 
           // Build cart items for the email
@@ -295,22 +291,15 @@ export async function GET(request: NextRequest) {
           }));
 
           logger.info('Abandoned cart cron: email sent', {
+            tenantSlug: tenant.slug,
             email: user.email,
             itemCount: cart.items.length,
             cartTotal: cartTotal.toFixed(2),
             success: result.success,
           });
-
-          return {
-            cartId: cart.id,
-            userId: user.id,
-            email: user.email,
-            itemCount: cart.items.length,
-            success: result.success,
-            messageId: result.messageId,
-          };
         } catch (error) {
           logger.error('Abandoned cart cron: failed for user', {
+            tenantSlug: tenant.slug,
             email: user.email,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -327,33 +316,14 @@ export async function GET(request: NextRequest) {
             email: user.email,
             error: err instanceof Error ? err.message : String(err),
           }));
-
-          return {
-            cartId: cart.id,
-            userId: user.id,
-            email: user.email,
-            itemCount: cart.items.length,
-            success: false,
-            error: 'Failed to process abandoned cart email',
-          };
         }
       });
 
-      const batchResults = await Promise.allSettled(batchPromises);
-      for (const result of batchResults) {
-        if (result.status === 'fulfilled') {
-          results.push(result.value);
-        }
-      }
+      await Promise.allSettled(batchPromises);
     }
-
-    const successCount = results.filter((r) => r.success).length;
-    const failCount = results.filter((r) => !r.success).length;
-    const duration = Date.now() - startTime;
 
     // Item 79: SMS recovery for carts abandoned > SMS_DELAY_HOURS ago
     // Only send SMS to users who already received email but haven't converted
-    let smsSent = 0;
     if (ENABLE_SMS_RECOVERY) {
       const smsDelayAgo = new Date(now.getTime() - SMS_DELAY_HOURS * 60 * 60 * 1000);
 
@@ -414,8 +384,8 @@ export async function GET(request: NextRequest) {
             await sendSms({
               to: user.phone,
               body: isFr
-                ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur biocyclepeptides.com/checkout'
-                : 'BioCycle: Your cart is waiting! Complete your order at biocyclepeptides.com/checkout',
+                ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur attitudes.vip/checkout'
+                : 'BioCycle: Your cart is waiting! Complete your order at attitudes.vip/checkout',
             });
 
             await db.emailLog.create({
@@ -431,8 +401,6 @@ export async function GET(request: NextRequest) {
                 error: logErr instanceof Error ? logErr.message : String(logErr),
               });
             });
-
-            smsSent++;
           } catch (smsError) {
             logger.error('Abandoned cart SMS failed', {
               email: user.email,
@@ -441,29 +409,21 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-
-      logger.info('Abandoned cart cron: SMS recovery', { smsSent });
     }
+      });
+
+    const duration = Date.now() - startTime;
 
     logger.info('Abandoned cart cron: job complete', {
-      totalCarts: abandonedCarts.length,
-      eligible: eligibleCarts.length,
-      sent: successCount,
-      failed: failCount,
-      smsSent,
+      tenants: tenantResult,
       durationMs: duration,
     });
 
     return NextResponse.json({
       success: true,
-      date: now.toISOString(),
-      totalCarts: abandonedCarts.length,
-      eligible: eligibleCarts.length,
-      sent: successCount,
-      failed: failCount,
-      smsSent,
+      date: new Date().toISOString(),
+      tenants: tenantResult,
       durationMs: duration,
-      results,
     });
     } catch (error) {
       logger.error('Abandoned cart cron: job error', {

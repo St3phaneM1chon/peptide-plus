@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Nos valeurs | BioCycle Peptides',
   description: 'Rigueur scientifique, intégrité, innovation et responsabilité : les 6 valeurs fondamentales qui guident BioCycle Peptides dans la recherche peptidique.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/a-propos/valeurs',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/valeurs`,
   },
   openGraph: {
     title: 'Nos valeurs | BioCycle Peptides',
     description: 'Rigueur scientifique, intégrité, innovation et responsabilité : les 6 valeurs fondamentales qui guident BioCycle Peptides dans la recherche peptidique.',
-    url: 'https://biocyclepeptides.com/a-propos/valeurs',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/valeurs`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

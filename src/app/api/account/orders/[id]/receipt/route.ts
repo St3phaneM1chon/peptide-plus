@@ -73,7 +73,7 @@ function buildReceiptHTML(params: {
   shippingCountry: string;
   items: Array<{
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
     quantity: number;
     unitPrice: number;
     discount: number;
@@ -105,8 +105,8 @@ function buildReceiptHTML(params: {
     .map((item) => {
       const name =
         esc(item.productName) +
-        (item.formatName
-          ? ` <span style="color:#6b7280;font-size:12px">— ${esc(item.formatName)}</span>`
+        (item.optionName
+          ? ` <span style="color:#6b7280;font-size:12px">— ${esc(item.optionName)}</span>`
           : '');
       return `<tr>
         <td>${name}</td>
@@ -264,7 +264,7 @@ function buildReceiptHTML(params: {
 
   <div class="footer">
     Merci pour votre confiance !<br>
-    ${esc(params.companyName)} &bull; biocyclepeptides.com<br>
+    ${esc(params.companyName)} &bull; attitudes.vip<br>
     Pour toute question, contactez notre service client.
   </div>
 
@@ -334,7 +334,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session, params
       shippingCountry: order.shippingCountry,
       items: order.items.map((item) => ({
         productName: item.productName,
-        formatName: item.formatName ?? null,
+        optionName: item.optionName ?? null,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         discount: Number(item.discount),

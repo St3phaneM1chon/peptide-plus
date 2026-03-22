@@ -30,7 +30,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 const chargeSavedCardSchema = z.object({
   cardId: z.string().min(1, 'Card ID is required'),
   productId: z.string().min(1, 'Product ID is required'),
-  formatId: z.string().optional(), // COMMERCE-007: Accept formatId for stock validation
+  optionId: z.string().optional(), // COMMERCE-007: Accept optionId for stock validation
   quantity: z.number().int().min(1).max(100).optional().default(1),
   province: z.string().length(2).optional(),
   companyId: z.string().optional(),
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { cardId, productId, formatId, quantity, province: reqProvince, companyId } = result.data;
+    const { cardId, productId, optionId, quantity, province: reqProvince, companyId } = result.data;
 
     // Idempotency key to prevent duplicate payments
     const idempotencyKey = request.headers.get('x-idempotency-key');
@@ -138,9 +138,9 @@ export async function POST(request: NextRequest) {
 
     // COMMERCE-007 FIX: Validate stock at format level before charging saved card
     let unitPrice = Number(product.price);
-    if (formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await prisma.productOption.findUnique({
+        where: { id: optionId },
         select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
       });
       if (!format) {

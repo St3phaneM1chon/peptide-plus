@@ -202,7 +202,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         data: { inviteToken, inviteTokenExpiry },
       });
 
-      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
       const inviteUrl = `${baseUrl}/auth/accept-invite?token=${inviteToken}`;
       const inviterName = session.user.name || session.user.email || 'Admin';
 

@@ -52,7 +52,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
               id: true,
               productId: true,
               productName: true,
-              formatName: true,
+              optionName: true,
               quantity: true,
               unitPrice: true,
             },
@@ -77,7 +77,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
         id: item.id,
         productId: item.productId,
         name: item.productName,
-        format: item.formatName || '',
+        format: item.optionName || '',
         quantity: item.quantity,
         price: Number(item.unitPrice),
         image: null, // Product image fetched separately if needed

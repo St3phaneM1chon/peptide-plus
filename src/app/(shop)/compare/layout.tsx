@@ -4,7 +4,7 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 export const metadata: Metadata = {
   title: 'Comparer les peptides',
-  description: `Comparaison côte à côte des peptides de recherche ${siteName}. Comparez pureté, prix, formats et spécifications.`,
+  description: `Comparaison côte à côte des peptides de recherche ${siteName}. Comparez pureté, prix, options et spécifications.`,
   robots: { index: false, follow: true },
   openGraph: {
     title: `Comparer les peptides | ${siteName}`,

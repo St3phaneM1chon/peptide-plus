@@ -35,7 +35,7 @@ const MAX_TRANSLATION_LENGTH = 10_000;
 
 const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Product: 'productTranslation',
-  ProductFormat: 'productFormatTranslation',
+  ProductOption: 'productOptionTranslation',
   Category: 'categoryTranslation',
   Article: 'articleTranslation',
   BlogPost: 'blogPostTranslation',
@@ -47,7 +47,7 @@ const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
 
 const FK_FIELD_MAP: Record<TranslatableModel, string> = {
   Product: 'productId',
-  ProductFormat: 'formatId',
+  ProductOption: 'optionId',
   Category: 'categoryId',
   Article: 'articleId',
   BlogPost: 'blogPostId',

@@ -7,12 +7,12 @@ export const dynamic = 'force-dynamic';
  * Accepts a CSV file (FormData with key "file") containing inventory data.
  *
  * Expected CSV columns (header row required):
- *   sku       - ProductFormat SKU (required, used as lookup key)
+ *   sku       - ProductOption SKU (required, used as lookup key)
  *   quantity  - New stock quantity (required, integer >= 0)
  *   cost      - Optional unit cost (decimal)
  *
  * Behaviour:
- *   - Looks up each SKU in ProductFormat
+ *   - Looks up each SKU in ProductOption
  *   - If found, updates stockQuantity and optionally costPrice
  *   - Creates an InventoryTransaction record for the adjustment
  *   - Returns summary: imported count, skipped rows, errors
@@ -183,28 +183,28 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     }
 
     // Phase 2: Batch lookup all SKUs in one query
-    const formats = allSkus.length > 0
-      ? await prisma.productFormat.findMany({
+    const options = allSkus.length > 0
+      ? await prisma.productOption.findMany({
           where: { sku: { in: allSkus } },
           select: { id: true, sku: true, productId: true, stockQuantity: true },
         })
       : [];
-    const formatBySku = new Map(formats.map((f) => [f.sku, f]));
+    const formatBySku = new Map(options.map((f) => [f.sku, f]));
 
-    // Phase 3: Batch lookup latest WAC for all matched formats in one query
-    // Use a raw query to get the most recent runningWAC per (productId, formatId)
-    const matchedFormatIds = formats.map((f) => f.id);
+    // Phase 3: Batch lookup latest WAC for all matched options in one query
+    // Use a raw query to get the most recent runningWAC per (productId, optionId)
+    const matchedFormatIds = options.map((f) => f.id);
     const latestWacMap = new Map<string, number>();
     if (matchedFormatIds.length > 0) {
       const wacResults = await prisma.inventoryTransaction.findMany({
-        where: { formatId: { in: matchedFormatIds } },
+        where: { optionId: { in: matchedFormatIds } },
         orderBy: { createdAt: 'desc' },
-        distinct: ['formatId'],
-        select: { formatId: true, runningWAC: true },
+        distinct: ['optionId'],
+        select: { optionId: true, runningWAC: true },
       });
       for (const w of wacResults) {
-        if (w.formatId) {
-          latestWacMap.set(w.formatId, Number(w.runningWAC));
+        if (w.optionId) {
+          latestWacMap.set(w.optionId, Number(w.runningWAC));
         }
       }
     }
@@ -237,7 +237,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
       // Queue stock update
       transactionOps.push(
-        prisma.productFormat.update({
+        prisma.productOption.update({
           where: { id: format.id },
           data: {
             stockQuantity: row.quantity,
@@ -253,7 +253,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           prisma.inventoryTransaction.create({
             data: {
               productId: format.productId,
-              formatId: format.id,
+              optionId: format.id,
               type: 'ADJUSTMENT',
               quantity: adjustment,
               unitCost: unitCost,

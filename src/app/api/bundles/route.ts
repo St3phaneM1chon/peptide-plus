@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               quantity: true,
-              formatId: true,
+              optionId: true,
               product: {
                 select: {
                   id: true,
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
                   price: true,
                   compareAtPrice: true,
                   imageUrl: true,
-                  formats: {
+                  options: {
                     where: { isActive: true },
                     select: {
                       id: true,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
                       price: true,
                       comparePrice: true,
                       imageUrl: true,
-                      formatType: true,
+                      optionType: true,
                       sortOrder: true,
                       inStock: true,
                       stockQuantity: true,
@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
         let itemPrice = Number(item.product.price);
 
         // If a specific format is selected, use its price
-        if (item.formatId) {
-          const format = item.product.formats.find((f) => f.id === item.formatId);
+        if (item.optionId) {
+          const format = item.product.options.find((f) => f.id === item.optionId);
           if (format) {
             itemPrice = Number(format.price);
           }
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
             ...item.product,
             price: Number(item.product.price),
             compareAtPrice: item.product.compareAtPrice ? Number(item.product.compareAtPrice) : null,
-            formats: item.product.formats.map((f) => ({
+            options: item.product.options.map((f) => ({
               ...f,
               price: Number(f.price),
               comparePrice: f.comparePrice ? Number(f.comparePrice) : null,

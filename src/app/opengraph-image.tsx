@@ -125,7 +125,7 @@ export default function OGImage() {
             Free Shipping $150+
           </div>
           <div style={{ marginLeft: 'auto', color: '#64748b', fontSize: '18px' }}>
-            biocyclepeptides.com
+            attitudes.vip
           </div>
         </div>
       </div>

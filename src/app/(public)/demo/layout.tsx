@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Demander une démonstration | BioCycle Peptides',
   description: 'Demandez une démonstration personnalisée des produits et services BioCycle Peptides pour vos besoins en peptides de recherche.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/demo',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/demo`,
   },
   openGraph: {
     title: 'Demander une démonstration | BioCycle Peptides',
     description: 'Demandez une démonstration personnalisée des produits et services BioCycle Peptides pour vos besoins en peptides de recherche.',
-    url: 'https://biocyclepeptides.com/demo',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/demo`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

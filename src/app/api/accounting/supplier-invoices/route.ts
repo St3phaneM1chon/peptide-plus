@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { assertPeriodOpen } from '@/lib/accounting/validation';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 // A003 FIX: Add rate limiting and CSRF protection
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
@@ -193,11 +194,11 @@ export const POST = withAdminGuard(async (request) => {
     const internalPrefix = `FF-${year}-`;
     let internalRef: string | undefined;
     try {
-      const [maxRow] = await prisma.$queryRaw<{ max_ref: string | null }[]>`
-        SELECT MAX("internalRef") as max_ref
-        FROM "SupplierInvoice"
-        WHERE "internalRef" LIKE ${internalPrefix + '%'}
-      `;
+      const maxRows = await tenantQueryRaw<{ max_ref: string | null }>(
+        `SELECT MAX("internalRef") as max_ref FROM "SupplierInvoice" WHERE "internalRef" LIKE $1`,
+        internalPrefix + '%'
+      );
+      const maxRow = maxRows[0];
       let nextNum = 1;
       if (maxRow?.max_ref) {
         const num = parseInt(maxRow.max_ref.split('-').pop() || '0');

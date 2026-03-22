@@ -85,11 +85,28 @@ if (isProduction) {
 // Logger instance
 // ---------------------------------------------------------------------------
 
+// Multi-tenant: enrich logs with tenantId from global tenant context
+const tenantEnricher = winston.format((info) => {
+  try {
+    const ctx = (globalThis as Record<string, unknown>).__tenantContext as { tenantId?: string } | undefined;
+    if (ctx?.tenantId) {
+      info.tenantId = ctx.tenantId;
+    }
+  } catch {
+    // Skip enrichment if context not available
+  }
+  return info;
+});
+
 export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
   levels: winston.config.npm.levels,
+  format: winston.format.combine(
+    tenantEnricher(),
+    winston.format.errors({ stack: true }),
+  ),
   defaultMeta: {
-    service: 'peptide-plus',
+    service: 'koraline',
     env: process.env.NODE_ENV || 'development',
   },
   transports,

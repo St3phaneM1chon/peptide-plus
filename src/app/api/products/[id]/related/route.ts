@@ -64,7 +64,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
               where: { isPrimary: true },
               take: 1,
             },
-            formats: {
+            options: {
               where: { isActive: true },
               orderBy: { sortOrder: 'asc' },
               take: 1,
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           averageRating: p.averageRating ? Number(p.averageRating) : null,
           reviewCount: p.reviewCount,
           category: p.category,
-          inStock: p.formats.some(f => f.inStock && f.stockQuantity > 0),
+          inStock: p.options.some(f => f.inStock && f.stockQuantity > 0),
         }));
       },
       { ttl: CacheTTL.PRODUCTS, tags: ['products'] }

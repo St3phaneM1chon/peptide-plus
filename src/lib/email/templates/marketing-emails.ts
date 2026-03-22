@@ -22,7 +22,7 @@
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
 import { logger } from '@/lib/logger';
 
-const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || 'https://biocyclepeptides.com';
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 // FLAW-096 FIX: Sanitize customer names for email subjects (strip control chars, limit length)
 function safeSubjectName(name: string): string {

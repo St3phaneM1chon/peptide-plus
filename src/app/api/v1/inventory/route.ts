@@ -76,7 +76,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
             name: true,
           },
         },
-        formats: {
+        options: {
           select: {
             id: true,
             name: true,

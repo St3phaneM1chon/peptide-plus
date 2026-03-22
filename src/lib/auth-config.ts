@@ -404,6 +404,17 @@ export const authConfig: NextAuthConfig = {
           if (user.email) token.email = user.email;
           if (user.image) token.picture = user.image;
 
+          // Multi-Tenant: Set tenantId from the user's DB record
+          try {
+            const userTenant = await prisma.user.findUnique({
+              where: { id: user.id! },
+              select: { tenantId: true },
+            });
+            token.tenantId = userTenant?.tenantId || null;
+          } catch {
+            token.tenantId = null;
+          }
+
           // Pour OAuth, le user object de l'adapter n'a pas le role custom
           // On fetch toujours depuis la DB pour avoir le role correct
           if (account?.provider !== 'credentials') {
@@ -485,6 +496,7 @@ export const authConfig: NextAuthConfig = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
+        session.user.tenantId = (token.tenantId as string) || '';
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
         // SECURITY FIX (FAILLE-059): Propagate actual MFA verification state from JWT.
@@ -624,6 +636,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
+      tenantId: string;
       email: string;
       name: string;
       image: string | null;
@@ -643,6 +656,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
+    tenantId: string | null;
     role: UserRole;
     mfaEnabled: boolean;
     mfaVerified: boolean;

@@ -6,9 +6,9 @@ import UpsellInterstitialModal from '@/components/shop/UpsellInterstitialModal';
 
 interface CartItemParams {
   productId: string;
-  formatId?: string;
+  optionId?: string;
   name: string;
-  formatName?: string;
+  optionName?: string;
   price: number;
   comparePrice?: number;
   quantity?: number;
@@ -112,7 +112,7 @@ export function UpsellProvider({ children }: { children: ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             quantity: item.quantity || 1,
             frequency,
           }),

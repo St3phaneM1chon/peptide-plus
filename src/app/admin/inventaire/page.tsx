@@ -47,12 +47,12 @@ import { addCSRFHeader } from '@/lib/csrf';
 
 // ── Types ─────────────────────────────────────────────────────
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
   productId: string;
   productName: string;
   productSlug: string;
-  formatName: string;
+  optionName: string;
   sku?: string;
   price: number;
   stockQuantity: number;
@@ -77,7 +77,7 @@ interface Supplier {
 interface PurchaseOrder {
   id: string;
   supplierId: string;
-  items: { productId: string; formatId?: string; quantity: number; unitCost: number }[];
+  items: { productId: string; optionId?: string; quantity: number; unitCost: number }[];
   expectedDelivery?: string;
   notes?: string;
   status: 'DRAFT' | 'ORDERED' | 'PARTIAL' | 'RECEIVED' | 'CANCELLED';
@@ -285,7 +285,7 @@ function PurchaseOrdersTab() {
     supplierId: '',
     expectedDelivery: '',
     notes: '',
-    items: [{ productId: '', formatId: '', quantity: 1, unitCost: 0 }],
+    items: [{ productId: '', optionId: '', quantity: 1, unitCost: 0 }],
   });
 
   const fetchData = useCallback(async () => {
@@ -312,7 +312,7 @@ function PurchaseOrdersTab() {
   }, [orders, statusFilter]);
 
   const addItem = () => {
-    setForm(f => ({ ...f, items: [...f.items, { productId: '', formatId: '', quantity: 1, unitCost: 0 }] }));
+    setForm(f => ({ ...f, items: [...f.items, { productId: '', optionId: '', quantity: 1, unitCost: 0 }] }));
   };
 
   const removeItem = (idx: number) => {
@@ -341,7 +341,7 @@ function PurchaseOrdersTab() {
           supplierId: form.supplierId,
           items: form.items.map(i => ({
             productId: i.productId,
-            formatId: i.formatId || undefined,
+            optionId: i.optionId || undefined,
             quantity: Number(i.quantity),
             unitCost: Number(i.unitCost),
           })),
@@ -356,7 +356,7 @@ function PurchaseOrdersTab() {
       }
       const newPO = await res.json();
       setOrders(prev => [newPO, ...prev]);
-      setForm({ supplierId: '', expectedDelivery: '', notes: '', items: [{ productId: '', formatId: '', quantity: 1, unitCost: 0 }] });
+      setForm({ supplierId: '', expectedDelivery: '', notes: '', items: [{ productId: '', optionId: '', quantity: 1, unitCost: 0 }] });
       setShowForm(false);
       toast.success('Purchase order created');
     } catch {
@@ -458,7 +458,7 @@ function PurchaseOrdersTab() {
                       className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm" placeholder="Product ID" />
                   </div>
                   <div className="col-span-3">
-                    <input type="text" value={item.formatId} onChange={e => updateItem(idx, 'formatId', e.target.value)}
+                    <input type="text" value={item.optionId} onChange={e => updateItem(idx, 'optionId', e.target.value)}
                       className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm" placeholder="Format ID (opt)" />
                   </div>
                   <div className="col-span-2">
@@ -545,8 +545,8 @@ function PurchaseOrdersTab() {
 interface ReconciliationItem {
   productId: string;
   productName: string;
-  formatId: string;
-  formatName: string;
+  optionId: string;
+  optionName: string;
   recordedStock: number;
   calculatedStock: number;
   discrepancy: number;
@@ -601,7 +601,7 @@ function ReconciliationTab() {
         headers: { 'Content-Type': 'application/json', ...addCSRFHeader() },
         body: JSON.stringify({
           productId: item.productId,
-          formatId: item.formatId || undefined,
+          optionId: item.optionId || undefined,
           adjustedStock: adjustForm.adjustedStock,
           reason: adjustForm.reason,
         }),
@@ -694,13 +694,13 @@ function ReconciliationTab() {
                 </tr>
               ) : (
                 filteredItems.map((item) => {
-                  const itemKey = `${item.productId}:${item.formatId}`;
+                  const itemKey = `${item.productId}:${item.optionId}`;
                   const isAdjusting = adjusting === itemKey;
 
                   return (
                     <tr key={itemKey} className={item.status === 'DISCREPANCY' ? 'bg-orange-50/50' : ''}>
                       <td className="px-4 py-3 font-medium text-slate-900">{item.productName}</td>
-                      <td className="px-4 py-3 text-slate-600">{item.formatName}</td>
+                      <td className="px-4 py-3 text-slate-600">{item.optionName}</td>
                       <td className="px-4 py-3 text-end font-mono">{item.recordedStock}</td>
                       <td className="px-4 py-3 text-end font-mono">{item.calculatedStock}</td>
                       <td className={`px-4 py-3 text-end font-mono font-medium ${
@@ -780,14 +780,14 @@ function ReconciliationTab() {
 
 // ── Helpers ───────────────────────────────────────────────────
 
-function stockBadgeVariant(item: ProductFormat): 'success' | 'warning' | 'error' | 'neutral' {
+function stockBadgeVariant(item: ProductOption): 'success' | 'warning' | 'error' | 'neutral' {
   if (item.stockQuantity === 0) return 'error';
   if (item.stockQuantity <= item.lowStockThreshold) return 'warning';
   if (item.availability === 'DISCONTINUED') return 'neutral';
   return 'success';
 }
 
-function stockBadgeText(item: ProductFormat, t: (key: string) => string): string {
+function stockBadgeText(item: ProductOption, t: (key: string) => string): string {
   if (item.stockQuantity === 0) return t('admin.inventory.availOutOfStock');
   if (item.stockQuantity <= item.lowStockThreshold) return t('admin.inventory.lowStock');
   if (item.availability === 'DISCONTINUED') return t('admin.inventory.availDiscontinued');
@@ -796,7 +796,7 @@ function stockBadgeText(item: ProductFormat, t: (key: string) => string): string
 
 // ── ABC Classification Helper ─────────────────────────────────
 
-function classifyABC(items: ProductFormat[]): Map<string, 'A' | 'B' | 'C'> {
+function classifyABC(items: ProductOption[]): Map<string, 'A' | 'B' | 'C'> {
   const classification = new Map<string, 'A' | 'B' | 'C'>();
   const sorted = [...items].sort((a, b) => (b.price * b.stockQuantity) - (a.price * a.stockQuantity));
   const totalValue = sorted.reduce((sum, i) => sum + i.price * i.stockQuantity, 0);
@@ -815,7 +815,7 @@ function classifyABC(items: ProductFormat[]): Map<string, 'A' | 'B' | 'C'> {
   return classification;
 }
 
-function reorderUrgency(item: ProductFormat): number {
+function reorderUrgency(item: ProductOption): number {
   // Score 0-100: higher = more urgent
   if (item.stockQuantity === 0) return 100;
   if (item.lowStockThreshold === 0) return 0;
@@ -837,7 +837,7 @@ const ABC_BADGE: Record<string, { bg: string; text: string }> = {
 export default function InventairePage() {
   const { t, locale, formatCurrency } = useI18n();
   const [activeTab, setActiveTab] = useState<InventoryTab>('stock');
-  const [inventory, setInventory] = useState<ProductFormat[]>([]);
+  const [inventory, setInventory] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -864,7 +864,7 @@ export default function InventairePage() {
     orderId: string | null;
     createdAt: string;
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
   }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -893,7 +893,7 @@ export default function InventairePage() {
         const params = new URLSearchParams();
         if (item) {
           params.set('productId', item.productId);
-          params.set('formatId', showHistory);
+          params.set('optionId', showHistory);
         }
         params.set('limit', '20');
 
@@ -1035,7 +1035,7 @@ export default function InventairePage() {
     const headers = ['Product', 'Format', 'SKU', 'Current Stock', 'Threshold', 'Price', 'Status'];
     const rows = lowStockItems.map(item => [
       `"${item.productName.replace(/"/g, '""')}"`,
-      `"${item.formatName.replace(/"/g, '""')}"`,
+      `"${item.optionName.replace(/"/g, '""')}"`,
       item.sku || '',
       item.stockQuantity,
       item.lowStockThreshold,
@@ -1071,7 +1071,7 @@ export default function InventairePage() {
     const headers = ['Product', 'Format', 'SKU', 'Price', 'Suggested Order Qty'];
     const rows = outOfStock.map(item => [
       `"${item.productName.replace(/"/g, '""')}"`,
-      `"${item.formatName.replace(/"/g, '""')}"`,
+      `"${item.optionName.replace(/"/g, '""')}"`,
       item.sku || '',
       item.price.toFixed(2),
       Math.max(item.lowStockThreshold * 2, 10), // Suggest 2x threshold or min 10
@@ -1114,7 +1114,7 @@ export default function InventairePage() {
         if (
           !item.productName.toLowerCase().includes(search) &&
           !item.sku?.toLowerCase().includes(search) &&
-          !item.formatName.toLowerCase().includes(search)
+          !item.optionName.toLowerCase().includes(search)
         ) {
           return false;
         }
@@ -1171,7 +1171,7 @@ export default function InventairePage() {
       id: item.id,
       avatar: { text: item.productName.charAt(0) },
       title: item.productName,
-      subtitle: item.formatName + (item.sku ? ` (${item.sku})` : ''),
+      subtitle: item.optionName + (item.sku ? ` (${item.sku})` : ''),
       preview: `${t('admin.inventory.colStock')}: ${item.stockQuantity} - ${formatCurrency(item.price)}`,
       badges: [
         {
@@ -1415,7 +1415,7 @@ export default function InventairePage() {
               <DetailPane
                 header={{
                   title: selectedItem.productName,
-                  subtitle: `${selectedItem.formatName}${selectedItem.sku ? ` - SKU: ${selectedItem.sku}` : ''}`,
+                  subtitle: `${selectedItem.optionName}${selectedItem.sku ? ` - SKU: ${selectedItem.sku}` : ''}`,
                   avatar: { text: selectedItem.productName.charAt(0) },
                   onBack: () => { setSelectedItemId(null); setEditingId(null); },
                   backLabel: t('admin.inventory.title'),
@@ -1540,7 +1540,7 @@ export default function InventairePage() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Format</p>
-                        <p className="text-slate-900">{selectedItem.formatName}</p>
+                        <p className="text-slate-900">{selectedItem.optionName}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.inventory.colSku')}</p>
@@ -1708,7 +1708,7 @@ export default function InventairePage() {
                         {outOfStockItems.map(item => (
                           <tr key={item.id} className="hover:bg-red-50/50">
                             <td className="px-3 py-2 text-slate-900">{item.productName}</td>
-                            <td className="px-3 py-2 text-slate-600">{item.formatName}</td>
+                            <td className="px-3 py-2 text-slate-600">{item.optionName}</td>
                             <td className="px-3 py-2 text-slate-500">{item.sku || '-'}</td>
                             <td className="px-3 py-2 text-end text-slate-700">{formatCurrency(item.price)}</td>
                           </tr>
@@ -1742,7 +1742,7 @@ export default function InventairePage() {
                         {lowStockItems.map(item => (
                           <tr key={item.id} className="hover:bg-amber-50/50">
                             <td className="px-3 py-2 text-slate-900">{item.productName}</td>
-                            <td className="px-3 py-2 text-slate-600">{item.formatName}</td>
+                            <td className="px-3 py-2 text-slate-600">{item.optionName}</td>
                             <td className="px-3 py-2 text-center font-semibold text-amber-700">{item.stockQuantity}</td>
                             <td className="px-3 py-2 text-center text-slate-500">{item.lowStockThreshold}</td>
                           </tr>
@@ -1868,7 +1868,7 @@ export default function InventairePage() {
                         {item.abcClass}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500">{item.formatName}{item.sku ? ` (${item.sku})` : ''}</p>
+                    <p className="text-xs text-slate-500">{item.optionName}{item.sku ? ` (${item.sku})` : ''}</p>
                   </div>
 
                   <div className="text-center px-3">
@@ -1925,7 +1925,7 @@ export default function InventairePage() {
                 <option value="">Selectionnez...</option>
                 {inventory.filter(i => i.stockQuantity > 0).map(item => (
                   <option key={item.id} value={item.id}>
-                    {item.productName} - {item.formatName} ({item.stockQuantity})
+                    {item.productName} - {item.optionName} ({item.stockQuantity})
                   </option>
                 ))}
               </select>

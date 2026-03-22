@@ -41,6 +41,7 @@ import { db } from '@/lib/db';
 import { sendEmail, welcomeEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const BATCH_SIZE = 10;
 const WELCOME_POINTS = 100; // Default welcome points to mention
@@ -119,9 +120,12 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       const now = new Date();
 
     // Item 82: Process all drip steps in a single cron run
+    // Prisma middleware auto-filters by tenant
     const allResults: Array<{
       step: string;
       userId: string;
@@ -351,29 +355,19 @@ export async function GET(request: NextRequest) {
 
     const successCount = allResults.filter((r) => r.success).length;
     const failCount = allResults.filter((r) => !r.success).length;
-    const duration = Date.now() - startTime;
-
-    // Group results by step for summary
-    const stepSummary: Record<string, { sent: number; failed: number }> = {};
-    for (const r of allResults) {
-      if (!stepSummary[r.step]) stepSummary[r.step] = { sent: 0, failed: 0 };
-      if (r.success) stepSummary[r.step].sent++;
-      else stepSummary[r.step].failed++;
-    }
 
     logger.info(
-      `[CRON:WELCOME] Complete: ${successCount} sent, ${failCount} failed across ${DRIP_STEPS.length} steps, ${duration}ms`
+      `[CRON:WELCOME] Complete for tenant ${tenant.slug}: ${successCount} sent, ${failCount} failed across ${DRIP_STEPS.length} steps`
     );
+      });
+
+    const duration = Date.now() - startTime;
 
     return NextResponse.json({
       success: true,
-      date: now.toISOString(),
-      totalProcessed,
-      sent: successCount,
-      failed: failCount,
+      date: new Date().toISOString(),
+      tenants: tenantResult,
       durationMs: duration,
-      stepSummary,
-      results: allResults,
     });
     } catch (error) {
       logger.error('[CRON:WELCOME] Job error', { error: error instanceof Error ? error.message : String(error) });

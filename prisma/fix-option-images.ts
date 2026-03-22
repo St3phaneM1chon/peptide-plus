@@ -13,13 +13,13 @@ async function main() {
     const hasGoodImage = product.imageUrl && product.imageUrl !== '/images/products/peptide-default.png';
     if (!hasGoodImage) continue;
 
-    for (const format of product.formats) {
+    for (const format of product.options) {
       const needsUpdate = !format.imageUrl
         || format.imageUrl.includes('peptide-default')
         || format.imageUrl.includes('/images/formats/');
 
       if (needsUpdate) {
-        await prisma.productFormat.update({
+        await prisma.productOption.update({
           where: { id: format.id },
           data: { imageUrl: product.imageUrl },
         });

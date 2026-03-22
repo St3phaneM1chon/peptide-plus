@@ -84,7 +84,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               productId: item.productId,
-              formatId: item.formatId || null,
+              optionId: item.optionId || null,
             }),
           })
         )
@@ -113,7 +113,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         body: JSON.stringify({
           items: items.map(item => ({
             productId: item.productId,
-            formatId: item.formatId || null,
+            optionId: item.optionId || null,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -278,7 +278,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <div className="space-y-4">
               {items.map((item, index) => (
                 <div
-                  key={`${item.productId}-${item.formatId}`}
+                  key={`${item.productId}-${item.optionId}`}
                   className="flex gap-4 bg-neutral-50 rounded-xl p-3 transition-all duration-300"
                   style={index === items.length - 1 ? { animation: 'pulse-highlight 1s ease-out' } : undefined}
                 >
@@ -298,8 +298,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <h3 className="font-medium text-neutral-900 truncate">
                       {item.name}
                     </h3>
-                    {item.formatName && (
-                      <p className="text-sm text-neutral-500">{item.formatName}</p>
+                    {item.optionName && (
+                      <p className="text-sm text-neutral-500">{item.optionName}</p>
                     )}
                     <p className="font-bold text-primary-600 mt-1">
                       {formatPrice(item.price)}
@@ -309,7 +309,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div className="flex items-center gap-3 mt-2">
                       <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${item.name}`}>
                         <button
-                          onClick={() => updateQuantity(item.productId, item.formatId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.optionId, item.quantity - 1)}
                           aria-label={`Decrease quantity of ${item.name}`}
                           className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
@@ -317,7 +317,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </button>
                         <span className="w-8 text-center text-sm" aria-live="polite" aria-atomic="true">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.productId, item.formatId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.optionId, item.quantity + 1)}
                           aria-label={`Increase quantity of ${item.name}`}
                           className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
@@ -325,7 +325,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </button>
                       </div>
                       <button
-                        onClick={() => removeItem(item.productId, item.formatId)}
+                        onClick={() => removeItem(item.productId, item.optionId)}
                         aria-label={`Remove ${item.name} from cart`}
                         className="text-red-500 text-sm hover:underline"
                       >

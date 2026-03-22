@@ -15,7 +15,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
-    const formatId = searchParams.get('formatId');
+    const optionId = searchParams.get('optionId');
     const type = searchParams.get('type');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
@@ -28,8 +28,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       where.productId = productId;
     }
 
-    if (formatId) {
-      where.formatId = formatId;
+    if (optionId) {
+      where.optionId = optionId;
     }
 
     if (type) {
@@ -56,34 +56,34 @@ export const GET = withAdminGuard(async (request, _ctx) => {
 
     // Enrich with product/format names if needed
     const productIds = [...new Set(transactions.map((t) => t.productId))];
-    const formatIds = [...new Set(transactions.filter((t) => t.formatId).map((t) => t.formatId as string))];
+    const optionIds = [...new Set(transactions.filter((t) => t.optionId).map((t) => t.optionId as string))];
 
-    const [products, formats] = await Promise.all([
+    const [products, options] = await Promise.all([
       prisma.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, name: true, sku: true },
       }),
-      formatIds.length > 0
-        ? prisma.productFormat.findMany({
-            where: { id: { in: formatIds } },
+      optionIds.length > 0
+        ? prisma.productOption.findMany({
+            where: { id: { in: optionIds } },
             select: { id: true, name: true, sku: true },
           })
         : [],
     ]);
 
     const productMap = new Map(products.map((p) => [p.id, p]));
-    const formatMap = new Map(formats.map((f) => [f.id, f]));
+    const formatMap = new Map(options.map((f) => [f.id, f]));
 
     const enrichedTransactions = transactions.map((t) => {
       const product = productMap.get(t.productId);
-      const format = t.formatId ? formatMap.get(t.formatId) : null;
+      const format = t.optionId ? formatMap.get(t.optionId) : null;
       return {
         id: t.id,
         productId: t.productId,
         productName: product?.name || 'Unknown',
         productSku: product?.sku || null,
-        formatId: t.formatId,
-        formatName: format?.name || null,
+        optionId: t.optionId,
+        optionName: format?.name || null,
         formatSku: format?.sku || null,
         type: t.type,
         quantity: t.quantity,

@@ -54,7 +54,7 @@ const SYSTEM_RULES: KeywordRule[] = [
   {
     id: 'sys-help',
     keyword: 'HELP',
-    response: 'For support, visit biocyclepeptides.com/help or call 1-800-555-0199. Reply STOP to unsubscribe.',
+    response: 'For support, visit attitudes.vip/help or call 1-800-555-0199. Reply STOP to unsubscribe.',
     isRegex: false,
     caseSensitive: false,
     isActive: true,

@@ -54,7 +54,7 @@ interface ShippingUpdateData {
 interface BackInStockData {
   productName: string;
   productSlug: string;
-  formatName?: string;
+  optionName?: string;
   price: number;
   currency?: string;
   imageUrl?: string;
@@ -66,7 +66,7 @@ const emailConfig = {
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com',
   logoUrl: process.env.LOGO_URL || '',
   primaryColor: '#333333',
-  baseUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com',
+  baseUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://attitudes.vip',
 };
 
 /**
@@ -470,7 +470,7 @@ export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr', u
       ` : ''}
 
       <h3 style="margin: 0 0 8px 0; color: #333; font-size: 20px;">
-        ${data.productName}${data.formatName ? ` - ${data.formatName}` : ''}
+        ${data.productName}${data.optionName ? ` - ${data.optionName}` : ''}
       </h3>
 
       <p style="margin: 0; font-size: 24px; color: #ff6b35; font-weight: bold;">

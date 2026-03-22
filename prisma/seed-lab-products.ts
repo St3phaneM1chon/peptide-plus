@@ -11,10 +11,10 @@ async function createLabFormat(
   price: number,
   stock: number
 ) {
-  await prisma.productFormat.create({
+  await prisma.productOption.create({
     data: {
       productId,
-      formatType: FormatType.ACCESSORY,
+      optionType: FormatType.ACCESSORY,
       name: 'Unite standard',
       price,
       sku,
@@ -459,7 +459,7 @@ async function main() {
       } else {
         const created = await prisma.product.create({ data: productData });
 
-        // Create default ProductFormat for the new product
+        // Create default ProductOption for the new product
         await createLabFormat(created.id, p.sku, p.price, p.stock);
         totalCreated++;
       }
@@ -473,11 +473,11 @@ async function main() {
 
   // Verify counts
   const labCount = await prisma.product.count({ where: { productType: ProductType.LAB_SUPPLY } });
-  const formatCount = await prisma.productFormat.count();
+  const formatCount = await prisma.productOption.count();
   const accCatCount = await prisma.category.count({ where: { parentId: accessoriesCategory.id } });
   const eqCatCount = await prisma.category.count({ where: { parentId: equipmentCategory.id } });
   console.log(`  LAB_SUPPLY products in DB: ${labCount}`);
-  console.log(`  Total ProductFormats in DB: ${formatCount}`);
+  console.log(`  Total ProductOptions in DB: ${formatCount}`);
   console.log(`  Subcategories under Accessories: ${accCatCount}`);
   console.log(`  Subcategories under Equipment: ${eqCatCount}`);
 }

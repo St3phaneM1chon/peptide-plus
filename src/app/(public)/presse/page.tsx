@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Espace presse | BioCycle Peptides',
   description: 'Espace presse BioCycle Peptides : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/presse',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/presse`,
   },
   openGraph: {
     title: 'Espace presse | BioCycle Peptides',
     description: 'Espace presse BioCycle Peptides : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
-    url: 'https://biocyclepeptides.com/presse',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/presse`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

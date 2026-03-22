@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Notre histoire | BioCycle Peptides',
   description: 'De sa fondation à Montréal à fournisseur de confiance au Canada, découvrez le parcours de BioCycle Peptides et notre engagement envers la recherche peptidique.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/a-propos/histoire',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/histoire`,
   },
   openGraph: {
     title: 'Notre histoire | BioCycle Peptides',
     description: 'De sa fondation à Montréal à fournisseur de confiance au Canada, découvrez le parcours de BioCycle Peptides et notre engagement envers la recherche peptidique.',
-    url: 'https://biocyclepeptides.com/a-propos/histoire',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/histoire`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

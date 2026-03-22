@@ -22,7 +22,7 @@ export const revalidate = 300;
 // ---------------------------------------------------------------------------
 
 export async function generateMetadata(): Promise<Metadata> {
-  const siteUrl = 'https://biocyclepeptides.com';
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   return {
     title: 'Blog - BioCycle Peptides',
     description:
@@ -90,7 +90,7 @@ async function getBlogPosts(locale: string): Promise<BlogPostRow[]> {
 // ---------------------------------------------------------------------------
 
 function blogListSchema(posts: BlogPostRow[]) {
-  const siteUrl = 'https://biocyclepeptides.com';
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   return {
     '@context': 'https://schema.org',
     '@type': 'Blog',

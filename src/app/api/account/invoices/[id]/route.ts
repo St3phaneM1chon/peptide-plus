@@ -64,7 +64,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session, params
       items: order.items.map((item) => ({
         id: item.id,
         productName: item.productName,
-        formatName: item.formatName,
+        optionName: item.optionName,
         sku: item.sku,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),

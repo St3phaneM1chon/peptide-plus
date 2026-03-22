@@ -22,9 +22,9 @@ interface SubscriptionProduct {
 interface Subscription {
   id: string;
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   productName: string;
-  formatName: string | null;
+  optionName: string | null;
   quantity: number;
   frequency: string;
   discountPercent: number;
@@ -521,7 +521,7 @@ export default function SubscriptionsPage() {
                           <div>
                             <h3 className="font-bold text-lg">
                               {sub.productName}
-                              {sub.formatName ? ` — ${sub.formatName}` : ''}
+                              {sub.optionName ? ` — ${sub.optionName}` : ''}
                             </h3>
                             <p className="text-sm text-neutral-500">
                               {sub.quantity}x • {frequencyLabels[sub.frequency] || sub.frequency}

@@ -1,5 +1,5 @@
-const SITE_URL = 'https://biocyclepeptides.com';
-const SITE_NAME = 'BioCycle Peptides';
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 const DEFAULT_LOGO = `${SITE_URL}/icon-512.png`;
 
 export function organizationSchema() {

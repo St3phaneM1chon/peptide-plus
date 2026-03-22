@@ -67,7 +67,7 @@ function generateShortCode(): string {
 }
 
 function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+  return process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL || 'https://attitudes.vip';
 }
 
 // ---------------------------------------------------------------------------

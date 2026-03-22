@@ -1,7 +1,12 @@
 /**
- * DATABASE CLIENT - Prisma
+ * DATABASE CLIENT - Prisma (Multi-Tenant Koraline SaaS)
  * Singleton pattern pour éviter les connexions multiples
  * Connection pool configured for production performance
+ *
+ * MULTI-TENANT:
+ * - tenantId est injecté automatiquement dans toutes les requêtes via $extends
+ * - Utiliser setCurrentTenantId() pour définir le tenant du contexte (appelé par le middleware Next.js)
+ * - Les modèles SANS tenantId (Tenant, VerificationToken) ne sont pas filtrés
  *
  * Transient error retry: use withRetry() to wrap queries that should be
  * retried on P1001/P1002/P1017 (connection dropped, timeout, server closed).
@@ -10,6 +15,66 @@
 
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
+// ---------------------------------------------------------------------------
+// Multi-Tenant Context via global variable (server-side only)
+// ---------------------------------------------------------------------------
+// Next.js Edge Runtime doesn't support async_hooks/AsyncLocalStorage.
+// We use a simple global context that works in Node.js server runtime.
+// Each request sets the tenant context before processing and clears it after.
+
+interface TenantContext {
+  tenantId: string | null;
+  isSuperAdmin: boolean;
+}
+
+const globalForTenant = globalThis as unknown as {
+  __tenantContext?: TenantContext;
+};
+
+/**
+ * Définit le tenant pour le contexte courant.
+ * Appelé au début de chaque requête API via headers x-tenant-slug.
+ */
+export function setCurrentTenantId(tenantId: string | null, isSuperAdmin = false): void {
+  globalForTenant.__tenantContext = { tenantId, isSuperAdmin };
+}
+
+/**
+ * Récupère le tenantId du contexte courant.
+ */
+export function getCurrentTenantIdFromContext(): string | null {
+  return globalForTenant.__tenantContext?.tenantId ?? null;
+}
+
+/**
+ * Vérifie si le contexte courant est super-admin (Attitudes).
+ */
+export function isCurrentContextSuperAdmin(): boolean {
+  return globalForTenant.__tenantContext?.isSuperAdmin ?? false;
+}
+
+/**
+ * Exécute une fonction dans un contexte tenant spécifique.
+ * Utilisé par les cron jobs et scripts pour exécuter du code
+ * dans le contexte d'un tenant spécifique.
+ */
+export function runWithTenant<T>(tenantId: string | null, isSuperAdmin: boolean, fn: () => T): T {
+  const previous = globalForTenant.__tenantContext;
+  globalForTenant.__tenantContext = { tenantId, isSuperAdmin };
+  try {
+    return fn();
+  } finally {
+    globalForTenant.__tenantContext = previous;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Modèles qui N'ONT PAS de tenantId (données plateforme)
+// ---------------------------------------------------------------------------
+const MODELS_WITHOUT_TENANT = new Set([
+  'Tenant',
+  'VerificationToken',
+]);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -64,10 +129,154 @@ const basePrisma =
   }).$extends({
     query: {
       $allModels: {
-        async findMany({ args, query }) {
+        async findMany({ model, args, query }) {
           // Apply default limit only when caller didn't specify `take`
           if (args.take === undefined) {
             args.take = DEFAULT_FIND_MANY_LIMIT;
+          }
+          // Multi-tenant: inject tenantId filter
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async findFirst({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async findUnique({ model, args, query }) {
+          // findUnique can't have additional where filters easily,
+          // but we verify tenant AFTER the query for safety
+          const result = await query(args);
+          if (result && !MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              const resultAny = result as Record<string, unknown>;
+              if (resultAny.tenantId && resultAny.tenantId !== tenantId) {
+                logger.warn('[Prisma] Tenant isolation violation blocked', {
+                  model,
+                  expectedTenant: tenantId,
+                  actualTenant: resultAny.tenantId,
+                });
+                return null;
+              }
+            }
+          }
+          return result;
+        },
+        async count({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async aggregate({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async groupBy({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async create({ model, args, query }) {
+          // Auto-set tenantId on create if not explicitly provided
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId) {
+              const data = args.data as Record<string, unknown>;
+              if (!data.tenantId) {
+                data.tenantId = tenantId;
+              }
+            }
+          }
+          return query(args);
+        },
+        async createMany({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId) {
+              if (Array.isArray(args.data)) {
+                args.data = args.data.map((item: Record<string, unknown>) => ({
+                  ...item,
+                  tenantId: item.tenantId || tenantId,
+                }));
+              } else {
+                const data = args.data as Record<string, unknown>;
+                if (!data.tenantId) {
+                  data.tenantId = tenantId;
+                }
+              }
+            }
+          }
+          return query(args);
+        },
+        async update({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async updateMany({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async delete({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async deleteMany({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+            }
+          }
+          return query(args);
+        },
+        async upsert({ model, args, query }) {
+          if (!MODELS_WITHOUT_TENANT.has(model)) {
+            const tenantId = getCurrentTenantIdFromContext();
+            if (tenantId && !isCurrentContextSuperAdmin()) {
+              args.where = { ...args.where, tenantId };
+              const createData = args.create as Record<string, unknown>;
+              if (!createData.tenantId) {
+                createData.tenantId = tenantId;
+              }
+            }
           }
           return query(args);
         },

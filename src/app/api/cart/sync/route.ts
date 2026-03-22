@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
 
 const cartItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   quantity: z.number().int().min(1).max(100),
   // COMMERCE-001 FIX: Client-sent price is accepted for schema validation only;
   // actual priceAtAdd is always resolved from the database server-side.
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         items: {
           select: {
             productId: true,
-            formatId: true,
+            optionId: true,
             quantity: true,
             priceAtAdd: true,
           },
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       const product = productMap.get(item.productId);
       return {
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         quantity: item.quantity,
         price: Number(item.priceAtAdd),
         name: product?.name || 'Unknown Product',
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     const { items } = parsed.data;
 
     // COMMERCE-001 FIX: Resolve all prices from the database, never trust client-sent prices.
-    // Batch-fetch products and formats upfront to avoid N+1 queries.
+    // Batch-fetch products and options upfront to avoid N+1 queries.
     const productIds = [...new Set(items.map(i => i.productId))];
     const allProducts = await prisma.product.findMany({
       where: { id: { in: productIds }, isActive: true },
@@ -137,17 +137,17 @@ export async function POST(request: NextRequest) {
     });
     const productMap = new Map(allProducts.map(p => [p.id, p]));
 
-    const formatIds = items.map(i => i.formatId).filter((f): f is string => !!f);
-    const allFormats = formatIds.length > 0
-      ? await prisma.productFormat.findMany({
-          where: { id: { in: [...new Set(formatIds)] } },
+    const optionIds = items.map(i => i.optionId).filter((f): f is string => !!f);
+    const allFormats = optionIds.length > 0
+      ? await prisma.productOption.findMany({
+          where: { id: { in: [...new Set(optionIds)] } },
           select: { id: true, price: true, productId: true },
         })
       : [];
     const formatMap = new Map(allFormats.map(f => [f.id, f]));
 
-    // Validate all items have valid products/formats and resolve server-side prices
-    const resolvedItems: { productId: string; formatId: string | null; quantity: number; serverPrice: number }[] = [];
+    // Validate all items have valid products/options and resolve server-side prices
+    const resolvedItems: { productId: string; optionId: string | null; quantity: number; serverPrice: number }[] = [];
     for (const item of items) {
       const product = productMap.get(item.productId);
       if (!product) {
@@ -156,10 +156,10 @@ export async function POST(request: NextRequest) {
 
       let serverPrice = Number(product.price);
 
-      if (item.formatId) {
-        const format = formatMap.get(item.formatId);
+      if (item.optionId) {
+        const format = formatMap.get(item.optionId);
         if (!format) {
-          return NextResponse.json({ error: `Format not found: ${item.formatId}` }, { status: 400 });
+          return NextResponse.json({ error: `Format not found: ${item.optionId}` }, { status: 400 });
         }
         // Verify format belongs to the claimed product
         if (format.productId !== item.productId) {
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
       resolvedItems.push({
         productId: item.productId,
-        formatId: item.formatId || null,
+        optionId: item.optionId || null,
         quantity: item.quantity,
         serverPrice,
       });
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
         data: resolvedItems.map((item) => ({
           cartId: cart.id,
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
           quantity: item.quantity,
           priceAtAdd: item.serverPrice, // COMMERCE-001: Always use server-validated price
         })),

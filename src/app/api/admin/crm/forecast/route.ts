@@ -17,12 +17,12 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
-import { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
@@ -115,19 +115,9 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     const lastMonth = (now.getMonth() + months - 1) % 12;
     const timelineRangeEnd = new Date(lastYear, lastMonth + 1, 0, 23, 59, 59, 999);
 
-    const pipelineFilter = pipelineId
-      ? Prisma.sql`AND d."pipelineId" = ${pipelineId}`
-      : Prisma.empty;
-
-    const timelineRows = await prisma.$queryRaw<
-      Array<{
-        month_label: string;
-        total_value: number;
-        weighted_value: number;
-        won_value: number;
-        deal_count: bigint;
-      }>
-    >(Prisma.sql`
+    // Tenant-safe raw query for timeline aggregation
+    const timelineParams: unknown[] = [timelineRangeStart, timelineRangeEnd];
+    let timelineSql = `
       SELECT
         TO_CHAR(d."expectedCloseDate", 'YYYY-MM') AS month_label,
         COALESCE(SUM(d.value), 0)::float AS total_value,
@@ -136,12 +126,23 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         COUNT(*)::bigint AS deal_count
       FROM "CrmDeal" d
       JOIN "CrmStage" s ON d."stageId" = s.id
-      WHERE d."expectedCloseDate" >= ${timelineRangeStart}
-        AND d."expectedCloseDate" <= ${timelineRangeEnd}
-        ${pipelineFilter}
+      WHERE d."expectedCloseDate" >= $1
+        AND d."expectedCloseDate" <= $2`;
+    if (pipelineId) {
+      timelineParams.push(pipelineId);
+      timelineSql += ` AND d."pipelineId" = $${timelineParams.length}`;
+    }
+    timelineSql += `
       GROUP BY TO_CHAR(d."expectedCloseDate", 'YYYY-MM')
-      ORDER BY month_label
-    `);
+      ORDER BY month_label`;
+
+    const timelineRows = await tenantQueryRaw<{
+      month_label: string;
+      total_value: number;
+      weighted_value: number;
+      won_value: number;
+      deal_count: bigint;
+    }>(timelineSql, ...timelineParams);
 
     const timelineMap = new Map(timelineRows.map(r => [r.month_label, r]));
 

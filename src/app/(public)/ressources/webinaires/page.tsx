@@ -10,7 +10,7 @@ export const metadata = {
   openGraph: {
     title: 'Webinaires | BioCycle Peptides',
     description: 'Webinaires sur la recherche peptidique et les meilleures pratiques.',
-    url: 'https://biocyclepeptides.com/ressources/webinaires',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/ressources/webinaires`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

@@ -50,7 +50,7 @@ export const GET = withAdminGuard(async (request) => {
     const statusFilter = searchParams.get('status') || 'POSTED';
     const typeFilter = searchParams.get('type');
 
-    // Validate date formats if provided
+    // Validate date options if provided
     if (startDateStr && !/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) {
       return NextResponse.json(
         { error: 'Invalid startDate format. Use YYYY-MM-DD.' },

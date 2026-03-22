@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
 // ---------------------------------------------------------------------------
 
 function extractSenderEmail(body: Record<string, any>): string {
-  // Try various formats
+  // Try various options
   const rawFrom =
     body.from ||
     body.From ||

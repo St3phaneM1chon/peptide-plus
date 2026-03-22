@@ -117,7 +117,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
             select: {
               id: true,
               productName: true,
-              formatName: true,
+              optionName: true,
               sku: true,
               quantity: true,
               unitPrice: true,
@@ -286,7 +286,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
           select: {
             id: true,
             productName: true,
-            formatName: true,
+            optionName: true,
             sku: true,
             quantity: true,
             unitPrice: true,

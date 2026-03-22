@@ -19,7 +19,7 @@ const COMPANY_STATIC = {
   country: 'Canada',
   phone: '(514) 555-0199',
   email: 'support@biocyclepeptides.com',
-  website: 'www.biocyclepeptides.com',
+  website: 'www.attitudes.vip',
 };
 
 async function getCompanyInfo() {
@@ -92,7 +92,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session, params
           select: {
             id: true,
             productName: true,
-            formatName: true,
+            optionName: true,
             sku: true,
             quantity: true,
             unitPrice: true,
@@ -307,8 +307,8 @@ export const GET = withUserGuard(async (_request: NextRequest, { session, params
         y = margin;
       }
 
-      const productLabel = item.formatName
-        ? `${item.productName} - ${item.formatName}`
+      const productLabel = item.optionName
+        ? `${item.productName} - ${item.optionName}`
         : item.productName;
 
       // Truncate long product names

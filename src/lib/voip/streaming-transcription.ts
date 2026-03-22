@@ -197,7 +197,7 @@ export class StreamingTranscriptionService {
 
       if (!data) return;
 
-      // Support common transcription server response formats
+      // Support common transcription server response options
       const isFinal = data.is_final ?? (data.type === 'final' ? true : !data.is_partial);
       const text =
         data.channel?.alternatives?.[0]?.transcript || // Deepgram format

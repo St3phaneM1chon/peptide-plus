@@ -76,7 +76,7 @@ async function fetchAdminData() {
 
     // F1.7: Low stock using per-format threshold via raw SQL
     prisma.$queryRaw<[{ count: bigint }]>`
-      SELECT COUNT(*)::bigint as count FROM "ProductFormat"
+      SELECT COUNT(*)::bigint as count FROM "ProductOption"
       WHERE "trackInventory" = true
         AND "isActive" = true
         AND "stockQuantity" <= "lowStockThreshold"

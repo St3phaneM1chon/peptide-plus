@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Nos engagements | BioCycle Peptides',
   description: 'Qualité, transparence, éthique et environnement : découvrez les 5 engagements fondamentaux de BioCycle Peptides envers la communauté scientifique canadienne.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/a-propos/engagements',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/engagements`,
   },
   openGraph: {
     title: 'Nos engagements | BioCycle Peptides',
     description: 'Qualité, transparence, éthique et environnement : découvrez les 5 engagements fondamentaux de BioCycle Peptides envers la communauté scientifique canadienne.',
-    url: 'https://biocyclepeptides.com/a-propos/engagements',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/engagements`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

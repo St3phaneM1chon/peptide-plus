@@ -1,6 +1,9 @@
 /**
- * Template de base pour tous les emails BioCycle Peptides
+ * Template de base pour tous les emails — Multi-Tenant Koraline
+ * Le nom de l'entreprise vient du tenant config (companyName parameter).
  */
+
+import { EMAIL_SENDER_NAME } from '@/lib/email/constants';
 
 /** Shared HTML escape utility — use for all user-supplied strings in email templates */
 export function escapeHtml(str: string): string {
@@ -25,7 +28,7 @@ export interface BaseTemplateData {
     linkedin?: string;
     twitter?: string;
   };
-  /** Override the company name in the footer. Defaults to 'BioCycle Peptides Inc.' */
+  /** Override the company name in the footer. Defaults to tenant name or platform name. */
   companyName?: string;
   /** Override the company address in the footer. Defaults to 'Montreal, QC, Canada' */
   companyAddress?: string;
@@ -39,15 +42,15 @@ export function baseTemplate(data: BaseTemplateData): string {
   const {
     preheader = '', content, footerText, unsubscribeUrl, locale = 'fr',
     darkMode = false, socialLinks,
-    companyName = 'BioCycle Peptides Inc.',
+    companyName = EMAIL_SENDER_NAME,
     companyAddress = 'Montréal, QC, Canada',
   } = data;
 
   const isFr = locale === 'fr';
   
-  const defaultFooter = isFr 
-    ? 'Cet email a été envoyé par BioCycle Peptides. Tous les produits sont destinés uniquement à la recherche scientifique.'
-    : 'This email was sent by BioCycle Peptides. All products are intended for scientific research only.';
+  const defaultFooter = isFr
+    ? `Cet email a été envoyé par ${companyName}.`
+    : `This email was sent by ${companyName}.`;
 
   const contactText = isFr ? 'Contactez-nous' : 'Contact us';
   const viewOnlineText = isFr ? 'Voir en ligne' : 'View online';
@@ -59,7 +62,7 @@ export function baseTemplate(data: BaseTemplateData): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>BioCycle Peptides</title>
+  <title>${escapeHtml(companyName)}</title>
   <!--[if mso]>
   <style type="text/css">
     table { border-collapse: collapse; }
@@ -146,9 +149,9 @@ export function baseTemplate(data: BaseTemplateData): string {
               </p>
               ` : ''}
               <p style="margin: 0 0 12px 0; font-size: 12px; color: #9ca3af;">
-                <a href="https://biocyclepeptides.com/contact" style="color: #6b7280; text-decoration: underline;">${contactText}</a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/contact" style="color: #6b7280; text-decoration: underline;">${contactText}</a>
                 &nbsp;|&nbsp;
-                <a href="https://biocyclepeptides.com" style="color: #6b7280; text-decoration: underline;">${viewOnlineText}</a>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}" style="color: #6b7280; text-decoration: underline;">${viewOnlineText}</a>
                 ${unsubscribeUrl ? `&nbsp;|&nbsp;<a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">${isFr ? 'Se désabonner' : 'Unsubscribe'}</a>` : ''}
               </p>
               <p style="margin: 0; font-size: 11px; color: #9ca3af;">
@@ -193,7 +196,7 @@ export const emailComponents = {
   
   orderItem: (name: string, quantity: number, price: string, imageUrl?: string, isFr: boolean = true) => {
     // AUDIT-FIX: Whitelist allowed image domains to prevent tracking pixel injection
-    const ALLOWED_IMAGE_DOMAINS = ['biocyclepeptides.com', 'cdn.biocyclepeptides.com', 'biocyclepeptides.azurewebsites.net', 'localhost'];
+    const ALLOWED_IMAGE_DOMAINS = ['attitudes.vip', 'biocyclepeptides.com', 'cdn.biocyclepeptides.com', 'biocyclepeptides.azurewebsites.net', 'localhost'];
     let safeImage: string | undefined;
     if (imageUrl && /^https?:\/\//.test(imageUrl)) {
       try {

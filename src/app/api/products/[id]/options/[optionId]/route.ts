@@ -12,8 +12,8 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 // BUG-009 FIX: Zod validation schema for format updates
-const updateFormatSchema = z.object({
-  formatType: z.string().max(50).optional(),
+const updateOptionSchema = z.object({
+  optionType: z.string().max(50).optional(),
   name: z.string().max(200).optional(),
   description: z.string().max(2000).optional().nullable(),
   imageUrl: z.string().url().max(2000).optional().nullable(),
@@ -40,16 +40,16 @@ const updateFormatSchema = z.object({
 // GET single format
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ id: string; formatId: string }> }
+  { params }: { params: Promise<{ id: string; optionId: string }> }
 ) {
   try {
-    const { id, formatId } = await params;
-    const format = await prisma.productFormat.findUnique({
-      where: { id: formatId },
+    const { id, optionId } = await params;
+    const format = await prisma.productOption.findUnique({
+      where: { id: optionId },
       select: {
         id: true,
         productId: true,
-        formatType: true,
+        optionType: true,
         name: true,
         description: true,
         imageUrl: true,
@@ -90,10 +90,10 @@ export async function GET(
 // PUT update format
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; formatId: string }> }
+  { params }: { params: Promise<{ id: string; optionId: string }> }
 ) {
   try {
-    const { id, formatId } = await params;
+    const { id, optionId } = await params;
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
       return apiError('Unauthorized', ErrorCode.UNAUTHORIZED, { request });
@@ -108,12 +108,12 @@ export async function PUT(
     const body = await request.json();
 
     // BUG-009 FIX: Validate body with Zod before destructuring to prevent mass assignment
-    const validation = updateFormatSchema.safeParse(body);
+    const validation = updateOptionSchema.safeParse(body);
     if (!validation.success) {
       return apiError(validation.error.errors[0]?.message || 'Invalid format data', ErrorCode.VALIDATION_ERROR, { details: validation.error.errors, request });
     }
     const {
-      formatType,
+      optionType,
       name,
       description,
       imageUrl,
@@ -138,8 +138,8 @@ export async function PUT(
     } = validation.data;
 
     // Check if format exists
-    const existingFormat = await prisma.productFormat.findUnique({
-      where: { id: formatId },
+    const existingFormat = await prisma.productOption.findUnique({
+      where: { id: optionId },
     });
 
     if (!existingFormat || existingFormat.productId !== id) {
@@ -149,12 +149,12 @@ export async function PUT(
     // BUG-044 FIX: Use transaction for atomic default toggle
     if (isDefault && !existingFormat.isDefault) {
       await prisma.$transaction([
-        prisma.productFormat.updateMany({
-          where: { productId: id, id: { not: formatId } },
+        prisma.productOption.updateMany({
+          where: { productId: id, id: { not: optionId } },
           data: { isDefault: false },
         }),
-        prisma.productFormat.update({
-          where: { id: formatId },
+        prisma.productOption.update({
+          where: { id: optionId },
           data: { isDefault: true },
         }),
       ]);
@@ -165,10 +165,10 @@ export async function PUT(
     const newAvailability = (availability as import('@prisma/client').StockStatus | undefined) ?? existingFormat.availability;
     const inStock = newStockQuantity > 0 && ['IN_STOCK', 'LIMITED'].includes(newAvailability);
 
-    const format = await prisma.productFormat.update({
-      where: { id: formatId },
+    const format = await prisma.productOption.update({
+      where: { id: optionId },
       data: {
-        formatType: formatType || undefined,
+        optionType: optionType || undefined,
         name: name ?? undefined,
         description,
         imageUrl,
@@ -195,7 +195,7 @@ export async function PUT(
     });
 
     // Auto-enqueue translation (force re-translate on update)
-    enqueue.productFormat(formatId, true);
+    enqueue.productOption(optionId, true);
 
     // Revalidate cached pages after format update
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
@@ -211,10 +211,10 @@ export async function PUT(
 // DELETE format
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; formatId: string }> }
+  { params }: { params: Promise<{ id: string; optionId: string }> }
 ) {
   try {
-    const { id, formatId } = await params;
+    const { id, optionId } = await params;
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
       return apiError('Unauthorized', ErrorCode.UNAUTHORIZED, { request });
@@ -227,8 +227,8 @@ export async function DELETE(
     }
 
     // Check if format exists
-    const format = await prisma.productFormat.findUnique({
-      where: { id: formatId },
+    const format = await prisma.productOption.findUnique({
+      where: { id: optionId },
     });
 
     if (!format || format.productId !== id) {
@@ -236,8 +236,8 @@ export async function DELETE(
     }
 
     // BUG-018 FIX: Soft-delete instead of hard-delete to preserve OrderItem references
-    await prisma.productFormat.update({
-      where: { id: formatId },
+    await prisma.productOption.update({
+      where: { id: optionId },
       data: { isActive: false, discontinuedAt: new Date() },
     });
 

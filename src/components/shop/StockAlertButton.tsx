@@ -8,16 +8,16 @@ import { addCSRFHeader } from '@/lib/csrf';
 
 interface StockAlertButtonProps {
   productId: string;
-  formatId?: string;
+  optionId?: string;
   productName: string;
-  formatName?: string;
+  optionName?: string;
 }
 
 export default function StockAlertButton({
   productId,
-  formatId,
+  optionId,
   productName: _productName,
-  formatName: _formatName,
+  optionName: _optionName,
 }: StockAlertButtonProps) {
   const { data: session } = useSession();
   const { t } = useI18n();
@@ -49,7 +49,7 @@ export default function StockAlertButton({
         body: JSON.stringify({
           email,
           productId,
-          formatId,
+          optionId,
         }),
       });
 

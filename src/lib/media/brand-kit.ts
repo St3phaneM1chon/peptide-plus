@@ -45,7 +45,7 @@ export interface BrandKitInput {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_BRAND_KIT: Omit<BrandKit, 'id' | 'createdAt' | 'updatedAt'> = {
-  name: process.env.BRAND_NAME || 'BioCycle Peptides',
+  name: process.env.BRAND_NAME || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP',
   logoUrl: process.env.BRAND_LOGO_URL || null,
   faviconUrl: process.env.BRAND_FAVICON_URL || null,
   primaryColor: process.env.BRAND_PRIMARY_COLOR || '#1e40af',

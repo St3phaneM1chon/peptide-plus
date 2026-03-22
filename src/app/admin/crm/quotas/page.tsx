@@ -144,7 +144,7 @@ export default function QuotasPage() {
     return 'bg-red-100';
   };
 
-  const formatType = (type: string) => {
+  const optionType = (type: string) => {
     switch (type) {
       case 'calls': return 'Calls';
       case 'revenue': return 'Revenue';
@@ -332,7 +332,7 @@ export default function QuotasPage() {
                         {formatPeriod(quota.period)}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {formatType(quota.targetType)}
+                        {optionType(quota.targetType)}
                       </td>
                       <td className="px-4 py-3 text-end font-medium text-gray-900">
                         {targetNum.toLocaleString()}

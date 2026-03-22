@@ -13,7 +13,7 @@ interface ProductCardFeaturedProps {
   purity?: number;
   imageUrl?: string;
   category?: string;
-  formats?: {
+  options?: {
     id: string;
     name: string;
     price: number;
@@ -29,13 +29,13 @@ export default function ProductCardFeatured({
   purity,
   imageUrl,
   category,
-  formats = [],
+  options = [],
 }: ProductCardFeaturedProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
-  const hasCompare = formats.some((f) => f.comparePrice && f.comparePrice > f.price);
+  const hasCompare = options.some((f) => f.comparePrice && f.comparePrice > f.price);
   const lowestCompare = hasCompare
-    ? Math.min(...formats.filter((f) => f.comparePrice).map((f) => f.comparePrice!))
+    ? Math.min(...options.filter((f) => f.comparePrice).map((f) => f.comparePrice!))
     : undefined;
 
   return (

@@ -141,7 +141,7 @@ function useQuickActions(t: (k: string) => string, pathname: string): QuickActio
         id: 'generate_variants',
         icon: Boxes,
         label: t('admin.copilot.variantsAction') || 'Generate Variants',
-        description: t('admin.copilot.variantsDesc') || 'AI-suggested product formats & dosages',
+        description: t('admin.copilot.variantsDesc') || 'AI-suggested product options & dosages',
         action: 'generate_variants',
         entityType: 'product',
       });

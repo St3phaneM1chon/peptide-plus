@@ -184,7 +184,7 @@ export function parseBusinessCardText(extractedText: string): BusinessCardData {
       continue;
     }
 
-    // Phone detection (various formats)
+    // Phone detection (various options)
     const phoneMatch = line.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/);
     if (phoneMatch) {
       const label = line.toLowerCase();

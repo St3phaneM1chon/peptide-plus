@@ -9,6 +9,7 @@ import { timingSafeEqual } from 'crypto';
 import { releaseExpiredReservations } from '@/lib/inventory';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (timing-safe comparison)
@@ -33,13 +34,19 @@ export async function GET(request: NextRequest) {
 
   return withJobLock('release-reservations', async () => {
     try {
-      const releasedCount = await releaseExpiredReservations();
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
+        // Prisma middleware auto-filters by tenant
+        const releasedCount = await releaseExpiredReservations();
 
-      logger.info(`[CRON] Released ${releasedCount} expired inventory reservations`);
+        logger.info(`[CRON] Released ${releasedCount} expired inventory reservations`, {
+          tenantSlug: tenant.slug,
+        });
+      });
 
       return NextResponse.json({
         success: true,
-        released: releasedCount,
+        tenants: tenantResult,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

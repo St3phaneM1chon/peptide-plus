@@ -321,13 +321,14 @@ async function sendAccountLockedNotification(
   try {
     const { sendEmail } = await import('./email');
     const lockoutMinutes = Math.ceil(lockoutDurationMs / 60000);
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://biocyclepeptides.com';
+    const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://attitudes.vip';
     const resetUrl = `${baseUrl}/auth/forgot-password`;
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #DC2626;">Account Security Alert</h2>
-        <p>Your BioCycle Peptides account has been temporarily locked due to multiple failed login attempts.</p>
+        <p>Your ${siteName} account has been temporarily locked due to multiple failed login attempts.</p>
         <table style="border-collapse: collapse; margin: 16px 0;">
           <tr><td style="padding: 4px 12px; font-weight: bold;">Account:</td><td style="padding: 4px 12px;">${email}</td></tr>
           <tr><td style="padding: 4px 12px; font-weight: bold;">IP Address:</td><td style="padding: 4px 12px;">${ipAddress}</td></tr>
@@ -337,13 +338,13 @@ async function sendAccountLockedNotification(
         <p>If this was you, please wait ${lockoutMinutes} minutes before trying again.</p>
         <p>If you did not attempt to log in, we recommend resetting your password immediately:</p>
         <p><a href="${resetUrl}" style="display: inline-block; background: #F97316; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Reset Password</a></p>
-        <p style="color: #6B7280; font-size: 12px; margin-top: 24px;">This is an automated security notification from BioCycle Peptides. Do not reply to this email.</p>
+        <p style="color: #6B7280; font-size: 12px; margin-top: 24px;">This is an automated security notification from ${siteName}. Do not reply to this email.</p>
       </div>
     `;
 
     await sendEmail({
       to: { email },
-      subject: 'Security Alert: Account Locked - BioCycle Peptides',
+      subject: `Security Alert: Account Locked - ${siteName}`,
       html,
       tags: ['security', 'lockout', 'automated'],
     });

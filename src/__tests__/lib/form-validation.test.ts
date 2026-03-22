@@ -7,8 +7,8 @@
  *
  * Tests validation utilities used in checkout and account forms:
  * - Address validation (shipping/billing)
- * - Canadian postal code formats
- * - US ZIP code formats
+ * - Canadian postal code options
+ * - US ZIP code options
  * - Email validation
  * - Phone validation
  * - Name validation
@@ -164,7 +164,7 @@ describe('Address Validation', () => {
 // =====================================================
 
 describe('Canadian Postal Code Validation', () => {
-  describe('valid formats', () => {
+  describe('valid options', () => {
     const validCodes = [
       'H2X 1Y4',
       'h2x 1y4',    // lowercase
@@ -182,7 +182,7 @@ describe('Canadian Postal Code Validation', () => {
     });
   });
 
-  describe('invalid formats', () => {
+  describe('invalid options', () => {
     const invalidCodes = [
       '12345',        // US ZIP
       'ABCDEF',       // all letters
@@ -214,7 +214,7 @@ describe('Canadian Postal Code Validation', () => {
 // =====================================================
 
 describe('US ZIP Code Validation', () => {
-  describe('valid formats', () => {
+  describe('valid options', () => {
     const validCodes = [
       '12345',
       '12345-6789',  // ZIP+4
@@ -228,7 +228,7 @@ describe('US ZIP Code Validation', () => {
     });
   });
 
-  describe('invalid formats', () => {
+  describe('invalid options', () => {
     const invalidCodes = [
       'ABCDE',       // letters
       '1234',        // 4 digits
@@ -319,7 +319,7 @@ describe('Phone Validation', () => {
     expect(isValidPhone('')).toBe(true);
   });
 
-  it('should accept valid phone formats', () => {
+  it('should accept valid phone options', () => {
     expect(isValidPhone('5145551234')).toBe(true);
     expect(isValidPhone('(514) 555-1234')).toBe(true);
     expect(isValidPhone('514-555-1234')).toBe(true);

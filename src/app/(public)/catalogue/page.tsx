@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Catalogue | BioCycle Peptides',
     description: 'Catalogue complet de peptides de recherche premium. Testés en laboratoire, pureté 99 %+.',
-    url: 'https://biocyclepeptides.com/catalogue',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/catalogue`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

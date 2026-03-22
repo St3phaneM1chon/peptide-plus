@@ -23,7 +23,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const expressCheckoutSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
-  formatId: z.string().optional(), // COMMERCE-006: Accept formatId for stock validation
+  optionId: z.string().optional(), // COMMERCE-006: Accept optionId for stock validation
   quantity: z.number().int().min(1).max(100).optional().default(1),
   type: z.enum(['apple-pay', 'google-pay'], {
     required_error: 'Payment type must be apple-pay or google-pay',
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { productId, formatId, quantity, type, province: reqProvince, companyId } = result.data;
+    const { productId, optionId, quantity, type, province: reqProvince, companyId } = result.data;
 
     // Idempotency key to prevent duplicate payments
     const idempotencyKey = request.headers.get('x-idempotency-key');
@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
 
     // COMMERCE-006 FIX: Validate stock at format level before creating express checkout
     let unitPrice = Number(product.price);
-    if (formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await prisma.productOption.findUnique({
+        where: { id: optionId },
         select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
       });
       if (!format) {

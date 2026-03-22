@@ -291,15 +291,15 @@ export async function cleanupUatRun(runId: string): Promise<{ deleted: Record<st
     // instead of sequential individual updates (was 1 query per sale tx, now 1 transaction)
     const formatQtyMap = new Map<string, number>();
     for (const tx of saleTxs) {
-      if (tx.formatId) {
-        formatQtyMap.set(tx.formatId, (formatQtyMap.get(tx.formatId) || 0) + Math.abs(tx.quantity));
+      if (tx.optionId) {
+        formatQtyMap.set(tx.optionId, (formatQtyMap.get(tx.optionId) || 0) + Math.abs(tx.quantity));
       }
     }
     if (formatQtyMap.size > 0) {
       await prisma.$transaction(
-        Array.from(formatQtyMap.entries()).map(([formatId, qty]) =>
-          prisma.productFormat.update({
-            where: { id: formatId },
+        Array.from(formatQtyMap.entries()).map(([optionId, qty]) =>
+          prisma.productOption.update({
+            where: { id: optionId },
             data: { stockQuantity: { increment: qty } },
           })
         )

@@ -5,6 +5,7 @@
 
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { logger } from '@/lib/logger';
+import { tenantCacheKey } from '@/lib/tenant-cache';
 
 const CACHE_PREFIX = 'cache:';
 const TAG_PREFIX = 'cache:tag:';
@@ -99,22 +100,22 @@ export const CacheTags = {
  */
 export const CacheKeys = {
   config: {
-    currencies: () => 'config:currencies',
-    siteSettings: () => 'config:siteSettings',
+    currencies: () => tenantCacheKey('config:currencies'),
+    siteSettings: () => tenantCacheKey('config:siteSettings'),
   },
   categories: {
-    all: () => 'categories:all',
-    byId: (id: string) => `categories:${id}`,
+    all: () => tenantCacheKey('categories:all'),
+    byId: (id: string) => tenantCacheKey(`categories:${id}`),
   },
   products: {
-    list: (hash: string) => `products:list:${hash}`,
-    byId: (id: string) => `products:${id}`,
-    bySlug: (slug: string) => `products:slug:${slug}`,
-    related: (id: string) => `products:${id}:related`,
-    search: (query: string) => `products:search:${query}`,
+    list: (hash: string) => tenantCacheKey(`products:list:${hash}`),
+    byId: (id: string) => tenantCacheKey(`products:${id}`),
+    bySlug: (slug: string) => tenantCacheKey(`products:slug:${slug}`),
+    related: (id: string) => tenantCacheKey(`products:${id}:related`),
+    search: (query: string) => tenantCacheKey(`products:search:${query}`),
   },
   search: {
-    suggestions: (query: string) => `search:suggestions:${query}`,
+    suggestions: (query: string) => tenantCacheKey(`search:suggestions:${query}`),
   },
 };
 

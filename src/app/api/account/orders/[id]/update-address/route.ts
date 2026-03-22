@@ -222,7 +222,7 @@ export const PUT = withUserGuard(async (request: NextRequest, { session, params 
         items: updatedOrder.items.map((item) => ({
           id: item.id,
           productName: item.productName,
-          formatName: item.formatName,
+          optionName: item.optionName,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           sku: item.sku,

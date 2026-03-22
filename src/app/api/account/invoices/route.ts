@@ -66,7 +66,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
           select: {
             id: true,
             productName: true,
-            formatName: true,
+            optionName: true,
             quantity: true,
             unitPrice: true,
             total: true,
@@ -108,7 +108,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
       items: order.items.map((item) => ({
         id: item.id,
         productName: item.productName,
-        formatName: item.formatName,
+        optionName: item.optionName,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         total: Number(item.total),

@@ -424,7 +424,7 @@ export default function ApiPubliquePage() {
               <h3 className="font-medium text-slate-700 mb-2">{t('admin.apiPublique.authentication')}</h3>
               <pre className="bg-slate-900 text-green-400 rounded-lg p-4 text-sm overflow-x-auto">
 {`curl -H "Authorization: Bearer bp_live_YOUR_KEY" \\
-  https://biocyclepeptides.com/api/v1/products`}
+  https://attitudes.vip/api/v1/products`}
               </pre>
             </div>
 

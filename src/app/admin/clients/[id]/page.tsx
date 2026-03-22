@@ -187,7 +187,7 @@ interface SubscriptionItem {
   cancelledAt: string | null;
   createdAt: string;
   product: { name: string; slug: string; imageUrl: string | null } | null;
-  format: { name: string; formatType: string; dosageMg: number | null } | null;
+  option: { name: string; optionType: string; dosageMg: number | null } | null;
 }
 
 interface ReviewItem {
@@ -1132,10 +1132,10 @@ export default function ClientDetailPage() {
                           {sub.status}
                         </StatusBadge>
                       </div>
-                      {sub.format && (
+                      {sub.option && (
                         <p className="text-sm text-slate-500">
-                          {sub.format.name}
-                          {sub.format.dosageMg ? ` - ${sub.format.dosageMg}mg` : ''}
+                          {sub.option.name}
+                          {sub.option.dosageMg ? ` - ${sub.option.dosageMg}mg` : ''}
                         </p>
                       )}
                       <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">

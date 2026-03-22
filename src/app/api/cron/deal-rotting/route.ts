@@ -15,6 +15,7 @@ import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -53,10 +54,23 @@ export async function GET(request: NextRequest) {
 
   return withJobLock('deal-rotting', async () => {
     try {
+      // Multi-tenant: iterate over all active tenants
+      // Collect results across all tenants
+      const allRottingDeals: Array<{
+        tenantSlug: string;
+        dealId: string;
+        title: string;
+        assignedTo: { id: string; name: string | null; email: string | null } | null;
+        stageName: string;
+        daysInStage: number;
+      }> = [];
+
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       const now = new Date();
       const thresholdDate = new Date(now.getTime() - ROTTING_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
 
       // Find deals in non-terminal stages (not won, not lost)
+      // Prisma middleware auto-filters by tenant
       const deals = await prisma.crmDeal.findMany({
         where: {
           stage: {
@@ -76,14 +90,6 @@ export async function GET(request: NextRequest) {
       });
 
       // Filter to deals whose last stage change is older than threshold
-      const rottingDeals: Array<{
-        dealId: string;
-        title: string;
-        assignedTo: { id: string; name: string | null; email: string | null } | null;
-        stageName: string;
-        daysInStage: number;
-      }> = [];
-
       for (const deal of deals) {
         const lastStageChange = deal.stageHistory[0]?.createdAt;
         if (!lastStageChange) continue;
@@ -93,7 +99,8 @@ export async function GET(request: NextRequest) {
             (now.getTime() - lastStageChange.getTime()) / (24 * 60 * 60 * 1000)
           );
 
-          rottingDeals.push({
+          allRottingDeals.push({
+            tenantSlug: tenant.slug,
             dealId: deal.id,
             title: deal.title,
             assignedTo: deal.assignedTo
@@ -104,15 +111,17 @@ export async function GET(request: NextRequest) {
           });
         }
       }
+      });
 
       // Sort by days in stage descending (most stale first)
-      rottingDeals.sort((a, b) => b.daysInStage - a.daysInStage);
+      allRottingDeals.sort((a, b) => b.daysInStage - a.daysInStage);
 
       return NextResponse.json({
         success: true,
-        count: rottingDeals.length,
+        count: allRottingDeals.length,
         thresholdDays: ROTTING_THRESHOLD_DAYS,
-        deals: rottingDeals,
+        deals: allRottingDeals,
+        tenants: tenantResult,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

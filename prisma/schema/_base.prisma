@@ -77,11 +77,12 @@ enum ExpenseStatus {
   REIMBURSED
 }
 
-// FormatType enum removed — formatType is now a String field
+// FormatType enum removed — optionType is now a String field
 // Managed dynamically via FormatTypeOption table in admin UI
 
 model FormatTypeOption {
   id        String   @id @default(cuid())
+  tenantId  String?
   value     String   @unique   // e.g. "VIAL_2ML", "CAPSULE_60"
   label     String              // Display label in French
   sortOrder Int      @default(0)
@@ -90,6 +91,7 @@ model FormatTypeOption {
   updatedAt DateTime @updatedAt
 
   @@index([isActive, sortOrder])
+  @@index([tenantId])
 }
 
 enum HeroMediaType {

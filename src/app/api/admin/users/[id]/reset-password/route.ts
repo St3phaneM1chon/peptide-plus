@@ -45,7 +45,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { params, sessi
     });
 
     // Send reset email
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
 
     try {

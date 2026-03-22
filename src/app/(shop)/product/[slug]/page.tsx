@@ -38,7 +38,7 @@ async function getProductFromDB(slug: string) {
       images: {
         orderBy: { sortOrder: 'asc' },
       },
-      formats: {
+      options: {
         where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
       },
@@ -153,9 +153,9 @@ function transformProductForClient(
   const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
   const productImage = primaryImage?.url || product.imageUrl || undefined;
 
-  // Compute lowest price from formats
-  const lowestPrice = product.formats.length > 0
-    ? Math.min(...product.formats.map(f => Number(f.price)))
+  // Compute lowest price from options
+  const lowestPrice = product.options.length > 0
+    ? Math.min(...product.options.map(f => Number(f.price)))
     : Number(product.price);
 
   return {
@@ -186,10 +186,10 @@ function transformProductForClient(
       alt: img.alt || product.name,
       isPrimary: img.isPrimary,
     })),
-    formats: product.formats.map(f => ({
+    options: product.options.map(f => ({
       id: f.id,
       name: f.name,
-      type: f.formatType?.toLowerCase() || 'vial_2ml',
+      type: f.optionType?.toLowerCase() || 'vial_2ml',
       dosageMg: f.dosageMg ? Number(f.dosageMg) : undefined,
       price: Number(f.price),
       comparePrice: f.comparePrice ? Number(f.comparePrice) : undefined,
@@ -272,10 +272,10 @@ export default async function ProductPage({ params }: PageProps) {
 
   // Build JSON-LD structured data
   const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
-  const lowestPrice = product.formats.length > 0
-    ? Math.min(...product.formats.map(f => Number(f.price)))
+  const lowestPrice = product.options.length > 0
+    ? Math.min(...product.options.map(f => Number(f.price)))
     : Number(product.price);
-  const hasStock = product.formats.some(f => f.inStock);
+  const hasStock = product.options.some(f => f.inStock);
 
   const productJsonLd = productSchema({
     name: translatedProduct.name,
@@ -285,7 +285,7 @@ export default async function ProductPage({ params }: PageProps) {
     images: product.images.map(img => ({ url: img.url })),
     price: lowestPrice,
     purity: product.purity ? Number(product.purity) : undefined,
-    sku: product.formats[0]?.sku || product.id,
+    sku: product.options[0]?.sku || product.id,
     inStock: hasStock,
     categoryName: product.category?.name || undefined,
     reviewCount: reviewStats._count.rating || undefined,

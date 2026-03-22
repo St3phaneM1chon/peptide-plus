@@ -133,8 +133,8 @@ export const enqueue = {
   productUrgent: (entityId: string) =>
     enqueueTranslation('Product', entityId, { priority: 1, force: true }),
 
-  productFormat: (entityId: string, force = false) =>
-    enqueueTranslation('ProductFormat', entityId, { priority: 2, force }),
+  productOption: (entityId: string, force = false) =>
+    enqueueTranslation('ProductOption', entityId, { priority: 2, force }),
 
   category: (entityId: string, force = false) =>
     enqueueTranslation('Category', entityId, { priority: 2, force }),
@@ -374,7 +374,7 @@ async function updateQualityLevel(
 ): Promise<void> {
   const tableMap: Record<string, string> = {
     Product: 'productTranslation',
-    ProductFormat: 'productFormatTranslation',
+    ProductOption: 'productOptionTranslation',
     Category: 'categoryTranslation',
     Article: 'articleTranslation',
     BlogPost: 'blogPostTranslation',
@@ -385,7 +385,7 @@ async function updateQualityLevel(
   };
   const fkMap: Record<string, string> = {
     Product: 'productId',
-    ProductFormat: 'formatId',
+    ProductOption: 'optionId',
     Category: 'categoryId',
     Article: 'articleId',
     BlogPost: 'blogPostId',
@@ -441,14 +441,14 @@ async function getOpenAI(): Promise<OpenAI> {
 
 /** Prisma table + FK maps (duplicated from auto-translate for independence) */
 const TABLE_MAP: Record<string, string> = {
-  Product: 'productTranslation', ProductFormat: 'productFormatTranslation',
+  Product: 'productTranslation', ProductOption: 'productOptionTranslation',
   Category: 'categoryTranslation', Article: 'articleTranslation',
   BlogPost: 'blogPostTranslation', Video: 'videoTranslation',
   Webinar: 'webinarTranslation', QuickReply: 'quickReplyTranslation',
   Faq: 'faqTranslation',
 };
 const FK_MAP: Record<string, string> = {
-  Product: 'productId', ProductFormat: 'formatId',
+  Product: 'productId', ProductOption: 'optionId',
   Category: 'categoryId', Article: 'articleId',
   BlogPost: 'blogPostId', Video: 'videoId',
   Webinar: 'webinarId', QuickReply: 'quickReplyId',
@@ -481,7 +481,7 @@ async function readSourceFields(
   model: TranslatableModel,
   entityId: string
 ): Promise<Record<string, string>> {
-  const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
+  const sourceModel = model === 'ProductOption' ? 'productOption' : model.charAt(0).toLowerCase() + model.slice(1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const entity = await ((prisma as Record<string, any>)[sourceModel]).findUnique({
     where: { id: entityId },

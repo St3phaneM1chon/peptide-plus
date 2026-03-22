@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Security | BioCycle Peptides',
     description: 'How BioCycle Peptides protects your data and ensures platform security.',
-    url: 'https://biocyclepeptides.com/securite',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/securite`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

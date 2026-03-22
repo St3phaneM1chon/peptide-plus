@@ -37,8 +37,8 @@ export function generateVideoSEO(video: {
   instructor?: string | null;
   slug: string;
 }): SEOMeta {
-  const siteName = 'BioCycle Peptides';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
   // Parse tags
   let keywords: string[] = [];

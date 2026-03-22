@@ -7,9 +7,9 @@ export const rpName = 'BioCycle Peptides';
 
 // RP ID must match the domain (without protocol or port)
 export const rpID = process.env.NODE_ENV === 'production'
-  ? 'biocyclepeptides.com'
+  ? (process.env.WEBAUTHN_RP_ID || 'attitudes.vip')
   : 'localhost';
 
 export const origin = process.env.NODE_ENV === 'production'
-  ? 'https://biocyclepeptides.com'
+  ? (process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip')
   : 'http://localhost:3000';

@@ -115,9 +115,9 @@ export async function POST(request: NextRequest) {
     let attachmentUrl: string | null = null;
     if (rawAttachmentUrl) {
       try {
-        const parsed = new URL(rawAttachmentUrl, process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+        const parsed = new URL(rawAttachmentUrl, process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip');
         const allowedHosts = [
-          parsed.hostname === new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com').hostname,
+          parsed.hostname === new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip').hostname,
           parsed.hostname.endsWith('.blob.core.windows.net'), // Azure Blob Storage
           parsed.hostname === 'localhost',
         ];

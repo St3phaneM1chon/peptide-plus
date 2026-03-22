@@ -22,9 +22,9 @@ import { useI18n } from '@/i18n/client';
 
 interface ResolvedItem {
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   name: string;
-  formatName: string | null;
+  optionName: string | null;
   quantity: number;
   currentPrice: number | null;
   image: string | null;
@@ -91,9 +91,9 @@ export default function SharedCartBanner() {
     availableItems.forEach((item) => {
       addItem({
         productId: item.productId,
-        formatId: item.formatId ?? undefined,
+        optionId: item.optionId ?? undefined,
         name: item.name,
-        formatName: item.formatName ?? undefined,
+        optionName: item.optionName ?? undefined,
         price: item.currentPrice as number,
         quantity: item.quantity,
         image: item.image ?? undefined,
@@ -193,7 +193,7 @@ export default function SharedCartBanner() {
         {/* Item previews */}
         <div className="shared-cart-banner__items">
           {availableItems.map((item) => (
-            <div key={`${item.productId}-${item.formatId ?? 'default'}`} className="shared-cart-banner__item">
+            <div key={`${item.productId}-${item.optionId ?? 'default'}`} className="shared-cart-banner__item">
               {item.image && (
                 <div className="shared-cart-banner__item-image">
                   <Image
@@ -207,8 +207,8 @@ export default function SharedCartBanner() {
               )}
               <div className="shared-cart-banner__item-info">
                 <span className="shared-cart-banner__item-name">{item.name}</span>
-                {item.formatName && (
-                  <span className="shared-cart-banner__item-format">{item.formatName}</span>
+                {item.optionName && (
+                  <span className="shared-cart-banner__item-format">{item.optionName}</span>
                 )}
               </div>
               <div className="shared-cart-banner__item-meta">

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
           orderBy: { sortOrder: 'asc' },
           take: 1, // Primary image only for comparison
         },
-        formats: {
+        options: {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
         },
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         certificateName: product.certificateName,
         dataSheetUrl: product.dataSheetUrl,
         dataSheetName: product.dataSheetName,
-        formats: product.formats,
+        options: product.options,
         averageRating: avgRating,
         reviewCount: totalRatings,
         isActive: product.isActive,

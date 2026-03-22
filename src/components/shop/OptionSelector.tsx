@@ -17,49 +17,49 @@ interface Format {
   stockQuantity: number;
 }
 
-interface FormatSelectorProps {
-  formats: Format[];
+interface OptionSelectorProps {
+  options: Format[];
   selectedFormat: Format;
   onSelect: (format: Format) => void;
   formatPrice: (price: number) => string;
 }
 
 // BUG-067 FIX: Use shared format icon utility instead of incomplete local mapping
-import { getFormatIcon } from '@/lib/format-icons';
+import { getOptionIcon } from '@/lib/option-icons';
 
-export default function FormatSelector({
-  formats,
+export default function OptionSelector({
+  options,
   selectedFormat,
   onSelect,
   formatPrice
-}: FormatSelectorProps) {
+}: OptionSelectorProps) {
   const { t } = useI18n();
 
-  // BUG-097 FIX: Keyboard navigation for radiogroup (ArrowUp/Down/Left/Right cycle through in-stock formats)
+  // BUG-097 FIX: Keyboard navigation for radiogroup (ArrowUp/Down/Left/Right cycle through in-stock options)
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     const navigableKeys = ['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'];
     if (!navigableKeys.includes(e.key)) return;
 
     e.preventDefault();
-    const availableFormats = formats.filter((f) => f.inStock);
-    if (availableFormats.length === 0) return;
+    const availableOptions = options.filter((f) => f.inStock);
+    if (availableOptions.length === 0) return;
 
-    const currentIndex = availableFormats.findIndex((f) => f.id === selectedFormat.id);
+    const currentIndex = availableOptions.findIndex((f) => f.id === selectedFormat.id);
     let nextIndex: number;
 
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      nextIndex = currentIndex < availableFormats.length - 1 ? currentIndex + 1 : 0;
+      nextIndex = currentIndex < availableOptions.length - 1 ? currentIndex + 1 : 0;
     } else {
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : availableFormats.length - 1;
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : availableOptions.length - 1;
     }
 
-    onSelect(availableFormats[nextIndex]);
+    onSelect(availableOptions[nextIndex]);
 
     // Move focus to the newly selected radio button
     const radiogroup = e.currentTarget;
     const buttons = radiogroup.querySelectorAll<HTMLButtonElement>('button[role="radio"]:not(:disabled)');
     buttons[nextIndex]?.focus();
-  }, [formats, selectedFormat, onSelect]);
+  }, [options, selectedFormat, onSelect]);
 
   return (
     <fieldset style={{ border: 'none', padding: 0, margin: 0 }} className="space-y-3">
@@ -68,9 +68,9 @@ export default function FormatSelector({
       </legend>
 
       <div className="grid grid-cols-2 gap-3" role="radiogroup" onKeyDown={handleKeyDown}>
-        {formats.map((format) => {
-          // BUG-067 FIX: Use shared getFormatIcon utility for complete format coverage
-          const formatIcon = getFormatIcon(format.type);
+        {options.map((format) => {
+          // BUG-067 FIX: Use shared getOptionIcon utility for complete format coverage
+          const formatIcon = getOptionIcon(format.type);
           const isSelected = selectedFormat.id === format.id;
           
           return (

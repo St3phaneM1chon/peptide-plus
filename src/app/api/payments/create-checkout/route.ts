@@ -34,12 +34,12 @@ function getStripe(): Stripe {
 // BE-SEC-03: Zod validation schema for checkout request
 const checkoutItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().optional().nullable(),
+  optionId: z.string().optional().nullable(),
   quantity: z.number().int().positive().max(100),
   // Client-sent prices are ignored (validated from DB), but allow them through
   price: z.number().optional(),
   name: z.string().optional(),
-  formatName: z.string().optional(),
+  optionName: z.string().optional(),
   imageUrl: z.string().optional().nullable(),
 });
 
@@ -231,9 +231,9 @@ export async function POST(request: NextRequest) {
 
     // =====================================================
     // SECURITY: Validate ALL prices from the database
-    // N+1 FIX: Batch-fetch all products and formats upfront
+    // N+1 FIX: Batch-fetch all products and options upfront
     // =====================================================
-    const verifiedItems: { productId: string; formatId: string | null; name: string; formatName: string | null; quantity: number; price: number; priceConverted: number; imageUrl: string | null; productType: string; weightGrams: number | null }[] = [];
+    const verifiedItems: { productId: string; optionId: string | null; name: string; optionName: string | null; quantity: number; price: number; priceConverted: number; imageUrl: string | null; productType: string; weightGrams: number | null }[] = [];
     let serverSubtotal = 0;
 
     // Validate basic item structure first
@@ -251,18 +251,18 @@ export async function POST(request: NextRequest) {
     });
     const productMap = new Map(allProducts.map(p => [p.id, p]));
 
-    // E-16 FIX: Batch-fetch formats with productId constraint to prevent cross-product format attacks.
+    // E-16 FIX: Batch-fetch options with productId constraint to prevent cross-product format attacks.
     // Each format is looked up with its claimed productId, so a cheap format from product A
     // cannot be referenced as belonging to product B.
     const formatProductPairs = items
-      .filter((i: { formatId?: string }): i is { formatId: string; productId: string } => !!i.formatId)
+      .filter((i: { optionId?: string }): i is { optionId: string; productId: string } => !!i.optionId)
       .map((i) => ({
-        id: i.formatId,
+        id: i.optionId,
         productId: i.productId,
       }));
     const uniqueFormatPairs = [...new Map(formatProductPairs.map(p => [`${p.id}:${p.productId}`, p])).values()];
     const allFormats = uniqueFormatPairs.length > 0
-      ? await prisma.productFormat.findMany({
+      ? await prisma.productOption.findMany({
           where: {
             OR: uniqueFormatPairs.map(pair => ({ id: pair.id, productId: pair.productId })),
           },
@@ -279,20 +279,20 @@ export async function POST(request: NextRequest) {
       }
 
       let verifiedPrice = Number(product.price);
-      let formatName: string | null = null;
+      let optionName: string | null = null;
       let weightGrams: number | null = null;
 
       // If a format is specified, use its price and weight instead
-      if (item.formatId) {
-        const format = formatMap.get(item.formatId);
+      if (item.optionId) {
+        const format = formatMap.get(item.optionId);
         if (!format) {
-          return NextResponse.json({ error: `Format introuvable: ${item.formatId}` }, { status: 400 });
+          return NextResponse.json({ error: `Format introuvable: ${item.optionId}` }, { status: 400 });
         }
         if (format.productId !== item.productId) {
           return NextResponse.json({ error: 'Le format ne correspond pas au produit' }, { status: 400 });
         }
         verifiedPrice = Number(format.price);
-        formatName = format.name;
+        optionName = format.name;
         weightGrams = format.weightGrams ?? null;
       }
 
@@ -304,9 +304,9 @@ export async function POST(request: NextRequest) {
 
       verifiedItems.push({
         productId: product.id,
-        formatId: item.formatId || null,
+        optionId: item.optionId || null,
         name: product.name,
-        formatName,
+        optionName,
         quantity,
         price: verifiedPrice, // CAD price (for accounting)
         priceConverted,       // Converted price (for Stripe)
@@ -483,12 +483,12 @@ export async function POST(request: NextRequest) {
       reservationIds = await prisma.$transaction(async (tx) => {
         const ids: string[] = [];
         for (const item of verifiedItems) {
-          if (item.formatId) {
+          if (item.optionId) {
             // Lock the format row to prevent concurrent overselling
             const [format] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
               SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
-              FROM "ProductFormat"
-              WHERE id = ${item.formatId}
+              FROM "ProductOption"
+              WHERE id = ${item.optionId}
               FOR UPDATE
             `;
 
@@ -499,7 +499,7 @@ export async function POST(request: NextRequest) {
             const reservation = await tx.inventoryReservation.create({
               data: {
                 productId: item.productId,
-                formatId: item.formatId,
+                optionId: item.optionId,
                 quantity: item.quantity,
                 cartId: cartId || undefined,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
@@ -507,7 +507,7 @@ export async function POST(request: NextRequest) {
             });
             ids.push(reservation.id);
           } else {
-            // BUG 8: Also check stock for base products without formats
+            // BUG 8: Also check stock for base products without options
             const [product] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
               SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
               FROM "Product"
@@ -522,7 +522,7 @@ export async function POST(request: NextRequest) {
             const reservation = await tx.inventoryReservation.create({
               data: {
                 productId: item.productId,
-                formatId: null,
+                optionId: null,
                 quantity: item.quantity,
                 cartId: cartId || undefined,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
@@ -551,7 +551,7 @@ export async function POST(request: NextRequest) {
         currency: stripeCurrency,
         product_data: {
           name: item.name,
-          description: item.formatName || undefined,
+          description: item.optionName || undefined,
           images: item.imageUrl ? [item.imageUrl] : undefined,
         },
         unit_amount: toCents(item.priceConverted),
@@ -642,7 +642,7 @@ export async function POST(request: NextRequest) {
     // records via cartId + DB product lookups.
     const compactItems = verifiedItems.map((item) => ({
       p: item.productId,
-      f: item.formatId,
+      f: item.optionId,
       q: item.quantity,
       $: item.price,
     }));

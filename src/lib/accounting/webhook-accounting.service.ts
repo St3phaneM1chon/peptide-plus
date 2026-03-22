@@ -36,14 +36,14 @@ interface OrderWithItems {
   items: {
     id: string;
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
     sku: string | null;
     quantity: number;
     unitPrice: Decimal;
     discount: Decimal;
     total: Decimal;
     productId: string;
-    formatId: string | null;
+    optionId: string | null;
   }[];
 }
 
@@ -472,7 +472,7 @@ async function createCustomerInvoice(order: OrderWithItems, tx?: Parameters<Para
       status: 'PAID',
       items: {
         create: order.items.map((item) => ({
-          description: `${item.productName}${item.formatName ? ` - ${item.formatName}` : ''}`,
+          description: `${item.productName}${item.optionName ? ` - ${item.optionName}` : ''}`,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           discount: item.discount,

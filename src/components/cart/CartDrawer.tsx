@@ -184,10 +184,10 @@ export default function CartDrawer() {
             <div className="cart-items">
               {items.map((item) => (
                 <CartItemRow
-                  key={`${item.productId}-${item.formatId || 'default'}`}
+                  key={`${item.productId}-${item.optionId || 'default'}`}
                   item={item}
-                  onUpdateQuantity={(qty) => updateQuantity(item.productId, item.formatId, qty)}
-                  onRemove={() => removeItem(item.productId, item.formatId)}
+                  onUpdateQuantity={(qty) => updateQuantity(item.productId, item.optionId, qty)}
+                  onRemove={() => removeItem(item.productId, item.optionId)}
                   t={t}
                   formatCurrency={formatCurrency}
                 />
@@ -233,9 +233,9 @@ export default function CartDrawer() {
 interface CartItemRowProps {
   item: {
     productId: string;
-    formatId?: string;
+    optionId?: string;
     name: string;
-    formatName?: string;
+    optionName?: string;
     price: number;
     quantity: number;
     image?: string;
@@ -267,7 +267,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: Ca
       {/* Details */}
       <div className="cart-item__details">
         <h4 className="cart-item__title">{item.name}</h4>
-        {item.formatName && <p className="cart-item__variant">{item.formatName}</p>}
+        {item.optionName && <p className="cart-item__variant">{item.optionName}</p>}
         <div className="cart-item__price-line">
           <span className="cart-item__price">{formatCurrency(item.price)}</span>
           <span className="cart-item__line-total">{formatCurrency(item.price * item.quantity)}</span>

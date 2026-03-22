@@ -41,7 +41,7 @@ function getShareSecret(): Uint8Array {
 
 interface SharedCartItem {
   productId: string;
-  formatId?: string | null;
+  optionId?: string | null;
   name: string;
   price: number;
   quantity: number;
@@ -90,11 +90,11 @@ export async function GET(
 
     // Collect all product IDs and format IDs we need to verify
     const productIds = [...new Set(payload.items.map((i) => i.productId))];
-    const formatIds = payload.items
-      .map((i) => i.formatId)
+    const optionIds = payload.items
+      .map((i) => i.optionId)
       .filter((id): id is string => !!id);
 
-    // Fetch current product data with active formats
+    // Fetch current product data with active options
     const products = await prisma.product.findMany({
       where: { id: { in: productIds }, isActive: true },
       select: {
@@ -108,8 +108,8 @@ export async function GET(
           orderBy: { sortOrder: 'asc' },
           take: 1,
         },
-        formats: {
-          where: formatIds.length > 0 ? { id: { in: formatIds } } : { isActive: true },
+        options: {
+          where: optionIds.length > 0 ? { id: { in: optionIds } } : { isActive: true },
           select: {
             id: true,
             name: true,
@@ -131,7 +131,7 @@ export async function GET(
       if (!product) {
         return {
           productId: sharedItem.productId,
-          formatId: sharedItem.formatId ?? null,
+          optionId: sharedItem.optionId ?? null,
           name: sharedItem.name,
           quantity: sharedItem.quantity,
           currentPrice: null,
@@ -144,10 +144,10 @@ export async function GET(
       // Resolve format if specified
       let currentPrice: number;
       let inStock: boolean;
-      let formatName: string | undefined;
+      let optionName: string | undefined;
 
-      if (sharedItem.formatId) {
-        const format = product.formats.find((f) => f.id === sharedItem.formatId);
+      if (sharedItem.optionId) {
+        const format = product.options.find((f) => f.id === sharedItem.optionId);
         if (!format) {
           // Format was removed - fall back to base product price
           currentPrice = Number(product.price);
@@ -155,7 +155,7 @@ export async function GET(
         } else {
           currentPrice = format.price ? Number(format.price) : Number(product.price);
           inStock = (format.stockQuantity ?? product.stockQuantity ?? 0) > 0;
-          formatName = format.name;
+          optionName = format.name;
         }
       } else {
         currentPrice = Number(product.price);
@@ -169,9 +169,9 @@ export async function GET(
 
       return {
         productId: sharedItem.productId,
-        formatId: sharedItem.formatId ?? null,
+        optionId: sharedItem.optionId ?? null,
         name: product.name,
-        formatName: formatName ?? null,
+        optionName: optionName ?? null,
         quantity: sharedItem.quantity,
         currentPrice,
         image: imageUrl,

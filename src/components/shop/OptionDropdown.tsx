@@ -22,7 +22,7 @@ export type FormatType =
 export interface FormatOption {
   id: string;
   name: string;
-  formatType: FormatType;
+  optionType: FormatType;
   price: number;
   comparePrice?: number | null;
   imageUrl?: string | null;
@@ -34,8 +34,8 @@ export interface FormatOption {
   isDefault?: boolean;
 }
 
-interface FormatDropdownProps {
-  formats: FormatOption[];
+interface OptionDropdownProps {
+  options: FormatOption[];
   selectedFormat: FormatOption;
   onSelect: (format: FormatOption) => void;
   variant?: 'default' | 'compact' | 'visual';
@@ -46,18 +46,18 @@ interface FormatDropdownProps {
 
 // Icons and images for each format type (labels come from i18n)
 const FORMAT_DEFAULTS: Record<FormatType, { icon: string; labelKey: string; image: string }> = {
-  VIAL_2ML: { icon: '💉', labelKey: 'formats.vial2ml', image: '/images/formats/vial-2ml.png' },
-  VIAL_10ML: { icon: '🧪', labelKey: 'formats.vial10ml', image: '/images/formats/vial-10ml.png' },
-  CARTRIDGE_3ML: { icon: '💊', labelKey: 'formats.cartridge3ml', image: '/images/formats/cartridge.png' },
-  KIT_12: { icon: '📦', labelKey: 'formats.kit12', image: '/images/formats/kit-12.png' },
-  CAPSULE_60: { icon: '💊', labelKey: 'formats.capsules60', image: '/images/formats/capsules-60.png' },
-  CAPSULE_120: { icon: '💊', labelKey: 'formats.capsules120', image: '/images/formats/capsules-120.png' },
-  PACK_5: { icon: '📦', labelKey: 'formats.pack5', image: '/images/formats/pack-5.png' },
-  PACK_10: { icon: '📦', labelKey: 'formats.pack10', image: '/images/formats/pack-10.png' },
-  BUNDLE: { icon: '🎁', labelKey: 'formats.bundle', image: '/images/formats/bundle.png' },
-  ACCESSORY: { icon: '🔧', labelKey: 'formats.accessory', image: '/images/formats/accessory.png' },
-  NASAL_SPRAY: { icon: '💨', labelKey: 'formats.nasalSpray', image: '/images/formats/nasal-spray.png' },
-  CREAM: { icon: '🧴', labelKey: 'formats.cream', image: '/images/formats/cream.png' },
+  VIAL_2ML: { icon: '💉', labelKey: 'options.vial2ml', image: '/images/options/vial-2ml.png' },
+  VIAL_10ML: { icon: '🧪', labelKey: 'options.vial10ml', image: '/images/options/vial-10ml.png' },
+  CARTRIDGE_3ML: { icon: '💊', labelKey: 'options.cartridge3ml', image: '/images/options/cartridge.png' },
+  KIT_12: { icon: '📦', labelKey: 'options.kit12', image: '/images/options/kit-12.png' },
+  CAPSULE_60: { icon: '💊', labelKey: 'options.capsules60', image: '/images/options/capsules-60.png' },
+  CAPSULE_120: { icon: '💊', labelKey: 'options.capsules120', image: '/images/options/capsules-120.png' },
+  PACK_5: { icon: '📦', labelKey: 'options.pack5', image: '/images/options/pack-5.png' },
+  PACK_10: { icon: '📦', labelKey: 'options.pack10', image: '/images/options/pack-10.png' },
+  BUNDLE: { icon: '🎁', labelKey: 'options.bundle', image: '/images/options/bundle.png' },
+  ACCESSORY: { icon: '🔧', labelKey: 'options.accessory', image: '/images/options/accessory.png' },
+  NASAL_SPRAY: { icon: '💨', labelKey: 'options.nasalSpray', image: '/images/options/nasal-spray.png' },
+  CREAM: { icon: '🧴', labelKey: 'options.cream', image: '/images/options/cream.png' },
 };
 
 const AVAILABILITY_COLORS: Record<string, { labelKey: string; color: string }> = {
@@ -69,15 +69,15 @@ const AVAILABILITY_COLORS: Record<string, { labelKey: string; color: string }> =
   LIMITED: { labelKey: 'shop.limitedStock', color: 'text-primary-600' },
 };
 
-export default function FormatDropdown({
-  formats,
+export default function OptionDropdown({
+  options,
   selectedFormat,
   onSelect,
   variant = 'default',
   showImages = true,
   showPrices = true,
   className = '',
-}: FormatDropdownProps) {
+}: OptionDropdownProps) {
   const { formatPrice } = useCurrency();
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -94,11 +94,11 @@ export default function FormatDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter out formats with stockQuantity <= 0
-  const visibleFormats = formats.filter(f => f.stockQuantity > 0);
+  // Filter out options with stockQuantity <= 0
+  const visibleFormats = options.filter(f => f.stockQuantity > 0);
 
   const getFormatInfo = (format: FormatOption) => {
-    return FORMAT_DEFAULTS[format.formatType] || FORMAT_DEFAULTS.ACCESSORY;
+    return FORMAT_DEFAULTS[format.optionType] || FORMAT_DEFAULTS.ACCESSORY;
   };
 
   const getAvailabilityInfo = (availability: string) => {

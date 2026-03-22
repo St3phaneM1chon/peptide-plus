@@ -14,9 +14,9 @@ import { addCSRFHeader } from '@/lib/csrf';
 
 interface ProductHistoryItem {
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   productName: string;
-  formatName: string | null;
+  optionName: string | null;
   imageUrl: string | null;
   slug: string;
   currentPrice: number;
@@ -80,7 +80,7 @@ export default function ProductHistoryPage() {
   const handleSubscriptionAccept = async (frequency: string, discountPercent: number) => {
     if (!subscriptionOffer) return;
 
-    setAddingToCart(`${subscriptionOffer.productId}__${subscriptionOffer.formatId}`);
+    setAddingToCart(`${subscriptionOffer.productId}__${subscriptionOffer.optionId}`);
 
     try {
       // Create subscription in DB
@@ -89,7 +89,7 @@ export default function ProductHistoryPage() {
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           productId: subscriptionOffer.productId,
-          formatId: subscriptionOffer.formatId,
+          optionId: subscriptionOffer.optionId,
           quantity: 1,
           frequency,
         }),
@@ -98,9 +98,9 @@ export default function ProductHistoryPage() {
       // Add to cart (subscription already created, bypass upsell)
       addItem({
         productId: subscriptionOffer.productId,
-        formatId: subscriptionOffer.formatId || undefined,
+        optionId: subscriptionOffer.optionId || undefined,
         name: subscriptionOffer.productName,
-        formatName: subscriptionOffer.formatName || undefined,
+        optionName: subscriptionOffer.optionName || undefined,
         price: subscriptionOffer.currentPrice * (1 - discountPercent / 100),
         image: subscriptionOffer.imageUrl || undefined,
       });
@@ -118,9 +118,9 @@ export default function ProductHistoryPage() {
     // Add to cart without subscription (use upsell for potential volume discount)
     addItemWithUpsell({
       productId: subscriptionOffer.productId,
-      formatId: subscriptionOffer.formatId || undefined,
+      optionId: subscriptionOffer.optionId || undefined,
       name: subscriptionOffer.productName,
-      formatName: subscriptionOffer.formatName || undefined,
+      optionName: subscriptionOffer.optionName || undefined,
       price: subscriptionOffer.currentPrice,
       image: subscriptionOffer.imageUrl || undefined,
     });
@@ -193,7 +193,7 @@ export default function ProductHistoryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {category.products.map((product) => {
                     const isAvailable = product.isActive && product.inStock;
-                    const loadingKey = `${product.productId}__${product.formatId}`;
+                    const loadingKey = `${product.productId}__${product.optionId}`;
                     const isAdding = addingToCart === loadingKey;
 
                     return (
@@ -226,8 +226,8 @@ export default function ProductHistoryPage() {
                               >
                                 {product.productName}
                               </Link>
-                              {product.formatName && (
-                                <p className="text-sm text-gray-500">{product.formatName}</p>
+                              {product.optionName && (
+                                <p className="text-sm text-gray-500">{product.optionName}</p>
                               )}
                             </div>
                           </div>
@@ -307,9 +307,9 @@ export default function ProductHistoryPage() {
         {subscriptionOffer && (
           <SubscriptionOfferModal
             productId={subscriptionOffer.productId}
-            formatId={subscriptionOffer.formatId}
+            optionId={subscriptionOffer.optionId}
             productName={subscriptionOffer.productName}
-            formatName={subscriptionOffer.formatName}
+            optionName={subscriptionOffer.optionName}
             currentPrice={subscriptionOffer.currentPrice}
             onAccept={handleSubscriptionAccept}
             onDecline={handleSubscriptionDecline}

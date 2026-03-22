@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger';
 
 const transferSchema = z.object({
   productId: z.string().min(1, 'Product ID required'),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   quantity: z.number().int().positive('Quantity must be a positive integer'),
   fromLocation: z.string().min(1, 'Source location required'),
   toLocation: z.string().min(1, 'Destination location required'),
@@ -27,7 +27,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       );
     }
 
-    const { productId, formatId, quantity, fromLocation, toLocation, reason } = parsed.data;
+    const { productId, optionId, quantity, fromLocation, toLocation, reason } = parsed.data;
 
     if (fromLocation === toLocation) {
       return NextResponse.json(
@@ -43,7 +43,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       const latestTx = await tx.inventoryTransaction.findFirst({
         where: {
           productId,
-          ...(formatId ? { formatId } : {}),
+          ...(optionId ? { optionId } : {}),
         },
         orderBy: { createdAt: 'desc' },
         select: { runningWAC: true, unitCost: true },
@@ -58,7 +58,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       const outTx = await tx.inventoryTransaction.create({
         data: {
           productId,
-          formatId: formatId ?? null,
+          optionId: optionId ?? null,
           type: 'ADJUSTMENT',
           quantity: -quantity,
           unitCost: currentUnitCost,
@@ -72,7 +72,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       await tx.inventoryTransaction.create({
         data: {
           productId,
-          formatId: formatId ?? null,
+          optionId: optionId ?? null,
           type: 'ADJUSTMENT',
           quantity: quantity,
           unitCost: currentUnitCost,

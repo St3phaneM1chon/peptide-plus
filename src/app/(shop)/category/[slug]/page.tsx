@@ -113,7 +113,7 @@ export default async function CategoryPage({ params }: PageProps) {
         orderBy: { sortOrder: 'asc' },
         select: { id: true, url: true, alt: true, isPrimary: true },
       },
-      formats: {
+      options: {
         where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
         select: {
@@ -156,8 +156,8 @@ export default async function CategoryPage({ params }: PageProps) {
     imageUrl: p.images?.find((img: { isPrimary: boolean; url: string }) => img.isPrimary)?.url || p.images?.[0]?.url || p.imageUrl || undefined,
     isNew: p.isNew || undefined,
     isBestseller: p.isBestseller || undefined,
-    inStock: p.formats.some((f: { inStock: boolean }) => f.inStock),
-    formats: p.formats.map((f: { id: string; name: string; price: number | { toNumber?: () => number }; comparePrice: number | { toNumber?: () => number } | null; inStock: boolean; stockQuantity: number }) => ({
+    inStock: p.options.some((f: { inStock: boolean }) => f.inStock),
+    options: p.options.map((f: { id: string; name: string; price: number | { toNumber?: () => number }; comparePrice: number | { toNumber?: () => number } | null; inStock: boolean; stockQuantity: number }) => ({
       id: f.id,
       name: f.name,
       price: Number(f.price),

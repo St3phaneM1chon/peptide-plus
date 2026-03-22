@@ -13,7 +13,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 const subscribeSchema = z.object({
   email: z.string().email('Invalid email address'),
   productId: z.string().min(1, 'Product ID is required'),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
 });
 
 /**
@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, productId, formatId } = validation.data;
+    const { email, productId, optionId } = validation.data;
 
     // Verify product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        formats: formatId ? { where: { id: formatId } } : undefined,
+        options: optionId ? { where: { id: optionId } } : undefined,
       },
     });
 
@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If formatId is provided, verify it exists and belongs to this product
-    if (formatId) {
-      const format = await prisma.productFormat.findFirst({
+    // If optionId is provided, verify it exists and belongs to this product
+    if (optionId) {
+      const format = await prisma.productOption.findFirst({
         where: {
-          id: formatId,
+          id: optionId,
           productId: productId,
         },
       });
@@ -91,16 +91,16 @@ export async function POST(request: NextRequest) {
     // Create or update alert (upsert for idempotency)
     const alert = await prisma.stockAlert.upsert({
       where: {
-        email_productId_formatId: {
+        email_productId_optionId: {
           email,
           productId,
-          formatId: formatId ?? '',
+          optionId: optionId ?? '',
         },
       },
       create: {
         email,
         productId,
-        formatId: formatId ?? null,
+        optionId: optionId ?? null,
       },
       update: {
         // Reset notified status if user re-subscribes
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/stock-alerts?productId=...&formatId=... - Check subscription status
+ * GET /api/stock-alerts?productId=...&optionId=... - Check subscription status
  * SECURITY: Requires auth — uses session email to prevent email enumeration
  */
 export async function GET(request: NextRequest) {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
-    const formatId = searchParams.get('formatId');
+    const optionId = searchParams.get('optionId');
 
     if (!productId) {
       return NextResponse.json(
@@ -152,10 +152,10 @@ export async function GET(request: NextRequest) {
     // Use session email instead of query param to prevent checking other users' subscriptions
     const alert = await prisma.stockAlert.findUnique({
       where: {
-        email_productId_formatId: {
+        email_productId_optionId: {
           email: session.user.email,
           productId,
-          formatId: formatId ?? '',
+          optionId: optionId ?? '',
         },
       },
     });

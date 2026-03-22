@@ -45,7 +45,7 @@ interface ApiProduct {
     url: string;
     alt?: string;
   }>;
-  formats: Array<{
+  options: Array<{
     id: string;
     label: string;
     type?: string;
@@ -95,11 +95,11 @@ function slugToCategoryKey(slug: string): string | undefined {
 const newThreshold = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
 function toCardProps(p: ApiProduct) {
-  const activeFormats = p.formats.filter((f) => f.isActive);
-  const lowestPrice = activeFormats.length > 0
-    ? Math.min(...activeFormats.map((f) => Number(f.price)))
+  const activeOptions = p.options.filter((f) => f.isActive);
+  const lowestPrice = activeOptions.length > 0
+    ? Math.min(...activeOptions.map((f) => Number(f.price)))
     : 0;
-  const hasStock = activeFormats.some((f) => f.stockQuantity > 0);
+  const hasStock = activeOptions.some((f) => f.stockQuantity > 0);
 
   return {
     id: p.id,
@@ -113,7 +113,7 @@ function toCardProps(p: ApiProduct) {
     isNew: new Date(p.createdAt) > newThreshold,
     isBestseller: p.isFeatured,
     inStock: hasStock,
-    formats: activeFormats.map((f) => ({
+    options: activeOptions.map((f) => ({
       id: f.id,
       name: f.label,
       price: Number(f.price),

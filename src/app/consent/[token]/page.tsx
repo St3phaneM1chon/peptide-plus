@@ -293,7 +293,7 @@ export default function ConsentFormPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          BioCycle Peptides · biocyclepeptides.com
+          BioCycle Peptides · attitudes.vip
         </p>
       </div>
     </div>

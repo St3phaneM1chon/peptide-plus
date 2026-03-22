@@ -16,7 +16,7 @@ interface OrderItem {
   id: string;
   productId: string;
   productName: string;
-  formatName: string;
+  optionName: string;
   quantity: number;
   unitPrice: number;
   sku?: string;
@@ -34,8 +34,8 @@ interface ProductInventory {
   productId: string;
   productName: string;
   category: string;
-  formats: {
-    formatName: string;
+  options: {
+    optionName: string;
     totalQuantity: number;
     totalSpent: number;
     orderCount: number;
@@ -139,7 +139,7 @@ export default function InventoryPage() {
             productId: item.productId,
             productName: item.productName,
             category: detectCategory(item.productName),
-            formats: [],
+            options: [],
             totalQuantity: 0,
             totalSpent: 0,
             totalOrders: 0,
@@ -163,17 +163,17 @@ export default function InventoryPage() {
         }
 
         // Add format info
-        let format = product.formats.find(f => f.formatName === item.formatName);
+        let format = product.options.find(f => f.optionName === item.optionName);
         if (!format) {
           format = {
-            formatName: item.formatName || 'Standard',
+            optionName: item.optionName || 'Standard',
             totalQuantity: 0,
             totalSpent: 0,
             orderCount: 0,
             lastOrderDate: order.createdAt,
             orders: [],
           };
-          product.formats.push(format);
+          product.options.push(format);
         }
 
         format.totalQuantity += item.quantity;
@@ -208,7 +208,7 @@ export default function InventoryPage() {
       };
     }
 
-    const totalFormats = inventory.reduce((sum, p) => sum + p.formats.length, 0);
+    const totalFormats = inventory.reduce((sum, p) => sum + p.options.length, 0);
     const totalQuantity = inventory.reduce((sum, p) => sum + p.totalQuantity, 0);
     const totalSpent = inventory.reduce((sum, p) => sum + p.totalSpent, 0);
     
@@ -254,7 +254,7 @@ export default function InventoryPage() {
       const term = searchTerm.toLowerCase();
       result = result.filter(p => 
         p.productName.toLowerCase().includes(term) ||
-        p.formats.some(f => f.formatName.toLowerCase().includes(term))
+        p.options.some(f => f.optionName.toLowerCase().includes(term))
       );
     }
 
@@ -305,10 +305,10 @@ export default function InventoryPage() {
   const exportCSV = () => {
     const headers = [t('account.inventory.csvProduct'), t('account.inventory.csvCategory'), t('account.inventory.csvFormat'), t('account.inventory.csvTotalQuantity'), t('account.inventory.csvTotalSpent'), t('account.inventory.csvLastOrder'), t('account.inventory.csvStockStatus'), t('account.inventory.csvNotes')];
     const rows = filteredInventory.flatMap(p => 
-      p.formats.map(f => [
+      p.options.map(f => [
         p.productName,
         p.category,
-        f.formatName,
+        f.optionName,
         f.totalQuantity,
         fmtPrice(f.totalSpent),
         new Date(f.lastOrderDate).toLocaleDateString(locale),
@@ -558,9 +558,9 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1">
-                          {product.formats.map(f => (
-                            <span key={f.formatName} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
-                              {f.formatName} ({f.totalQuantity})
+                          {product.options.map(f => (
+                            <span key={f.optionName} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
+                              {f.optionName} ({f.totalQuantity})
                             </span>
                           ))}
                         </div>
@@ -711,9 +711,9 @@ function ProductCard({
       <div className="p-4 bg-gray-50">
         <p className="text-xs text-gray-500 mb-2">{t('account.inventory.orderedFormats')}</p>
         <div className="flex flex-wrap gap-2">
-          {product.formats.map(f => (
-            <div key={f.formatName} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm">
-              <span className="font-medium">{f.formatName}</span>
+          {product.options.map(f => (
+            <div key={f.optionName} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm">
+              <span className="font-medium">{f.optionName}</span>
               <span className="text-gray-500 ms-1">×{f.totalQuantity}</span>
             </div>
           ))}
@@ -855,7 +855,7 @@ function ProductDetailModal({
                   <p className="text-xs text-gray-500">{t('account.inventory.modalOrders')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-gray-900">{product.formats.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{product.options.length}</p>
                   <p className="text-xs text-gray-500">{t('account.inventory.statFormats')}</p>
                 </div>
               </div>
@@ -864,10 +864,10 @@ function ProductDetailModal({
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">{t('account.inventory.formatBreakdown')}</h3>
                 <div className="space-y-2">
-                  {product.formats.map(f => (
-                    <div key={f.formatName} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  {product.options.map(f => (
+                    <div key={f.optionName} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium text-gray-900">{f.formatName}</p>
+                        <p className="font-medium text-gray-900">{f.optionName}</p>
                         <p className="text-sm text-gray-500">{f.orderCount} {t('account.inventory.orderCount', { count: f.orderCount })}</p>
                       </div>
                       <div className="text-end">
@@ -922,9 +922,9 @@ function ProductDetailModal({
 
           {activeTab === 'history' && (
             <div className="space-y-4">
-              {product.formats.map(format => (
-                <div key={format.formatName}>
-                  <h3 className="font-semibold text-gray-900 mb-3">{format.formatName}</h3>
+              {product.options.map(format => (
+                <div key={format.optionName}>
+                  <h3 className="font-semibold text-gray-900 mb-3">{format.optionName}</h3>
                   <div className="space-y-2">
                     {format.orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((order, idx) => (
                       <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

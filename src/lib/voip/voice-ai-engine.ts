@@ -101,7 +101,7 @@ RÈGLES STRICTES:
 - Si c'est la 3e question sans réponse satisfaisante → [TRANSFER]
 
 CAPACITÉS:
-- Informations produits (nom, description, prix, formats disponibles)
+- Informations produits (nom, description, prix, options disponibles)
 - Statut de commande (si client identifié)
 - FAQ et politiques (livraison, retours, garantie)
 - Programme de fidélité (tiers, points, avantages)
@@ -131,7 +131,7 @@ STRICT RULES:
 - If 3rd question without satisfactory answer → [TRANSFER]
 
 CAPABILITIES:
-- Product information (name, description, price, available formats)
+- Product information (name, description, price, available options)
 - Order status (if client identified)
 - FAQ and policies (shipping, returns, warranty)
 - Loyalty program (tiers, points, benefits)

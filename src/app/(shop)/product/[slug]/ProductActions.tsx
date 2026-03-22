@@ -94,9 +94,9 @@ export default function ProductActions({
         <div className="mb-6">
           <StockAlertButton
             productId={productId}
-            formatId={selectedFormatId}
+            optionId={selectedFormatId}
             productName={productName}
-            formatName={selectedFormatName}
+            optionName={selectedFormatName}
           />
         </div>
       )}

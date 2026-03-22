@@ -11,9 +11,9 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
-  formatType: string;
+  optionType: string;
   name: string;
   description: string | null;
   imageUrl: string | null;
@@ -84,7 +84,7 @@ interface Product {
   isNew: boolean;
   isBestseller: boolean;
   isActive: boolean;
-  formats: ProductFormat[];
+  options: ProductOption[];
   category: { id: string; name: string; slug: string };
   translations?: TranslationStatus[];
 }
@@ -112,9 +112,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [formatToDelete, setFormatToDelete] = useState<string | null>(null);
-  const [concurrentEditConfirm, setConcurrentEditConfirm] = useState<{ format: ProductFormat; initialFormat: ProductFormat } | null>(null);
-  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats' | 'sales' | 'promos' | 'videos' | 'reviews' | 'deals'>('header');
+  const [optionToDelete, setFormatToDelete] = useState<string | null>(null);
+  const [concurrentEditConfirm, setConcurrentEditConfirm] = useState<{ format: ProductOption; initialFormat: ProductOption } | null>(null);
+  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'options' | 'sales' | 'promos' | 'videos' | 'reviews' | 'deals'>('header');
   const [translationStatuses, setTranslationStatuses] = useState<TranslationStatus[]>([]);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -245,9 +245,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     return [];
   });
 
-  const [formats, setFormats] = useState<ProductFormat[]>(product.formats);
+  const [options, setOptions] = useState<ProductOption[]>(product.options);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
-  const [editingFormatId, setEditingFormatId] = useState<string | null>(null);
+  const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
 
   // Fetch translation statuses
   useEffect(() => {
@@ -301,37 +301,37 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   // Format management
   const handleAddFormat = async () => {
     try {
-      const res = await fetch(`/api/products/${product.id}/formats`, {
+      const res = await fetch(`/api/products/${product.id}/options`, {
         method: 'POST',
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
-          formatType: 'VIAL_2ML',
-          name: t('admin.productForm.newFormat'),
+          optionType: 'VIAL_2ML',
+          name: t('admin.productForm.newOption'),
           price: 0,
           stockQuantity: 100,
           lowStockThreshold: 5,
           availability: 'IN_STOCK',
-          isDefault: formats.length === 0,
+          isDefault: options.length === 0,
           isActive: true,
         }),
       });
       if (res.ok) {
-        const { data: createdFormat } = await res.json();
-        setFormats([...formats, createdFormat]);
-        setEditingFormatId(createdFormat.id);
+        const { data: createdOption } = await res.json();
+        setOptions([...options, createdOption]);
+        setEditingOptionId(createdOption.id);
       }
     } catch {
-      toast.error(t('admin.productForm.formatCreationError'));
+      toast.error(t('admin.productForm.optionCreationError'));
     }
   };
 
   // BUG-049 FIX: Detect concurrent edits via updatedAt check before saving format.
   // Sends only fields that differ from the original to minimize overwrite risk.
   // BUG-075 FIX: Optimistic update - update local state immediately, revert on error.
-  const handleSaveFormat = async (format: ProductFormat, initialFormat: ProductFormat) => {
+  const handleSaveFormat = async (format: ProductOption, initialFormat: ProductOption) => {
     // BUG-049: Fetch the current server state to check for concurrent modifications
     try {
-      const checkRes = await fetch(`/api/products/${product.id}/formats/${format.id}`);
+      const checkRes = await fetch(`/api/products/${product.id}/options/${format.id}`);
       if (checkRes.ok) {
         const { data: serverFormat } = await checkRes.json();
         if (serverFormat.updatedAt && initialFormat.updatedAt && serverFormat.updatedAt !== initialFormat.updatedAt) {
@@ -345,20 +345,20 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     }
 
     // BUG-075: Optimistic update - apply changes to local state immediately
-    const previousFormats = formats;
-    setFormats(formats.map(f => f.id === format.id ? format : f));
-    setEditingFormatId(null);
+    const previousOptions = options;
+    setOptions(options.map(f => f.id === format.id ? format : f));
+    setEditingOptionId(null);
 
     try {
       // BUG-049: Build a partial payload with only changed fields to reduce overwrite surface
       const changedFields: Record<string, unknown> = {};
-      for (const key of Object.keys(format) as (keyof ProductFormat)[]) {
+      for (const key of Object.keys(format) as (keyof ProductOption)[]) {
         if (format[key] !== initialFormat[key]) {
           changedFields[key] = format[key];
         }
       }
 
-      const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
+      const res = await fetch(`/api/products/${product.id}/options/${format.id}`, {
         method: 'PUT',
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
@@ -366,18 +366,18 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       if (res.ok) {
         // Replace optimistic data with confirmed server data (includes updatedAt, etc.)
         const { data: updatedFormat } = await res.json();
-        setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
+        setOptions(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
       } else {
         // BUG-075: Revert optimistic update on server error
-        setFormats(previousFormats);
-        setEditingFormatId(format.id);
-        toast.error(t('admin.productForm.formatUpdateError'));
+        setOptions(previousOptions);
+        setEditingOptionId(format.id);
+        toast.error(t('admin.productForm.optionUpdateError'));
       }
     } catch {
       // BUG-075: Revert optimistic update on network error
-      setFormats(previousFormats);
-      setEditingFormatId(format.id);
-      toast.error(t('admin.productForm.formatUpdateError'));
+      setOptions(previousOptions);
+      setEditingOptionId(format.id);
+      toast.error(t('admin.productForm.optionUpdateError'));
     }
   };
 
@@ -387,51 +387,51 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     const { format, initialFormat } = concurrentEditConfirm;
     setConcurrentEditConfirm(null);
     // Skip the server check and go straight to the optimistic update + save
-    const previousFormats = formats;
-    setFormats(formats.map(f => f.id === format.id ? format : f));
-    setEditingFormatId(null);
+    const previousOptions = options;
+    setOptions(options.map(f => f.id === format.id ? format : f));
+    setEditingOptionId(null);
     try {
       const changedFields: Record<string, unknown> = {};
-      for (const key of Object.keys(format) as (keyof ProductFormat)[]) {
+      for (const key of Object.keys(format) as (keyof ProductOption)[]) {
         if (format[key] !== initialFormat[key]) {
           changedFields[key] = format[key];
         }
       }
-      const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
+      const res = await fetch(`/api/products/${product.id}/options/${format.id}`, {
         method: 'PUT',
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
         const { data: updatedFormat } = await res.json();
-        setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
+        setOptions(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
       } else {
-        setFormats(previousFormats);
-        setEditingFormatId(format.id);
-        toast.error(t('admin.productForm.formatUpdateError'));
+        setOptions(previousOptions);
+        setEditingOptionId(format.id);
+        toast.error(t('admin.productForm.optionUpdateError'));
       }
     } catch {
-      setFormats(previousFormats);
-      setEditingFormatId(format.id);
-      toast.error(t('admin.productForm.formatUpdateError'));
+      setOptions(previousOptions);
+      setEditingOptionId(format.id);
+      toast.error(t('admin.productForm.optionUpdateError'));
     }
   };
 
   // BUG-093/094 FIX: Use ConfirmDialog instead of window.confirm() for format deletion
-  const handleDeleteFormat = (formatId: string) => {
-    setFormatToDelete(formatId);
+  const handleDeleteOption = (optionId: string) => {
+    setFormatToDelete(optionId);
   };
 
   const confirmDeleteFormat = async () => {
-    if (!formatToDelete) return;
+    if (!optionToDelete) return;
     try {
-      const res = await fetch(`/api/products/${product.id}/formats/${formatToDelete}`, { method: 'DELETE', headers: addCSRFHeader() });
+      const res = await fetch(`/api/products/${product.id}/options/${optionToDelete}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
-        setFormats(formats.filter(f => f.id !== formatToDelete));
-        toast.success(t('admin.productForm.formatDeleted'));
+        setOptions(options.filter(f => f.id !== optionToDelete));
+        toast.success(t('admin.productForm.optionDeleted'));
       } else {
         const err = await res.json().catch(() => null);
-        toast.error(err?.error?.message || t('admin.productForm.formatDeleteError'));
+        toast.error(err?.error?.message || t('admin.productForm.optionDeleteError'));
       }
     } catch {
       toast.error(t('admin.productForm.deletionError'));
@@ -498,12 +498,12 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const tabIcons = {
     header: <ClipboardList className="w-4 h-4" />,
     texts: <FileEdit className="w-4 h-4" />,
-    formats: <Package className="w-4 h-4" />,
+    options: <Package className="w-4 h-4" />,
   };
   const tabs = [
     { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: tabIcons.header, count: null },
     { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: tabIcons.texts, count: productTexts.length },
-    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: tabIcons.formats, count: formats.length },
+    { id: 'options' as const, label: t('admin.productForm.tabOptions'), icon: tabIcons.options, count: options.length },
     { id: 'sales' as const, label: t('admin.bridges.salesStats'), icon: <ShoppingCart className="w-4 h-4" />, count: null },
     { id: 'promos' as const, label: t('admin.bridges.activePromos'), icon: <Tag className="w-4 h-4" />, count: promosData?.length ?? null },
     { id: 'videos' as const, label: t('admin.bridges.linkedVideos'), icon: <Film className="w-4 h-4" />, count: videosData?.length ?? null },
@@ -946,12 +946,12 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         )}
 
         {/* ===== TAB: FORMATS ===== */}
-        {activeTab === 'formats' && (
+        {activeTab === 'options' && (
           <div className={`space-y-4 transition-opacity ${saving ? 'opacity-50 pointer-events-none' : ''}`} aria-disabled={saving || undefined}>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableFormats')}</h2>
-                <p className="text-sm text-neutral-500">{t('admin.productForm.formatsDescription')}</p>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableOptions')}</h2>
+                <p className="text-sm text-neutral-500">{t('admin.productForm.optionsDescription')}</p>
               </div>
               <div className="flex items-center gap-2">
                 {isOwner && (
@@ -960,7 +960,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     className="inline-flex items-center gap-2 px-3 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors text-sm"
                   >
                     <Settings2 className="w-4 h-4" />
-                    {t('admin.productForm.manageFormatTypes')}
+                    {t('admin.productForm.manageOptionTypes')}
                   </button>
                 )}
                 <button
@@ -968,12 +968,12 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  {t('admin.productForm.addFormat')}
+                  {t('admin.productForm.addOption')}
                 </button>
               </div>
             </div>
 
-            {formats.length === 0 ? (
+            {options.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormatsShort')}</p>
                 <button onClick={handleAddFormat} className="text-indigo-600 hover:text-indigo-700 font-medium">
@@ -981,9 +981,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                 </button>
               </div>
             ) : (
-              formats.map((format) => {
+              options.map((format) => {
                 const stock = getStockDisplay(format.stockQuantity, format.lowStockThreshold, t);
-                const isEditing = editingFormatId === format.id;
+                const isEditing = editingOptionId === format.id;
 
                 return (
                   <div
@@ -997,9 +997,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     {isEditing ? (
                       <EditFormatForm
                         format={format}
-                        formatTypes={FORMAT_TYPES}
+                        optionTypes={FORMAT_TYPES}
                         onSave={handleSaveFormat}
-                        onCancel={() => setEditingFormatId(null)}
+                        onCancel={() => setEditingOptionId(null)}
                       />
                     ) : (
                       <div className="flex items-center justify-between p-4">
@@ -1035,7 +1035,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                           </div>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => setEditingFormatId(format.id)}
+                              onClick={() => setEditingOptionId(format.id)}
                               className="p-2 text-neutral-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                               aria-label="Modifier le format"
                             >
@@ -1043,7 +1043,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                             </button>
                             {isOwner && (
                               <button
-                                onClick={() => handleDeleteFormat(format.id)}
+                                onClick={() => handleDeleteOption(format.id)}
                                 className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 aria-label="Supprimer le format"
                               >
@@ -1292,7 +1292,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
       {/* BUG-093 FIX: Custom ConfirmDialog for format deletion instead of window.confirm() */}
       <ConfirmDialog
-        isOpen={formatToDelete !== null}
+        isOpen={optionToDelete !== null}
         title={t('admin.productForm.deleteFormatConfirm')}
         message={t('admin.productForm.deleteFormatDescription')}
         confirmLabel={t('admin.productForm.delete')}
@@ -1334,21 +1334,21 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
 function EditFormatForm({
   format: initialFormat,
-  formatTypes,
+  optionTypes,
   onSave,
   onCancel,
 }: {
-  format: ProductFormat;
-  formatTypes: { value: string; label: string }[];
+  format: ProductOption;
+  optionTypes: { value: string; label: string }[];
   // BUG-049 FIX: onSave now receives both the edited format and the initial format
   // so the parent can diff them and detect concurrent edits via updatedAt
-  onSave: (format: ProductFormat, initialFormat: ProductFormat) => void;
+  onSave: (format: ProductOption, initialFormat: ProductOption) => void;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
   const [format, setFormat] = useState({ ...initialFormat });
 
-  const FORMAT_TYPES = formatTypes;
+  const FORMAT_TYPES = optionTypes;
   const AVAILABILITY_OPTIONS = getAvailabilityOptions(t);
 
   const stock = getStockDisplay(format.stockQuantity, format.lowStockThreshold, t);
@@ -1366,7 +1366,7 @@ function EditFormatForm({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.type')} *</label>
-          <select aria-label="Type de format" value={format.formatType} onChange={(e) => setFormat({ ...format, formatType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select aria-label="Type de format" value={format.optionType} onChange={(e) => setFormat({ ...format, optionType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             {FORMAT_TYPES.map(type => (<option key={type.value} value={type.value}>{type.label}</option>))}
           </select>
         </div>
@@ -1439,7 +1439,7 @@ function EditFormatForm({
             value={format.imageUrl || ''}
             onChange={(url) => setFormat({ ...format, imageUrl: url || null })}
             context="product-image"
-            label={t('admin.productForm.formatPhoto')}
+            label={t('admin.productForm.optionPhoto')}
             previewSize="sm"
           />
         </div>
@@ -1490,10 +1490,10 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
   const [editLabel, setEditLabel] = useState('');
 
   const loadTypes = () => {
-    fetch('/api/admin/format-types?active=false')
+    fetch('/api/admin/option-types?active=false')
       .then((r) => r.json())
       .then((j) => setTypes(j.data || []))
-      .catch(() => toast.error(t('admin.formatTypes.loadError')))
+      .catch(() => toast.error(t('admin.optionTypes.loadError')))
       .finally(() => setLoading(false));
   };
 
@@ -1503,22 +1503,22 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
     if (!newValue.trim() || !newLabel.trim()) return;
     setSavingId('new');
     try {
-      const res = await fetch('/api/admin/format-types', {
+      const res = await fetch('/api/admin/option-types', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...addCSRFHeader() },
         body: JSON.stringify({ value: newValue.toUpperCase().replace(/\s+/g, '_'), label: newLabel }),
       });
       const json = await res.json();
       if (res.ok) {
-        toast.success(t('admin.formatTypes.addSuccess'));
+        toast.success(t('admin.optionTypes.addSuccess'));
         setNewValue('');
         setNewLabel('');
         setAddingNew(false);
         loadTypes();
       } else {
-        toast.error(json.error?.message || json.error || t('admin.formatTypes.addError'));
+        toast.error(json.error?.message || json.error || t('admin.optionTypes.addError'));
       }
-    } catch { toast.error(t('admin.formatTypes.addError')); }
+    } catch { toast.error(t('admin.optionTypes.addError')); }
     setSavingId(null);
   };
 
@@ -1526,53 +1526,53 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
     if (!editLabel.trim()) return;
     setSavingId(id);
     try {
-      const res = await fetch(`/api/admin/format-types/${id}`, {
+      const res = await fetch(`/api/admin/option-types/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...addCSRFHeader() },
         body: JSON.stringify({ label: editLabel }),
       });
       if (res.ok) {
-        toast.success(t('admin.formatTypes.updateSuccess'));
+        toast.success(t('admin.optionTypes.updateSuccess'));
         setEditingId(null);
         loadTypes();
       } else {
         const json = await res.json();
-        toast.error(json.error?.message || json.error || t('admin.formatTypes.updateError'));
+        toast.error(json.error?.message || json.error || t('admin.optionTypes.updateError'));
       }
-    } catch { toast.error(t('admin.formatTypes.updateError')); }
+    } catch { toast.error(t('admin.optionTypes.updateError')); }
     setSavingId(null);
   };
 
   const handleToggleActive = async (item: FormatTypeOption) => {
     setSavingId(item.id);
     try {
-      const res = await fetch(`/api/admin/format-types/${item.id}`, {
+      const res = await fetch(`/api/admin/option-types/${item.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...addCSRFHeader() },
         body: JSON.stringify({ isActive: !item.isActive }),
       });
       if (res.ok) loadTypes();
-      else toast.error(t('admin.formatTypes.updateError'));
-    } catch { toast.error(t('admin.formatTypes.updateError')); }
+      else toast.error(t('admin.optionTypes.updateError'));
+    } catch { toast.error(t('admin.optionTypes.updateError')); }
     setSavingId(null);
   };
 
   const handleDelete = async (item: FormatTypeOption) => {
-    if (!window.confirm(t('admin.formatTypes.deleteConfirm', { label: item.label }))) return;
+    if (!window.confirm(t('admin.optionTypes.deleteConfirm', { label: item.label }))) return;
     setSavingId(item.id);
     try {
-      const res = await fetch(`/api/admin/format-types/${item.id}`, {
+      const res = await fetch(`/api/admin/option-types/${item.id}`, {
         method: 'DELETE',
         headers: addCSRFHeader(),
       });
       if (res.ok) {
-        toast.success(t('admin.formatTypes.deleteSuccess'));
+        toast.success(t('admin.optionTypes.deleteSuccess'));
         loadTypes();
       } else {
         const json = await res.json();
-        toast.error(json.error?.message || json.error || t('admin.formatTypes.deleteError'));
+        toast.error(json.error?.message || json.error || t('admin.optionTypes.deleteError'));
       }
-    } catch { toast.error(t('admin.formatTypes.deleteError')); }
+    } catch { toast.error(t('admin.optionTypes.deleteError')); }
     setSavingId(null);
   };
 
@@ -1581,8 +1581,8 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
     const prev = types[index - 1];
     setSavingId(item.id);
     await Promise.all([
-      fetch(`/api/admin/format-types/${item.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: prev.sortOrder }) }),
-      fetch(`/api/admin/format-types/${prev.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: item.sortOrder }) }),
+      fetch(`/api/admin/option-types/${item.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: prev.sortOrder }) }),
+      fetch(`/api/admin/option-types/${prev.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: item.sortOrder }) }),
     ]);
     loadTypes();
     setSavingId(null);
@@ -1593,8 +1593,8 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
     const next = types[index + 1];
     setSavingId(item.id);
     await Promise.all([
-      fetch(`/api/admin/format-types/${item.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: next.sortOrder }) }),
-      fetch(`/api/admin/format-types/${next.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: item.sortOrder }) }),
+      fetch(`/api/admin/option-types/${item.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: next.sortOrder }) }),
+      fetch(`/api/admin/option-types/${next.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...addCSRFHeader() }, body: JSON.stringify({ sortOrder: item.sortOrder }) }),
     ]);
     loadTypes();
     setSavingId(null);
@@ -1605,7 +1605,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-neutral-200">
-          <h2 className="text-lg font-semibold text-neutral-900">{t('admin.formatTypes.title')}</h2>
+          <h2 className="text-lg font-semibold text-neutral-900">{t('admin.optionTypes.title')}</h2>
           <button onClick={onClose} className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg">
             <X className="w-5 h-5" />
           </button>
@@ -1618,7 +1618,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
               <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
             </div>
           ) : types.length === 0 ? (
-            <p className="text-sm text-neutral-500 text-center py-4">{t('admin.formatTypes.empty')}</p>
+            <p className="text-sm text-neutral-500 text-center py-4">{t('admin.optionTypes.empty')}</p>
           ) : (
             types.map((item, index) => (
               <div
@@ -1672,12 +1672,12 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
                   onClick={() => handleToggleActive(item)}
                   className={`px-2 py-1 text-xs rounded-full font-medium ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-500'}`}
                 >
-                  {item.isActive ? t('admin.formatTypes.active') : t('admin.formatTypes.inactive')}
+                  {item.isActive ? t('admin.optionTypes.active') : t('admin.optionTypes.inactive')}
                 </button>
                 <button
                   onClick={() => handleDelete(item)}
                   className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title={t('admin.formatTypes.deleteTooltip')}
+                  title={t('admin.optionTypes.deleteTooltip')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1692,7 +1692,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.formatTypes.valueLabel')}</label>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.optionTypes.valueLabel')}</label>
                   <input
                     type="text"
                     value={newValue}
@@ -1703,7 +1703,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
                   <p className="text-xs text-neutral-400 mt-1">UPPER_SNAKE_CASE</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.formatTypes.labelField')}</label>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.optionTypes.labelField')}</label>
                   <input
                     type="text"
                     value={newLabel}
@@ -1722,7 +1722,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
                   disabled={!newValue.trim() || !newLabel.trim() || savingId === 'new'}
                   className="px-3 py-1.5 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50"
                 >
-                  {savingId === 'new' ? <Loader2 className="w-4 h-4 animate-spin" /> : t('admin.formatTypes.add')}
+                  {savingId === 'new' ? <Loader2 className="w-4 h-4 animate-spin" /> : t('admin.optionTypes.add')}
                 </button>
               </div>
             </div>
@@ -1732,7 +1732,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
               className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
             >
               <Plus className="w-4 h-4" />
-              {t('admin.formatTypes.addNew')}
+              {t('admin.optionTypes.addNew')}
             </button>
           )}
         </div>

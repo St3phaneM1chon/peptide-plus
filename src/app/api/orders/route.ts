@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
               id: true,
               productId: true,
               productName: true,
-              formatName: true,
+              optionName: true,
               sku: true,
               quantity: true,
               unitPrice: true,

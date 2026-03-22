@@ -23,7 +23,7 @@ export default function ExtensionsClient({ extensions: initial }: { extensions: 
   const { t } = useI18n();
   const [extensions, setExtensions] = useState(initial);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ userId: '', extension: '', sipUsername: '', sipPassword: '', sipDomain: 'pbx.biocyclepeptides.com' });
+  const [form, setForm] = useState({ userId: '', extension: '', sipUsername: '', sipPassword: '', sipDomain: 'pbx.attitudes.vip' });
 
   const handleAdd = async () => {
     try {
@@ -41,7 +41,7 @@ export default function ExtensionsClient({ extensions: initial }: { extensions: 
       setExtensions((prev) => [...prev, extension]);
       toast.success(t('common.saved'));
       setShowAdd(false);
-      setForm({ userId: '', extension: '', sipUsername: '', sipPassword: '', sipDomain: 'pbx.biocyclepeptides.com' });
+      setForm({ userId: '', extension: '', sipUsername: '', sipPassword: '', sipDomain: 'pbx.attitudes.vip' });
     } catch {
       toast.error(t('common.error'));
     }

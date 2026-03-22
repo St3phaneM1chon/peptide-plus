@@ -15,7 +15,7 @@ interface ReturnRequest {
   orderNumber: string;
   orderItemId: string;
   productName: string;
-  formatName: string;
+  optionName: string;
   quantity: number;
   reason: string;
   details?: string;
@@ -38,7 +38,7 @@ interface Order {
 interface OrderItem {
   id: string;
   productName: string;
-  formatName?: string;
+  optionName?: string;
   quantity: number;
   unitPrice: number;
 }
@@ -288,7 +288,7 @@ export default function ReturnsPage() {
                     <option value="">{t('account.returnsPage.chooseItem')}</option>
                     {selectedOrder.items.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.productName} {item.formatName ? `- ${item.formatName}` : ''} (Qty: {item.quantity})
+                        {item.productName} {item.optionName ? `- ${item.optionName}` : ''} (Qty: {item.quantity})
                       </option>
                     ))}
                   </select>
@@ -438,7 +438,7 @@ export default function ReturnsPage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">
                         {request.productName}
-                        {request.formatName && ` - ${request.formatName}`}
+                        {request.optionName && ` - ${request.optionName}`}
                       </h3>
                       <p className="text-sm text-gray-500">Quantity: {request.quantity}</p>
                       <div className="mt-2">

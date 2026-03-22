@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           where: { isPrimary: true },
           take: 1,
         },
-        formats: {
+        options: {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
           take: 1,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
         imageUrl: p.images[0]?.url || p.imageUrl,
         averageRating: p.averageRating ? Number(p.averageRating) : null,
-        inStock: p.formats.some(f => f.inStock && f.stockQuantity > 0),
+        inStock: p.options.some(f => f.inStock && f.stockQuantity > 0),
       }));
 
     return apiSuccess({ products: sorted });

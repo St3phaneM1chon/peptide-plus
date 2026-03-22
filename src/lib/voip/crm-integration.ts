@@ -63,7 +63,7 @@ export async function screenPop(callerNumber: string): Promise<{
 }> {
   const normalized = normalizeForSearch(callerNumber);
 
-  // Search by phone number (try multiple formats)
+  // Search by phone number (try multiple options)
   const user = await prisma.user.findFirst({
     where: {
       OR: [

@@ -7,7 +7,7 @@
  *
  * Features:
  * - Survey template CRUD (stored as JSON in SiteSetting)
- * - Question builder with typed question formats (rating, yes/no, open text, DTMF)
+ * - Question builder with typed question options (rating, yes/no, open text, DTMF)
  * - Survey response aggregation and statistics
  * - Active survey selection for IVR integration
  */

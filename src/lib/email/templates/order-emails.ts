@@ -4,7 +4,7 @@
 
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
 
-const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || 'https://biocyclepeptides.com';
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 // Types
 export interface OrderItem {

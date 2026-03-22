@@ -69,7 +69,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
           where: { isPrimary: true },
           take: 1,
         },
-        formats: {
+        options: {
           where: { isActive: true },
           orderBy: { price: 'asc' },
           take: 1,
@@ -89,7 +89,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
         if (!product) return null;
 
         const primaryImage = product.images[0];
-        const lowestFormat = product.formats[0];
+        const lowestFormat = product.options[0];
 
         return {
           id: item.id,

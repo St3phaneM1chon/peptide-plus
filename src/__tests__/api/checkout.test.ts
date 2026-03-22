@@ -19,7 +19,7 @@ import {
   createMockPrisma,
   createMockSession,
   createMockProduct,
-  createMockProductFormat,
+  createMockProductOption,
   createMockPromoCode,
 } from '../helpers/mocks';
 
@@ -112,7 +112,7 @@ describe('POST /api/payments/create-checkout', () => {
     it('should create a Stripe checkout session and return sessionId + url', async () => {
       const product = createMockProduct({ price: 59.99 });
       mockPrisma.product.findUnique.mockResolvedValue(product);
-      // No format lookup needed when formatId is absent
+      // No format lookup needed when optionId is absent
       mockPrisma.inventoryReservation.create.mockResolvedValue({ id: 'res-1' });
 
       const request = makeRequest({
@@ -240,10 +240,10 @@ describe('POST /api/payments/create-checkout', () => {
 
     it('should return 400 when format does not exist', async () => {
       mockPrisma.product.findUnique.mockResolvedValue(createMockProduct());
-      mockPrisma.productFormat.findUnique.mockResolvedValue(null);
+      mockPrisma.productOption.findUnique.mockResolvedValue(null);
 
       const request = makeRequest({
-        items: [{ productId: 'prod-1', formatId: 'bad-format', quantity: 1 }],
+        items: [{ productId: 'prod-1', optionId: 'bad-format', quantity: 1 }],
         shippingInfo: { province: 'QC', country: 'CA' },
       });
 
@@ -256,14 +256,14 @@ describe('POST /api/payments/create-checkout', () => {
 
     it('should return 400 when stock is insufficient', async () => {
       mockPrisma.product.findUnique.mockResolvedValue(createMockProduct());
-      mockPrisma.productFormat.findUnique
-        .mockResolvedValueOnce(createMockProductFormat({ price: 49.99 })) // for price lookup
+      mockPrisma.productOption.findUnique
+        .mockResolvedValueOnce(createMockProductOption({ price: 49.99 })) // for price lookup
         .mockResolvedValueOnce(
-          createMockProductFormat({ stockQuantity: 1, trackInventory: true })
+          createMockProductOption({ stockQuantity: 1, trackInventory: true })
         ); // for stock check
 
       const request = makeRequest({
-        items: [{ productId: 'prod-1', formatId: 'format-1', quantity: 5 }],
+        items: [{ productId: 'prod-1', optionId: 'format-1', quantity: 5 }],
         shippingInfo: { province: 'QC', country: 'CA' },
       });
 

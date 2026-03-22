@@ -39,7 +39,7 @@ export default function EmbedScript({
   const [activeMethod, setActiveMethod] = useState<EmbedMethod>('script');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const resolvedBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://biocyclepeptides.com');
+  const resolvedBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'));
 
   const scriptEmbedCode = `<!-- BioCycle Peptides Chat Widget -->
 <script>

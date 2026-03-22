@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Cas d\'usage des peptides de recherche | BioCycle Peptides',
   description: 'Explorez les applications concretes des peptides BioCycle Peptides dans la recherche scientifique, les etudes precliniques et le developpement.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/solutions/cas-usage',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/cas-usage`,
   },
   openGraph: {
     title: 'Cas d\'usage des peptides de recherche | BioCycle Peptides',
     description: 'Explorez les applications concretes des peptides BioCycle Peptides dans la recherche scientifique et les etudes precliniques.',
-    url: 'https://biocyclepeptides.com/solutions/cas-usage',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/cas-usage`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

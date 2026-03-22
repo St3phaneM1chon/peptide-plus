@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 
 const bundleItemSchema = z.object({
   productId: z.string().min(1).max(100),
-  formatId: z.string().max(100).optional().nullable(),
+  optionId: z.string().max(100).optional().nullable(),
   quantity: z.number().int().min(1).max(9999).default(1),
 });
 
@@ -51,7 +51,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
             select: {
               id: true,
               productId: true,
-              formatId: true,
+              optionId: true,
               quantity: true,
               product: {
                 select: {
@@ -60,7 +60,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
                   slug: true,
                   price: true,
                   imageUrl: true,
-                  formats: {
+                  options: {
                     select: { id: true, name: true, price: true },
                   },
                 },
@@ -82,8 +82,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       const items = bundle.items.map((item) => {
         let itemPrice = Number(item.product.price);
 
-        if (item.formatId) {
-          const format = item.product.formats.find((f) => f.id === item.formatId);
+        if (item.optionId) {
+          const format = item.product.options.find((f) => f.id === item.optionId);
           if (format) {
             itemPrice = Number(format.price);
           }
@@ -186,7 +186,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         items: {
           create: data.items?.map((item) => ({
             productId: item.productId,
-            formatId: item.formatId || null,
+            optionId: item.optionId || null,
             quantity: item.quantity || 1,
           })) || [],
         },
@@ -196,7 +196,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           include: {
             product: {
               include: {
-                formats: true,
+                options: true,
               },
             },
           },

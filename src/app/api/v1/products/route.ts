@@ -90,7 +90,7 @@ export const GET = withApiAuth(async (request: NextRequest) => {
             slug: true,
           },
         },
-        formats: {
+        options: {
           select: {
             id: true,
             name: true,

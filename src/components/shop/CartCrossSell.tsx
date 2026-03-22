@@ -79,9 +79,9 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
       }
 
       const productData = await response.json();
-      const availableFormat = productData.product?.formats?.find(
+      const availableFormat = productData.product?.options?.find(
         (f: { isActive: boolean; stockQuantity: number }) => f.isActive && f.stockQuantity > 0
-      ) || productData.formats?.find(
+      ) || productData.options?.find(
         (f: { isActive: boolean; stockQuantity: number }) => f.isActive && f.stockQuantity > 0
       );
 
@@ -93,9 +93,9 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
       // Direct add to cart (no upsell interstitial for cross-sell items)
       addItem({
         productId: product.id,
-        formatId: availableFormat.id,
+        optionId: availableFormat.id,
         name: product.name,
-        formatName: availableFormat.name,
+        optionName: availableFormat.name,
         price: Number(availableFormat.price),
         comparePrice: availableFormat.comparePrice
           ? Number(availableFormat.comparePrice)

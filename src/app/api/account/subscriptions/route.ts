@@ -17,7 +17,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createSubscriptionSchema = z.object({
   productId: z.string().min(1, 'productId is required'),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   quantity: z.number().int().min(1).optional(),
   frequency: z.string().min(1, 'frequency is required'),
 });
@@ -63,9 +63,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       select: {
         id: true,
         productId: true,
-        formatId: true,
+        optionId: true,
         productName: true,
-        formatName: true,
+        optionName: true,
         quantity: true,
         frequency: true,
         discountPercent: true,
@@ -82,9 +82,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       subscriptions: subscriptions.map((s) => ({
         id: s.id,
         productId: s.productId,
-        formatId: s.formatId,
+        optionId: s.optionId,
         productName: s.productName,
-        formatName: s.formatName,
+        optionName: s.optionName,
         quantity: s.quantity,
         frequency: s.frequency,
         discountPercent: s.discountPercent,
@@ -120,7 +120,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
-    const { productId, formatId, quantity, frequency } = parsed.data;
+    const { productId, optionId, quantity, frequency } = parsed.data;
 
     const freq = frequency.toUpperCase();
     if (!FREQUENCY_DISCOUNTS[freq]) {
@@ -138,12 +138,12 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     }
 
     // Fetch format info if provided
-    let formatName: string | null = null;
+    let optionName: string | null = null;
     let unitPrice = Number(product.price);
 
-    if (formatId) {
-      const format = await db.productFormat.findUnique({
-        where: { id: formatId },
+    if (optionId) {
+      const format = await db.productOption.findUnique({
+        where: { id: optionId },
         select: { name: true, price: true, isActive: true },
       });
 
@@ -151,7 +151,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
         return NextResponse.json({ error: 'Format not found or inactive' }, { status: 404 });
       }
 
-      formatName = format.name;
+      optionName = format.name;
       unitPrice = Number(format.price);
     }
 
@@ -178,9 +178,9 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
       data: {
         userId: user.id,
         productId,
-        formatId: formatId || null,
+        optionId: optionId || null,
         productName: product.name,
-        formatName,
+        optionName,
         quantity: quantity || 1,
         frequency: freq,
         discountPercent: FREQUENCY_DISCOUNTS[freq],
@@ -194,9 +194,9 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
       subscription: {
         id: subscription.id,
         productId: subscription.productId,
-        formatId: subscription.formatId,
+        optionId: subscription.optionId,
         productName: subscription.productName,
-        formatName: subscription.formatName,
+        optionName: subscription.optionName,
         quantity: subscription.quantity,
         frequency: subscription.frequency,
         discountPercent: subscription.discountPercent,

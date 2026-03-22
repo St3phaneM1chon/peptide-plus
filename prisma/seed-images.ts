@@ -81,8 +81,8 @@ async function main() {
     imagesCreated++;
 
     // Create format images in gallery
-    for (let i = 0; i < entry.formats.length; i++) {
-      const fmt = entry.formats[i];
+    for (let i = 0; i < entry.options.length; i++) {
+      const fmt = entry.options[i];
       await prisma.productImage.create({
         data: {
           productId: product.id,
@@ -96,11 +96,11 @@ async function main() {
     }
 
     // 3. Update format imageUrl by matching SKU
-    for (const manifestFmt of entry.formats) {
+    for (const manifestFmt of entry.options) {
       // Try matching: manifest SKU "BPC157-5MG" → DB SKU "PP-BPC157-5MG"
       const dbSku = `PP-${manifestFmt.sku}`;
 
-      const matchingFormat = product.formats.find(f => {
+      const matchingFormat = product.options.find(f => {
         if (!f.sku) return false;
         // Direct match
         if (f.sku === manifestFmt.sku) return true;
@@ -113,7 +113,7 @@ async function main() {
       });
 
       if (matchingFormat) {
-        await prisma.productFormat.update({
+        await prisma.productOption.update({
           where: { id: matchingFormat.id },
           data: { imageUrl: manifestFmt.image },
         });

@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Peptides de recherche pour chercheurs individuels | BioCycle Peptides',
   description: 'Commandez des peptides de recherche en petites quantites. Guides de reconstitution, certificats d\'analyse et support technique pour chercheurs.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/solutions/particuliers',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/particuliers`,
   },
   openGraph: {
     title: 'Peptides de recherche pour chercheurs individuels | BioCycle Peptides',
     description: 'Commandez des peptides de recherche en petites quantites. Guides de reconstitution, certificats d\'analyse et support technique.',
-    url: 'https://biocyclepeptides.com/solutions/particuliers',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/particuliers`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
  * WEBHOOK - Email Bounce Handler
  *
  * Improvement #46: Receive bounce notifications from email providers
- * Supports: Resend, SendGrid webhook formats
+ * Supports: Resend, SendGrid webhook options
  *
  * POST /api/webhooks/email-bounce
  */
@@ -40,7 +40,7 @@ function checkRateLimit(): boolean {
 /**
  * Verify Resend/Svix webhook signature (HMAC-SHA256).
  *
- * Supported webhook signature formats:
+ * Supported webhook signature options:
  * 1. **Svix (Resend default)**: Uses `svix-id`, `svix-timestamp`, and `svix-signature`
  *    headers. The secret is base64-encoded with a `whsec_` prefix. Signature is
  *    computed as HMAC-SHA256 over `{svix-id}.{svix-timestamp}.{rawBody}`.
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Faille #39 - Polymorphic payload documentation:
-    // This webhook intentionally accepts 3 different payload formats to support multiple
+    // This webhook intentionally accepts 3 different payload options to support multiple
     // email providers (Resend, SendGrid, generic). This is safe because:
     // 1. All requests are authenticated via HMAC signature (Resend/Svix) or Bearer token
     // 2. Signature verification happens BEFORE payload parsing (fail-closed)
@@ -373,7 +373,7 @@ async function processInboundResendEmail(data: Record<string, unknown>): Promise
   const emailData = await res.json() as Record<string, unknown>;
 
   // Forward to inbound email webhook handler via internal fetch
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://attitudes.vip';
   const webhookSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
 
   await fetch(`${baseUrl}/api/webhooks/inbound-email`, {

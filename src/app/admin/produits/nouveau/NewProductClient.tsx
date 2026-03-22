@@ -32,9 +32,9 @@ interface ProductText {
   references: string;
 }
 
-interface FormatToCreate {
+interface OptionToCreate {
   id: string;
-  formatType: string;
+  optionType: string;
   name: string;
   description: string;
   imageUrl: string;
@@ -60,7 +60,7 @@ export default function NewProductClient({ categories }: Props) {
   const router = useRouter();
   const { t } = useI18n();
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
+  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'options'>('header');
 
   const PRODUCT_TYPES = getProductTypes(t);
   const [dynamicFormatTypes, setDynamicFormatTypes] = useState<{ value: string; label: string }[]>([]);
@@ -99,7 +99,7 @@ export default function NewProductClient({ categories }: Props) {
   });
 
   const [productTexts, setProductTexts] = useState<ProductText[]>([]);
-  const [formats, setFormats] = useState<FormatToCreate[]>([]);
+  const [options, setOptions] = useState<OptionToCreate[]>([]);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   // BUG-079 FIX: Debounced slug uniqueness check
@@ -185,11 +185,11 @@ export default function NewProductClient({ categories }: Props) {
   };
 
   // Formats
-  const addFormat = () => {
-    const newFormat: FormatToCreate = {
+  const addOption = () => {
+    const newOption: OptionToCreate = {
       // FIX: BUG-095 - Use crypto.randomUUID for unique IDs instead of Date.now()
       id: `fmt-${crypto.randomUUID().slice(0, 12)}`,
-      formatType: 'VIAL_2ML',
+      optionType: 'VIAL_2ML',
       name: '',
       description: '',
       imageUrl: '',
@@ -203,18 +203,18 @@ export default function NewProductClient({ categories }: Props) {
       stockQuantity: 100,
       lowStockThreshold: 5,
       availability: 'IN_STOCK',
-      isDefault: formats.length === 0,
+      isDefault: options.length === 0,
       isActive: true,
     };
-    setFormats([...formats, newFormat]);
+    setOptions([...options, newOption]);
   };
 
-  const updateFormat = (id: string, updates: Partial<FormatToCreate>) => {
-    setFormats(formats.map(f => f.id === id ? { ...f, ...updates } : f));
+  const updateOption = (id: string, updates: Partial<OptionToCreate>) => {
+    setOptions(options.map(f => f.id === id ? { ...f, ...updates } : f));
   };
 
-  const removeFormat = (id: string) => {
-    setFormats(formats.filter(f => f.id !== id));
+  const removeOption = (id: string) => {
+    setOptions(options.filter(f => f.id !== id));
   };
 
   const handleSave = async () => {
@@ -230,9 +230,9 @@ export default function NewProductClient({ categories }: Props) {
     }
 
     // FIX: BUG-047 - Client-side format validation before sending to API
-    if (formats.length > 0) {
-      const invalidFormat = formats.find(f => !f.name.trim() || f.price < 0);
-      if (invalidFormat) {
+    if (options.length > 0) {
+      const invalidOption = options.find(f => !f.name.trim() || f.price < 0);
+      if (invalidOption) {
         toast.error(
           t('admin.productForm.formatValidationError')
         );
@@ -247,12 +247,12 @@ export default function NewProductClient({ categories }: Props) {
         headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...formData,
-          price: formData.price || formats[0]?.price || 0,
+          price: formData.price || options[0]?.price || 0,
           purity: formData.purity ? parseFloat(formData.purity) : null,
           molecularWeight: formData.molecularWeight ? parseFloat(formData.molecularWeight as string) : null,
           customSections: productTexts.map(({ id: _id, ...rest }) => rest),
-          // TODO: BUG-047 - Add client-side Zod validation for formats before sending to API
-          formats: formats.map(({ id: _id, ...f }) => f),
+          // TODO: BUG-047 - Add client-side Zod validation for options before sending to API
+          options: options.map(({ id: _id, ...f }) => f),
         }),
       });
 
@@ -274,12 +274,12 @@ export default function NewProductClient({ categories }: Props) {
   const tabIcons = {
     header: <ClipboardList className="w-4 h-4" />,
     texts: <FileEdit className="w-4 h-4" />,
-    formats: <Package className="w-4 h-4" />,
+    options: <Package className="w-4 h-4" />,
   };
   const tabs = [
     { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: tabIcons.header, count: null },
     { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: tabIcons.texts, count: productTexts.length },
-    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: tabIcons.formats, count: formats.length },
+    { id: 'options' as const, label: t('admin.productForm.tabOptions'), icon: tabIcons.options, count: options.length },
   ];
 
   return (
@@ -782,38 +782,38 @@ export default function NewProductClient({ categories }: Props) {
         )}
 
         {/* ===== TAB: FORMATS ===== */}
-        {activeTab === 'formats' && (
+        {activeTab === 'options' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableFormats')}</h2>
-                <p className="text-sm text-neutral-500">{t('admin.productForm.formatsDescription')}</p>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableOptions')}</h2>
+                <p className="text-sm text-neutral-500">{t('admin.productForm.optionsDescription')}</p>
               </div>
               <button
-                onClick={addFormat}
+                onClick={addOption}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                {t('admin.productForm.addFormat')}
+                {t('admin.productForm.addOption')}
               </button>
             </div>
 
-            {formats.length === 0 ? (
+            {options.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormats')}</p>
-                <button onClick={addFormat} className="text-indigo-600 hover:text-indigo-700 font-medium">
+                <button onClick={addOption} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   {t('admin.productForm.addFirstFormat')}
                 </button>
               </div>
             ) : (
-              formats.map((format, index) => (
-                <FormatCard
+              options.map((format, index) => (
+                <OptionCard
                   key={format.id}
                   format={format}
                   index={index}
-                  formatTypes={FORMAT_TYPES}
-                  onUpdate={(updates) => updateFormat(format.id, updates)}
-                  onRemove={() => removeFormat(format.id)}
+                  optionTypes={FORMAT_TYPES}
+                  onUpdate={(updates) => updateOption(format.id, updates)}
+                  onRemove={() => removeOption(format.id)}
                 />
               ))
             )}
@@ -826,23 +826,23 @@ export default function NewProductClient({ categories }: Props) {
 
 // ==================== FORMAT CARD COMPONENT ====================
 
-function FormatCard({
+function OptionCard({
   format,
   index,
-  formatTypes,
+  optionTypes,
   onUpdate,
   onRemove,
 }: {
-  format: FormatToCreate;
+  format: OptionToCreate;
   index: number;
-  formatTypes: { value: string; label: string }[];
-  onUpdate: (updates: Partial<FormatToCreate>) => void;
+  optionTypes: { value: string; label: string }[];
+  onUpdate: (updates: Partial<OptionToCreate>) => void;
   onRemove: () => void;
 }) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(true);
 
-  const FORMAT_TYPES = formatTypes;
+  const FORMAT_TYPES = optionTypes;
   const AVAILABILITY_OPTIONS = getAvailabilityOptions(t);
 
   const stock = getStockDisplay(format.stockQuantity, format.lowStockThreshold, t);
@@ -869,7 +869,7 @@ function FormatCard({
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium text-neutral-900">
-                {format.name || t('admin.productForm.formatNumber', { number: index + 1 })}
+                {format.name || t('admin.productForm.optionNumber', { number: index + 1 })}
               </p>
               {format.isDefault && (
                 <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded-full">{t('admin.productForm.default')}</span>
@@ -907,10 +907,10 @@ function FormatCard({
         <div className="border-t border-neutral-100 p-5 bg-neutral-50 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatType')} *</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.optionType')} *</label>
               <select
-                value={format.formatType}
-                onChange={(e) => onUpdate({ formatType: e.target.value })}
+                value={format.optionType}
+                onChange={(e) => onUpdate({ optionType: e.target.value })}
                 className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {FORMAT_TYPES.map(type => (
@@ -919,7 +919,7 @@ function FormatCard({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatName')} *</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.optionName')} *</label>
               <input
                 type="text"
                 value={format.name}
@@ -1058,7 +1058,7 @@ function FormatCard({
                 value={format.imageUrl}
                 onChange={(url) => onUpdate({ imageUrl: url })}
                 context="product-image"
-                label={t('admin.productForm.formatPhoto')}
+                label={t('admin.productForm.optionPhoto')}
                 previewSize="sm"
               />
             </div>

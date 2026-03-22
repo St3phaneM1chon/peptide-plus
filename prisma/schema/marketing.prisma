@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 model SocialPost {
   id          String    @id @default(cuid())
+  tenantId    String?
   platform    String    // "instagram", "facebook", "twitter", "tiktok", "linkedin"
   content     String    @db.Text
   imageUrl    String?
@@ -22,6 +23,7 @@ model SocialPost {
   @@index([platform])
   @@index([createdById])
   @@index([externalId])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -29,6 +31,7 @@ model SocialPost {
 // ---------------------------------------------------------------------------
 model SocialPostTranslation {
   id           String   @id @default(cuid())
+  tenantId     String?
   socialPostId String
   locale       String   @db.VarChar(10)
   content      String?  @db.Text
@@ -38,6 +41,7 @@ model SocialPostTranslation {
 
   @@unique([socialPostId, locale])
   @@index([socialPostId])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -45,6 +49,7 @@ model SocialPostTranslation {
 // ---------------------------------------------------------------------------
 model AdCampaignSnapshot {
   id           String   @id @default(cuid())
+  tenantId     String?
   platform     String // "youtube", "google-ads", "tiktok", "x", "linkedin", "meta"
   campaignId   String?
   campaignName String?
@@ -59,5 +64,5 @@ model AdCampaignSnapshot {
 
   @@unique([platform, campaignId, date])
   @@index([platform, date])
+  @@index([tenantId])
 }
-

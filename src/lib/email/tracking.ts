@@ -26,7 +26,7 @@ function getTrackingSecret(): string {
 }
 
 function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+  return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://attitudes.vip';
 }
 
 // ---------------------------------------------------------------------------

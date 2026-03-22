@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Carrieres chez BioCycle Peptides | Rejoignez notre equipe',
   description: 'Rejoignez l\'équipe BioCycle Peptides. Explorez nos postes ouverts et découvrez notre culture d\'entreprise dédiée à la recherche sur les peptides.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/carrieres',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/carrieres`,
   },
   openGraph: {
     title: 'Carrieres chez BioCycle Peptides | Rejoignez notre equipe',
     description: 'Rejoignez l\'équipe BioCycle Peptides. Postes ouverts et culture d\'entreprise.',
-    url: 'https://biocyclepeptides.com/carrieres',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/carrieres`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

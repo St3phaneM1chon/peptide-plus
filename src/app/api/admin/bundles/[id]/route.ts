@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 
 const bundleItemSchema = z.object({
   productId: z.string().min(1).max(100),
-  formatId: z.string().max(100).optional().nullable(),
+  optionId: z.string().max(100).optional().nullable(),
   quantity: z.number().int().min(1).max(9999).default(1),
 });
 
@@ -39,7 +39,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
           include: {
             product: {
               include: {
-                formats: true,
+                options: true,
               },
             },
           },
@@ -146,7 +146,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
           include: {
             product: {
               include: {
-                formats: true,
+                options: true,
               },
             },
           },
@@ -166,7 +166,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         data: data.items.map((item) => ({
           bundleId: id,
           productId: item.productId,
-          formatId: item.formatId || null,
+          optionId: item.optionId || null,
           quantity: item.quantity || 1,
         })),
       });

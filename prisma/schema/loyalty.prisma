@@ -1,5 +1,6 @@
 model Ambassador {
   id             String                 @id @default(cuid())
+  tenantId       String?
   userId         String?
   name           String
   email          String?                @unique
@@ -22,10 +23,12 @@ model Ambassador {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AmbassadorCommission {
   id               String            @id @default(cuid())
+  tenantId         String?
   ambassadorId     String
   orderId          String
   orderNumber      String
@@ -47,10 +50,12 @@ model AmbassadorCommission {
   @@index([payoutId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AmbassadorPayout {
   id            String                 @id @default(cuid())
+  tenantId      String?
   ambassadorId  String
   amount        Decimal                @db.Decimal(10, 2)
   method        String?
@@ -66,10 +71,12 @@ model AmbassadorPayout {
   @@index([processedById])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model LoyaltyTransaction {
   id           String                 @id @default(cuid())
+  tenantId     String?
   userId       String
   type         LoyaltyTransactionType
   points       Int
@@ -90,10 +97,12 @@ model LoyaltyTransaction {
   @@index([type])
   @@index([userId])
   @@index([userId, type]) // F-070: Composite for duplicate detection (EARN_SIGNUP, EARN_BIRTHDAY)
+  @@index([tenantId])
 }
 
 model LoyaltyTierConfig {
   id                    String             @id @default(cuid())
+  tenantId              String?
   name                  String             @unique // BRONZE, SILVER, GOLD, PLATINUM, DIAMOND
   minPoints             Int                @default(0)
   discountPercent       Decimal            @default(0) @db.Decimal(5, 2)
@@ -107,10 +116,12 @@ model LoyaltyTierConfig {
   @@index([priority])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Referral {
   id            String    @id @default(cuid())
+  tenantId      String?
   referrerId    String
   referredId    String
   referralCode  String
@@ -130,5 +141,5 @@ model Referral {
   @@index([referrerId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
-

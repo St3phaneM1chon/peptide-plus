@@ -116,7 +116,7 @@ export async function POST(
         items: {
           select: {
             productId: true,
-            formatId: true,
+            optionId: true,
             quantity: true,
             productName: true,
           },
@@ -322,9 +322,9 @@ export async function POST(
       // 2. Restore inventory for each order item
       // COMMERCE-020 FIX: Restore stock for BOTH format-level and base product-level items
       for (const item of order.items) {
-        if (item.formatId) {
-          await tx.productFormat.updateMany({
-            where: { id: item.formatId },
+        if (item.optionId) {
+          await tx.productOption.updateMany({
+            where: { id: item.optionId },
             data: { stockQuantity: { increment: item.quantity } },
           });
         } else {
@@ -337,7 +337,7 @@ export async function POST(
         logger.info(`[cancelOrder] Restored ${item.quantity}x stock for ${item.productName}`, {
           orderId: order.id,
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
         });
       }
 

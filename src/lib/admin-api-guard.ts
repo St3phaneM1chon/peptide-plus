@@ -138,6 +138,28 @@ export function withAdminGuard(
       }
 
       // ---------------------------------------------------------------
+      // 1a. Multi-Tenant: Set tenant context from session or headers
+      // ---------------------------------------------------------------
+      const { setCurrentTenantId } = await import('@/lib/db');
+      const tenantSlug = request.headers.get('x-tenant-slug') || '';
+      const isSuperAdmin = request.headers.get('x-tenant-super-admin') === '1';
+
+      // Use tenantId from session (trusted) if available, otherwise resolve from slug
+      if (session.user.tenantId) {
+        setCurrentTenantId(session.user.tenantId, isSuperAdmin);
+      } else if (tenantSlug) {
+        // Resolve tenantId from slug for the context
+        const { prisma } = await import('@/lib/db');
+        const tenant = await prisma.tenant.findUnique({
+          where: { slug: tenantSlug },
+          select: { id: true },
+        });
+        if (tenant) {
+          setCurrentTenantId(tenant.id, isSuperAdmin);
+        }
+      }
+
+      // ---------------------------------------------------------------
       // 1b. FIX: FAILLE-066 - Reject oversized JSON bodies (max 1MB)
       //     Skip for multipart/form-data (file uploads have their own size checks)
       // ---------------------------------------------------------------

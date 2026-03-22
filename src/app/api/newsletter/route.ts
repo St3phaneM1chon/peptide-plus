@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
 
       // Send double opt-in confirmation email (CASL requirement)
       if (!existingMailing || existingMailing.status !== 'ACTIVE') {
-        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
         const confirmUrl = `${baseUrl}/api/mailing-list/confirm?token=${confirmToken}`;
         const unsubscribeUrl = `${baseUrl}/api/mailing-list/unsubscribe?token=${unsubscribeToken}`;
 

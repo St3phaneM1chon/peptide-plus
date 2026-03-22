@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Nos clients | BioCycle Peptides',
   description: 'Découvrez les entreprises et chercheurs qui font confiance à BioCycle Peptides pour leurs peptides de recherche de haute pureté.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/clients',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/clients`,
   },
   openGraph: {
     title: 'Nos clients | BioCycle Peptides',
     description: 'Découvrez les entreprises et chercheurs qui font confiance à BioCycle Peptides pour leurs peptides de recherche.',
-    url: 'https://biocyclepeptides.com/clients',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/clients`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

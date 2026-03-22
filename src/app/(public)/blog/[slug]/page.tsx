@@ -99,7 +99,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  const siteUrl = 'https://biocyclepeptides.com';
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   const imageUrl = post.imageUrl
     ? post.imageUrl.startsWith('http')
       ? post.imageUrl
@@ -151,7 +151,7 @@ function blogPostSchema(post: {
   publishedAt: Date | null;
   updatedAt: Date | null;
 }) {
-  const siteUrl = 'https://biocyclepeptides.com';
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -187,7 +187,7 @@ function blogPostSchema(post: {
 }
 
 function breadcrumbSchema(postTitle: string, slug: string) {
-  const siteUrl = 'https://biocyclepeptides.com';
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

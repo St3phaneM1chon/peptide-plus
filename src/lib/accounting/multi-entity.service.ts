@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -182,22 +183,29 @@ async function bulkSumByAccountType(
   endDate?: Date,
 ): Promise<AggRow[]> {
   try {
-    const conditions = [
-      Prisma.sql`je.status = 'POSTED'`,
-      Prisma.sql`je."deletedAt" IS NULL`,
-      Prisma.sql`ca."isActive" = true`,
+    // Build safe parameterized query with positional params
+    const conditions: string[] = [
+      `je.status = 'POSTED'`,
+      `je."deletedAt" IS NULL`,
+      `ca."isActive" = true`,
     ];
+    const params: unknown[] = [];
+    let paramIndex = 1;
 
     if (startDate) {
-      conditions.push(Prisma.sql`je.date >= ${startDate}::timestamp`);
+      conditions.push(`je.date >= $${paramIndex}::timestamp`);
+      params.push(startDate);
+      paramIndex++;
     }
     if (endDate) {
-      conditions.push(Prisma.sql`je.date <= ${endDate}::timestamp`);
+      conditions.push(`je.date <= $${paramIndex}::timestamp`);
+      params.push(endDate);
+      paramIndex++;
     }
 
-    const whereClause = Prisma.join(conditions, ' AND ');
+    const whereClause = conditions.join(' AND ');
 
-    const rows = await prisma.$queryRaw<AggRow[]>(Prisma.sql`
+    const sql = `
       SELECT ca.type AS account_type,
              LEFT(ca.code, 2) AS code_prefix,
              COALESCE(SUM(jl.debit), 0)::float AS total_debit,
@@ -207,7 +215,9 @@ async function bulkSumByAccountType(
       JOIN "JournalEntry" je ON jl."entryId" = je.id
       WHERE ${whereClause}
       GROUP BY ca.type, LEFT(ca.code, 2)
-    `);
+    `;
+
+    const rows = await tenantQueryRaw<AggRow>(sql, ...params);
 
     return rows;
   } catch (error) {
@@ -671,11 +681,13 @@ async function generateIntercoNumber(): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `ICT-${year}-`;
 
-  const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-    SELECT MAX("transactionNumber") as max_num
+  const rows = await tenantQueryRaw<{ max_num: string | null }>(
+    `SELECT MAX("transactionNumber") as max_num
     FROM "IntercompanyTransaction"
-    WHERE "transactionNumber" LIKE ${prefix + '%'}
-  `;
+    WHERE "transactionNumber" LIKE $1`,
+    prefix + '%'
+  );
+  const maxRow = rows[0];
 
   let nextNum = 1;
   if (maxRow?.max_num) {

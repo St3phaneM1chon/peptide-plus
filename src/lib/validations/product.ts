@@ -21,9 +21,9 @@ const productImageSchema = z.object({
 // Product format
 // ---------------------------------------------------------------------------
 
-const productFormatSchema = z.object({
+const productOptionSchema = z.object({
   id: z.string().uuid().optional(), // existing format ID for upsert
-  formatType: z.string().max(50).optional(),
+  optionType: z.string().max(50).optional(),
   name: sanitizedString(1, 200),
   description: z.string().max(2000).optional(),
   imageUrl: z.string().url().optional().nullable(),
@@ -42,7 +42,7 @@ const productFormatSchema = z.object({
   sortOrder: z.number().int().optional(),
   isDefault: z.boolean().optional(),
   isActive: z.boolean().optional(),
-}); // not strict - formats have dynamic fields from admin
+}); // not strict - options have dynamic fields from admin
 
 // ---------------------------------------------------------------------------
 // Create product
@@ -83,7 +83,7 @@ export const createProductSchema = z.object({
   isFeatured: z.boolean().optional(),
   isActive: z.boolean().optional(),
   images: z.array(productImageSchema).max(50).optional(),
-  formats: z.array(productFormatSchema).max(50).optional(),
+  options: z.array(productOptionSchema).max(50).optional(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;

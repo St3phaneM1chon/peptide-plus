@@ -20,7 +20,7 @@ export function getFormatTypes(t: TranslateFn) {
 /** Fetch dynamic format types from API (for admin use). Falls back to hardcoded list. */
 export async function fetchFormatTypes(): Promise<{ value: string; label: string }[]> {
   try {
-    const res = await fetch('/api/admin/format-types');
+    const res = await fetch('/api/admin/option-types');
     if (res.ok) {
       const json = await res.json();
       return (json.data || []).map((ft: { value: string; label: string }) => ({

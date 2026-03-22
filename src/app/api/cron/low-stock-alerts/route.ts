@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/cron/low-stock-alerts
  * Cron job to check for products with stock below threshold and send admin notification.
  *
- * Checks ProductFormat records where stockQuantity <= lowStockThreshold (default: 5).
+ * Checks ProductOption records where stockQuantity <= lowStockThreshold (default: 5).
  * Sends a single digest email to the admin with a table of all low-stock items.
  *
  * Authentication: Requires CRON_SECRET in Authorization header.
@@ -17,6 +17,7 @@ import { sendEmail } from '@/lib/email/email-service';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const LOW_STOCK_DEFAULT_THRESHOLD = 5;
 
@@ -43,10 +44,11 @@ export async function GET(request: NextRequest) {
 
   return withJobLock('low-stock-alerts', async () => {
     try {
-      // Fetch all active, inventory-tracked formats.
-      // We cannot use a Prisma `where` that compares two columns (stockQuantity <= lowStockThreshold),
-      // so we load all tracked formats and filter in application code.
-      const trackedFormats = await prisma.productFormat.findMany({
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
+      // Fetch all active, inventory-tracked options.
+      // Prisma middleware auto-filters by tenant
+      const trackedFormats = await prisma.productOption.findMany({
         where: {
           isActive: true,
           trackInventory: true,
@@ -76,14 +78,12 @@ export async function GET(request: NextRequest) {
         return f.stockQuantity <= threshold;
       });
 
-      logger.info(`[low-stock-alerts] Found ${alertFormats.length} low-stock format(s)`);
+      logger.info(`[low-stock-alerts] Found ${alertFormats.length} low-stock format(s)`, {
+        tenantSlug: tenant.slug,
+      });
 
       if (alertFormats.length === 0) {
-        return NextResponse.json({
-          success: true,
-          message: 'No low-stock products found',
-          alertCount: 0,
-        });
+        return;
       }
 
       // FIX A9-P1-005: Dedup — skip if the exact same set of items was already alerted
@@ -95,22 +95,21 @@ export async function GET(request: NextRequest) {
       try {
         const redis = await getRedisClient();
         if (redis) {
-          const lastHash = await redis.get('low-stock-alerts:last-hash');
+          const dedupKey = `low-stock-alerts:${tenant.slug}:last-hash`;
+          const lastHash = await redis.get(dedupKey);
           if (lastHash === alertHash) {
-            logger.info('[low-stock-alerts] Skipped — same items already alerted (dedup)');
-            return NextResponse.json({
-              success: true,
-              message: 'No new low-stock changes since last alert',
-              alertCount: alertFormats.length,
-              skippedDedup: true,
+            logger.info('[low-stock-alerts] Skipped — same items already alerted (dedup)', {
+              tenantSlug: tenant.slug,
             });
+            return;
           }
           // Store hash with 24h TTL — a new alert will be sent if items change OR after 24h
-          await redis.set('low-stock-alerts:last-hash', alertHash, 'EX', 86400);
+          await redis.set(dedupKey, alertHash, 'EX', 86400);
         }
       } catch (redisErr) {
         // Redis down — proceed with sending (prefer alert over silence)
         logger.warn('[low-stock-alerts] Redis dedup check failed, sending anyway', {
+          tenantSlug: tenant.slug,
           error: redisErr instanceof Error ? redisErr.message : String(redisErr),
         });
       }
@@ -124,12 +123,9 @@ export async function GET(request: NextRequest) {
 
       if (!adminEmail) {
         logger.error(
-          '[low-stock-alerts] No admin email configured (SiteSettings.supportEmail / SiteSettings.email / ADMIN_EMAIL)'
+          '[low-stock-alerts] No admin email configured', { tenantSlug: tenant.slug }
         );
-        return NextResponse.json(
-          { error: 'No admin email configured' },
-          { status: 500 }
-        );
+        return;
       }
 
       const html = buildDigestEmail(outOfStock, lowStock);
@@ -143,28 +139,21 @@ export async function GET(request: NextRequest) {
 
       if (!emailResult.success) {
         logger.error('[low-stock-alerts] Failed to send digest email', {
+          tenantSlug: tenant.slug,
           error: emailResult.error,
         });
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Failed to send notification email',
-            alertCount: alertFormats.length,
-          },
-          { status: 502 }
+      } else {
+        logger.info(
+          `[low-stock-alerts] Digest sent to ${adminEmail} (${alertFormats.length} item(s))`, {
+            tenantSlug: tenant.slug,
+          }
         );
       }
-
-      logger.info(
-        `[low-stock-alerts] Digest sent to ${adminEmail} (${alertFormats.length} item(s))`
-      );
+      });
 
       return NextResponse.json({
         success: true,
-        message: `Low stock alert sent to ${adminEmail}`,
-        alertCount: alertFormats.length,
-        outOfStockCount: outOfStock.length,
-        lowStockCount: lowStock.length,
+        tenants: tenantResult,
       });
     } catch (error) {
       logger.error('[low-stock-alerts] Unexpected error', {
@@ -230,7 +219,7 @@ function buildDigestEmail(
   lowStock: AlertFormat[]
 ): string {
   const baseUrl =
-    process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_URL || 'https://biocyclepeptides.com';
+    process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
   let html = `

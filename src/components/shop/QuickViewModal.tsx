@@ -9,13 +9,13 @@ import { useUpsell } from '@/contexts/UpsellContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
-import { getFormatIcon } from '@/lib/format-icons';
+import { getOptionIcon } from '@/lib/option-icons';
 
 // BUG-067 FIX: Import canonical ClientFormatType instead of defining local duplicate
 import type { ClientFormatType } from '@/types';
 type FormatType = ClientFormatType;
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
   name: string;
   type?: FormatType;
@@ -37,7 +37,7 @@ interface Product {
   avgMass?: string;
   categoryName?: string;
   productImage: string;
-  formats: ProductFormat[];
+  options: ProductOption[];
 }
 
 interface QuickViewModalProps {
@@ -46,12 +46,12 @@ interface QuickViewModalProps {
   onClose: () => void;
 }
 
-// Format icons imported from shared utility: @/lib/format-icons
+// Format icons imported from shared utility: @/lib/option-icons
 
 export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModalProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ProductFormat | undefined>();
+  const [selectedFormat, setSelectedFormat] = useState<ProductOption | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -73,8 +73,8 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
           const data = await res.json();
           setProduct(data.product);
           // Auto-select first available format
-          const availableFormat = data.product.formats?.find((f: ProductFormat) => f.inStock && f.stockQuantity > 0);
-          setSelectedFormat(availableFormat || data.product.formats?.[0]);
+          const availableFormat = data.product.options?.find((f: ProductOption) => f.inStock && f.stockQuantity > 0);
+          setSelectedFormat(availableFormat || data.product.options?.[0]);
         } else {
           toast.error(t('shop.failedToLoadProduct'));
           onClose();
@@ -162,7 +162,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
   };
 
   // Get format name (no translation for now since nameKey is not in DB)
-  const getFormatName = (format: ProductFormat) => {
+  const getOptionName = (format: ProductOption) => {
     return format.name;
   };
 
@@ -171,14 +171,14 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
 
     setIsAdding(true);
 
-    const formatName = getFormatName(selectedFormat);
-    const fullProductName = `${getProductName()} ${formatName}`;
+    const optionName = getOptionName(selectedFormat);
+    const fullProductName = `${getProductName()} ${optionName}`;
 
     addItemWithUpsell({
       productId: product.id,
-      formatId: selectedFormat.id,
+      optionId: selectedFormat.id,
       name: fullProductName,
-      formatName: formatName,
+      optionName: optionName,
       price: selectedFormat.price,
       comparePrice: selectedFormat.comparePrice,
       image: selectedFormat.image || product.productImage,
@@ -311,13 +311,13 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
               )}
 
               {/* Format Selector */}
-              {product.formats && product.formats.length > 0 && (
+              {product.options && product.options.length > 0 && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
                     {t('shop.packaging')}:
                   </label>
                   <div className="grid grid-cols-1 gap-2">
-                    {product.formats
+                    {product.options
                       .filter(f => f.stockQuantity > 0)
                       .map((format) => (
                         <button
@@ -330,10 +330,10 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                           }`}
                         >
                           <span className="text-2xl">
-                            {getFormatIcon(format.type)}
+                            {getOptionIcon(format.type)}
                           </span>
                           <div className="flex-1 text-start">
-                            <p className="font-medium text-neutral-900">{getFormatName(format)}</p>
+                            <p className="font-medium text-neutral-900">{getOptionName(format)}</p>
                             <p className="text-sm text-primary-600 font-bold">{formatPrice(format.price)}</p>
                           </div>
                           {selectedFormat?.id === format.id && (

@@ -364,13 +364,13 @@ async function handleCaptureRefunded(event: PayPalWebhookEvent, webhookRecordId:
     try {
       await prisma.$transaction(async (tx) => {
         for (const item of order.items) {
-          if (item.formatId) {
-            await tx.productFormat.update({
-              where: { id: item.formatId },
+          if (item.optionId) {
+            await tx.productOption.update({
+              where: { id: item.optionId },
               data: { stockQuantity: { increment: item.quantity } },
             });
           } else {
-            // A8-P2-003 + E-07 FIX: Also restore stock for base products (no formatId)
+            // A8-P2-003 + E-07 FIX: Also restore stock for base products (no optionId)
             await tx.product.updateMany({
               where: { id: item.productId, trackInventory: true },
               data: { stockQuantity: { increment: item.quantity } },
@@ -381,7 +381,7 @@ async function handleCaptureRefunded(event: PayPalWebhookEvent, webhookRecordId:
           const lastTransaction = await tx.inventoryTransaction.findFirst({
             where: {
               productId: item.productId,
-              formatId: item.formatId,
+              optionId: item.optionId,
             },
             orderBy: { createdAt: 'desc' },
             select: { runningWAC: true },
@@ -392,7 +392,7 @@ async function handleCaptureRefunded(event: PayPalWebhookEvent, webhookRecordId:
           await tx.inventoryTransaction.create({
             data: {
               productId: item.productId,
-              formatId: item.formatId,
+              optionId: item.optionId,
               type: 'RETURN',
               quantity: item.quantity,
               unitCost: wac,

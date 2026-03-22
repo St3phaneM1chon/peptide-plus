@@ -31,6 +31,7 @@ import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
 import { processInactivityExpiration } from '@/lib/loyalty/points-engine';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 const BATCH_SIZE = 10;
 const INACTIVITY_MONTHS = 11;
@@ -60,8 +61,11 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       // === FIX F-011: ACTUALLY EXPIRE past-due points ===
       // Find transactions with expiresAt in the past that haven't been expired yet
+      // Prisma middleware auto-filters by tenant
       const now = new Date();
       const expiredTransactions = await db.loyaltyTransaction.findMany({
         where: {
@@ -418,38 +422,19 @@ export async function GET(request: NextRequest) {
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
-    const duration = Date.now() - startTime;
 
     logger.info(
-      `[CRON:POINTS] Complete: ${successCount} sent, ${failCount} failed, ${duration}ms`
+      `[CRON:POINTS] Complete for tenant ${tenant.slug}: ${successCount} sent, ${failCount} failed`
     );
+      });
+
+    const duration = Date.now() - startTime;
 
     return NextResponse.json({
       success: true,
       date: new Date().toISOString(),
-      processed: eligibleUsers.length,
-      sent: successCount,
-      failed: failCount,
+      tenants: tenantResult,
       durationMs: duration,
-      pointsExpired: {
-        usersProcessed: expiredCount,
-        totalUsersWithExpiredPoints: Object.keys(expiredByUser).length,
-      },
-      inactivityExpired: {
-        usersProcessed: inactivityResult.usersProcessed,
-        totalPointsExpired: inactivityResult.totalPointsExpired,
-      },
-      breakdown: {
-        explicitExpiry: expiringTransactions.length,
-        inactiveUsers: inactiveUsersWithPoints.length,
-        afterDedup: eligibleUsers.length,
-      },
-      // FIX F-081: Don't expose user emails/IDs in the response - return only aggregate stats
-      summary: {
-        totalProcessed: eligibleUsers.length,
-        emailsSent: successCount,
-        emailsFailed: failCount,
-      },
     });
     } catch (error) {
       logger.error('[CRON:POINTS] Job error', { error: error instanceof Error ? error.message : String(error) });

@@ -17,7 +17,7 @@ const purchaseOrderSchema = z.object({
   supplierId: z.string().min(1),
   items: z.array(z.object({
     productId: z.string().min(1),
-    formatId: z.string().optional(),
+    optionId: z.string().optional(),
     quantity: z.number().int().positive(),
     unitCost: z.number().positive(),
   })).min(1),

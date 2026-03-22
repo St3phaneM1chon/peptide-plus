@@ -14,7 +14,7 @@ interface FetchedProduct {
   price?: number | string;
   imageUrl?: string;
   purity?: number | string;
-  formats?: Array<{ isActive: boolean; price: number | string }>;
+  options?: Array<{ isActive: boolean; price: number | string }>;
   images?: Array<{ url: string; isPrimary?: boolean }>;
 }
 
@@ -71,10 +71,10 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();
         for (const p of fetchedProducts) {
-          // Compute lowest price from formats
-          const activeFormats = (p.formats || []).filter((f) => f.isActive);
-          const lowestPrice = activeFormats.length > 0
-            ? Math.min(...activeFormats.map((f) => Number(f.price)))
+          // Compute lowest price from options
+          const activeOptions = (p.options || []).filter((f) => f.isActive);
+          const lowestPrice = activeOptions.length > 0
+            ? Math.min(...activeOptions.map((f) => Number(f.price)))
             : Number(p.price) || 0;
 
           // Get primary image

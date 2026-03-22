@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
 // ---------------------------------------------------------------------------
 
 const BRAND_COLOR = '#EA580C';
-const COMPANY_NAME = 'BioCycle Peptides';
+const COMPANY_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 const PLATFORM_NAMES: Record<string, string> = {
   zoom: 'Zoom',

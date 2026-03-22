@@ -39,10 +39,10 @@ export type ProductType = 'PEPTIDE' | 'SUPPLEMENT' | 'ACCESSORY' | 'BUNDLE';
 export type StockStatus = 'IN_STOCK' | 'OUT_OF_STOCK' | 'LIMITED' | 'COMING_SOON' | 'PRE_ORDER';
 
 // Interface Format
-export interface ProductFormat {
+export interface ProductOption {
   id: string;
   name: string;
-  nameKey: string;        // Clé de traduction (formats.xxx)
+  nameKey: string;        // Clé de traduction (options.xxx)
   type: FormatType;
   dosageMg?: number;
   volumeMl?: number;
@@ -83,7 +83,7 @@ export interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   isFeatured?: boolean;
-  formats: ProductFormat[];
+  options: ProductOption[];
   images?: {
     id: string;
     url: string;
@@ -183,7 +183,7 @@ Stability: 24 months at -20°C`,
     categorySlug: 'peptides',
     isBestseller: true,
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-tesa-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 65, sku: 'PP-TESA-5MG', inStock: true, stockQuantity: 150, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-tesa-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 110, sku: 'PP-TESA-10MG', inStock: true, stockQuantity: 100, availability: 'IN_STOCK' },
       { id: 'f-tesa-3', name: '10mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 10, volumeMl: 3, price: 145, sku: 'PP-TESA-CART', inStock: true, stockQuantity: 50, availability: 'IN_STOCK' },
@@ -224,7 +224,7 @@ Reconstitution: Bacteriostatic water`,
     categorySlug: 'peptides',
     isBestseller: true,
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-sema-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 50, sku: 'PP-SEMA-5MG', inStock: true, stockQuantity: 200, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-sema-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 90, sku: 'PP-SEMA-10MG', inStock: true, stockQuantity: 150, availability: 'IN_STOCK' },
       { id: 'f-sema-3', name: '10mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 10, volumeMl: 3, price: 125, sku: 'PP-SEMA-CART', inStock: true, stockQuantity: 70, availability: 'IN_STOCK' },
@@ -261,7 +261,7 @@ Storage: -20°C`,
     categorySlug: 'peptides',
     isNew: true,
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-tirz-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 60, sku: 'PP-TIRZ-5MG', inStock: true, stockQuantity: 150, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-tirz-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 108, sku: 'PP-TIRZ-10MG', inStock: true, stockQuantity: 100, availability: 'IN_STOCK' },
       { id: 'f-tirz-3', name: '10mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 10, volumeMl: 3, price: 150, sku: 'PP-TIRZ-CART', inStock: true, stockQuantity: 70, availability: 'IN_STOCK' },
@@ -296,7 +296,7 @@ Storage: -20°C`,
     categoryKey: 'peptides',
     categorySlug: 'peptides',
     isNew: true,
-    formats: [
+    options: [
       { id: 'f-reta-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 90, sku: 'PP-RETA-5MG', inStock: true, stockQuantity: 100, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-reta-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 165, sku: 'PP-RETA-10MG', inStock: true, stockQuantity: 60, availability: 'IN_STOCK' },
       { id: 'f-reta-3', name: '10mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 10, volumeMl: 3, price: 195, sku: 'PP-RETA-CART', inStock: true, stockQuantity: 40, availability: 'IN_STOCK' },
@@ -339,7 +339,7 @@ Stability: 24 months at -20°C`,
     categorySlug: 'peptides',
     isBestseller: true,
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-bpc-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 40, sku: 'PP-BPC-5MG', inStock: true, stockQuantity: 200, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-bpc-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 70, sku: 'PP-BPC-10MG', inStock: true, stockQuantity: 150, availability: 'IN_STOCK' },
       { id: 'f-bpc-3', name: '10mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 10, volumeMl: 3, price: 95, sku: 'PP-BPC-CART', inStock: true, stockQuantity: 80, availability: 'IN_STOCK' },
@@ -377,7 +377,7 @@ Storage: 2-8°C`,
     categoryKey: 'peptides',
     categorySlug: 'peptides',
     isBestseller: true,
-    formats: [
+    options: [
       { id: 'f-tb-1', name: '5mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 5, price: 40, sku: 'PP-TB500-5MG', inStock: true, stockQuantity: 180, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-tb-2', name: '10mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 10, price: 75, sku: 'PP-TB500-10MG', inStock: true, stockQuantity: 100, availability: 'IN_STOCK' },
       { id: 'f-tb-3', name: '5mg x 10 Pack', nameKey: 'pack10', type: 'pack_10', dosageMg: 50, unitCount: 10, price: 320, comparePrice: 400, sku: 'PP-TB500-5MG-10PK', inStock: true, stockQuantity: 25, availability: 'IN_STOCK' },
@@ -411,7 +411,7 @@ Storage: 2-8°C`,
     categoryKey: 'peptides',
     categorySlug: 'peptides',
     isBestseller: true,
-    formats: [
+    options: [
       { id: 'f-blend-1', name: '6mg/6mg Vial', nameKey: 'vial2ml', type: 'vial_2ml', dosageMg: 12, price: 70, sku: 'PP-BLEND-12MG', inStock: true, stockQuantity: 120, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-blend-2', name: '12mg Cartridge 3ml', nameKey: 'cartridge3ml', type: 'cartridge_3ml', dosageMg: 12, volumeMl: 3, price: 95, sku: 'PP-BLEND-CART', inStock: true, stockQuantity: 60, availability: 'IN_STOCK' },
       { id: 'f-blend-3', name: '12mg x 10 Pack', nameKey: 'pack10', type: 'pack_10', dosageMg: 120, unitCount: 10, price: 560, comparePrice: 700, sku: 'PP-BLEND-10PK', inStock: true, stockQuantity: 20, availability: 'IN_STOCK' },
@@ -445,7 +445,7 @@ Flavor: Unflavored`,
     categoryKey: 'supplements',
     categorySlug: 'supplements',
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-creat-1', name: '500g Powder', nameKey: 'powder500g', type: 'powder_500g', price: 35, sku: 'PP-CREAT-500G', inStock: true, stockQuantity: 100, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-creat-2', name: '1kg Powder', nameKey: 'powder1kg', type: 'powder_1kg', price: 55, comparePrice: 70, sku: 'PP-CREAT-1KG', inStock: true, stockQuantity: 80, availability: 'IN_STOCK' },
     ],
@@ -474,7 +474,7 @@ Sugar: 2g per serving`,
     categoryName: 'Supplements',
     categoryKey: 'supplements',
     categorySlug: 'supplements',
-    formats: [
+    options: [
       { id: 'f-gum-1', name: '60 Gummies', nameKey: 'gummies60', type: 'gummies_60', unitCount: 60, price: 29, sku: 'PP-GUMMY-60', inStock: true, stockQuantity: 150, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-gum-2', name: '120 Gummies', nameKey: 'gummies120', type: 'gummies_120', unitCount: 120, price: 49, comparePrice: 58, sku: 'PP-GUMMY-120', inStock: true, stockQuantity: 100, availability: 'IN_STOCK' },
     ],
@@ -503,7 +503,7 @@ Serving: 1 capsule daily`,
     categoryName: 'Supplements',
     categoryKey: 'supplements',
     categorySlug: 'supplements',
-    formats: [
+    options: [
       { id: 'f-nad-1', name: '30 Capsules', nameKey: 'capsules30', type: 'capsules_30', unitCount: 30, price: 65, sku: 'PP-NAD-30', inStock: true, stockQuantity: 80, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-nad-2', name: '60 Capsules', nameKey: 'capsules60', type: 'capsules_60', unitCount: 60, price: 110, comparePrice: 130, sku: 'PP-NAD-60', inStock: true, stockQuantity: 60, availability: 'IN_STOCK' },
     ],
@@ -532,7 +532,7 @@ Serving: 1-2 capsules daily`,
     categoryName: 'Supplements',
     categoryKey: 'supplements',
     categorySlug: 'supplements',
-    formats: [
+    options: [
       { id: 'f-nac-1', name: '60 Capsules', nameKey: 'capsules60', type: 'capsules_60', unitCount: 60, price: 25, sku: 'PP-NAC-60', inStock: true, stockQuantity: 200, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-nac-2', name: '120 Capsules', nameKey: 'capsules120', type: 'capsules_120', unitCount: 120, price: 40, comparePrice: 50, sku: 'PP-NAC-120', inStock: true, stockQuantity: 150, availability: 'IN_STOCK' },
     ],
@@ -565,7 +565,7 @@ Includes: Pen, instructions`,
     categoryKey: 'accessories',
     categorySlug: 'accessories',
     isFeatured: true,
-    formats: [
+    options: [
       { id: 'f-pen-1', name: 'Single Pen', nameKey: 'single', type: 'accessory', price: 45, sku: 'PP-PEN-1', inStock: true, stockQuantity: 200, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-pen-2', name: 'Pack of 2', nameKey: 'pack2', type: 'pack_2', unitCount: 2, price: 80, comparePrice: 90, sku: 'PP-PEN-2PK', inStock: true, stockQuantity: 100, availability: 'IN_STOCK' },
     ],
@@ -595,7 +595,7 @@ Closure: Rubber stopper + aluminum cap`,
     categoryName: 'Accessories',
     categoryKey: 'accessories',
     categorySlug: 'accessories',
-    formats: [
+    options: [
       { id: 'f-cart-1', name: 'Pack of 5', nameKey: 'pack5', type: 'pack_5', unitCount: 5, price: 15, sku: 'PP-CART-5', inStock: true, stockQuantity: 300, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-cart-2', name: 'Pack of 10', nameKey: 'pack10', type: 'pack_10', unitCount: 10, price: 25, comparePrice: 30, sku: 'PP-CART-10', inStock: true, stockQuantity: 200, availability: 'IN_STOCK' },
     ],
@@ -625,7 +625,7 @@ Sterility: EO sterilized`,
     categoryName: 'Accessories',
     categoryKey: 'accessories',
     categorySlug: 'accessories',
-    formats: [
+    options: [
       { id: 'f-need-1', name: 'Box of 50', nameKey: 'box50', type: 'box_50', unitCount: 50, price: 12, sku: 'PP-NEEDLE-50', inStock: true, stockQuantity: 500, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-need-2', name: 'Box of 100', nameKey: 'box100', type: 'box_100', unitCount: 100, price: 20, comparePrice: 24, sku: 'PP-NEEDLE-100', inStock: true, stockQuantity: 300, availability: 'IN_STOCK' },
     ],
@@ -655,7 +655,7 @@ Sterility: EO sterilized`,
     categoryName: 'Accessories',
     categoryKey: 'accessories',
     categorySlug: 'accessories',
-    formats: [
+    options: [
       { id: 'f-syr-1', name: 'Box of 50', nameKey: 'box50', type: 'box_50', unitCount: 50, price: 10, sku: 'PP-SYR-50', inStock: true, stockQuantity: 400, availability: 'IN_STOCK', isDefault: true },
       { id: 'f-syr-2', name: 'Box of 100', nameKey: 'box100', type: 'box_100', unitCount: 100, price: 18, comparePrice: 20, sku: 'PP-SYR-100', inStock: true, stockQuantity: 250, availability: 'IN_STOCK' },
     ],
@@ -749,15 +749,15 @@ export function getRelatedProducts(product: Product): RelatedProduct[] {
 /**
  * Récupère le format par défaut d'un produit
  */
-export function getDefaultFormat(product: Product): ProductFormat | undefined {
-  return product.formats.find(f => f.isDefault) || product.formats.find(f => f.inStock) || product.formats[0];
+export function getDefaultOption(product: Product): ProductOption | undefined {
+  return product.options.find(f => f.isDefault) || product.options.find(f => f.inStock) || product.options[0];
 }
 
 /**
  * Vérifie si un produit a des rabais
  */
 export function hasDiscount(product: Product): boolean {
-  return product.formats.some(f => f.comparePrice && f.comparePrice > f.price);
+  return product.options.some(f => f.comparePrice && f.comparePrice > f.price);
 }
 
 /**

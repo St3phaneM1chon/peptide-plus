@@ -23,7 +23,7 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const createOrderItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   quantity: z.number().int().min(1),
   name: z.string().optional(),
   price: z.number().optional(),
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // SECURITY: Validate ALL prices from the database (batch queries to avoid N+1)
-    const verifiedItems: { productId: string; formatId: string | null; name: string; format: string; quantity: number; price: number; productType: string }[] = [];
+    const verifiedItems: { productId: string; optionId: string | null; name: string; option: string; quantity: number; price: number; productType: string }[] = [];
     let serverSubtotal = 0;
 
     // Validate input first
@@ -114,25 +114,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Batch fetch all products and formats in 2 queries instead of N+N
+    // Batch fetch all products and options in 2 queries instead of N+N
     const productIds = [...new Set(items.map((i: { productId: string }) => i.productId))];
-    const formatIds = items.map((i: { formatId?: string }) => i.formatId).filter(Boolean) as string[];
+    const optionIds = items.map((i: { optionId?: string }) => i.optionId).filter(Boolean) as string[];
 
-    const [products, formats] = await Promise.all([
+    const [products, options] = await Promise.all([
       prisma.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, name: true, price: true, isActive: true, productType: true },
       }),
-      formatIds.length > 0
-        ? prisma.productFormat.findMany({
-            where: { id: { in: formatIds } },
+      optionIds.length > 0
+        ? prisma.productOption.findMany({
+            where: { id: { in: optionIds } },
             select: { id: true, name: true, price: true, productId: true },
           })
         : Promise.resolve([]),
     ]);
 
     const productMap = new Map(products.map(p => [p.id, p]));
-    const formatMap = new Map(formats.map(f => [f.id, f]));
+    const formatMap = new Map(options.map(f => [f.id, f]));
 
     for (const item of items) {
       const product = productMap.get(item.productId);
@@ -141,19 +141,19 @@ export async function POST(request: NextRequest) {
       }
 
       let verifiedPrice = Number(product.price);
-      let formatName = '';
+      let optionName = '';
 
-      if (item.formatId) {
-        const format = formatMap.get(item.formatId);
+      if (item.optionId) {
+        const format = formatMap.get(item.optionId);
         if (!format) {
-          return NextResponse.json({ error: `Format introuvable: ${item.formatId}` }, { status: 400 });
+          return NextResponse.json({ error: `Format introuvable: ${item.optionId}` }, { status: 400 });
         }
         // SECURITY: Verify format belongs to the product
         if (format.productId !== item.productId) {
           return NextResponse.json({ error: 'Le format ne correspond pas au produit' }, { status: 400 });
         }
         verifiedPrice = Number(format.price);
-        formatName = format.name;
+        optionName = format.name;
       }
 
       const quantity = Math.max(1, Math.floor(item.quantity));
@@ -161,9 +161,9 @@ export async function POST(request: NextRequest) {
 
       verifiedItems.push({
         productId: product.id,
-        formatId: item.formatId || null,
+        optionId: item.optionId || null,
         name: product.name,
-        format: formatName,
+        option: optionName,
         quantity,
         price: verifiedPrice,
         productType: product.productType,
@@ -317,12 +317,12 @@ export async function POST(request: NextRequest) {
       reservationIds = await prisma.$transaction(async (tx) => {
         const ids: string[] = [];
         for (const item of verifiedItems) {
-          if (item.formatId) {
+          if (item.optionId) {
             // Lock the format row to prevent concurrent overselling
             const [format] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
               SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
-              FROM "ProductFormat"
-              WHERE id = ${item.formatId}
+              FROM "ProductOption"
+              WHERE id = ${item.optionId}
               FOR UPDATE
             `;
 
@@ -333,14 +333,14 @@ export async function POST(request: NextRequest) {
             const reservation = await tx.inventoryReservation.create({
               data: {
                 productId: item.productId,
-                formatId: item.formatId,
+                optionId: item.optionId,
                 quantity: item.quantity,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min TTL
               },
             });
             ids.push(reservation.id);
           } else {
-            // E-07: Also check stock for base products without formats
+            // E-07: Also check stock for base products without options
             const [product] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
               SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
               FROM "Product"
@@ -355,7 +355,7 @@ export async function POST(request: NextRequest) {
             const reservation = await tx.inventoryReservation.create({
               data: {
                 productId: item.productId,
-                formatId: null,
+                optionId: null,
                 quantity: item.quantity,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min TTL
               },

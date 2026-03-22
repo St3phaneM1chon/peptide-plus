@@ -69,7 +69,7 @@ export async function sendConsentExpirationReminders(daysBeforeExpiry = 7): Prom
               <p>Dear ${consent.client?.name || 'Client'},</p>
               <p>Your consent for the video "<strong>${consent.video?.title || 'Unknown'}</strong>" expires in <strong>${daysLeft} days</strong>.</p>
               <p>Please review and renew your consent if you wish to continue.</p>
-              <p>Best regards,<br>BioCycle Peptides Team</p>
+              <p>Best regards,<br>${process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'} Team</p>
             `,
           });
           result.sent++;

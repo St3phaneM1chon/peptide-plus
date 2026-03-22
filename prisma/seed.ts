@@ -25,10 +25,10 @@ async function createAllFormats(productId: string, _baseName: string, baseSku: s
   ];
 
   for (const format of formats) {
-    await prisma.productFormat.create({
+    await prisma.productOption.create({
       data: {
         productId,
-        formatType: format.type,
+        optionType: format.type,
         name: format.name,
         dosageMg: format.dosage,
         unitCount: format.units,
@@ -55,10 +55,10 @@ async function createCapsuleFormats(productId: string, baseSku: string, basePric
   ];
 
   for (const format of formats) {
-    await prisma.productFormat.create({
+    await prisma.productOption.create({
       data: {
         productId,
-        formatType: format.type,
+        optionType: format.type,
         name: format.name,
         unitCount: format.units,
         price: format.price,
@@ -341,7 +341,7 @@ async function main() {
   // PRODUITS - Supprimer les anciens formats
   // =====================================================
   console.log('🗑️ Suppression des anciens formats...');
-  await prisma.productFormat.deleteMany({});
+  await prisma.productOption.deleteMany({});
 
   // =====================================================
   // PRODUITS - RÉCUPÉRATION & RÉPARATION
@@ -658,10 +658,10 @@ async function main() {
   await createAllFormats(selank.id, 'Selank', 'PP-SELANK', 22);
 
   // Selank Nasal Spray
-  await prisma.productFormat.create({
+  await prisma.productOption.create({
     data: {
       productId: selank.id,
-      formatType: 'NASAL_SPRAY',
+      optionType: 'NASAL_SPRAY',
       name: '10ml Nasal Spray',
       volumeMl: 10,
       price: 45.00,
@@ -694,10 +694,10 @@ async function main() {
   await createAllFormats(semax.id, 'Semax', 'PP-SEMAX', 40);
 
   // Semax Nasal Spray
-  await prisma.productFormat.create({
+  await prisma.productOption.create({
     data: {
       productId: semax.id,
-      formatType: 'NASAL_SPRAY',
+      optionType: 'NASAL_SPRAY',
       name: '10ml Nasal Spray',
       volumeMl: 10,
       price: 65.00,
@@ -801,10 +801,10 @@ async function main() {
   await createAllFormats(ghkcu.id, 'GHK-Cu', 'PP-GHKCU', 50);
 
   // GHK-Cu Cream
-  await prisma.productFormat.create({
+  await prisma.productOption.create({
     data: {
       productId: ghkcu.id,
-      formatType: 'CREAM',
+      optionType: 'CREAM',
       name: '50ml Topical Cream',
       volumeMl: 50,
       price: 85.00,
@@ -907,10 +907,10 @@ async function main() {
   });
 
   await Promise.all([
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: bacWater.id,
-        formatType: 'ACCESSORY',
+        optionType: 'ACCESSORY',
         name: '10ml Vial',
         volumeMl: 10,
         price: 13.00,
@@ -922,10 +922,10 @@ async function main() {
         availability: StockStatus.IN_STOCK,
       },
     }),
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: bacWater.id,
-        formatType: 'ACCESSORY',
+        optionType: 'ACCESSORY',
         name: '30ml Vial',
         volumeMl: 30,
         price: 25.00,
@@ -936,10 +936,10 @@ async function main() {
         availability: StockStatus.IN_STOCK,
       },
     }),
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: bacWater.id,
-        formatType: 'PACK_10',
+        optionType: 'PACK_10',
         name: '10ml x 10 Pack',
         volumeMl: 100,
         unitCount: 10,
@@ -972,10 +972,10 @@ async function main() {
   });
 
   await Promise.all([
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: insulinSyringes.id,
-        formatType: 'ACCESSORY',
+        optionType: 'ACCESSORY',
         name: 'Box of 10',
         unitCount: 10,
         price: 15.00,
@@ -987,10 +987,10 @@ async function main() {
         availability: StockStatus.IN_STOCK,
       },
     }),
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: insulinSyringes.id,
-        formatType: 'ACCESSORY',
+        optionType: 'ACCESSORY',
         name: 'Box of 50',
         unitCount: 50,
         price: 45.00,
@@ -1002,10 +1002,10 @@ async function main() {
         availability: StockStatus.IN_STOCK,
       },
     }),
-    prisma.productFormat.create({
+    prisma.productOption.create({
       data: {
         productId: insulinSyringes.id,
-        formatType: 'ACCESSORY',
+        optionType: 'ACCESSORY',
         name: 'Box of 100',
         unitCount: 100,
         price: 75.00,
@@ -1037,10 +1037,10 @@ async function main() {
     },
   });
 
-  await prisma.productFormat.create({
+  await prisma.productOption.create({
     data: {
       productId: injectionPen.id,
-      formatType: 'ACCESSORY',
+      optionType: 'ACCESSORY',
       name: 'Single Pen',
       unitCount: 1,
       price: 35.00,
@@ -1184,7 +1184,7 @@ async function main() {
 
   // Count totals
   const productCount = await prisma.product.count();
-  const formatCount = await prisma.productFormat.count();
+  const formatCount = await prisma.productOption.count();
   const accountCount = await prisma.chartOfAccount.count();
 
   console.log('✅ Seeding terminé avec succès!');

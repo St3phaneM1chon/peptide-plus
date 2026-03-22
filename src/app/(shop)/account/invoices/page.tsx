@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 interface InvoiceItem {
   id: string;
   productName: string;
-  formatName: string | null;
+  optionName: string | null;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -53,7 +53,7 @@ interface InvoiceDetail {
   items: {
     id: string;
     productName: string;
-    formatName: string | null;
+    optionName: string | null;
     sku: string | null;
     quantity: number;
     unitPrice: number;
@@ -681,8 +681,8 @@ export default function InvoicesPage() {
                         <tr key={item.id}>
                           <td className="px-4 py-3">
                             <p className="font-medium text-gray-900 text-sm">{item.productName}</p>
-                            {item.formatName && (
-                              <p className="text-xs text-gray-500">{item.formatName}</p>
+                            {item.optionName && (
+                              <p className="text-xs text-gray-500">{item.optionName}</p>
                             )}
                             {item.sku && (
                               <p className="text-xs text-gray-400">SKU: {item.sku}</p>
@@ -851,7 +851,7 @@ export default function InvoicesPage() {
                   <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '8px 12px', fontSize: '12px' }}>
                       {item.productName}
-                      {item.formatName && <span style={{ color: '#888' }}> - {item.formatName}</span>}
+                      {item.optionName && <span style={{ color: '#888' }}> - {item.optionName}</span>}
                     </td>
                     <td style={{ padding: '8px 12px', textAlign: 'center', fontSize: '12px' }}>{item.quantity}</td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', fontSize: '12px' }}>

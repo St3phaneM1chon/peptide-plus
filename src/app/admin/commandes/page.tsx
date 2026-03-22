@@ -94,7 +94,7 @@ interface Order {
   items: Array<{
     id: string;
     productName: string;
-    formatName?: string;
+    optionName?: string;
     quantity: number;
     unitPrice: number;
     total: number;
@@ -1223,7 +1223,7 @@ export default function OrdersPage() {
       .map(
         (item) =>
           `<tr>
-            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${item.productName}${item.formatName ? ` <small style="color:#64748b">(${item.formatName})</small>` : ''}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${item.productName}${item.optionName ? ` <small style="color:#64748b">(${item.optionName})</small>` : ''}</td>
             <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${item.quantity}</td>
           </tr>`
       )
@@ -1861,8 +1861,8 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                             <tr key={item.id}>
                               <td className="px-4 py-3 max-w-[250px]">
                                 <p className="font-medium text-slate-900 truncate">{item.productName}</p>
-                                {item.formatName && (
-                                  <p className="text-xs text-slate-500 truncate">{item.formatName}</p>
+                                {item.optionName && (
+                                  <p className="text-xs text-slate-500 truncate">{item.optionName}</p>
                                 )}
                               </td>
                               <td className="px-4 py-3 text-center text-sm text-slate-700">{item.quantity}</td>
@@ -2359,7 +2359,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                   <div key={item.id} className="px-3 py-2 flex justify-between text-sm">
                     <span className="text-slate-700">
                       {item.productName}
-                      {item.formatName && <span className="text-slate-400 ms-1">({item.formatName})</span>}
+                      {item.optionName && <span className="text-slate-400 ms-1">({item.optionName})</span>}
                     </span>
                     <span className="text-slate-500">x{item.quantity}</span>
                   </div>

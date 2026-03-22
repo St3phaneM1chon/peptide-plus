@@ -61,7 +61,7 @@ export default function ReconciliationPage() {
       const res = await fetch(`/api/admin/payments/reconciliation?${params.toString()}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Failed to fetch reconciliation report');
+        toast.error(data.error || t('admin.paymentReconciliation.fetchError'));
         return;
       }
       const data = await res.json();
@@ -82,7 +82,12 @@ export default function ReconciliationPage() {
   const handleExportCSV = () => {
     if (!report) return;
     const BOM = '\uFEFF';
-    const headers = ['Order Number', 'Total', 'Payment Status', 'Date'];
+    const headers = [
+      t('admin.paymentReconciliation.colOrderNumber'),
+      t('admin.paymentReconciliation.colTotal'),
+      t('admin.paymentReconciliation.colPaymentStatus'),
+      t('admin.paymentReconciliation.colDate'),
+    ];
     const rows = report.unmatched.map(u => [
       u.orderNumber,
       u.total.toFixed(2),
@@ -99,7 +104,7 @@ export default function ReconciliationPage() {
     a.download = `reconciliation-${fromDate}-${toDate}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Exported successfully');
+    toast.success(t('common.exported'));
   };
 
   const statusBadge = (status: string) => {
@@ -117,9 +122,9 @@ export default function ReconciliationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Payment Reconciliation</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t('admin.paymentReconciliation.title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Compare order totals against Stripe payments for a given period
+            {t('admin.paymentReconciliation.subtitle')}
           </p>
         </div>
       </div>
@@ -130,7 +135,7 @@ export default function ReconciliationPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <Calendar className="w-3.5 h-3.5 inline me-1" />
-              From
+              {t('admin.paymentReconciliation.from')}
             </label>
             <input
               type="date"
@@ -145,7 +150,7 @@ export default function ReconciliationPage() {
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               <Calendar className="w-3.5 h-3.5 inline me-1" />
-              To
+              {t('admin.paymentReconciliation.to')}
             </label>
             <input
               type="date"
@@ -161,7 +166,7 @@ export default function ReconciliationPage() {
             onClick={fetchReport}
             loading={loading}
           >
-            Generate Report
+            {t('admin.paymentReconciliation.generateReport')}
           </Button>
           {report && (
             <Button
@@ -171,7 +176,7 @@ export default function ReconciliationPage() {
               onClick={handleExportCSV}
               disabled={report.unmatched.length === 0}
             >
-              Export Unmatched
+              {t('admin.paymentReconciliation.exportUnmatched')}
             </Button>
           )}
         </div>
@@ -181,7 +186,7 @@ export default function ReconciliationPage() {
       {loading && (
         <div className="flex items-center justify-center h-48" role="status">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-          <span className="sr-only">Loading...</span>
+          <span className="sr-only">{t('common.loading')}</span>
         </div>
       )}
 
@@ -189,9 +194,9 @@ export default function ReconciliationPage() {
       {!loading && !report && (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
           <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">No report generated yet</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.paymentReconciliation.noReport')}</h3>
           <p className="text-sm text-slate-500 mb-4">
-            Select a date range and click &quot;Generate Report&quot; to view the reconciliation data.
+            {t('admin.paymentReconciliation.noReportDesc')}
           </p>
         </div>
       )}
@@ -201,37 +206,37 @@ export default function ReconciliationPage() {
         <>
           {/* Period info */}
           <div className="text-sm text-slate-500">
-            Report period: <span className="font-medium text-slate-700">{formatDate(report.period.from)}</span>
+            {t('admin.paymentReconciliation.reportPeriod')}: <span className="font-medium text-slate-700">{formatDate(report.period.from)}</span>
             {' '}&rarr;{' '}
             <span className="font-medium text-slate-700">{formatDate(report.period.to)}</span>
           </div>
 
           {/* Summary stat cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            <StatCard label="Total Orders" value={report.summary.totalOrders} icon={Receipt} />
-            <StatCard label="Total Revenue" value={formatCurrency(report.summary.totalRevenue)} icon={DollarSign} />
-            <StatCard label="Total Refunded" value={formatCurrency(report.summary.totalRefunded)} icon={RefreshCw} />
-            <StatCard label="Net Revenue" value={formatCurrency(report.summary.netRevenue)} icon={TrendingUp} />
-            <StatCard label="Payment Errors" value={report.summary.paymentErrors} icon={AlertTriangle} />
-            <StatCard label="Matched (Stripe)" value={report.summary.matchedWithStripe} icon={DollarSign} />
-            <StatCard label="Unmatched" value={report.summary.unmatchedOrders} icon={AlertTriangle} />
+            <StatCard label={t('admin.paymentReconciliation.totalOrders')} value={report.summary.totalOrders} icon={Receipt} />
+            <StatCard label={t('admin.paymentReconciliation.totalRevenue')} value={formatCurrency(report.summary.totalRevenue)} icon={DollarSign} />
+            <StatCard label={t('admin.paymentReconciliation.totalRefunded')} value={formatCurrency(report.summary.totalRefunded)} icon={RefreshCw} />
+            <StatCard label={t('admin.paymentReconciliation.netRevenue')} value={formatCurrency(report.summary.netRevenue)} icon={TrendingUp} />
+            <StatCard label={t('admin.paymentReconciliation.paymentErrors')} value={report.summary.paymentErrors} icon={AlertTriangle} />
+            <StatCard label={t('admin.paymentReconciliation.matchedStripe')} value={report.summary.matchedWithStripe} icon={DollarSign} />
+            <StatCard label={t('admin.paymentReconciliation.unmatched')} value={report.summary.unmatchedOrders} icon={AlertTriangle} />
           </div>
 
           {/* Revenue breakdown visual */}
           <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <h3 className="text-base font-semibold text-slate-900 mb-4">Revenue Breakdown</h3>
+            <h3 className="text-base font-semibold text-slate-900 mb-4">{t('admin.paymentReconciliation.revenueBreakdown')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 bg-emerald-50 rounded-lg">
                 <p className="text-2xl font-bold text-emerald-700">{formatCurrency(report.summary.totalRevenue)}</p>
-                <p className="text-sm text-emerald-600 mt-1">Gross Revenue</p>
+                <p className="text-sm text-emerald-600 mt-1">{t('admin.paymentReconciliation.grossRevenue')}</p>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg">
                 <p className="text-2xl font-bold text-red-700">-{formatCurrency(report.summary.totalRefunded)}</p>
-                <p className="text-sm text-red-600 mt-1">Refunded</p>
+                <p className="text-sm text-red-600 mt-1">{t('admin.paymentReconciliation.refunded')}</p>
               </div>
               <div className="text-center p-4 bg-indigo-50 rounded-lg">
                 <p className="text-2xl font-bold text-indigo-700">{formatCurrency(report.summary.netRevenue)}</p>
-                <p className="text-sm text-indigo-600 mt-1">Net Revenue</p>
+                <p className="text-sm text-indigo-600 mt-1">{t('admin.paymentReconciliation.netRevenue')}</p>
               </div>
             </div>
           </div>
@@ -239,7 +244,7 @@ export default function ReconciliationPage() {
           {/* Stripe match rate */}
           {report.summary.totalOrders > 0 && (
             <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="text-base font-semibold text-slate-900 mb-3">Stripe Match Rate</h3>
+              <h3 className="text-base font-semibold text-slate-900 mb-3">{t('admin.paymentReconciliation.stripeMatchRate')}</h3>
               <div className="flex items-center gap-4">
                 <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
                   <div
@@ -254,7 +259,7 @@ export default function ReconciliationPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                {report.summary.matchedWithStripe} of {report.summary.totalOrders} orders matched with Stripe payment IDs
+                {t('admin.paymentReconciliation.matchedCount', { matched: report.summary.matchedWithStripe, total: report.summary.totalOrders })}
               </p>
             </div>
           )}
@@ -264,23 +269,23 @@ export default function ReconciliationPage() {
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">Unmatched Orders</h3>
+                  <h3 className="text-base font-semibold text-slate-900">{t('admin.paymentReconciliation.unmatchedOrders')}</h3>
                   <p className="text-sm text-slate-500">
-                    {report.unmatched.length} order(s) without a Stripe payment ID
+                    {t('admin.paymentReconciliation.unmatchedOrdersDesc', { count: report.unmatched.length })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-medium text-amber-700">Requires attention</span>
+                  <span className="text-xs font-medium text-amber-700">{t('admin.paymentReconciliation.requiresAttention')}</span>
                 </div>
               </div>
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Order Number</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Total</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Payment Status</th>
-                    <th className="text-start px-6 py-3 font-medium text-slate-600">Date</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colOrderNumber')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colTotal')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colPaymentStatus')}</th>
+                    <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colDate')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -311,9 +316,9 @@ export default function ReconciliationPage() {
           {report.unmatched.length === 0 && report.summary.totalOrders > 0 && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
               <DollarSign className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold text-emerald-900">All payments reconciled</h3>
+              <h3 className="text-lg font-semibold text-emerald-900">{t('admin.paymentReconciliation.allReconciled')}</h3>
               <p className="text-sm text-emerald-700 mt-1">
-                All {report.summary.totalOrders} orders have matching Stripe payment IDs.
+                {t('admin.paymentReconciliation.allReconciledDesc', { count: report.summary.totalOrders })}
               </p>
             </div>
           )}

@@ -10,7 +10,7 @@ export const GET = withAdminGuard(async (request) => {
   const { searchParams } = new URL(request.url);
   const activeOnly = searchParams.get('active') !== 'false';
 
-  const types = await prisma.formatTypeOption.findMany({
+  const types = await prisma.optionTypeOption.findMany({
     where: activeOnly ? { isActive: true } : undefined,
     orderBy: { sortOrder: 'asc' },
   });
@@ -35,15 +35,15 @@ export const POST = withAdminGuard(async (request) => {
   const { value, label, sortOrder } = parsed.data;
 
   // Check uniqueness
-  const existing = await prisma.formatTypeOption.findUnique({ where: { value } });
+  const existing = await prisma.optionTypeOption.findUnique({ where: { value } });
   if (existing) {
     return apiError('Ce type existe déjà', 409);
   }
 
   // Auto sort order if not provided
-  const finalSort = sortOrder ?? (await prisma.formatTypeOption.count()) + 1;
+  const finalSort = sortOrder ?? (await prisma.optionTypeOption.count()) + 1;
 
-  const created = await prisma.formatTypeOption.create({
+  const created = await prisma.optionTypeOption.create({
     data: { value, label, sortOrder: finalSort },
   });
 

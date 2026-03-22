@@ -19,13 +19,13 @@ interface BundleItem {
     imageUrl?: string | null;
     price: number;
     purity?: number | null;
-    formats: Array<{
+    options: Array<{
       id: string;
       name: string;
       price: number;
     }>;
   };
-  formatId?: string | null;
+  optionId?: string | null;
   itemPrice: number;
   itemTotal: number;
 }
@@ -90,15 +90,15 @@ export default function BundleDetailPage() {
     try {
       // Add each item in the bundle to the cart
       bundle.items.forEach((item) => {
-        const format = item.formatId
-          ? item.product.formats.find((f) => f.id === item.formatId)
+        const format = item.optionId
+          ? item.product.options.find((f) => f.id === item.optionId)
           : null;
 
         addItem({
           productId: item.product.id,
-          formatId: item.formatId || undefined,
+          optionId: item.optionId || undefined,
           name: item.product.name,
-          formatName: format?.name,
+          optionName: format?.name,
           price: item.itemPrice,
           quantity: item.quantity,
           image: item.product.imageUrl || undefined,
@@ -268,8 +268,8 @@ export default function BundleDetailPage() {
             </h2>
             <div className="space-y-4">
               {bundle.items.map((item) => {
-                const selectedFormat = item.formatId
-                  ? item.product.formats.find((f) => f.id === item.formatId)
+                const selectedFormat = item.optionId
+                  ? item.product.options.find((f) => f.id === item.optionId)
                   : null;
 
                 return (

@@ -96,7 +96,7 @@ function writePool(config: CallerIdPoolConfig): void {
 
 /**
  * Extract the area code from a phone number.
- * Handles E.164 format (+1XXXXXXXXXX) and plain formats.
+ * Handles E.164 format (+1XXXXXXXXXX) and plain options.
  */
 function extractAreaCode(phone: string): string | null {
   // Remove non-digit characters

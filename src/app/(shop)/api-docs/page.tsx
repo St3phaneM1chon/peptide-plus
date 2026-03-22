@@ -63,7 +63,7 @@ const ENDPOINTS: EndpointDef[] = [
       "sku": "PEP-BPC157-5",
       "stockQuantity": 150,
       "category": { "id": "...", "name": "Peptides", "slug": "peptides" },
-      "formats": [...]
+      "options": [...]
     }
   ],
   "meta": { "page": 1, "limit": 20, "total": 25, "totalPages": 2 }
@@ -85,7 +85,7 @@ const ENDPOINTS: EndpointDef[] = [
     "slug": "bpc-157",
     "description": "Body Protection Compound...",
     "price": "45.99",
-    "formats": [...],
+    "options": [...],
     "images": [...],
     "quantityDiscounts": [...]
   }
@@ -133,7 +133,7 @@ const ENDPOINTS: EndpointDef[] = [
       { name: 'shippingState', type: 'string', required: true, description: 'State/Province' },
       { name: 'shippingPostal', type: 'string', required: true, description: 'Postal/ZIP code' },
       { name: 'shippingCountry', type: 'string', required: true, description: 'Country code (default: CA)' },
-      { name: 'items', type: 'array', required: true, description: 'Array of { productId, formatId?, quantity }' },
+      { name: 'items', type: 'array', required: true, description: 'Array of { productId, optionId?, quantity }' },
       { name: 'userId', type: 'string', required: false, description: 'Link order to existing user' },
       { name: 'customerNotes', type: 'string', required: false, description: 'Customer notes' },
     ],
@@ -287,7 +287,7 @@ const ENDPOINTS: EndpointDef[] = [
       "sku": "PEP-BPC157-5",
       "stockQuantity": 150,
       "reorderPoint": 20,
-      "formats": [
+      "options": [
         { "name": "5mg Vial", "stockQuantity": 80, "inStock": true }
       ]
     }

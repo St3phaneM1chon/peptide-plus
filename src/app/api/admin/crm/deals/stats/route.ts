@@ -22,6 +22,7 @@ import { prisma } from '@/lib/db';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 const dealStatsActionSchema = z.object({
   action: z.enum(['take_snapshot', 'schedule_snapshot']),
@@ -156,8 +157,8 @@ async function getAtRiskCustomers() {
 
 async function getCLVDistribution() {
   // Push aggregation to database instead of loading all customers+orders into memory
-  const buckets = await prisma.$queryRaw<{ range: string; count: bigint }[]>`
-    SELECT
+  const buckets = await tenantQueryRaw<{ range: string; count: bigint }>(
+    `SELECT
       CASE
         WHEN clv < 100 THEN '$0-100'
         WHEN clv < 500 THEN '$100-500'
@@ -173,8 +174,8 @@ async function getCLVDistribution() {
       WHERE "userId" IS NOT NULL
       GROUP BY "userId"
     ) user_clv
-    GROUP BY range
-  `;
+    GROUP BY range`
+  );
 
   const rangeOrder = ['$0-100', '$100-500', '$500-1K', '$1K-5K', '$5K-10K', '$10K+'];
   const countMap = new Map(buckets.map(b => [b.range, Number(b.count)]));
@@ -185,12 +186,12 @@ async function getCLVDistribution() {
 
 async function getCLVTop() {
   // Push aggregation to database — only fetch top 20 instead of ALL customers
-  const topCustomers = await prisma.$queryRaw<{
+  const topCustomers = await tenantQueryRaw<{
     contactId: string; name: string | null; email: string;
     totalRevenue: number; orderCount: bigint; avgOrderValue: number;
     lifespanMonths: number; monthlyRevenue: number; estimatedCLV: number;
-  }[]>`
-    SELECT
+  }>(
+    `SELECT
       u.id AS "contactId",
       u.name,
       u.email,
@@ -204,8 +205,8 @@ async function getCLVTop() {
     JOIN "Order" o ON u.id = o."userId"
     GROUP BY u.id, u.name, u.email, u."createdAt"
     ORDER BY "estimatedCLV" DESC
-    LIMIT 20
-  `;
+    LIMIT 20`
+  );
 
   return {
     topCustomers: topCustomers.map(c => ({
@@ -224,8 +225,8 @@ async function getCLVTop() {
 
 async function getCLVAverage() {
   // Push aggregation to database instead of loading all customers into memory
-  const result = await prisma.$queryRaw<{ averageCLV: number; customerCount: bigint }[]>`
-    SELECT
+  const result = await tenantQueryRaw<{ averageCLV: number; customerCount: bigint }>(
+    `SELECT
       ROUND(AVG(estimated_clv)::numeric, 2) AS "averageCLV",
       COUNT(*) AS "customerCount"
     FROM (
@@ -234,8 +235,8 @@ async function getCLVAverage() {
       FROM "User" u
       JOIN "Order" o ON u.id = o."userId"
       GROUP BY u.id, u."createdAt"
-    ) clv_data
-  `;
+    ) clv_data`
+  );
 
   return {
     averageCLV: Number(result[0]?.averageCLV) || 0,

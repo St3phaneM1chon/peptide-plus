@@ -267,7 +267,7 @@ async function sendApprovalNotification(
           <p style="margin: 0;"><strong>Approval ID:</strong> ${approvalId}</p>
         </div>
         <p>Please log in to the admin panel to review and approve or reject this request.</p>
-        <a href="${process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com'}/admin/comptabilite/workflows"
+        <a href="${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/admin/comptabilite/workflows"
            style="display: inline-block; background: #4f46e5; color: white; padding: 10px 24px; border-radius: 6px; text-decoration: none; margin-top: 8px;">
           Review Approval
         </a>

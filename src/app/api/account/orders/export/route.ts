@@ -128,7 +128,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
                 items: {
                   select: {
                     productName: true,
-                    formatName: true,
+                    optionName: true,
                     quantity: true,
                     unitPrice: true,
                     total: true,
@@ -145,7 +145,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
             for (const order of batch) {
               const itemsList = order.items
                 .map((item) => {
-                  const formatInfo = item.formatName ? ` (${item.formatName})` : '';
+                  const formatInfo = item.optionName ? ` (${item.optionName})` : '';
                   return `${item.productName}${formatInfo} x${item.quantity}`;
                 })
                 .join('; ');

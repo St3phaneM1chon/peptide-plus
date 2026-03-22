@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Actualités | BioCycle Peptides',
   description: 'Restez informé des dernières nouvelles, lancements de produits et mises à jour de recherche de BioCycle Peptides au Canada.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/actualites',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/actualites`,
   },
   openGraph: {
     title: 'Actualités | BioCycle Peptides',
     description: 'Restez informé des dernières nouvelles, lancements de produits et mises à jour de recherche de BioCycle Peptides au Canada.',
-    url: 'https://biocyclepeptides.com/actualites',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/actualites`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

@@ -1,5 +1,6 @@
 model Article {
   id              String               @id @default(cuid())
+  tenantId        String?
   title           String
   slug            String               @unique
   excerpt         String?
@@ -24,10 +25,12 @@ model Article {
   @@index([isPublished])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ArticleTranslation {
   id              String             @id @default(cuid())
+  tenantId        String?
   articleId       String
   locale          String
   title           String?
@@ -48,10 +51,12 @@ model ArticleTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BlogPost {
   id              String                @id @default(cuid())
+  tenantId        String?
   title           String
   slug            String                @unique
   excerpt         String?
@@ -76,10 +81,12 @@ model BlogPost {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BlogPostTranslation {
   id              String             @id @default(cuid())
+  tenantId        String?
   blogPostId      String
   locale          String
   title           String?
@@ -100,10 +107,12 @@ model BlogPostTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Faq {
   id           String           @id @default(cuid())
+  tenantId     String?
   question     String
   answer       String
   category     String           @default("general")
@@ -118,10 +127,12 @@ model Faq {
   @@index([isPublished])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model FaqTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   faqId        String
   locale       String
   question     String
@@ -139,10 +150,12 @@ model FaqTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Guide {
   id            String             @id @default(cuid())
+  tenantId      String?
   title         String
   slug          String             @unique
   description   String?
@@ -164,10 +177,12 @@ model Guide {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model GuideTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   guideId      String
   locale       String
   title        String?
@@ -185,10 +200,12 @@ model GuideTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model HeroSlide {
   id               String                 @id @default(cuid())
+  tenantId         String?
   slug             String                 @unique
   mediaType        HeroMediaType          @default(IMAGE)
   backgroundUrl    String
@@ -216,10 +233,12 @@ model HeroSlide {
   @@index([isActive, sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model HeroSlideTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   slideId      String
   locale       String
   badgeText    String?
@@ -241,10 +260,12 @@ model HeroSlideTranslation {
   @@index([slideId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model NewsArticle {
   id           String                   @id @default(cuid())
+  tenantId     String?
   title        String
   slug         String                   @unique
   excerpt      String?
@@ -265,10 +286,12 @@ model NewsArticle {
   @@index([type])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model NewsArticleTranslation {
   id            String             @id @default(cuid())
+  tenantId      String?
   newsArticleId String
   locale        String
   title         String?
@@ -287,10 +310,12 @@ model NewsArticleTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model NewsletterSubscriber {
   id             String    @id @default(cuid())
+  tenantId       String?
   email          String    @unique
   name           String?
   isActive       Boolean   @default(true)
@@ -303,10 +328,12 @@ model NewsletterSubscriber {
   @@index([isActive])
   @@index([subscribedAt])
   @@index([locale])
+  @@index([tenantId])
 }
 
 model Page {
   id              String            @id @default(cuid())
+  tenantId        String?
   title           String
   slug            String            @unique
   content         String
@@ -326,10 +353,12 @@ model Page {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PageTranslation {
   id              String             @id @default(cuid())
+  tenantId        String?
   pageId          String
   locale          String
   title           String
@@ -349,10 +378,12 @@ model PageTranslation {
   @@index([pageId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Testimonial {
   id            String                   @id @default(cuid())
+  tenantId      String?
   name          String
   role          String?
   company       String?
@@ -374,10 +405,12 @@ model Testimonial {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model TestimonialTranslation {
   id            String             @id @default(cuid())
+  tenantId      String?
   testimonialId String
   locale        String
   content       String?
@@ -395,10 +428,12 @@ model TestimonialTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Webinar {
   id              String               @id @default(cuid())
+  tenantId        String?
   title           String
   slug            String               @unique
   description     String?
@@ -428,10 +463,12 @@ model Webinar {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model WebinarTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   webinarId    String
   locale       String
   title        String?
@@ -450,10 +487,12 @@ model WebinarTranslation {
   @@index([webinarId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model TranslationJob {
   id          String               @id @default(cuid())
+  tenantId    String?
   model       String
   entityId    String
   pass        Int                  @default(1)
@@ -473,10 +512,12 @@ model TranslationJob {
   @@index([model, entityId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model TranslationFeedback {
   id        String   @id @default(cuid())
+  tenantId  String?
   locale    String
   rating    String // 'good' | 'bad'
   comment   String?
@@ -486,6 +527,7 @@ model TranslationFeedback {
 
   @@index([locale, rating])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -493,6 +535,7 @@ model TranslationFeedback {
 // =============================================
 model ForumCategory {
   id           String                      @id @default(cuid())
+  tenantId     String?
   name         String
   slug         String                      @unique
   description  String?
@@ -505,11 +548,13 @@ model ForumCategory {
 
   @@index([slug])
   @@index([sortOrder])
+  @@index([tenantId])
 }
 
 // FIX A1-P2-005: Forum category translation model for i18n support
 model ForumCategoryTranslation {
   id              String             @id @default(cuid())
+  tenantId        String?
   forumCategoryId String
   locale          String
   name            String?
@@ -527,10 +572,12 @@ model ForumCategoryTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ForumPost {
   id           String         @id @default(cuid())
+  tenantId     String?
   title        String
   content      String
   authorId     String
@@ -555,10 +602,12 @@ model ForumPost {
   @@index([createdAt])
   @@index([isPinned, createdAt])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model ForumReply {
   id            String       @id @default(cuid())
+  tenantId      String?
   content       String
   authorId      String
   postId        String
@@ -580,10 +629,12 @@ model ForumReply {
   @@index([parentReplyId])
   @@index([createdAt])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model ForumVote {
   id        String      @id @default(cuid())
+  tenantId  String?
   userId    String
   postId    String?
   replyId   String?
@@ -598,6 +649,7 @@ model ForumVote {
   @@unique([userId, replyId])
   @@index([postId])
   @@index([replyId])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -605,6 +657,7 @@ model ForumVote {
 // =============================================
 model ContactMessage {
   id        String    @id @default(cuid())
+  tenantId  String?
   name      String
   email     String
   subject   String?
@@ -621,6 +674,7 @@ model ContactMessage {
   @@index([createdAt])
   @@index([isRead])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -628,6 +682,7 @@ model ContactMessage {
 // ---------------------------------------------------------------------------
 model BrandKit {
   id             String   @id @default(cuid())
+  tenantId       String?
   name           String
   logoUrl        String?
   faviconUrl     String?
@@ -642,5 +697,5 @@ model BrandKit {
   updatedAt      DateTime @updatedAt
 
   @@index([isActive])
+  @@index([tenantId])
 }
-

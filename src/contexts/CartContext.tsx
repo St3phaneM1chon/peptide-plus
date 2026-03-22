@@ -7,9 +7,9 @@ import { useI18n } from '@/i18n/client';
 
 interface CartItem {
   productId: string;
-  formatId?: string;
+  optionId?: string;
   name: string;
-  formatName?: string;
+  optionName?: string;
   price: number;
   comparePrice?: number;
   quantity: number;
@@ -17,7 +17,7 @@ interface CartItem {
   sku?: string;
   maxQuantity?: number;
   productType?: string;
-  /** Weight of one unit in grams (from ProductFormat.weightGrams). Used for weight-based shipping. */
+  /** Weight of one unit in grams (from ProductOption.weightGrams). Used for weight-based shipping. */
   weightGrams?: number;
 }
 
@@ -27,10 +27,10 @@ interface CartContextType {
   subtotal: number;
   isOpen: boolean;
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
-  removeItem: (productId: string, formatId?: string) => void;
-  updateQuantity: (productId: string, formatId: string | undefined, quantity: number) => void;
+  removeItem: (productId: string, optionId?: string) => void;
+  updateQuantity: (productId: string, optionId: string | undefined, quantity: number) => void;
   clearCart: () => void;
-  isInCart: (productId: string, formatId?: string) => boolean;
+  isInCart: (productId: string, optionId?: string) => boolean;
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
@@ -79,9 +79,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
           setItems(prev => {
             // Merge: DB items that aren't already in local cart
-            const localIds = new Set(prev.map(i => `${i.productId}:${i.formatId || ''}`));
+            const localIds = new Set(prev.map(i => `${i.productId}:${i.optionId || ''}`));
             const newItems = data.items.filter(
-              (i: CartItem) => !localIds.has(`${i.productId}:${i.formatId || ''}`)
+              (i: CartItem) => !localIds.has(`${i.productId}:${i.optionId || ''}`)
             );
             return newItems.length > 0 ? [...prev, ...newItems] : prev;
           });
@@ -168,7 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // I-CART-7: Enforce max total items in cart
       const currentTotal = prevItems.reduce((sum, item) => sum + item.quantity, 0);
       const existingIndex = prevItems.findIndex(
-        (item) => item.productId === newItem.productId && item.formatId === newItem.formatId
+        (item) => item.productId === newItem.productId && item.optionId === newItem.optionId
       );
 
       if (existingIndex >= 0) {
@@ -215,18 +215,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsOpen(true);
   }, []);
 
-  const removeItem = useCallback((productId: string, formatId?: string) => {
+  const removeItem = useCallback((productId: string, optionId?: string) => {
     setItems((prevItems) =>
       prevItems.filter(
-        (item) => !(item.productId === productId && item.formatId === formatId)
+        (item) => !(item.productId === productId && item.optionId === optionId)
       )
     );
     toast.info('Removed from cart');
   }, []);
 
-  const updateQuantity = useCallback((productId: string, formatId: string | undefined, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, optionId: string | undefined, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId, formatId);
+      removeItem(productId, optionId);
       return;
     }
 
@@ -236,7 +236,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prevItems) => {
       // I-CART-7: Enforce total cart limit
       const otherItemsTotal = prevItems
-        .filter((item) => !(item.productId === productId && item.formatId === formatId))
+        .filter((item) => !(item.productId === productId && item.optionId === optionId))
         .reduce((sum, item) => sum + item.quantity, 0);
 
       const allowedQuantity = Math.min(clampedQuantity, MAX_CART_ITEMS - otherItemsTotal);
@@ -245,7 +245,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       return prevItems.map((item) =>
-        item.productId === productId && item.formatId === formatId
+        item.productId === productId && item.optionId === optionId
           ? { ...item, quantity: Math.min(allowedQuantity, item.maxQuantity || MAX_ITEM_QUANTITY) }
           : item
       );
@@ -260,9 +260,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   }, []);
 
-  const isInCart = useCallback((productId: string, formatId?: string) => {
+  const isInCart = useCallback((productId: string, optionId?: string) => {
     return items.some(
-      (item) => item.productId === productId && item.formatId === formatId
+      (item) => item.productId === productId && item.optionId === optionId
     );
   }, [items]);
 

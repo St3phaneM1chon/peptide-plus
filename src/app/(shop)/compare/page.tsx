@@ -34,10 +34,10 @@ interface CompareProduct {
   barcode: string | null;
   certificateUrl: string | null;
   dataSheetUrl: string | null;
-  formats: Array<{
+  options: Array<{
     id: string;
     name: string;
-    formatType: string;
+    optionType: string;
     price: number;
     inStock: boolean;
     stockQuantity: number;
@@ -109,7 +109,7 @@ function ComparePageContent() {
   };
 
   const handleAddToCart = (product: CompareProduct) => {
-    const defaultFormat = product.formats.find(f => f.inStock) || product.formats[0];
+    const defaultFormat = product.options.find(f => f.inStock) || product.options[0];
 
     if (!defaultFormat || !defaultFormat.inStock) {
       toast.error(t('shop.outOfStock'));
@@ -118,9 +118,9 @@ function ComparePageContent() {
 
     addItemWithUpsell({
       productId: product.id,
-      formatId: defaultFormat.id,
+      optionId: defaultFormat.id,
       name: `${product.name} ${defaultFormat.name}`,
-      formatName: defaultFormat.name,
+      optionName: defaultFormat.name,
       price: defaultFormat.price,
       image: product.imageUrl || '/images/products/peptide-default.png',
       maxQuantity: defaultFormat.stockQuantity || 99,
@@ -145,7 +145,7 @@ function ComparePageContent() {
     let bestProductSlug = '';
 
     products.forEach(product => {
-      const minPrice = Math.min(...product.formats.map(f => f.price));
+      const minPrice = Math.min(...product.options.map(f => f.price));
       if (minPrice < lowestPrice) {
         lowestPrice = minPrice;
         bestProductSlug = product.slug;
@@ -383,7 +383,7 @@ function ComparePageContent() {
             <tr className="border-b border-neutral-200 hover:bg-neutral-50">
               <td className="py-3 px-4 font-medium text-neutral-700">{t('compare.stock')}</td>
               {products.map((product) => {
-                const hasStock = product.formats.some(f => f.inStock && f.stockQuantity > 0);
+                const hasStock = product.options.some(f => f.inStock && f.stockQuantity > 0);
                 return (
                   <td key={product.slug} className="py-3 px-4 text-center">
                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
@@ -400,18 +400,18 @@ function ComparePageContent() {
 
             {/* Available Formats */}
             <tr className="border-b border-neutral-200 hover:bg-neutral-50">
-              <td className="py-3 px-4 font-medium text-neutral-700">{t('compare.formats')}</td>
+              <td className="py-3 px-4 font-medium text-neutral-700">{t('compare.options')}</td>
               {products.map((product) => (
                 <td key={product.slug} className="py-3 px-4">
                   <div className="flex flex-col gap-1 text-sm text-neutral-600">
-                    {product.formats.slice(0, 3).map((format) => (
+                    {product.options.slice(0, 3).map((format) => (
                       <div key={format.id}>
                         {format.name} - {formatPrice(format.price)}
                       </div>
                     ))}
-                    {product.formats.length > 3 && (
+                    {product.options.length > 3 && (
                       <div className="text-xs text-neutral-400">
-                        +{product.formats.length - 3} {t('compare.more')}
+                        +{product.options.length - 3} {t('compare.more')}
                       </div>
                     )}
                   </div>
@@ -497,7 +497,7 @@ function ComparePageContent() {
             <tr>
               <td className="py-4 px-4"></td>
               {products.map((product) => {
-                const hasStock = product.formats.some(f => f.inStock && f.stockQuantity > 0);
+                const hasStock = product.options.some(f => f.inStock && f.stockQuantity > 0);
                 return (
                   <td key={product.slug} className="py-4 px-4 text-center">
                     <button
@@ -522,7 +522,7 @@ function ComparePageContent() {
       {/* Mobile View - Stacked Cards */}
       <div className="lg:hidden space-y-6">
         {products.map((product) => {
-          const hasStock = product.formats.some(f => f.inStock && f.stockQuantity > 0);
+          const hasStock = product.options.some(f => f.inStock && f.stockQuantity > 0);
           return (
             <div key={product.slug} className="bg-white border border-neutral-200 rounded-lg p-4 relative">
               <button

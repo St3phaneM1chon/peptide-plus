@@ -25,7 +25,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 const translationTriggerSchema = z.object({
-  model: z.enum(['Product', 'ProductFormat', 'Category', 'Article', 'BlogPost', 'Video', 'Webinar', 'QuickReply']),
+  model: z.enum(['Product', 'ProductOption', 'Category', 'Article', 'BlogPost', 'Video', 'Webinar', 'QuickReply']),
   entityId: z.string().optional(),
   force: z.boolean().optional().default(false),
   locales: z.array(z.string()).optional(),
@@ -56,8 +56,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Batch translate ALL entities of a model
     if (all) {
       // This runs asynchronously - queue each entity
-      const sourceModelName = model === 'ProductFormat'
-        ? 'productFormat'
+      const sourceModelName = model === 'ProductOption'
+        ? 'productOption'
         : model.charAt(0).toLowerCase() + model.slice(1);
 
       const { prisma } = await import('@/lib/db');
@@ -68,7 +68,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
       for (const entity of entities) {
         enqueue[
-          model === 'ProductFormat' ? 'productFormat' :
+          model === 'ProductOption' ? 'productOption' :
           model === 'BlogPost' ? 'blogPost' :
           model === 'QuickReply' ? 'quickReply' :
           (model.charAt(0).toLowerCase() + model.slice(1)) as keyof typeof enqueue

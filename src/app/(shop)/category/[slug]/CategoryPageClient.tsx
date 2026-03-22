@@ -5,7 +5,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/shop/ProductCard';
 import { useI18n } from '@/i18n/client';
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
   name: string;
   price: number;
@@ -27,7 +27,7 @@ interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   inStock: boolean;
-  formats: ProductFormat[];
+  options: ProductOption[];
 }
 
 interface SubCategory {

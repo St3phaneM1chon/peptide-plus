@@ -23,6 +23,7 @@ import { sendEmail, sunsetEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 // Re-engagement discount code injected into step-2 sunset email
 const CHURN_DISCOUNT_CODE = process.env.CHURN_DISCOUNT_CODE || 'COMEBACK15';
@@ -60,8 +61,11 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // Multi-tenant: iterate over all active tenants
+      const tenantResult = await forEachActiveTenant(async (tenant) => {
       // ── 1. Fetch at-risk customer metrics ──────────────────────────────────
       // Criteria: churnScore > 0.7 OR (lastOrderDays > 90 AND totalOrders >= 2)
+      // Prisma middleware auto-filters by tenant
       const atRiskMetrics = await prisma.customerMetrics.findMany({
         where: {
           OR: [
@@ -86,15 +90,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (atRiskMetrics.length === 0) {
-        return NextResponse.json({
-          success: true,
-          date: new Date().toISOString(),
-          atRisk: 0,
-          skipped: 0,
-          sent: 0,
-          failed: 0,
-          durationMs: Date.now() - startTime,
-        });
+        return; // No at-risk customers for this tenant
       }
 
       // ── 2. Load user details for at-risk customers ─────────────────────────
@@ -286,25 +282,23 @@ export async function GET(request: NextRequest) {
       const sentCount = results.filter((r) => r.success).length;
       const skippedCount = results.filter((r) => r.skipped).length;
       const failedCount = results.filter((r) => !r.success && !r.skipped).length;
-      const duration = Date.now() - startTime;
 
       logger.info('Churn alerts cron: job complete', {
+        tenantSlug: tenant.slug,
         atRisk: atRiskMetrics.length,
         candidates: candidates.length,
         sent: sentCount,
         skipped: skippedCount,
         failed: failedCount,
-        durationMs: duration,
       });
+    });
+
+      const duration = Date.now() - startTime;
 
       return NextResponse.json({
         success: true,
         date: new Date().toISOString(),
-        atRisk: atRiskMetrics.length,
-        candidates: candidates.length,
-        sent: sentCount,
-        skipped: skippedCount,
-        failed: failedCount,
+        tenants: tenantResult,
         durationMs: duration,
       });
     } catch (error) {

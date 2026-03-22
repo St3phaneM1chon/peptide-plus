@@ -18,7 +18,7 @@ function buildAlternates(url: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
   // --- Main pages (high traffic, updated often) ---
   const mainPages: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [

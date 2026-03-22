@@ -30,12 +30,12 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const saveItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().nullable().optional(),
+  optionId: z.string().nullable().optional(),
 }).strict();
 
 const deleteItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().nullable().optional(),
+  optionId: z.string().nullable().optional(),
 }).strict();
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ export async function GET() {
           select: {
             id: true,
             productId: true,
-            formatId: true,
+            optionId: true,
             quantity: true,
             priceAtAdd: true,
             createdAt: true,
@@ -98,7 +98,7 @@ export async function GET() {
       return {
         id: item.id,
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         quantity: item.quantity,
         priceAtAdd: Number(item.priceAtAdd),
         currentPrice: product ? Number(product.price) : null,
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { productId, formatId } = parsed.data;
+    const { productId, optionId } = parsed.data;
     const userId = session.user.id;
 
     // Find the user's active cart
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       where: { userId },
       include: {
         items: {
-          where: { productId, formatId: formatId ?? null },
+          where: { productId, optionId: optionId ?? null },
         },
       },
     });
@@ -179,14 +179,14 @@ export async function POST(request: NextRequest) {
       where: {
         cartId: savedCart.id,
         productId,
-        formatId: formatId ?? null,
+        optionId: optionId ?? null,
       },
     });
     await prisma.cartItem.create({
       data: {
         cartId: savedCart.id,
         productId,
-        formatId: formatId ?? null,
+        optionId: optionId ?? null,
         quantity,
         priceAtAdd: price,
       },
@@ -240,7 +240,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { productId, formatId } = parsed.data;
+    const { productId, optionId } = parsed.data;
     const savedSessionId = `saved-${session.user.id}`;
 
     const savedCart = await prisma.cart.findUnique({
@@ -256,7 +256,7 @@ export async function DELETE(request: NextRequest) {
       where: {
         cartId: savedCart.id,
         productId,
-        formatId: formatId ?? null,
+        optionId: optionId ?? null,
       },
     });
 

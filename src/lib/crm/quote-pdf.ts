@@ -66,8 +66,8 @@ interface QuotePdfData {
 const COMPANY_NAME = 'BioCycle Peptides';
 const COMPANY_TAGLINE = 'Research-Grade Peptides';
 const COMPANY_ADDRESS = 'Canada';
-const COMPANY_EMAIL = 'info@biocyclepeptides.com';
-const COMPANY_WEBSITE = 'biocyclepeptides.com';
+const COMPANY_EMAIL = process.env.INFO_EMAIL || 'info@biocyclepeptides.com';
+const COMPANY_WEBSITE = process.env.NEXT_PUBLIC_DOMAIN || 'attitudes.vip';
 
 // Colors (RGB tuples)
 const COLOR_PRIMARY: [number, number, number] = [13, 148, 136]; // teal-600

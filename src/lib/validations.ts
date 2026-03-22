@@ -31,9 +31,9 @@ export const createProductSchema = z.object({
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   availability: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'PRE_ORDER', 'DISCONTINUED', 'COMING_SOON', 'LIMITED']).default('IN_STOCK'),
-  formats: z.array(z.object({
+  options: z.array(z.object({
     name: z.string().min(1),
-    formatType: z.string().optional(),
+    optionType: z.string().optional(),
     volume: z.number().min(0).optional().nullable(),
     concentration: z.string().optional().nullable(),
     sku: z.string().optional().nullable(),

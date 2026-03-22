@@ -9,12 +9,12 @@ export const metadata: Metadata = {
   title: 'Solutions peptidiques pour entreprises et laboratoires | BioCycle Peptides',
   description: 'Approvisionnement en peptides de recherche pour entreprises et laboratoires. Volume, comptes dedies, support technique et livraison rapide au Canada.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/solutions/entreprises',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/entreprises`,
   },
   openGraph: {
     title: 'Solutions peptidiques pour entreprises et laboratoires | BioCycle Peptides',
     description: 'Approvisionnement en peptides de recherche pour entreprises et laboratoires. Volume, comptes dedies et support technique.',
-    url: 'https://biocyclepeptides.com/solutions/entreprises',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/entreprises`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

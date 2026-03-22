@@ -1,0 +1,62 @@
+// =============================================================================
+// MULTI-TENANT — Koraline SaaS Platform
+// =============================================================================
+// Chaque client Koraline est un "tenant" isolé.
+// tenant_id est injecté automatiquement par le middleware Prisma dans db.ts
+// RLS PostgreSQL sert de filet de sécurité supplémentaire.
+
+model Tenant {
+  id              String    @id @default(cuid())
+  slug            String    @unique                  // ex: "biocycle", "attitudes"
+  name            String                             // ex: "BioCycle Peptides"
+  domainCustom    String?   @unique                  // ex: "biocyclepeptides.com"
+  domainKoraline  String?   @unique                  // ex: "biocycle.koraline.app"
+  plan            String    @default("pro")          // essential, pro, enterprise
+  status          TenantStatus @default(ACTIVE)
+
+  // Branding
+  logoUrl         String?
+  primaryColor    String    @default("#0066CC")
+  secondaryColor  String    @default("#003366")
+  font            String    @default("Inter")
+
+  // Configuration
+  modulesEnabled  Json      @default("[]")           // ["commerce","crm","marketplace_pro"]
+  featuresFlags   Json      @default("{}")            // {"live_shopping":false,"ai_repricing":true}
+  locale          String    @default("fr")
+  timezone        String    @default("America/Toronto")
+  currency        String    @default("CAD")
+
+  // Taxes — activables/désactivables par tenant (D72)
+  // Beaucoup de PPE/PME ne perçoivent pas les taxes au départ
+  taxEnabled          Boolean   @default(false)           // Master toggle : percevoir les taxes ou non
+  taxGstNumber        String?                             // Numéro TPS fédéral (ex: 123456789RT0001)
+  taxQstNumber        String?                             // Numéro TVQ Québec (ex: 1234567890TQ0001)
+  taxHstNumber        String?                             // Numéro TVH (provinces harmonisées)
+  taxPstNumber        String?                             // Numéro PST (BC, SK, MB)
+  taxProvince         String    @default("QC")            // Province du tenant (pour déterminer les taxes applicables)
+  taxConfig           Json      @default("{}")            // Config avancée : {"gst":true,"qst":true,"pst":false,"rates_override":{}}
+
+  // Stripe
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+
+  // Metadata
+  ownerUserId     String?
+  maxEmployees    Int       @default(3)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  suspendedAt     DateTime?
+  suspendedReason String?
+
+  @@index([status])
+  @@index([plan])
+  @@index([createdAt])
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+  CANCELLED
+}

@@ -111,6 +111,8 @@ export const pageSizeSchema = z
 
 /** Allowed domains for product image URLs */
 const ALLOWED_IMAGE_DOMAINS = [
+  'attitudes.vip',
+  'www.attitudes.vip',
   'biocyclepeptides.com',
   'www.biocyclepeptides.com',
   'res.cloudinary.com',

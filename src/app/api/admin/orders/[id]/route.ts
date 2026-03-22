@@ -458,7 +458,7 @@ async function handleRefund(
         select: {
           id: true,
           productId: true,
-          formatId: true,
+          optionId: true,
           quantity: true,
         },
       },
@@ -608,30 +608,30 @@ async function handleRefund(
         where: {
           OR: order.items.map(item => ({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
           })),
         },
         orderBy: { createdAt: 'desc' },
-        distinct: ['productId', 'formatId'],
-        select: { productId: true, formatId: true, runningWAC: true },
+        distinct: ['productId', 'optionId'],
+        select: { productId: true, optionId: true, runningWAC: true },
       });
-      const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.formatId}`, Number(w.runningWAC)]));
+      const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.optionId}`, Number(w.runningWAC)]));
 
       for (const item of order.items) {
-        if (item.formatId) {
-          await tx.productFormat.update({
-            where: { id: item.formatId },
+        if (item.optionId) {
+          await tx.productOption.update({
+            where: { id: item.optionId },
             data: { stockQuantity: { increment: item.quantity } },
           });
         }
 
-        const wac = wacMap.get(`${item.productId}-${item.formatId}`) ?? 0;
+        const wac = wacMap.get(`${item.productId}-${item.optionId}`) ?? 0;
 
         // Create RETURN inventory transaction
         await tx.inventoryTransaction.create({
           data: {
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             type: 'RETURN',
             quantity: item.quantity,
             unitCost: wac,
@@ -886,9 +886,9 @@ async function handleReship(
         select: {
           id: true,
           productId: true,
-          formatId: true,
+          optionId: true,
           productName: true,
-          formatName: true,
+          optionName: true,
           sku: true,
           quantity: true,
         },
@@ -957,9 +957,9 @@ async function handleReship(
         items: {
           create: order.items.map((item) => ({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             productName: item.productName,
-            formatName: item.formatName,
+            optionName: item.optionName,
             sku: item.sku,
             quantity: item.quantity,
             unitPrice: 0,
@@ -984,24 +984,24 @@ async function handleReship(
       where: {
         OR: order.items.map(item => ({
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
         })),
       },
       orderBy: { createdAt: 'desc' },
-      distinct: ['productId', 'formatId'],
-      select: { productId: true, formatId: true, runningWAC: true },
+      distinct: ['productId', 'optionId'],
+      select: { productId: true, optionId: true, runningWAC: true },
     });
-    const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.formatId}`, Number(w.runningWAC)]));
+    const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.optionId}`, Number(w.runningWAC)]));
 
     for (const item of order.items) {
-      const wac = wacMap.get(`${item.productId}-${item.formatId}`) ?? 0;
+      const wac = wacMap.get(`${item.productId}-${item.optionId}`) ?? 0;
       lossAccumulator += wac * item.quantity;
 
       // LOSS transaction on the original order (colis perdu)
       await tx.inventoryTransaction.create({
         data: {
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
           type: 'LOSS',
           quantity: -item.quantity,
           unitCost: wac,
@@ -1016,7 +1016,7 @@ async function handleReship(
       await tx.inventoryTransaction.create({
         data: {
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
           type: 'SALE',
           quantity: -item.quantity,
           unitCost: wac,
@@ -1028,16 +1028,16 @@ async function handleReship(
       });
 
       // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
-      if (item.formatId) {
+      if (item.optionId) {
         const rowsAffected: number = await tx.$executeRaw`
-          UPDATE "ProductFormat"
+          UPDATE "ProductOption"
           SET "stockQuantity" = "stockQuantity" - ${item.quantity},
               "updatedAt" = NOW()
-          WHERE id = ${item.formatId}
+          WHERE id = ${item.optionId}
             AND "stockQuantity" >= ${item.quantity}
         `;
         if (rowsAffected === 0) {
-          logger.warn(`[Admin reship] Insufficient stock for format ${item.formatId}: wanted to decrement ${item.quantity}, atomic UPDATE matched 0 rows`);
+          logger.warn(`[Admin reship] Insufficient stock for format ${item.optionId}: wanted to decrement ${item.quantity}, atomic UPDATE matched 0 rows`);
         }
       }
     }

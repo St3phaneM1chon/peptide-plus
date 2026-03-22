@@ -54,7 +54,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session, para
     }
 
     // Build client portal URL
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
     const portalUrl = `${baseUrl}/estimate/${existing.viewToken}`;
 
     // Build email

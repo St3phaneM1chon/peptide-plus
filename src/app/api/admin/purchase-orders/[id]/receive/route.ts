@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  * When items are received:
  * 1. Update PO item receivedQty
  * 2. Update PO status (PARTIAL_RECEIVED or RECEIVED)
- * 3. Increment inventory quantities (ProductFormat.stockQuantity)
+ * 3. Increment inventory quantities (ProductOption.stockQuantity)
  * 4. Create InventoryTransaction records with WAC recalculation
  * 5. Create JournalEntry: Debit Inventory (1210), Credit Accounts Payable (2000)
  */
@@ -143,7 +143,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
     const result = await prisma.$transaction(async (tx) => {
       const inventoryUpdates: Array<{
         productId: string;
-        formatId: string | null;
+        optionId: string | null;
         quantity: number;
         unitCost: number;
         newWAC: number;
@@ -167,9 +167,9 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
 
           // Get current stock quantity
           let currentQty = 0;
-          if (poItem.formatId) {
-            const format = await tx.productFormat.findUnique({
-              where: { id: poItem.formatId },
+          if (poItem.optionId) {
+            const format = await tx.productOption.findUnique({
+              where: { id: poItem.optionId },
               select: { stockQuantity: true, trackInventory: true },
             });
             if (format?.trackInventory) {
@@ -181,7 +181,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
           const lastTransaction = await tx.inventoryTransaction.findFirst({
             where: {
               productId: poItem.productId,
-              formatId: poItem.formatId || null,
+              optionId: poItem.optionId || null,
             },
             orderBy: { createdAt: 'desc' },
             select: { runningWAC: true },
@@ -198,9 +198,9 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
             : unitCost;
 
           // Increment stock
-          if (poItem.formatId) {
-            await tx.productFormat.update({
-              where: { id: poItem.formatId },
+          if (poItem.optionId) {
+            await tx.productOption.update({
+              where: { id: poItem.optionId },
               data: { stockQuantity: { increment: qtyToReceive } },
             });
           }
@@ -209,7 +209,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
           await tx.inventoryTransaction.create({
             data: {
               productId: poItem.productId,
-              formatId: poItem.formatId || null,
+              optionId: poItem.optionId || null,
               type: 'PURCHASE',
               quantity: qtyToReceive,
               unitCost,
@@ -222,7 +222,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
 
           inventoryUpdates.push({
             productId: poItem.productId,
-            formatId: poItem.formatId,
+            optionId: poItem.optionId,
             quantity: qtyToReceive,
             unitCost,
             newWAC,
@@ -452,7 +452,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         itemsReceived: result.inventoryUpdates.length,
         inventoryUpdates: result.inventoryUpdates.map((u) => ({
           productId: u.productId,
-          formatId: u.formatId,
+          optionId: u.optionId,
           description: u.description,
           quantityReceived: u.quantity,
           unitCost: u.unitCost,

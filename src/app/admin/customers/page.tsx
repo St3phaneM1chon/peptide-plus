@@ -6,6 +6,7 @@ import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { Crown, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { TutorialLink } from '@/components/admin/TutorialLink';
 import { RFM_SEGMENTS, calculateRFMScore, type RFMSegment } from '@/lib/analytics/rfm-engine';
 import { customerConfig } from './config';
 
@@ -206,6 +207,11 @@ export default function CustomersPage() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Tutorial Link */}
+      <div className="px-4 lg:px-6 pt-3 flex-shrink-0">
+        <TutorialLink guideSlug="02-commerce/02-clients" magazineSlug="Section_02_Commerce" />
+      </div>
+
       {/* VIP Customer Identification Panel */}
       {vipCustomers.length > 0 && (
         <div className="px-4 lg:px-6 pt-4 lg:pt-6 flex-shrink-0">

@@ -42,10 +42,10 @@ export async function GET(
       );
     }
 
-    // Fetch formats and images for all products in parallel (avoids 3-level nesting)
+    // Fetch options and images for all products in parallel (avoids 3-level nesting)
     const productIds = [...new Set(bundle.items.map((item) => item.product.id))];
-    const [formats, images] = await Promise.all([
-      prisma.productFormat.findMany({
+    const [options, images] = await Promise.all([
+      prisma.productOption.findMany({
         where: { productId: { in: productIds } },
       }),
       prisma.productImage.findMany({
@@ -54,11 +54,11 @@ export async function GET(
     ]);
 
     // Group by productId for fast lookup
-    const formatsByProduct = new Map<string, typeof formats>();
-    for (const f of formats) {
-      const arr = formatsByProduct.get(f.productId) || [];
+    const optionsByProduct = new Map<string, typeof options>();
+    for (const f of options) {
+      const arr = optionsByProduct.get(f.productId) || [];
       arr.push(f);
-      formatsByProduct.set(f.productId, arr);
+      optionsByProduct.set(f.productId, arr);
     }
     const imagesByProduct = new Map<string, typeof images>();
     for (const img of images) {
@@ -71,12 +71,12 @@ export async function GET(
     let originalTotal = 0;
 
     const items = bundle.items.map((item) => {
-      const productFormats = formatsByProduct.get(item.product.id) || [];
+      const productOptions = optionsByProduct.get(item.product.id) || [];
       let itemPrice = Number(item.product.price);
 
       // If a specific format is selected, use its price
-      if (item.formatId) {
-        const format = productFormats.find((f) => f.id === item.formatId);
+      if (item.optionId) {
+        const format = productOptions.find((f) => f.id === item.optionId);
         if (format) {
           itemPrice = Number(format.price);
         }
@@ -94,12 +94,12 @@ export async function GET(
           purity: item.product.purity ? Number(item.product.purity) : null,
           molecularWeight: item.product.molecularWeight ? Number(item.product.molecularWeight) : null,
           weight: item.product.weight ? Number(item.product.weight) : null,
-          formats: productFormats
+          options: productOptions
             .filter((f) => f.isActive)
             .map((f) => ({
               id: f.id,
               productId: f.productId,
-              formatType: f.formatType,
+              optionType: f.optionType,
               name: f.name,
               description: f.description,
               imageUrl: f.imageUrl,

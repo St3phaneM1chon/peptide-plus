@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Inventory Export API
- * GET - Export inventory (product formats with stock info) as CSV
+ * GET - Export inventory (product options with stock info) as CSV
  */
 
 import { NextResponse } from 'next/server';
@@ -29,12 +29,12 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
 // GET /api/admin/inventory/export - Export inventory as CSV
 export const GET = withAdminGuard(async (request, _ctx) => {
   try {
-    // FIX: BUG-068 - Support includeInactive query param to include inactive formats
+    // FIX: BUG-068 - Support includeInactive query param to include inactive options
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
 
     // A7-P2-003: Add take limit to prevent OOM on large inventory exports
-    const formats = await prisma.productFormat.findMany({
+    const options = await prisma.productOption.findMany({
       where: {
         trackInventory: true, // Keep trackInventory filter (non-tracked items have no stock to report)
         ...(includeInactive ? {} : { isActive: true }),
@@ -63,9 +63,9 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       'productName',
       'productSlug',
       'productSku',
-      'formatId',
-      'formatName',
-      'formatType',
+      'optionId',
+      'optionName',
+      'optionType',
       'sku',
       'price',
       'costPrice',
@@ -79,7 +79,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
 
     const lines: string[] = [csvRow(headers)];
 
-    for (const format of formats) {
+    for (const format of options) {
       lines.push(
         csvRow([
           format.product.id,
@@ -88,7 +88,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
           format.product.sku,
           format.id,
           format.name,
-          format.formatType,
+          format.optionType,
           format.sku,
           Number(format.price).toFixed(2),
           format.costPrice ? Number(format.costPrice).toFixed(2) : '',

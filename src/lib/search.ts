@@ -170,13 +170,13 @@ export async function fullTextSearch(
       }
     }
 
-    // Filter in-stock if needed (post-query filter for simplicity with formats relation)
+    // Filter in-stock if needed (post-query filter for simplicity with options relation)
     let filteredResults = results;
     let filteredTotal = total;
     if (inStock) {
       const productIds = results.map(r => r.id);
       if (productIds.length > 0) {
-        const inStockIds = await prisma.productFormat.findMany({
+        const inStockIds = await prisma.productOption.findMany({
           where: {
             product: { id: { in: productIds } },
             isActive: true,
@@ -189,11 +189,11 @@ export async function fullTextSearch(
         filteredResults = results.filter(r => inStockSet.has(r.id));
       }
 
-      // BUG-051 FIX: Recount total after inStock filter by querying only products with active in-stock formats
+      // BUG-051 FIX: Recount total after inStock filter by querying only products with active in-stock options
       const inStockCountResult = await prisma.$queryRaw<[{ count: bigint }]>`
         SELECT COUNT(DISTINCT p."id") as count
         FROM "Product" p
-        INNER JOIN "ProductFormat" pf ON pf."productId" = p."id"
+        INNER JOIN "ProductOption" pf ON pf."productId" = p."id"
         WHERE ${whereClause}
           AND pf."isActive" = true
           AND pf."stockQuantity" > 0`;
@@ -250,7 +250,7 @@ async function fallbackSearch(
 
   // In-stock filter
   if (inStock) {
-    where.formats = {
+    where.options = {
       some: {
         isActive: true,
         stockQuantity: { gt: 0 },

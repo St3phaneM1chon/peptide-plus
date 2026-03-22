@@ -481,7 +481,7 @@ function parseCSVLine(line: string): string[] {
 }
 
 /**
- * FIX (F032): Parse date strings properly for Canadian bank formats.
+ * FIX (F032): Parse date strings properly for Canadian bank options.
  * new Date(dateStr) interprets DD/MM/YYYY as MM/DD/YYYY in JS,
  * so we must manually parse the components for DD/MM/YYYY and DD-MM-YYYY.
  */

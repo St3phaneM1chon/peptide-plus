@@ -13,7 +13,7 @@ interface ProductBadgeData {
   reviewCount?: number;
   price?: number;
   compareAtPrice?: number;
-  formats?: Array<{
+  options?: Array<{
     stockQuantity: number;
     inStock: boolean;
   }>;
@@ -47,8 +47,8 @@ export function getProductBadges(product: ProductBadgeData): Badge[] {
   }
 
   // 3. LOW STOCK - any format has stock > 0 AND <= 5
-  if (product.formats && product.formats.length > 0) {
-    const hasLowStock = product.formats.some(
+  if (product.options && product.options.length > 0) {
+    const hasLowStock = product.options.some(
       f => f.inStock && f.stockQuantity > 0 && f.stockQuantity <= 5
     );
     if (hasLowStock) {

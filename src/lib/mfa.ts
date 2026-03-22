@@ -16,7 +16,7 @@ authenticator.options = {
 };
 
 // FAILLE-069 FIX: Use correct app name as fallback instead of generic 'SecureApp'
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'BioCycle Peptides';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Attitudes VIP';
 
 // =====================================================
 // TOTP (Google Authenticator, etc.)

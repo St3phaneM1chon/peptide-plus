@@ -74,7 +74,7 @@ const updateProductSchema = z.object({
     sortOrder: z.number().optional(),
     isPrimary: z.boolean().optional(),
   })).optional(),
-  formats: z.array(z.record(z.unknown())).optional(),
+  options: z.array(z.record(z.unknown())).optional(),
 }).strict();
 
 interface RouteParams {
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             orderBy: { sortOrder: 'asc' },
             select: { id: true, url: true, alt: true, caption: true, sortOrder: true, isPrimary: true },
           },
-          formats: {
+          options: {
             where: { isActive: true },
             orderBy: { sortOrder: 'asc' },
           },
@@ -148,9 +148,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         adminNotes: _an, internalSku: _is,
         ...publicProduct
       } = translated as Record<string, unknown>;
-      // Also strip costPrice from formats
-      if (Array.isArray(publicProduct.formats)) {
-        publicProduct.formats = (publicProduct.formats as Record<string, unknown>[]).map(
+      // Also strip costPrice from options
+      if (Array.isArray(publicProduct.options)) {
+        publicProduct.options = (publicProduct.options as Record<string, unknown>[]).map(
           ({ costPrice: _fc, ...rest }) => rest
         );
       }
@@ -201,7 +201,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return apiError('Invalid data', ErrorCode.VALIDATION_ERROR, { request });
     }
 
-    const { images, formats } = parsed.data;
+    const { images, options } = parsed.data;
 
     // Whitelist: only allow safe fields to be updated (H13 - mass assignment fix)
     const allowedProductFields = [
@@ -234,7 +234,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         id: true,
         slug: true,
         images: { select: { id: true } },
-        formats: { select: { id: true } },
+        options: { select: { id: true } },
       },
     });
 
@@ -301,19 +301,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      // BUG 12: Use upsert pattern for formats to avoid breaking FK constraints
+      // BUG 12: Use upsert pattern for options to avoid breaking FK constraints
       // Instead of deleteMany + createMany, update existing, create new, deactivate removed
-      if (formats !== undefined) {
-        const incomingFormatIds = (formats || [])
+      if (options !== undefined) {
+        const incomingFormatIds = (options || [])
           .filter((f: Record<string, unknown>) => f.id)
           .map((f: Record<string, unknown>) => f.id as string);
 
-        // Deactivate formats that are no longer in the incoming list (instead of deleting)
-        if (existingProduct.formats.length > 0) {
-          const existingIds = existingProduct.formats.map(f => f.id);
+        // Deactivate options that are no longer in the incoming list (instead of deleting)
+        if (existingProduct.options.length > 0) {
+          const existingIds = existingProduct.options.map(f => f.id);
           const removedIds = existingIds.filter(eid => !incomingFormatIds.includes(eid));
           if (removedIds.length > 0) {
-            await tx.productFormat.updateMany({
+            await tx.productOption.updateMany({
               where: { id: { in: removedIds } },
               data: { isActive: false },
             });
@@ -321,12 +321,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
 
         // Upsert each format: update if it has an id, create if new
-        if (formats && formats.length > 0) {
-          for (let index = 0; index < formats.length; index++) {
-            const f = formats[index] as Record<string, unknown>;
+        if (options && options.length > 0) {
+          for (let index = 0; index < options.length; index++) {
+            const f = options[index] as Record<string, unknown>;
             const formatData = {
               productId: id,
-              formatType: (f.formatType as string) || 'VIAL_2ML',
+              optionType: (f.optionType as string) || 'VIAL_2ML',
               name: f.name as string,
               description: (f.description as string) || '',
               imageUrl: (f.imageUrl as string) || null,
@@ -349,13 +349,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
             if (f.id && typeof f.id === 'string') {
               // Update existing format
-              await tx.productFormat.update({
+              await tx.productOption.update({
                 where: { id: f.id },
                 data: formatData,
               });
             } else {
               // Create new format
-              await tx.productFormat.create({
+              await tx.productOption.create({
                 data: formatData,
               });
             }
@@ -370,7 +370,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         include: { 
           category: true,
           images: { orderBy: { sortOrder: 'asc' } },
-          formats: { orderBy: { sortOrder: 'asc' } },
+          options: { orderBy: { sortOrder: 'asc' } },
         },
       });
     });
@@ -385,7 +385,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         details: JSON.stringify({
           fields: Object.keys(productData),
           imagesCount: images?.length,
-          formatsCount: formats?.length,
+          optionsCount: options?.length,
         }),
       },
     });

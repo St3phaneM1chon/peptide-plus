@@ -84,7 +84,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
               id: true,
               productId: true,
               productName: true,
-              formatName: true,
+              optionName: true,
               sku: true,
               quantity: true,
               unitPrice: true,

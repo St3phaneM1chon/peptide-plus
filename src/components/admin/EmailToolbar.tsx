@@ -174,7 +174,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
 
   const handleHighlight = (color: string) => {
     if (color === 'transparent') {
-      exec('removeFormat');
+      exec('removeOption');
     } else {
       exec('hiliteColor', color);
     }
@@ -276,7 +276,7 @@ export function EmailToolbar({ editorRef, onAttach, uploading, trailing }: Email
       <Separator />
 
       {/* Clear Formatting */}
-      <TBtn onClick={() => exec('removeFormat')} title="Effacer la mise en forme">
+      <TBtn onClick={() => exec('removeOption')} title="Effacer la mise en forme">
         <Eraser className={`${iconSize} ${iconColor}`} />
       </TBtn>
 

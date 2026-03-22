@@ -281,16 +281,16 @@ export interface ShippingLabelData {
   generatedAt: string;
 }
 
-/** BioCycle Peptides sender information for shipping labels */
+/** Sender information for shipping labels — reads from env, per-tenant in future */
 const SENDER_INFO = {
-  name: 'BioCycle Peptides',
-  company: 'BioCycle Peptides Inc.',
-  address: '123 Innovation Blvd',
-  city: 'Montréal',
-  province: 'QC',
-  postalCode: 'H2X 1Y4',
+  name: process.env.BUSINESS_NAME || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP',
+  company: process.env.BUSINESS_NAME || process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP',
+  address: process.env.BUSINESS_ADDRESS || '123 Innovation Blvd',
+  city: process.env.BUSINESS_CITY || 'Montréal',
+  province: process.env.BUSINESS_PROVINCE || 'QC',
+  postalCode: process.env.BUSINESS_POSTAL_CODE || 'H2X 1Y4',
   country: 'CA',
-  phone: '+1-514-555-0100',
+  phone: process.env.BUSINESS_PHONE || '+1-514-555-0100',
 };
 
 /**
@@ -507,9 +507,9 @@ export function getCustomsDeclaration(
     currency: currency.toUpperCase(),
     numberOfItems: customsItems.reduce((sum, item) => sum + item.quantity, 0),
     exporterInfo: {
-      name: 'BioCycle Peptides Inc.',
-      company: 'BioCycle Peptides Inc.',
-      address: '123 Innovation Blvd, Montréal, QC H2X 1Y4, Canada',
+      name: SENDER_INFO.name,
+      company: SENDER_INFO.company,
+      address: `${SENDER_INFO.address}, ${SENDER_INFO.city}, ${SENDER_INFO.province} ${SENDER_INFO.postalCode}, Canada`,
       country: 'CA',
     },
     generatedAt: new Date().toISOString(),

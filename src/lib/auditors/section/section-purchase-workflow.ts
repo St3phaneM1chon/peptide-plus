@@ -36,7 +36,7 @@ export default class SectionPurchaseWorkflowAuditor extends BaseSectionAuditor {
     prismaModels: [
       'Order', 'OrderItem', 'OrderEvent',
       'Cart', 'CartItem',
-      'Product', 'ProductFormat',
+      'Product', 'ProductOption',
       'Purchase', 'Subscription',
       'GiftCard', 'PromoCode', 'PromoCodeUsage',
       'Refund', 'ReturnRequest',
@@ -158,7 +158,7 @@ export default class SectionPurchaseWorkflowAuditor extends BaseSectionAuditor {
     } else {
       results.push(this.fail(`${prefix}-05`, 'CRITICAL', 'InventoryReservation model missing',
         'Without reservations, concurrent checkouts can oversell stock',
-        { recommendation: 'Add model InventoryReservation with productFormatId, quantity, expiresAt, orderId, cartId' }));
+        { recommendation: 'Add model InventoryReservation with productOptionId, quantity, expiresAt, orderId, cartId' }));
     }
 
     // Check Refund model
@@ -197,7 +197,7 @@ export default class SectionPurchaseWorkflowAuditor extends BaseSectionAuditor {
     const stripeCheckoutPath = path.join(this.srcDir, 'app', 'api', 'payments', 'create-checkout', 'route.ts');
     const stripeCheckout = this.readFile(stripeCheckoutPath);
     if (stripeCheckout) {
-      const hasDbPriceFetch = /prisma\.(product|productFormat)\.find/.test(stripeCheckout) ||
+      const hasDbPriceFetch = /prisma\.(product|productOption)\.find/.test(stripeCheckout) ||
                               /findUnique|findMany|findFirst/.test(stripeCheckout);
       results.push(
         hasDbPriceFetch
@@ -216,7 +216,7 @@ export default class SectionPurchaseWorkflowAuditor extends BaseSectionAuditor {
     const paypalCreatePath = path.join(this.srcDir, 'app', 'api', 'payments', 'paypal', 'create-order', 'route.ts');
     const paypalCreate = this.readFile(paypalCreatePath);
     if (paypalCreate) {
-      const hasDbFetch = /prisma\.(product|productFormat)\.find/.test(paypalCreate) ||
+      const hasDbFetch = /prisma\.(product|productOption)\.find/.test(paypalCreate) ||
                          /findUnique|findMany|findFirst/.test(paypalCreate);
       results.push(
         hasDbFetch

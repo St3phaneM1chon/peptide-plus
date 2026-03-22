@@ -574,7 +574,7 @@ export function getPreBuiltFlows(): PreBuiltFlow[] {
           position: { x: 250, y: 100 },
           data: {
             label: 'Email Bienvenue',
-            subject: 'Bienvenue chez BioCycle Peptides!',
+            subject: `Bienvenue chez ${process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}!`,
             htmlContent: '',
           },
         },

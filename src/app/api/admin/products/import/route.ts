@@ -146,7 +146,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Item 73: Support both CSV and JSON file formats
+    // Item 73: Support both CSV and JSON file options
     const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv';
     const isJSON = file.name.endsWith('.json') || file.type === 'application/json';
 
@@ -179,7 +179,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         rows = productsArray.map((p: Record<string, unknown>) => {
           const row: Record<string, string> = {};
           for (const [key, value] of Object.entries(p)) {
-            if (key === 'formats' || key === 'createdAt' || key === 'id') continue; // Skip non-importable fields
+            if (key === 'options' || key === 'createdAt' || key === 'id') continue; // Skip non-importable fields
             row[key] = value !== null && value !== undefined ? String(value) : '';
           }
           return row;

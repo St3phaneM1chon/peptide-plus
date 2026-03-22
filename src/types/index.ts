@@ -146,7 +146,7 @@ export interface Product {
   updatedAt: Date;
   // Relations
   images?: ProductImage[];
-  formats?: ProductFormat[];
+  options?: ProductOption[];
 }
 
 export interface ProductImage {
@@ -162,10 +162,10 @@ export interface ProductImage {
   createdAt: Date;
 }
 
-export interface ProductFormat {
+export interface ProductOption {
   id: string;
   productId: string;
-  formatType: string;
+  optionType: string;
   name: string;
   description: string | null;
   imageUrl: string | null;
@@ -263,7 +263,7 @@ export enum ProductType {
 /**
  * BUG-067 FIX: Canonical lowercase format type for client-side components.
  * API responses transform DB FormatType to lowercase (e.g. VIAL_2ML -> vial_2ml).
- * All shop components (ProductCard, QuickViewModal, FormatSelector) should import this type.
+ * All shop components (ProductCard, QuickViewModal, OptionSelector) should import this type.
  */
 export type ClientFormatType =
   | 'vial_2ml'

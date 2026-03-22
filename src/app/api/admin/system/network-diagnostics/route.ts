@@ -156,7 +156,7 @@ export const GET = withAdminGuard(async () => {
   // Run checks in parallel groups
   // Group 1: DNS resolution
   const dnsChecks = await Promise.all([
-    checkDNS('biocyclepeptides.com'),
+    checkDNS('attitudes.vip'),
     checkDNS('github.com'),
     checkDNS('login.microsoftonline.com'),
   ]);
@@ -164,7 +164,7 @@ export const GET = withAdminGuard(async () => {
 
   // Group 2: Endpoint health
   const endpointChecks = await Promise.all([
-    checkEndpoint('https://biocyclepeptides.com/api/health?type=live', 'Production Health'),
+    checkEndpoint(`${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/api/health?type=live`, 'Production Health'),
     checkEndpoint('https://api.github.com/rate_limit', 'GitHub API'),
     checkEndpoint('https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration', 'Azure AD'),
     checkEndpoint('https://accounts.google.com/.well-known/openid-configuration', 'Google OAuth'),

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  * Returns:
  *   { items: ReorderItem[], skipped: SkippedItem[] }
  *
- * - items: products/formats that are still available and can be added to cart
+ * - items: products/options that are still available and can be added to cart
  * - skipped: items that could not be re-ordered, with a reason string
  */
 
@@ -21,10 +21,10 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 
 interface ReorderItem {
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   slug: string;
   name: string;
-  formatName: string | null;
+  optionName: string | null;
   quantity: number;
   price: number;
   image: string | null;
@@ -32,7 +32,7 @@ interface ReorderItem {
 
 interface SkippedItem {
   productId: string;
-  formatId: string | null;
+  optionId: string | null;
   name: string;
   reason: string;
 }
@@ -83,8 +83,8 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
 
     // Collect all product IDs and format IDs from the order
     const productIds = order.items.map((item) => item.productId);
-    const formatIds = order.items
-      .map((item) => item.formatId)
+    const optionIds = order.items
+      .map((item) => item.optionId)
       .filter((id): id is string => id !== null);
 
     // Fetch current product data to validate availability
@@ -97,8 +97,8 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
         imageUrl: true,
         isActive: true,
         price: true,
-        formats: {
-          where: formatIds.length > 0 ? { id: { in: formatIds } } : undefined,
+        options: {
+          where: optionIds.length > 0 ? { id: { in: optionIds } } : undefined,
           select: {
             id: true,
             name: true,
@@ -125,8 +125,8 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
       if (!product) {
         skipped.push({
           productId: item.productId,
-          formatId: item.formatId,
-          name: item.productName + (item.formatName ? ` - ${item.formatName}` : ''),
+          optionId: item.optionId,
+          name: item.productName + (item.optionName ? ` - ${item.optionName}` : ''),
           reason: 'product_not_found',
         });
         continue;
@@ -135,24 +135,24 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
       if (!product.isActive) {
         skipped.push({
           productId: item.productId,
-          formatId: item.formatId,
-          name: item.productName + (item.formatName ? ` - ${item.formatName}` : ''),
+          optionId: item.optionId,
+          name: item.productName + (item.optionName ? ` - ${item.optionName}` : ''),
           reason: 'product_unavailable',
         });
         continue;
       }
 
       // If the order item had a specific format
-      if (item.formatId) {
-        const format = product.formats.find((f) => f.id === item.formatId);
+      if (item.optionId) {
+        const format = product.options.find((f) => f.id === item.optionId);
 
         // Format no longer exists
         if (!format) {
           skipped.push({
             productId: item.productId,
-            formatId: item.formatId,
-            name: `${item.productName} - ${item.formatName || 'Unknown format'}`,
-            reason: 'format_not_found',
+            optionId: item.optionId,
+            name: `${item.productName} - ${item.optionName || 'Unknown format'}`,
+            reason: 'option_not_found',
           });
           continue;
         }
@@ -161,9 +161,9 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
         if (!format.isActive) {
           skipped.push({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             name: `${item.productName} - ${format.name}`,
-            reason: 'format_unavailable',
+            reason: 'option_unavailable',
           });
           continue;
         }
@@ -172,7 +172,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
         if (format.availability === 'DISCONTINUED') {
           skipped.push({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             name: `${item.productName} - ${format.name}`,
             reason: 'discontinued',
           });
@@ -183,7 +183,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
         if (!format.inStock || format.availability === 'OUT_OF_STOCK') {
           skipped.push({
             productId: item.productId,
-            formatId: item.formatId,
+            optionId: item.optionId,
             name: `${item.productName} - ${format.name}`,
             reason: 'out_of_stock',
           });
@@ -192,10 +192,10 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
 
         items.push({
           productId: product.id,
-          formatId: format.id,
+          optionId: format.id,
           slug: product.slug,
           name: product.name,
-          formatName: format.name,
+          optionName: format.name,
           quantity: item.quantity,
           price: Number(format.price),
           image: product.imageUrl,
@@ -204,10 +204,10 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
         // Product without a specific format — use base product price
         items.push({
           productId: product.id,
-          formatId: null,
+          optionId: null,
           slug: product.slug,
           name: product.name,
-          formatName: null,
+          optionName: null,
           quantity: item.quantity,
           price: Number(product.price),
           image: product.imageUrl,

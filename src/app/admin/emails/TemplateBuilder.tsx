@@ -26,7 +26,7 @@ const BLOCK_TYPES = [
   { type: 'text', label: 'Texte', icon: Type, defaultContent: { text: 'Votre texte ici...', align: 'left' } },
   { type: 'image', label: 'Image', icon: Image, defaultContent: { url: '', alt: 'Image', width: '100%' } },
   { type: 'product_grid', label: 'Grille produits', icon: ShoppingBag, defaultContent: { count: '4', title: 'Nos recommandations' } },
-  { type: 'cta', label: 'Bouton CTA', icon: MousePointer, defaultContent: { text: 'Acheter maintenant', url: 'https://biocyclepeptides.com', color: '#059669' } },
+  { type: 'cta', label: 'Bouton CTA', icon: MousePointer, defaultContent: { text: 'Acheter maintenant', url: 'https://attitudes.vip', color: '#059669' } },
   { type: 'divider', label: 'Separateur', icon: Minus, defaultContent: {} },
 ] as const;
 
@@ -93,7 +93,7 @@ export function parseBlocksFromTextContent(textContent: string | null | undefine
 const DEFAULT_BLOCKS: TemplateBlock[] = [
   { id: '1', type: 'header', content: { text: 'BioCycle Peptides', align: 'center' } },
   { id: '2', type: 'text', content: { text: 'Bonjour {{firstName}},\n\nDecouvrez nos dernieres nouveautes!', align: 'left' } },
-  { id: '3', type: 'cta', content: { text: 'Voir les produits', url: 'https://biocyclepeptides.com/products', color: '#059669' } },
+  { id: '3', type: 'cta', content: { text: 'Voir les produits', url: 'https://attitudes.vip/products', color: '#059669' } },
 ];
 
 export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: TemplateBuilderProps) {

@@ -19,9 +19,9 @@ import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 const cartItemSchema = z.object({
   productId: z.string().optional(),
-  formatId: z.string().optional(),
+  optionId: z.string().optional(),
   name: z.string().optional(),
-  formatName: z.string().optional(),
+  optionName: z.string().optional(),
   sku: z.string().optional(),
   quantity: z.number().min(1).or(z.string().transform(Number)),
   price: z.number().or(z.string().transform(Number)).optional(),
@@ -196,14 +196,14 @@ export async function POST(request: NextRequest) {
       let serverSubtotal = 0;
       if (cartItems && cartItems.length > 0) {
         const cartProductIds = [...new Set(cartItems.map((i: { productId?: string }) => i.productId).filter(Boolean) as string[])];
-        const cartFormatIds = cartItems.map((i: { formatId?: string }) => i.formatId).filter(Boolean) as string[];
+        const cartFormatIds = cartItems.map((i: { optionId?: string }) => i.optionId).filter(Boolean) as string[];
 
         const [cartProducts, cartFormats] = await Promise.all([
           cartProductIds.length > 0
             ? prisma.product.findMany({ where: { id: { in: cartProductIds } }, select: { id: true, price: true } })
             : Promise.resolve([]),
           cartFormatIds.length > 0
-            ? prisma.productFormat.findMany({ where: { id: { in: cartFormatIds } }, select: { id: true, price: true, productId: true } })
+            ? prisma.productOption.findMany({ where: { id: { in: cartFormatIds } }, select: { id: true, price: true, productId: true } })
             : Promise.resolve([]),
         ]);
 
@@ -211,8 +211,8 @@ export async function POST(request: NextRequest) {
         const formatPriceMap = new Map(cartFormats.map(f => [f.id, { price: Number(f.price), productId: f.productId }]));
 
         for (const item of cartItems) {
-          if (item.formatId) {
-            const format = formatPriceMap.get(item.formatId);
+          if (item.optionId) {
+            const format = formatPriceMap.get(item.optionId);
             if (format) {
               if (item.productId && format.productId !== item.productId) {
                 return NextResponse.json({ error: 'Le format ne correspond pas au produit' }, { status: 400 });
@@ -356,9 +356,9 @@ export async function POST(request: NextRequest) {
             items: cartItems && cartItems.length > 0 ? {
               create: cartItems.map((item: Record<string, unknown>) => ({
                 productId: String(item.productId),
-                formatId: item.formatId ? String(item.formatId) : null,
+                optionId: item.optionId ? String(item.optionId) : null,
                 productName: String(item.name || ''),
-                formatName: item.formatName ? String(item.formatName) : null,
+                optionName: item.optionName ? String(item.optionName) : null,
                 sku: item.sku ? String(item.sku) : null,
                 quantity: Number(item.quantity) || 1,
                 unitPrice: Number(item.price) || 0,
@@ -394,19 +394,19 @@ export async function POST(request: NextRequest) {
             });
 
             // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
-            if (reservation.formatId) {
+            if (reservation.optionId) {
               const rowsAffected: number = await tx.$executeRaw`
-                UPDATE "ProductFormat"
+                UPDATE "ProductOption"
                 SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
                     "updatedAt" = NOW()
-                WHERE id = ${reservation.formatId}
+                WHERE id = ${reservation.optionId}
                   AND "stockQuantity" >= ${reservation.quantity}
               `;
               if (rowsAffected === 0) {
-                logger.warn(`[PayPal capture] Insufficient stock for format ${reservation.formatId}`, { wanted: reservation.quantity });
+                logger.warn(`[PayPal capture] Insufficient stock for format ${reservation.optionId}`, { wanted: reservation.quantity });
               }
             } else {
-              // A8-P2-003 + E-07 FIX: Also decrement stock for base products (no formatId)
+              // A8-P2-003 + E-07 FIX: Also decrement stock for base products (no optionId)
               const rowsAffected: number = await tx.$executeRaw`
                 UPDATE "Product"
                 SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
             const lastTx = await tx.inventoryTransaction.findFirst({
               where: {
                 productId: reservation.productId,
-                formatId: reservation.formatId,
+                optionId: reservation.optionId,
               },
               orderBy: { createdAt: 'desc' },
               select: { runningWAC: true },
@@ -434,7 +434,7 @@ export async function POST(request: NextRequest) {
             await tx.inventoryTransaction.create({
               data: {
                 productId: reservation.productId,
-                formatId: reservation.formatId,
+                optionId: reservation.optionId,
                 type: 'SALE',
                 quantity: -reservation.quantity,
                 unitCost: wac,

@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Témoignages clients | BioCycle Peptides',
   description: 'Lisez les témoignages de chercheurs et laboratoires sur leur expérience avec les peptides de recherche BioCycle Peptides.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/clients/temoignages',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/clients/temoignages`,
   },
   openGraph: {
     title: 'Témoignages clients | BioCycle Peptides',
     description: 'Lisez les témoignages de chercheurs et laboratoires sur leur expérience avec les peptides de recherche BioCycle Peptides.',
-    url: 'https://biocyclepeptides.com/clients/temoignages',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/clients/temoignages`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

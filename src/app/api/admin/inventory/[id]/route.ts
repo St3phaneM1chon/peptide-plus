@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Inventory Item API
- * PATCH - Update stock quantity for a specific ProductFormat
+ * PATCH - Update stock quantity for a specific ProductOption
  */
 
 import { NextResponse } from 'next/server';
@@ -25,7 +25,7 @@ const updateStockSchema = z.object({
     .max(500, 'Reason must be 500 characters or fewer'),
 }).strict();
 
-// PATCH /api/admin/inventory/[id] - Update stock quantity for a ProductFormat
+// PATCH /api/admin/inventory/[id] - Update stock quantity for a ProductOption
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
@@ -41,8 +41,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
     const { stockQuantity, reason } = parsed.data;
 
-    // Verify the ProductFormat exists
-    const format = await prisma.productFormat.findUnique({
+    // Verify the ProductOption exists
+    const format = await prisma.productOption.findUnique({
       where: { id },
       select: {
         id: true,
@@ -87,7 +87,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         format.availability === 'IN_STOCK' || format.availability === 'OUT_OF_STOCK';
 
       if (shouldUpdateAvailability && format.availability !== newAvailability) {
-        await tx.productFormat.update({
+        await tx.productOption.update({
           where: { id },
           data: { availability: newAvailability },
         });
@@ -95,7 +95,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     });
 
     // Fetch the updated format to return
-    const updated = await prisma.productFormat.findUnique({
+    const updated = await prisma.productOption.findUnique({
       where: { id },
       select: {
         id: true,
@@ -115,7 +115,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     logAdminAction({
       adminUserId: session.user.id,
       action: 'ADJUST_STOCK',
-      targetType: 'ProductFormat',
+      targetType: 'ProductOption',
       targetId: id,
       previousValue: { stockQuantity: previousQuantity, availability: format.availability },
       newValue: { stockQuantity, reason, delta },
@@ -131,7 +131,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
             productId: updated.productId,
             productName: updated.product.name,
             productSlug: updated.product.slug,
-            formatName: updated.name,
+            optionName: updated.name,
             sku: updated.sku,
             price: Number(updated.price),
             stockQuantity: updated.stockQuantity,

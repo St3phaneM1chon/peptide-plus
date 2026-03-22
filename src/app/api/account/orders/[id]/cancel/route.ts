@@ -244,10 +244,10 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
 
       // Restore product stock quantities for each item
       for (const item of order.items) {
-        if (item.formatId) {
+        if (item.optionId) {
           // Restore stock for product format
-          await tx.productFormat.updateMany({
-            where: { id: item.formatId },
+          await tx.productOption.updateMany({
+            where: { id: item.optionId },
             data: {
               stockQuantity: {
                 increment: item.quantity,
@@ -350,7 +350,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
             cancelledBy: 'CUSTOMER',
             items: order.items.map(item => ({
               productName: item.productName,
-              formatName: item.formatName,
+              optionName: item.optionName,
               quantity: item.quantity,
             })),
           }),
@@ -388,7 +388,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session, params
           total: Number(order.total),
           currency: order.currency?.code || 'CAD',
           items: order.items.map(item => ({
-            name: item.productName + (item.formatName ? ` - ${item.formatName}` : ''),
+            name: item.productName + (item.optionName ? ` - ${item.optionName}` : ''),
             quantity: item.quantity,
           })),
           refundAmount: result.refundAmount,

@@ -18,7 +18,7 @@ import { logger } from '@/lib/logger';
 // Constants
 // ---------------------------------------------------------------------------
 
-const SITE_URL = 'https://biocyclepeptides.com';
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
 /** Static public pages that should always appear in the sitemap */
 const STATIC_PAGES = [

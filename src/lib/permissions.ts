@@ -26,7 +26,7 @@ export const PERMISSIONS = {
   'products.create': 'Create products',
   'products.edit': 'Edit products',
   'products.delete': 'Delete products',
-  'products.manage_formats': 'Manage product formats',
+  'products.manage_options': 'Manage product options',
   'products.manage_images': 'Manage product images',
   'products.manage_inventory': 'Manage inventory levels',
 
@@ -137,7 +137,7 @@ export type PermissionCode = keyof typeof PERMISSIONS;
 export const PERMISSION_MODULES: Record<string, { label: string; permissions: PermissionCode[] }> = {
   products: {
     label: 'Products',
-    permissions: ['products.view', 'products.create', 'products.edit', 'products.delete', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory'],
+    permissions: ['products.view', 'products.create', 'products.edit', 'products.delete', 'products.manage_options', 'products.manage_images', 'products.manage_inventory'],
   },
   categories: {
     label: 'Categories',

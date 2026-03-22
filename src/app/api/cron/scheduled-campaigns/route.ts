@@ -25,6 +25,7 @@ import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { escapeHtml } from '@/lib/email/templates/base-template';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
+import { forEachActiveTenant } from '@/lib/tenant-cron';
 
 export async function GET(request: NextRequest) {
   // FLAW-007 FIX: Only accept cron secret via Authorization header, not query string.
@@ -51,9 +52,12 @@ export async function GET(request: NextRequest) {
 
   return withJobLock('scheduled-campaigns', async () => {
   try {
+    // Multi-tenant: iterate over all active tenants
+    const tenantResult = await forEachActiveTenant(async (tenant) => {
     const now = new Date();
 
     // Find campaigns ready to send (atomic status guard)
+    // Prisma middleware auto-filters by tenant
     const scheduledCampaigns = await prisma.emailCampaign.findMany({
       where: {
         status: 'SCHEDULED',
@@ -63,7 +67,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (scheduledCampaigns.length === 0) {
-      return NextResponse.json({ success: true, triggered: 0 });
+      return; // No scheduled campaigns for this tenant
     }
 
     const results: Array<{ id: string; name: string; success: boolean; sent?: number; failed?: number; error?: string }> = [];
@@ -301,13 +305,14 @@ export async function GET(request: NextRequest) {
     }
 
     const successCount = results.filter((r) => r.success).length;
-    logger.info(`[CRON:SCHEDULED-CAMPAIGNS] Triggered ${successCount}/${scheduledCampaigns.length} campaigns`);
+    logger.info(`[CRON:SCHEDULED-CAMPAIGNS] Triggered ${successCount}/${scheduledCampaigns.length} campaigns`, {
+      tenantSlug: tenant.slug,
+    });
+    });
 
     return NextResponse.json({
       success: true,
-      triggered: successCount,
-      failed: results.length - successCount,
-      results,
+      tenants: tenantResult,
     });
   } catch (error) {
     logger.error('[CRON:SCHEDULED-CAMPAIGNS] Error', { error: error instanceof Error ? error.message : String(error) });

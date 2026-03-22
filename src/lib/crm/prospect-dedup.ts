@@ -347,7 +347,7 @@ export async function findCrossListProspectDuplicates(
 }
 
 // ---------------------------------------------------------------------------
-// Advanced phone normalization (international formats)
+// Advanced phone normalization (international options)
 // ---------------------------------------------------------------------------
 
 export function normalizePhoneInternational(phone: string): string {

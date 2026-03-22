@@ -161,7 +161,9 @@ const PEPTIDE_KNOWLEDGE = `
 - Réponse sous 24h maximum
 `;
 
-const SYSTEM_PROMPT = `Tu es l'assistant virtuel de BioCycle Peptides, une entreprise canadienne basée à Montréal spécialisée dans les peptides de recherche de haute qualité.
+const CHAT_SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+
+const SYSTEM_PROMPT = `Tu es l'assistant virtuel de ${CHAT_SITE_NAME}, une plateforme e-commerce propulsée par Koraline.
 
 ## TON RÔLE
 - Répondre aux questions sur les peptides et nos produits

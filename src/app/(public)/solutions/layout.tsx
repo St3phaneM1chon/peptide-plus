@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Solutions peptidiques pour la recherche | BioCycle Peptides',
   description: 'Trouvez la solution peptidique adaptee a vos besoins de recherche. Entreprises, chercheurs individuels et partenaires au Canada et internationalement.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/solutions',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions`,
   },
   openGraph: {
     title: 'Solutions peptidiques pour la recherche | BioCycle Peptides',
     description: 'Trouvez la solution peptidique adaptee a vos besoins de recherche. Entreprises, chercheurs individuels et partenaires.',
-    url: 'https://biocyclepeptides.com/solutions',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

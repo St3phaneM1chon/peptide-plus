@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
               where: { isPrimary: true },
               take: 1,
             },
-            formats: {
+            options: {
               where: {
                 isActive: true,
                 stockQuantity: { gt: 0 },
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
         );
 
         recommendations = productDetails
-          .filter(product => product.formats.length > 0) // Only products with available formats
+          .filter(product => product.options.length > 0) // Only products with available options
           .map(product => ({
             id: product.id,
             name: product.name,
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
             where: { isPrimary: true },
             take: 1,
           },
-          formats: {
+          options: {
             where: {
               isActive: true,
               stockQuantity: { gt: 0 },
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
       });
 
       const fallbackRecommendations = categoryProducts
-        .filter(product => product.formats.length > 0)
+        .filter(product => product.options.length > 0)
         .map(product => ({
           id: product.id,
           name: product.name,
@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
             where: { isPrimary: true },
             take: 1,
           },
-          formats: {
+          options: {
             where: {
               isActive: true,
               stockQuantity: { gt: 0 },
@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
       });
 
       const bestsellerRecommendations = bestsellerProducts
-        .filter(product => product.formats.length > 0)
+        .filter(product => product.options.length > 0)
         .map(product => ({
           id: product.id,
           name: product.name,

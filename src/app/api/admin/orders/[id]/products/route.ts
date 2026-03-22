@@ -38,12 +38,12 @@ export const GET = withAdminGuard(async (
     if (productIds.length === 0) return apiSuccess({ enabled: true, products: [] }, { request });
 
     // Fetch products and their format-level stock in parallel
-    const [products, formats] = await Promise.all([
+    const [products, options] = await Promise.all([
       prisma.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, name: true, slug: true, sku: true, isActive: true, price: true },
       }),
-      prisma.productFormat.findMany({
+      prisma.productOption.findMany({
         where: { productId: { in: productIds } },
         select: {
           id: true,
@@ -59,20 +59,20 @@ export const GET = withAdminGuard(async (
 
     const productMap = new Map(products.map((p) => [p.id, p]));
 
-    // Group formats by productId for quick lookup
-    const formatsByProduct = new Map<string, typeof formats>();
-    for (const f of formats) {
-      const arr = formatsByProduct.get(f.productId) || [];
+    // Group options by productId for quick lookup
+    const optionsByProduct = new Map<string, typeof options>();
+    for (const f of options) {
+      const arr = optionsByProduct.get(f.productId) || [];
       arr.push(f);
-      formatsByProduct.set(f.productId, arr);
+      optionsByProduct.set(f.productId, arr);
     }
 
     return apiSuccess({
       enabled: true,
       products: order.items.map((item) => {
         const prod = productMap.get(item.productId);
-        const prodFormats = formatsByProduct.get(item.productId) || [];
-        const totalStock = prodFormats.reduce((sum, f) => sum + f.stockQuantity, 0);
+        const prodOptions = optionsByProduct.get(item.productId) || [];
+        const totalStock = prodOptions.reduce((sum, f) => sum + f.stockQuantity, 0);
 
         return {
           productId: item.productId,
@@ -86,8 +86,8 @@ export const GET = withAdminGuard(async (
           // A5-P2-005: Inventory data
           stock: {
             totalStock,
-            formats: prodFormats.map((f) => ({
-              formatId: f.id,
+            options: prodOptions.map((f) => ({
+              optionId: f.id,
               name: f.name,
               sku: f.sku,
               stockQuantity: f.stockQuantity,

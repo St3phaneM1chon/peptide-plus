@@ -19,11 +19,11 @@ export const POST = withAdminGuard(
     try {
       const { id } = await params;
 
-      // Fetch the source product with formats
+      // Fetch the source product with options
       const source = await prisma.product.findUnique({
         where: { id },
         include: {
-          formats: true,
+          options: true,
         },
       });
 
@@ -82,11 +82,11 @@ export const POST = withAdminGuard(
           isFeatured: false,
           isNew: false,
           isBestseller: false,
-          // Create formats as well
-          formats: {
-            create: source.formats.map((f) => ({
+          // Create options as well
+          options: {
+            create: source.options.map((f) => ({
               name: f.name,
-              formatType: f.formatType,
+              optionType: f.optionType,
               price: f.price,
               comparePrice: f.comparePrice,
               sku: f.sku ? `${f.sku}-COPY` : null,
@@ -102,7 +102,7 @@ export const POST = withAdminGuard(
           },
         },
         include: {
-          formats: true,
+          options: true,
           category: { select: { id: true, name: true } },
         },
       });

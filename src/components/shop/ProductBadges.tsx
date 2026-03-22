@@ -12,7 +12,7 @@ interface ProductBadgesProps {
     reviewCount?: number;
     price?: number;
     compareAtPrice?: number;
-    formats?: Array<{
+    options?: Array<{
       stockQuantity: number;
       inStock: boolean;
     }>;

@@ -47,7 +47,7 @@ export function getPublicBaseUrl(): string {
   ].filter(Boolean) as string[];
 
   return candidates.find(u => !u.includes('localhost') && !u.includes('0.0.0.0'))
-    || 'https://biocyclepeptides.com';
+    || 'https://attitudes.vip';
 }
 
 function getCallbackUrl(platform: Platform): string {

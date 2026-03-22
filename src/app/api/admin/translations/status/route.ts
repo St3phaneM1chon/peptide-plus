@@ -27,7 +27,7 @@ import {
 import { logger } from '@/lib/logger';
 
 const ALL_MODELS: TranslatableModel[] = [
-  'Product', 'ProductFormat', 'Category', 'Article',
+  'Product', 'ProductOption', 'Category', 'Article',
   'BlogPost', 'Video', 'Webinar', 'QuickReply',
 ];
 

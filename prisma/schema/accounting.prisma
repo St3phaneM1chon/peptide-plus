@@ -1,5 +1,6 @@
 model AccountingAlert {
   id         String    @id @default(cuid())
+  tenantId   String?
   type       String
   severity   String    @default("MEDIUM")
   title      String
@@ -19,6 +20,7 @@ model AccountingAlert {
   @@index([severity])
   @@index([type])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // TODO #51: Create AuditTrail model to store structured audit entries instead of console.info logs.
@@ -31,6 +33,7 @@ model AccountingAlert {
 //   nextRunDate, isActive, autoPost, notifyOnCreate, createdBy, createdAt, updatedAt
 model AccountingPeriod {
   id               String    @id @default(cuid())
+  tenantId         String?
   name             String
   code             String    @unique
   startDate        DateTime
@@ -46,10 +49,12 @@ model AccountingPeriod {
   @@index([status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model FiscalYear {
   id        String    @id @default(cuid())
+  tenantId  String?
   name      String
   startDate DateTime
   endDate   DateTime
@@ -63,10 +68,12 @@ model FiscalYear {
   @@index([isClosed])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model AccountingSettings {
   id                    String  @id @default("default")
+  tenantId              String?
   companyName           String  @default("BioCycle Peptides Inc.")
   companyAddress        String?
   companyCity           String  @default("Montréal")
@@ -93,10 +100,12 @@ model AccountingSettings {
 
   updatedAt DateTime @updatedAt
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BankAccount {
   id             String            @id @default(cuid())
+  tenantId       String?
   name           String
   accountNumber  String?
   institution    String
@@ -116,10 +125,12 @@ model BankAccount {
   @@index([type])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BankTransaction {
   id                   String               @id @default(cuid())
+  tenantId             String?
   bankAccountId        String
   date                 DateTime
   description          String
@@ -147,10 +158,12 @@ model BankTransaction {
   @@index([bankAccountId, date]) // Phase 9: Composite for bank statement queries
   @@index([matchedEntryId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Budget {
   id        String       @id @default(cuid())
+  tenantId  String?
   name      String
   year      Int
   isActive  Boolean      @default(true)
@@ -161,10 +174,12 @@ model Budget {
   @@index([year])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BudgetLine {
   id          String   @id @default(cuid())
+  tenantId    String?
   budgetId    String
   accountCode String
   accountName String
@@ -190,10 +205,12 @@ model BudgetLine {
   @@index([budgetId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ChartOfAccount {
   id                 String           @id @default(cuid())
+  tenantId           String?
   code               String           @unique
   name               String
   description        String?
@@ -228,10 +245,12 @@ model ChartOfAccount {
   @@index([gifiCode])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CreditNote {
   id               String           @id @default(cuid())
+  tenantId         String?
   creditNoteNumber String           @unique
   invoiceId        String?
   orderId          String?
@@ -263,10 +282,12 @@ model CreditNote {
   @@index([status])
   @@index([deletedAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CustomerInvoice {
   id              String                @id @default(cuid())
+  tenantId        String?
   invoiceNumber   String                @unique
   customerId      String?
   customerName    String
@@ -313,10 +334,12 @@ model CustomerInvoice {
   @@index([orderId, status]) // A7-P2: Composite for order-linked invoice lookups with status filter
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CustomerInvoiceItem {
   id          String          @id @default(cuid())
+  tenantId    String?
   invoiceId   String
   description String
   quantity    Int             @default(1)
@@ -331,10 +354,12 @@ model CustomerInvoiceItem {
   @@index([invoiceId])
   @@index([productId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Expense {
   id            String   @id @default(cuid())
+  tenantId      String?
   expenseNumber String   @unique
   date          DateTime
   description   String
@@ -392,6 +417,7 @@ model Expense {
   @@index([deletedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // TODO #55: Add @default(cuid()) to id fields in accounting models:
@@ -399,6 +425,7 @@ model Expense {
 //   Currently these models require manual ID generation which is error-prone.
 model JournalEntry {
   id           String             @id @default(cuid())
+  tenantId     String?
   entryNumber  String             @unique
   date         DateTime
   description  String
@@ -438,10 +465,12 @@ model JournalEntry {
   @@index([type, status, date]) // Composite for accounting reports filtering by type, status, and date range
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model JournalLine {
   id          String         @id @default(cuid())
+  tenantId    String?
   entryId     String
   accountId   String
   description String?
@@ -457,10 +486,12 @@ model JournalLine {
   @@index([entryId])
   @@index([accountId, entryId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model SupplierInvoice {
   id              String        @id @default(cuid())
+  tenantId        String?
   invoiceNumber   String
   supplierId      String?
   supplierName    String
@@ -501,10 +532,12 @@ model SupplierInvoice {
   @@index([createdAt])
   @@index([updatedAt])
   @@unique([invoiceNumber, supplierId]) // F012 FIX: Different suppliers can reuse the same invoice number
+  @@index([tenantId])
 }
 
 model TaxReport {
   id                String          @id @default(cuid())
+  tenantId          String?
   period            String
   periodType        String          @default("MONTHLY")
   year              Int
@@ -544,10 +577,12 @@ model TaxReport {
   @@index([year, regionCode]) // #58 - Composite index for tax report queries filtered by year+region
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model RecurringEntryTemplate {
   id           String    @id @default(cuid())
+  tenantId     String?
   name         String
   description  String?
   frequency    String // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
@@ -565,6 +600,7 @@ model RecurringEntryTemplate {
   @@index([frequency])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -572,6 +608,7 @@ model RecurringEntryTemplate {
 // =============================================
 model FixedAsset {
   id                      String                   @id @default(cuid())
+  tenantId                String?
   name                    String
   description             String?
   // Asset details
@@ -620,10 +657,12 @@ model FixedAsset {
   @@index([acquisitionDate])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model FixedAssetDepreciation {
   id             String     @id @default(cuid())
+  tenantId       String?
   fixedAssetId   String
   fixedAsset     FixedAsset @relation(fields: [fixedAssetId], references: [id], onDelete: Cascade)
   // Period
@@ -645,6 +684,7 @@ model FixedAssetDepreciation {
   @@index([fiscalYear])
   @@index([journalEntryId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -652,6 +692,7 @@ model FixedAssetDepreciation {
 // =============================================
 model FiscalCalendarEvent {
   id            String    @id @default(cuid())
+  tenantId      String?
   // Event details
   title         String
   titleFr       String?
@@ -686,6 +727,7 @@ model FiscalCalendarEvent {
   @@index([templateId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -693,6 +735,7 @@ model FiscalCalendarEvent {
 // =============================================
 model BankRule {
   id       String  @id @default(cuid())
+  tenantId String?
   name     String
   priority Int     @default(0)
   isActive Boolean @default(true)
@@ -725,6 +768,7 @@ model BankRule {
   @@index([accountId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -732,6 +776,7 @@ model BankRule {
 // =============================================
 model AccountingExport {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   format      String   @default("CSV") // CSV, PDF, QBO, SAGE
   periodStart DateTime
@@ -748,6 +793,7 @@ model AccountingExport {
   @@index([status])
   @@index([createdBy])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -755,6 +801,7 @@ model AccountingExport {
 // =============================================
 model OcrScan {
   id             String   @id @default(cuid())
+  tenantId       String?
   originalUrl    String
   originalName   String
   mimeType       String
@@ -772,11 +819,13 @@ model OcrScan {
   @@index([createdBy])
   @@index([journalEntryId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // DB-007: Custom Reports Builder
 model CustomReport {
   id          String    @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   type        String    // INCOME_STATEMENT, BALANCE_SHEET, CASH_FLOW, AR_AGING, AP_AGING, TAX_SUMMARY, JOURNAL_DETAIL, TRIAL_BALANCE, CUSTOM
@@ -798,11 +847,13 @@ model CustomReport {
   @@index([deletedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-010: Cash flow tracking
 model CashFlowEntry {
   id          String   @id @default(cuid())
+  tenantId    String?
   type        String   // INFLOW, OUTFLOW
   category    String   // SALES, REFUND, SUBSCRIPTION, PAYROLL, SUPPLIER, TAX, etc.
   amount      Decimal  @db.Decimal(12, 2)
@@ -824,6 +875,7 @@ model CashFlowEntry {
   @@index([type, date])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -831,6 +883,7 @@ model CashFlowEntry {
 // =============================================
 model Employee {
   id                 String    @id @default(cuid())
+  tenantId           String?
   userId             String?   // Optional link to User table (not all employees are system users)
   firstName          String
   lastName           String
@@ -866,10 +919,12 @@ model Employee {
   @@index([userId])
   @@index([status])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model PayrollRun {
   id                String    @id @default(cuid())
+  tenantId          String?
   runDate           DateTime
   periodStart       DateTime
   periodEnd         DateTime
@@ -893,10 +948,12 @@ model PayrollRun {
   @@index([periodStart, periodEnd])
   @@index([deletedAt])
   @@index([journalEntryId])
+  @@index([tenantId])
 }
 
 model PayrollEntry {
   id             String  @id @default(cuid())
+  tenantId       String?
   payrollRunId   String
   employeeId     String
   hoursWorked    Decimal @default(0) @db.Decimal(8, 2)
@@ -937,10 +994,12 @@ model PayrollEntry {
 
   @@index([payrollRunId])
   @@index([employeeId])
+  @@index([tenantId])
 }
 
 model PayStub {
   id               String   @id @default(cuid())
+  tenantId         String?
   employeeId       String
   periodStart      DateTime
   periodEnd        DateTime
@@ -959,6 +1018,7 @@ model PayStub {
 
   @@index([employeeId])
   @@index([periodStart, periodEnd])
+  @@index([tenantId])
 }
 
 // =============================================================================
@@ -966,6 +1026,7 @@ model PayStub {
 // =============================================================================
 model TimeEntry {
   id             String    @id @default(cuid())
+  tenantId       String?
   employeeId     String?
   userId         String?
   userName       String
@@ -999,10 +1060,12 @@ model TimeEntry {
   @@index([projectId])
   @@index([projectName])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model TimeProject {
   id           String    @id @default(cuid())
+  tenantId     String?
   name         String
   code         String    @unique
   description  String?
@@ -1020,10 +1083,12 @@ model TimeProject {
   @@index([code])
   @@index([status])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model BatchJob {
   id             String    @id @default(cuid())
+  tenantId       String?
   type           String // BATCH_JOURNAL_ENTRIES, BATCH_INVOICES, BATCH_PAYMENTS, BATCH_EXPENSES, BATCH_STATUS_UPDATE, BATCH_EXPORT, BATCH_DELETE
   status         String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
   totalItems     Int       @default(0)
@@ -1042,6 +1107,7 @@ model BatchJob {
   @@index([type])
   @@index([status])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // =============================================================================
@@ -1049,6 +1115,7 @@ model BatchJob {
 // =============================================================================
 model CostProject {
   id             String    @id @default(cuid())
+  tenantId       String?
   name           String
   code           String    @unique
   description    String?
@@ -1080,10 +1147,12 @@ model CostProject {
   @@index([deletedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ProjectCostEntry {
   id             String   @id @default(cuid())
+  tenantId       String?
   projectId      String
   type           String // LABOR, EXPENSE, MATERIAL, SUBCONTRACTOR, OVERHEAD
   description    String
@@ -1113,10 +1182,12 @@ model ProjectCostEntry {
   @@index([invoiceId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ProjectMilestone {
   id          String    @id @default(cuid())
+  tenantId    String?
   projectId   String
   name        String
   description String?
@@ -1134,6 +1205,7 @@ model ProjectMilestone {
   @@index([status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================================================
@@ -1141,6 +1213,7 @@ model ProjectMilestone {
 // =============================================================================
 model ClientPortalAccess {
   id          String    @id @default(cuid())
+  tenantId    String?
   token       String    @unique @default(cuid())
   email       String    @unique
   clientName  String
@@ -1154,6 +1227,7 @@ model ClientPortalAccess {
 
   @@index([token])
   @@index([isActive])
+  @@index([tenantId])
 }
 
 // =============================================================================
@@ -1161,6 +1235,7 @@ model ClientPortalAccess {
 // =============================================================================
 model LegalEntity {
   id              String    @id @default(cuid())
+  tenantId        String?
   name            String
   code            String    @unique
   legalName       String?
@@ -1189,10 +1264,12 @@ model LegalEntity {
   @@index([code])
   @@index([parentEntityId])
   @@index([isActive])
+  @@index([tenantId])
 }
 
 model IntercompanyTransaction {
   id                String    @id @default(cuid())
+  tenantId          String?
   transactionNumber String    @unique
   fromEntityId      String
   toEntityId        String
@@ -1216,10 +1293,12 @@ model IntercompanyTransaction {
   @@index([status])
   @@index([type])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model RSDeProject {
   id                         String            @id @default(cuid())
+  tenantId                   String?
   name                       String
   description                String?           @db.Text
   fiscalYear                 Int
@@ -1238,10 +1317,12 @@ model RSDeProject {
 
   @@index([fiscalYear])
   @@index([status])
+  @@index([tenantId])
 }
 
 model RSDeExpense {
   id               String              @id @default(cuid())
+  tenantId         String?
   projectId        String
   category         RSDeExpenseCategory
   description      String
@@ -1259,10 +1340,12 @@ model RSDeExpense {
   @@index([projectId])
   @@index([category])
   @@index([date])
+  @@index([tenantId])
 }
 
 model RSDeCalculation {
   id              String   @id @default(cuid())
+  tenantId        String?
   projectId       String
   fiscalYear      Int
   totalEligible   Decimal  @db.Decimal(14, 2)
@@ -1279,11 +1362,13 @@ model RSDeCalculation {
 
   @@index([projectId])
   @@index([fiscalYear])
+  @@index([tenantId])
 }
 
 // --- 3B.5: Multi-Currency Exchange Rates ---
 model ExchangeRate {
   id           String   @id @default(cuid())
+  tenantId     String?
   fromCurrency String
   toCurrency   String
   rate         Decimal  @db.Decimal(12, 6)
@@ -1294,5 +1379,5 @@ model ExchangeRate {
   @@unique([fromCurrency, toCurrency])
   @@index([fromCurrency])
   @@index([toCurrency])
+  @@index([tenantId])
 }
-

@@ -47,13 +47,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             orderBy: { sortOrder: 'asc' },
             select: { id: true, url: true, alt: true },
           },
-          formats: {
+          options: {
             where: { isActive: true },
             orderBy: { sortOrder: 'asc' },
             select: {
               id: true,
               name: true,
-              formatType: true,
+              optionType: true,
               dosageMg: true,
               price: true,
               comparePrice: true,
@@ -88,8 +88,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
       // Transform for client
       const primaryImage = translated.images[0];
-      const lowestPrice = product.formats.length > 0
-        ? Math.min(...product.formats.map(f => Number(f.price)))
+      const lowestPrice = product.options.length > 0
+        ? Math.min(...product.options.map(f => Number(f.price)))
         : Number(product.price);
 
       return {
@@ -104,10 +104,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         categoryName: translated.category?.name || '',
         productImage: primaryImage?.url || translated.imageUrl || '/images/products/peptide-default.png',
         videoUrl: translated.videoUrl || undefined,
-        formats: translated.formats.map(f => ({
+        options: translated.options.map(f => ({
           id: f.id,
           name: f.name,
-          type: f.formatType?.toLowerCase() || 'vial_2ml',
+          type: f.optionType?.toLowerCase() || 'vial_2ml',
           dosageMg: f.dosageMg ? Number(f.dosageMg) : undefined,
           price: Number(f.price),
           comparePrice: f.comparePrice ? Number(f.comparePrice) : undefined,

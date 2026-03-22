@@ -550,7 +550,7 @@ export abstract class BaseSectionAuditor extends BaseAuditor {
         const hasLocaleFormat = /toLocaleDate|toLocaleDateString|toLocaleString|formatDate|Intl\.DateTimeFormat|locale/.test(content);
         results.push(
           hasLocaleFormat
-            ? this.pass(`${prefix}-dateformat-${pageName}`, `Page /admin/${pageName} formats dates with locale`)
+            ? this.pass(`${prefix}-dateformat-${pageName}`, `Page /admin/${pageName} options dates with locale`)
             : this.fail(`${prefix}-dateformat-${pageName}`, 'LOW', `Dates may not be locale-formatted on /admin/${pageName}`,
                 `Page renders dates but may not format them according to user locale`,
                 { filePath: `src/app/admin/${pageName}/page.tsx`, recommendation: 'Use toLocaleDateString(locale) for date display' })

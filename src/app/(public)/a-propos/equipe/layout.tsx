@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: 'Notre équipe | BioCycle Peptides',
   description: 'Rencontrez l\'équipe multidisciplinaire de BioCycle Peptides : scientifiques, logisticiens et experts dédiés à fournir des peptides de recherche de qualité.',
   alternates: {
-    canonical: 'https://biocyclepeptides.com/a-propos/equipe',
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/equipe`,
   },
   openGraph: {
     title: 'Notre équipe | BioCycle Peptides',
     description: 'Rencontrez l\'équipe multidisciplinaire de BioCycle Peptides : scientifiques, logisticiens et experts dédiés à fournir des peptides de recherche de qualité.',
-    url: 'https://biocyclepeptides.com/a-propos/equipe',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/a-propos/equipe`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

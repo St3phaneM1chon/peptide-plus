@@ -66,7 +66,7 @@ const sampleData = {
   backInStock: {
     productName: 'BPC-157 5mg',
     productSlug: 'bpc-157-5mg',
-    formatName: 'Vial 2ml',
+    optionName: 'Vial 2ml',
     price: 79.99,
     currency: 'CAD',
     imageUrl: 'https://example.com/images/bpc-157.jpg',

@@ -17,9 +17,9 @@ import { logger } from '@/lib/logger';
 // Shared constants & helpers
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+const BASE_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 const BRAND_COLOR = '#EA580C'; // Orange accent
-const COMPANY_NAME = 'BioCycle Peptides';
+const COMPANY_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
 
 type SupportedLocale = 'fr' | 'en';
 

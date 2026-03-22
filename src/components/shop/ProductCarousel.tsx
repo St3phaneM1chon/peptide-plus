@@ -16,7 +16,7 @@ interface ProductCarouselProps {
     isNew?: boolean;
     isBestseller?: boolean;
     inStock?: boolean;
-    formats?: Array<{
+    options?: Array<{
       id: string;
       name: string;
       price: number;

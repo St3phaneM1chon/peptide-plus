@@ -1,5 +1,6 @@
 model Bundle {
   id          String       @id @default(cuid())
+  tenantId    String?
   name        String
   slug        String       @unique
   description String?
@@ -13,24 +14,28 @@ model Bundle {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model BundleItem {
   id        String  @id @default(cuid())
+  tenantId  String?
   bundleId  String
   productId String
-  formatId  String?
+  optionId  String?
   quantity  Int     @default(1)
   bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@index([bundleId])
-  @@index([formatId])
+  @@index([optionId])
   @@index([productId])
+  @@index([tenantId])
 }
 
 model Cart {
   id           String     @id @default(cuid())
+  tenantId     String?
   userId       String?    @unique
   sessionId    String?    @unique
   currencyCode String     @default("CAD")
@@ -45,29 +50,33 @@ model Cart {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CartItem {
   id         String   @id @default(cuid())
+  tenantId   String?
   cartId     String
   productId  String
-  formatId   String?
+  optionId   String?
   quantity   Int      @default(1)
   priceAtAdd Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
-  @@unique([cartId, productId, formatId])
+  @@unique([cartId, productId, optionId])
   @@index([cartId])
-  @@index([formatId])
+  @@index([optionId])
   @@index([productId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Category {
   id           String                @id @default(cuid())
+  tenantId     String?
   name         String
   slug         String                @unique
   description  String?
@@ -91,10 +100,12 @@ model Category {
   @@index([isActive, sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CategoryTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   categoryId   String
   locale       String
   name         String?
@@ -112,10 +123,12 @@ model CategoryTranslation {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ClientReference {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   logoUrl     String?
   industry    String?
@@ -130,10 +143,12 @@ model ClientReference {
   @@index([isPublished])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Company {
   id             String            @id @default(cuid())
+  tenantId       String?
   name           String
   slug           String            @unique
   contactEmail   String
@@ -163,10 +178,12 @@ model Company {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CompanyCustomer {
   id         String   @id @default(cuid())
+  tenantId   String?
   companyId  String
   customerId String
   addedAt    DateTime @default(now())
@@ -177,10 +194,12 @@ model CompanyCustomer {
   @@unique([companyId, customerId])
   @@index([companyId])
   @@index([customerId])
+  @@index([tenantId])
 }
 
 model CourseAccess {
   id                  String    @id @default(cuid())
+  tenantId            String?
   userId              String
   productId           String
   purchaseId          String    @unique
@@ -201,10 +220,12 @@ model CourseAccess {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Currency {
   id            String   @id @default(cuid())
+  tenantId      String?
   code          String   @unique
   name          String
   symbol        String
@@ -219,10 +240,12 @@ model Currency {
   @@index([code])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Discount {
   id           String       @id @default(cuid())
+  tenantId     String?
   name         String
   type         DiscountType @default(PERCENTAGE)
   value        Decimal      @db.Decimal(10, 2)
@@ -249,10 +272,12 @@ model Discount {
   @@index([createdAt])
   @@index([updatedAt])
   @@index([isActive, priority])
+  @@index([tenantId])
 }
 
 model GiftCard {
   id                    String    @id @default(cuid())
+  tenantId              String?
   code                  String    @unique
   initialAmount         Decimal   @db.Decimal(10, 2)
   balance               Decimal   @db.Decimal(10, 2)
@@ -274,10 +299,12 @@ model GiftCard {
   @@index([recipientEmail])
   @@index([redeemedBy])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Grade {
   id          String   @id @default(cuid())
+  tenantId    String?
   userId      String
   productId   String
   moduleId    String
@@ -292,6 +319,7 @@ model Grade {
   @@unique([userId, moduleId])
   @@index([productId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // A8-P2-002: `price` is an ABSOLUTE price (e.g. $45.00), NOT a discount percentage.
@@ -299,6 +327,7 @@ model Grade {
 // If price >= Product.price, the customer sees no savings — admin should be warned.
 model ProductTierPrice {
   id        String            @id @default(cuid())
+  tenantId  String?
   productId String
   tierName  String
   price     Decimal           @db.Decimal(10, 2) // Absolute price for this tier (NOT a discount)
@@ -315,10 +344,12 @@ model ProductTierPrice {
   @@index([tierName])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Module {
   id          String   @id @default(cuid())
+  tenantId    String?
   productId   String
   name        String
   description String?
@@ -333,10 +364,12 @@ model Module {
   @@index([productId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Order {
   id                    String          @id @default(cuid())
+  tenantId              String?
   orderNumber           String          @unique
   userId                String?
   subtotal              Decimal         @db.Decimal(10, 2)
@@ -423,10 +456,12 @@ model Order {
   @@index([paymentStatus, createdAt]) // S10: Composite for social-proof & abandoned-cart queries filtering by paymentStatus + date range
   @@index([status, paymentStatus]) // S10: Composite for queries filtering orders by both status and payment status
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model OrderEvent {
   id        String   @id @default(cuid())
+  tenantId  String?
   orderId   String
   type      String   // STATUS_CHANGE, NOTE, PAYMENT, SHIPPING, REFUND, SYSTEM
   title     String
@@ -440,10 +475,12 @@ model OrderEvent {
   @@index([orderId, createdAt])
   @@index([type])
   @@index([actorId])
+  @@index([tenantId])
 }
 
 model PaymentError {
   id              String    @id @default(cuid())
+  tenantId        String?
   orderId         String?
   stripePaymentId String?
   errorType       String
@@ -461,15 +498,17 @@ model PaymentError {
   @@index([stripePaymentId])
   @@index([errorType])
   @@index([deletedAt])
+  @@index([tenantId])
 }
 
 model OrderItem {
   id          String   @id @default(cuid())
+  tenantId    String?
   orderId     String
   productId   String
-  formatId    String?
+  optionId    String?
   productName String
-  formatName  String?
+  optionName  String?
   sku         String?
   quantity    Int
   unitPrice   Decimal  @db.Decimal(10, 2)
@@ -478,17 +517,19 @@ model OrderItem {
   createdAt   DateTime @default(now())
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@index([formatId])
+  @@index([optionId])
   @@index([orderId])
   @@index([productId])
   @@index([orderId, productId])
-  @@index([productId, formatId]) // P-09: composite for product-history DISTINCT ON (productId, formatId)
-  @@index([productId, formatId, createdAt]) // P-09: composite for latest price per (productId, formatId) ordered by date
+  @@index([productId, optionId]) // P-09: composite for product-history DISTINCT ON (productId, optionId)
+  @@index([productId, optionId, createdAt]) // P-09: composite for latest price per (productId, optionId) ordered by date
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model PaymentMethodConfig {
   id          String   @id @default(cuid())
+  tenantId    String?
   countryCode String
   methodType  String
   provider    String
@@ -503,10 +544,12 @@ model PaymentMethodConfig {
   @@index([countryCode, isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PriceWatch {
   id            String    @id @default(cuid())
+  tenantId      String?
   userId        String
   productId     String
   originalPrice Decimal   @db.Decimal(10, 2)
@@ -520,10 +563,12 @@ model PriceWatch {
   @@unique([userId, productId])
   @@index([productId, notified])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Product {
   id                  String               @id @default(cuid())
+  tenantId            String?
   name                String
   subtitle            String?
   slug                String               @unique
@@ -534,7 +579,7 @@ model Product {
   productType         ProductType          @default(PEPTIDE)
   price               Decimal              @db.Decimal(10, 2)
   // BUG-058 NOTE: This field is named "compareAtPrice" (Shopify convention) for the
-  // product-level strike-through price. The ProductFormat model uses "comparePrice"
+  // product-level strike-through price. The ProductOption model uses "comparePrice"
   // (without "At") for the format-level strike-through price. Both represent the
   // original price before discount, but the naming differs for historical reasons.
   // Do NOT rename — that would require a DB migration. Frontend code maps both to
@@ -578,10 +623,10 @@ model Product {
   storageConditions   String?
   tags                String?
   // DUAL-STOCK NOTE: Product.stockQuantity is a DENORMALIZED aggregate.
-  // The source of truth for inventory is ProductFormat.stockQuantity.
+  // The source of truth for inventory is ProductOption.stockQuantity.
   // This field should equal SUM(formats.stockQuantity) and is used only for
   // quick product-level filtering (e.g., "show in-stock products").
-  // Checkout and inventory operations MUST use ProductFormat.stockQuantity.
+  // Checkout and inventory operations MUST use ProductOption.stockQuantity.
   stockQuantity       Int                  @default(0)
   trackInventory      Boolean              @default(true)
   // DB-011: Reorder management
@@ -601,7 +646,7 @@ model Product {
   modules             Module[]
   priceWatches        PriceWatch[]
   category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  formats             ProductFormat[]
+  options              ProductOption[]
   images              ProductImage[]
   questions           ProductQuestion[]
   translations        ProductTranslation[]
@@ -641,6 +686,7 @@ model Product {
   @@index([averageRating])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // Browse abandonment tracking: records authenticated user product page views
@@ -648,6 +694,7 @@ model Product {
 // without adding to cart. Rows older than 30 days are cleaned up by data-retention cron.
 model ProductView {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String?
   productId String?
   viewedAt  DateTime @default(now())
@@ -659,10 +706,12 @@ model ProductView {
   @@index([userId, productId])
   @@index([userId, viewedAt])
   @@index([viewedAt])
+  @@index([tenantId])
 }
 
-model ProductFormat {
+model ProductOption {
   id                String                     @id @default(cuid())
+  tenantId          String?
   productId         String
   name              String
   description       String?
@@ -686,7 +735,7 @@ model ProductFormat {
   comparePrice      Decimal?                   @db.Decimal(10, 2)
   discontinuedAt    DateTime?
   dosageMg          Decimal?                   @db.Decimal(10, 2)
-  formatType        String                     @default("VIAL_2ML")
+  optionType        String                     @default("VIAL_2ML")
   imageUrl          String?
   lowStockThreshold Int                        @default(5)
   trackInventory    Boolean                    @default(true)
@@ -695,15 +744,15 @@ model ProductFormat {
   weightGrams       Int?
   costPrice         Decimal?                   @db.Decimal(10, 2)
   product                  Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  translations             ProductFormatTranslation[]
+  translations             ProductOptionTranslation[]
   inventoryReservations    InventoryReservation[]
   inventoryTransactions    InventoryTransaction[]
 
   // FIX A1-P0-002: Reverse relation for Subscription FK
-  subscriptions            Subscription[]             @relation("FormatSubscriptions")
+  subscriptions            Subscription[]             @relation("OptionSubscriptions")
 
   @@index([availability])
-  @@index([formatType])
+  @@index([optionType])
   @@index([productId])
   @@index([sku])
   @@index([isActive])
@@ -711,11 +760,13 @@ model ProductFormat {
   @@index([productId, availability]) // S10: Composite for finding in-stock formats per product
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
-model ProductFormatTranslation {
+model ProductOptionTranslation {
   id            String             @id @default(cuid())
-  formatId      String
+  tenantId      String?
+  optionId      String
   locale        String
   name          String?
   description   String?
@@ -725,17 +776,19 @@ model ProductFormatTranslation {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   qualityLevel  TranslationQuality @default(draft)
-  productFormat ProductFormat      @relation(fields: [formatId], references: [id], onDelete: Cascade)
+  productOption ProductOption      @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
-  @@unique([formatId, locale])
-  @@index([formatId])
+  @@unique([optionId, locale])
+  @@index([optionId])
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ProductImage {
   id        String   @id @default(cuid())
+  tenantId  String?
   productId String
   url       String
   alt       String?
@@ -749,10 +802,12 @@ model ProductImage {
 
   @@index([productId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model ProductQuestion {
   id          String   @id @default(cuid())
+  tenantId    String?
   userId      String
   productId   String
   question    String
@@ -769,10 +824,12 @@ model ProductQuestion {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ProductTranslation {
   id                  String             @id @default(cuid())
+  tenantId            String?
   productId           String
   locale              String
   name                String?
@@ -800,10 +857,12 @@ model ProductTranslation {
   @@index([productId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PromoCode {
   id                String           @id @default(cuid())
+  tenantId          String?
   code              String           @unique
   description       String?
   type              DiscountType     @default(PERCENTAGE)
@@ -827,10 +886,12 @@ model PromoCode {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PromoCodeUsage {
   id          String    @id @default(cuid())
+  tenantId    String?
   promoCodeId String
   userId      String
   orderId     String?
@@ -843,10 +904,12 @@ model PromoCodeUsage {
   @@index([promoCodeId, userId])
   @@index([usedAt])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model Purchase {
   id              String         @id @default(cuid())
+  tenantId        String?
   userId          String
   companyId       String?
   productId       String
@@ -878,10 +941,12 @@ model Purchase {
   @@index([status, createdAt]) // Phase 11: Reporting by status + date
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model QuantityDiscount {
   id        String   @id @default(cuid())
+  tenantId  String?
   productId String
   minQty    Int
   maxQty    Int?
@@ -894,10 +959,12 @@ model QuantityDiscount {
   @@index([productId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ReturnRequest {
   id          String   @id @default(cuid())
+  tenantId    String?
   orderItemId String
   orderId     String
   userId      String
@@ -920,10 +987,12 @@ model ReturnRequest {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Refund {
   id              String         @id @default(cuid())
+  tenantId        String?
   orderId         String?
   returnRequestId String?
   amount          Decimal        @db.Decimal(10, 2)
@@ -948,10 +1017,12 @@ model Refund {
   @@index([status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Review {
   id           String        @id @default(cuid())
+  tenantId     String?
   userId       String
   productId    String
   rating       Int
@@ -978,10 +1049,12 @@ model Review {
   @@index([productId, isApproved, isPublished])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ReviewImage {
   id        String   @id @default(cuid())
+  tenantId  String?
   reviewId  String
   url       String
   alt       String?
@@ -991,10 +1064,12 @@ model ReviewImage {
 
   @@index([reviewId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Shipping {
   id                String                  @id @default(cuid())
+  tenantId          String?
   purchaseId        String                  @unique
   recipientName     String
   addressLine1      String
@@ -1022,10 +1097,12 @@ model Shipping {
   @@index([trackingNumber])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ShippingStatusHistory {
   id          String         @id @default(cuid())
+  tenantId    String?
   shippingId  String
   status      ShippingStatus
   location    String?
@@ -1035,10 +1112,12 @@ model ShippingStatusHistory {
 
   @@index([shippingId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model ShippingZone {
   id                    String   @id @default(cuid())
+  tenantId              String?
   name                  String
   countries             String
   baseFee               Decimal  @db.Decimal(10, 2)
@@ -1056,31 +1135,35 @@ model ShippingZone {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model StockAlert {
   id         String    @id @default(cuid())
+  tenantId   String?
   email      String
   productId  String
-  formatId   String?
+  optionId   String?
   notified   Boolean   @default(false)
   notifiedAt DateTime?
   createdAt  DateTime  @default(now())
   product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([email, productId, formatId])
+  @@unique([email, productId, optionId])
   @@index([email])
   @@index([productId, notified])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Subscription {
   id              String         @id @default(cuid())
+  tenantId        String?
   userId          String?
   productId       String?
-  formatId        String?
+  optionId        String?
   productName     String
-  formatName      String?
+  optionName      String?
   quantity        Int            @default(1)
   frequency       String         @default("EVERY_2_MONTHS")
   discountPercent Int            @default(10)
@@ -1096,9 +1179,9 @@ model Subscription {
   // FIX A1-P0-002: Add @relation directives for FK fields
   user            User?          @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: SetNull)
   product         Product?       @relation("ProductSubscriptions", fields: [productId], references: [id], onDelete: SetNull)
-  format          ProductFormat? @relation("FormatSubscriptions", fields: [formatId], references: [id], onDelete: SetNull)
+  option          ProductOption? @relation("OptionSubscriptions", fields: [optionId], references: [id], onDelete: SetNull)
 
-  @@index([formatId])
+  @@index([optionId])
   @@index([nextDelivery])
   @@index([nextBillingDate])
   @@index([productId])
@@ -1107,10 +1190,12 @@ model Subscription {
   @@index([userId, status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Wishlist {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String?
   productId String?
   createdAt DateTime @default(now())
@@ -1123,10 +1208,12 @@ model Wishlist {
   @@index([productId])
   @@index([userId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model WishlistCollection {
   id        String         @id @default(cuid())
+  tenantId  String?
   userId    String
   name      String         @default("My Wishlist")
   isDefault Boolean        @default(false)
@@ -1138,10 +1225,12 @@ model WishlistCollection {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model WishlistItem {
   id           String             @id @default(cuid())
+  tenantId     String?
   collectionId String
   productId    String
   createdAt    DateTime           @default(now())
@@ -1151,10 +1240,12 @@ model WishlistItem {
   @@index([collectionId])
   @@index([productId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model UpsellConfig {
   id                   String   @id @default(cuid())
+  tenantId             String?
   productId            String?  @unique
   isEnabled            Boolean  @default(true)
   showQuantityDiscount Boolean  @default(true)
@@ -1174,6 +1265,7 @@ model UpsellConfig {
   @@index([isEnabled])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -1182,6 +1274,7 @@ model UpsellConfig {
 // DB-001: Customer Metrics for CLV prediction, RFM segmentation, churn scoring
 model CustomerMetrics {
   id               String   @id @default(cuid())
+  tenantId         String?
   userId           String?  @unique
   predictedCLV     Decimal  @default(0) @db.Decimal(12, 2)
   rfmSegment       String   @default("NEW") // CHAMPIONS, LOYAL, AT_RISK, LOST, NEW, etc.
@@ -1209,15 +1302,17 @@ model CustomerMetrics {
   @@index([calculatedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-002: Abandoned Cart recovery
 model AbandonedCart {
   id               String    @id @default(cuid())
+  tenantId         String?
   userId           String?
   sessionId        String?
   email            String?
-  items            Json      // Array of {productId, formatId, quantity, price}
+  items            Json      // Array of {productId, optionId, quantity, price}
   totalValue       Decimal   @default(0) @db.Decimal(10, 2)
   status           String    @default("ABANDONED") // ABANDONED, RECOVERY_SENT, RECOVERED, EXPIRED
   recoveryAttempts Json?     // Array of {sentAt, type, result}
@@ -1240,11 +1335,13 @@ model AbandonedCart {
   @@index([recoveredOrderId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-005: Custom fields / metafields system
 model CustomField {
   id           String             @id @default(cuid())
+  tenantId     String?
   name         String
   key          String             @unique
   description  String?
@@ -1263,10 +1360,12 @@ model CustomField {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CustomFieldValue {
   id            String      @id @default(cuid())
+  tenantId      String?
   customFieldId String
   entityId      String
   value         String?
@@ -1283,11 +1382,13 @@ model CustomFieldValue {
   @@index([entityId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-013: Social proof events for real-time notifications
 model SocialProofEvent {
   id           String   @id @default(cuid())
+  tenantId     String?
   type         String   // PURCHASE, REVIEW, SIGNUP, WISHLIST
   productId    String?
   productName  String?
@@ -1301,11 +1402,13 @@ model SocialProofEvent {
   @@index([productId])
   @@index([expiresAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // DB-014: Customer preferences from quizzes, interests, communication
 model CustomerPreference {
   id                 String   @id @default(cuid())
+  tenantId           String?
   userId             String?  @unique
   quizAnswers        Json?    // Structured quiz responses
   interests          Json?    // Array of interest tags
@@ -1325,6 +1428,7 @@ model CustomerPreference {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // ---------------------------------------------------------------------------
@@ -1332,6 +1436,7 @@ model CustomerPreference {
 // ---------------------------------------------------------------------------
 model Estimate {
   id              String    @id @default(cuid())
+  tenantId        String?
   estimateNumber  String    @unique
   customerId      String?
   customerName    String
@@ -1381,10 +1486,12 @@ model Estimate {
   @@index([deletedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EstimateItem {
   id              String   @id @default(cuid())
+  tenantId        String?
   estimateId      String
   productId       String?
   productName     String
@@ -1403,10 +1510,12 @@ model EstimateItem {
   @@index([estimateId])
   @@index([productId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model PriceBook {
   id          String        @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   type        PriceBookType @default(STANDARD)
@@ -1422,10 +1531,12 @@ model PriceBook {
 
   @@index([isActive])
   @@index([type])
+  @@index([tenantId])
 }
 
 model PriceBookEntry {
   id          String    @id @default(cuid())
+  tenantId    String?
   priceBookId String
   priceBook   PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
   productId   String
@@ -1440,5 +1551,5 @@ model PriceBookEntry {
   @@unique([priceBookId, productId, minQuantity])
   @@index([priceBookId])
   @@index([productId])
+  @@index([tenantId])
 }
-

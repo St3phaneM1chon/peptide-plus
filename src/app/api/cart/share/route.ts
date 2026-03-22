@@ -54,7 +54,7 @@ function getShareSecret(): Uint8Array {
 
 const sharedCartItemSchema = z.object({
   productId: z.string().min(1),
-  formatId: z.string().nullable().optional(),
+  optionId: z.string().nullable().optional(),
   name: z.string().min(1).max(200),
   price: z.number().min(0),
   quantity: z.number().int().min(1).max(10),
@@ -72,7 +72,7 @@ const shareCartSchema = z.object({
 interface SharedCartPayload {
   items: Array<{
     productId: string;
-    formatId?: string | null;
+    optionId?: string | null;
     name: string;
     price: number;
     quantity: number;
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     const payload: SharedCartPayload = {
       items: items.map((item) => ({
         productId: item.productId,
-        formatId: item.formatId ?? null,
+        optionId: item.optionId ?? null,
         name: stripHtml(item.name),
         price: item.price,
         quantity: item.quantity,

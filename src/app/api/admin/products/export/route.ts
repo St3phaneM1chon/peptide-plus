@@ -2,12 +2,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Products Export API
- * GET - Export all products as CSV or JSON with their formats (item 73)
+ * GET - Export all products as CSV or JSON with their options (item 73)
  *
  * Query params:
  *   format=csv (default) | json
  *
- * JSON export includes full product data with formats, suitable for
+ * JSON export includes full product data with options, suitable for
  * re-import via POST /api/admin/products/import.
  */
 
@@ -71,11 +71,11 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
         category: {
           select: { id: true, name: true },
         },
-        formats: {
+        options: {
           select: {
             id: true,
             name: true,
-            formatType: true,
+            optionType: true,
             price: true,
             comparePrice: true,
             sku: true,
@@ -130,10 +130,10 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
         origin: product.origin,
         imageUrl: product.imageUrl,
         createdAt: product.createdAt.toISOString(),
-        formats: product.formats.map((f) => ({
+        options: product.options.map((f) => ({
           id: f.id,
           name: f.name,
-          formatType: f.formatType,
+          optionType: f.optionType,
           price: Number(f.price),
           comparePrice: f.comparePrice ? Number(f.comparePrice) : null,
           sku: f.sku,
@@ -195,22 +195,22 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       'imageUrl',
       'createdAt',
       // Format fields (concatenated)
-      'formats_count',
-      'formats_names',
-      'formats_skus',
-      'formats_prices',
-      'formats_stocks',
-      'formats_types',
+      'options_count',
+      'options_names',
+      'options_skus',
+      'options_prices',
+      'options_stocks',
+      'options_types',
     ];
 
     const lines: string[] = [csvRow(headers)];
 
     for (const product of products) {
-      const formatNames = product.formats.map((f) => f.name).join(' | ');
-      const formatSkus = product.formats.map((f) => f.sku || '').join(' | ');
-      const formatPrices = product.formats.map((f) => Number(f.price).toFixed(2)).join(' | ');
-      const formatStocks = product.formats.map((f) => f.stockQuantity).join(' | ');
-      const formatTypes = product.formats.map((f) => f.formatType).join(' | ');
+      const optionNames = product.options.map((f) => f.name).join(' | ');
+      const formatSkus = product.options.map((f) => f.sku || '').join(' | ');
+      const formatPrices = product.options.map((f) => Number(f.price).toFixed(2)).join(' | ');
+      const formatStocks = product.options.map((f) => f.stockQuantity).join(' | ');
+      const optionTypes = product.options.map((f) => f.optionType).join(' | ');
 
       lines.push(
         csvRow([
@@ -237,12 +237,12 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
           product.origin,
           product.imageUrl,
           product.createdAt.toISOString(),
-          product.formats.length,
-          formatNames,
+          product.options.length,
+          optionNames,
           formatSkus,
           formatPrices,
           formatStocks,
-          formatTypes,
+          optionTypes,
         ])
       );
     }

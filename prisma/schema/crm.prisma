@@ -4,6 +4,7 @@
 // H5: Customer Notes — internal notes on customer profiles
 model CustomerNote {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String
   authorId  String
   content   String   @db.Text
@@ -16,11 +17,13 @@ model CustomerNote {
 
   @@index([userId, createdAt])
   @@index([authorId])
+  @@index([tenantId])
 }
 
 // Workflow/Approval system (Phase 3-7)
 model WorkflowRule {
   id           String   @id @default(cuid())
+  tenantId     String?
   name         String
   description  String?
   entityType   String   // JOURNAL_ENTRY, EXPENSE, PURCHASE_ORDER, etc.
@@ -37,10 +40,12 @@ model WorkflowRule {
   approvalRequests ApprovalRequest[]
 
   @@index([entityType, isActive])
+  @@index([tenantId])
 }
 
 model ApprovalRequest {
   id              String        @id @default(cuid())
+  tenantId        String?
   workflowRuleId  String?
   workflowRule    WorkflowRule? @relation(fields: [workflowRuleId], references: [id], onDelete: SetNull)
   entityType      String
@@ -63,11 +68,13 @@ model ApprovalRequest {
   @@index([status, assignedRole])
   @@index([status, assignedTo])
   @@index([workflowRuleId])
+  @@index([tenantId])
 }
 
 // --- J1: CRM Lead ---
 model CrmLead {
   id              String          @id @default(cuid())
+  tenantId        String?
   companyName     String?
   contactName     String
   email           String?
@@ -115,11 +122,13 @@ model CrmLead {
   @@index([dncStatus])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // --- J2: CRM Pipeline + Stages ---
 model CrmPipeline {
   id        String             @id @default(cuid())
+  tenantId  String?
   name      String
   isDefault Boolean            @default(false)
   createdAt DateTime           @default(now())
@@ -129,10 +138,12 @@ model CrmPipeline {
   deals  CrmDeal[]
 
   @@index([isDefault])
+  @@index([tenantId])
 }
 
 model CrmPipelineStage {
   id          String      @id @default(cuid())
+  tenantId    String?
   pipelineId  String
   pipeline    CrmPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
   name        String
@@ -150,11 +161,13 @@ model CrmPipelineStage {
 
   @@unique([pipelineId, position])
   @@index([pipelineId])
+  @@index([tenantId])
 }
 
 // --- J3: CRM Deal ---
 model CrmDeal {
   id                String           @id @default(cuid())
+  tenantId          String?
   title             String
   value             Decimal          @default(0)
   currency          String           @default("CAD")
@@ -207,11 +220,13 @@ model CrmDeal {
   @@index([contactId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // --- J3b: Deal Products ---
 model CrmDealProduct {
   id        String   @id @default(cuid())
+  tenantId  String?
   dealId    String
   deal      CrmDeal  @relation(fields: [dealId], references: [id], onDelete: Cascade)
   productId String
@@ -227,11 +242,13 @@ model CrmDealProduct {
   @@unique([dealId, productId])
   @@index([dealId])
   @@index([productId])
+  @@index([tenantId])
 }
 
 // --- J4: Deal Stage History ---
 model CrmDealStageHistory {
   id          String           @id @default(cuid())
+  tenantId    String?
   dealId      String
   deal        CrmDeal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
   fromStageId String?
@@ -249,11 +266,13 @@ model CrmDealStageHistory {
   @@index([fromStageId])
   @@index([toStageId])
   @@index([changedById])
+  @@index([tenantId])
 }
 
 // --- J5: CRM Task + Activity ---
 model CrmTask {
   id           String          @id @default(cuid())
+  tenantId     String?
   title        String
   description  String?
   type         CrmTaskType     @default(OTHER)
@@ -278,10 +297,12 @@ model CrmTask {
   @@index([leadId])
   @@index([contactId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CrmActivity {
   id            String          @id @default(cuid())
+  tenantId      String?
   type          CrmActivityType
   title         String
   description   String?
@@ -303,11 +324,13 @@ model CrmActivity {
   @@index([performedById])
   @@index([type])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // --- J6: Unified Inbox ---
 model InboxConversation {
   id            String       @id @default(cuid())
+  tenantId      String?
   channel       InboxChannel
   status        InboxStatus  @default(OPEN)
   subject       String?
@@ -330,10 +353,12 @@ model InboxConversation {
   @@index([leadId])
   @@index([lastMessageAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model InboxMessage {
   id              String            @id @default(cuid())
+  tenantId        String?
   conversationId  String
   conversation    InboxConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   direction       MessageDirection
@@ -349,10 +374,12 @@ model InboxMessage {
   @@index([conversationId])
   @@index([conversationId, createdAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model SlaPolicy {
   id                   String   @id @default(cuid())
+  tenantId             String?
   name                 String
   firstResponseMinutes Int
   resolutionMinutes    Int
@@ -364,11 +391,13 @@ model SlaPolicy {
 
   @@index([isActive])
   @@index([priority])
+  @@index([tenantId])
 }
 
 // --- J8: Agent Daily Stats ---
 model AgentDailyStats {
   id            String   @id @default(cuid())
+  tenantId      String?
   agentId       String
   agent         User     @relation("AgentDailyStatsAgent", fields: [agentId], references: [id], onDelete: Restrict)
   date          DateTime @db.Date
@@ -390,11 +419,13 @@ model AgentDailyStats {
   @@unique([agentId, date])
   @@index([agentId])
   @@index([date])
+  @@index([tenantId])
 }
 
 // --- K1: CRM Workflow ---
 model CrmWorkflow {
   id          String              @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   status      WorkflowStatus      @default(DRAFT)
@@ -414,10 +445,12 @@ model CrmWorkflow {
   @@index([status])
   @@index([triggerType])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 model CrmWorkflowStep {
   id          String            @id @default(cuid())
+  tenantId    String?
   workflowId  String
   workflow    CrmWorkflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   position    Int
@@ -430,10 +463,12 @@ model CrmWorkflowStep {
 
   @@unique([workflowId, position])
   @@index([workflowId])
+  @@index([tenantId])
 }
 
 model CrmWorkflowExecution {
   id          String                    @id @default(cuid())
+  tenantId    String?
   workflowId  String
   workflow    CrmWorkflow               @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   entityType  String                    // 'lead' | 'deal'
@@ -448,11 +483,13 @@ model CrmWorkflowExecution {
   @@index([workflowId])
   @@index([status])
   @@index([entityType, entityId])
+  @@index([tenantId])
 }
 
 // --- K2: CRM Campaign ---
 model CrmCampaign {
   id              String              @id @default(cuid())
+  tenantId        String?
   name            String
   type            CrmCampaignType
   status          CrmCampaignStatus   @default(DRAFT)
@@ -482,10 +519,12 @@ model CrmCampaign {
   @@index([type])
   @@index([createdById])
   @@index([callScriptId])
+  @@index([tenantId])
 }
 
 model CrmCampaignActivity {
   id          String      @id @default(cuid())
+  tenantId    String?
   campaignId  String
   campaign    CrmCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   leadId      String
@@ -505,11 +544,13 @@ model CrmCampaignActivity {
   @@index([leadId])
   @@index([status])
   @@index([callLogId])
+  @@index([tenantId])
 }
 
 // --- K3: Consent & Compliance ---
 model CrmConsentRecord {
   id          String            @id @default(cuid())
+  tenantId    String?
   phone       String?
   email       String?
   channel     CrmConsentChannel @default(ALL)
@@ -533,10 +574,12 @@ model CrmConsentRecord {
   @@index([channel])
   @@index([leadId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model CallingRule {
   id                String   @id @default(cuid())
+  tenantId          String?
   name              String
   timezone          String   // e.g. "America/Toronto"
   startHour         Int      @default(9)   // 9 AM
@@ -552,11 +595,13 @@ model CallingRule {
   updatedAt         DateTime @updatedAt
 
   @@index([isActive])
+  @@index([tenantId])
 }
 
 // --- K4: CRM Quota ---
 model CrmQuota {
   id        String   @id @default(cuid())
+  tenantId  String?
   agentId   String
   agent     User     @relation("CrmQuotaAgent", fields: [agentId], references: [id], onDelete: Restrict)
   period    String   // 'daily' | 'weekly' | 'monthly' | 'quarterly'
@@ -570,11 +615,13 @@ model CrmQuota {
 
   @@index([agentId])
   @@index([period, periodStart])
+  @@index([tenantId])
 }
 
 // --- K5: Scheduled Report ---
 model CrmScheduledReport {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   reportType  String   // 'pipeline' | 'campaign' | 'agent' | 'calls' | 'custom'
   config      Json     // filters, groupings, metrics
@@ -590,11 +637,13 @@ model CrmScheduledReport {
 
   @@index([isActive, nextSendAt])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 // --- K6: Web-to-Lead Form ---
 model CrmLeadForm {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   fields      Json     // array of field definitions
   redirectUrl String?
@@ -611,11 +660,13 @@ model CrmLeadForm {
   @@index([isActive])
   @@index([assignToId])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 // --- 3B.1: Canned Responses / Snippets ---
 model CrmSnippet {
   id          String   @id @default(cuid())
+  tenantId    String?
   title       String
   content     String
   category    String   @default("general") // general, email, sms, chat
@@ -630,11 +681,13 @@ model CrmSnippet {
   @@index([category])
   @@index([isActive])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 // --- 3B.3: Quotes/CPQ ---
 model CrmQuote {
   id          String         @id @default(cuid())
+  tenantId    String?
   number      String         @unique // QUO-001
   dealId      String
   deal        CrmDeal        @relation(fields: [dealId], references: [id], onDelete: Restrict)
@@ -662,10 +715,12 @@ model CrmQuote {
   @@index([status])
   @@index([createdById])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CrmQuoteItem {
   id          String   @id @default(cuid())
+  tenantId    String?
   quoteId     String
   quote       CrmQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   productId   String?
@@ -681,11 +736,13 @@ model CrmQuoteItem {
 
   @@index([quoteId])
   @@index([productId])
+  @@index([tenantId])
 }
 
 // --- 3B.4: Approval Workflows ---
 model CrmApproval {
   id            String         @id @default(cuid())
+  tenantId      String?
   entityType    String         // 'deal', 'quote', 'discount'
   entityId      String
   reason        String?
@@ -704,11 +761,13 @@ model CrmApproval {
   @@index([status])
   @@index([requestedById])
   @@index([approverId])
+  @@index([tenantId])
 }
 
 // --- 3E.1: Agent Scheduling ---
 model AgentSchedule {
   id        String         @id @default(cuid())
+  tenantId  String?
   agentId   String
   agent     User           @relation("AgentScheduleAgent", fields: [agentId], references: [id], onDelete: Restrict)
   date      DateTime       @db.Date
@@ -725,11 +784,13 @@ model AgentSchedule {
   @@index([agentId])
   @@index([date])
   @@index([shiftType])
+  @@index([tenantId])
 }
 
 // --- 3E.2: QA Scoring Forms ---
 model CrmQaForm {
   id          String       @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   criteria    Json         // array of { name, maxScore, weight }
@@ -740,10 +801,12 @@ model CrmQaForm {
   scores CrmQaScore[]
 
   @@index([isActive])
+  @@index([tenantId])
 }
 
 model CrmQaScore {
   id         String    @id @default(cuid())
+  tenantId   String?
   formId     String
   form       CrmQaForm @relation(fields: [formId], references: [id], onDelete: Cascade)
   agentId    String
@@ -763,11 +826,13 @@ model CrmQaScore {
   @@index([scoredById])
   @@index([callLogId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // --- 3E.3: Agent Break Management ---
 model AgentBreak {
   id        String         @id @default(cuid())
+  tenantId  String?
   agentId   String
   agent     User           @relation("AgentBreakAgent", fields: [agentId], references: [id], onDelete: Restrict)
   type      AgentBreakType @default(SHORT_BREAK)
@@ -781,11 +846,13 @@ model AgentBreak {
   @@index([agentId])
   @@index([startedAt])
   @@index([type])
+  @@index([tenantId])
 }
 
 // --- 4H.2: Deal Team / Commission Splits (B17) ---
 model CrmDealTeam {
   id             String   @id @default(cuid())
+  tenantId       String?
   dealId         String?
   userId         String?
   role           String   @default("member") // owner, member, support, overlay
@@ -801,10 +868,12 @@ model CrmDealTeam {
   @@unique([dealId, userId])
   @@index([dealId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model CrmContract {
   id              String         @id @default(cuid())
+  tenantId        String?
   title           String
   dealId          String?
   contactId       String?
@@ -834,10 +903,12 @@ model CrmContract {
   @@index([status])
   @@index([endDate])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 model CrmTicket {
   id            String         @id @default(cuid())
+  tenantId      String?
   number        String         @unique // TKT-001
   subject       String
   description   String?        @db.Text
@@ -871,10 +942,12 @@ model CrmTicket {
   @@index([contactId])
   @@index([conversationId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CrmTicketComment {
   id        String   @id @default(cuid())
+  tenantId  String?
   ticketId  String
   ticket    CrmTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   authorId  String?
@@ -887,10 +960,12 @@ model CrmTicketComment {
   @@index([ticketId])
   @@index([authorId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model KBArticle {
   id          String          @id @default(cuid())
+  tenantId    String?
   title       String
   slug        String          @unique
   content     String          @db.Text
@@ -913,10 +988,12 @@ model KBArticle {
   @@index([status])
   @@index([slug])
   @@index([isPublic])
+  @@index([tenantId])
 }
 
 model KBCategory {
   id          String    @id @default(cuid())
+  tenantId    String?
   name        String
   slug        String    @unique
   description String?
@@ -931,11 +1008,13 @@ model KBCategory {
 
   @@index([parentId])
   @@index([slug])
+  @@index([tenantId])
 }
 
 // --- 4D.1: Workflow Versioning (I16) ---
 model CrmWorkflowVersion {
   id           String       @id @default(cuid())
+  tenantId     String?
   workflowId   String?
   version      Int          @default(1)
   triggerType  String
@@ -954,10 +1033,12 @@ model CrmWorkflowVersion {
   @@index([workflowId])
   @@index([createdById])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CrmPlaybook {
   id          String         @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   status      PlaybookStatus @default(DRAFT)
@@ -972,11 +1053,13 @@ model CrmPlaybook {
   @@index([createdById])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // --- 4I.1: Data Retention Policies (L9) ---
 model DataRetentionPolicy {
   id            String   @id @default(cuid())
+  tenantId      String?
   name          String
   entityType    String   // lead, deal, activity, recording, ticket
   retentionDays Int      @default(365)
@@ -988,10 +1071,12 @@ model DataRetentionPolicy {
 
   @@index([entityType])
   @@index([isActive])
+  @@index([tenantId])
 }
 
 model ProspectList {
   id               String              @id @default(cuid())
+  tenantId         String?
   name             String
   description      String?
   source           ProspectListSource  @default(MANUAL)
@@ -1025,10 +1110,12 @@ model ProspectList {
   @@index([status])
   @@index([createdById])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Prospect {
   id               String          @id @default(cuid())
+  tenantId         String?
 
   // Contact info
   contactName      String
@@ -1101,11 +1188,13 @@ model Prospect {
   @@index([website])
   @@index([enrichmentScore])
   @@index([dncStatus])
+  @@index([tenantId])
 }
 
 // --- Scraper Job Queue ---
 model ScrapeJob {
   id             String        @id @default(cuid())
+  tenantId       String?
   status         String        @default("pending") // pending, running, completed, failed, cancelled
   query          String
   engine         String        @default("playwright") // playwright | places_api
@@ -1130,6 +1219,7 @@ model ScrapeJob {
   @@index([status])
   @@index([createdById])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // ============================================================
@@ -1139,6 +1229,7 @@ model ScrapeJob {
 // --- Rep Follow-Up Schedule (3/6/12/18/24 months client retention) ---
 model RepFollowUpSchedule {
   id             String         @id @default(cuid())
+  tenantId       String?
   agentId        String
   leadId         String?
   dealId         String?
@@ -1167,6 +1258,7 @@ model RepFollowUpSchedule {
   @@index([leadId])
   @@index([dealId])
   @@index([customerId])
+  @@index([tenantId])
 }
 
 enum FollowUpType {
@@ -1188,6 +1280,7 @@ enum FollowUpStatus {
 // --- Rep Bonus Tier (hybrid commission: sales + activities) ---
 model RepBonusTier {
   id                 String                 @id @default(cuid())
+  tenantId           String?
   name               String
   commissionType     CommissionType
 
@@ -1214,6 +1307,7 @@ model RepBonusTier {
   payouts            CommissionPayout[]
 
   @@index([isActive, priority])
+  @@index([tenantId])
 }
 
 enum CommissionType {
@@ -1231,6 +1325,7 @@ enum ActivityCommissionType {
 // --- Commission Payout (calculated payment history) ---
 model CommissionPayout {
   id                    String       @id @default(cuid())
+  tenantId              String?
   agentId               String
   tierId                String
 
@@ -1268,6 +1363,7 @@ model CommissionPayout {
   @@index([agentId, periodStart])
   @@index([status])
   @@unique([agentId, tierId, periodStart, periodEnd])
+  @@index([tenantId])
 }
 
 enum PayoutStatus {
@@ -1276,4 +1372,3 @@ enum PayoutStatus {
   PAID
   REJECTED
 }
-

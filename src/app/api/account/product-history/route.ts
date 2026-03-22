@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withUserGuard } from '@/lib/user-api-guard';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { tenantQueryRaw } from '@/lib/tenant-raw-query';
 
 export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
   try {
@@ -24,7 +25,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
     // PERF-003: Push aggregation to database using groupBy instead of loading all orders into JS
     const aggregated = await db.orderItem.groupBy({
-      by: ['productId', 'formatId', 'productName', 'formatName'],
+      by: ['productId', 'optionId', 'productName', 'optionName'],
       where: {
         order: {
           userId: user.id,
@@ -42,29 +43,31 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
     // Extract unique product IDs from aggregation results
     const productIds = [...new Set(aggregated.map((g) => g.productId))];
-    const formatIds = [...new Set(aggregated.map((g) => g.formatId).filter(Boolean))] as string[];
+    const optionIds = [...new Set(aggregated.map((g) => g.optionId).filter(Boolean))] as string[];
 
-    // P-15 FIX: Replace N individual findFirst queries with a single $queryRaw that fetches
-    // the most recent unitPrice per (productId, formatId) group in one DB round-trip.
-    // DISTINCT ON orders by (productId, formatId, createdAt DESC) to get the latest row per pair.
-    type LatestPriceRow = { productId: string; formatId: string | null; unitPrice: string };
-    const latestPriceRows = await db.$queryRaw<LatestPriceRow[]>`
-      SELECT DISTINCT ON ("productId", "formatId") "productId", "formatId", "unitPrice"
+    // P-15 FIX: Replace N individual findFirst queries with a single query that fetches
+    // the most recent unitPrice per (productId, optionId) group in one DB round-trip.
+    // DISTINCT ON orders by (productId, optionId, createdAt DESC) to get the latest row per pair.
+    type LatestPriceRow = { productId: string; optionId: string | null; unitPrice: string };
+    const latestPriceRows = await tenantQueryRaw<LatestPriceRow>(
+      `SELECT DISTINCT ON ("productId", "optionId") "productId", "optionId", "unitPrice"
       FROM "OrderItem" oi
-      WHERE oi."productId" = ANY(${productIds}::text[])
+      WHERE oi."productId" = ANY($1::text[])
         AND EXISTS (
           SELECT 1 FROM "Order" o
           WHERE o."id" = oi."orderId"
-            AND o."userId" = ${user.id}
+            AND o."userId" = $2
             AND o."status" != 'CANCELLED'
         )
-      ORDER BY "productId", "formatId", "createdAt" DESC
-    `;
+      ORDER BY "productId", "optionId", "createdAt" DESC`,
+      productIds,
+      user.id
+    );
 
-    // Index latest prices by "productId__formatId" composite key for O(1) lookup
+    // Index latest prices by "productId__optionId" composite key for O(1) lookup
     const latestPriceMap = new Map<string, number>();
     for (const row of latestPriceRows) {
-      const key = `${row.productId}__${row.formatId ?? 'null'}`;
+      const key = `${row.productId}__${row.optionId ?? 'null'}`;
       if (!latestPriceMap.has(key)) {
         latestPriceMap.set(key, Number(row.unitPrice));
       }
@@ -75,9 +78,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       string,
       {
         productId: string;
-        formatId: string | null;
+        optionId: string | null;
         productName: string;
-        formatName: string | null;
+        optionName: string | null;
         totalOrdered: number;
         orderCount: number;
         lastOrderDate: string;
@@ -86,12 +89,12 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     >();
 
     for (const group of aggregated) {
-      const key = `${group.productId}__${group.formatId || 'null'}`;
+      const key = `${group.productId}__${group.optionId || 'null'}`;
       productMap.set(key, {
         productId: group.productId,
-        formatId: group.formatId,
+        optionId: group.optionId,
         productName: group.productName,
-        formatName: group.formatName,
+        optionName: group.optionName,
         totalOrdered: group._sum.quantity || 0,
         orderCount: group._count._all,
         lastOrderDate: group._max.createdAt?.toISOString() || new Date().toISOString(),
@@ -101,7 +104,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
     // P-15 FIX: Use select to fetch only the fields actually used in the response,
     // avoiding loading heavy columns (description, specifications, aminoSequence, etc.)
-    const [products, formats] = await Promise.all([
+    const [products, options] = await Promise.all([
       db.product.findMany({
         where: { id: { in: productIds } },
         select: {
@@ -113,9 +116,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
           category: { select: { id: true, name: true } },
         },
       }),
-      formatIds.length > 0
-        ? db.productFormat.findMany({
-            where: { id: { in: formatIds } },
+      optionIds.length > 0
+        ? db.productOption.findMany({
+            where: { id: { in: optionIds } },
             select: {
               id: true,
               price: true,
@@ -127,7 +130,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     ]);
 
     const productLookup = new Map(products.map((p) => [p.id, p]));
-    const formatLookup = new Map(formats.map((f) => [f.id, f]));
+    const formatLookup = new Map(options.map((f) => [f.id, f]));
 
     // Build category-grouped result
     const categoryMap = new Map<
@@ -137,9 +140,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
         name: string;
         products: Array<{
           productId: string;
-          formatId: string | null;
+          optionId: string | null;
           productName: string;
-          formatName: string | null;
+          optionName: string | null;
           imageUrl: string | null;
           slug: string;
           currentPrice: number;
@@ -157,7 +160,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
       const product = productLookup.get(item.productId);
       if (!product) continue;
 
-      const format = item.formatId ? formatLookup.get(item.formatId) : null;
+      const format = item.optionId ? formatLookup.get(item.optionId) : null;
       const categoryId = product.category?.id || 'uncategorized';
       const categoryName = product.category?.name || 'Autres';
 
@@ -167,9 +170,9 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
       categoryMap.get(categoryId)!.products.push({
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         productName: item.productName,
-        formatName: item.formatName,
+        optionName: item.optionName,
         imageUrl: product.imageUrl,
         slug: product.slug,
         currentPrice: format ? Number(format.price) : Number(product.price),

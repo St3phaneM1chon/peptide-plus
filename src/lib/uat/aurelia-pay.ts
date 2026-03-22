@@ -73,9 +73,9 @@ function generateAddress(scenario: UatScenario): GeneratedAddress {
 
 interface SelectedProduct {
   productId: string;
-  formatId: string;
+  optionId: string;
   productName: string;
-  formatName: string;
+  optionName: string;
   sku: string;
   unitPrice: number;
   quantity: number;
@@ -85,8 +85,8 @@ interface SelectedProduct {
 async function selectProducts(items: UatScenarioItem[]): Promise<SelectedProduct[]> {
   const selected: SelectedProduct[] = [];
 
-  // Get all available formats with stock
-  const formats = await prisma.productFormat.findMany({
+  // Get all available options with stock
+  const options = await prisma.productOption.findMany({
     where: {
       isActive: true,
       stockQuantity: { gt: 0 },
@@ -97,24 +97,24 @@ async function selectProducts(items: UatScenarioItem[]): Promise<SelectedProduct
     orderBy: { price: 'asc' },
   });
 
-  if (formats.length === 0) {
+  if (options.length === 0) {
     throw new Error('Aucun produit avec stock disponible pour le test UAT');
   }
 
   for (const item of items) {
     if (item.priceRange === 'all') {
       // Select ALL available products (1 of each)
-      for (const f of formats) {
+      for (const f of options) {
         const lastTx = await prisma.inventoryTransaction.findFirst({
-          where: { productId: f.productId, formatId: f.id },
+          where: { productId: f.productId, optionId: f.id },
           orderBy: { createdAt: 'desc' },
           select: { runningWAC: true },
         });
         selected.push({
           productId: f.productId,
-          formatId: f.id,
+          optionId: f.id,
           productName: f.product.name,
-          formatName: f.name,
+          optionName: f.name,
           sku: f.sku || f.product.sku || 'N/A',
           unitPrice: Number(f.price),
           quantity: 1,
@@ -124,23 +124,23 @@ async function selectProducts(items: UatScenarioItem[]): Promise<SelectedProduct
       continue;
     }
 
-    let target: typeof formats[number] | undefined;
+    let target: typeof options[number] | undefined;
 
     if (item.priceRange === 'exact' && item.exactPrice !== undefined) {
       // Find closest price
-      target = formats.reduce((prev, curr) =>
+      target = options.reduce((prev, curr) =>
         Math.abs(Number(curr.price) - item.exactPrice!) < Math.abs(Number(prev.price) - item.exactPrice!)
           ? curr : prev
       );
     } else if (item.priceRange === 'cheap') {
       // First quartile
-      target = formats[0];
+      target = options[0];
     } else if (item.priceRange === 'expensive') {
       // Last quartile
-      target = formats[formats.length - 1];
+      target = options[options.length - 1];
     } else {
       // Mid-range
-      target = formats[Math.floor(formats.length / 2)];
+      target = options[Math.floor(options.length / 2)];
     }
 
     if (!target) {
@@ -148,16 +148,16 @@ async function selectProducts(items: UatScenarioItem[]): Promise<SelectedProduct
     }
 
     const lastTx = await prisma.inventoryTransaction.findFirst({
-      where: { productId: target.productId, formatId: target.id },
+      where: { productId: target.productId, optionId: target.id },
       orderBy: { createdAt: 'desc' },
       select: { runningWAC: true },
     });
 
     selected.push({
       productId: target.productId,
-      formatId: target.id,
+      optionId: target.id,
       productName: target.product.name,
-      formatName: target.name,
+      optionName: target.name,
       sku: target.sku || target.product.sku || 'N/A',
       unitPrice: Number(target.price),
       quantity: item.quantity,
@@ -305,9 +305,9 @@ export async function simulateAureliaPay(params: {
               const localPrice = isLocalCAD ? p.unitPrice : Math.round((p.unitPrice / exchangeRate) * 100) / 100;
               return {
                 productId: p.productId,
-                formatId: p.formatId,
+                optionId: p.optionId,
                 productName: p.productName,
-                formatName: p.formatName,
+                optionName: p.optionName,
                 sku: p.sku,
                 quantity: p.quantity,
                 unitPrice: localPrice,
@@ -323,8 +323,8 @@ export async function simulateAureliaPay(params: {
       // 9. Consume inventory (decrement stock + create SALE transactions)
       for (const product of products) {
         // Decrement stock
-        await tx.productFormat.update({
-          where: { id: product.formatId },
+        await tx.productOption.update({
+          where: { id: product.optionId },
           data: { stockQuantity: { decrement: product.quantity } },
         });
 
@@ -332,7 +332,7 @@ export async function simulateAureliaPay(params: {
         await tx.inventoryTransaction.create({
           data: {
             productId: product.productId,
-            formatId: product.formatId,
+            optionId: product.optionId,
             type: 'SALE',
             quantity: -product.quantity,
             unitCost: product.wac,
@@ -464,15 +464,15 @@ async function executeRefund(orderId: string, _testCaseId: string): Promise<void
 
   // 3. Restore stock
   for (const item of order.items) {
-    if (item.formatId) {
-      await prisma.productFormat.update({
-        where: { id: item.formatId },
+    if (item.optionId) {
+      await prisma.productOption.update({
+        where: { id: item.optionId },
         data: { stockQuantity: { increment: item.quantity } },
       });
     }
 
     const lastTx = await prisma.inventoryTransaction.findFirst({
-      where: { productId: item.productId, formatId: item.formatId },
+      where: { productId: item.productId, optionId: item.optionId },
       orderBy: { createdAt: 'desc' },
       select: { runningWAC: true },
     });
@@ -481,7 +481,7 @@ async function executeRefund(orderId: string, _testCaseId: string): Promise<void
     await prisma.inventoryTransaction.create({
       data: {
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         type: 'RETURN',
         quantity: item.quantity,
         unitCost: wac,
@@ -575,9 +575,9 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
       items: {
         create: order.items.map((item) => ({
           productId: item.productId,
-          formatId: item.formatId,
+          optionId: item.optionId,
           productName: item.productName,
-          formatName: item.formatName,
+          optionName: item.optionName,
           sku: item.sku,
           quantity: item.quantity,
           unitPrice: 0,
@@ -593,7 +593,7 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
 
   for (const item of order.items) {
     const lastTx = await prisma.inventoryTransaction.findFirst({
-      where: { productId: item.productId, formatId: item.formatId },
+      where: { productId: item.productId, optionId: item.optionId },
       orderBy: { createdAt: 'desc' },
       select: { runningWAC: true },
     });
@@ -604,7 +604,7 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
     await prisma.inventoryTransaction.create({
       data: {
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         type: 'LOSS',
         quantity: -item.quantity,
         unitCost: wac,
@@ -619,7 +619,7 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
     await prisma.inventoryTransaction.create({
       data: {
         productId: item.productId,
-        formatId: item.formatId,
+        optionId: item.optionId,
         type: 'SALE',
         quantity: -item.quantity,
         unitCost: wac,
@@ -631,9 +631,9 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
     });
 
     // Decrement stock
-    if (item.formatId) {
-      await prisma.productFormat.update({
-        where: { id: item.formatId },
+    if (item.optionId) {
+      await prisma.productOption.update({
+        where: { id: item.optionId },
         data: { stockQuantity: { decrement: item.quantity } },
       });
     }

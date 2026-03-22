@@ -8,7 +8,7 @@ import NewProductClient from './NewProductClient';
 
 export const metadata = {
   title: 'Nouveau produit | Admin',
-  description: 'Créer un nouveau produit avec ses formats.',
+  description: 'Créer un nouveau produit avec ses options.',
 };
 
 export default async function AdminNewProductPage() {

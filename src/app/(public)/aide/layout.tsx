@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Help Center | BioCycle Peptides',
     description: 'Find help and support for using the BioCycle Peptides platform.',
-    url: 'https://biocyclepeptides.com/aide',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/aide`,
     siteName: 'BioCycle Peptides',
     type: 'website',
   },

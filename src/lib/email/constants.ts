@@ -1,9 +1,10 @@
 /**
- * Centralized email address constants — BioCycle Peptides
+ * Centralized email address constants — Multi-Tenant Koraline
  *
  * All company email addresses used in backend code should reference these
- * constants instead of hardcoding strings. This allows easy updates if
- * addresses change and ensures consistency across the codebase.
+ * constants instead of hardcoding strings. In multi-tenant mode, the tenant
+ * name and email addresses come from the tenant config in DB.
+ * These constants serve as fallbacks for the platform (Attitudes VIP).
  *
  * Frontend/i18n files may still reference addresses in locale JSON;
  * those are content-level and managed via translations.
@@ -28,5 +29,5 @@ export const EMAIL_ADDRESSES = {
   unsubscribe: process.env.UNSUBSCRIBE_EMAIL || 'unsubscribe@biocyclepeptides.com',
 } as const;
 
-/** Company name used in email sender fields */
-export const EMAIL_SENDER_NAME = 'BioCycle Peptides';
+/** Company name used in email sender fields — reads from env or defaults to platform name */
+export const EMAIL_SENDER_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';

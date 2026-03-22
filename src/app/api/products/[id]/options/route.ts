@@ -8,25 +8,25 @@ import { enqueue } from '@/lib/translation';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { createFormatSchema } from '@/lib/validations/format';
+import { createOptionSchema } from '@/lib/validations/option';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { getClientIpFromRequest } from '@/lib/admin-audit';
 
-// GET all formats for a product
+// GET all options for a product
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const formats = await prisma.productFormat.findMany({
+    const options = await prisma.productOption.findMany({
       where: { productId: id, isActive: true },
       orderBy: { sortOrder: 'asc' },
       select: {
         id: true,
         productId: true,
-        formatType: true,
+        optionType: true,
         name: true,
         description: true,
         imageUrl: true,
@@ -52,10 +52,10 @@ export async function GET(
       },
     });
 
-    return apiSuccess(formats);
+    return apiSuccess(options);
   } catch (error) {
-    logger.error('Error fetching formats', { error: error instanceof Error ? error.message : String(error) });
-    return apiError('Failed to fetch formats', ErrorCode.INTERNAL_ERROR);
+    logger.error('Error fetching options', { error: error instanceof Error ? error.message : String(error) });
+    return apiError('Failed to fetch options', ErrorCode.INTERNAL_ERROR);
   }
 }
 
@@ -67,7 +67,7 @@ export async function POST(
   try {
     // Rate limiting
     const ip = getClientIpFromRequest(request);
-    const rl = await rateLimitMiddleware(ip, '/api/products/formats');
+    const rl = await rateLimitMiddleware(ip, '/api/products/options');
     if (!rl.success) { const res = apiError('Too many requests', ErrorCode.RATE_LIMITED); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
     // CSRF protection
@@ -83,12 +83,12 @@ export async function POST(
     }
 
     const body = await request.json();
-    const parsed = createFormatSchema.safeParse(body);
+    const parsed = createOptionSchema.safeParse(body);
     if (!parsed.success) {
       return apiError('Invalid data', ErrorCode.VALIDATION_ERROR);
     }
     const {
-      formatType,
+      optionType,
       name,
       description,
       imageUrl,
@@ -115,29 +115,29 @@ export async function POST(
       : undefined;
 
     if (isActive === false) {
-      logger.warn('Inactive format created', { productId: id, formatName: name });
+      logger.warn('Inactive format created', { productId: id, optionName: name });
     }
 
     // BUG-044 FIX: Wrap default toggle + create in transaction to prevent race condition
     const format = await prisma.$transaction(async (tx) => {
       // If this is set as default, unset other defaults
       if (isDefault) {
-        await tx.productFormat.updateMany({
+        await tx.productOption.updateMany({
           where: { productId: id },
           data: { isDefault: false },
         });
       }
 
       // Get max sortOrder
-      const maxSort = await tx.productFormat.aggregate({
+      const maxSort = await tx.productOption.aggregate({
         where: { productId: id },
         _max: { sortOrder: true },
       });
 
-      return tx.productFormat.create({
+      return tx.productOption.create({
         data: {
           productId: id,
-          formatType,
+          optionType,
           name,
           description,
           imageUrl,
@@ -163,7 +163,7 @@ export async function POST(
     });
 
     // Auto-enqueue translation for all 21 locales
-    enqueue.productFormat(format.id);
+    enqueue.productOption(format.id);
 
     // Revalidate cached pages after format creation
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }

@@ -49,7 +49,7 @@ export async function generateUnsubscribeUrl(
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXTAUTH_URL ||
-    'https://biocyclepeptides.com';
+    'https://attitudes.vip';
   return `${baseUrl}/api/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
@@ -66,6 +66,6 @@ export async function generatePreferenceCenterUrl(
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXTAUTH_URL ||
-    'https://biocyclepeptides.com';
+    'https://attitudes.vip';
   return `${baseUrl}/email-preferences?token=${encodeURIComponent(token)}`;
 }

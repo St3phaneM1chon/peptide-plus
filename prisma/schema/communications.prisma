@@ -1,5 +1,6 @@
 model ChatConversation {
   id              String        @id @default(cuid())
+  tenantId        String?
   visitorId       String
   visitorName     String?
   visitorEmail    String?
@@ -24,10 +25,12 @@ model ChatConversation {
   @@index([visitorId, status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ChatMessage {
   id              String           @id @default(cuid())
+  tenantId        String?
   conversationId  String
   content         String
   contentOriginal String?
@@ -48,10 +51,12 @@ model ChatMessage {
 
   @@index([conversationId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model ChatSettings {
   id                 String   @id @default("default")
+  tenantId           String?
   isAdminOnline      Boolean  @default(false)
   adminLanguage      String   @default("fr")
   chatbotEnabled     Boolean  @default(true)
@@ -64,10 +69,12 @@ model ChatSettings {
   widgetPosition     String   @default("bottom-right")
   updatedAt          DateTime @updatedAt
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Conversation {
   id            String             @id @default(cuid())
+  tenantId      String?
   userId        String
   subject       String?
   status        ConversationStatus @default(OPEN)
@@ -90,10 +97,12 @@ model Conversation {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EmailLog {
   id         String    @id @default(cuid())
+  tenantId   String?
   templateId String?
   to         String
   subject    String
@@ -126,11 +135,13 @@ model EmailLog {
   @@index([userId, sentAt])
   @@index([campaignId])
   @@index([campaignId, status])
+  @@index([tenantId])
 }
 
 // Faille #11: Persistent bounce tracking (was in-memory only, lost on restart)
 model EmailBounce {
   id         String   @id @default(cuid())
+  tenantId   String?
   email      String
   bounceType String   // 'hard' or 'soft'
   provider   String
@@ -144,11 +155,13 @@ model EmailBounce {
   @@index([email, bounceType])
   @@index([messageId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // Faille #12: Persistent suppression list for hard-bounced/complained emails
 model EmailSuppression {
   id        String   @id @default(cuid())
+  tenantId  String?
   email     String   @unique
   reason    String   // 'hard_bounce', 'complaint', 'manual'
   provider  String?
@@ -157,10 +170,12 @@ model EmailSuppression {
 
   @@index([email])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model EmailTemplate {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String   @unique
   subject     String
   htmlContent String
@@ -176,10 +191,12 @@ model EmailTemplate {
   @@index([trigger])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model Message {
   id             String       @id @default(cuid())
+  tenantId       String?
   conversationId String
   senderId       String
   type           MessageType  @default(TEXT)
@@ -196,10 +213,12 @@ model Message {
   @@index([conversationId])
   @@index([createdAt])
   @@index([senderId])
+  @@index([tenantId])
 }
 
 model QuickReply {
   id           String                  @id @default(cuid())
+  tenantId     String?
   title        String
   content      String
   category     String?
@@ -212,10 +231,12 @@ model QuickReply {
   @@index([category])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model QuickReplyTranslation {
   id           String             @id @default(cuid())
+  tenantId     String?
   quickReplyId String
   locale       String
   title        String?
@@ -233,6 +254,7 @@ model QuickReplyTranslation {
   @@index([quickReplyId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // =============================================
@@ -240,6 +262,7 @@ model QuickReplyTranslation {
 // =============================================
 model InboundEmail {
   id             String                   @id @default(cuid())
+  tenantId       String?
   conversationId String?
   from           String
   fromName       String?
@@ -260,10 +283,12 @@ model InboundEmail {
   @@index([conversationId])
   @@index([messageId])
   @@index([receivedAt])
+  @@index([tenantId])
 }
 
 model InboundEmailAttachment {
   id             String       @id @default(cuid())
+  tenantId       String?
   inboundEmailId String
   filename       String
   mimeType       String
@@ -272,10 +297,12 @@ model InboundEmailAttachment {
   inboundEmail   InboundEmail @relation(fields: [inboundEmailId], references: [id], onDelete: Cascade)
 
   @@index([inboundEmailId])
+  @@index([tenantId])
 }
 
 model EmailConversation {
   id              String                 @id @default(cuid())
+  tenantId        String?
   subject         String
   customerId      String?
   assignedToId    String?
@@ -301,10 +328,12 @@ model EmailConversation {
   @@index([snoozedUntil])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model OutboundReply {
   id             String            @id @default(cuid())
+  tenantId       String?
   conversationId String
   senderId       String
   to             String
@@ -323,10 +352,12 @@ model OutboundReply {
   @@index([senderId])
   @@index([messageId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model ConversationNote {
   id             String            @id @default(cuid())
+  tenantId       String?
   conversationId String
   authorId       String
   content        String
@@ -338,10 +369,12 @@ model ConversationNote {
   @@index([authorId])
   @@index([conversationId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model ConversationActivity {
   id             String            @id @default(cuid())
+  tenantId       String?
   conversationId String
   actorId        String?
   action         String
@@ -352,10 +385,12 @@ model ConversationActivity {
   @@index([actorId])
   @@index([conversationId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CannedResponse {
   id         String   @id @default(cuid())
+  tenantId   String?
   title      String
   content    String
   variables  String?
@@ -370,10 +405,12 @@ model CannedResponse {
   @@index([locale])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EmailAutomationFlow {
   id          String               @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   trigger     String
@@ -389,10 +426,12 @@ model EmailAutomationFlow {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EmailCampaign {
   id           String    @id @default(cuid())
+  tenantId     String?
   name         String
   subject      String
   htmlContent  String
@@ -416,10 +455,12 @@ model EmailCampaign {
   @@index([scheduledAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model ConsentRecord {
   id             String    @id @default(cuid())
+  tenantId       String?
   email          String
   userId         String?
   type           String
@@ -446,18 +487,22 @@ model ConsentRecord {
   @@index([grantedAt])
   @@index([revokedAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // ── Email Settings & Segments ────────────────────────────────────
 model EmailSettings {
   key       String   @id
+  tenantId  String?
   value     String
   updatedAt DateTime @updatedAt
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EmailAccount {
   id           String   @id @default(cuid())
+  tenantId     String?
   name         String                       // Display name (e.g. "Support", "Marketing")
   email        String   @unique             // Email address (e.g. support@biocyclepeptides.com)
   displayName  String?                      // Sender display name
@@ -473,10 +518,12 @@ model EmailAccount {
 
   @@index([isDefault])
   @@index([isActive])
+  @@index([tenantId])
 }
 
 model EmailSegment {
   id          String   @id @default(cuid())
+  tenantId    String?
   name        String
   description String?
   query       String   // JSON: segment filter criteria
@@ -489,10 +536,12 @@ model EmailSegment {
   @@index([createdBy])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model EmailFlowExecution {
   id          String               @id @default(cuid())
+  tenantId    String?
   flowId      String
   email       String
   currentNode String
@@ -508,11 +557,13 @@ model EmailFlowExecution {
   @@index([email])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // ── CASL-Compliant Mailing List ─────────────────────────────────
 model MailingListSubscriber {
   id               String                  @id @default(cuid())
+  tenantId         String?
   email            String                  @unique
   name             String?
   userId           String?
@@ -537,10 +588,12 @@ model MailingListSubscriber {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model MailingListPreference {
   id           String                @id @default(cuid())
+  tenantId     String?
   subscriberId String
   subscriber   MailingListSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
   category     String // "promotions", "promo_codes", "specials", "new_products"
@@ -552,11 +605,13 @@ model MailingListPreference {
   @@index([subscriberId])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 // DB-007: Email engagement tracking
 model EmailEngagement {
   id              String         @id @default(cuid())
+  tenantId        String?
   emailLogId      String?
   campaignId      String?
   recipientEmail  String
@@ -590,10 +645,12 @@ model EmailEngagement {
   @@index([bouncedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model VoipConnection {
   id             String   @id @default(cuid())
+  tenantId       String?
   provider       String   @unique // "telnyx", "voipms", "fusionpbx"
   isEnabled      Boolean  @default(false)
 
@@ -625,10 +682,12 @@ model VoipConnection {
   @@index([configuredById])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model PhoneNumber {
   id           String          @id @default(cuid())
+  tenantId     String?
   connectionId String
   connection   VoipConnection  @relation(fields: [connectionId], references: [id], onDelete: Restrict)
 
@@ -665,10 +724,12 @@ model PhoneNumber {
   @@index([isActive])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model SipExtension {
   id             String      @id @default(cuid())
+  tenantId       String?
   userId         String
   user           User        @relation("UserExtension", fields: [userId], references: [id], onDelete: Restrict)
 
@@ -703,10 +764,12 @@ model SipExtension {
   @@index([status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CallLog {
   id             String          @id @default(cuid())
+  tenantId       String?
 
   // Call identification
   pbxUuid        String?         @unique // FreeSWITCH UUID
@@ -774,10 +837,12 @@ model CallLog {
   @@index([startedAt])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CallRecording {
   id              String   @id @default(cuid())
+  tenantId        String?
   callLogId       String?  @unique
   callLog         CallLog? @relation(fields: [callLogId], references: [id], onDelete: SetNull)
 
@@ -811,10 +876,12 @@ model CallRecording {
   @@index([isTranscribed])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CallTranscription {
   id             String         @id @default(cuid())
+  tenantId       String?
   callLogId      String         @unique
   callLog        CallLog        @relation(fields: [callLogId], references: [id], onDelete: Restrict)
   recordingId    String?        @unique
@@ -841,10 +908,12 @@ model CallTranscription {
   @@index([language])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CallSurvey {
   id           String    @id @default(cuid())
+  tenantId     String?
   callLogId    String    @unique
   callLog      CallLog   @relation(fields: [callLogId], references: [id], onDelete: Restrict)
 
@@ -860,10 +929,12 @@ model CallSurvey {
 
   @@index([overallScore])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model Voicemail {
   id            String        @id @default(cuid())
+  tenantId      String?
 
   extensionId   String
   extension     SipExtension  @relation(fields: [extensionId], references: [id], onDelete: Restrict)
@@ -892,10 +963,12 @@ model Voicemail {
   @@index([isArchived])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model DialerCampaign {
   id           String         @id @default(cuid())
+  tenantId     String?
   companyId    String
   company      Company        @relation("CompanyCampaigns", fields: [companyId], references: [id], onDelete: Restrict)
 
@@ -934,10 +1007,12 @@ model DialerCampaign {
   @@index([status])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model DialerListEntry {
   id           String          @id @default(cuid())
+  tenantId     String?
   campaignId   String
   campaign     DialerCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
@@ -972,10 +1047,12 @@ model DialerListEntry {
   @@index([scheduledAt])
   @@index([crmLeadId])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model DialerDisposition {
   id           String                @id @default(cuid())
+  tenantId     String?
   campaignId   String
   campaign     DialerCampaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   listEntryId  String                @unique
@@ -993,11 +1070,13 @@ model DialerDisposition {
   @@index([type])
   @@index([callbackAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // DNCL (Do Not Call List) — Canada CRTC compliance
 model DnclEntry {
   id           String   @id @default(cuid())
+  tenantId     String?
   phoneNumber  String   @unique  // E.164 format
   source       String   @default("crtc") // "crtc", "internal", "customer_request"
   addedAt      DateTime @default(now())
@@ -1007,11 +1086,13 @@ model DnclEntry {
   @@index([phoneNumber])
   @@index([source])
   @@index([addedAt])
+  @@index([tenantId])
 }
 
 // Dialer Script Template (reusable across campaigns)
 model DialerScript {
   id          String   @id @default(cuid())
+  tenantId    String?
   companyId   String
   company     Company  @relation("CompanyDialerScripts", fields: [companyId], references: [id], onDelete: Restrict)
   name        String
@@ -1024,10 +1105,12 @@ model DialerScript {
   @@unique([companyId, name])
   @@index([companyId])
   @@index([isActive])
+  @@index([tenantId])
 }
 
 model CallQueue {
   id           String           @id @default(cuid())
+  tenantId     String?
   companyId    String
   company      Company          @relation("CompanyQueues", fields: [companyId], references: [id], onDelete: Restrict)
 
@@ -1058,10 +1141,12 @@ model CallQueue {
   @@index([companyId])
   @@index([isActive])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CallQueueMember {
   id          String       @id @default(cuid())
+  tenantId    String?
   queueId     String
   queue       CallQueue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
   userId      String
@@ -1075,10 +1160,12 @@ model CallQueueMember {
   @@unique([queueId, userId])
   @@index([queueId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 model IvrMenu {
   id           String        @id @default(cuid())
+  tenantId     String?
   companyId    String
   company      Company       @relation("CompanyIvrMenus", fields: [companyId], references: [id], onDelete: Restrict)
 
@@ -1113,10 +1200,12 @@ model IvrMenu {
   @@index([afterHoursMenuId])
   @@index([isActive])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model IvrMenuOption {
   id          String    @id @default(cuid())
+  tenantId    String?
   menuId      String
   menu        IvrMenu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
 
@@ -1135,10 +1224,12 @@ model IvrMenuOption {
 
   @@unique([menuId, digit])
   @@index([menuId])
+  @@index([tenantId])
 }
 
 model PresenceStatus {
   id          String      @id @default(cuid())
+  tenantId    String?
   userId      String
   user        User        @relation("UserPresence", fields: [userId], references: [id], onDelete: Restrict)
 
@@ -1160,10 +1251,12 @@ model PresenceStatus {
   @@index([userId])
   @@index([status])
   @@index([updatedAt])
+  @@index([tenantId])
 }
 
 model CoachingSession {
   id           String                @id @default(cuid())
+  tenantId     String?
   companyId    String
   company      Company               @relation("CompanyCoaching", fields: [companyId], references: [id], onDelete: Restrict)
 
@@ -1202,10 +1295,12 @@ model CoachingSession {
   @@index([status])
   @@index([scheduledAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model CoachingScore {
   id          String          @id @default(cuid())
+  tenantId    String?
   sessionId   String
   session     CoachingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -1220,11 +1315,13 @@ model CoachingScore {
   @@unique([sessionId, criterion])
   @@index([sessionId])
   @@index([criterion])
+  @@index([tenantId])
 }
 
 // H6: SMS Log — tracks all SMS sent through the system
 model SmsLog {
   id        String   @id @default(cuid())
+  tenantId  String?
   userId    String?
   to        String
   body      String
@@ -1242,11 +1339,13 @@ model SmsLog {
   @@index([status])
   @@index([messageId])
   @@index([sentAt])
+  @@index([tenantId])
 }
 
 // --- J7: SMS Marketing ---
 model SmsCampaign {
   id               String              @id @default(cuid())
+  tenantId         String?
   name             String
   status           SmsCampaignStatus   @default(DRAFT)
   templateId       String?
@@ -1273,10 +1372,12 @@ model SmsCampaign {
   @@index([templateId])
   @@index([scheduledAt])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model SmsCampaignMessage {
   id          String                    @id @default(cuid())
+  tenantId    String?
   campaignId  String
   campaign    SmsCampaign               @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   recipientId String?
@@ -1291,19 +1392,23 @@ model SmsCampaignMessage {
   @@index([campaignId])
   @@index([recipientId])
   @@index([status])
+  @@index([tenantId])
 }
 
 model SmsOptOut {
   id        String   @id @default(cuid())
+  tenantId  String?
   phone     String   @unique
   reason    String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 model SmsTemplate {
   id        String        @id @default(cuid())
+  tenantId  String?
   name      String
   body      String
   variables String[]      @default([])
@@ -1314,6 +1419,7 @@ model SmsTemplate {
   campaigns SmsCampaign[]
 
   @@index([isActive])
+  @@index([tenantId])
 }
 
 // =============================================================
@@ -1322,6 +1428,7 @@ model SmsTemplate {
 
 model AureliaChat {
   id               String   @id @default(cuid())
+  tenantId         String?
   conversationId   String
   userId           String
   content          String   @db.Text
@@ -1337,5 +1444,5 @@ model AureliaChat {
   @@index([conversationId, createdAt])
   @@index([status])
   @@index([userId, createdAt])
+  @@index([tenantId])
 }
-

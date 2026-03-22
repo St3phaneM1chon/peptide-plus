@@ -12,13 +12,13 @@ import QuickViewButton from './QuickViewButton';
 import QuickViewModal from './QuickViewModal';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
-import { getFormatIcon } from '@/lib/format-icons';
+import { getOptionIcon } from '@/lib/option-icons';
 
 // BUG-067 FIX: Import canonical ClientFormatType instead of defining local duplicate
 import type { ClientFormatType } from '@/types';
 type FormatType = ClientFormatType;
 
-interface ProductFormat {
+interface ProductOption {
   id: string;
   name: string;
   nameKey?: string; // Translation key for format name
@@ -45,7 +45,7 @@ interface ProductCardProps {
   isNew?: boolean;
   isBestseller?: boolean;
   inStock?: boolean;
-  formats?: ProductFormat[];
+  options?: ProductOption[];
   avgMass?: string;
   createdAt?: Date | string;
   purchaseCount?: number;
@@ -53,7 +53,7 @@ interface ProductCardProps {
   reviewCount?: number;
 }
 
-// Format icons imported from shared utility: @/lib/format-icons
+// Format icons imported from shared utility: @/lib/option-icons
 
 export default memo(function ProductCard({
   id,
@@ -70,7 +70,7 @@ export default memo(function ProductCard({
   isNew: _isNew,
   isBestseller: _isBestseller,
   inStock = true,
-  formats,
+  options,
   avgMass,
   createdAt,
   purchaseCount,
@@ -82,11 +82,11 @@ export default memo(function ProductCard({
   const { addItemWithUpsell } = useUpsell();
   const { t } = useI18n();
   
-  // Filter out formats with stockQuantity <= 0
-  const availableFormats = formats?.filter(f => f.stockQuantity > 0);
+  // Filter out options with stockQuantity <= 0
+  const availableOptions = options?.filter(f => f.stockQuantity > 0);
 
-  const [selectedFormat, setSelectedFormat] = useState<ProductFormat | undefined>(
-    availableFormats?.find((f) => f.inStock) || availableFormats?.[0]
+  const [selectedFormat, setSelectedFormat] = useState<ProductOption | undefined>(
+    availableOptions?.find((f) => f.inStock) || availableOptions?.[0]
   );
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -98,7 +98,7 @@ export default memo(function ProductCard({
   const displayComparePrice = selectedFormat?.comparePrice || comparePrice;
 
   // Derive if format has been manually selected by comparing with initial default
-  const initialFormat = availableFormats?.find((f) => f.inStock) || availableFormats?.[0];
+  const initialFormat = availableOptions?.find((f) => f.inStock) || availableOptions?.[0];
   const hasSelectedFormat = selectedFormat !== undefined && initialFormat !== undefined && selectedFormat.id !== initialFormat.id;
 
   // Get translated product name
@@ -108,9 +108,9 @@ export default memo(function ProductCard({
   const categoryName = categoryKey ? t(`categories.${categoryKey}`) : category;
 
   // Get translated format name
-  const getFormatName = useCallback((format: ProductFormat) => {
+  const getOptionName = useCallback((format: ProductOption) => {
     if (format.nameKey) {
-      return t(`formats.${format.nameKey}`);
+      return t(`options.${format.nameKey}`);
     }
     return format.name;
   }, [t]);
@@ -127,7 +127,7 @@ export default memo(function ProductCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
 
-  const handleFormatSelect = useCallback((format: ProductFormat) => {
+  const handleFormatSelect = useCallback((format: ProductOption) => {
     setSelectedFormat(format);
     setIsDropdownOpen(false);
     // BUG-053 FIX: Reset quantity if it exceeds new format's stock
@@ -144,14 +144,14 @@ export default memo(function ProductCard({
     setIsAdding(true);
 
     // Full product name with format
-    const formatName = getFormatName(selectedFormat);
-    const fullProductName = `${productName} ${formatName}`;
+    const optionName = getOptionName(selectedFormat);
+    const fullProductName = `${productName} ${optionName}`;
 
     addItemWithUpsell({
       productId: id,
-      formatId: selectedFormat.id,
+      optionId: selectedFormat.id,
       name: fullProductName,
-      formatName: formatName,
+      optionName: optionName,
       price: displayPrice,
       comparePrice: displayComparePrice,
       image: selectedFormat?.image || imageUrl || '/images/products/peptide-default.png',
@@ -160,7 +160,7 @@ export default memo(function ProductCard({
     });
 
     setTimeout(() => setIsAdding(false), 1000);
-  }, [inStock, selectedFormat, productName, id, displayPrice, displayComparePrice, imageUrl, quantity, addItemWithUpsell, getFormatName]);
+  }, [inStock, selectedFormat, productName, id, displayPrice, displayComparePrice, imageUrl, quantity, addItemWithUpsell, getOptionName]);
 
   return (
     <>
@@ -186,7 +186,7 @@ export default memo(function ProductCard({
                   reviewCount,
                   price: displayPrice,
                   compareAtPrice: displayComparePrice,
-                  formats: availableFormats,
+                  options: availableOptions,
                 }}
                 maxBadges={2}
               />
@@ -220,7 +220,7 @@ export default memo(function ProductCard({
         <Link href={`/product/${slug}`}>
           <h3 className="font-bold text-lg text-neutral-900 hover:text-primary-600 transition-colors line-clamp-2">
             {hasSelectedFormat && selectedFormat 
-              ? `${productName} ${getFormatName(selectedFormat)}` 
+              ? `${productName} ${getOptionName(selectedFormat)}` 
               : productName}
           </h3>
         </Link>
@@ -282,7 +282,7 @@ export default memo(function ProductCard({
         {/* Bottom Section - Packaging + Actions (aligned across all cards) */}
         <div className="mt-auto pt-4">
           {/* Format Selector Dropdown */}
-          {availableFormats && availableFormats.length > 1 && (
+          {availableOptions && availableOptions.length > 1 && (
             <div className="relative mb-4" ref={dropdownRef}>
               <label className="text-xs text-neutral-500 uppercase tracking-wider">{t('shop.packaging')}:</label>
               <button
@@ -297,10 +297,10 @@ export default memo(function ProductCard({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">
-                    {getFormatIcon(selectedFormat?.type)}
+                    {getOptionIcon(selectedFormat?.type)}
                   </span>
                   <span className="text-sm font-medium truncate">
-                    {selectedFormat ? getFormatName(selectedFormat) : t('shop.selectFormat')}
+                    {selectedFormat ? getOptionName(selectedFormat) : t('shop.selectFormat')}
                   </span>
                 </div>
                 <svg 
@@ -315,8 +315,8 @@ export default memo(function ProductCard({
 
               {/* Dropdown Menu - Overlays card with scroll */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full inset-x-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableFormats')}>
-                  {availableFormats.map((format) => (
+                <div className="absolute z-50 top-full inset-x-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableOptions')}>
+                  {availableOptions.map((format) => (
                     <button
                       key={format.id}
                       role="option"
@@ -337,15 +337,15 @@ export default memo(function ProductCard({
                       {/* Format Image/Icon */}
                       <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center overflow-hidden">
                         {format.image ? (
-                          <Image src={format.image} alt={getFormatName(format)} width={40} height={40} className="object-cover" />
+                          <Image src={format.image} alt={getOptionName(format)} width={40} height={40} className="object-cover" />
                         ) : (
-                          <span className="text-xl">{getFormatIcon(format.type)}</span>
+                          <span className="text-xl">{getOptionIcon(format.type)}</span>
                         )}
                       </div>
                       
                       {/* Format Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-neutral-900 truncate">{getFormatName(format)}</p>
+                        <p className="text-sm font-medium text-neutral-900 truncate">{getOptionName(format)}</p>
                         <p className="text-sm text-primary-600 font-bold">{formatPrice(format.price)}</p>
                       </div>
 

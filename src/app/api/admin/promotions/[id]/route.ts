@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  * TODO (item 77): Scheduled Price Changes
  * Add scheduled pricing capabilities beyond the current startsAt/endsAt promo dates:
  *   - New model ScheduledPriceChange with fields:
- *     id, productId, formatId?, newPrice, newCompareAtPrice?,
+ *     id, productId, optionId?, newPrice, newCompareAtPrice?,
  *     scheduledAt (when to apply), appliedAt (when actually applied),
  *     revertAt (optional: auto-revert date), revertedAt, status (PENDING/APPLIED/REVERTED),
  *     createdBy, reason

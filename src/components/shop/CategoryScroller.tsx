@@ -17,7 +17,7 @@ interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   inStock?: boolean;
-  formats?: {
+  options?: {
     id: string;
     name: string;
     price: number;

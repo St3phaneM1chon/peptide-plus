@@ -18,34 +18,41 @@ export const metadata = {
 };
 
 async function ProductsContent({ isOwner }: { isOwner: boolean }) {
-  // Récupérer les produits avec catégories et formats
-  const products = await prisma.product.findMany({
-    include: {
-      category: {
-        select: { id: true, name: true, slug: true },
-      },
-      formats: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          stockQuantity: true,
-          availability: true,
-          isActive: true,
+  let products: Awaited<ReturnType<typeof prisma.product.findMany>> = [];
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+
+  try {
+    // Récupérer les produits avec catégories et options
+    products = await prisma.product.findMany({
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
         },
-        orderBy: { sortOrder: 'asc' },
+        options: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            stockQuantity: true,
+            availability: true,
+            isActive: true,
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      orderBy: { createdAt: 'desc' },
+    });
 
-  // Récupérer les catégories pour le filtre
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: { sortOrder: 'asc' },
-  });
+    // Récupérer les catégories pour le filtre
+    categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+  } catch (error) {
+    console.error('Products data fetch failed:', error);
+  }
 
-  // Stats - BioCycle product types
+  // Stats — generic product types
   const stats = {
     total: products.length,
     active: products.filter(p => p.isActive).length,

@@ -42,7 +42,7 @@ function createMockModel(): MockPrismaModel {
 type MockPrismaType = {
   user: MockPrismaModel;
   product: MockPrismaModel;
-  productFormat: MockPrismaModel;
+  productOption: MockPrismaModel;
   order: MockPrismaModel;
   orderItem: MockPrismaModel;
   promoCode: MockPrismaModel;
@@ -64,7 +64,7 @@ export function createMockPrisma(): MockPrismaType {
   const mock: MockPrismaType = {
     user: createMockModel(),
     product: createMockModel(),
-    productFormat: createMockModel(),
+    productOption: createMockModel(),
     order: createMockModel(),
     orderItem: createMockModel(),
     promoCode: createMockModel(),
@@ -187,7 +187,7 @@ export function createMockCheckoutSession(
       cartItems: JSON.stringify([
         {
           productId: 'prod-1',
-          formatId: null,
+          optionId: null,
           name: 'Test Product',
           quantity: 1,
           price: 100,
@@ -248,7 +248,7 @@ export function createMockProduct(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function createMockProductFormat(overrides: Record<string, unknown> = {}) {
+export function createMockProductOption(overrides: Record<string, unknown> = {}) {
   return {
     id: 'format-1',
     name: '5mg Vial',
