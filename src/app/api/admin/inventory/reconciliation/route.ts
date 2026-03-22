@@ -174,7 +174,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       });
       if (!format) {
         return NextResponse.json(
-          { error: 'Format not found' },
+          { error: 'Option not found' },
           { status: 404 }
         );
       }

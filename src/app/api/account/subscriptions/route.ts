@@ -148,7 +148,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
       });
 
       if (!format || !format.isActive) {
-        return NextResponse.json({ error: 'Format not found or inactive' }, { status: 404 });
+        return NextResponse.json({ error: 'Option not found or inactive' }, { status: 404 });
       }
 
       optionName = format.name;

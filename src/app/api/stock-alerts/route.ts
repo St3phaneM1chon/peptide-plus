@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
       if (!format) {
         return NextResponse.json(
-          { error: 'Format not found for this product' },
+          { error: 'Option not found for this product' },
           { status: 404 }
         );
       }

@@ -5,7 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { z } from 'zod';
 
-// GET /api/admin/format-types — List all format types
+// GET /api/admin/option-types — List all format types
 export const GET = withAdminGuard(async (request) => {
   const { searchParams } = new URL(request.url);
   const activeOnly = searchParams.get('active') !== 'false';
@@ -24,7 +24,7 @@ const createSchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
 });
 
-// POST /api/admin/format-types — Create a new format type
+// POST /api/admin/option-types — Create a new format type
 export const POST = withAdminGuard(async (request) => {
   const body = await request.json();
   const parsed = createSchema.safeParse(body);

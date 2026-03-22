@@ -59,7 +59,7 @@ export async function GET(
   }
 }
 
-// POST create new format for a product
+// POST create new option for a product
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -109,13 +109,13 @@ export async function POST(
       isActive,
     } = parsed.data;
 
-    // FIX: BUG-043 - Warn when creating inactive format (isActive explicitly false)
+    // FIX: BUG-043 - Warn when creating inactive option (isActive explicitly false)
     const warningMessage = isActive === false
-      ? 'Format created but marked as inactive — it will not be visible to customers.'
+      ? 'Option created but marked as inactive — it will not be visible to customers.'
       : undefined;
 
     if (isActive === false) {
-      logger.warn('Inactive format created', { productId: id, optionName: name });
+      logger.warn('Inactive option created', { productId: id, optionName: name });
     }
 
     // BUG-044 FIX: Wrap default toggle + create in transaction to prevent race condition

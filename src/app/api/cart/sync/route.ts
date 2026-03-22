@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       if (item.optionId) {
         const format = formatMap.get(item.optionId);
         if (!format) {
-          return NextResponse.json({ error: `Format not found: ${item.optionId}` }, { status: 400 });
+          return NextResponse.json({ error: `Option not found: ${item.optionId}` }, { status: 400 });
         }
         // Verify format belongs to the claimed product
         if (format.productId !== item.productId) {

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         select: { price: true, productId: true, stockQuantity: true, trackInventory: true },
       });
       if (!format) {
-        return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Option not found' }, { status: 404 });
       }
       if (format.productId !== productId) {
         return NextResponse.json({ error: 'Format does not belong to product' }, { status: 400 });

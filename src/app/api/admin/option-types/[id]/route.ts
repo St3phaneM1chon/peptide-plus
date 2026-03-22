@@ -11,13 +11,13 @@ const updateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-// PUT /api/admin/format-types/[id] — Update a format type
+// PUT /api/admin/option-types/[id] — Update a format type
 export const PUT = withAdminGuard(async (request, { params }) => {
   const { id } = await params;
 
   const existing = await prisma.optionTypeOption.findUnique({ where: { id } });
   if (!existing) {
-    return apiError('Format type not found', 404);
+    return apiError('Option type not found', 404);
   }
 
   const body = await request.json();
@@ -34,13 +34,13 @@ export const PUT = withAdminGuard(async (request, { params }) => {
   return apiSuccess(updated, { request });
 }, { requiredPermission: 'manage_products' });
 
-// DELETE /api/admin/format-types/[id] — Delete a format type (only if unused)
+// DELETE /api/admin/option-types/[id] — Delete a format type (only if unused)
 export const DELETE = withAdminGuard(async (request, { params }) => {
   const { id } = await params;
 
   const existing = await prisma.optionTypeOption.findUnique({ where: { id } });
   if (!existing) {
-    return apiError('Format type not found', 404);
+    return apiError('Option type not found', 404);
   }
 
   // Check if any ProductOption uses this type

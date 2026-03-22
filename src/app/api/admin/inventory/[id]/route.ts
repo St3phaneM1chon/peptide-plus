@@ -56,7 +56,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     if (!format) {
       return NextResponse.json(
-        { error: 'Product format not found' },
+        { error: 'Product option not found' },
         { status: 404 }
       );
     }

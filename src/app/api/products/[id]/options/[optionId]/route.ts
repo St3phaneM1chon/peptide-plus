@@ -77,7 +77,7 @@ export async function GET(
     });
 
     if (!format || format.productId !== id) {
-      return apiError('Format not found', ErrorCode.NOT_FOUND);
+      return apiError('Option not found', ErrorCode.NOT_FOUND);
     }
 
     return apiSuccess(format);
@@ -87,7 +87,7 @@ export async function GET(
   }
 }
 
-// PUT update format
+// PUT update option
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; optionId: string }> }
@@ -143,7 +143,7 @@ export async function PUT(
     });
 
     if (!existingFormat || existingFormat.productId !== id) {
-      return apiError('Format not found', ErrorCode.NOT_FOUND, { request });
+      return apiError('Option not found', ErrorCode.NOT_FOUND, { request });
     }
 
     // BUG-044 FIX: Use transaction for atomic default toggle
@@ -208,7 +208,7 @@ export async function PUT(
   }
 }
 
-// DELETE format
+// DELETE option
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; optionId: string }> }
@@ -232,7 +232,7 @@ export async function DELETE(
     });
 
     if (!format || format.productId !== id) {
-      return apiError('Format not found', ErrorCode.NOT_FOUND, { request });
+      return apiError('Option not found', ErrorCode.NOT_FOUND, { request });
     }
 
     // BUG-018 FIX: Soft-delete instead of hard-delete to preserve OrderItem references

@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         return f.stockQuantity <= threshold;
       });
 
-      logger.info(`[low-stock-alerts] Found ${alertFormats.length} low-stock format(s)`, {
+      logger.info(`[low-stock-alerts] Found ${alertFormats.length} low-stock option(s)`, {
         tenantSlug: tenant.slug,
       });
 
