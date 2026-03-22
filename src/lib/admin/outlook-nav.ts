@@ -33,7 +33,6 @@ export interface NavRailItem {
 export const railItems: NavRailItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', icon: LayoutDashboard },
   { id: 'commerce', labelKey: 'admin.nav.commerce', icon: ShoppingCart, badge: 'pendingOrders' },
-  { id: 'catalog', labelKey: 'admin.nav.catalog', icon: Package },
   { id: 'marketing', labelKey: 'admin.nav.marketing', icon: Megaphone },
   { id: 'community', labelKey: 'admin.nav.community', icon: MessageCircle, badge: 'unreadChats' },
   { id: 'loyalty', labelKey: 'admin.nav.loyalty', icon: Award },
@@ -88,6 +87,16 @@ export const folderSections: Record<string, NavFolderSection> = {
     title: 'admin.nav.commerce',
     groups: [
       {
+        labelKey: 'admin.nav.catalog',
+        items: [
+          { href: '/admin/produits', labelKey: 'admin.nav.products', icon: Package },
+          { href: '/admin/categories', labelKey: 'admin.nav.categories', icon: FolderOpen },
+          { href: '/admin/bundles', labelKey: 'admin.nav.bundles', icon: Boxes },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.ordersAndSales',
         items: [
           { href: '/admin/commandes', labelKey: 'admin.nav.orders', icon: ShoppingCart, badge: 'pendingOrders' },
           { href: '/admin/customers', labelKey: 'admin.nav.customers', icon: Users },
@@ -96,21 +105,6 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
           { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
           { href: '/admin/paiements/reconciliation', labelKey: 'admin.nav.paymentReconciliation', icon: Scale },
-        ],
-        defaultOpen: true,
-      },
-    ],
-  },
-
-  catalog: {
-    railId: 'catalog',
-    title: 'admin.nav.catalog',
-    groups: [
-      {
-        items: [
-          { href: '/admin/produits', labelKey: 'admin.nav.products', icon: Package },
-          { href: '/admin/categories', labelKey: 'admin.nav.categories', icon: FolderOpen },
-          { href: '/admin/bundles', labelKey: 'admin.nav.bundles', icon: Boxes },
         ],
         defaultOpen: true,
       },
@@ -633,8 +627,7 @@ export const folderSections: Record<string, NavFolderSection> = {
 export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements')) return 'commerce';
-  if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles')) return 'catalog';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles')) return 'commerce';
   if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell') || pathname.startsWith('/admin/blog') || pathname.startsWith('/admin/rapports')) return 'marketing';
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
