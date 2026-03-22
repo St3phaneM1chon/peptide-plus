@@ -194,6 +194,34 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || request.headers.get('x-forwarded-host') || 'localhost';
   const { tenantSlug, isSuperAdmin } = resolveTenantFromHost(host);
 
+  // ---------------------------------------------------------------------------
+  // Super-Admin Tenant (attitudes.vip): Serve SaaS landing pages
+  // Rewrites public-facing paths to the /platform route group which has its
+  // own layout (no shop header/footer, Koraline SaaS branding).
+  // Tenant shops are NOT affected — this only triggers for isSuperAdmin hosts.
+  // ---------------------------------------------------------------------------
+  if (isSuperAdmin) {
+    const platformRoutes: Record<string, string> = {
+      '/': '/platform',
+      '/pricing': '/platform/pricing',
+      '/demo': '/platform/demo',
+    };
+    const rewriteTo = platformRoutes[pathname];
+    if (rewriteTo) {
+      const url = request.nextUrl.clone();
+      url.pathname = rewriteTo;
+      const res = NextResponse.rewrite(url, {
+        request: {
+          headers: new Headers(request.headers),
+        },
+      });
+      res.headers.set('x-request-id', requestId);
+      res.headers.set('x-tenant-slug', tenantSlug);
+      addSecurityHeaders(res);
+      return res;
+    }
+  }
+
   // Skip auth routes early (static files are already excluded by the matcher config below)
   if (pathname.startsWith('/auth')) {
     const res = NextResponse.next({
@@ -287,6 +315,7 @@ export async function middleware(request: NextRequest) {
   const publicPathPrefixes = [
     '/shop', '/products', '/blog', '/about', '/contact',
     '/legal', '/faq', '/search', '/community',
+    '/platform', // SaaS landing pages (served via rewrite for attitudes.vip)
   ];
   const isPublicPage =
     pathname === '/' ||
