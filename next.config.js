@@ -119,7 +119,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 wss://rtc.telnyx.com https://rtc.telnyx.com https://api.telnyx.com https://maps.googleapis.com",
+              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.attitudes.vip:7443 wss://sip.telnyx.com:7443 wss://rtc.telnyx.com https://rtc.telnyx.com https://api.telnyx.com https://maps.googleapis.com",
               "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com https://www.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
@@ -232,7 +232,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'biocyclepeptides.com',
+        hostname: 'attitudes.vip',
       },
       {
         protocol: 'https',
