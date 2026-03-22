@@ -42,7 +42,7 @@ function addSecurityHeaders(response: NextResponse): void {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://pbx.biocyclepeptides.com:7443 wss://sip.telnyx.com:7443 wss://rtc.telnyx.com https://rtc.telnyx.com https://api.telnyx.com https://maps.googleapis.com",
+    "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com wss://*.telnyx.com:7443 wss://sip.telnyx.com:7443 wss://rtc.telnyx.com https://rtc.telnyx.com https://api.telnyx.com https://maps.googleapis.com",
     "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com https://www.google.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -124,16 +124,86 @@ const clientRoutes = ['/client', '/dashboard/client'];
 // FAILLE-009: EMPLOYEE_PERMISSIONS and roleHasPermission moved to
 // src/lib/permission-constants.ts (single source of truth)
 
+// ---------------------------------------------------------------------------
+// Multi-Tenant: Resolve tenant from request hostname
+// ---------------------------------------------------------------------------
+// The Edge Runtime cannot use Prisma directly. Instead, we resolve the tenant
+// via a lightweight API call to /api/tenant/resolve on the first request,
+// then cache it for subsequent requests. For Phase 1 (single tenant BioCycle),
+// we use a simple hostname-based lookup.
+
+/**
+ * Returns the CORS origin for a given tenant slug.
+ * Used for Access-Control-Allow-Origin headers.
+ */
+function getTenantOrigin(tenantSlug: string): string {
+  const origins: Record<string, string> = {
+    biocycle: 'https://biocyclepeptides.com',
+    attitudes: 'https://attitudes.vip',
+  };
+  return origins[tenantSlug] || `https://${tenantSlug}.koraline.app`;
+}
+
+function resolveTenantFromHost(hostname: string): { tenantSlug: string; isSuperAdmin: boolean } {
+  const cleanHost = hostname.split(':')[0].toLowerCase();
+
+  // Super-admin: attitudes.vip
+  if (cleanHost === 'attitudes.vip' || cleanHost.endsWith('.attitudes.vip')) {
+    return { tenantSlug: 'attitudes', isSuperAdmin: true };
+  }
+
+  // BioCycle production
+  if (cleanHost === 'biocyclepeptides.com' || cleanHost === 'www.biocyclepeptides.com') {
+    return { tenantSlug: 'biocycle', isSuperAdmin: false };
+  }
+
+  // Azure production (legacy)
+  if (cleanHost === 'biocyclepeptides.azurewebsites.net') {
+    return { tenantSlug: 'biocycle', isSuperAdmin: false };
+  }
+
+  // Railway production domains
+  if (cleanHost.endsWith('.up.railway.app')) {
+    return { tenantSlug: 'attitudes', isSuperAdmin: true };
+  }
+
+  // Koraline subdomains: {slug}.koraline.app
+  const koralineMatch = cleanHost.match(/^([a-z0-9-]+)\.koraline\.app$/);
+  if (koralineMatch) {
+    return { tenantSlug: koralineMatch[1], isSuperAdmin: false };
+  }
+
+  // Localhost / dev → default to biocycle (first tenant)
+  if (cleanHost === 'localhost' || cleanHost === '127.0.0.1') {
+    return { tenantSlug: 'biocycle', isSuperAdmin: false };
+  }
+
+  // Unknown domain → try to resolve via slug from first subdomain part
+  // e.g., clientx.com → will be resolved by the API layer via DB lookup
+  // For now, default to biocycle
+  return { tenantSlug: 'biocycle', isSuperAdmin: false };
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Generate a correlation ID for every request (useful for tracing)
   const requestId = request.headers.get('x-request-id') || generateRequestId();
 
+  // Multi-Tenant: Resolve tenant from hostname and inject into request headers
+  const host = request.headers.get('host') || request.headers.get('x-forwarded-host') || 'localhost';
+  const { tenantSlug, isSuperAdmin } = resolveTenantFromHost(host);
+
   // Skip auth routes early (static files are already excluded by the matcher config below)
   if (pathname.startsWith('/auth')) {
-    const res = NextResponse.next();
+    const res = NextResponse.next({
+      request: {
+        headers: new Headers(request.headers),
+      },
+    });
     res.headers.set('x-request-id', requestId);
+    res.headers.set('x-tenant-slug', tenantSlug);
+    res.headers.set('x-tenant-super-admin', isSuperAdmin ? '1' : '0');
     addSecurityHeaders(res);
     return res;
   }
@@ -184,7 +254,7 @@ export async function middleware(request: NextRequest) {
     // Handle preflight OPTIONS requests
     if (request.method === 'OPTIONS') {
       const preflightResponse = new NextResponse(null, { status: 204 });
-      preflightResponse.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+      preflightResponse.headers.set('Access-Control-Allow-Origin', getTenantOrigin(tenantSlug));
       preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
       // AMELIORATION SYS-001: Include x-csrf-token in CORS allowed headers for cross-origin CSRF protection
       preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
@@ -198,9 +268,15 @@ export async function middleware(request: NextRequest) {
     // Auth for /api/admin/* is enforced by withAdminGuard() in each route handler.
     // No middleware JWT decode needed here — saves 5-15ms per admin API request.
 
-    const res = NextResponse.next();
+    const res = NextResponse.next({
+      request: {
+        headers: new Headers(request.headers),
+      },
+    });
     res.headers.set('x-request-id', requestId);
-    res.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+    res.headers.set('x-tenant-slug', tenantSlug);
+    res.headers.set('x-tenant-super-admin', isSuperAdmin ? '1' : '0');
+    res.headers.set('Access-Control-Allow-Origin', getTenantOrigin(tenantSlug));
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
     addSecurityHeaders(res);
@@ -227,9 +303,15 @@ export async function middleware(request: NextRequest) {
     } else {
       locale = getLocaleFromHeaders(request.headers.get('accept-language'));
     }
-    const res = NextResponse.next();
+    const res = NextResponse.next({
+      request: {
+        headers: new Headers(request.headers),
+      },
+    });
     res.headers.set('x-request-id', requestId);
     res.headers.set('x-locale', locale);
+    res.headers.set('x-tenant-slug', tenantSlug);
+    res.headers.set('x-tenant-super-admin', isSuperAdmin ? '1' : '0');
     addSecurityHeaders(res);
     return res;
   }
@@ -279,11 +361,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Créer la réponse
-  const response = NextResponse.next();
+  // Créer la réponse avec tenant headers propagés
+  const response = NextResponse.next({
+    request: {
+      headers: new Headers(request.headers),
+    },
+  });
 
   // Correlation ID for request tracing
   response.headers.set('x-request-id', requestId);
+
+  // Multi-Tenant headers
+  response.headers.set('x-tenant-slug', tenantSlug);
+  response.headers.set('x-tenant-super-admin', isSuperAdmin ? '1' : '0');
 
   // Ajouter la locale en header pour les composants server
   response.headers.set('x-locale', locale);
