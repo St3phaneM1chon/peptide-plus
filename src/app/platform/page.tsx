@@ -377,7 +377,7 @@ export default function PlatformLandingPage() {
                     </li>
                   </ul>
                   <Link
-                    href={`/signup?plan=${key}`}
+                    href={index === 2 ? "/demo" : `/signup?plan=${key}`}
                     className={`block w-full text-center py-3 rounded-full font-semibold text-sm transition-all ${
                       isPro
                         ? 'bg-[#0066CC] text-white hover:bg-[#0052A3] shadow-sm'
