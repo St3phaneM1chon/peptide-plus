@@ -438,11 +438,29 @@ export default function ParametresPage() {
                 </select>
               </FormField>
               <FormField label={t('admin.settingsPage.freeShippingThreshold')}>
-                <Input
-                  type="number"
-                  value={settings.freeShippingThreshold}
-                  onChange={(e) => setSettings({ ...settings, freeShippingThreshold: parseInt(e.target.value) || 0 })}
-                />
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={settings.freeShippingThreshold === -1}
+                      onChange={(e) => setSettings({ ...settings, freeShippingThreshold: e.target.checked ? -1 : 150 })}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    {t('admin.settingsPage.shippingNotApplicable') || 'Ne s\'applique pas (produit numérique, formation, service, forfait, etc.)'}
+                  </label>
+                  {settings.freeShippingThreshold !== -1 && (
+                    <Input
+                      type="number"
+                      min="0"
+                      value={settings.freeShippingThreshold}
+                      onChange={(e) => setSettings({ ...settings, freeShippingThreshold: parseInt(e.target.value) || 0 })}
+                      placeholder="150"
+                    />
+                  )}
+                  <p className="text-xs text-slate-500">
+                    {t('admin.settingsPage.shippingThresholdHelp') || 'Montant minimum pour la livraison gratuite. Cochez la case si vos produits ne nécessitent pas de livraison (formations en ligne, contrats de service, applications, forfaits, etc.)'}
+                  </p>
+                </div>
               </FormField>
               <FormField label={t('admin.settingsPage.weightUnit')}>
                 <select
