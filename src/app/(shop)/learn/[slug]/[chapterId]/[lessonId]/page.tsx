@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 /**
  * LESSON VIEWER PAGE
  * Renders lesson content (text/video/quiz) and tracks progress
+ * Enhanced: passes full course outline for sidebar navigation
  */
 
 import { redirect, notFound } from 'next/navigation';
@@ -120,6 +121,28 @@ export default async function LessonPage({ params }: PageProps) {
 
   const isCompleted = completedLessonIds.includes(lessonId);
 
+  // Build course outline for sidebar
+  const courseOutline = course.chapters.map((ch) => ({
+    id: ch.id,
+    title: ch.title,
+    lessons: ch.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      type: l.type,
+      chapterId: ch.id,
+      estimatedMinutes: l.estimatedMinutes,
+      videoDuration: l.videoDuration,
+    })),
+  }));
+
+  // Calculate total estimated minutes for reading time
+  const totalEstimatedMinutes = allLessons.reduce((acc, l) => {
+    const lesson = course.chapters
+      .flatMap((ch) => ch.lessons)
+      .find((cl) => cl.id === l.id);
+    return acc + (lesson?.estimatedMinutes || 0);
+  }, 0);
+
   return (
     <LessonViewerClient
       courseSlug={slug}
@@ -133,6 +156,7 @@ export default async function LessonPage({ params }: PageProps) {
         videoUrl: currentLesson.videoUrl,
         quizId: currentLesson.quizId,
         description: currentLesson.description,
+        estimatedMinutes: currentLesson.estimatedMinutes,
       }}
       chapter={{
         id: currentChapter.id,
@@ -145,6 +169,10 @@ export default async function LessonPage({ params }: PageProps) {
         totalLessons: allLessons.length,
       }}
       isCompleted={isCompleted}
+      courseOutline={courseOutline}
+      completedLessonIds={completedLessonIds}
+      courseProgress={allLessons.length > 0 ? Math.round((completedLessonIds.length / allLessons.length) * 100) : 0}
+      totalEstimatedMinutes={totalEstimatedMinutes}
     />
   );
 }
