@@ -12311,6 +12311,275 @@
       "saved": "Preferences enregistrees !",
       "saving": "Enregistrement...",
       "savePreferences": "Enregistrer les preferences"
+    },
+    "glossary": {
+      "title": "Glossaire de l'assurance",
+      "subtitle": "Retrouvez et comprenez tous les termes essentiels du secteur de l'assurance au Quebec.",
+      "searchPlaceholder": "Rechercher un terme...",
+      "termCount": "{count} termes disponibles",
+      "allDomains": "Tous",
+      "domainConformite": "Conformite",
+      "domainEthique": "Ethique",
+      "domainProduits": "Produits",
+      "domainJuridique": "Juridique",
+      "domainOrganismes": "Organismes",
+      "domainEpargne": "Epargne-retraite",
+      "domainInvalidite": "Invalidite",
+      "domainTarification": "Tarification",
+      "domainGeneral": "General",
+      "resultsCount": "{count} resultats",
+      "noResults": "Aucun resultat",
+      "noResultsDesc": "Essayez un autre mot-cle ou modifiez les filtres.",
+      "termSingular": "terme",
+      "termPlural": "termes",
+      "legalReference": "Reference legale",
+      "relatedTerms": "Termes associes",
+      "askAurelia": "Demander a Aurelia",
+      "backToTop": "Retour en haut"
+    },
+    "resources": {
+      "title": "Ressources d'etude",
+      "subtitle": "Methodes eprouvees, fiches de revision et ressources officielles pour maximiser votre apprentissage.",
+      "methodsTitle": "Methodes d'etude efficaces",
+      "methodsSubtitle": "Choisissez la methode qui correspond a votre style d'apprentissage et utilisez-la avec Aurelia.",
+      "howToUseWithAurelia": "Comment utiliser avec Aurelia :",
+      "tryIt": "Essayer",
+      "method": {
+        "pomodoro": {
+          "title": "Technique Pomodoro",
+          "desc": "Travaillez en sessions de 25 minutes avec des pauses de 5 minutes. Apres 4 sessions, prenez une pause de 15-30 minutes. Cette methode maintient la concentration et previent la fatigue mentale.",
+          "aurelia": "Activez le minuteur integre dans votre tableau de bord. Aurelia ajuste automatiquement le contenu a la duree de vos sessions."
+        },
+        "activeRecall": {
+          "title": "Rappel actif",
+          "desc": "Au lieu de relire passivement, testez-vous en essayant de rappeler l'information de memoire. Cette methode renforce les connexions neuronales et ameliore la retention a long terme.",
+          "aurelia": "Utilisez les quiz et flashcards d'Aurelia. Elle genere des questions personnalisees basees sur vos points faibles."
+        },
+        "spacedRepetition": {
+          "title": "Repetition espacee",
+          "desc": "Revisez le materiel a des intervalles croissants : 1 jour, 3 jours, 7 jours, 14 jours. Cela exploite l'effet d'espacement pour ancrer l'information en memoire a long terme.",
+          "aurelia": "La file de revision d'Aurelia utilise l'algorithme FSRS pour planifier automatiquement vos revisions au moment optimal."
+        },
+        "feynman": {
+          "title": "Technique Feynman",
+          "desc": "Expliquez un concept dans vos propres mots, comme si vous l'enseigniez a un debutant. Si vous ne pouvez pas l'expliquer simplement, vous ne le comprenez pas assez bien.",
+          "aurelia": "Dictez vos explications a Aurelia. Elle evaluera votre comprehension et corrigera les inexactitudes."
+        },
+        "mindMapping": {
+          "title": "Cartographie mentale",
+          "desc": "Creez des diagrammes visuels qui connectent les concepts entre eux. Cette methode aide a voir les relations et la structure d'ensemble d'un sujet complexe.",
+          "aurelia": "Consultez la carte des concepts d'Aurelia pour visualiser les liens entre les notions de chaque cours."
+        }
+      },
+      "sheetsTitle": "Fiches de revision",
+      "sheetsSubtitle": "Fiches synthetiques a telecharger pour reviser les notions essentielles.",
+      "downloadPdf": "Telecharger (PDF)",
+      "sheet": {
+        "assuranceVie": {
+          "title": "Assurance vie",
+          "desc": "Temporaire, entiere, universelle : definitions, comparaisons et cas d'utilisation."
+        },
+        "produitsFin": {
+          "title": "Produits financiers",
+          "desc": "REER, FERR, CRI, FRV, fonds distincts : vehicules d'epargne-retraite au Quebec."
+        },
+        "ethiqueConf": {
+          "title": "Ethique et conformite",
+          "desc": "Deontologie, devoir de conseil, LDPSF, UFC : obligations du representant."
+        },
+        "calculs": {
+          "title": "Formules et calculs",
+          "desc": "Primes, franchises, valeur de rachat, rendements : les formules essentielles."
+        }
+      },
+      "examPrepTitle": "Comment preparer l'examen de l'AMF",
+      "examPrepSubtitle": "Guide etape par etape pour reussir votre examen de certification en assurance.",
+      "examPrep": {
+        "step1": {
+          "title": "Evaluez votre niveau actuel",
+          "desc": "Commencez par le quiz diagnostic pour identifier vos forces et faiblesses. Cela vous permettra de concentrer vos efforts la ou c'est necessaire."
+        },
+        "step2": {
+          "title": "Etablissez un plan d'etude",
+          "desc": "Planifiez 6 a 8 semaines de preparation. Repartissez les matieres sur la periode et prevoyez des revisions regulieres."
+        },
+        "step3": {
+          "title": "Maitrisez la theorie",
+          "desc": "Completez les cours en ligne en prenant des notes. Utilisez la technique Feynman pour verifier votre comprehension de chaque concept."
+        },
+        "step4": {
+          "title": "Pratiquez avec des quiz",
+          "desc": "Faites des quiz regulierement. Ciblez les concepts ou votre maitrise est la plus faible. Visez au moins 80% avant de passer au sujet suivant."
+        },
+        "step5": {
+          "title": "Simulez l'examen",
+          "desc": "Utilisez les simulations de role-play pour tester vos connaissances en situation reelle. Pratiquez la gestion du temps."
+        },
+        "step6": {
+          "title": "Revision finale",
+          "desc": "La derniere semaine, concentrez-vous sur les fiches de revision et la repetition espacee. Ne surchargez pas — la confiance vient de la preparation."
+        }
+      },
+      "browseCoursesBtn": "Parcourir les cours",
+      "timeTitle": "Gestion du temps pour la formation continue",
+      "timeSubtitle": "Conseils pratiques pour integrer la formation dans votre emploi du temps charge.",
+      "timeTip": {
+        "tip1": {
+          "title": "Bloquez des creneaux fixes",
+          "desc": "Reservez 30 minutes par jour dans votre agenda. Traitez ce temps comme un rendez-vous client — non negociable."
+        },
+        "tip2": {
+          "title": "Profitez des temps morts",
+          "desc": "Ecoutez les lecons audio pendant vos deplacements ou revisez les flashcards en attendant un client."
+        },
+        "tip3": {
+          "title": "Suivez le principe 80/20",
+          "desc": "Concentrez-vous sur les 20% de concepts qui couvrent 80% de l'examen. Le quiz diagnostic identifie ces concepts pour vous."
+        },
+        "tip4": {
+          "title": "Etudiez en equipe",
+          "desc": "Formez un groupe d'etude avec vos collegues. Expliquer les concepts aux autres est la meilleure facon d'apprendre."
+        },
+        "tip5": {
+          "title": "Celebrez les progres",
+          "desc": "Suivez vos badges et votre serie d'etude. Les petites victoires maintiennent la motivation sur le long terme."
+        }
+      },
+      "officialTitle": "Ressources officielles",
+      "officialSubtitle": "Liens vers les organismes de reference du secteur de l'assurance au Quebec.",
+      "official": {
+        "amf": {
+          "title": "Autorite des marches financiers",
+          "desc": "Organisme de reglementation. Examens, permis, plaintes et reglements."
+        },
+        "chad": {
+          "title": "Chambre de l'assurance de dommages",
+          "desc": "Formation continue, deontologie et discipline en assurance de dommages."
+        },
+        "csf": {
+          "title": "Chambre de la securite financiere",
+          "desc": "Encadrement deontologique des representants en assurance de personnes."
+        },
+        "iqpf": {
+          "title": "Institut quebecois de planification financiere",
+          "desc": "Formation et certification en planification financiere."
+        }
+      },
+      "faqTitle": "Questions frequentes",
+      "faqSubtitle": "Reponses aux questions les plus courantes sur la plateforme.",
+      "faq": {
+        "whatIsAptitudes": {
+          "q": "Qu'est-ce que Aptitudes ?",
+          "a": "Aptitudes est une plateforme de formation continue en ligne pour les professionnels de l'assurance au Quebec. Elle offre des cours, des quiz, des simulations et un tuteur IA (Aurelia) pour vous aider a obtenir et maintenir vos UFC."
+        },
+        "howCourseWorks": {
+          "q": "Comment fonctionne un cours ?",
+          "a": "Chaque cours est divise en chapitres et lecons. Vous progressez a votre rythme, avec des quiz a la fin de chaque section. Aurelia s'adapte a votre niveau et propose des revisions personnalisees."
+        },
+        "mobileAccess": {
+          "q": "Puis-je etudier sur mon telephone ?",
+          "a": "Oui ! La plateforme est entierement responsive et optimisee pour les appareils mobiles. Toutes les fonctionnalites sont accessibles sur telephone et tablette."
+        },
+        "ufcCredits": {
+          "q": "Les cours donnent-ils des UFC ?",
+          "a": "Oui, les cours accredites donnent des unites de formation continue (UFC) reconnues par l'AMF et la Chambre de la securite financiere. Le nombre d'UFC est indique sur chaque cours."
+        },
+        "examPrep": {
+          "q": "Est-ce que la plateforme prepare a l'examen de l'AMF ?",
+          "a": "Oui. Nos cours couvrent les matieres de l'examen de l'AMF. Le quiz diagnostic identifie vos lacunes et Aurelia cree un parcours personnalise pour maximiser vos chances de reussite."
+        },
+        "aureliaHelp": {
+          "q": "Qu'est-ce qu'Aurelia et comment m'aide-t-elle ?",
+          "a": "Aurelia est votre tutrice IA personnelle. Elle repond a vos questions, genere des quiz adaptes, planifie vos revisions avec la repetition espacee et simule des situations client pour vous entrainer."
+        },
+        "resetProgress": {
+          "q": "Puis-je recommencer un cours ?",
+          "a": "Oui, vous pouvez reinitialiser votre progression sur n'importe quel cours depuis votre tableau de bord. Vos notes et badges restent sauvegardes."
+        },
+        "certificate": {
+          "q": "Comment obtenir mon certificat ?",
+          "a": "Un certificat de completion est genere automatiquement lorsque vous terminez toutes les lecons et reussissez le quiz final avec un score suffisant. Vous pouvez le telecharger en PDF ou le partager sur LinkedIn."
+        },
+        "teamAccess": {
+          "q": "Mon entreprise peut-elle inscrire toute l'equipe ?",
+          "a": "Oui, nous offrons des licences en volume pour les cabinets et les entreprises. Contactez-nous pour un tarif de groupe et l'acces au tableau de bord administrateur."
+        },
+        "offlineAccess": {
+          "q": "Puis-je etudier hors ligne ?",
+          "a": "Actuellement, une connexion internet est necessaire. Cependant, les flashcards et les notes sont mises en cache localement pour un acces rapide meme avec une connexion faible."
+        }
+      },
+      "ctaTitle": "Pret a commencer votre formation ?",
+      "ctaSubtitle": "Explorez nos cours et laissez Aurelia vous guider vers la reussite.",
+      "ctaBrowse": "Parcourir les cours",
+      "ctaGlossary": "Consulter le glossaire"
+    },
+    "achievements": {
+      "title": "Recompenses et badges",
+      "subtitle": "Consultez vos accomplissements, suivez votre progression et defiez votre equipe.",
+      "totalPoints": "Points totaux",
+      "badgesEarned": "Badges obtenus",
+      "currentStreak": "Serie actuelle",
+      "hoursStudied": "Heures etudiees",
+      "overallProgress": "Progression globale",
+      "progressDesc": "{earned} badges obtenus sur {total} — encore {remaining} a debloquer !",
+      "allCategories": "Toutes",
+      "category": {
+        "course": "Cours",
+        "quiz": "Quiz",
+        "streak": "Serie",
+        "community": "Communaute",
+        "special": "Special"
+      },
+      "earnedOn": "Obtenu le {date}",
+      "badge": {
+        "firstCourse": { "name": "Premier cours", "desc": "Terminer votre premier cours." },
+        "fiveCourses": { "name": "Etudiant assidu", "desc": "Terminer 5 cours." },
+        "tenCourses": { "name": "Expert en formation", "desc": "Terminer 10 cours." },
+        "allChapters": { "name": "Lecteur complet", "desc": "Terminer tous les chapitres d'un cours sans en sauter." },
+        "speedLearner": { "name": "Apprenant eclair", "desc": "Terminer un cours en moins de 3 jours." },
+        "perfectLesson": { "name": "Lecon parfaite", "desc": "Obtenir un score parfait a tous les quiz d'une lecon." },
+        "firstQuiz": { "name": "Premier quiz", "desc": "Reussir votre premier quiz." },
+        "quizAce": { "name": "As des quiz", "desc": "Reussir 10 quiz avec un score de 80% ou plus." },
+        "perfectScore": { "name": "Score parfait", "desc": "Obtenir 100% a un quiz." },
+        "conceptMaster": { "name": "Maitre des concepts", "desc": "Maitriser 25 concepts dans la carte de maitrise." },
+        "reviewChamp": { "name": "Champion de revision", "desc": "Completer 50 revisions espacees." },
+        "diagnosticPro": { "name": "Diagnostic pro", "desc": "Terminer le quiz diagnostic avec un score de 90% ou plus." },
+        "streak3": { "name": "3 jours de suite", "desc": "Etudier 3 jours consecutifs." },
+        "streak7": { "name": "Une semaine complete", "desc": "Etudier 7 jours consecutifs." },
+        "streak14": { "name": "Deux semaines de feu", "desc": "Etudier 14 jours consecutifs." },
+        "streak30": { "name": "Un mois dedic", "desc": "Etudier 30 jours consecutifs." },
+        "streak100": { "name": "Legende centenaire", "desc": "Etudier 100 jours consecutifs." },
+        "weekendWarrior": { "name": "Guerrier du weekend", "desc": "Etudier 4 weekends de suite." },
+        "firstNote": { "name": "Premiere note", "desc": "Creer votre premiere note de cours." },
+        "helpfulReview": { "name": "Avis utile", "desc": "Laisser un avis sur un cours complete." },
+        "roleplayPro": { "name": "Pro du role-play", "desc": "Reussir 5 simulations client." },
+        "teamPlayer": { "name": "Joueur d'equipe", "desc": "Participer a un groupe d'etude." },
+        "aureliaFriend": { "name": "Ami d'Aurelia", "desc": "Poser 20 questions a Aurelia." },
+        "flashcardNinja": { "name": "Ninja des flashcards", "desc": "Reviser 100 flashcards." },
+        "earlyAdopter": { "name": "Pionnier", "desc": "Etre parmi les premiers utilisateurs de la plateforme." },
+        "nightOwl": { "name": "Oiseau de nuit", "desc": "Etudier 5 fois apres 22h." },
+        "explorer": { "name": "Explorateur", "desc": "Visiter toutes les sections de la plateforme." },
+        "compliance": { "name": "Conforme", "desc": "Terminer tous les cours obligatoires de conformite." },
+        "dedicatedLearner": { "name": "Apprenant dedie", "desc": "Cumuler 100 heures d'etude." },
+        "ufcComplete": { "name": "UFC completes", "desc": "Obtenir les 30 UFC d'une periode de reference." }
+      },
+      "leaderboardTitle": "Classement par equipe",
+      "leaderboardSubtitle": "Comparez la performance de votre equipe avec les autres cabinets.",
+      "leaderboard": {
+        "equipe-alpha": "Equipe Alpha",
+        "equipe-bravo": "Equipe Bravo",
+        "equipe-charlie": "Equipe Charlie",
+        "equipe-delta": "Equipe Delta",
+        "equipe-echo": "Equipe Echo"
+      },
+      "memberCount": "{count} membres",
+      "pts": "pts",
+      "shareTitle": "Partagez vos accomplissements",
+      "shareSubtitle": "Montrez vos badges et votre progression a vos collegues et votre reseau.",
+      "shareProfile": "Partager mon profil",
+      "shareText": "J'ai obtenu {badges} badges et {points} points sur Aptitudes !",
+      "backToDashboard": "Retour au tableau de bord"
     }
   },
   "legal": {

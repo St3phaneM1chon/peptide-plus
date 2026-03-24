@@ -12313,6 +12313,275 @@
       "saved": "Preferences saved!",
       "saving": "Saving...",
       "savePreferences": "Save Preferences"
+    },
+    "glossary": {
+      "title": "Insurance Glossary",
+      "subtitle": "Find and understand all essential terms in the Quebec insurance industry.",
+      "searchPlaceholder": "Search for a term...",
+      "termCount": "{count} terms available",
+      "allDomains": "All",
+      "domainConformite": "Compliance",
+      "domainEthique": "Ethics",
+      "domainProduits": "Products",
+      "domainJuridique": "Legal",
+      "domainOrganismes": "Regulatory Bodies",
+      "domainEpargne": "Retirement Savings",
+      "domainInvalidite": "Disability",
+      "domainTarification": "Underwriting",
+      "domainGeneral": "General",
+      "resultsCount": "{count} results",
+      "noResults": "No results found",
+      "noResultsDesc": "Try another keyword or adjust the filters.",
+      "termSingular": "term",
+      "termPlural": "terms",
+      "legalReference": "Legal reference",
+      "relatedTerms": "Related terms",
+      "askAurelia": "Ask Aurelia about this",
+      "backToTop": "Back to top"
+    },
+    "resources": {
+      "title": "Study Resources",
+      "subtitle": "Proven methods, cheat sheets, and official resources to maximize your learning.",
+      "methodsTitle": "Effective Study Methods",
+      "methodsSubtitle": "Choose the method that fits your learning style and use it with Aurelia.",
+      "howToUseWithAurelia": "How to use with Aurelia:",
+      "tryIt": "Try it",
+      "method": {
+        "pomodoro": {
+          "title": "Pomodoro Technique",
+          "desc": "Work in 25-minute sessions with 5-minute breaks. After 4 sessions, take a 15-30 minute break. This method maintains focus and prevents mental fatigue.",
+          "aurelia": "Activate the built-in timer in your dashboard. Aurelia automatically adjusts content to your session length."
+        },
+        "activeRecall": {
+          "title": "Active Recall",
+          "desc": "Instead of passively rereading, test yourself by trying to recall information from memory. This method strengthens neural connections and improves long-term retention.",
+          "aurelia": "Use Aurelia's quizzes and flashcards. She generates personalized questions based on your weak points."
+        },
+        "spacedRepetition": {
+          "title": "Spaced Repetition",
+          "desc": "Review material at increasing intervals: 1 day, 3 days, 7 days, 14 days. This exploits the spacing effect to embed information in long-term memory.",
+          "aurelia": "Aurelia's review queue uses the FSRS algorithm to automatically schedule your reviews at the optimal time."
+        },
+        "feynman": {
+          "title": "Feynman Technique",
+          "desc": "Explain a concept in your own words, as if teaching it to a beginner. If you can't explain it simply, you don't understand it well enough.",
+          "aurelia": "Dictate your explanations to Aurelia. She will evaluate your understanding and correct any inaccuracies."
+        },
+        "mindMapping": {
+          "title": "Mind Mapping",
+          "desc": "Create visual diagrams that connect concepts to each other. This method helps see relationships and the overall structure of a complex subject.",
+          "aurelia": "View Aurelia's concept map to visualize the links between notions in each course."
+        }
+      },
+      "sheetsTitle": "Cheat Sheets",
+      "sheetsSubtitle": "Downloadable summary sheets to review essential concepts.",
+      "downloadPdf": "Download (PDF)",
+      "sheet": {
+        "assuranceVie": {
+          "title": "Life Insurance",
+          "desc": "Term, whole life, universal: definitions, comparisons, and use cases."
+        },
+        "produitsFin": {
+          "title": "Financial Products",
+          "desc": "RRSP, RRIF, LIRA, LIF, segregated funds: retirement savings vehicles in Quebec."
+        },
+        "ethiqueConf": {
+          "title": "Ethics & Compliance",
+          "desc": "Professional conduct, duty of advice, LDPSF, CEUs: representative obligations."
+        },
+        "calculs": {
+          "title": "Formulas & Calculations",
+          "desc": "Premiums, deductibles, cash value, returns: essential formulas."
+        }
+      },
+      "examPrepTitle": "How to Prepare for the AMF Exam",
+      "examPrepSubtitle": "Step-by-step guide to passing your insurance certification exam.",
+      "examPrep": {
+        "step1": {
+          "title": "Assess your current level",
+          "desc": "Start with the diagnostic quiz to identify your strengths and weaknesses. This will help you focus your efforts where they're needed most."
+        },
+        "step2": {
+          "title": "Create a study plan",
+          "desc": "Plan 6 to 8 weeks of preparation. Distribute topics over the period and schedule regular reviews."
+        },
+        "step3": {
+          "title": "Master the theory",
+          "desc": "Complete the online courses while taking notes. Use the Feynman Technique to verify your understanding of each concept."
+        },
+        "step4": {
+          "title": "Practice with quizzes",
+          "desc": "Take quizzes regularly. Target concepts where your mastery is weakest. Aim for at least 80% before moving to the next topic."
+        },
+        "step5": {
+          "title": "Simulate the exam",
+          "desc": "Use role-play simulations to test your knowledge in real-world situations. Practice time management."
+        },
+        "step6": {
+          "title": "Final review",
+          "desc": "In the last week, focus on cheat sheets and spaced repetition. Don't overload — confidence comes from preparation."
+        }
+      },
+      "browseCoursesBtn": "Browse Courses",
+      "timeTitle": "Time Management for Continuing Education",
+      "timeSubtitle": "Practical tips to fit learning into your busy schedule.",
+      "timeTip": {
+        "tip1": {
+          "title": "Block fixed time slots",
+          "desc": "Reserve 30 minutes per day in your calendar. Treat this time like a client meeting — non-negotiable."
+        },
+        "tip2": {
+          "title": "Use downtime wisely",
+          "desc": "Listen to audio lessons during your commute or review flashcards while waiting for a client."
+        },
+        "tip3": {
+          "title": "Follow the 80/20 principle",
+          "desc": "Focus on the 20% of concepts that cover 80% of the exam. The diagnostic quiz identifies these concepts for you."
+        },
+        "tip4": {
+          "title": "Study as a team",
+          "desc": "Form a study group with colleagues. Explaining concepts to others is the best way to learn."
+        },
+        "tip5": {
+          "title": "Celebrate progress",
+          "desc": "Track your badges and study streak. Small victories maintain motivation over the long term."
+        }
+      },
+      "officialTitle": "Official Resources",
+      "officialSubtitle": "Links to reference organizations in the Quebec insurance industry.",
+      "official": {
+        "amf": {
+          "title": "Autorite des marches financiers",
+          "desc": "Regulatory body. Exams, licenses, complaints, and regulations."
+        },
+        "chad": {
+          "title": "Chambre de l'assurance de dommages",
+          "desc": "Continuing education, ethics, and discipline in property & casualty insurance."
+        },
+        "csf": {
+          "title": "Chambre de la securite financiere",
+          "desc": "Ethical oversight of life insurance representatives."
+        },
+        "iqpf": {
+          "title": "Institut quebecois de planification financiere",
+          "desc": "Training and certification in financial planning."
+        }
+      },
+      "faqTitle": "Frequently Asked Questions",
+      "faqSubtitle": "Answers to the most common questions about the platform.",
+      "faq": {
+        "whatIsAptitudes": {
+          "q": "What is Aptitudes?",
+          "a": "Aptitudes is an online continuing education platform for insurance professionals in Quebec. It offers courses, quizzes, simulations, and an AI tutor (Aurelia) to help you earn and maintain your CEUs."
+        },
+        "howCourseWorks": {
+          "q": "How does a course work?",
+          "a": "Each course is divided into chapters and lessons. You progress at your own pace, with quizzes at the end of each section. Aurelia adapts to your level and offers personalized reviews."
+        },
+        "mobileAccess": {
+          "q": "Can I study on my phone?",
+          "a": "Yes! The platform is fully responsive and optimized for mobile devices. All features are accessible on phone and tablet."
+        },
+        "ufcCredits": {
+          "q": "Do courses count for CEUs?",
+          "a": "Yes, accredited courses provide continuing education units (CEUs) recognized by the AMF and the Chambre de la securite financiere. The number of CEUs is indicated on each course."
+        },
+        "examPrep": {
+          "q": "Does the platform prepare for the AMF exam?",
+          "a": "Yes. Our courses cover AMF exam topics. The diagnostic quiz identifies your gaps and Aurelia creates a personalized path to maximize your chances of success."
+        },
+        "aureliaHelp": {
+          "q": "What is Aurelia and how does she help me?",
+          "a": "Aurelia is your personal AI tutor. She answers your questions, generates adapted quizzes, schedules your reviews with spaced repetition, and simulates client situations for practice."
+        },
+        "resetProgress": {
+          "q": "Can I restart a course?",
+          "a": "Yes, you can reset your progress on any course from your dashboard. Your notes and badges are preserved."
+        },
+        "certificate": {
+          "q": "How do I get my certificate?",
+          "a": "A completion certificate is automatically generated when you finish all lessons and pass the final quiz with a sufficient score. You can download it as PDF or share it on LinkedIn."
+        },
+        "teamAccess": {
+          "q": "Can my company enroll the whole team?",
+          "a": "Yes, we offer volume licenses for firms and companies. Contact us for group pricing and admin dashboard access."
+        },
+        "offlineAccess": {
+          "q": "Can I study offline?",
+          "a": "Currently, an internet connection is required. However, flashcards and notes are cached locally for quick access even on slow connections."
+        }
+      },
+      "ctaTitle": "Ready to start your training?",
+      "ctaSubtitle": "Explore our courses and let Aurelia guide you to success.",
+      "ctaBrowse": "Browse Courses",
+      "ctaGlossary": "View Glossary"
+    },
+    "achievements": {
+      "title": "Achievements & Badges",
+      "subtitle": "View your accomplishments, track your progress, and challenge your team.",
+      "totalPoints": "Total Points",
+      "badgesEarned": "Badges Earned",
+      "currentStreak": "Current Streak",
+      "hoursStudied": "Hours Studied",
+      "overallProgress": "Overall Progress",
+      "progressDesc": "{earned} badges earned out of {total} — {remaining} more to unlock!",
+      "allCategories": "All",
+      "category": {
+        "course": "Courses",
+        "quiz": "Quizzes",
+        "streak": "Streaks",
+        "community": "Community",
+        "special": "Special"
+      },
+      "earnedOn": "Earned on {date}",
+      "badge": {
+        "firstCourse": { "name": "First Course", "desc": "Complete your first course." },
+        "fiveCourses": { "name": "Dedicated Student", "desc": "Complete 5 courses." },
+        "tenCourses": { "name": "Training Expert", "desc": "Complete 10 courses." },
+        "allChapters": { "name": "Thorough Reader", "desc": "Complete all chapters of a course without skipping." },
+        "speedLearner": { "name": "Speed Learner", "desc": "Complete a course in less than 3 days." },
+        "perfectLesson": { "name": "Perfect Lesson", "desc": "Get a perfect score on all quizzes in a lesson." },
+        "firstQuiz": { "name": "First Quiz", "desc": "Pass your first quiz." },
+        "quizAce": { "name": "Quiz Ace", "desc": "Pass 10 quizzes with a score of 80% or higher." },
+        "perfectScore": { "name": "Perfect Score", "desc": "Score 100% on a quiz." },
+        "conceptMaster": { "name": "Concept Master", "desc": "Master 25 concepts in the mastery map." },
+        "reviewChamp": { "name": "Review Champion", "desc": "Complete 50 spaced repetition reviews." },
+        "diagnosticPro": { "name": "Diagnostic Pro", "desc": "Complete the diagnostic quiz with a score of 90% or higher." },
+        "streak3": { "name": "3-Day Streak", "desc": "Study 3 consecutive days." },
+        "streak7": { "name": "Full Week", "desc": "Study 7 consecutive days." },
+        "streak14": { "name": "Two Weeks on Fire", "desc": "Study 14 consecutive days." },
+        "streak30": { "name": "Dedicated Month", "desc": "Study 30 consecutive days." },
+        "streak100": { "name": "Century Legend", "desc": "Study 100 consecutive days." },
+        "weekendWarrior": { "name": "Weekend Warrior", "desc": "Study 4 weekends in a row." },
+        "firstNote": { "name": "First Note", "desc": "Create your first course note." },
+        "helpfulReview": { "name": "Helpful Review", "desc": "Leave a review on a completed course." },
+        "roleplayPro": { "name": "Role-Play Pro", "desc": "Pass 5 client simulations." },
+        "teamPlayer": { "name": "Team Player", "desc": "Join a study group." },
+        "aureliaFriend": { "name": "Aurelia's Friend", "desc": "Ask Aurelia 20 questions." },
+        "flashcardNinja": { "name": "Flashcard Ninja", "desc": "Review 100 flashcards." },
+        "earlyAdopter": { "name": "Early Adopter", "desc": "Be among the first users of the platform." },
+        "nightOwl": { "name": "Night Owl", "desc": "Study 5 times after 10 PM." },
+        "explorer": { "name": "Explorer", "desc": "Visit every section of the platform." },
+        "compliance": { "name": "Compliant", "desc": "Complete all mandatory compliance courses." },
+        "dedicatedLearner": { "name": "Dedicated Learner", "desc": "Accumulate 100 hours of study." },
+        "ufcComplete": { "name": "CEUs Complete", "desc": "Earn the full 30 CEUs for a reference period." }
+      },
+      "leaderboardTitle": "Team Leaderboard",
+      "leaderboardSubtitle": "Compare your team's performance with other firms.",
+      "leaderboard": {
+        "equipe-alpha": "Team Alpha",
+        "equipe-bravo": "Team Bravo",
+        "equipe-charlie": "Team Charlie",
+        "equipe-delta": "Team Delta",
+        "equipe-echo": "Team Echo"
+      },
+      "memberCount": "{count} members",
+      "pts": "pts",
+      "shareTitle": "Share Your Achievements",
+      "shareSubtitle": "Show your badges and progress to your colleagues and network.",
+      "shareProfile": "Share My Profile",
+      "shareText": "I earned {badges} badges and {points} points on Aptitudes!",
+      "backToDashboard": "Back to Dashboard"
     }
   },
   "legal": {
