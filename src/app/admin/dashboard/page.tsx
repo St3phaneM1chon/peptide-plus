@@ -36,6 +36,16 @@ async function fetchAdminData() {
 
   // F1.11: Wrap all queries in $transaction to share a single DB connection
   // instead of opening 9 parallel connections via Promise.all
+  // LMS stats (outside transaction — different models, non-blocking)
+  const [lmsCourses, lmsEnrollments, lmsCompletions, lmsOverdue] = await Promise.all([
+    prisma.course.count({ where: { status: 'PUBLISHED' } }).catch(() => 0),
+    prisma.enrollment.count({ where: { status: 'ACTIVE' } }).catch(() => 0),
+    prisma.enrollment.count({ where: { status: 'COMPLETED' } }).catch(() => 0),
+    prisma.enrollment.count({
+      where: { complianceDeadline: { lt: new Date() }, status: { not: 'COMPLETED' } },
+    }).catch(() => 0),
+  ]);
+
   const [
     totalOrders,
     pendingOrders,
@@ -132,6 +142,12 @@ async function fetchAdminData() {
       totalProducts,
       lowStockFormats,
     },
+    lms: {
+      courses: lmsCourses,
+      activeEnrollments: lmsEnrollments,
+      completions: lmsCompletions,
+      overdueCompliance: lmsOverdue,
+    },
     recentOrders,
     recentUsers,
   };
@@ -143,13 +159,15 @@ async function fetchAdminData() {
 
 async function DashboardContent() {
   let stats: Awaited<ReturnType<typeof fetchAdminData>>['stats'];
+  let lms: Awaited<ReturnType<typeof fetchAdminData>>['lms'];
   let recentOrders: Awaited<ReturnType<typeof fetchAdminData>>['recentOrders'];
   let recentUsers: Awaited<ReturnType<typeof fetchAdminData>>['recentUsers'];
   try {
-    ({ stats, recentOrders, recentUsers } = await getAdminData());
+    ({ stats, lms, recentOrders, recentUsers } = await getAdminData());
   } catch (error) {
     console.error('Dashboard data fetch failed:', error);
     stats = { totalOrders: 0, pendingOrders: 0, monthlyRevenue: 0, totalClients: 0, totalCustomers: 0, totalProducts: 0, lowStockFormats: 0 };
+    lms = { courses: 0, activeEnrollments: 0, completions: 0, overdueCompliance: 0 };
     recentOrders = [];
     recentUsers = [];
   }
@@ -157,6 +175,7 @@ async function DashboardContent() {
   return (
     <DashboardClient
       stats={stats}
+      lmsStats={lms}
       recentOrders={JSON.parse(JSON.stringify(recentOrders))}
       recentUsers={JSON.parse(JSON.stringify(recentUsers))}
     />

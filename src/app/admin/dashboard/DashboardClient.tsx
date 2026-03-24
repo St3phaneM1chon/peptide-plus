@@ -70,8 +70,16 @@ interface RecentUser {
   createdAt: string;
 }
 
+interface LmsStats {
+  courses: number;
+  activeEnrollments: number;
+  completions: number;
+  overdueCompliance: number;
+}
+
 interface DashboardClientProps {
   stats: DashboardStats;
+  lmsStats?: LmsStats;
   recentOrders: RecentOrder[];
   recentUsers: RecentUser[];
 }
@@ -103,7 +111,7 @@ interface CrossModuleData {
   flags: Record<string, boolean>;
 }
 
-export default function DashboardClient({ stats, recentOrders, recentUsers }: DashboardClientProps) {
+export default function DashboardClient({ stats, lmsStats, recentOrders, recentUsers }: DashboardClientProps) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [crossModule, setCrossModule] = useState<CrossModuleData | null>(null);
@@ -288,6 +296,39 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
         <MorningBriefingWidget />
         <AIInsightsWidget />
       </div>
+
+      {/* LMS Formation Widget */}
+      {lmsStats && (lmsStats.courses > 0 || lmsStats.activeEnrollments > 0) && (
+        <div className="rounded-xl border bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+              Formation continue
+            </h3>
+            <Link href="/admin/formation" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+              Voir tout <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold">{lmsStats.courses}</p>
+              <p className="text-xs text-muted-foreground">Cours</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{lmsStats.activeEnrollments}</p>
+              <p className="text-xs text-muted-foreground">Inscrits</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">{lmsStats.completions}</p>
+              <p className="text-xs text-muted-foreground">Termines</p>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold ${lmsStats.overdueCompliance > 0 ? 'text-red-600' : ''}`}>{lmsStats.overdueCompliance}</p>
+              <p className="text-xs text-muted-foreground">En retard</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
