@@ -18,6 +18,7 @@ import {
   Workflow, ClipboardList, Mic, ArrowRightLeft, PhoneForwarded,
   Filter, MessageSquare, ListChecks, Trophy, CheckSquare,
   ToggleRight, Bot, Building2, Palette, Boxes, GraduationCap,
+  UserPlus, Medal, ShieldCheck, ExternalLink,
 } from 'lucide-react';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon, WhatsAppIcon } from '@/components/admin/icons/platform-icons';
 
@@ -39,6 +40,7 @@ export const railItems: NavRailItem[] = [
   { id: 'telephony', labelKey: 'admin.nav.telephony', icon: Phone },
   { id: 'crm', labelKey: 'admin.nav.crm', icon: Briefcase, badge: 'unreadChats' },
   { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator },
+  { id: 'formation', labelKey: 'admin.nav.formation', icon: GraduationCap },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
   { id: 'dev', labelKey: 'admin.nav.development', icon: FlaskConical },
 ];
@@ -560,6 +562,65 @@ export const folderSections: Record<string, NavFolderSection> = {
     ],
   },
 
+  formation: {
+    railId: 'formation',
+    title: 'admin.nav.formation',
+    groups: [
+      {
+        items: [
+          { href: '/admin/formation', labelKey: 'admin.nav.formationDashboard', icon: LayoutDashboard },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.formationContent',
+        items: [
+          { href: '/admin/formation/cours', labelKey: 'admin.nav.formationCourses', icon: BookOpen },
+          { href: '/admin/formation/categories', labelKey: 'admin.nav.formationCategories', icon: FolderOpen },
+          { href: '/admin/formation/quiz', labelKey: 'admin.nav.formationQuiz', icon: ClipboardList },
+          { href: '/admin/formation/medias', labelKey: 'admin.nav.formationMedia', icon: Video },
+          { href: '/admin/formation/instructeurs', labelKey: 'admin.nav.formationInstructors', icon: UserCheck },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.formationStudents',
+        items: [
+          { href: '/admin/formation/inscriptions', labelKey: 'admin.nav.formationEnrollments', icon: UserPlus },
+          { href: '/admin/formation/etudiants', labelKey: 'admin.nav.formationStudentsList', icon: Users },
+          { href: '/admin/formation/progression', labelKey: 'admin.nav.formationProgress', icon: TrendingUp },
+          { href: '/admin/formation/classement', labelKey: 'admin.nav.formationLeaderboard', icon: Trophy },
+          { href: '/admin/formation/badges', labelKey: 'admin.nav.formationBadges', icon: Medal },
+          { href: '/admin/formation/avis', labelKey: 'admin.nav.formationReviews', icon: Star },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.formationCertification',
+        items: [
+          { href: '/admin/formation/certificats', labelKey: 'admin.nav.formationCertificates', icon: Award },
+          { href: '/admin/formation/modeles-certificats', labelKey: 'admin.nav.formationCertTemplates', icon: FileText },
+          { href: '/admin/formation/conformite', labelKey: 'admin.nav.formationCompliance', icon: ShieldCheck },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+      {
+        labelKey: 'admin.nav.formationAdmin',
+        items: [
+          { href: '/admin/formation/analytics', labelKey: 'admin.nav.formationAnalytics', icon: BarChart3 },
+          { href: '/admin/formation/rapports', labelKey: 'admin.nav.formationReports', icon: FileBarChart },
+          { href: '/admin/formation/parametres', labelKey: 'admin.nav.formationSettings', icon: Settings },
+          { href: '/admin/formation/portail', labelKey: 'admin.nav.formationPortal', icon: ExternalLink },
+        ],
+        collapsible: true,
+        defaultOpen: false,
+      },
+    ],
+  },
+
   system: {
     railId: 'system',
     title: 'admin.nav.system',
@@ -639,6 +700,7 @@ export const folderSections: Record<string, NavFolderSection> = {
 
 /** Determine which rail section is active based on the current pathname */
 export function getActiveRailId(pathname: string): string {
+  if (pathname.startsWith('/admin/formation')) return 'formation';
   if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
   if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs') || pathname.startsWith('/admin/paiements') || pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories') || pathname.startsWith('/admin/bundles') || pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/livraison')) return 'commerce';

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { X, Mic, MicOff, Send, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Mic, MicOff, Send, Sparkles, Volume2, VolumeX, Loader2 } from 'lucide-react';
 
 /**
  * AURELIA WIDGET — Omnipresente sur chaque page etudiant
@@ -44,8 +44,13 @@ export default function AureliaWidget({ context, studentName }: AureliaWidgetPro
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [loadingTtsId, setLoadingTtsId] = useState<string | null>(null);
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoSpeakRef = useRef(autoSpeak);
 
   // Auto-scroll au dernier message
   useEffect(() => {
@@ -58,6 +63,97 @@ export default function AureliaWidget({ context, studentName }: AureliaWidgetPro
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Keep autoSpeakRef in sync
+  useEffect(() => {
+    autoSpeakRef.current = autoSpeak;
+  }, [autoSpeak]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  /** Stop any currently playing TTS audio */
+  const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setSpeakingMessageId(null);
+  }, []);
+
+  /** Speak a message via ElevenLabs TTS */
+  const speakMessage = useCallback(async (messageId: string, text: string) => {
+    // If already speaking this message, stop it
+    if (speakingMessageId === messageId) {
+      stopSpeaking();
+      return;
+    }
+
+    // Stop any current playback
+    stopSpeaking();
+
+    // Strip markdown formatting for cleaner speech
+    const cleanText = text
+      .replace(/#{1,6}\s/g, '')        // headings
+      .replace(/\*\*(.+?)\*\*/g, '$1') // bold
+      .replace(/\*(.+?)\*/g, '$1')     // italic
+      .replace(/`(.+?)`/g, '$1')       // inline code
+      .replace(/\[(.+?)\]\(.+?\)/g, '$1') // links
+      .replace(/^[-*]\s/gm, '')        // list markers
+      .replace(/^\d+\.\s/gm, '')       // numbered lists
+      .trim();
+
+    if (!cleanText) return;
+
+    setLoadingTtsId(messageId);
+
+    try {
+      const res = await fetch('/api/lms/tutor/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText.slice(0, 5000) }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('[TTS] Error:', errorData.error || res.statusText);
+        return;
+      }
+
+      const audioBlob = await res.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        setSpeakingMessageId(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+
+      audio.onerror = () => {
+        setSpeakingMessageId(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+
+      audioRef.current = audio;
+      setSpeakingMessageId(messageId);
+      await audio.play();
+    } catch (err) {
+      console.error('[TTS] Failed to speak:', err);
+      setSpeakingMessageId(null);
+    } finally {
+      setLoadingTtsId(null);
+    }
+  }, [speakingMessageId, stopSpeaking]);
 
   // Message d'accueil contextuel
   useEffect(() => {
@@ -122,12 +218,21 @@ export default function AureliaWidget({ context, studentName }: AureliaWidgetPro
 
       const data = await res.json();
 
+      const assistantId = `assistant-${Date.now()}`;
+      const assistantContent = data.response || 'Désolée, je n\'ai pas pu traiter ta demande.';
+
       setMessages(prev => [...prev, {
-        id: `assistant-${Date.now()}`,
+        id: assistantId,
         role: 'assistant',
-        content: data.response || 'Désolée, je n\'ai pas pu traiter ta demande.',
+        content: assistantContent,
         timestamp: new Date(),
       }]);
+
+      // Auto-speak if enabled
+      if (autoSpeakRef.current) {
+        // Small delay to let the state update propagate
+        setTimeout(() => speakMessage(assistantId, assistantContent), 100);
+      }
     } catch {
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
@@ -219,9 +324,19 @@ export default function AureliaWidget({ context, studentName }: AureliaWidgetPro
                 <p className="text-xs opacity-80">Tutrice personnelle</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} aria-label="Fermer" className="p-1 hover:bg-blue-700 rounded">
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setAutoSpeak(prev => !prev)}
+                className={`p-1 rounded transition-colors ${autoSpeak ? 'bg-blue-500' : 'hover:bg-blue-700 opacity-60'}`}
+                aria-label={autoSpeak ? 'Désactiver la lecture automatique' : 'Activer la lecture automatique'}
+                title={autoSpeak ? 'Lecture auto activée' : 'Lecture auto désactivée'}
+              >
+                {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </button>
+              <button onClick={() => setIsOpen(false)} aria-label="Fermer" className="p-1 hover:bg-blue-700 rounded">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Context banner */}
@@ -235,12 +350,47 @@ export default function AureliaWidget({ context, studentName }: AureliaWidgetPro
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-                  msg.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-md'
-                    : 'bg-muted rounded-bl-md'
-                }`}>
-                  {msg.content}
+                <div className="flex flex-col gap-1 max-w-[80%]">
+                  <div className={`rounded-2xl px-4 py-2 text-sm ${
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-br-md'
+                      : 'bg-muted rounded-bl-md'
+                  }`}>
+                    {msg.content}
+                  </div>
+                  {msg.role === 'assistant' && msg.id !== 'greeting' && (
+                    <div className="flex items-center gap-1 px-1">
+                      <button
+                        onClick={() => speakMessage(msg.id, msg.content)}
+                        disabled={loadingTtsId === msg.id}
+                        className={`p-1 rounded-full transition-colors text-muted-foreground hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50 ${
+                          speakingMessageId === msg.id ? 'text-blue-600 bg-blue-50' : ''
+                        }`}
+                        aria-label={
+                          loadingTtsId === msg.id
+                            ? 'Chargement audio...'
+                            : speakingMessageId === msg.id
+                              ? 'Arrêter la lecture'
+                              : 'Écouter ce message'
+                        }
+                        title={
+                          loadingTtsId === msg.id
+                            ? 'Chargement...'
+                            : speakingMessageId === msg.id
+                              ? 'Arrêter'
+                              : 'Écouter'
+                        }
+                      >
+                        {loadingTtsId === msg.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : speakingMessageId === msg.id ? (
+                          <VolumeX className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
