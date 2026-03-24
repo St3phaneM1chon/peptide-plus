@@ -13,6 +13,7 @@ import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accoun
 import { generateCOGSEntry } from '@/lib/inventory';
 import { qualifyReferral } from '@/lib/referral-qualify';
 import { logger } from '@/lib/logger';
+import { enrollUser, enrollUserInBundle } from '@/lib/lms/lms-service';
 import { validateTransition } from '@/lib/order-status-machine';
 import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
@@ -325,6 +326,14 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   logger.info('Checkout session completed', { sessionId: session.id });
 
   const metadata = session.metadata || {};
+
+  // ── LMS Course/Bundle Checkout ──
+  if (metadata.type === 'course' || metadata.type === 'bundle') {
+    await handleLmsCheckoutComplete(session, metadata);
+    await completeWebhookEvent(eventId);
+    return;
+  }
+
   const { userId, shippingAddress } = metadata;
   const shipping = shippingAddress ? JSON.parse(shippingAddress) : null;
 
@@ -1617,6 +1626,94 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
     await prisma.inventoryReservation.updateMany({
       where: { orderId: order.id, status: 'RESERVED' },
       data: { status: 'RELEASED', releasedAt: new Date() },
+    });
+  }
+}
+
+// =====================================================
+// LMS CHECKOUT HANDLER
+// =====================================================
+
+async function handleLmsCheckoutComplete(
+  session: Stripe.Checkout.Session,
+  metadata: Record<string, string>
+) {
+  const { type, itemId, userId, tenantId, corporateAccountId } = metadata;
+  const corpAcctId = corporateAccountId || null;
+
+  logger.info('[LMS Webhook] Processing LMS checkout', { type, itemId, userId, tenantId });
+
+  if (type === 'course') {
+    // Enroll in single course
+    await enrollUser(tenantId, itemId, userId);
+
+    // Update enrollment with payment info
+    await prisma.enrollment.updateMany({
+      where: { tenantId, courseId: itemId, userId },
+      data: {
+        enrollmentSource: 'purchase',
+        paymentType: corpAcctId ? 'corporate' : 'individual',
+        corporateAccountId: corpAcctId,
+      },
+    });
+
+    // Create CourseOrder record
+    const amount = (session.amount_total ?? 0) / 100;
+    await prisma.courseOrder.create({
+      data: {
+        tenantId,
+        userId,
+        courseId: itemId,
+        amount,
+        totalAmount: amount,
+        stripePaymentIntentId: session.payment_intent as string ?? null,
+        corporateAccountId: corpAcctId,
+        status: 'paid',
+        paidAt: new Date(),
+      },
+    });
+
+    logger.info('[LMS Webhook] Course enrollment complete', { courseId: itemId, userId });
+
+  } else if (type === 'bundle') {
+    // Enroll in all bundle courses
+    const result = await enrollUserInBundle(tenantId, itemId, userId, {
+      corporateAccountId: corpAcctId ?? undefined,
+      paymentType: corpAcctId ? 'corporate' : 'individual',
+    });
+
+    // Create CourseBundleOrder record
+    const amount = (session.amount_total ?? 0) / 100;
+    const discount = parseFloat(metadata.discount || '0');
+    await prisma.courseBundleOrder.create({
+      data: {
+        tenantId,
+        userId,
+        bundleId: itemId,
+        amount,
+        totalAmount: amount,
+        discountAmount: discount,
+        paymentType: corpAcctId ? 'CORPORATE' : 'INDIVIDUAL',
+        stripePaymentIntentId: session.payment_intent as string ?? null,
+        corporateAccountId: corpAcctId,
+        status: 'paid',
+        paidAt: new Date(),
+        enrollmentIds: result.enrollmentIds,
+      },
+    });
+
+    logger.info('[LMS Webhook] Bundle enrollment complete', {
+      bundleId: itemId, userId,
+      enrolled: result.enrollmentIds.length,
+      skipped: result.skippedCourseIds.length,
+    });
+  }
+
+  // Update corporate budget if applicable
+  if (corpAcctId && session.amount_total) {
+    await prisma.corporateAccount.update({
+      where: { id: corpAcctId },
+      data: { budgetUsed: { increment: (session.amount_total ?? 0) / 100 } },
     });
   }
 }

@@ -8,6 +8,12 @@ import { useTranslations } from '@/hooks/useTranslations';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
+interface SupplementaryText {
+  title: string;
+  content: string;
+  source?: string;
+}
+
 interface LessonData {
   id: string;
   title: string;
@@ -17,6 +23,13 @@ interface LessonData {
   quizId: string | null;
   description: string | null;
   estimatedMinutes: number | null;
+  // 4 volets contenu par notion
+  manualText?: string | null;
+  visualAnchorUrl?: string | null;
+  visualAnchorAlt?: string | null;
+  videoExplainerUrl?: string | null;
+  videoExplainerDuration?: number | null;
+  supplementaryTexts?: SupplementaryText[] | null;
 }
 
 interface ChapterData {
@@ -58,6 +71,7 @@ interface Props {
   completedLessonIds?: string[];
   courseProgress?: number;
   totalEstimatedMinutes?: number;
+  requireSequentialCompletion?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -200,6 +214,7 @@ export default function LessonViewerClient({
   completedLessonIds = [],
   courseProgress = 0,
   totalEstimatedMinutes: _totalEstimatedMinutes = 0,
+  requireSequentialCompletion = true,
 }: Props) {
   const { t } = useTranslations();
   const [completed, setCompleted] = useState(initialCompleted);
@@ -363,7 +378,10 @@ export default function LessonViewerClient({
               </div>
 
               <nav className="py-2" aria-label={t('learn.lessonViewer.courseOutline')}>
-                {courseOutline.map((ch, ci) => (
+                {courseOutline.map((ch, ci) => {
+                  // Build flat ordered list for sequential gate
+                  const allOutlineLessons = courseOutline.flatMap(c => c.lessons);
+                  return (
                   <div key={ch.id}>
                     <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       {ci + 1}. {ch.title}
@@ -372,6 +390,24 @@ export default function LessonViewerClient({
                       {ch.lessons.map((ol) => {
                         const isCurrent = ol.id === lesson.id;
                         const isDone = completedLessonIds.includes(ol.id);
+
+                        // Sequential gate: check if previous lesson is completed
+                        const globalIndex = allOutlineLessons.findIndex(l => l.id === ol.id);
+                        const isLocked = requireSequentialCompletion && globalIndex > 0 &&
+                          !completedLessonIds.includes(allOutlineLessons[globalIndex - 1].id) &&
+                          !isCurrent && !isDone;
+
+                        if (isLocked) {
+                          return (
+                            <li key={ol.id}>
+                              <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 cursor-not-allowed" title="Completez la lecon precedente d'abord">
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                <span className="truncate">{ol.title}</span>
+                              </div>
+                            </li>
+                          );
+                        }
+
                         return (
                           <li key={ol.id}>
                             <Link
@@ -405,7 +441,8 @@ export default function LessonViewerClient({
                       })}
                     </ul>
                   </div>
-                ))}
+                  );
+                })}
               </nav>
             </aside>
           </>
@@ -526,6 +563,92 @@ export default function LessonViewerClient({
                     className="prose prose-gray max-w-none"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(lesson.textContent) }}
                   />
+                </div>
+              )}
+
+              {/* ── 4 VOLETS CONTENU PAR NOTION ── */}
+              {(lesson.manualText || lesson.visualAnchorUrl || lesson.videoExplainerUrl || (lesson.supplementaryTexts && lesson.supplementaryTexts.length > 0)) && (
+                <div className="p-6 md:p-8 space-y-6 border-t border-gray-100">
+                  {/* Volet 1: Texte du manuel */}
+                  {lesson.manualText && (
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-blue-600 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        Texte du manuel
+                      </h3>
+                      <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-5 border border-blue-100 dark:border-blue-900">
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: renderMarkdown(lesson.manualText) }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Volet 2: Ancre visuel */}
+                  {lesson.visualAnchorUrl && (
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-600 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Ancre visuel
+                      </h3>
+                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-900 text-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={lesson.visualAnchorUrl}
+                          alt={lesson.visualAnchorAlt ?? `Ancre visuel — ${lesson.title}`}
+                          className="max-w-full rounded-lg mx-auto"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Volet 3: Video explicative */}
+                  {lesson.videoExplainerUrl && (
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-purple-600 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Video explicative
+                        {lesson.videoExplainerDuration && (
+                          <span className="text-xs font-normal text-purple-400">({Math.ceil(lesson.videoExplainerDuration / 60)} min)</span>
+                        )}
+                      </h3>
+                      <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg overflow-hidden border border-purple-100 dark:border-purple-900">
+                        <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                          <iframe
+                            className="absolute inset-0 w-full h-full"
+                            src={lesson.videoExplainerUrl}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={`Video — ${lesson.title}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Volet 4: Textes complementaires */}
+                  {lesson.supplementaryTexts && lesson.supplementaryTexts.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-600 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Textes complementaires
+                      </h3>
+                      <div className="space-y-3">
+                        {lesson.supplementaryTexts.map((text, i) => (
+                          <details key={i} className="bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-100 dark:border-amber-900 group">
+                            <summary className="p-4 cursor-pointer font-medium text-sm flex items-center justify-between hover:bg-amber-100/50 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
+                              {text.title}
+                              <svg className="w-4 h-4 transform group-open:rotate-180 transition-transform text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </summary>
+                            <div className="px-4 pb-4">
+                              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: renderMarkdown(text.content) }} />
+                              {text.source && (
+                                <p className="text-xs text-amber-500 mt-2 italic">Source: {text.source}</p>
+                              )}
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

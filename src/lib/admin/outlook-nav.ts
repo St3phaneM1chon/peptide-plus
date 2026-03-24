@@ -576,10 +576,19 @@ export const folderSections: Record<string, NavFolderSection> = {
         labelKey: 'admin.nav.formationContent',
         items: [
           { href: '/admin/formation/cours', labelKey: 'admin.nav.formationCourses', icon: BookOpen },
+          { href: '/admin/formation/forfaits', labelKey: 'admin.nav.formationBundles', icon: Package },
           { href: '/admin/formation/categories', labelKey: 'admin.nav.formationCategories', icon: FolderOpen },
           { href: '/admin/formation/quiz', labelKey: 'admin.nav.formationQuiz', icon: ClipboardList },
           { href: '/admin/formation/medias', labelKey: 'admin.nav.formationMedia', icon: Video },
           { href: '/admin/formation/instructeurs', labelKey: 'admin.nav.formationInstructors', icon: UserCheck },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.formationCorporate',
+        items: [
+          { href: '/admin/formation/corporatif', labelKey: 'admin.nav.formationCorporateAccounts', icon: Building2 },
         ],
         collapsible: true,
         defaultOpen: true,

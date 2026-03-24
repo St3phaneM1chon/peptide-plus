@@ -59,6 +59,13 @@ export default async function LessonPage({ params }: PageProps) {
               estimatedMinutes: true,
               isFree: true,
               description: true,
+              // 4 volets contenu par notion
+              manualText: true,
+              visualAnchorUrl: true,
+              visualAnchorAlt: true,
+              videoExplainerUrl: true,
+              videoExplainerDuration: true,
+              supplementaryTexts: true,
             },
           },
         },
@@ -157,7 +164,15 @@ export default async function LessonPage({ params }: PageProps) {
         quizId: currentLesson.quizId,
         description: currentLesson.description,
         estimatedMinutes: currentLesson.estimatedMinutes,
+        // 4 volets contenu par notion
+        manualText: currentLesson.manualText,
+        visualAnchorUrl: currentLesson.visualAnchorUrl,
+        visualAnchorAlt: currentLesson.visualAnchorAlt,
+        videoExplainerUrl: currentLesson.videoExplainerUrl,
+        videoExplainerDuration: currentLesson.videoExplainerDuration,
+        supplementaryTexts: currentLesson.supplementaryTexts as Array<{ title: string; content: string; source?: string }> | null,
       }}
+      requireSequentialCompletion={course.requireSequentialCompletion ?? true}
       chapter={{
         id: currentChapter.id,
         title: currentChapter.title,

@@ -6641,7 +6641,34 @@
       "quotes": "Devis",
       "timeTracking": "Suivi du temps",
       "help": "Aide",
-      "tutorials": "Tutoriels"
+      "tutorials": "Tutoriels",
+      "formation": "Formation",
+      "formationDashboard": "Tableau de bord",
+      "formationContent": "Contenu",
+      "formationCourses": "Cours",
+      "formationBundles": "Forfaits",
+      "formationCategories": "Categories",
+      "formationQuiz": "Quiz",
+      "formationMedia": "Medias",
+      "formationInstructors": "Instructeurs",
+      "formationCorporate": "Corporatif",
+      "formationCorporateAccounts": "Comptes corporatifs",
+      "formationStudents": "Etudiants",
+      "formationEnrollments": "Inscriptions",
+      "formationStudentsList": "Liste etudiants",
+      "formationProgress": "Progression",
+      "formationLeaderboard": "Classement",
+      "formationBadges": "Badges",
+      "formationReviews": "Avis",
+      "formationCertification": "Certification",
+      "formationCertificates": "Certificats",
+      "formationCertTemplates": "Modeles certificats",
+      "formationCompliance": "Conformite",
+      "formationAdmin": "Administration",
+      "formationAnalytics": "Analytique",
+      "formationReports": "Rapports",
+      "formationSettings": "Parametres",
+      "formationPortal": "Portail"
     },
     "tutorials": {
       "title": "Tutoriels",
@@ -12556,36 +12583,126 @@
       },
       "earnedOn": "Obtenu le {date}",
       "badge": {
-        "firstCourse": { "name": "Premier cours", "desc": "Terminer votre premier cours." },
-        "fiveCourses": { "name": "Etudiant assidu", "desc": "Terminer 5 cours." },
-        "tenCourses": { "name": "Expert en formation", "desc": "Terminer 10 cours." },
-        "allChapters": { "name": "Lecteur complet", "desc": "Terminer tous les chapitres d'un cours sans en sauter." },
-        "speedLearner": { "name": "Apprenant eclair", "desc": "Terminer un cours en moins de 3 jours." },
-        "perfectLesson": { "name": "Lecon parfaite", "desc": "Obtenir un score parfait a tous les quiz d'une lecon." },
-        "firstQuiz": { "name": "Premier quiz", "desc": "Reussir votre premier quiz." },
-        "quizAce": { "name": "As des quiz", "desc": "Reussir 10 quiz avec un score de 80% ou plus." },
-        "perfectScore": { "name": "Score parfait", "desc": "Obtenir 100% a un quiz." },
-        "conceptMaster": { "name": "Maitre des concepts", "desc": "Maitriser 25 concepts dans la carte de maitrise." },
-        "reviewChamp": { "name": "Champion de revision", "desc": "Completer 50 revisions espacees." },
-        "diagnosticPro": { "name": "Diagnostic pro", "desc": "Terminer le quiz diagnostic avec un score de 90% ou plus." },
-        "streak3": { "name": "3 jours de suite", "desc": "Etudier 3 jours consecutifs." },
-        "streak7": { "name": "Une semaine complete", "desc": "Etudier 7 jours consecutifs." },
-        "streak14": { "name": "Deux semaines de feu", "desc": "Etudier 14 jours consecutifs." },
-        "streak30": { "name": "Un mois dedic", "desc": "Etudier 30 jours consecutifs." },
-        "streak100": { "name": "Legende centenaire", "desc": "Etudier 100 jours consecutifs." },
-        "weekendWarrior": { "name": "Guerrier du weekend", "desc": "Etudier 4 weekends de suite." },
-        "firstNote": { "name": "Premiere note", "desc": "Creer votre premiere note de cours." },
-        "helpfulReview": { "name": "Avis utile", "desc": "Laisser un avis sur un cours complete." },
-        "roleplayPro": { "name": "Pro du role-play", "desc": "Reussir 5 simulations client." },
-        "teamPlayer": { "name": "Joueur d'equipe", "desc": "Participer a un groupe d'etude." },
-        "aureliaFriend": { "name": "Ami d'Aurelia", "desc": "Poser 20 questions a Aurelia." },
-        "flashcardNinja": { "name": "Ninja des flashcards", "desc": "Reviser 100 flashcards." },
-        "earlyAdopter": { "name": "Pionnier", "desc": "Etre parmi les premiers utilisateurs de la plateforme." },
-        "nightOwl": { "name": "Oiseau de nuit", "desc": "Etudier 5 fois apres 22h." },
-        "explorer": { "name": "Explorateur", "desc": "Visiter toutes les sections de la plateforme." },
-        "compliance": { "name": "Conforme", "desc": "Terminer tous les cours obligatoires de conformite." },
-        "dedicatedLearner": { "name": "Apprenant dedie", "desc": "Cumuler 100 heures d'etude." },
-        "ufcComplete": { "name": "UFC completes", "desc": "Obtenir les 30 UFC d'une periode de reference." }
+        "firstCourse": {
+          "name": "Premier cours",
+          "desc": "Terminer votre premier cours."
+        },
+        "fiveCourses": {
+          "name": "Etudiant assidu",
+          "desc": "Terminer 5 cours."
+        },
+        "tenCourses": {
+          "name": "Expert en formation",
+          "desc": "Terminer 10 cours."
+        },
+        "allChapters": {
+          "name": "Lecteur complet",
+          "desc": "Terminer tous les chapitres d'un cours sans en sauter."
+        },
+        "speedLearner": {
+          "name": "Apprenant eclair",
+          "desc": "Terminer un cours en moins de 3 jours."
+        },
+        "perfectLesson": {
+          "name": "Lecon parfaite",
+          "desc": "Obtenir un score parfait a tous les quiz d'une lecon."
+        },
+        "firstQuiz": {
+          "name": "Premier quiz",
+          "desc": "Reussir votre premier quiz."
+        },
+        "quizAce": {
+          "name": "As des quiz",
+          "desc": "Reussir 10 quiz avec un score de 80% ou plus."
+        },
+        "perfectScore": {
+          "name": "Score parfait",
+          "desc": "Obtenir 100% a un quiz."
+        },
+        "conceptMaster": {
+          "name": "Maitre des concepts",
+          "desc": "Maitriser 25 concepts dans la carte de maitrise."
+        },
+        "reviewChamp": {
+          "name": "Champion de revision",
+          "desc": "Completer 50 revisions espacees."
+        },
+        "diagnosticPro": {
+          "name": "Diagnostic pro",
+          "desc": "Terminer le quiz diagnostic avec un score de 90% ou plus."
+        },
+        "streak3": {
+          "name": "3 jours de suite",
+          "desc": "Etudier 3 jours consecutifs."
+        },
+        "streak7": {
+          "name": "Une semaine complete",
+          "desc": "Etudier 7 jours consecutifs."
+        },
+        "streak14": {
+          "name": "Deux semaines de feu",
+          "desc": "Etudier 14 jours consecutifs."
+        },
+        "streak30": {
+          "name": "Un mois dedic",
+          "desc": "Etudier 30 jours consecutifs."
+        },
+        "streak100": {
+          "name": "Legende centenaire",
+          "desc": "Etudier 100 jours consecutifs."
+        },
+        "weekendWarrior": {
+          "name": "Guerrier du weekend",
+          "desc": "Etudier 4 weekends de suite."
+        },
+        "firstNote": {
+          "name": "Premiere note",
+          "desc": "Creer votre premiere note de cours."
+        },
+        "helpfulReview": {
+          "name": "Avis utile",
+          "desc": "Laisser un avis sur un cours complete."
+        },
+        "roleplayPro": {
+          "name": "Pro du role-play",
+          "desc": "Reussir 5 simulations client."
+        },
+        "teamPlayer": {
+          "name": "Joueur d'equipe",
+          "desc": "Participer a un groupe d'etude."
+        },
+        "aureliaFriend": {
+          "name": "Ami d'Aurelia",
+          "desc": "Poser 20 questions a Aurelia."
+        },
+        "flashcardNinja": {
+          "name": "Ninja des flashcards",
+          "desc": "Reviser 100 flashcards."
+        },
+        "earlyAdopter": {
+          "name": "Pionnier",
+          "desc": "Etre parmi les premiers utilisateurs de la plateforme."
+        },
+        "nightOwl": {
+          "name": "Oiseau de nuit",
+          "desc": "Etudier 5 fois apres 22h."
+        },
+        "explorer": {
+          "name": "Explorateur",
+          "desc": "Visiter toutes les sections de la plateforme."
+        },
+        "compliance": {
+          "name": "Conforme",
+          "desc": "Terminer tous les cours obligatoires de conformite."
+        },
+        "dedicatedLearner": {
+          "name": "Apprenant dedie",
+          "desc": "Cumuler 100 heures d'etude."
+        },
+        "ufcComplete": {
+          "name": "UFC completes",
+          "desc": "Obtenir les 30 UFC d'une periode de reference."
+        }
       },
       "leaderboardTitle": "Classement par equipe",
       "leaderboardSubtitle": "Comparez la performance de votre equipe avec les autres cabinets.",
