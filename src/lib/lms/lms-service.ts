@@ -311,6 +311,13 @@ async function recalculateEnrollmentProgress(enrollmentId: string) {
       } catch {
         // Certificate issuance failure should not block completion
       }
+
+      // Auto-award badges on course completion
+      try {
+        await checkAndAwardBadges(enrollment.tenantId, enrollment.userId);
+      } catch {
+        // Badge award failure should not block completion
+      }
     }
   }
 
@@ -956,4 +963,77 @@ export async function resolvePricing(
   }
 
   return { price: originalPrice, originalPrice, discount: 0, isCorporate: true };
+}
+
+// ── Badge Auto-Award ────────────────────────────────────────────
+
+/**
+ * Checks and awards badges automatically based on student activity.
+ * Call after course completion, quiz pass, or streak update.
+ */
+export async function checkAndAwardBadges(tenantId: string, userId: string) {
+  const badges = await prisma.lmsBadge.findMany({
+    where: { tenantId, isActive: true },
+    select: { id: true, criteria: true },
+  });
+
+  if (badges.length === 0) return [];
+
+  // Load student stats
+  const [completedCourses, quizAttempts, streak, existingAwards] = await Promise.all([
+    prisma.enrollment.count({ where: { tenantId, userId, status: 'COMPLETED' } }),
+    prisma.quizAttempt.findMany({
+      where: { tenantId, userId, passed: true },
+      select: { id: true, score: true },
+    }),
+    prisma.lmsStreak.findFirst({ where: { tenantId, userId }, select: { currentStreak: true, longestStreak: true } }),
+    prisma.lmsBadgeAward.findMany({ where: { tenantId, userId }, select: { badgeId: true } }),
+  ]);
+
+  const awardedBadgeIds = new Set(existingAwards.map(a => a.badgeId));
+  const newAwards: string[] = [];
+
+  for (const badge of badges) {
+    if (awardedBadgeIds.has(badge.id)) continue;
+
+    const criteria = badge.criteria as { type?: string; value?: number } | null;
+    if (!criteria?.type) continue;
+
+    let qualifies = false;
+
+    switch (criteria.type) {
+      case 'course_completion':
+        qualifies = completedCourses >= (criteria.value ?? 1);
+        break;
+      case 'courses_completed':
+        qualifies = completedCourses >= (criteria.value ?? 5);
+        break;
+      case 'quiz_score':
+        qualifies = quizAttempts.some(q => Number(q.score) >= (criteria.value ?? 90));
+        break;
+      case 'streak_days':
+        qualifies = (streak?.currentStreak ?? 0) >= (criteria.value ?? 7);
+        break;
+      case 'manual':
+        // Manual badges are awarded by admin only
+        break;
+    }
+
+    if (qualifies) {
+      await prisma.lmsBadgeAward.create({
+        data: { tenantId, badgeId: badge.id, userId },
+      });
+      newAwards.push(badge.id);
+    }
+  }
+
+  // Update leaderboard badge count if new awards
+  if (newAwards.length > 0) {
+    await prisma.lmsLeaderboard.updateMany({
+      where: { tenantId, userId },
+      data: { badgeCount: { increment: newAwards.length } },
+    });
+  }
+
+  return newAwards;
 }

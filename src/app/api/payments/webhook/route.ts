@@ -1111,6 +1111,12 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
   });
 
   if (!order) {
+    // Check if this is an LMS refund (CourseOrder or CourseBundleOrder)
+    const lmsRefunded = await handleLmsRefund(charge);
+    if (lmsRefunded) {
+      await completeWebhookEvent(eventId);
+      return;
+    }
     logger.error('Order not found for refund', { paymentIntent: charge.payment_intent });
     await completeWebhookEvent(eventId);
     return;
@@ -1716,4 +1722,55 @@ async function handleLmsCheckoutComplete(
       data: { budgetUsed: { increment: (session.amount_total ?? 0) / 100 } },
     });
   }
+}
+
+// =====================================================
+// LMS REFUND HANDLER
+// =====================================================
+
+async function handleLmsRefund(charge: Stripe.Charge): Promise<boolean> {
+  const paymentIntentId = charge.payment_intent as string;
+  if (!paymentIntentId) return false;
+
+  // Check CourseOrder
+  const courseOrder = await prisma.courseOrder.findFirst({
+    where: { stripePaymentIntentId: paymentIntentId },
+  });
+
+  if (courseOrder) {
+    // Suspend enrollment
+    await prisma.enrollment.updateMany({
+      where: { tenantId: courseOrder.tenantId, courseId: courseOrder.courseId, userId: courseOrder.userId },
+      data: { status: 'SUSPENDED' },
+    });
+    await prisma.courseOrder.update({
+      where: { id: courseOrder.id },
+      data: { status: 'refunded', refundedAt: new Date(), refundAmount: (charge.amount_refunded ?? 0) / 100 },
+    });
+    logger.info('[LMS Refund] Course enrollment suspended', { courseOrderId: courseOrder.id, userId: courseOrder.userId });
+    return true;
+  }
+
+  // Check CourseBundleOrder
+  const bundleOrder = await prisma.courseBundleOrder.findFirst({
+    where: { stripePaymentIntentId: paymentIntentId },
+  });
+
+  if (bundleOrder) {
+    // Suspend all enrollments from this bundle
+    for (const enrollmentId of bundleOrder.enrollmentIds) {
+      await prisma.enrollment.update({
+        where: { id: enrollmentId },
+        data: { status: 'SUSPENDED' },
+      }).catch(() => {}); // Some enrollments may not exist anymore
+    }
+    await prisma.courseBundleOrder.update({
+      where: { id: bundleOrder.id },
+      data: { status: 'refunded' },
+    });
+    logger.info('[LMS Refund] Bundle enrollments suspended', { bundleOrderId: bundleOrder.id, count: bundleOrder.enrollmentIds.length });
+    return true;
+  }
+
+  return false;
 }
