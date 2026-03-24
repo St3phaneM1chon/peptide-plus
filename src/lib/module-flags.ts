@@ -30,7 +30,8 @@ export type ModuleKey =
   | 'loyalty'
   | 'media'
   | 'community'
-  | 'catalog';
+  | 'catalog'
+  | 'formation';
 
 /**
  * Check if a module is enabled via its feature flag in SiteSetting.

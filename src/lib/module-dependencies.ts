@@ -24,6 +24,7 @@ export const MODULE_DEPENDENCIES: Record<string, ModuleDependency> = {
   marketplace_enterprise: { requires: ['ecommerce'] },
   subscriptions: { requires: ['ecommerce'] },
   accounting_advanced: { requires: ['accounting'] },
+  formation: { requires: [] },
 };
 
 const PLAN_HIERARCHY = ['alacarte', 'essential', 'pro', 'enterprise'];

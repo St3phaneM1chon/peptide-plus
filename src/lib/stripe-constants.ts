@@ -76,6 +76,7 @@ export const KORALINE_MODULES = {
   ambassadors: { name: 'Ambassadeurs & Affiliation', monthlyPrice: 1900, description: 'Programme d\'affiliation, liens de parrainage' },
   monitoring: { name: 'Monitoring & Webhooks', monthlyPrice: 2900, description: 'Surveillance, webhooks, alertes' },
   accounting_advanced: { name: 'Comptabilité Avancée', monthlyPrice: 9900, description: 'Rapports avancés, multi-devises, exports' },
+  formation: { name: 'Formation continue (Aptitudes)', monthlyPrice: 4900, description: 'LMS complet: cours, forfaits PQAP, Aurelia IA tutrice, certification, conformité UFC, parrainage corporatif' },
 } as const;
 
 export type KoralineModule = keyof typeof KORALINE_MODULES;

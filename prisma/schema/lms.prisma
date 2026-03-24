@@ -963,6 +963,7 @@ model StudentProfile {
   id          String   @id @default(cuid())
   tenantId    String
   userId      String   @unique
+  user        User     @relation("UserStudentProfile", fields: [userId], references: [id], onDelete: Cascade)
 
   // ── Identité ──────────────────────────────────────────────
   firstName        String?
@@ -1787,6 +1788,7 @@ model CorporateAccount {
   tenantId          String
   companyName       String                          // "Chubb Insurance", "Industrielle Alliance"
   companyId         String?                         // Lien optionnel vers Company (ecommerce)
+  company           Company? @relation("CompanyCorporateAccounts", fields: [companyId], references: [id], onDelete: SetNull)
   slug              String
   contactEmail      String
   contactName       String?

@@ -296,6 +296,9 @@ model User {
   agentPayouts           CommissionPayout[]    @relation("RepCommissionAgent")
   approvedPayouts        CommissionPayout[]    @relation("RepCommissionApprover")
 
+  // LMS (Formation)
+  studentProfile         StudentProfile?       @relation("UserStudentProfile")
+
   @@index([role])
   @@index([createdAt])
   @@index([loyaltyTier])

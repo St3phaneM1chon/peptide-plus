@@ -9564,12 +9564,7 @@
       "certificates": "Certificates",
       "overdueComplianceAlert": "overdue compliance trainings",
       "viewDetails": "View Details",
-      "level": {
-        "beginner": "Beginner",
-        "intermediate": "Intermediate",
-        "advanced": "Advanced",
-        "expert": "Expert"
-      },
+      "level": "Level",
       "status": {
         "draft": "Draft",
         "underReview": "Under Review",
@@ -13407,6 +13402,21 @@
       "markComplete": "Mark as complete",
       "completed": "Completed",
       "keyboardHint": "Space: play/pause | Arrows: seek | M: mute | F: fullscreen"
+    },
+    "courseDetail": {
+      "aboutCourse": "About this course",
+      "certificate": "Completion certificate",
+      "chapters": "Chapters",
+      "continueLearning": "Continue learning",
+      "enrollError": "Enrollment error",
+      "enrollNow": "Enroll now",
+      "free": "Free",
+      "includes": "This course includes",
+      "instructor": "Instructor",
+      "lifetimeAccess": "Lifetime access",
+      "loginToEnroll": "Log in to enroll",
+      "prerequisites": "Prerequisites",
+      "reviews": "Reviews"
     }
   },
   "mailingList": {

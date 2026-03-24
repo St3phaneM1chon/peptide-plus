@@ -175,6 +175,9 @@ model Company {
   ivrMenus           IvrMenu[]         @relation("CompanyIvrMenus")
   coachingSessions   CoachingSession[] @relation("CompanyCoaching")
 
+  // LMS (Formation) — Corporate accounts linked to this company
+  corporateAccounts  CorporateAccount[] @relation("CompanyCorporateAccounts")
+
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])

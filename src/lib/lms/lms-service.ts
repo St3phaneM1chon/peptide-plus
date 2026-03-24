@@ -755,6 +755,17 @@ export async function enrollUserInBundle(
     throw new Error('Bundle not found');
   }
 
+  // Cross-tenant validation for corporate account
+  if (options?.corporateAccountId) {
+    const corp = await prisma.corporateAccount.findFirst({
+      where: { id: options.corporateAccountId, tenantId },
+      select: { id: true },
+    });
+    if (!corp) {
+      throw new Error('Corporate account does not belong to this tenant');
+    }
+  }
+
   const enrollmentIds: string[] = [];
   const skippedCourseIds: string[] = [];
 
