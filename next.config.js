@@ -209,6 +209,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // FIX: KB-PP-BUILD-013 — Reduce build memory usage on Railway (OOM at 4GB, now 8GB)
+    webpackMemoryOptimizations: true,
+    serverSourceMaps: false,
   },
   
   // Images - Optimisation et domaines autorisés

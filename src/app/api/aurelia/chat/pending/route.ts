@@ -10,12 +10,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
-const DAEMON_KEY = process.env.AURELIA_DAEMON_KEY;
-if (!DAEMON_KEY) throw new Error('AURELIA_DAEMON_KEY not configured');
+// KB-PP-BUILD-002: Lazy init — NEVER throw at top-level (crashes next build)
+function getDaemonKey(): string {
+  const key = process.env.AURELIA_DAEMON_KEY;
+  if (!key) throw new Error('AURELIA_DAEMON_KEY not configured');
+  return key;
+}
 
 function validateDaemonKey(request: NextRequest): boolean {
   const key = request.headers.get('x-aurelia-daemon-key');
-  return key === DAEMON_KEY;
+  return key === getDaemonKey();
 }
 
 /**
