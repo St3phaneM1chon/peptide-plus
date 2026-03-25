@@ -252,6 +252,15 @@ export async function updateLessonProgress(
     throw new Error('Course already completed');
   }
 
+  // FIX P1: Validate lessonId belongs to the enrollment's course
+  const lesson = await prisma.lesson.findFirst({
+    where: { id: lessonId, chapter: { courseId: enrollment.courseId } },
+    select: { id: true },
+  });
+  if (!lesson) {
+    throw new Error('Lesson does not belong to this course');
+  }
+
   // Validate: if videoCompleted is true, videoProgress must be > 0
   if (data.videoCompleted && (data.videoProgress === undefined || data.videoProgress <= 0)) {
     throw new Error('Cannot mark video as completed without video progress');
@@ -462,6 +471,15 @@ export async function issueCertificate(
   userId: string,
   studentName: string
 ) {
+  // FIX P1: Prevent duplicate certificate issuance
+  const existingCert = await prisma.certificate.findFirst({
+    where: { tenantId, userId, enrollment: { courseId: (await prisma.enrollment.findUnique({ where: { id: enrollmentId }, select: { courseId: true } }))?.courseId ?? '' } },
+    select: { id: true },
+  });
+  if (existingCert) {
+    throw new Error('Certificate already issued for this course');
+  }
+
   const enrollment = await prisma.enrollment.findFirst({
     where: { id: enrollmentId, tenantId, userId, status: 'COMPLETED' },
     include: {
