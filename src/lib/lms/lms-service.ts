@@ -936,12 +936,15 @@ export async function getCorporateAccountById(tenantId: string, id: string) {
 export async function getCorporateDashboardStats(tenantId: string, corporateAccountId: string) {
   const [account, enrollments, employees] = await Promise.all([
     prisma.corporateAccount.findFirst({ where: { id: corporateAccountId, tenantId } }),
+    // FIX P2: Limit enrollments loaded into memory (large companies could have 10K+)
     prisma.enrollment.findMany({
       where: { tenantId, corporateAccountId },
       include: {
         course: { select: { title: true, slug: true } },
         lessonProgress: { select: { isCompleted: true, quizScore: true, quizPassed: true } },
       },
+      take: 1000, // Cap at 1000 most recent enrollments
+      orderBy: { enrolledAt: 'desc' },
     }),
     prisma.corporateEmployee.findMany({
       where: { tenantId, corporateAccountId, isActive: true },
