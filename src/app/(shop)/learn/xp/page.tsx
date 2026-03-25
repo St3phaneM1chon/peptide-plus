@@ -17,12 +17,12 @@ export default function XpPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/lms/recommendations').then(r => r.json()).catch(() => ({ data: [] })),
-    ]).finally(() => setLoading(false));
-    // XP summary would come from a dedicated endpoint
-    setXp({ balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [] });
-    setLoading(false);
+    // FIX P2-09: Fetch real XP data instead of mock
+    fetch('/api/lms/xp')
+      .then(r => r.json())
+      .then(d => setXp(d.data ?? { balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [] }))
+      .catch(() => setXp({ balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [] }))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Chargement...</div>;
