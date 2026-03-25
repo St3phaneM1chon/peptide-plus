@@ -21,7 +21,12 @@ const addQuestionSchema = z.object({
   points: z.number().int().min(1).max(10).optional(),
   bloomLevel: z.number().int().min(1).max(5).optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
-  options: z.any().optional(),
+  // FIX P2: Validate options structure instead of z.any()
+  options: z.array(z.object({
+    id: z.string().optional(),
+    text: z.string(),
+    isCorrect: z.boolean().optional(),
+  })).optional(),
   correctAnswer: z.string().optional(),
   tags: z.array(z.string()).optional(),
   conceptId: z.string().optional(),
