@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db';
 import type { Prisma, CourseStatus } from '@prisma/client';
 import { sendEmail } from '@/lib/email';
 import { buildCertificateIssuedEmail } from '@/lib/email/templates/lms-emails';
-import { awardXp } from '@/lib/lms/xp-service';
+import { awardXp, updateStreak } from '@/lib/lms/xp-service';
 
 // ── Courses ──────────────────────────────────────────────────
 
@@ -315,6 +315,8 @@ export async function updateLessonProgress(
     try {
       await awardXp(enrollment.tenantId, enrollment.userId, 'lesson_complete', lessonId);
     } catch { /* XP failure should not block progress */ }
+    // FIX P7-11: Update daily streak on lesson completion
+    updateStreak(enrollment.tenantId, enrollment.userId).catch(() => {});
   }
 
   return progress;

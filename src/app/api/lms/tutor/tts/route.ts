@@ -114,19 +114,29 @@ export const POST = withUserGuard(async (request: NextRequest) => {
     // Call ElevenLabs TTS API
     const elevenLabsUrl = `${ELEVENLABS_API_BASE}/text-to-speech/${resolvedVoiceId}`;
 
-    const ttsResponse = await fetch(elevenLabsUrl, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json',
-        'Accept': 'audio/mpeg',
-      },
-      body: JSON.stringify({
-        text: trimmedText,
-        model_id: DEFAULT_MODEL_ID,
-        voice_settings: VOICE_SETTINGS,
-      }),
-    });
+    // FIX P4-09: AbortController with 15s timeout to prevent hanging requests
+    const ttsAbort = new AbortController();
+    const ttsTimeout = setTimeout(() => ttsAbort.abort(), 15_000);
+
+    let ttsResponse: Response;
+    try {
+      ttsResponse = await fetch(elevenLabsUrl, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'audio/mpeg',
+        },
+        body: JSON.stringify({
+          text: trimmedText,
+          model_id: DEFAULT_MODEL_ID,
+          voice_settings: VOICE_SETTINGS,
+        }),
+        signal: ttsAbort.signal,
+      });
+    } finally {
+      clearTimeout(ttsTimeout);
+    }
 
     if (!ttsResponse.ok) {
       const errorBody = await ttsResponse.text().catch(() => 'Unknown error');
@@ -174,6 +184,15 @@ export const POST = withUserGuard(async (request: NextRequest) => {
       },
     });
   } catch (error) {
+    // FIX P4-09: Distinguish timeout from other errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.error('[TTS] ElevenLabs request timed out (15s)');
+      return NextResponse.json(
+        { error: 'Le service de synthèse vocale a expiré. Réessayez.' },
+        { status: 504 }
+      );
+    }
+
     logger.error('[TTS] Text-to-speech failed', {
       error: error instanceof Error ? error.message : String(error),
     });

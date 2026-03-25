@@ -153,15 +153,25 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
 
     const deepgramUrl = `${DEEPGRAM_API_URL}?${params.toString()}`;
 
+    // FIX P4-10: AbortController with 60s timeout to prevent hanging requests
+    const sttAbort = new AbortController();
+    const sttTimeout = setTimeout(() => sttAbort.abort(), 60_000);
+
     // Send to Deepgram
-    const deepgramResponse = await fetch(deepgramUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${deepgramKey}`,
-        'Content-Type': mimeType || 'audio/webm',
-      },
-      body: audioBuffer,
-    });
+    let deepgramResponse: Response;
+    try {
+      deepgramResponse = await fetch(deepgramUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${deepgramKey}`,
+          'Content-Type': mimeType || 'audio/webm',
+        },
+        body: audioBuffer,
+        signal: sttAbort.signal,
+      });
+    } finally {
+      clearTimeout(sttTimeout);
+    }
 
     if (!deepgramResponse.ok) {
       const errorBody = await deepgramResponse.text().catch(() => 'Unknown error');
@@ -206,6 +216,15 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
       duration: Math.round(duration * 100) / 100,
     });
   } catch (error) {
+    // FIX P4-10: Distinguish timeout from other errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.error('[STT] Deepgram request timed out (60s)', { userId: session.user.id });
+      return NextResponse.json(
+        { error: 'Le service de transcription a expiré. Réessayez avec un fichier plus court.' },
+        { status: 504 }
+      );
+    }
+
     logger.error('[STT] Transcription failed', {
       userId: session.user.id,
       error: error instanceof Error ? error.message : String(error),

@@ -46,8 +46,16 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
       take: limit,
     });
 
+    // FIX P7-03: Look up user names instead of exposing raw userId
+    const userIds = enrollments.map(e => e.userId);
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true },
+    });
+    const userMap = new Map(users.map(u => [u.id, u]));
+
     const computed = enrollments.map((e, i) => ({
-      userId: e.userId,
+      displayName: userMap.get(e.userId)?.name ?? 'Etudiant',
       coursesCompleted: e._count.id,
       totalPoints: e._count.id * 100,
       currentStreak: 0,
@@ -55,13 +63,13 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
       rank: i + 1,
     }));
 
-    // Find current user's rank
-    const myRank = computed.findIndex(e => e.userId === session.user.id);
+    // Find current user's rank (match by index since userId is no longer in output)
+    const myRankIndex = enrollments.findIndex(e => e.userId === session.user.id);
 
     return NextResponse.json({
       data: {
         leaderboard: computed,
-        myRank: myRank >= 0 ? myRank + 1 : null,
+        myRank: myRankIndex >= 0 ? myRankIndex + 1 : null,
         period,
         source: 'computed',
       },

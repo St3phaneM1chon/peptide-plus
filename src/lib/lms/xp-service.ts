@@ -113,8 +113,10 @@ export async function getXpSummary(tenantId: string, userId: string) {
 
   const balance = lastTransaction?.balance ?? 0;
   // FIX P3: Level 0 when no XP, level 1 starts at 1 XP
-  const level = balance > 0 ? Math.floor(balance / 500) + 1 : 0;
-  const xpToNextLevel = balance > 0 ? 500 - (balance % 500) : 500;
+  // FIX P7-07: Cap at MAX_LEVEL to prevent unbounded growth
+  const MAX_LEVEL = 50;
+  const level = balance > 0 ? Math.min(MAX_LEVEL, Math.floor(balance / 500) + 1) : 0;
+  const xpToNextLevel = level >= MAX_LEVEL ? 0 : (balance > 0 ? 500 - (balance % 500) : 500);
 
   return {
     balance,
@@ -139,7 +141,7 @@ async function updateChallengeProgress(tenantId: string, userId: string, action:
       isCompleted: false,
       challenge: { isActive: true, startsAt: { lte: now }, endsAt: { gte: now } },
     },
-    include: { challenge: { select: { criteria: true, xpReward: true } } },
+    include: { challenge: { select: { criteria: true, xpReward: true, badgeId: true } } },
     take: 20, // FIX P3: Limit to prevent large result sets
   });
 
@@ -170,6 +172,19 @@ async function updateChallengeProgress(tenantId: string, userId: string, action:
         data: { xpAwarded: true },
       });
 
+      // FIX P7-09: Award badge if challenge has one
+      if (participant.challenge.badgeId) {
+        const alreadyAwarded = await prisma.lmsBadgeAward.findFirst({
+          where: { tenantId, badgeId: participant.challenge.badgeId, userId },
+          select: { id: true },
+        });
+        if (!alreadyAwarded) {
+          await prisma.lmsBadgeAward.create({
+            data: { tenantId, badgeId: participant.challenge.badgeId, userId },
+          });
+        }
+      }
+
       // Create notification
       await prisma.lmsNotification.create({
         data: {
@@ -183,4 +198,45 @@ async function updateChallengeProgress(tenantId: string, userId: string, action:
       }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
     }
   }
+}
+
+/**
+ * FIX P7-11: Update daily streak for a user.
+ * Called when a lesson is completed. Increments streak if consecutive day,
+ * resets to 1 if gap > 1 day, no-op if already counted today.
+ */
+export async function updateStreak(tenantId: string, userId: string): Promise<void> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const streak = await prisma.lmsStreak.findFirst({
+    where: { tenantId, userId },
+  });
+
+  if (!streak) {
+    await prisma.lmsStreak.create({
+      data: { tenantId, userId, currentStreak: 1, longestStreak: 1, lastActivityDate: today },
+    });
+    return;
+  }
+
+  const lastDate = streak.lastActivityDate ? new Date(streak.lastActivityDate) : null;
+  if (lastDate) lastDate.setHours(0, 0, 0, 0);
+
+  if (lastDate && lastDate.getTime() === today.getTime()) return; // Already counted today
+
+  const newStreak = lastDate && lastDate.getTime() === yesterday.getTime()
+    ? streak.currentStreak + 1
+    : 1; // Reset if gap > 1 day
+
+  await prisma.lmsStreak.update({
+    where: { id: streak.id },
+    data: {
+      currentStreak: newStreak,
+      longestStreak: Math.max(newStreak, streak.longestStreak),
+      lastActivityDate: today,
+    },
+  });
 }
