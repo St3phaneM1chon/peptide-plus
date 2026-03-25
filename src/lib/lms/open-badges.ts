@@ -87,6 +87,11 @@ export function generateBadgeAssertion(params: {
   expiresOn?: Date;
   evidence?: Array<{ id: string; name: string; description: string }>;
 }): OpenBadgeAssertion {
+  // FIX P3: Validate email before generating assertion
+  if (!params.recipientEmail || !params.recipientEmail.includes('@')) {
+    throw new Error('Valid recipient email required for badge assertion');
+  }
+
   return {
     '@context': [
       'https://www.w3.org/ns/credentials/v2',
