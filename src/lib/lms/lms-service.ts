@@ -3,6 +3,7 @@ import type { Prisma, CourseStatus } from '@prisma/client';
 import { sendEmail } from '@/lib/email';
 import { buildCertificateIssuedEmail } from '@/lib/email/templates/lms-emails';
 import { awardXp, updateStreak } from '@/lib/lms/xp-service';
+import { logAudit } from '@/lib/lms/audit-trail';
 
 // ── Courses ──────────────────────────────────────────────────
 
@@ -614,6 +615,16 @@ export async function issueCertificate(
     where: { id: enrollmentId },
     data: { certificateId: certificate.id },
   });
+
+  // P11-09 FIX: Audit log for certificate issuance (non-blocking)
+  logAudit({
+    tenantId,
+    userId,
+    action: 'create',
+    entity: 'certificate',
+    entityId: certificate.id,
+    details: { courseTitle: course.title, enrollmentId, verificationCode },
+  }).catch(() => {});
 
   // V2 P0 FIX: Auto-create CeCredit when course has accreditation (UFC system was non-functional)
   try {

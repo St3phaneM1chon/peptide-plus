@@ -56,12 +56,19 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     });
     if (!qaCheck) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
+    // P8-12 FIX: Detect if user is an instructor
+    const isInstructor = !!(await prisma.instructorProfile.findFirst({
+      where: { tenantId, userId: session.user.id, isActive: true },
+      select: { id: true },
+    }));
+
     const answer = await prisma.lessonQAAnswer.create({
       data: {
         tenantId,
         qaId: parsed.data.qaId,
         userId: session.user.id,
         content: parsed.data.content,
+        isInstructor,
       },
     });
 

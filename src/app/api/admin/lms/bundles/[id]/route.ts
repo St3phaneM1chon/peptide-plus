@@ -51,23 +51,25 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 
   const { courseIds, ...updateData } = parsed.data;
 
-  // Update bundle items if courseIds provided
-  if (courseIds) {
-    await prisma.courseBundleItem.deleteMany({ where: { bundleId: id } });
-    await prisma.courseBundleItem.createMany({
-      data: courseIds.map((courseId, i) => ({ bundleId: id, courseId, sortOrder: i })),
-    });
-  }
+  // P9-05 FIX: Wrap delete+create+update in $transaction for atomicity
+  const bundle = await prisma.$transaction(async (tx) => {
+    if (courseIds) {
+      await tx.courseBundleItem.deleteMany({ where: { bundleId: id } });
+      await tx.courseBundleItem.createMany({
+        data: courseIds.map((courseId, i) => ({ bundleId: id, courseId, sortOrder: i })),
+      });
+    }
 
-  const bundle = await prisma.courseBundle.update({
-    where: { id },
-    data: {
-      ...updateData,
-      ...(courseIds ? { courseCount: courseIds.length } : {}),
-    },
-    include: {
-      items: { include: { course: { select: { id: true, title: true, slug: true } } }, orderBy: { sortOrder: 'asc' } },
-    },
+    return tx.courseBundle.update({
+      where: { id },
+      data: {
+        ...updateData,
+        ...(courseIds ? { courseCount: courseIds.length } : {}),
+      },
+      include: {
+        items: { include: { course: { select: { id: true, title: true, slug: true } } }, orderBy: { sortOrder: 'asc' } },
+      },
+    });
   });
 
   return apiSuccess(bundle, { request });

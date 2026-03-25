@@ -60,20 +60,38 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     if (!discussion) return NextResponse.json({ error: 'Discussion not found' }, { status: 404 });
     if (discussion.isLocked) return NextResponse.json({ error: 'Discussion is locked' }, { status: 403 });
 
-    const reply = await prisma.courseDiscussionReply.create({
-      data: {
-        tenantId,
-        discussionId: parsed.data.discussionId,
-        userId: session.user.id,
-        content: parsed.data.content,
-        parentReplyId: parsed.data.parentReplyId ?? null,
-      },
-    });
+    // P8-03 FIX: Validate parentReplyId belongs to same tenant and discussion
+    if (parsed.data.parentReplyId) {
+      const parentReply = await prisma.courseDiscussionReply.findFirst({
+        where: { id: parsed.data.parentReplyId, tenantId, discussionId: parsed.data.discussionId },
+        select: { id: true },
+      });
+      if (!parentReply) return NextResponse.json({ error: 'Parent reply not found' }, { status: 404 });
+    }
 
-    await prisma.courseDiscussion.update({
-      where: { id: parsed.data.discussionId },
-      data: { replyCount: { increment: 1 } },
-    });
+    // P8-12 FIX: Detect if user is an instructor
+    const isInstructor = !!(await prisma.instructorProfile.findFirst({
+      where: { tenantId, userId: session.user.id, isActive: true },
+      select: { id: true },
+    }));
+
+    // P8-10 FIX: Wrap reply create + replyCount increment in a transaction
+    const [reply] = await prisma.$transaction([
+      prisma.courseDiscussionReply.create({
+        data: {
+          tenantId,
+          discussionId: parsed.data.discussionId,
+          userId: session.user.id,
+          content: parsed.data.content,
+          parentReplyId: parsed.data.parentReplyId ?? null,
+          isInstructor,
+        },
+      }),
+      prisma.courseDiscussion.update({
+        where: { id: parsed.data.discussionId },
+        data: { replyCount: { increment: 1 } },
+      }),
+    ]);
 
     return NextResponse.json({ data: reply }, { status: 201 });
   }

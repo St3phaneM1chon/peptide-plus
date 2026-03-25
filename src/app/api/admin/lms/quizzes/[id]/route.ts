@@ -122,6 +122,12 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
     return apiError('Quiz not found', ErrorCode.NOT_FOUND, { request, status: 404 });
   }
 
+  // P9-12 FIX: Prevent deleting quizzes with existing student attempts
+  const attemptCount = await prisma.quizAttempt.count({ where: { quizId: id, tenantId } });
+  if (attemptCount > 0) {
+    return apiError('Cannot delete quiz with existing attempts. Archive it instead.', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+  }
+
   await prisma.quiz.delete({ where: { id } });
 
   return apiSuccess({ deleted: true }, { request });
