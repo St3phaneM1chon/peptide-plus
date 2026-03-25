@@ -32,5 +32,12 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     },
   });
 
-  return NextResponse.json({ data: sessions });
+  // P8-26 FIX: Only reveal meetingUrl close to session start (15 min before)
+  const fifteenMinFromNow = new Date(Date.now() + 15 * 60000);
+  const sanitized = sessions.map(s => ({
+    ...s,
+    meetingUrl: s.startsAt <= fifteenMinFromNow ? s.meetingUrl : null,
+  }));
+
+  return NextResponse.json({ data: sanitized });
 }, { skipCsrf: true });
