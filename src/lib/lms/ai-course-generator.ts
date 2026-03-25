@@ -121,6 +121,17 @@ ${isFr ? 'Genere la structure complete du cours en JSON' : 'Generate complete co
   if (!jsonMatch) throw new Error('No JSON found in AI response');
 
   const outline = JSON.parse(jsonMatch[0]) as GeneratedCourseOutline;
+
+  // FIX P3: Validate required fields exist in AI response
+  if (!outline.title || !Array.isArray(outline.chapters) || outline.chapters.length === 0) {
+    throw new Error('AI response missing required fields (title, chapters)');
+  }
+  for (const ch of outline.chapters) {
+    if (!ch.title || !Array.isArray(ch.lessons)) {
+      throw new Error('AI response chapter missing title or lessons');
+    }
+  }
+
   logger.info(`[AI Course Gen] Generated: "${outline.title}" — ${outline.chapters.length} chapters`);
   return outline;
 }
