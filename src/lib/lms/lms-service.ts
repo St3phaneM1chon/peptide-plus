@@ -398,7 +398,7 @@ export async function submitQuizAttempt(
 ) {
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, tenantId },
-    include: { questions: true, lesson: { select: { chapter: { select: { courseId: true } } } } },
+    include: { questions: true, lesson: { select: { id: true, chapter: { select: { courseId: true } } } } },
   });
   if (!quiz) throw new Error('Quiz not found');
 
@@ -492,6 +492,18 @@ export async function submitQuizAttempt(
   // Award XP for passing a quiz (non-blocking)
   if (passed) {
     try { await awardXp(tenantId, userId, 'quiz_pass', quizId); } catch { /* non-blocking */ }
+  }
+
+  // V2 P1 FIX: Update LessonProgress.quizPassed + quizScore (was never written)
+  // This is required for sequential gate (canAccessLesson checks quizPassed)
+  if (quiz.lesson?.id) {
+    const lessonId = quiz.lesson.id;
+    const updateData: Record<string, unknown> = { quizScore: score };
+    if (passed) updateData.quizPassed = true; // Only set to true, never revert to false
+    await prisma.lessonProgress.updateMany({
+      where: { tenantId, lessonId, userId },
+      data: updateData,
+    }).catch(() => { /* lesson progress may not exist yet */ });
   }
 
   return result;
