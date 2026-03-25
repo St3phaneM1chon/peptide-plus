@@ -49,6 +49,13 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     const parsed = answerSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
 
+    // V2 FIX: Verify QA belongs to same tenant
+    const qaCheck = await prisma.lessonQA.findFirst({
+      where: { id: parsed.data.qaId, tenantId },
+      select: { id: true },
+    });
+    if (!qaCheck) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+
     const answer = await prisma.lessonQAAnswer.create({
       data: {
         tenantId,

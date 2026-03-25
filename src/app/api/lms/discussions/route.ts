@@ -52,6 +52,14 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     const parsed = replySchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
 
+    // V2 FIX: Verify discussion belongs to same tenant before replying
+    const discussion = await prisma.courseDiscussion.findFirst({
+      where: { id: parsed.data.discussionId, tenantId },
+      select: { id: true, isLocked: true },
+    });
+    if (!discussion) return NextResponse.json({ error: 'Discussion not found' }, { status: 404 });
+    if (discussion.isLocked) return NextResponse.json({ error: 'Discussion is locked' }, { status: 403 });
+
     const reply = await prisma.courseDiscussionReply.create({
       data: {
         tenantId,

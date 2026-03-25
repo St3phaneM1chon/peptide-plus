@@ -579,6 +579,7 @@ export async function issueCertificate(
 }
 
 export async function verifyCertificate(verificationCode: string) {
+  // V2 FIX: Don't expose tenantId in public verification response
   return prisma.certificate.findUnique({
     where: { verificationCode },
     select: {
@@ -588,7 +589,7 @@ export async function verifyCertificate(verificationCode: string) {
       status: true,
       issuedAt: true,
       expiresAt: true,
-      tenantId: true,
+      // tenantId removed — internal info should not be in public endpoint
     },
   });
 }
