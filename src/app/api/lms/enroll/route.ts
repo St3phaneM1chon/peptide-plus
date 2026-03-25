@@ -42,7 +42,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
         courseName: course.title,
         courseSlug: course.slug,
       });
-      sendEmail({ to: { email: session.user.email, name: session.user.name ?? undefined }, subject: email.subject, html: email.html, text: email.text }).catch(() => {});
+      sendEmail({ to: { email: session.user.email, name: session.user.name ?? undefined }, subject: email.subject, html: email.html, text: email.text }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
     }
 
     return NextResponse.json({ enrollment }, { status: 201 });

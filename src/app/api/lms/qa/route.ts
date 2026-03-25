@@ -69,7 +69,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
           title: 'Nouvelle reponse a votre question',
           message: qa.question.slice(0, 100),
         },
-      }).catch(() => {});
+      }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
     }
 
     return NextResponse.json({ data: answer }, { status: 201 });

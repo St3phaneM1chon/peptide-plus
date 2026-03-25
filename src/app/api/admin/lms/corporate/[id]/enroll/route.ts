@@ -142,7 +142,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         companyName: account.companyName,
         coursesEnrolled: courseNames,
       });
-      sendEmail({ to: { email: user.email, name: user.name ?? undefined }, subject: email.subject, html: email.html, text: email.text }).catch(() => {});
+      sendEmail({ to: { email: user.email, name: user.name ?? undefined }, subject: email.subject, html: email.html, text: email.text }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
     }
   }
 

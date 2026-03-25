@@ -72,7 +72,7 @@ export async function awardXp(
   await prisma.lmsLeaderboard.updateMany({
     where: { tenantId, userId },
     data: { totalPoints: newBalance },
-  }).catch(() => {}); // Non-blocking — leaderboard refresh cron will create entries
+  }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); }); // Non-blocking — leaderboard refresh cron will create entries
 
   // Check challenge progress (guard against recursive calls)
   if (reason !== 'challenge') {
@@ -168,7 +168,7 @@ async function updateChallengeProgress(tenantId: string, userId: string, action:
           message: `+${participant.challenge.xpReward} XP`,
           link: '/learn/achievements',
         },
-      }).catch(() => {});
+      }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
     }
   }
 }
