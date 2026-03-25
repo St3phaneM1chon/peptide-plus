@@ -127,6 +127,17 @@ export async function evaluateDiagnostic(
   unknownConcepts: number;
   lessonsToSkip: string[];
 }> {
+  // FIX P2: Validate total response time against diagnostic maxMinutes
+  const totalTimeSec = answers.reduce((sum, a) => sum + (a.responseTimeSec || 0), 0);
+  const diagnostic = await prisma.diagnosticQuiz.findFirst({
+    where: { tenantId, courseId },
+    select: { maxMinutes: true },
+  });
+  if (diagnostic?.maxMinutes && totalTimeSec > diagnostic.maxMinutes * 60 * 1.1) {
+    // Allow 10% grace period
+    throw new Error('Diagnostic time limit exceeded');
+  }
+
   // Récupérer les questions avec leurs réponses correctes
   const questionIds = answers.map(a => a.questionId);
   const questions = await prisma.lmsConceptQuestion.findMany({
