@@ -151,7 +151,7 @@ function nextForgetStability(
 
 function nextInterval(stability: number, desiredRetention: number): number {
   return Math.max(1, Math.round(
-    (stability / 9) * (Math.pow(1 / desiredRetention, 1) - 1)
+    (stability / 9) * (1 / desiredRetention - 1)
   ));
 }
 

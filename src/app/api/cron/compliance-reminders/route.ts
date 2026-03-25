@@ -75,13 +75,14 @@ export async function GET(request: NextRequest) {
       });
       if (!user?.email) continue;
 
-      // Count remaining courses
+      // V2 P2 FIX: Count compliance courses NOT YET completed (was counting by deadline date)
       const remainingEnrollments = await prisma.enrollment.count({
         where: {
           tenantId: period.tenantId,
           userId: period.userId,
           status: 'ACTIVE',
-          complianceDeadline: { lte: endOfDay },
+          complianceStatus: { in: ['NOT_STARTED', 'IN_PROGRESS', 'OVERDUE'] },
+          course: { isCompliance: true },
         },
       });
 

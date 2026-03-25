@@ -193,7 +193,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   // Build FSRS card from mastery record
   const card: FsrsCard = mastery
     ? {
-        difficulty: mastery.easiness, // Map easiness to FSRS difficulty
+        difficulty: Number(mastery.easiness) * 2, // V2 P2 FIX: Convert SM-2 easiness (0.5-5) to FSRS difficulty (1-10)
         stability: mastery.interval,
         retrievability: mastery.confidence,
         lastReview: mastery.lastTestedAt,
