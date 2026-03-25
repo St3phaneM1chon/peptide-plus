@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 import { Package, BookOpen, Clock, Star } from 'lucide-react';
 
 interface BundleItem {
@@ -24,6 +25,7 @@ interface Bundle {
 export default function ForfaitsPage() {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslations();
 
   useEffect(() => {
     fetch('/api/lms/bundles')
@@ -33,12 +35,12 @@ export default function ForfaitsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Chargement des forfaits...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">{t('common.loading')}</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold mb-3">Forfaits de formation</h1>
+        <h1 className="text-3xl font-bold mb-3">{t('learn.bundles.bundleCatalog')}</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Nos forfaits regroupent les formations essentielles pour votre certification.
           Economisez en choisissant un forfait plutot que des cours individuels.
@@ -46,7 +48,7 @@ export default function ForfaitsPage() {
       </div>
 
       {bundles.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">Aucun forfait disponible pour le moment.</div>
+        <div className="text-center py-12 text-muted-foreground">{t('learn.bundles.noBundles')}</div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {bundles.map(bundle => {
