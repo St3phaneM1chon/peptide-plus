@@ -547,142 +547,113 @@ export async function issueCertificate(
   userId: string,
   studentName: string
 ) {
-  // FIX P1: Prevent duplicate certificate issuance
-  // TODO P11-01: TOCTOU race condition — this check + create should be wrapped in a
-  // $transaction with serializable isolation to prevent concurrent issuance. Deferred
-  // because it requires broader refactoring of the downstream logic.
-  const existingCert = await prisma.certificate.findFirst({
-    where: { tenantId, userId, enrollment: { courseId: (await prisma.enrollment.findUnique({ where: { id: enrollmentId }, select: { courseId: true } }))?.courseId ?? '' } },
-    select: { id: true },
-  });
-  if (existingCert) {
-    throw new Error('Certificate already issued for this course');
-  }
-
-  const enrollment = await prisma.enrollment.findFirst({
-    where: { id: enrollmentId, tenantId, userId, status: 'COMPLETED' },
-    include: {
-      course: {
-        include: {
-          chapters: {
-            include: {
-              lessons: { select: { quizId: true } },
-            },
+  // P11-01 FIX: Entire certificate issuance wrapped in $transaction to prevent
+  // TOCTOU race condition (duplicate check + create are now atomic)
+  const { certificate, course, verificationCode } = await prisma.$transaction(async (tx) => {
+    // 1. Fetch enrollment with course data
+    const enrollment = await tx.enrollment.findFirst({
+      where: { id: enrollmentId, tenantId, userId, status: 'COMPLETED' },
+      include: {
+        course: {
+          include: {
+            chapters: { include: { lessons: { select: { quizId: true } } } },
           },
         },
       },
-    },
-  });
-  if (!enrollment) throw new Error('Enrollment not found or not completed');
-
-  const course = enrollment.course;
-  const templateId = course.certificateTemplateId;
-  if (!templateId) throw new Error('No certificate template configured for this course');
-
-  // C3-BIZ-B-003 FIX: Verify quiz completion before issuing certificate
-  // Quizzes are on Lessons (not Chapters), so collect quizIds from all lessons
-  const courseQuizIds = course.chapters
-    .flatMap(ch => ch.lessons)
-    .map(l => l.quizId)
-    .filter((id): id is string => id !== null);
-  if (courseQuizIds.length > 0) {
-    const passingAttempts = await prisma.quizAttempt.findMany({
-      where: { userId, quizId: { in: courseQuizIds }, tenantId, passed: true },
-      select: { quizId: true },
     });
-    const passedQuizIds = new Set(passingAttempts.map(a => a.quizId));
-    const unpassedQuizzes = courseQuizIds.filter(id => !passedQuizIds.has(id));
-    if (unpassedQuizzes.length > 0) {
-      throw new Error('Required quizzes not passed');
+    if (!enrollment) throw new Error('Enrollment not found or not completed');
+
+    const txCourse = enrollment.course;
+    const templateId = txCourse.certificateTemplateId;
+    if (!templateId) throw new Error('No certificate template configured for this course');
+
+    // 2. Duplicate check (atomic — inside transaction)
+    const existingCert = await tx.certificate.findFirst({
+      where: { tenantId, userId, enrollment: { courseId: enrollment.courseId } },
+      select: { id: true },
+    });
+    if (existingCert) throw new Error('Certificate already issued for this course');
+
+    // 3. Verify quiz completion
+    const courseQuizIds = txCourse.chapters
+      .flatMap(ch => ch.lessons)
+      .map(l => l.quizId)
+      .filter((id): id is string => id !== null);
+    if (courseQuizIds.length > 0) {
+      const passingAttempts = await tx.quizAttempt.findMany({
+        where: { userId, quizId: { in: courseQuizIds }, tenantId, passed: true },
+        select: { quizId: true },
+      });
+      const passedQuizIds = new Set(passingAttempts.map(a => a.quizId));
+      const unpassedQuizzes = courseQuizIds.filter(id => !passedQuizIds.has(id));
+      if (unpassedQuizzes.length > 0) throw new Error('Required quizzes not passed');
     }
-  }
 
-  const verificationCode = crypto.randomUUID();
+    // 4. Create certificate + link to enrollment (atomic)
+    const vCode = crypto.randomUUID();
+    const cert = await tx.certificate.create({
+      data: {
+        tenantId, templateId, userId,
+        courseTitle: txCourse.title, studentName, verificationCode: vCode,
+        expiresAt: null,
+      },
+    });
+    await tx.enrollment.update({
+      where: { id: enrollmentId },
+      data: { certificateId: cert.id },
+    });
 
-  const certificate = await prisma.certificate.create({
-    data: {
-      tenantId,
-      templateId,
-      userId,
-      courseTitle: course.title,
-      studentName,
-      verificationCode,
-      expiresAt: null, // Can be configured per template
-    },
+    // 5. Auto-create CeCredits for accredited courses (inside transaction for consistency)
+    try {
+      const accreditations = await tx.courseAccreditation.findMany({
+        where: { tenantId, courseId: enrollment.courseId, status: 'APPROVED' },
+        select: { regulatoryBodyId: true, ufcCredits: true, ceCategory: true },
+      });
+      for (const acc of accreditations) {
+        const license = await tx.representativeLicense.findFirst({
+          where: { tenantId, userId, regulatoryBodyId: acc.regulatoryBodyId, isActive: true },
+          select: { id: true },
+        });
+        if (!license) continue;
+        const activePeriod = await tx.cePeriod.findFirst({
+          where: { tenantId, userId, regulatoryBodyId: acc.regulatoryBodyId, status: { in: ['ACTIVE', 'GRACE_PERIOD'] } },
+          select: { id: true },
+        });
+        if (activePeriod) {
+          await tx.ceCredit.create({
+            data: {
+              tenantId, userId, licenseId: license.id, cePeriodId: activePeriod.id,
+              courseId: enrollment.courseId, enrollmentId, certificateId: cert.id,
+              ufcCredits: acc.ufcCredits, ceCategory: acc.ceCategory,
+              description: `Cours complete: ${txCourse.title}`,
+              isVerified: true, verifiedAt: new Date(), earnedAt: new Date(),
+            },
+          });
+          await tx.cePeriod.update({
+            where: { id: activePeriod.id },
+            data: { earnedUfc: { increment: Number(acc.ufcCredits) } },
+          });
+        }
+      }
+    } catch {
+      // UFC credit creation should not block certificate issuance
+    }
+
+    return { certificate: cert, course: txCourse, verificationCode: vCode };
   });
 
-  await prisma.enrollment.update({
-    where: { id: enrollmentId },
-    data: { certificateId: certificate.id },
-  });
-
-  // P11-09 FIX: Audit log for certificate issuance (non-blocking)
+  // Non-blocking operations OUTSIDE transaction
   logAudit({
-    tenantId,
-    userId,
-    action: 'create',
-    entity: 'certificate',
+    tenantId, userId, action: 'create', entity: 'certificate',
     entityId: certificate.id,
     details: { courseTitle: course.title, enrollmentId, verificationCode },
   }).catch(() => {});
 
-  // V2 P0 FIX: Auto-create CeCredit when course has accreditation (UFC system was non-functional)
-  try {
-    const accreditations = await prisma.courseAccreditation.findMany({
-      where: { tenantId, courseId: enrollment.courseId, status: 'APPROVED' },
-      select: { regulatoryBodyId: true, ufcCredits: true, ceCategory: true },
-    });
-    for (const acc of accreditations) {
-      // Find user's license for this regulatory body
-      const license = await prisma.representativeLicense.findFirst({
-        where: { tenantId, userId, regulatoryBodyId: acc.regulatoryBodyId, isActive: true },
-        select: { id: true },
-      });
-      if (!license) continue; // No active license for this body — skip
-
-      // Find active CePeriod for this user + regulatory body
-      const activePeriod = await prisma.cePeriod.findFirst({
-        where: { tenantId, userId, regulatoryBodyId: acc.regulatoryBodyId, status: { in: ['ACTIVE', 'GRACE_PERIOD'] } },
-        select: { id: true },
-      });
-      if (activePeriod) {
-        await prisma.ceCredit.create({
-          data: {
-            tenantId,
-            userId,
-            licenseId: license.id,
-            cePeriodId: activePeriod.id,
-            courseId: enrollment.courseId,
-            enrollmentId,
-            certificateId: certificate.id,
-            ufcCredits: acc.ufcCredits,
-            ceCategory: acc.ceCategory,
-            description: `Cours complete: ${course.title}`,
-            isVerified: true,
-            verifiedAt: new Date(),
-            earnedAt: new Date(),
-          },
-        });
-        // Update denormalized UFC count on CePeriod
-        await prisma.cePeriod.update({
-          where: { id: activePeriod.id },
-          data: { earnedUfc: { increment: Number(acc.ufcCredits) } },
-        });
-      }
-    }
-  } catch {
-    // UFC credit creation should not block certificate issuance
-  }
-
-  // Send certificate email (non-blocking)
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
   if (user?.email) {
     const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://attitudes.vip'}/learn/certificates/verify/${verificationCode}`;
     const email = buildCertificateIssuedEmail({
-      studentName: studentName,
-      courseName: course.title,
-      verificationCode,
-      verificationUrl,
+      studentName, courseName: course.title, verificationCode, verificationUrl,
     });
     sendEmail({ to: { email: user.email, name: user.name ?? undefined }, subject: email.subject, html: email.html, text: email.text }).catch((e) => { if (typeof console !== "undefined") console.warn("[LMS] Non-blocking op failed:", e instanceof Error ? e.message : e); });
   }
