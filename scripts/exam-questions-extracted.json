@@ -1,0 +1,3274 @@
+{
+  "deontologie": {
+    "manual": "F-111",
+    "source": "chapitre 1 a 4 déonto.docx",
+    "questions": [
+      {
+        "question": "Quel organisme parmi les suivants encadre la formation continue obligatoire?",
+        "options": [
+          "Le Syndic.",
+          "Le PQAP.",
+          "La CSF.",
+          "L’AMF."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle possibilité s’offre à Linda pour récupérer cette somme?",
+        "options": [
+          "Aucune, car ce montant ne peut servir qu’à la retraite.",
+          "Retirer ce montant, puisqu’elle ne compte plus prendre sa retraite au Canada."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Vers quel organisme allez-vous la diriger?",
+        "options": [
+          "À l’Autorité des marchés financiers.",
+          "À la Commission d’accès à l’information.",
+          "Au Commissariat à la protection de la vie privée du Canada.",
+          "Au Syndic."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel des énoncés suivants est un critère qui doit être respecté afin d’être en présence d’un contrat de rente?",
+        "options": [
+          "Avoir transformé son REER en FERR avant l’année de ses 71 ans.",
+          "Avoir transformé son REER en FRV avant l’année de ses 65 ans.",
+          "Il doit y avoir établissement d’un montant périodique déterminé dans le temps.",
+          "Il doit y avoir une obligation de payer une rente au décès du crédirentier."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel parmi les choix suivants est un type de contrats de rente disponible sur le marché?",
+        "options": [
+          "Une rente viagère transformable avant l’âge de 71 ans.",
+          "Une rente viagère réversible à un descendant.",
+          "Une rente viagère à terme garantie 10 ans.",
+          "Une rente viagère réversible."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui assume les responsabilités du comité de retraite dans un RPA comptant moins de 26 employés?",
+        "options": [
+          "Un employé, un retraité et une personne neutre.",
+          "L’employeur.",
+          "L’établissement financier.",
+          "La compagnie d’assurance."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien recevra-t-il mensuellement de son assurance collective durant son invalidité?",
+        "options": [
+          "0$.",
+          "987$.",
+          "3 796,33$.",
+          "4 783,33$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Est-ce que Mathieu peut transférer à Rebekka la totalité de son RPA?",
+        "options": [
+          "Oui, si celle-ci accepte car le montant devra être immobilisé.",
+          "Oui, mais seulement 50% du montant pourra être retiré au comptant.",
+          "Non, car seulement 25 000$ pourra être transféré à Rebekka."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Un représentant peut-il porter en appel un jugement du comité de discipline s’il n’est pas satisfait de la décision et qu’il considère que le comité a fait une erreur?",
+        "options": [
+          "Oui devant la Cour pénale.",
+          "Oui devant la Cour Magistrale.",
+          "Oui devant la Cour du Québec.",
+          "Oui devant la Cour d’appel du Québec."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans quels produits peut-on transférer les sommes investies à l’échéance du compte de retraite immobilisé?",
+        "options": [
+          "Dans une rente viagère ou un Fonds de revenu viager.",
+          "Dans une rente certaine pour une période minimale de 10 ans.",
+          "Dans une rente viagère ou un Fonds Enregistré de Revenu de Retraite.",
+          "Dans une rente viagère au nom de son conjoint."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel produit les employeurs doivent-ils obligatoirement offrir selon l’échéancier proposé?",
+        "options": [
+          "Un Régime enregistré d’épargne retraite au conjoint.",
+          "Un Régime volontaire d’épargne retraite.",
+          "Un Régime de rente collective.",
+          "Un Régime de pension agréé."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’Association canadienne des organismes de contrôle des régimes de retraite (ACOR).",
+        "options": [
+          "Le Bureau du surintendant des institutions financières (BSIF).",
+          "Retraite Québec.",
+          "L’Association canadienne des compagnies d’assurance de personnes (ACCAP)."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sophie recevra un tiers des biens et ses deux enfants se partageront deux tiers des biens.",
+        "options": [
+          "Michelle et Sophie se partageront les biens de Robert en part égale.",
+          "Michelle recevra la totalité des biens de Robert."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "À quel moment sera-t-il possible de transiger avec la fille de cette cliente?",
+        "options": [
+          "À partir du moment que tous les enfants sont en accords avec les décisions.",
+          "À partir du moment où son mandat sera homologué."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 14
+  },
+  "deontologie_ch1-2": {
+    "manual": "F-111",
+    "source": "chapitres 1 et 2 déonto - sans réponses.docx",
+    "questions": [
+      {
+        "question": "La prime du contrat d’assurance est de 105$ et le risque assurable est de 60 jours.",
+        "options": [
+          "L’indemnité est de 105$ mensuellement et le délai de carence est de 60 jours.",
+          "La prime est de 60% du revenu et le risque est la possibilité d’un accident."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui recevra le capital de l’assurance vie souscrite par Stéphane?",
+        "options": [
+          "Stéphane car celui-ci est le preneur du contrat d’assurance.",
+          "Stéphane et ses deux enfants recevront le capital en part égale.",
+          "Le bénéficiaire sera désigné par un jugement d’un tribunal.",
+          "Le capital sera versé aux deux enfants de Stéphane."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien recevra-t-il de son assurance collective durant son invalidité?",
+        "options": [
+          "Il ne recevra aucune prestation.",
+          "5 250$ par mois.",
+          "612,50$ par mois.",
+          "1 750$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui suis-je?",
+        "options": [
+          "La Loi sur la distribution de produits et services financiers.",
+          "Assuris."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Parmi les caractéristiques suivantes, lesquelles décrivent le contrat souscrit par Jean-Charles?",
+        "options": [
+          "Il s’agit d’un contrat aléatoire, à titre onéreux et bilatéral.",
+          "Il s’agit d’un contrat bilatéral, à titre gratuit et aléatoire.",
+          "Il s’agit d’un contrat à titre onéreux, unilatéral et aléatoire.",
+          "Il s’agit d’un contrat synallagmatique, aléatoire et à titre gratuit."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 5
+  },
+  "deontologie_ch3-4": {
+    "manual": "F-111",
+    "source": "chapitres 3 et 4 déonto - sans réponses.docx",
+    "questions": [
+      {
+        "question": "Jean-Claude commet-il une faute en décidant tout de même de rencontrer ses clients?",
+        "options": [
+          "Oui, il commet une faute envers la profession.",
+          "Oui, il commet une faute envers le public.",
+          "Oui, il commet une faute envers la clientèle.",
+          "Oui, il commet une faute envers l’assureur."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle est parmi les suivantes, l’option qui permettra à Jean-Roger de décaisser les sommes accumulées dans son régime de retraite?",
+        "options": [
+          "Il peut transférer les sommes dans un Compte de retraite immobilisé.",
+          "Il peut transférer les sommes dans un Fonds enregistré de revenu de retraite.",
+          "Il peut transférer les sommes dans un Régime enregistré d’épargne-retraite.",
+          "Il peut transférer les sommes dans un Fonds de revenu viager."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Que recommandez-vous à Joachin pour lui permettre de combler son besoin?",
+        "options": [
+          "Je recommande de souscrire un contrat de rente à terme de durée fixe.",
+          "Je recommande de souscrire un contrat de rente viagère réversible.",
+          "Je recommande de souscrire un contrat de rente viagère sans période garantie.",
+          "Je recommande de souscrire un contrat de rente à capital fixe."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle sera le revenu annuel de retraite que touchera Jean-Claude?",
+        "options": [
+          "83 333$ par année.",
+          "50 000$ par année.",
+          "20 000$ par année.",
+          "16 666$ par année."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’Association canadienne des organismes de contrôle des régimes de retraite (ACOR).",
+        "options": [
+          "Le Conseil canadien des responsables de la réglementation d’assurance (CCRRA).",
+          "Le Bureau du surintendant des institutions financières (BSIF).",
+          "L’Association canadienne des compagnies d’assurance de personnes (ACCAP)."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel des énoncés parmi les suivants est exact?",
+        "options": [
+          "L’entreprise est dotée d’un comité de surveillance.",
+          "L’entreprise est dotée d’un comité de retraite.",
+          "L’entreprise est dotée d’un comité de discipline.",
+          "L’entreprise est dotée d’un comité de conformité."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Elle a fait une faute envers les autres représentants, les cabinets, les sociétés autonomes, les assureurs et les institutions financières.",
+        "options": [
+          "Elle a fait une faute envers le public.",
+          "Elle a fait une faute envers la clientèle.",
+          "Elle a fait une faute envers la profession."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 7
+  },
+  "deontologie_supp": {
+    "manual": "F-111",
+    "source": "Questions supplémentaires - déontologie.docx",
+    "questions": [
+      {
+        "question": "Parmi les sources de droit, une de ces sources regroupent l’ensemble des décisions rendues par les tribunaux.  Quelle est cette source ?",
+        "options": [
+          "La doctrine",
+          "La jurisprudence",
+          "La réglementation",
+          "La législation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne concerne pas les personnes morales ?",
+        "options": [
+          "Son existence est perpétuelle",
+          "Existence distincte de celle de ses membres",
+          "Tous les associés participent en tant qu’administrateur",
+          "Agit suivant les résolutions de son C.A."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel régime matrimonial permet un partage égal des biens acquis pendant le mariage et est administré par le mari ?",
+        "options": [
+          "La communauté de biens",
+          "La société d’acquêts",
+          "La séparation de biens",
+          "La séparation d’acquêts"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel bien ne fait pas parti du patrimoine familial ?",
+        "options": [
+          "Droits accumulés dans la rente de la RRQ",
+          "Droits accumulés dans un RVER",
+          "Droits accumulés dans un RPDB",
+          "Droits accumulés dans un RPA"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors d’une séparation de corps, certains avantages sont conservés.  Trouvez-en un ?",
+        "options": [
+          "Droit d’hériter si l’époux décède sans testament",
+          "Droit de retirer dans les REER de son époux",
+          "Droit de continuer à contribuer au régime matrimonial",
+          "Droit de révoquer son époux comme bénéficiaire irrévocable"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comme elle n’avait pas de testament son époux héritera de la totalité de ses biens.",
+        "options": [
+          "Son époux aura la moitié de ses biens et sa mère l’autre moitié.",
+          "Son époux aura les deux tiers et sa mère l’autre tier.",
+          "Sa mère aura les deux tiers et son époux l’autre tier."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors d’un décès sans testament, si la succession ne s’entend pas pour désigner un liquidateur de succession qui tranchera ?",
+        "options": [
+          "L’enfant le plus vieux",
+          "La majorité",
+          "Le notaire",
+          "Le tribunal"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Juliette a donné, il y a quelques mois, une procuration à son frère pour administrer ses affaires.  On s’aperçoit maintenant que Juliette n’a plus toute sa tête.  Que doit faire son frère ?",
+        "options": [
+          "Continuer à administrer puisqu’il est son mandataire",
+          "Appeler le notaire pour être certain que celui-ci émette un mandat d’inaptitude",
+          "Cesser d’agir puisque le mandat n’est plus valide",
+          "Vendre tous les actifs pour en faire bénéficier Juliette"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique s’applique à l’assurance-emploi ?",
+        "options": [
+          "Paie 55% du salaire net",
+          "Est le premier payeur lorsque d’autres régimes publics s’appliquent",
+          "Doit avoir été sans travail ni rémunération durant 7 jours consécutifs",
+          "Est un revenu non-imposable"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel ne s’applique pas à la sécurité de la vieillesse ?",
+        "options": [
+          "Le financement provient des revenus fiscaux et non de cotisations.",
+          "Pas nécessaire d’avoir l’âge de la retraite pour le recevoir."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jasmine avait accès à une assurance médicament par l’entremise de l’assurance collective de son conjoint.  Ils ont rompu depuis quelques semaines et elle se demande si elle peut continuer à profiter de cette assurance. Que lui dites-vous ?",
+        "options": [
+          "Sans problème, elle a juste à payer sa part.",
+          "Oui, si son ex-conjoint y consent et qu’elle paie sa part.",
+          "Non, mais de toute façon avoir une assurance médicament n’est pas essentielle."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jocelyne vient d’avoir 60 ans et même si elle travaille à temps plein, elle a un budget très serré.  Elle se demande si elle peut recevoir sa pension du régime des rentes du Québec.  Que pouvez-vous lui répondre ?",
+        "options": [
+          "Non car elle doit avoir 65 ans pour demander son régime de pension.",
+          "Non car comme elle a un revenu de travail, elle n’y aura pas accès.",
+          "Oui sans problème",
+          "Oui mais on diminuera son montant de prestation des revenus qu’elle déclarera."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’application de cette clause signifie que le total des prestations reçues d’une ou des sources de revenus ne doit pas excéder un pourcentage de salaire prévu dans le contrat. S’il y a excédent, il est déduit des prestations versées par l’assureur. Quelle est cette clause ?",
+        "options": [
+          "Clause d’intégration",
+          "Clause de limitation",
+          "Clause de réduction",
+          "Clause de pondération"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle loi provinciale a un statut supralégislatif ?",
+        "options": [
+          "Charte des droits et libertés de la personne du Québec",
+          "Loi sur les assureurs",
+          "Loi sur la distribution de produits et services financiers",
+          "Charte canadienne des droits et libertés"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Former ses employés sur l’importance de la protection des renseignements personnels",
+        "options": [
+          "Installer des systèmes de sécurité informatique fiables",
+          "Instaurer un suivi des consultations des renseignements personnels",
+          "Chapitre 2"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour qu’un risque soit assurable, il doit répondre à certains critères sauf un, lequel ?",
+        "options": [
+          "Doit être un évènement incertain",
+          "Doit être un évènement futur",
+          "Doit être indépendant",
+          "Doit être impossible"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique n’est pas liée au contrat d’assurance de personne ?",
+        "options": [
+          "Bilatéral",
+          "Consensuel",
+          "Commutatif",
+          "Aléatoire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel document n’est pas à remettre au client ?",
+        "options": [
+          "Une copie de la proposition",
+          "Une copie des notes du représentant",
+          "Une copie des questionnaires médicaux",
+          "Une copie de l’avis de divergence"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sur la tête de qui est prise la police d’assurance ?",
+        "options": [
+          "Le preneur",
+          "Le bénéficiaire",
+          "L’assuré",
+          "Le titulaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quand est-ce que le titulaire subrogé devient propriétaire de la police ?",
+        "options": [
+          "Lorsque celui-ci est majeur",
+          "En aucun temps",
+          "Lorsque le titulaire décède",
+          "Lorsque le bénéficiaire décède"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jean a pris une police sur la tête de son épouse Sylvie.  Il a mis comme bénéficiaire son fils Serge et comme bénéficiaire subrogé sa fille Anita.  Sylvie et Serge sont décédés dans un accident d’auto.  Qui bénéficiera de la prestation de décès ?",
+        "options": [
+          "Jean si Anita est déjà décédée.",
+          "La succession de Sylvie.",
+          "La succession de Jean.",
+          "La succession de Serge."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans une relation tripartite, lequel n’est pas l’un des partis ?",
+        "options": [
+          "L’entreprise",
+          "L’assureur",
+          "L’assuré",
+          "L’adhérent"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles sont les 4 conditions pour qu’un contrat d’assurance soit valide ?",
+        "options": [
+          "La cause, l’objet, le consentement et le risque",
+          "La prime, la prestation, le risque et l’intérêt d’assurance",
+          "La cause, l’objet, la prime et la prestation",
+          "Le consentement, la capacité, l’objet et la cause"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sophie a vendu une police d’assurance à Maxime un jeune trisomique de 25 ans. Les parents de Maxime qui ont vu le contrat sur la table ne sont pas content du tout.  Quel vice de consentement peut être invoqué ?",
+        "options": [
+          "La crainte",
+          "La lésion",
+          "L’erreur",
+          "La fraude"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour qu’une police d’assurance vie soit effective, elle doit respecter 3 critères.  Lequel n’en est pas un ?",
+        "options": [
+          "Le versement de la première prime",
+          "L’acceptation du bénéficiaire par l’assureur",
+          "L’acceptation de la proposition par l’assureur sans modification"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Couverture à partir de la signature de la proposition jusqu’à l’émission de la police",
+        "options": [
+          "Donne un montant de prestation moindre que le montant assuré",
+          "Valide lorsqu’il y a une signature et une prime versée"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle des situations suivantes n’est pas une cause d’annulation de contrat ?",
+        "options": [
+          "Une fraude",
+          "Une fausse déclaration",
+          "L’absence d’intérêt d’assurance ou de consentement",
+          "Le non-paiement de la prime"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jack a contracté une assurance invalidité et lors du rempli de la proposition, il a dit avoir 38 ans alors qu’en vérité il en avait 43.  Comment réagira l’assureur lorsqu’il l’apprendra?",
+        "options": [
+          "Vu que c’est une fraude, il annulera la police.",
+          "Vu que c’est une fraude, il résiliera la police."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comment appelle-t-on l’omission, involontaire ou non, d’un fait ou d’un renseignement pouvant influer sur le taux de prime ou sur la décision de l’assureur d’accepter ou non le risque.",
+        "options": [
+          "Une fraude",
+          "Une réticence",
+          "Une erreur",
+          "Un oubli"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Derek, n’a pas ouvert son courrier et du coup il n’a pas payer le renouvellement annuel de son assurance-vie. Par le fait même son assurance est tombée en déchéance.  S’il veut la remettre en force il devra respecter certains critères.  Lequel n’en est pas un ?",
+        "options": [
+          "Payer toutes les primes en retard",
+          "Faire sa demande dans l’année qui suit la résiliation",
+          "Repayer les avances reçues",
+          "Répondre aux conditions nécessaires d’assurabilité"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Il doit y avoir un intérêt d’assurance entre le nouveau titulaire et l’assuré ou obtenir un consentement",
+        "options": [
+          "Le nouveau preneur peut changer en tout temps les bénéficiaires",
+          "S’il y a un titulaire subrogé, il sera automatiquement révoqué."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Steven vient d’acheter une maison et veut mettre sa police d’assurance vie en garantie pour couvrir son hypothèque.  Peut-il le faire ?",
+        "options": [
+          "Oui, en tout temps",
+          "Oui, mais seulement s’il a le consentement des bénéficiaires irrévocables",
+          "Oui, mais il doit avoir comme seul bénéficiaire l’institution financière",
+          "Non, il doit prendre l’assurance-vie qui accompagne le prêt"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La compagnie d’assurance XYZ n’assure que les personnes âgées entre 18 et 65 ans.  Comment appelle-t-on cette clause ?",
+        "options": [
+          "Une réduction",
+          "Une limitation",
+          "Une exclusion conventionnelle",
+          "Une exclusion légale"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dannick est un adepte des sports extrêmes.  Lors de son récent voyage dans le sud, il a pratiqué le saut à l’élastique (Bungee). Celui-ci s’est écrasé sur les rochers et est décédé sur le coup.  Quelle clause du contrat permettrait à l’assureur de ne pas payer sa succession ?",
+        "options": [
+          "Une exclusion légale",
+          "Une clause d’exclusion traditionnelle",
+          "Une clause de limitation",
+          "Une clause d’exclusion conventionnelle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance individuelle et parfois en assurance collective, si l’assuré ne mentionne pas une affection, l’assureur ne la couvrira pas pendant une certaine période.  Quelle est la durée de cette période ?",
+        "options": [
+          "180 jours",
+          "2 ans",
+          "1 an",
+          "Jamais"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Rebecca a une assurance-vie de 200 000$ qu’elle a prise il y a 5 ans. Le mois dernier, suite à la naissance de son premier enfant, elle a augmenté son assurance de 100 000$. Hier, dans un moment de désespoir, elle s’est suicidée.  Combien sa succession recevra-t-elle ?",
+        "options": [
+          "200 000$",
+          "0$ car elle s’est suicidée",
+          "300 000$",
+          "100 000$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors d’une modification au contrat par l’assureur, celle-ci est présumée accepté par le preneur :",
+        "options": [
+          "10 jours après réception du document",
+          "30 jours après réception du document",
+          "60 jours après réception du document",
+          "90 jours après réception du document"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jean-David a pris une assurance vie et a désigné sa succession comme bénéficiaire.  Au moment de son décès il doit beaucoup d’argent à ses créanciers.  Qui recevra l’argent de son assurance?",
+        "options": [
+          "Sa succession tel qu’indiqué au contrat",
+          "Sa succession à 50% et ses créanciers pour l’autre 50%"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Y-a-t-il une façon de retirer un bénéficiaire irrévocable d’un contrat sans son consentement ?",
+        "options": [
+          "Oui, car le propriétaire de la police à tous les droits",
+          "Jamais car pour un bénéficiaire irrévocable ça prend toujours un consentement",
+          "Oui, en cédant la police à un nouveau titulaire",
+          "Oui, dans le cas d’un divorce si la police a été prise durant le mariage"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Joseph est un représentant en assurance qui est très consciencieux.  Il est par le fait même très proche de ses clients.  Lors de sa dernière visite chez Mme Tanguay, celle-ci lui a déclaré vouloir le mettre comme bénéficiaire sur sa police d’assurance puisqu’ils se connaissent depuis plus de 30 ans.  Joseph peut-il être son bénéficiaire ?",
+        "options": [
+          "Oui, sans problème",
+          "Oui, mais il devra signer un document concernant les conflits d’intérêts",
+          "Oui, avec le consentement de ses enfants",
+          "Non, car il est en conflit d’intérêt"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle des façons suivantes n’est pas un mode de désignation de bénéficiaire au Québec ?",
+        "options": [
+          "Dans un écrit fait à la main",
+          "Dans un testament",
+          "En demandant à son agent de faire la modification de bénéficiaire",
+          "De façon électronique"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Oui, le syndic peut demander à l’assureur de lui verser une partie de la prestation.",
+        "options": [
+          "Non, les montants sont insaisissables par la loi.",
+          "Non, car l’assuré a déjà des problèmes financiers."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qu’est-ce qui n’est pas considéré comme une preuve de décès ?",
+        "options": [
+          "Une copie de la nécrologie du journal local mentionnant le décès",
+          "Certificat de décès",
+          "Copie de l’acte de décès",
+          "Déclaration de décès signée par un directeur de funérailles"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien de temps le bénéficiaire d’une assurance vie a-t-il pour faire valoir ses droits à l’assureur ?",
+        "options": [
+          "30 jours",
+          "90 jours",
+          "2 ans",
+          "3 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors de l’hospitalisation de la petite Clara, 8 ans, la DPJ a saisi le dossier et celle-ci a été confiée à une famille d’accueil.  Bien entendu les parents n’ont jamais cessé de payer la prime.  Qui aura droit à la prestation ?",
+        "options": [
+          "Les parents car ce sont eux qui paient la prime",
+          "Clara car la police est à son nom",
+          "Le directeur de la DPJ"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance collective, quel est le document constatant le contrat et devant contenir les indications et mentions prescrites par le législateur ?",
+        "options": [
+          "Une attestation d’assurance",
+          "Le contrat cadre",
+          "Le contrat d’assurance remis aux adhérents",
+          "La dernière contre-proposition"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Claudine a subi une fracture. Son assurance collective lui verse 1500$ par mois.  De plus, lors de son premier versement elle reçoit un montant forfaitaire de 1000$ supplémentaire.  Surprise, elle consulte sa brochure et s’aperçoit qu’elle aurait dû recevoir 2000$ pour une fracture. Elle appelle son employeur qui vérifie le contrat cadre dans lequel il est inscrit qu’elle ne devrait recevoir que 1000$.  Elle croit avoir droit au 2000$ puisque c’est dans sa brochure.  Selon vous a-t-elle raison ?",
+        "options": [
+          "Non, la compagnie paie toujours le moindre des deux montants",
+          "Non, car le contrat cadre est toujours celui qui domine",
+          "Oui, car la brochure est toujours celle qui domine"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Mika est en invalidité depuis maintenant 24 mois et vient de se voir offrir un emploi en administration par son employeur vu qu’elle ne retournera pas à son poste habituel.  Mika ne voulant pas faire de travaux administratifs se demande ce qu’elle peut faire.  Peut-elle demeurer sur son assurance invalidité collective?",
+        "options": [
+          "Oui, jusqu’à ce que l’employeur lui trouve un poste qui lui convient.",
+          "Oui, jusqu’à ce qu’elle puisse retourner à son poste habituel.",
+          "Oui, car l’employeur doit toujours offrir plusieurs alternatives.",
+          "Non, si l’employeur lui offre une solution adaptée, elle doit l’accepter."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La liste obligatoire des médicaments couvert par l’assurance médicament au Québec doit être de :",
+        "options": [
+          "6000 médicaments couvert à 63%",
+          "6000 médicaments couvert à 68%",
+          "8000 médicaments couvert à 68%",
+          "8000 médicaments couvert à 63%"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lorsqu’on contracte une assurance-prêt, on sait que le prêteur est le bénéficiaire, qui est le preneur ?",
+        "options": [
+          "Le client",
+          "L’institution financière",
+          "L’assureur",
+          "Personne, puisqu’en assurance-prêt il n’y a pas de preneur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance collective, la preuve d’assurabilité des adhérents se limite en général à une seule chose, laquelle ?",
+        "options": [
+          "À être présent au travail lors de la prise d’effet de la police",
+          "À un questionnaire médical",
+          "À une entrevue faite lors de la proposition",
+          "À la bonne foi"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Cynthia est employée dans une entreprise où l’assurance collective est obligatoire.  Elle est déjà couverte par l’assurance collective de son conjoint.  Que peut elle faire ?",
+        "options": [
+          "Elle peut expliquer la situation et ne pas s’inscrire.",
+          "Elle devra prendre la couverture telle qu’offerte puisque c’est obligatoire."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans le cadre de l’assurance-médicament on défini un conjoint selon certain critère.  Lequel n’en est pas un ?",
+        "options": [
+          "Être marié ou uni civilement",
+          "Vivre maritalement depuis au moins 3 ans",
+          "Vivre maritalement depuis 12 mois",
+          "Vivre maritalement et avoir un enfant ensemble"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jonathan a 23 ans et habite encore chez ses parents.  Il travaille à temps plein dans une boulangerie qui n’offre pas d’assurance collective.  Il se demande s’il est encore couvert par celle de ses parents. Que lui répondez-vous ?",
+        "options": [
+          "Oui car tous les enfants sont couverts jusqu’à leurs 25 ans",
+          "Oui car il n’y a pas d’âge limite pour les enfants"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle n’est pas une caractéristique d’une transformation de police d’assurance vie collective en assurance vie individuelle ?",
+        "options": [
+          "L’adhérent doit avoir moins de 65 ans",
+          "Doit être assuré depuis au moins 5 ans",
+          "Pas de qualification médicale si transforme dans les 31 jours suivant l’échéance",
+          "Peut transformer pour aussi peu que 5000$ d’assurance vie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Je suis une société à but non lucratif, chargée de protéger les assurés canadiens en cas d’insolvabilité de leur compagnie d’assurance vie.  Qui suis-je ?",
+        "options": [
+          "L’ACCAP",
+          "L’ombudsman des assurances de personnes",
+          "CANAFE",
+          "Assuris",
+          "Chapitre 3"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Fanny vient d’hériter d’un gros montant d’argent et elle aimerait le placer et ne vivre que des intérêts de ce placement.  Dans quoi devrait-elle le placer ?",
+        "options": [
+          "Une rente viagère",
+          "Une rente certaine",
+          "Une rente à capital fixe",
+          "Une rente viagère garantie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Gaétan veut une rente qui pourrait lui permettre de laisser du capital à son fils s’il décède.  Que devrait-il souscrire ?",
+        "options": [
+          "Une rente viagère",
+          "Une rente viagère garantie",
+          "Une rente viagère réversible",
+          "Il n’y a pas de produit qui permette cela"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comment appelle-t-on la personne sur la tête de qui on prend une rente ?",
+        "options": [
+          "Un crédirentier",
+          "Un rentier",
+          "Un débirentier",
+          "Un titulaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui est le prestataire ?",
+        "options": [
+          "Le crédirentier",
+          "Le rentier",
+          "Le débirentier",
+          "Le titulaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui est le débirentier ?",
+        "options": [
+          "Le prestataire",
+          "L’assuré",
+          "Le bénéficiaire",
+          "La société de fiducie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qu’est-ce que l’aliénation du capital ?",
+        "options": [
+          "Les primes ou cotisations deviennent la propriété du débirentier",
+          "Les primes ou cotisations deviennent la propriété du crédirentier",
+          "Les versements deviennent la propriété du débirentier",
+          "Les versements deviennent la propriété du crédirentier"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quels sont les deux phases d’un contrat de rente ?",
+        "options": [
+          "Phase d’accumulation, phase de capitalisation",
+          "Phase d’accumulation, phase de service",
+          "Phase de souscription, phase de service",
+          "Phase d’accumulation, phase de souscription"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle différence y-a-t-il entre un CIG et un CPG ?",
+        "options": [
+          "Le CPG permet l’ajout d’un bénéficiaire",
+          "Le CIG permet l’ajout d’un bénéficiaire",
+          "Le CPG est émis par un assureur",
+          "Le CIG est garanti à 75% par les fonds généraux de l’assureur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui peut émettre des contrats de rente afférents à des fonds distincts ?",
+        "options": [
+          "Les banques",
+          "Les caisses populaires",
+          "Les assureurs",
+          "Le gouvernement fédéral"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le REER possède plusieurs caractéristiques, sauf une, laquelle ?",
+        "options": [
+          "Les sommes s’accumulent en franchise d’impôt",
+          "C’est un placement immobilisé",
+          "Son échéance doit survenir au plus tard à la fin d’année des 71 ans du rentier",
+          "Les déductions non utilisées sont reportables d’une année à l’autre."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle particularité est attribuée au FERR ?",
+        "options": [
+          "Le FERR a un montant de retrait minimum annuel imposable.",
+          "Le FERR a un montant de retrait minimum et maximum imposable.",
+          "Le FERR a un montant de retrait minimum annuel non-imposable.",
+          "Le FERR a un montant de retrait minimum et maximum non-imposable."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Georges, 47 ans, est atteint d’un cancer virulent et il ne lui reste que 8 mois à vivre.  Celui-ci aimerait retirer l’argent de son CRI.  Peut-il le faire?",
+        "options": [
+          "Non, car les sommes sont immobilisées.",
+          "Oui, comme le REER on peut le retirer quand on veut.",
+          "Non, jamais avant l’âge de 65 ans."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Est-il vrai qu’il faut absolument transformer le CRI en FRV ?",
+        "options": [
+          "Oui, c’est la règle",
+          "Non, on peut le transformer en FERR",
+          "Non, on peut aussi le transformer en rente viagère",
+          "Non, on peut aussi le transformer en rente certaine"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Réal, 65 ans, voudrait faire le tour du monde pendant qu’il est encore en bonne santé.  Il voudrait donc sortir l’argent de son CRI.  Il a cumulé dans celui-ci 42500$.  Peut-il le faire ?",
+        "options": [
+          "Oui, car il a plus de 65 ans.",
+          "Oui, mais il devra payer un gros montant d’impôt.",
+          "Non, car la somme est plus élevée que 40% du MGA qui s’établit à 57400$",
+          "Non, car les sommes doivent rester non-immobilisées."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Johnny, 70 ans, vient d’apprendre qu’il est atteint de la sclérose latérale amyotrophique alors son temps est compté.  Il a toujours voulu voir le Grand Canyon et voudrait sortir l’argent de son FRV.  Est-ce possible pour Johnny ?",
+        "options": [
+          "Oui, s’il transfert son FRV dans un CRI puisqu’il a encore l’âge pour le faire.",
+          "Oui, car l’invalidité physique est une exception pour sortir du FRV.",
+          "Non, il est trop tard car il est en phase de service.",
+          "Non, de toute façon il n’a plus la santé pour aller voir le Grand Canyon."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Nathalie, qui vient d’hériter d’un gros montant, voudrait cotiser à un CELI mais elle ne sait pas le montant qu’elle peut y déposer.  Si vous savez que Nathalie a aujourd’hui 45 ans et qu’on est le 31 décembre 2019, quel est le montant maximum qu’elle peut déposer ?",
+        "options": [
+          "5500$",
+          "6000$",
+          "72500$",
+          "63500$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans une entente pour une rente collective, l’assureur peut offrir plusieurs services.  Lequel n’en est pas un ?",
+        "options": [
+          "Rédiger les brochures explicatives destinées aux participants",
+          "Tenir des séances d’information pour les participants",
+          "Fournir des outils relatifs à l’évolution des fonds offerts",
+          "Offrir les services de conseillers juridiques"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Angela est policière dans les forces armées.  Son employeur lui dit toujours qu’à sa retraite elle recevra un pourcentage de ses 5 meilleures années de salaire.  Son régime est donc :",
+        "options": [
+          "À cotisation déterminée",
+          "À prestation déterminée",
+          "À deux volets",
+          "À prestation anticipée"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La rente doit débuter au plus tard à la fin de l’année où le participant a atteint l’âge de :",
+        "options": [
+          "60 ans",
+          "65 ans",
+          "70 ans",
+          "71 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le texte du régime doit contenir plusieurs éléments, lequel n’en fait pas parti :",
+        "options": [
+          "Les conditions d’adhésion et de retrait",
+          "Le caractère contributif ou non contributif du régime",
+          "Le caractère facultatif ou obligatoire de l’adhésion",
+          "La date de cessation du régime"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un régime de retraite à prestation déterminée, qui est responsable des déficits :",
+        "options": [
+          "L’employé",
+          "L’employeur",
+          "L’assureur",
+          "Le comité de retraite"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un régime comptant moins de 26 participants, qui assume les obligations du comité de retraite :",
+        "options": [
+          "L’assureur",
+          "Un administrateur",
+          "Le C.A.",
+          "L’employeur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le comité de retraite peut déléguer ses pouvoirs, en totalité ou en partie, ou se faire représenter par un tiers.  Comment appelle-t-on ce tiers ?",
+        "options": [
+          "Un représentant",
+          "Un observateur",
+          "Un délégataire",
+          "Un membre indépendant"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En vertu de la Loi sur les régimes complémentaires de retraite, les cotisations sont :",
+        "options": [
+          "Acquise après 24 mois",
+          "Acquise après notre période probatoire",
+          "Acquise immédiatement",
+          "Acquise après 12 mois de travail sans interruption"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Un participant à un RPA peut-il se faire rembourser au comptant la valeur des droits cumulés ?",
+        "options": [
+          "Oui, s’il vaut moins de 11 480$",
+          "Oui, s’il vaut moins de 22 960$",
+          "Oui, s’il retire moins de 11 480$",
+          "Oui, s’il retire moins de 22 960$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Non, puisqu’elle ne satisfait pas aux exceptions permettant de sortir l’argent du fond de pension",
+        "options": [
+          "Oui, mais elle devra payer les impôts sur le montant",
+          "Oui, à condition que le montant soit inférieur à 20% du MGA",
+          "Oui, à condition que le montant soit inférieur à 40% du MGA"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Par qui sont généralement fixé les cotisations de l’employeur dans un RRPD ?",
+        "options": [
+          "Par l’assureur",
+          "Par l’employeur",
+          "Par le comité de retraite",
+          "Par un actuaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un RRCD qui assume les risques de placement ?",
+        "options": [
+          "L’employeur",
+          "L’employé",
+          "Le comité de retraite",
+          "Le fiduciaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Une rente qu’on reçoit au cours des 10 ans précédant l’âge normale de la retraite",
+        "options": [
+          "Une rente qu’on reçoit entre l’âge normal de la retraite et ses 71 ans",
+          "Une rente qu’on reçoit à 65 ans",
+          "Une rente qu’on reçoit passé 71 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Si j’ai droit à une rente temporaire, à quel pourcentage du MGA ais-je droit ?",
+        "options": [
+          "20%",
+          "35%",
+          "40%",
+          "60%"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui sera le bénéficiaire de la rente en cas de décès ?",
+        "options": [
+          "Le bénéficiaire désigné",
+          "La succession",
+          "Le conjoint",
+          "Les enfants s’il n’y a pas de conjoint"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Joey a une petite entreprise employant 15 personnes.  Il veut leur offrir des rentes collectives mais ne veut pas administrer le régime ou avoir un comité de retraite.  Que peut-il faire ?",
+        "options": [
+          "Il n’aura pas le choix de l’administrer puisqu’il a moins de 26 participants.",
+          "Il n’aura pas à l’administrer car son comptable le fera à sa place.",
+          "Il pourrait offrir un RRS et c’est une institution financière qui administrera.",
+          "Il pourrait offrir un RRI qui comporte beaucoup plus d’avantages."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un RRS, quelles sont les cotisations non-immobilisées ?",
+        "options": [
+          "Les cotisations patronales",
+          "Les cotisations patronales et salariales",
+          "Les cotisations volontaires et patronales",
+          "Les cotisations volontaires et salariales (si le texte du régime le prévoit)"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Abdul travaillait à la banque Nationale depuis quelques années.  Il vient d’être embaucher au siège social de Patrick Morin.  Il se demande s’il peut transférer son régime de retraite dans celui de son nouvel employeur.  Que lui répondez-vous?",
+        "options": [
+          "Oui, sans problème",
+          "Oui, seulement si son employeur le lui permet",
+          "Non, puisqu’il devra le transférer dans un REER immobilisé",
+          "Non, puisqu’il devra le transférer dans un CRI"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Charlie travaille pour une compagnie qui emploie 8 employés.  Comme ils n’ont aucun régime collectif, qu’est-ce qui pourrait lui être offert sans contribution de l’employeur ?",
+        "options": [
+          "Un RPA",
+          "Un RRS",
+          "Un RPAC",
+          "Un RVER"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un RVER, quand on parle d’employé visé, on parle de personnes qui résident ou travaillent au Québec et :",
+        "options": [
+          "Qui ont plus de 6 mois de service continu et qui ont plus de 18 ans",
+          "Qui ont plus de 12 mois de service continu et qui ont plus de 18 ans",
+          "Qui ont plus de 6 mois de service continu et qui ont plus de 16 ans",
+          "Qui ont plus de 12 mois de service continu et qui ont plus de 16 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique n’appartient pas au RVER ?",
+        "options": [
+          "Les employeurs sont obligés de cotiser",
+          "Un taux de cotisation de 4% s’applique",
+          "Les cotisations de l’employé sont non-immobilisées",
+          "L’adhésion est automatique"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Andréa a refusé de cotiser au RVER de son entreprise.  Si elle change d’avis dans le futur, est-il possible de commencer à cotiser ?",
+        "options": [
+          "Oui, car l’employeur doit l’offrir à chaque 6 mois",
+          "Oui, car l’employeur doit l’offrir à chaque 12 mois",
+          "Oui, car l’employeur doit l’offrir à chaque 24 mois",
+          "Non, il est trop tard"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel organisme surveille l’obligation des employeurs à offrir un RVER ?",
+        "options": [
+          "Retraite Québec",
+          "ARC",
+          "CNESST",
+          "Assurance emploi"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel organisme tient un registre des personnes morales autorisées à agir comme administrateur d’un RVER ?",
+        "options": [
+          "AMF",
+          "CSF",
+          "ACCAP",
+          "Retraite Québec"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles caractéristiques représentent le RPAC ?",
+        "options": [
+          "L’employeur n’a pas à l’offrir et toutes les cotisations sont non-immobilisées",
+          "L’employeur doit l’offrir et toutes les cotisations sont non-immobilisées",
+          "L’employeur n’a pas à l’offrir et toutes les cotisations sont immobilisées",
+          "L’employeur doit l’offrir et toutes les cotisations sont immobilisées"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel régime peut offrir une solution de rechange au RRCD en raison de la souplesse de ses règles (pas de comité de retraite, fonds non-immobilisés…) ?",
+        "options": [
+          "RPA",
+          "RPDB",
+          "REER collectif",
+          "RPAC"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans un RPDB, après combien de temps les cotisations sont-elles acquises au participant ?",
+        "options": [
+          "Immédiatement",
+          "6 mois",
+          "12 mois",
+          "24 mois"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La Loi de l’impôt sur le revenu qui régit le RPDB l’oblige à être en fiducie auprès d’une société de fiducie ou d’au moins :",
+        "options": [
+          "1 fiduciaire",
+          "2 fiduciaires",
+          "3 fiduciaires",
+          "4 fiduciaires"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Certains employeurs permettent aux employés de participer à la croissance de leur entreprise en versant des sommes dans un régime. Celui-ci est alors dit « non enregistré », et les sommes ne s’accumulent pas en franchise d’impôt. L’employeur verse parfois des cotisations complémentaires égales à un pourcentage des cotisations de l’employé.  Comment appelle-t-on ce régime ?",
+        "options": [
+          "Un RPDB",
+          "Un REER collectif",
+          "Un RPEB",
+          "Un RPA"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sa succession mais si celle-ci est déficitaire elle pourrait réclamer la part des impôts à Jonas",
+        "options": [
+          "Il n’y a pas d’impôt à payer puisqu’il sera transféré dans les REER de Jonas",
+          "Sa succession parce que Jonas n’avait pas le droit d’être bénéficiaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Cassy avait désigné comme bénéficiaire de son régime de retraite, Brandon son fils.  Lors de son décès dû à un accident de travail, Cassy avait 45 ans. Sachant qu’elle avait une relation maritale avec Jordan depuis 5 ans et n’avait pas fait de changement de bénéficiaire, qui recevra les droits accumulés du régime de retraite ?",
+        "options": [
+          "La succession",
+          "Brandon",
+          "Jordan",
+          "Brandon et Jordan se partageront 50% chacun dû au patrimoine familial"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Éric travaille depuis 30 ans pour la compagnie ABC.  Lorsqu’on lui avait demandé de nommer un bénéficiaire pour son régime de pension, il avait nommé Natacha, sa meilleure amie.  Dans les années qui suivirent Natacha et Éric ont vécu maritalement pendant plus de 20 ans.  Il y a deux ans, ils ont rompu et depuis, Éric vit maritalement avec Suzy.  Il se demande qui recevrait les droits accumulés dans son régime de retraite, s’il venait à décéder subitement.  Que lui répondez-vous ?",
+        "options": [
+          "La succession",
+          "Natacha",
+          "Suzy",
+          "Les parents d’Éric"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Marcel a divorcé, il y a 10 ans, alors qu’il débutait sa phase de service.  Il avait fait réajuster sa rente suite à son divorce. Depuis, il vit avec Suzanne.  S’il décédait demain, qui recevrait sa rente ?",
+        "options": [
+          "La succession",
+          "Suzanne",
+          "Son ex-épouse",
+          "Personne puisque la réversibilité ne s’appliquerait pas"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Retirer au comptant si l’ex-conjoint réside depuis plus de 2 ans dans un autre pays",
+        "options": [
+          "Le laisser dans le régime",
+          "Le transférer dans son REER"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "François et Monique sont passé à l’évaluation de leur patrimoine familiale.  Ils doivent se séparer chacun 107 000$.  Si François a 75 000$ dans son régime de retraite, peut-il le verser entièrement à Monique pour ainsi réduire sa dette ?",
+        "options": [
+          "Oui, sans problème",
+          "Oui, mais seulement si le comité de retraite donne son accord",
+          "Non, puisque cet argent est immobilisé"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La désignation de bénéficiaire peut rendre le contrat de rente insaisissable.  Lequel de ces bénéficiaires révocables est saisissable ?",
+        "options": [
+          "L’époux",
+          "Un enfant",
+          "Un parent",
+          "Un conjoint de fait"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les sommes versées dans un CRI ou un FRV sont insaisissables sauf dans deux conditions, trouvez l’une d’elle ?",
+        "options": [
+          "Traitement pour une maladie grave",
+          "Saisie pour dettes alimentaires",
+          "Remboursement de créanciers",
+          "Remboursement au syndic",
+          "Chapitre 4"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "De qui relève l’autorité des marchés financiers ?",
+        "options": [
+          "Retraite Québec",
+          "Ministre des finances",
+          "ARC",
+          "ACCAP"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Parmi les fonctions de l’AMF, lequel n’en est pas une ?",
+        "options": [
+          "Sévir contre l’exercice légal",
+          "Tenir et conserver un registre des représentants et des inscrits",
+          "Agir à titre de centre de renseignements dans le domaine de l’assurance",
+          "Constituer un fonds d’assurance de la responsabilité professionnelle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui a pour mission d’assurer la protection du public en maintenant la discipline et en veillant à la formation continue et à la déontologie de ses membres",
+        "options": [
+          "L’AMF",
+          "Le syndic",
+          "Le comité de discipline",
+          "La CSF"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Si je ne suis pas satisfait d’une décision du comité de discipline où puis-je en appeler ?",
+        "options": [
+          "Cour du Québec",
+          "AMF",
+          "Cour pénale",
+          "Cour supérieure"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui a pour mission de servir ses sociétés membres dans les domaines où elles ont des intérêts, des préoccupations et des besoins communs ?",
+        "options": [
+          "BSIF",
+          "ACOR",
+          "CCRRA",
+          "ACCAP"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel organisme est là pour faciliter la détection, la prévention et la dissuasion du blanchiment d’argent et du financement des activités terroristes tout en assurant la protection des renseignements personnels détenus.",
+        "options": [
+          "CAI",
+          "CANAFE",
+          "BSIF",
+          "Forum conjoint"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "J’agis comme régulateur pour les régimes complémentaires de retraite, les instruments de transferts découlant de cette loi (compte de retraite immobilisé (CRI), fonds de revenu viager (FRV) et contrats de rentes viagères souscrits avec des sommes provenant de régimes complémentaires de retraite) et les régimes volontaires d’épargne-retraite (RVER). Qui suis-je ?",
+        "options": [
+          "ARC",
+          "Retraite Québec",
+          "CNESST",
+          "RPC"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La commission d’accès à l’information du Québec est chargée de l’application d’une loi.  Laquelle ?",
+        "options": [
+          "La loi sur les assureurs",
+          "La loi sur la distribution des produits et services financiers",
+          "La LNNTE",
+          "La loi sur la protection des renseignements personnels dans le secteur privé"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel est l’organisme équivalent à la CAI à l’extérieur du Québec ?",
+        "options": [
+          "Le Commissariat à la protection de la vie privée du Canada.",
+          "Le Commissariat à la protection de la vie personnelle du Canada.",
+          "Le Commissariat à la protection de la confidentialité du Canada.",
+          "Le Commissariat à la protection des renseignements personnels du Canada."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui peut distribuer des valeurs mobilières ?",
+        "options": [
+          "Le conseiller en sécurité financière",
+          "Le planificateur financier",
+          "Les représentants de courtier en placement",
+          "Le représentant en valeurs mobilières"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Plusieurs conditions doivent être complétées avant d’obtenir son certificat de représentant, laquelle n’en est pas une ?",
+        "options": [
+          "Acquérir la formation minimale",
+          "Réussir les examens demandés par l’Autorité",
+          "Compléter une période probatoire de 6 semaines",
+          "Payer les droits"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lorsqu’on obtient son certificat on doit choisir son mode d’exercice, parmi les suivants lequel n’est pas un mode d’exercice défini ?",
+        "options": [
+          "Cabinet",
+          "Société de personnes",
+          "Société autonome",
+          "Représentant autonome"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le représentant ayant complété un PQAP complet peut vendre une diversité de produits sauf un. Lequel ?",
+        "options": [
+          "Assurance-vie",
+          "Assurance-vie collective",
+          "Fonds distincts",
+          "Fonds communs"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel métier, parmi les suivants, est compatible avec le métier de représentant ?",
+        "options": [
+          "Policier",
+          "Agent de sécurité",
+          "Prêtre",
+          "Employé d’un syndicat"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les représentants d’une société autonome doivent exercer leurs activités à titre d’employés ou d’associés de la société en nom collectif",
+        "options": [
+          "Tous les associés doivent être des représentants",
+          "La société autonome est un regroupement de représentants autonomes",
+          "Se compose de représentants regroupés au sein d’une société en nom collectif"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Avec qui une société autonome ne peut partager ses commissions ?",
+        "options": [
+          "Un courtier immobilier",
+          "Un courtier en valeur mobilière",
+          "Un cabinet",
+          "Un représentant autonome"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le représentant doit-il mentionner au client qu’il recevra des honoraires pour le service rendu ?",
+        "options": [
+          "Non, cet aspect est confidentiel",
+          "Non, car le client n’a pas à connaitre le mode de rémunération de la compagnie",
+          "Oui, mais seulement si le service est rendu",
+          "Oui, par écrit préalablement ou au moment où il rend ses services."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les inscrits doivent tenir à jour certains registres, lequel n’en est pas un ?",
+        "options": [
+          "Registre des mesures incitatives",
+          "Registre des plaintes",
+          "Registre du compte séparé",
+          "Registre des publicités"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "A quelle fréquence les plaintes doivent-elle être transmise à l’autorité ?",
+        "options": [
+          "Une fois par année",
+          "Deux fois par année",
+          "À tous les mois",
+          "Sans délai, sur demande de l’autorité"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comme elle n’est plus représentante et qu’elle n’a jamais réclamer, elle peut l’annuler.",
+        "options": [
+          "Elle doit la garder pour les 12 prochains mois.",
+          "Elle doit la garder pour les 5 prochaines années."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Un représentant rattaché à une institution de dépôt peut exécuter certaines tâches sauf une, laquelle ?",
+        "options": [
+          "La référence de crédit",
+          "Transactions courantes de dépôts et retraits au comptoir",
+          "Le service-conseil de crédit"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lucien vient de transférer pour une nouvelle compagnie d’assurance.  Lucien s’était fait faire beaucoup de feuille de travail avec l’en-tête de son ancienne compagnie.  Étant économe, il décide de continuer à utiliser ce matériel lorsqu’il rencontre ses clients.  Il se dit que de toute façon il rapporte toujours avec lui lesdites feuilles.  Pour les clients de Lucien, de quel nature est son mandat?",
+        "options": [
+          "Mandat général",
+          "Mandat spécifique",
+          "Mandat réel",
+          "Mandat apparent"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qu’est-ce qui défini le mandat du représentant ?",
+        "options": [
+          "Son contrat d’adhésion",
+          "Son contrat de représentation",
+          "Son permis auprès de l’AMF",
+          "Ses qualifications acquises"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans ses obligations, le représentant peut être mandataire de l’assureur. Dans quelle situation, il ne l’est pas ?",
+        "options": [
+          "Au moment de vérifier l’identité du client",
+          "Au moment de donner de l’information sur le produit",
+          "Au moment du paiement d’une somme d’argent",
+          "Au moment de faire l’analyse des besoins"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans ses obligations, le représentant peut être mandataire du client. Dans quelle situation, il ne l’est pas ?",
+        "options": [
+          "Au moment de l’établissement de la proposition",
+          "Dans le cas d’une divergence entre la proposition et la police",
+          "Au moment de la souscription d’une assurance",
+          "Dans le cadre d’une réclamation auprès de l’assureur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lorsqu’on vérifie l’identité du client, celui-ci peut nous proposer certains documents sauf un, lequel ?",
+        "options": [
+          "Carte d’assurance maladie",
+          "Permis de conduire",
+          "Acte de naissance",
+          "Facture de service public prouvant son lieu de résidence"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors d’une opération douteuse, on a combien de jours pour déclarer à CANAFE ?",
+        "options": [
+          "Immédiatement",
+          "Dans les 10 jours",
+          "Dans les 20 jours",
+          "Dans les 30 jours"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sabrina vient d’aller faire l’analyse de besoin d’un client qui aura, selon l’analyse, besoin d’une assurance invalidité.  Elle se demande si elle doit lui laisser une copie de l’analyse ?",
+        "options": [
+          "Non, puisque le client n’en a pas besoin",
+          "Non, ce n’est pas une exigence",
+          "Oui, aussitôt qu’elle l’a fait elle doit lui en laisser une copie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quand doit-on remplir le préavis de remplacement ?",
+        "options": [
+          "Avant ou en même temps que la proposition d’assurance",
+          "Au maximum à la livraison de la police",
+          "Lors de la souscription",
+          "Lors de l’analyse de besoin"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le représentant peut engager sa responsabilité de 4 façons différentes, laquelle n’en est pas une ?",
+        "options": [
+          "La responsabilité civique du représentant ;",
+          "La responsabilité déontologique et disciplinaire du représentant ;",
+          "La responsabilité pénale du représentant ;",
+          "La responsabilité criminelle du représentant"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour qu’un recours en responsabilité civile (ou professionnelle) soit accueilli, il faut prouver trois éléments, trouvez l’intrus :",
+        "options": [
+          "La faute ;",
+          "Le dommage (aussi appelé le préjudice) ;",
+          "Le lien de causalité entre la faute et le dommage",
+          "La perte"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La personne convaincue qu’un représentant a commis une faute personnellement, à titre de mandataire ou de préposé d’un employeur, et qui a subi des dommages en raison de cet acte fautif peut exercer un recours. Pour des dommages de 35 000$ à qui elle doit s’adresser ?",
+        "options": [
+          "La cour supérieure",
+          "La cour du Québec, chambre civile",
+          "La cour du Québec, division des petites créances",
+          "La cour d’appel"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Un manquement déontologique découle du non-respect des obligations imposées par le Code de déontologie de la Chambre de la sécurité financière. En cas de non-respect de ses obligations, le représentant engage sa responsabilité, et il est susceptible de faire l’objet d’une plainte auprès :",
+        "options": [
+          "Du syndic",
+          "Du comité de discipline",
+          "De la CSF",
+          "De l’AMF"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "S’applique généralement aux infractions telles que le meurtre, l’agression sexuelle, le vol et la fraude",
+        "options": [
+          "S’applique à tous les canadiens âgés de 18 ans et plus",
+          "Seul le gouvernement fédéral a le pouvoir d’établir des infractions criminelles",
+          "Le droit criminel provient du code criminel"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le client convaincu d’être victime d’un vol, d’une fraude ou d’un détournement de fonds doit porter plainte :",
+        "options": [
+          "À la police",
+          "Au syndic",
+          "À l’AMF",
+          "À la CSF"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Melissa, sur son heure de diner, a rencontré une collègue et ils ont abusé de la bouteille de vin.  Si Melissa décide d’honorer ses rendez-vous de l’après-midi envers qui commettra-t-elle une faute ?",
+        "options": [
+          "Le client",
+          "Le public",
+          "La profession",
+          "Elle ne commet pas de faute si elle honore ses rendez-vous"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 145
+  },
+  "accma": {
+    "manual": "F-312",
+    "source": "chapitre 1 a 8 accma - sans réponse.docx",
+    "questions": [
+      {
+        "question": "Quel sera la couverture d’assurance mensuelle offerte par l’assureur?",
+        "options": [
+          "1 717,00$ par mois.",
+          "2 425,00$ par mois.",
+          "20 600,00$ par mois.",
+          "908,00$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien recevra-t-il mensuellement pour son retour progressif au travail?",
+        "options": [
+          "2 100,00$.",
+          "3 600,00$.",
+          "5 760,00$.",
+          "3 500,00$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel sera le total des prestations versées par l’assureur pour son retour progressif au travail?",
+        "options": [
+          "3 600,00$ par mois.",
+          "3 150,00$ par mois.",
+          "4 200,00$ par mois.",
+          "4 800,00$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel sera le total des prestations versées par l’assureur?",
+        "options": [
+          "28 000$.",
+          "17 500$.",
+          "38 500$.",
+          "7 000$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle sera la portion non imposable de la prestation versée à Steve?",
+        "options": [
+          "13 750$.",
+          "18 750$.",
+          "6 250$.",
+          "1 250$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel sera le montant des prestations que versera l’assureur de l’assurance collective?",
+        "options": [
+          "3 350,00$ par mois.",
+          "2 600,00$ par mois.",
+          "750,00$ par mois.",
+          "4 200,00$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien recevra-t-il de sa compagnie d’assurance?",
+        "options": [
+          "31 200$.",
+          "36 000$.",
+          "28 800$.",
+          "24 000$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles sont les clauses d’un contrat d’assurance invalidité individuelle permettant au client de recevoir des indemnités s’il perd l’usage de deux membres et de ne pas payer de primes lors de son invalidité?",
+        "options": [
+          "L’exonération des primes et l’indexation au coût de la vie.",
+          "La présomption d’invalidité totale et la garantie d’assurabilité future.",
+          "L’exonération des primes et la présomption d’invalidité totale.",
+          "L’exonération des primes et la garantie de décès accidentel."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien de temps au maximum Béatrice pourrait être exonérée de sa prime d’assurance?",
+        "options": [
+          "A) 12 mois.",
+          "B)   3 mois.",
+          "C)   5 mois.",
+          "D) Elle ne sera pas exonérée pour les trois premiers mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Elle ne pourra pas augmenter les prestations à cause du diagnostic de son cancer.",
+        "options": [
+          "Elle pourra augmenter les prestations à 4 250$ par mois.",
+          "Elle pourra augmenter les prestations de 850$ par mois.",
+          "Elle pourra augmenter les prestations de 600$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "De quelle manière Patrick pourrait-il remédier à cette situation?",
+        "options": [
+          "Il pourrait souscrire une protection de rente viagère.",
+          "Il pourrait souscrire une assurance de soins de longue durée.",
+          "Il pourrait souscrire une assurance contre les maladies graves.",
+          "Il pourrait souscrire une assurance groupée."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’assureur versera 100% des prestations prévues au contrat et il n’appliquera pas le délai de carence.",
+        "options": [
+          "L’assureur versera 100% de l’avenant DMA.",
+          "L’assureur versera un pourcentage de l’avenant DMA.",
+          "L’assureur ne versera aucune prestation."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Combien de jours l’assuré doit-il avoir survécu au diagnostic d’une maladie grave afin d’être éligible à la prestation?",
+        "options": [
+          "A) 90 jours.",
+          "B) 60 jours.",
+          "C) 45 jours.",
+          "D) 30 jours."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel sera le montant des prestations versé par l’assureur durant l’invalidité de Maxime?",
+        "options": [
+          "20 000$ en déduisant la franchise et la coassurance.",
+          "19 000$ en déduisant la franchise et la coassurance."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle des exclusions suivantes ne fait pas partie des exclusions les plus courantes?",
+        "options": [
+          "L’invalidité découlant des actes terroristes.",
+          "L’invalidité découlant d’une tentative de suicide.",
+          "L’invalidité découlant de la participation à des jeux de hasard.",
+          "L’invalidité découlant d’une grossesse normale ou d’un accouchement normal."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel est le type d’assurance qui repose sur le diagnostic du médecin de la compagnie d’assurance afin de déterminer l’éligibilité d’un assuré aux remboursements des prestations?",
+        "options": [
+          "L’assurance protection frais généraux.",
+          "L’assurance résiduelle.",
+          "L’assurance de soins de longue durée.",
+          "L’assurance collective pondérée."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles maladies parmi les suivantes sont des maladies de base couvertes par ce type d’assurance?",
+        "options": [
+          "La crise cardiaque, l’accident vasculaire cérébral et le cancer.",
+          "Le cancer, le diabète et le pontage coronarien.",
+          "Le diabète, l’accident vasculaire cérébral et la crise cardiaque.",
+          "Le cancer, l’eczéma et la crise cardiaque."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’exonération est généralement assujettie à un délai de carence de quatre à six mois à partir du début de l’invalidité admissible.",
+        "options": [
+          "B)  Il s’agit d’un avenant facultatif qui est disponible pour l’assuré.",
+          "C)  Il s’agit d’une clause intrinsèque qui permet l’exonération des primes."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel des choix suivants n’est pas un type de remboursement des primes disponibles par les assureurs?",
+        "options": [
+          "Le remboursement au décès.",
+          "Le remboursement au 65e anniversaire du preneur.",
+          "Le remboursement à l’échéance de la police.",
+          "Le remboursement au rachat de la police."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comment appelle-t-on cette clause?",
+        "options": [
+          "Le délai de survie.",
+          "La période d’admissibilité.",
+          "Le délai de carence.",
+          "La période d’attente."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui suis-je?",
+        "options": [
+          "La déclaration fiscale.",
+          "Le bilan.",
+          "Le budget.",
+          "Le relevé bancaire."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Trouvez deux de ces activités parmi les choix suivants?",
+        "options": [
+          "L’incapacité de s’habiller et de conduire sa voiture.",
+          "L’incapacité de se laver et de s’alimenter.",
+          "L’incapacité de contrôler sa continence et de parler.",
+          "L’incapacité d’aller aux toilettes et de téléphoner."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Que lui conseillez-vous?",
+        "options": [
+          "Il pourrait souscrire une assurance invalidité individuelle.",
+          "Il pourrait souscrire une assurance protection frais généraux d’entreprise.",
+          "Il pourrait souscrire une assurance protection pour personne clé.",
+          "Il pourrait souscrire une assurance protection pour prêt d’entreprise."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle des exclusions suivantes n’est pas une exclusion contractuelle dans une police d’assurance voyage?",
+        "options": [
+          "L’exclusion de tentative de suicide.",
+          "L’exclusion d’abus de drogue et d’alcool.",
+          "L’exclusion de l’hérédité familiale.",
+          "L’exclusion de la pratique d’activités dangereuses."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel montant recevra Mathilde à titre de remboursement pour ses frais dentaires?",
+        "options": [
+          "Elle recevra 105$.",
+          "B) Elle recevra 420$.",
+          "C) Elle recevra 480$.",
+          "D) Elle recevra 405$."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle sera le montant de couverture dont bénéficiera Jamie pour son contrat d’assurance invalidité?",
+        "options": [
+          "3 375$ par mois.",
+          "2 875$ par mois.",
+          "1 792$ par mois.",
+          "3 075$ par mois."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel des choix suivants n’est pas un des trois objectifs financiers?",
+        "options": [
+          "Répondre aux besoins familiaux.",
+          "Accumuler de la richesse (patrimoine).",
+          "Créer un revenu de retraite.",
+          "Vendre ses biens à leur juste valeur marchande."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel des critères suivants n’est pas un des critères à considérer pour ce type de protection?",
+        "options": [
+          "Il doit être essentiel au bon fonctionnement de l’entreprise.",
+          "Il doit avoir été contracté par au moins un parent du propriétaire."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Que recommandez-vous à Kevin afin de répondre à son besoin?",
+        "options": [
+          "Il devra mettre en place un régime collectif à rétention et contributif.",
+          "Il devra mettre en place un régime groupé.",
+          "Il devra mettre en place un régime à rétention pondérée.",
+          "Il devra mettre en place un régime groupé et pondéré."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle sera la portion imposable des prestations versées à Vincent?",
+        "options": [
+          "Un montant de 1 050,00$ sera imposable.",
+          "Un montant de 2 100,00$ sera imposable.",
+          "Un montant de 7 500,00$ sera imposable.",
+          "Un montant de 6 450,00$ sera imposable."
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 30
+  },
+  "accma_supp": {
+    "manual": "F-312",
+    "source": "Questions supplémentaires - acc-mal.docx",
+    "questions": [
+      {
+        "question": "Une fois les besoins immédiats (nourriture, logement, vêtements, moyens de transport, loisirs, etc.) satisfaits grâce au revenu courant, tout excédent devrait servir à constituer un fonds d’urgence.  Quelle valeur devrait avoir ce fond d’urgence ?",
+        "options": [
+          "Un à trois mois de dépenses courantes",
+          "Trois à six mois de dépenses courantes",
+          "Six à neuf mois de dépenses courantes",
+          "Une année complète de dépenses courantes"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le revenu de retraite provient de différentes sources, laquelle n’en est pas une ?",
+        "options": [
+          "Liquidation d’actifs",
+          "Héritages",
+          "Régimes de retraite de l’employeur",
+          "Liquidation des pertes sur les valeurs mobilières"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qu’est-ce qui n’est pas un risque financier pouvant affecter nos objectifs ?",
+        "options": [
+          "Des dépenses prévues",
+          "La perte de revenu ou d’épargne",
+          "La baisse du niveau de vie",
+          "L’inflation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle maladie cognitive peut amener une perte d’indépendance ?",
+        "options": [
+          "Le cancer",
+          "Une crise cardiaque",
+          "L’Alzheimer",
+          "Le diabète"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Deux types de polices d’assurance peuvent aider à protéger nos actifs, lesquelles ?",
+        "options": [
+          "Assurance maladie complémentaire et maladies graves",
+          "Invalidité et soins de longue durée",
+          "Maladies graves et soins de longue durée",
+          "Assurance maladie complémentaire et Invalidité"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les objectifs de l’entreprise ou du propriétaire d’entreprise se traduisent directement en objectifs individuels, trouver l’erreur ?",
+        "options": [
+          "Rentabilité de l’entreprise",
+          "Vente de l’entreprise",
+          "Vente à la juste valeur marchande",
+          "Succession de l’entreprise"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le risque est en général défini comme étant la possibilité qu’un résultat donné :",
+        "options": [
+          "Souvent négatif se produise",
+          "Souvent positif se produise",
+          "Souvent négatif soit sans conséquence",
+          "Souvent positif soit sans conséquence"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La personne qui veut autofinancer le coût d’une perte découlant d’un risque n’a vraiment que trois options, laquelle n’en est pas une ?",
+        "options": [
+          "Payer le coût avec les liquidités actuelles",
+          "Emprunter pour acquérir des fonds et payer le coût",
+          "Diminuer son épargne ou vendre ses actifs",
+          "Acquérir une police d’assurance",
+          "Chapitre 2"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui est le débiteur hypothécaire ?",
+        "options": [
+          "L’institution financière",
+          "L’assureur",
+          "L’emprunteur",
+          "Le titulaire subsidiaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour quel type de police, l’assureur est obligé de la renouveler jusqu’à l’âge de 65 ans, ne peut la modifier et doit la transformer ensuite en police à renouvellement garanti ?",
+        "options": [
+          "Police résiliable",
+          "Police non-résiliable",
+          "Police à renouvellement garanti",
+          "Police à émission garanti"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les primes d’une police résiliable sont supérieures à celle d’une police à renouvellement garanti",
+        "options": [
+          "Pour les catégories professionnelles à risque plus élevé",
+          "Offre le moins de protection au titulaire de police"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui suis-je ?  Je viens remplacer une assurance collective.  Je m’adresse aux catégories professionnelles à faible risque.  Je suis offert sous deux formes.",
+        "options": [
+          "Police résiliable",
+          "Police à émission garantie",
+          "Régime d’assurance invalidité non-traditionnel",
+          "Police à renouvellement garanti"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Esteban a un salaire de 45 000$ par année, il reçoit aussi un revenu locatif de 500$ par mois ainsi que des commissions annuelles de 12 000$.  Quel montant de prestations pourriez-vous lui offrir ?",
+        "options": [
+          "3 150$",
+          "2 650$",
+          "1 650$",
+          "2 150$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La compagnie d’assurance de Jeannot refuse de le payer prétextant qu’il n’a pas soumis les détails de son invalidité.  Quelle est la cause de ce refus ?",
+        "options": [
+          "Une absence de perte",
+          "Une absence de preuve",
+          "Une fausse déclaration",
+          "Une fraude"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Chloé a pris une assurance invalidité il y a plusieurs années.  À cette époque, elle gagnait 37 000$ par année.  Son représentant lui avait donc vendu une police qui lui donnait 1850$ par mois.  Depuis 6 mois dû à un changement de poste elle n’en gagne que  32 000$.  Combien recevrait-elle si elle tombait invalide ?",
+        "options": [
+          "1850 $",
+          "0$ car elle n’a pas averti l’assureur",
+          "1600$",
+          "1850$ car elle n’a pas averti l’assureur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle affirmation est fausse concernant la prestation de réhabilitation ?",
+        "options": [
+          "L’assureur ne peut obliger l’assuré à participer",
+          "L’assuré doit obtenir une préapprobation des services et honoraires",
+          "L’assureur assume toujours l’entièreté des coûts",
+          "L’assureur peut payer entre autres de la recherche d’emploi"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Roch s’est blessé au dos en jouant au football et a été invalide pendant 6 mois.  Il a ensuite repris le travail mais 3 mois plus tard son dos à recommencer à lui faire mal.  Son médecin l’a donc sorti en invalidité.  Quelle clause de son contrat pourrait lui permettre d’éviter le délai de carence ?",
+        "options": [
+          "La présomption d’invalidité totale",
+          "La prestation de réhabilitation",
+          "La définition d’invalidité propre profession",
+          "La clause d’invalidité récidivante"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle pourrait être le désavantage d’une clause d’invalidité récidivante ?",
+        "options": [
+          "Ne pas faire ses deux délais de carence",
+          "D’avoir à payer un supplément pour obtenir cette clause",
+          "D’épuiser plus rapidement sa période de prestation",
+          "Il n’y a aucun désavantage avec cette clause"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans une présomption d’invalidité totale quel sens n’est pas inclus ?",
+        "options": [
+          "Le toucher",
+          "La parole",
+          "L’ouïe",
+          "La vue"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne s’applique pas à la présomption d’invalidité totale ?",
+        "options": [
+          "Peut gagner son plein salaire",
+          "Le délai de carence normal ne s’applique pas",
+          "N’est pas nécessairement offerte dans toutes les polices",
+          "S’applique lorsqu’on perd un ou deux membres"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sandy vient de perdre sa mère d’une longue invalidité.  Lorsqu’elle regarde le contrat d’assurance invalidité de celle-ci elle s’aperçoit qu’il y a une clause de prestation au survivant.  Elle se demande ce que ça pourrait lui rapporter.  Si vous savez que sa mère recevait 3500$ par mois en invalidité totale, que lui répondez-vous ?",
+        "options": [
+          "Elle recevra 3500$ par mois pendant 3 mois",
+          "Elle recevra 10500$ dans un montant forfaitaire",
+          "Elle recevra 3500$ par mois pendant 4 mois",
+          "Elle recevra 14000$ dans un montant forfaitaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans la prestation au survivant, qu’entend-on par délai d’admissibilité ?",
+        "options": [
+          "C’est une période d’invalidité partielle avant le décès",
+          "C’est une période d’invalidité résiduelle avant le décès",
+          "C’est une période d’invalidité totale avant le décès",
+          "C’est une période d’attente avant de recevoir le chèque de l’assureur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel facteur n’influence pas les primes en assurance invalidité individuelle ?",
+        "options": [
+          "Les frais généraux de fonctionnement",
+          "Des tables de morbidité",
+          "Une estimation des rendements de placement sur les primes capitalisées",
+          "Antécédents de réclamation de la famille de l’assuré"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui paiera la prime la plus élevé pour sa police invalidité individuelle ?",
+        "options": [
+          "Une femme de 35 ans",
+          "Un homme de 35 ans",
+          "Une femme de 62 ans",
+          "Un homme de 62 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les assureurs recueillent l’information médicale et l’information relative à la santé pertinentes sur les assurés éventuels grâce à des sources différentes, laquelle n’en est pas une ?",
+        "options": [
+          "Formulaire non médical dans la proposition",
+          "Déclarations du médecin traitant fournies par le médecin de l’assureur",
+          "Examen paramédical d’une infirmière",
+          "Examen médical complet d’un médecin"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle définition d’invalidité est la moins stricte pour être admissible mais la plus stricte pour déposer une réclamation ?",
+        "options": [
+          "Propre profession",
+          "Profession habituelle",
+          "Toute profession",
+          "Invalidité totale selon le RPC"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sébastien travaille comme chauffeur de camion de messagerie.  Quelle est sa catégorie professionnelle ?",
+        "options": [
+          "4A",
+          "3A",
+          "2A",
+          "A"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sarah a fait une chute à cheval et s’est fracturé la cheville.  Elle a été invalide pendant 5 mois.  Sachant qu’elle a un délai de carence de 3 mois et une période de prestation de 12 mois, combien de temps sera-t-elle exonérée ?",
+        "options": [
+          "2 mois",
+          "1 mois",
+          "5 mois",
+          "12 mois",
+          "Pour la garantie d’assurabilité future, l’avenant est offert :",
+          "À toutes les personnes qui se qualifie d’un point de vue médical",
+          "À toutes les personnes qui font moins de 50 000$ par année",
+          "À toutes les personnes de la catégories professionnelles 4A",
+          "À toutes les personnes de moins de 50 ou 55 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel avenant accroît de manière déterminée la prestation d’un montant fixe sans sélection mais avec une augmentation correspondante de la prime ?",
+        "options": [
+          "Indexation des prestations",
+          "Bonification de couverture automatique",
+          "Garantie d’assurabilité future",
+          "Garantie d’hospitalisation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel avenant correspond aux caractéristiques suivantes : pas de sélection médicale, la perte doit survenir dans les 365 jours, montant forfaitaire.",
+        "options": [
+          "Présomption d’invalidité totale",
+          "DMA",
+          "Garantie d’hospitalisation",
+          "Prestation de réhabilitation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique vient différencier l’invalidité partielle et l’invalidité résiduelle ?",
+        "options": [
+          "Une période d’invalidité totale pour l’invalidité résiduelle",
+          "Une période d’invalidité totale pour l’invalidité partielle",
+          "Une période d’attente pour l’invalidité résiduelle",
+          "Une période d’attente pour l’invalidité partielle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Evelyne a eu un grave accident de ski il y a quelque mois.  Suite à cette période d’invalidité totale, elle retourne au travail à temps partiel la semaine prochaine.  Son salaire à temps partiel sera de 2500$ par mois soit la moitié moins que ce qu’elle gagne habituellement. Elle se demande combien l’assureur lui versera si elle a un avenant d’invalidité résiduelle et un montant de prestation équivalent à 60% de son revenu.",
+        "options": [
+          "4500$",
+          "3000$",
+          "1500$",
+          "0$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Marion a été impliqué dans un grave accident de la route en octobre dernier.  Suite à cet accident, il a été en invalidité totale pendant plusieurs mois.  Il retourne au travail dans quelques jours.  Il travaillera 3 jours par semaine.  Il possède une assurance invalidité qui le couvre à 3200$ par mois et cette assurance possède un avenant d’invalidité résiduelle.  Combien pourra-t-il réclamer ?",
+        "options": [
+          "3200$",
+          "1280$",
+          "1920$",
+          "0$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Bruno est intéressé par votre assurance mais il aimerait bien faire rajouter l’avenant de remboursement des primes.  Que pourriez-vous lui dire sur cet avenant ?",
+        "options": [
+          "Qu’il pourra assurément recevoir toutes ses primes même s’il réclame.",
+          "Que les remboursements sont imposables",
+          "Que l’avenant pourrait faire augmenter sa prime de 40 à 60%",
+          "Que cet avenant est très avantageux surtout s’il pense réclamer souvent"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Si le preneur représente un risque supérieur à la moyenne, l’assureur ne pourrait :",
+        "options": [
+          "Imposer une surprime",
+          "Ajouter un avenant d’exclusion",
+          "Refuser sa proposition",
+          "Diminuer la prime",
+          "La garantie en cas d’hospitalisation :",
+          "Couvre l’assuré après le délai de carence de sa police",
+          "Donne des prestations mensuelles de 3000$ et plus",
+          "Est calculé sur le prorata hebdomadaire de la prestation de base"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Couvre la période entre la journée d’hospitalisation et le début du versement des prestations.",
+        "options": [
+          "En ce qui a trait à l’imposition :",
+          "Toute prime payé par l’assuré rend sa prestation imposable",
+          "Toute prime payé totalement par l’employeur rend la prestation non-imposable",
+          "Toute prime payé par l’employeur et l’employé est non-imposable",
+          "Toute prime payé totalement par l’employeur rend la prestation imposable"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne convient pas pour l’invalidité de courte durée ?",
+        "options": [
+          "Prestation de l’ordre de 70 à 75% du revenu avant invalidité",
+          "Définition d’invalidité « toute profession »",
+          "Durée maximale des prestations : 12 mois",
+          "Peut se coordonner avec l’assurance emploi"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’invalidité de longue durée s’appuie sur deux définitions d’invalidité, lesquelles?",
+        "options": [
+          "Propre profession et profession habituelle",
+          "Propre profession et profession individuelle",
+          "Toute profession et propre profession",
+          "Profession habituelle et toute profession"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le participant cesse de correspondre à la définition de membre dans la catégorie du groupe couvert",
+        "options": [
+          "L’employé ou le participant au régime collectif prend sa retraite",
+          "Le montant maximum sans preuve est :"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pascal travaille pour un employeur qui offre de l’assurance collective.  Pascal et son employeur se partagent le coût de la prime qui est de 2100$ annuellement.  Ce printemps, Pascal a eu un accident de motoneige et il a réclamé 6500$.  Pascal n’avait pas réclamé depuis 3 ans.  Quelle portion de sa réclamation sera non-imposable ?",
+        "options": [
+          "3150$",
+          "3350$",
+          "1050$",
+          "5450$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Timothée avait souscrit, en 2010, une assurance invalidité individuel alors qu’il gagnait 62000$ par année pour compléter son assurance collective qui lui donne 70% de son revenu. Son assurance invalidité individuelle l’amenait à la limite permise. En 2018, lors d’une restructuration de l’entreprise son revenu a baissé à 48000$ par année.  S’il devait réclamer aujourd’hui, combien recevrait-il de son assurance collective ?",
+        "options": [
+          "2625$",
+          "775$",
+          "3400$",
+          "2800$"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne convient pas à l’assurance prêt ?",
+        "options": [
+          "Offerte de façon facultative",
+          "La sélection est rétroactive",
+          "Les prestations sont versées à l’assuré",
+          "Les prestations sont non-imposables",
+          "Chapitre 3"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sylvia vient d’acheter une police maladie grave.  Si on lui diagnostique un cancer dans deux semaines, qu’est-ce qui l’empêcherait de se faire payer ?",
+        "options": [
+          "Le délai de survie",
+          "La période d’admissibilité",
+          "La pondération de la police"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Sa situation financière par rapport au montant d’assurance de la proposition la mettrait en surassurance",
+        "options": [
+          "Son état de santé actuel",
+          "Les antécédents médicaux de ses parents",
+          "Sa situation géographique"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Susanne possède une assurance maladie grave de base 4 conditions qui pourrait lui verser 50 000$ en cas de maladies graves.  Si on sait que les 3 premières conditions de base sont le cancer, la crise cardiaque et l’AVC, quelle est la 4e condition ?",
+        "options": [
+          "Brûlure grave",
+          "Traumatisme crânien",
+          "Pontage coronarien",
+          "Diabète"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles caractéristiques correspond à une police maladie grave à émission garantie ?",
+        "options": [
+          "Avec sélection médicale, Prestation illimitée",
+          "Avec sélection médicale, prestation limitée",
+          "Sans sélection médicale, prestation illimitée",
+          "Sans sélection médicale, prestation limitée"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dominic, 35 ans, a une police maladie grave depuis 10 ans.  Il vient de recevoir un chèque lui remboursant toutes les primes qu’il a payées.  On lui dit qu’à partir de maintenant sa police est résiliée. Pourquoi ?",
+        "options": [
+          "Parce que Dominic avait pris le remboursement des primes à l’échéance",
+          "Parce que Dominic avait pris le remboursement des primes au rachat"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle condition médicale pourrait permettre l’exonération des primes ?",
+        "options": [
+          "Un cancer qui met la vie en danger",
+          "Une crise cardiaque",
+          "Un faible accident vasculaire cérébrale",
+          "Un pontage coronarien"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jeanne n’est plus capable de rester dans son appartement mais n’a pas besoin de soin 24 heures par jour.  Quel type de soin pourrait-on lui offrir ?",
+        "options": [
+          "Des soins de répits",
+          "Des soins à domicile",
+          "De l’aide à la vie autonome",
+          "Des soins en maison de santé ou de repos"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Par qui sont réglementé les maisons de santé ou de repos ?",
+        "options": [
+          "Par les organismes à but lucratif",
+          "Par les organismes à but non lucratif",
+          "Par le gouvernement fédéral",
+          "Par le gouvernement provincial"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les clients de l’assurance de soins de longue durée sont la plupart du temps âgés de :",
+        "options": [
+          "65 ans et plus",
+          "55 à 65 ans",
+          "45 à 55 ans",
+          "De tout âge"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance soins de longue durée, la couverture est faite selon certains facteurs. Lequel est spécifique à l’assurance soins de longue durée ?",
+        "options": [
+          "Âge de la personne à assurer",
+          "Capacité cognitive",
+          "Antécédents médicaux",
+          "Fumeur ou non-fumeur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle maladie n’est pas la cause du trouble cognitif ?",
+        "options": [
+          "L’Alzheimer",
+          "Le parkinson",
+          "La crise cardiaque",
+          "Le sida"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’assuré doit être décédé d’une maladie amenant une invalidité de longue durée pour avoir droit à son remboursement",
+        "options": [
+          "Ne pas avoir réclamé pendant que la police était en vigueur",
+          "Le remboursement peut être fait au décès, au rachat ou à l’échéance",
+          "Le remboursement de primes est imposable pour l’assuré",
+          "Les remboursements de l’assurance soins de longue durée sont calculés sur :",
+          "Un maximum journalier",
+          "Un maximum hebdomadaire",
+          "Un maximum mensuel",
+          "De façon forfaitaire",
+          "Les polices soins de longue durée sont :",
+          "À renouvellement garanti",
+          "Résiliable",
+          "Non-résiliable",
+          "À émission garantie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance maladie complémentaire individuelle, les assureurs utilisent 2 facteurs pour réduire les primes.  Quels sont-ils ?",
+        "options": [
+          "La franchise et le délai de carence",
+          "Le délai de carence et la coassurance",
+          "La coassurance et la franchise",
+          "Le délai de carence et la période de prestation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Meredith a une assurance maladie complémentaire individuelle qu’elle vient d’utiliser pour une réclamation dentaire.  Elle ne comprend pas pourquoi elle doit payer le total de la franchise puisqu’elle l’avait déjà payé quelques mois auparavant.  Pourquoi selon vous ?",
+        "options": [
+          "Parce que la franchise se paye pour chaque réclamation",
+          "Parce qu’elle ne l’avait pas tout payé la dernière fois"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jocelyn a soumis une facture dentaire de 300$ à son assureur.  Celui-ci lui rembourse seulement 100$.  Jocelyn ne comprend pas puisque pour toutes ses autres réclamations dentaires de l’année il n’a eu aucun problème.  Quelle pourrait être la raison ?",
+        "options": [
+          "Il avait une franchise à payer",
+          "Il a atteint le plafond annuel déterminé par l’assureur",
+          "Il n’a pas soumis sa facture",
+          "Il a dépassé les délais de transmission"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jeannine a visité le dentiste le mois dernier et la facture pour ses soins dentaires s’élevait à 380$.  Si vous savez que c’est sa première réclamation de l’année et qu’elle a une franchise de 75$ ainsi qu’un facteur de coassurance de 80%.  Combien devra-t-elle débourser de ses poches ?",
+        "options": [
+          "136$",
+          "244$",
+          "304$",
+          "76$",
+          "En assurance voyage, la sélection médicale est souvent fait de façon :",
+          "Rétroactive au moment de l’émission",
+          "Rétroactive au moment de la souscription",
+          "Rétroactive au moment de la proposition",
+          "Rétroactive au moment de la réclamation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Non, de toute façon l’assureur rembourse les factures alors elle doit payer en premier",
+        "options": [
+          "Oui, avant même de se faire opérer elle doit le contacter",
+          "Oui, après son opération pour savoir quel traitement a été fait"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel est un facteur qui n’influence pas la prime en assurance voyage ?",
+        "options": [
+          "La destination",
+          "La durée du voyage",
+          "Antécédents familiaux",
+          "L’âge"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les médicaments sur ordonnance sont séparés en deux grandes catégories, lesquelles ?",
+        "options": [
+          "Sans ordonnance et vente libre",
+          "De marque et générique",
+          "De marque et vente libre",
+          "Générique et vente libre"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les médicaments de marque sont fabriqués par la société pharmaceutique ayant effectué les recherches et les études de conception s’y rapportant. Qu’est-ce qui protège l’investissement de l’entreprise ?",
+        "options": [
+          "Une certification",
+          "Une classification",
+          "Un brevet",
+          "Une autorisation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Plusieurs travaux dentaires sont remboursés par l’assurance.  Trouvez-en un ?",
+        "options": [
+          "Blanchiment des dents",
+          "Couronne",
+          "Extraction",
+          "Redressement",
+          "En général, les soins de la vue sont remboursés au :",
+          "6 mois",
+          "12 mois",
+          "18 mois",
+          "24 mois"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne convient pas à la DMA ?",
+        "options": [
+          "Le décès ou la perte doit survenir dans les 180 jours",
+          "Perte de membre ou de sens (vue, ouïe)",
+          "Décès de cause accidentel seulement",
+          "Montant forfaitaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jasper a un régime d’assurance collective qui rembourse ses frais médicaux dont ses frais dentaires.  Le régime couvre aussi sa femme Melody et son fils Siméon.  Ils ont chacun une franchise individuelle de 100$ ainsi qu’une franchise familiale de 250$.  Leur facteur de coassurance est de 20%.  En février, une première réclamation a été soumise pour Melody au montant de 150$.  En avril, c’est Siméon qui a été chez le dentiste.  Une facture de 75$ a été soumise.  En mai, Siméon est retourné chez le dentiste et une facture de 100$ a été envoyé à l’assureur.  Finalement en août, c’était au tour de Jasper de visiter le dentiste.  Il a soumis une facture de 180$.  Quel montant sera remboursé par l’assureur ?",
+        "options": [
+          "204$",
+          "51$",
+          "250$",
+          "0$",
+          "Chapitre 5"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle n’est pas une forme d’entreprise ?",
+        "options": [
+          "Entreprise individuelle",
+          "Entreprise autonome",
+          "Société en nom collectif",
+          "Société par actions"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour quelle forme d’entreprise les avoirs personnels du propriétaire individuel sont à la merci des créanciers ?",
+        "options": [
+          "Entreprise individuelle",
+          "Entreprise autonome",
+          "Société en nom collectif",
+          "Société par actions"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour quelle forme d’entreprise les associés peuvent être solidairement responsables de ses dettes et de son passif ?",
+        "options": [
+          "Entreprise individuelle",
+          "Entreprise autonome",
+          "Société en nom collectif",
+          "Société par actions"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les sociétés par actions ont deux formes de détention, lesquelles ?",
+        "options": [
+          "Détention individuelle et détention groupée",
+          "Détention individuelle et détention publique",
+          "Détention individuelle et détention privée",
+          "Détention privée et détention publique",
+          "La protection frais généraux peut être offerte aux entreprises comptant :",
+          "50 employés et moins",
+          "25 employés et moins",
+          "10 employés et moins",
+          "5 employés et moins"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Laquelle de ces dépenses ne seraient pas admissible dans une protection frais généraux ?",
+        "options": [
+          "Taxes foncières sur les locaux commerciaux détenus en propriété",
+          "Impôt sur les bénéfices de l’entreprise",
+          "Portion du capital des remboursements de prêts",
+          "Intérêts sur les prêts"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jérôme possède une protection frais généraux avec report.  Sa protection le couvre pour 5000$ par mois.  Le premier mois, il envoie pour 4500$ de factures, on les lui rembourse.  Le deuxième mois il soumet pour 5500$ de facture et on lui rembourse.  Quel type de report a-t-il ?",
+        "options": [
+          "Report des frais admissibles excédentaires",
+          "Report des frais admissibles supplémentaires",
+          "Report des prestations non-réclamées",
+          "Report des prestations non-utilisées"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle caractéristique ne correspond pas à la protection frais généraux ?",
+        "options": [
+          "Délai de carence entre 15 et 90 jours",
+          "Prestation non-imposable",
+          "Prestation mensuelle",
+          "Vient couvrir les frais courants de l’entreprise"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour qu’un prêt soit admissible à la protection pour prêt d’entreprise il doit respecter 3 critères.  Lequel n’en est pas un ?",
+        "options": [
+          "Il doit être essentiel au bon fonctionnement de l’entreprise;",
+          "L’intérêt payé sur le prêt doit être non déductible d’impôt"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Justin a une protection pour prêt d’entreprise.  Cette protection garantie son prêt de 250 000$.  Combien recevrait-il en cas d’invalidité et après quel délai de carence s’il a opté pour un montant forfaitaire ?",
+        "options": [
+          "250 000$ après 6 mois",
+          "250 000$ après 12 mois",
+          "187 500$ après 6 mois",
+          "187 500$ après 12 mois"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle est la convention de rachat d’actions la plus difficile à monter ?",
+        "options": [
+          "Celle pour une société par actions",
+          "Celle pour une société en nom collectif",
+          "Celle pour l’entreprise individuelle",
+          "Celle pour le travailleur autonome"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans la convention, le prix peut être déterminé de plusieurs façons.  Laquelle n’en est pas une ?",
+        "options": [
+          "Prix fixé à l’avance",
+          "Prix calculé à l’aide d’une formule",
+          "Prix déterminé par un évaluateur indépendant",
+          "Prix déterminé par les propriétaires au moment où la convention s’applique"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La convention de rachat d’action n’est pas financée par cette source ?",
+        "options": [
+          "Les actifs personnels",
+          "Les actifs de l’entreprises",
+          "Un emprunt",
+          "Une assurance"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel est un type de convention de rachat d’action ?",
+        "options": [
+          "Convention de rachat par l’associé",
+          "Convention de rachat croisé",
+          "Convention de rachat en cas d’invalidité",
+          "Convention de rachat probable"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles caractéristiques correspondent à la protection rachat d’actions en cas d’invalidité ?",
+        "options": [
+          "Délai de carence court, définition d’invalidité propre profession",
+          "Délai de carence court, définition d’invalidité profession habituelle",
+          "Délai de carence long, définition d’invalidité propre profession",
+          "Délai de carence long, définition d’invalidité profession habituelle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Avec la protection rachat d’action en cas d’invalidité, bon nombre de polices prévoient la diminution annuelle des prestations d’un montant à partir d’un certain âge.  Quel est ce montant et à partir de quel âge ?",
+        "options": [
+          "10% à partir de 60 ans",
+          "20% à partir de 60 ans",
+          "10% à partir de 65 ans",
+          "20% à partir de 60 ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Une des principales restrictions applicables aux personnes considérées comme étant des personnes clés pour l’assurance concerne :",
+        "options": [
+          "La profession effectuée",
+          "Le type d’entreprise",
+          "Les parts détenues dans l’entreprise",
+          "La définition d’invalidité"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quel avenant est spécifique à la protection pour personne clé ?",
+        "options": [
+          "Avenant de remboursement des frais de remplacement",
+          "Avenant de remboursement des frais d’embauche",
+          "Avenant de remboursement des frais déclarés",
+          "Avenant de remboursement des frais accessoires"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelles caractéristiques sont associées à la protection pour personne clé ?",
+        "options": [
+          "Prestations maximum 10 000$ par mois, délai de carence 30 à 90 jours",
+          "Prestations maximum 10 000$ par mois, délai de carence 90 à 120 jours",
+          "Prestations maximum 15 000$ par mois, délai de carence 30 à 90 jours",
+          "Prestations maximum 15 000$ par mois, délai de carence 90 à 120 jours",
+          "La FSBE est régie uniquement par :",
+          "Les assureurs",
+          "Revenu Québec",
+          "L’ARC",
+          "Les fiduciaires",
+          "La fiducie qui administre la FSSBE doit résider :",
+          "En Amérique du Nord",
+          "Au Canada",
+          "Au Québec",
+          "Elle peut résider n’importe où"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quels frais peuvent être couvert par un régime de gestion-santé personnel ?",
+        "options": [
+          "Tous les frais médicaux",
+          "Tous les services ou produits admissibles au crédit d’impôt pour frais médicaux",
+          "Les soins de la vue, les soins dentaires et les médicaments d’ordonnance",
+          "Les soins de la vue et les soins dentaires"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour les régimes de gestion-santé personnels, les contributions doivent être utilisées dans les :",
+        "options": [
+          "6 mois suivant leur versement",
+          "12 mois suivant leur versement",
+          "18 mois suivant leur versement",
+          "24 mois suivant leur versement",
+          "Pour un régime groupé, on doit avoir au moins :",
+          "1 employés",
+          "2 employés",
+          "5 employés",
+          "6 employés",
+          "Chapitre 6"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le profil du client doit contenir 3 choses, lesquelles ?",
+        "options": [
+          "Situation personnelle, situation financière, situation familiale",
+          "Situation personnelle, situation financière, couverture actuelle",
+          "Situation familiale, situation financière, couverture actuelle",
+          "Situation personnelle, situation familiale, couverture actuelle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Jonathan aime marcher en forêt, faire du vélo et un peu de jogging alors que Stéphane préfère la lecture et les échecs.  Lequel des deux représente un plus gros risque pour l’assureur ?",
+        "options": [
+          "Jonathan car ses activités lui font prendre plus de risque",
+          "Stéphane car il est plus sédentaire donc plus à risque de problème de santé",
+          "Le risque est équivalent pour chacun d’eux"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour certains produits d’assurance, l’espérance de vie entre en ligne de compte.  Pour quel produit l’espérance de vie d’une femme fera augmenter les coûts puisque le coût global des soins sera plus élevé ?",
+        "options": [
+          "Assurance maladie complémentaire",
+          "Assurance soins de longue durée",
+          "Maladies graves",
+          "Protection pour personne clé"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Il est utile de connaître la profession du client pour n’importe quelle assurance, mais ce facteur ne permet pas de déterminer le montant de l’assurance requis pour deux types de police, lesquelles ?",
+        "options": [
+          "Invalidité et maladies graves",
+          "Invalidité et soins de longue durée",
+          "Maladies graves et soins de longue durée",
+          "Assurance maladie complémentaire et soins de longue durée"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Si le client tire son revenu, en tout ou partie, de commissions, il faut vérifier la tendance de ce revenu sur plusieurs années pour connaître la stabilité du revenu actuel du client et la viabilité du revenu futur. Combien d’années prendront nous en compte ?",
+        "options": [
+          "Un an",
+          "Deux ans",
+          "Trois ans",
+          "Cinq ans"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel n’est pas un revenu passif ?",
+        "options": [
+          "Revenu de placement",
+          "Droit d’auteur",
+          "Pension alimentaire à payer",
+          "Revenu de fiducie"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Gilbert a habité et travaillé au Québec toute sa vie.  Il se demande d’où il pourrait tirer un revenu d’invalidité.  Lequel n’en est pas un ?",
+        "options": [
+          "RRQ",
+          "AE",
+          "CNESST",
+          "RPC"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les dépenses peuvent être ventilés en trois catégories. Trouvez l’intrus ?",
+        "options": [
+          "Frais généraux",
+          "Épargne et placement",
+          "Dettes",
+          "Frais de subsistance"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les relevés de valeur nette et de revenus et de dépenses peuvent venir remplacer un autre document.  Lequel ?",
+        "options": [
+          "Le budget",
+          "Le bilan",
+          "Le relevé bancaire",
+          "Le relevé de carte de crédit"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel n’est pas un critère pour être un bénéficiaire d’un REEI ?",
+        "options": [
+          "Elle a droit au crédit d’impôt pour personnes handicapées",
+          "Elle réside au Québec",
+          "Elle a moins de 60 ans",
+          "Elle a un numéro d’assurance sociale"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’assurance vie avec valeur de rachat pourrait constituer une source de fonds en cas d’urgence sous quatre formes.  Laquelle n’en est pas une ?",
+        "options": [
+          "Participations versées chaque année au titulaire de police ;",
+          "Emprunts sur la valeur de rachat ;",
+          "Congés de primes",
+          "Remboursement des primes"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le représentant en assurance s’intéresse particulièrement à l’ensemble des dettes personnelles du client pour trois raisons.  Laquelle n’en est pas une ?",
+        "options": [
+          "Les dettes doivent en général être remboursées par versements mensuels",
+          "Les dettes définissent le genre d’acheteur qu’est le client"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lequel n’est pas un avantage de la marge de crédit ?",
+        "options": [
+          "Taux d’intérêt annuel dépassant souvent 20 %.",
+          "Donnent accès à des montants que le client peut retirer en tout temps",
+          "Seul l’intérêt mensuel exigible doit être remboursé de façon régulière"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "La façon la plus simple de savoir où en sont les comptes de cartes de crédit du client consiste à examiner ses derniers relevés mensuels.  On se fie sur combien de mois ?",
+        "options": [
+          "Un",
+          "Deux",
+          "Trois",
+          "Quatre"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’AE est un deuxième payeur par rapport à la majorité des autres programmes de prestations d’invalidité sauf un, lequel ?",
+        "options": [
+          "Assurance collective",
+          "Assurance invalidité personnelle",
+          "CNESST",
+          "RRQ"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les résidents du Québec ont droit à une réduction du taux de cotisation de l’Assurance-emploi, pourquoi ?",
+        "options": [
+          "Parce que les statistiques de réclamation sont moins élevées au Québec",
+          "Parce que nous payons déjà des cotisations pour la CNESST",
+          "Parce que nous payons déjà des cotisations pour le RQAP",
+          "Parce que le taux de chômage est moins élevé au Québec"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour la RRQ, lorsqu’une réclamation d’invalidité est approuvée, on commence à recevoir des prestations à partir du :",
+        "options": [
+          "1er mois",
+          "2e mois",
+          "3e mois",
+          "4e mois",
+          "Chapitre 7"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Plusieurs facteurs permettent de contrôler la prime. Parmi les choix suivants, lequel me permet de le faire ?",
+        "options": [
+          "Diminuer le délai de carence",
+          "Diminuer la période de prestation",
+          "Augmenter le montant de prestation",
+          "Enlever la franchise"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle est la pierre angulaire de tout le processus d’émission d’une police d’assurance ?",
+        "options": [
+          "La proposition",
+          "La souscription",
+          "L’émission",
+          "La réclamation"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Une attention particulière doit être apportée à certains aspects de la proposition. Lequel n’en est pas un ?",
+        "options": [
+          "La prime",
+          "La prestation",
+          "Les avenants",
+          "Titulaire, personne assurée et bénéficiaire"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le représentant intervient dans les aspects suivants de la proposition sauf un, lequel ?",
+        "options": [
+          "Commentaire de l’assureur",
+          "Questions médicales",
+          "Rapport d’inspection",
+          "Rapport sur les activités et sports dangereux"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Comment s’appelle la section « ouverte » de la proposition où le représentant peut indiquer des renseignements qui pourraient être utile à l’évaluateur ?",
+        "options": [
+          "Commentaires du représentant",
+          "Questions médicales",
+          "Rapport d’inspection",
+          "Rapport sur les activités et sports dangereux"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lorsqu’une entreprise fait une demande d’assurance, la compagnie d’assurance peut exiger les chiffres des 3 dernières années.  Quel document sera exigé ?",
+        "options": [
+          "Le bilan",
+          "L’état des résultats",
+          "Les états financiers",
+          "Le budget"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "En assurance contre les maladies et les accidents quel facteur n’a pas d’incidence sur la prime ?",
+        "options": [
+          "Rendements de placements",
+          "Taux de déchéance",
+          "Taux de mortalité",
+          "Tarification et exclusions"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les tables de morbidité permettent à quel professionnel d’estimer les réclamations futures le plus précisément possible ?",
+        "options": [
+          "Aux comptables",
+          "Aux mathématiciens",
+          "Aux actuaires",
+          "Aux tarificateurs"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Qui assume les frais reliés à la DMT (déclaration du médecin traitant) ?",
+        "options": [
+          "L’assuré",
+          "L’assureur",
+          "Le médecin",
+          "Le représentant"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Le délai de 10 jours pour « libre examen » commence quand ?",
+        "options": [
+          "À la souscription de la police",
+          "À l’émission de la police",
+          "À la délivrance de la police",
+          "Lors du versement de la première prime"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Si un assuré à la possibilité de transformer une assurance invalidité collective en assurance invalidité individuelle, il a combien de jour pour effectuer la transformation sans questions médicales ?",
+        "options": [
+          "15 jours",
+          "30 jours",
+          "45 jours",
+          "60 jours"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Lors d’un processus de réclamation, quelle est la première étape pour l’assuré ?",
+        "options": [
+          "Remplir le formulaire de réclamation",
+          "Envoyer le formulaire de réclamation",
+          "Aviser l’assureur ou son représentant de l’évènement",
+          "Aller voir son médecin",
+          "Chapitre 8"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour quel genre de groupe, la loi des grands nombres ne s’applique pas ?",
+        "options": [
+          "Un groupe de 500 personnes et moins",
+          "Un groupe de 250 personnes et moins",
+          "Un groupe de 100 personnes et moins",
+          "Un groupe de 25 personnes et moins",
+          "Il est vrai de dire que les plus petits groupes paient des primes :",
+          "Équivalent aux grands groupes",
+          "Plus élevées que les grands groupes",
+          "Moins élevées que les grands groupes",
+          "Abordable pour la grandeur du groupe",
+          "L’un des moyens les plus efficaces pour estimer la composition future est :",
+          "L’âge des participants",
+          "Les données actuarielles",
+          "Les sondages",
+          "Le taux de roulement"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Les prestations pour un PAE sont en général non-imposable.  Pour quel service peut-on voir ses prestations devenir imposable ?",
+        "options": [
+          "Conseil de retraite",
+          "Conseil de placement pour un employé licencié",
+          "Conseil concernant la santé physique ou mentale",
+          "Conseil juridique"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Dans les grandes organisations, qui s’occupent d’adhérer les participants au régime ?",
+        "options": [
+          "L’employeur",
+          "La secrétaire",
+          "Les ressources humaines",
+          "L’assureur"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle est la première étape du règlement d’une réclamation en assurance collective ?",
+        "options": [
+          "Faire le paiement à l’adhérent",
+          "Vérifier si une prestation est payable",
+          "Approuver la réclamation",
+          "Comparer le formulaire de réclamation avec les conditions au contrat"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "L’évaluation de la couverture collective actuelle porte sur tous les éléments suivants sauf un, lequel ?",
+        "options": [
+          "L’analyse approfondie des prestations offertes",
+          "L’évaluation de l’expérience du groupe en matière de réclamations",
+          "L’analyse des primes proposées"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Pour quel type de financement l’assureur assume la pleine responsabilité du paiement de toutes les réclamations ?",
+        "options": [
+          "Régime assuré",
+          "Régime à rétention",
+          "Régime pondéré",
+          "Services administratifs seulement"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Quelle sorte de tarification jumèle la tarification par manuel et la tarification par expérience ?",
+        "options": [
+          "Tarification combinée",
+          "Tarification jumelée",
+          "Tarification diversifiée",
+          "Tarification pondérée"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Siméon a créé sa compagnie il y a quelques mois et veut maintenant offrir à ses employés de l’assurance collective.  Quelle sera sa cote de crédibilité ?",
+        "options": [
+          "Élevée",
+          "Faible",
+          "Moyenne",
+          "Nulle"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      },
+      {
+        "question": "Est-ce que la prime d’assurance collective est taxable ?",
+        "options": [
+          "Non, il n’y a pas de taxe en assurance de personne",
+          "Oui, mais seulement si c’est l’employeur qui paie la prime",
+          "Oui, une taxe qui varie entre 2 et 3% de la prime nette payable",
+          "Oui, une taxe qui varie entre 4 et 5% de la prime nette payable"
+        ],
+        "type": "MULTIPLE_CHOICE"
+      }
+    ],
+    "count": 123
+  }
+}
