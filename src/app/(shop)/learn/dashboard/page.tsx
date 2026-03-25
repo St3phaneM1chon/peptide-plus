@@ -305,6 +305,7 @@ export default function LearningDashboardPage() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                           {course.courseThumbnail ? (
                             <img src={course.courseThumbnail} alt="" className="w-full h-full object-cover" />
                           ) : (
