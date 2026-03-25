@@ -1482,7 +1482,10 @@ REGLES:
   // ── 10. Call Claude ───────────────────────────────────────────────
   const claudeResponse = await callClaude(enrichedPrompt, claudeMessages, maxTokens);
 
-  // ── 11. Persistence (fire-and-forget) ────────────────────────────
+  // ── 11. Persistence (fire-and-forget in production) ─────────────
+  // V2 NOTE: Usage counter is already incremented atomically in getOrCreateSession().
+  // Messages, session stats, and FSRS interactions below are non-critical — losing them
+  // degrades analytics but does not affect billing or access control.
   const persistPromise = (async () => {
     try {
       // Save user message
