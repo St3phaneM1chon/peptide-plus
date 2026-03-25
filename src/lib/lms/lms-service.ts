@@ -381,9 +381,20 @@ export async function submitQuizAttempt(
 ) {
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, tenantId },
-    include: { questions: true },
+    include: { questions: true, lesson: { select: { chapter: { select: { courseId: true } } } } },
   });
   if (!quiz) throw new Error('Quiz not found');
+
+  // FIX P1: Verify user is enrolled in the course this quiz belongs to
+  if (quiz.lesson?.chapter?.courseId) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { tenantId_courseId_userId: { tenantId, courseId: quiz.lesson.chapter.courseId, userId } },
+      select: { status: true },
+    });
+    if (!enrollment || enrollment.status === 'SUSPENDED' || enrollment.status === 'CANCELLED') {
+      throw new Error('Not enrolled in this course');
+    }
+  }
 
   // Check max attempts
   const attemptCount = await prisma.quizAttempt.count({
@@ -878,11 +889,13 @@ export async function enrollUserInBundle(
     enrollmentIds.push(enrollment.id);
   }
 
-  // Update bundle enrollment count
-  await prisma.courseBundle.update({
-    where: { id: bundleId },
-    data: { enrollmentCount: { increment: 1 } },
-  });
+  // FIX P1: Only increment bundle enrollment count if at least 1 new enrollment was created
+  if (enrollmentIds.length > 0) {
+    await prisma.courseBundle.update({
+      where: { id: bundleId },
+      data: { enrollmentCount: { increment: 1 } },
+    });
+  }
 
   return { enrollmentIds, skippedCourseIds };
 }
