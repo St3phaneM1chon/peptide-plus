@@ -1100,8 +1100,13 @@ async function callClaude(
     throw new Error('ANTHROPIC_API_KEY is not configured');
   }
 
+  // FIX P0: Add 30s timeout to prevent thread exhaustion
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
+    signal: controller.signal,
     headers: {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
@@ -1117,6 +1122,7 @@ async function callClaude(
       })),
     }),
   });
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => 'Unknown error');
@@ -1423,8 +1429,11 @@ REGLES:
     });
   }
 
-  // Add the current user message
-  claudeMessages.push({ role: 'user', content: message });
+  // Add the current user message (sanitized to prevent prompt injection via XML tags)
+  const sanitizedMessage = message
+    .replace(/<\/?(?:student-profile|system|context|instructions|admin)[^>]*>/gi, '')
+    .slice(0, 5000); // Max 5000 chars per message
+  claudeMessages.push({ role: 'user', content: sanitizedMessage });
 
   // Determine max tokens based on mode
   const maxTokens = finalMode === 'RAPID' ? 800

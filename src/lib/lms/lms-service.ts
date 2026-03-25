@@ -882,7 +882,7 @@ export async function getCorporateDashboardStats(tenantId: string, corporateAcco
       },
     }),
     prisma.corporateEmployee.findMany({
-      where: { corporateAccountId, isActive: true },
+      where: { tenantId, corporateAccountId, isActive: true },
       select: { userId: true, department: true },
     }),
   ]);
