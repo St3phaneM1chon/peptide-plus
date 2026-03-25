@@ -64,9 +64,11 @@ export default function DiscussionsPage() {
 
       {courseId && (
         <>
-          <form onSubmit={handleSubmit} className="rounded-xl border p-4 mb-6 space-y-3">
-            <input type="text" placeholder={t('lms.discussions.titlePlaceholder')} value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" required />
-            <textarea placeholder={t('lms.discussions.messagePlaceholder')} value={newContent} onChange={(e) => setNewContent(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm min-h-[80px]" required />
+          <form onSubmit={handleSubmit} className="rounded-xl border p-4 mb-6 space-y-3" aria-label={t('lms.discussions.publish')}>
+            <label htmlFor="discussion-title" className="sr-only">{t('lms.discussions.titlePlaceholder')}</label>
+            <input id="discussion-title" type="text" placeholder={t('lms.discussions.titlePlaceholder')} value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" required aria-required="true" />
+            <label htmlFor="discussion-content" className="sr-only">{t('lms.discussions.messagePlaceholder')}</label>
+            <textarea id="discussion-content" placeholder={t('lms.discussions.messagePlaceholder')} value={newContent} onChange={(e) => setNewContent(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm min-h-[80px]" required aria-required="true" />
             <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
               <Send className="h-4 w-4" /> {submitting ? t('lms.discussions.publishing') : t('lms.discussions.publish')}
             </button>
@@ -77,9 +79,9 @@ export default function DiscussionsPage() {
           ) : discussions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">{t('lms.discussions.empty')}</div>
           ) : (
-            <div className="space-y-3">
+            <ul role="list" className="space-y-3">
               {discussions.map((d: any) => (
-                <div key={d.id} className="rounded-lg border p-4 hover:border-primary/30 transition-colors">
+                <li key={d.id} className="rounded-lg border p-4 hover:border-primary/30 transition-colors">
                   <div className="flex items-start gap-2">
                     {d.isPinned && <Pin className="h-4 w-4 text-amber-500 flex-shrink-0 mt-1" />}
                     <div className="flex-1">
@@ -91,9 +93,9 @@ export default function DiscussionsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </>
       )}
