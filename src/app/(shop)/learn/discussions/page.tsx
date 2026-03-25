@@ -3,8 +3,10 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MessageSquare, Send, Pin } from 'lucide-react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function DiscussionsPage() {
+  const { t } = useTranslations();
   const searchParams = useSearchParams();
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,17 +47,17 @@ export default function DiscussionsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-        <MessageSquare className="h-8 w-8 text-blue-500" /> Forum de discussion
+        <MessageSquare className="h-8 w-8 text-blue-500" /> {t('lms.discussions.title')}
       </h1>
-      <p className="text-muted-foreground mb-8">Echangez avec vos collegues de formation.</p>
+      <p className="text-muted-foreground mb-8">{t('lms.discussions.subtitle')}</p>
 
       {!courseId && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">Entrez l&apos;identifiant d&apos;un cours pour voir ses discussions.</p>
+          <p className="text-muted-foreground mb-4">{t('lms.discussions.enterCourseId')}</p>
           <div className="flex gap-2 max-w-md mx-auto">
-            <input type="text" placeholder="ID du cours" className="flex-1 rounded-md border px-3 py-2 text-sm"
+            <input type="text" placeholder={t('lms.discussions.courseIdPlaceholder')} className="flex-1 rounded-md border px-3 py-2 text-sm"
               onKeyDown={(e) => { if (e.key === 'Enter') setCourseId((e.target as HTMLInputElement).value); }} />
-            <button onClick={() => {}} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">Charger</button>
+            <button onClick={() => {}} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">{t('lms.discussions.load')}</button>
           </div>
         </div>
       )}
@@ -63,17 +65,17 @@ export default function DiscussionsPage() {
       {courseId && (
         <>
           <form onSubmit={handleSubmit} className="rounded-xl border p-4 mb-6 space-y-3">
-            <input type="text" placeholder="Titre de la discussion" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" required />
-            <textarea placeholder="Votre message..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm min-h-[80px]" required />
+            <input type="text" placeholder={t('lms.discussions.titlePlaceholder')} value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" required />
+            <textarea placeholder={t('lms.discussions.messagePlaceholder')} value={newContent} onChange={(e) => setNewContent(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm min-h-[80px]" required />
             <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
-              <Send className="h-4 w-4" /> {submitting ? 'Publication...' : 'Publier'}
+              <Send className="h-4 w-4" /> {submitting ? t('lms.discussions.publishing') : t('lms.discussions.publish')}
             </button>
           </form>
 
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('lms.discussions.loading')}</div>
           ) : discussions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Aucune discussion. Soyez le premier!</div>
+            <div className="text-center py-8 text-muted-foreground">{t('lms.discussions.empty')}</div>
           ) : (
             <div className="space-y-3">
               {discussions.map((d: any) => (
@@ -84,7 +86,7 @@ export default function DiscussionsPage() {
                       <h3 className="font-medium">{d.title}</h3>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{d.content}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>{d.replyCount} reponse(s)</span>
+                        <span>{d.replyCount} {t('lms.discussions.replies')}</span>
                         <span>{new Date(d.createdAt).toLocaleDateString('fr-CA')}</span>
                       </div>
                     </div>
