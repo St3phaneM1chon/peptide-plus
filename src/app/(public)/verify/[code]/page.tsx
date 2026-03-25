@@ -142,7 +142,7 @@ export default async function CertificateVerificationPage({ params }: PageProps)
                 <p className="text-lg font-semibold text-gray-900 mt-0.5">{cert.courseTitle}</p>
               </div>
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusConfig.badgeColor}`}>
-                {cert.status}
+                {cert.status === 'ISSUED' ? t('lms.certificateStatusActive') : cert.status === 'REVOKED' ? t('lms.certificateStatusRevoked') : t('lms.certificateStatusExpired')}
               </span>
             </div>
 
