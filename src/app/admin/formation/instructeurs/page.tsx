@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import { PageHeader, Button, DataTable, EmptyState, Modal, FormField, Input, Textarea, StatusBadge, type Column } from '@/components/admin';
 import { Plus, GraduationCap, Pencil, Trash2 } from 'lucide-react';
+import { ConfirmProvider, useConfirm } from '@/components/lms/ConfirmDialog';
 
 interface InstructorRow {
   id: string;
@@ -33,6 +34,10 @@ const emptyForm: InstructorForm = {
 };
 
 export default function InstructorsPage() {
+  return <ConfirmProvider><InstructorsPageInner /></ConfirmProvider>;
+}
+function InstructorsPageInner() {
+  const { confirm: confirmDialog } = useConfirm();
   const { t } = useTranslations();
 
   const [instructors, setInstructors] = useState<InstructorRow[]>([]);
@@ -139,7 +144,8 @@ export default function InstructorsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.lms.instructors.deleteConfirm'))) return;
+    const ok = await confirmDialog({ title: t('admin.lms.instructors.deleteConfirm'), message: t('admin.lms.instructors.deleteConfirm'), destructive: true });
+    if (!ok) return;
     try {
       await fetch(`/api/admin/lms/instructors?id=${id}`, { method: 'DELETE' });
       fetchInstructors();

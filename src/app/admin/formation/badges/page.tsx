@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import { PageHeader, Button, EmptyState, Modal, FormField, Input, Textarea } from '@/components/admin';
 import { Plus, Award, Pencil, Trash2 } from 'lucide-react';
+import { ConfirmProvider, useConfirm } from '@/components/lms/ConfirmDialog';
 
 interface BadgeRow {
   id: string;
@@ -38,6 +39,11 @@ const emptyForm: BadgeForm = {
 };
 
 export default function BadgesPage() {
+  return <ConfirmProvider><BadgesPageInner /></ConfirmProvider>;
+}
+
+function BadgesPageInner() {
+  const { confirm: confirmDialog } = useConfirm();
   const { t } = useTranslations();
 
   const [badges, setBadges] = useState<BadgeRow[]>([]);
@@ -137,7 +143,8 @@ export default function BadgesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.lms.badges.deleteConfirm'))) return;
+    const ok = await confirmDialog({ title: t('admin.lms.badges.deleteConfirm'), message: t('admin.lms.badges.deleteConfirm'), destructive: true });
+    if (!ok) return;
     try {
       await fetch(`/api/admin/lms/badges?id=${id}`, { method: 'DELETE' });
       fetchBadges();

@@ -5,6 +5,7 @@ import { useTranslations } from '@/hooks/useTranslations';
 import { PageHeader, DataTable, StatusBadge, EmptyState, type Column } from '@/components/admin';
 import { FilterBar, SelectFilter } from '@/components/admin';
 import { Star, MessageSquare, Check, X, Trash2 } from 'lucide-react';
+import { ConfirmProvider, useConfirm } from '@/components/lms/ConfirmDialog';
 
 type ReviewStatus = 'pending' | 'approved' | 'rejected';
 type StatusFilter = '' | ReviewStatus;
@@ -26,6 +27,10 @@ const statusVariants: Record<string, 'success' | 'warning' | 'error' | 'neutral'
 };
 
 export default function ReviewsPage() {
+  return <ConfirmProvider><ReviewsPageInner /></ConfirmProvider>;
+}
+function ReviewsPageInner() {
+  const { confirm: confirmDialog } = useConfirm();
   const { t } = useTranslations();
 
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
@@ -62,7 +67,7 @@ export default function ReviewsPage() {
   useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
   const handleAction = async (id: string, action: 'approve' | 'reject' | 'delete') => {
-    if (action === 'delete' && !confirm(t('admin.lms.reviews.deleteConfirm'))) return;
+    if (action === 'delete') { const ok = await confirmDialog({ title: t('admin.lms.reviews.deleteConfirm'), message: t('admin.lms.reviews.deleteConfirm'), destructive: true }); if (!ok) return; }
 
     try {
       if (action === 'delete') {

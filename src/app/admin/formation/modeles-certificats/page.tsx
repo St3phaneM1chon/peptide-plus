@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import { PageHeader, Button, EmptyState, Modal, FormField, Input, Textarea } from '@/components/admin';
 import { Plus, FileCheck, Pencil, Trash2, Star } from 'lucide-react';
+import { ConfirmProvider, useConfirm } from '@/components/lms/ConfirmDialog';
 
 interface TemplateRow {
   id: string;
@@ -51,6 +52,10 @@ const STYLE_GRADIENTS: Record<string, string> = {
 };
 
 export default function CertificateTemplatesPage() {
+  return <ConfirmProvider><CertificateTemplatesPageInner /></ConfirmProvider>;
+}
+function CertificateTemplatesPageInner() {
+  const { confirm: confirmDialog } = useConfirm();
   const { t } = useTranslations();
 
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
@@ -154,7 +159,8 @@ export default function CertificateTemplatesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.lms.certTemplates.deleteConfirm'))) return;
+    const ok = await confirmDialog({ title: t('admin.lms.certTemplates.deleteConfirm'), message: t('admin.lms.certTemplates.deleteConfirm'), destructive: true });
+    if (!ok) return;
     try {
       await fetch(`/api/admin/lms/certificate-templates?id=${id}`, { method: 'DELETE' });
       fetchTemplates();

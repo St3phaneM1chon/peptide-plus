@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 import { PageHeader, Button, EmptyState } from '@/components/admin';
 import { Upload, Image as ImageIcon, Video, FileText, Trash2, Search, File } from 'lucide-react';
+import { ConfirmProvider, useConfirm } from '@/components/lms/ConfirmDialog';
 
 type MediaType = '' | 'image' | 'video' | 'document';
 
@@ -40,6 +41,10 @@ function formatFileSize(bytes: number): string {
 }
 
 export default function MediaLibraryPage() {
+  return <ConfirmProvider><MediaLibraryPageInner /></ConfirmProvider>;
+}
+function MediaLibraryPageInner() {
+  const { confirm: confirmDialog } = useConfirm();
   const { t } = useTranslations();
 
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -94,7 +99,8 @@ export default function MediaLibraryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.lms.mediaLibrary.deleteConfirm'))) return;
+    const ok = await confirmDialog({ title: t('admin.lms.mediaLibrary.deleteConfirm'), message: t('admin.lms.mediaLibrary.deleteConfirm'), destructive: true });
+    if (!ok) return;
     try {
       await fetch(`/api/admin/lms/media?id=${id}`, { method: 'DELETE' });
       fetchMedia();
