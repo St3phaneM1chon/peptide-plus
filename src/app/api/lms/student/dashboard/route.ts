@@ -34,7 +34,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
 
     // Streak
     prisma.lmsStreak.findUnique({
-      where: { userId },
+      where: { tenantId_userId: { tenantId, userId } },
       select: { currentStreak: true, longestStreak: true, lastActivityDate: true },
     }),
 

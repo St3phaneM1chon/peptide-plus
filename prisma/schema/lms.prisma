@@ -489,7 +489,7 @@ model LessonProgress {
 model CertificateTemplate {
   id          String  @id @default(cuid())
   tenantId    String
-  name        String   @unique
+  name        String
   description String?
 
   // Design
@@ -564,7 +564,7 @@ model CourseReview {
 model LmsBadge {
   id          String          @id @default(cuid())
   tenantId    String
-  name        String   @unique
+  name        String
   description String?
   iconUrl     String?
   criteria    Json            @default("{}") // {"type":"courses_completed","count":5}
@@ -585,19 +585,20 @@ model LmsBadgeAward {
   userId    String
   awardedAt DateTime @default(now())
 
-  @@unique([badgeId, userId])
+  @@unique([tenantId, badgeId, userId])
   @@index([tenantId, userId])
 }
 
 model LmsStreak {
   id               String    @id @default(cuid())
   tenantId         String
-  userId           String    @unique
+  userId           String
   currentStreak    Int       @default(0)
   longestStreak    Int       @default(0)
   lastActivityDate DateTime?
   updatedAt        DateTime  @updatedAt
 
+  @@unique([tenantId, userId])
   @@index([tenantId])
 }
 
