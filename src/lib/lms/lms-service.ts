@@ -100,8 +100,21 @@ export async function getCourseById(tenantId: string, id: string) {
   });
 }
 
+// FIX P0: Strip protected denormalized fields that callers must not manipulate
+const PROTECTED_COURSE_FIELDS = ['enrollmentCount', 'completionCount', 'averageRating', 'reviewCount'] as const;
+
+function sanitizeCourseInput<T extends Record<string, unknown>>(data: T): T {
+  const sanitized = { ...data };
+  for (const field of PROTECTED_COURSE_FIELDS) {
+    delete sanitized[field];
+  }
+  return sanitized;
+}
+
 export async function createCourse(tenantId: string, data: Prisma.CourseCreateInput) {
-  return prisma.course.create({ data: { ...data, tenantId } });
+  const safeData = sanitizeCourseInput(data as Record<string, unknown>);
+  delete safeData.id; // FIX P1: prevent PK injection
+  return prisma.course.create({ data: { ...safeData as Prisma.CourseCreateInput, tenantId, status: 'DRAFT' } });
 }
 
 export async function updateCourse(tenantId: string, id: string, data: Prisma.CourseUpdateInput) {
@@ -110,68 +123,78 @@ export async function updateCourse(tenantId: string, id: string, data: Prisma.Co
   if (!course) throw new Error('Course not found');
   return prisma.course.update({
     where: { id },
-    data,
+    data: sanitizeCourseInput(data as Record<string, unknown>) as Prisma.CourseUpdateInput,
   });
 }
 
 export async function deleteCourse(tenantId: string, id: string) {
-  // Verify ownership before delete
   const course = await prisma.course.findFirst({ where: { id, tenantId } });
   if (!course) throw new Error('Course not found');
+  // FIX P1: Prevent deletion of courses with enrollments (data loss prevention)
+  const enrollmentCount = await prisma.enrollment.count({ where: { courseId: id } });
+  if (enrollmentCount > 0) {
+    throw new Error('Cannot delete course with existing enrollments. Archive it instead.');
+  }
   return prisma.course.delete({ where: { id } });
 }
 
 // ── Enrollments ──────────────────────────────────────────────
 
 export async function enrollUser(tenantId: string, courseId: string, userId: string, enrolledBy?: string) {
-  // C3-BIZ-B-004 FIX: Check for duplicate enrollment before creating
-  const existing = await prisma.enrollment.findUnique({
-    where: { tenantId_courseId_userId: { tenantId, courseId, userId } },
-    select: { id: true },
+  // FIX P1: Wrap enrollment in transaction to prevent race conditions
+  return prisma.$transaction(async (tx) => {
+    // Check for duplicate enrollment
+    const existing = await tx.enrollment.findUnique({
+      where: { tenantId_courseId_userId: { tenantId, courseId, userId } },
+      select: { id: true },
+    });
+    if (existing) throw new Error('Already enrolled');
+
+    const course = await tx.course.findFirst({
+      where: { id: courseId, tenantId, status: 'PUBLISHED' },
+      include: { _count: { select: { enrollments: true } }, chapters: { include: { lessons: { where: { isPublished: true } } } } },
+    });
+    if (!course) throw new Error('Course not found or not published');
+
+    // Check max enrollments
+    if (course.maxEnrollments && course._count.enrollments >= course.maxEnrollments) {
+      throw new Error('Course is full');
+    }
+
+    // Check enrollment deadline
+    if (course.enrollmentDeadline && new Date() > course.enrollmentDeadline) {
+      throw new Error('Enrollment closed');
+    }
+
+    const totalLessons = course.chapters.reduce((sum, ch) => sum + ch.lessons.length, 0);
+
+    let complianceDeadline: Date | undefined;
+    if (course.isCompliance && course.complianceDeadlineDays) {
+      complianceDeadline = new Date();
+      complianceDeadline.setDate(complianceDeadline.getDate() + course.complianceDeadlineDays);
+    }
+
+    const enrollment = await tx.enrollment.create({
+      data: {
+        tenantId,
+        courseId,
+        userId,
+        totalLessons,
+        enrolledBy: enrolledBy ?? null,
+        enrollmentSource: enrolledBy ? 'admin' : 'self',
+        complianceStatus: course.isCompliance ? 'NOT_STARTED' : null,
+        complianceDeadline: complianceDeadline ?? null,
+      },
+    });
+
+    // Increment enrollment count atomically within transaction
+    await tx.course.update({
+      where: { id: courseId },
+      data: { enrollmentCount: { increment: 1 } },
+    });
+
+    return enrollment;
   });
-  if (existing) throw new Error('Already enrolled');
-
-  const course = await prisma.course.findFirst({
-    where: { id: courseId, tenantId, status: 'PUBLISHED' },
-    include: { _count: { select: { enrollments: true } }, chapters: { include: { lessons: true } } },
-  });
-  if (!course) throw new Error('Course not found or not published');
-
-  // Check max enrollments
-  if (course.maxEnrollments && course._count.enrollments >= course.maxEnrollments) {
-    throw new Error('Course is full');
-  }
-
-  // Count total lessons
-  const totalLessons = course.chapters.reduce((sum, ch) => sum + ch.lessons.length, 0);
-
-  // Calculate compliance deadline
-  let complianceDeadline: Date | undefined;
-  if (course.isCompliance && course.complianceDeadlineDays) {
-    complianceDeadline = new Date();
-    complianceDeadline.setDate(complianceDeadline.getDate() + course.complianceDeadlineDays);
-  }
-
-  const enrollment = await prisma.enrollment.create({
-    data: {
-      tenantId,
-      courseId,
-      userId,
-      totalLessons,
-      enrolledBy: enrolledBy ?? null,
-      enrollmentSource: enrolledBy ? 'admin' : 'self',
-      complianceStatus: course.isCompliance ? 'NOT_STARTED' : null,
-      complianceDeadline: complianceDeadline ?? null,
-    },
-  });
-
-  // Increment enrollment count on course
-  await prisma.course.update({
-    where: { id: courseId },
-    data: { enrollmentCount: { increment: 1 } },
-  });
-
-  return enrollment;
 }
 
 export async function getEnrollment(tenantId: string, courseId: string, userId: string) {
