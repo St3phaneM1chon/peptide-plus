@@ -32,7 +32,8 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   const body = await request.json();
   const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+    // FIX P1: Don't leak Zod error details to client
+    return NextResponse.json({ error: 'Invalid checkout request' }, { status: 400 });
   }
 
   const { type, id } = parsed.data;
