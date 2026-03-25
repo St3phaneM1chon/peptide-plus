@@ -29,7 +29,7 @@ interface BundleForm {
 const emptyForm: BundleForm = { name: '', slug: '', description: '', price: '', corporatePrice: '', courseIds: [] };
 
 export default function ForfaitsPage() {
-  useTranslations();
+  const { t } = useTranslations();
   const [bundles, setBundles] = useState<BundleRow[]>([]);
   const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
   const [loading, setLoading] = useState(true);

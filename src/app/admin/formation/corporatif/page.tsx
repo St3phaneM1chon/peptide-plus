@@ -36,7 +36,7 @@ const emptyForm: CorporateForm = {
 };
 
 export default function CorporatifPage() {
-  useTranslations();
+  const { t } = useTranslations();
   const [accounts, setAccounts] = useState<CorporateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
