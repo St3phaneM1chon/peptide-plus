@@ -808,6 +808,7 @@ export async function getBundles(tenantId: string) {
       },
     },
     orderBy: { name: 'asc' },
+    take: 100, // FIX P3: Limit query result
   });
 }
 
@@ -923,6 +924,7 @@ export async function getCorporateAccounts(tenantId: string) {
       _count: { select: { employees: true, enrollments: true, bundleOrders: true } },
     },
     orderBy: { companyName: 'asc' },
+    take: 200, // FIX P3: Limit query result
   });
 }
 
