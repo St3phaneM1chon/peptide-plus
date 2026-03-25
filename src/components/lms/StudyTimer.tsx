@@ -101,8 +101,8 @@ export default function StudyTimer({
         setSecondsLeft(focusDuration * 60);
         setShowBreakSuggestion(false);
       }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, isRunning, phase, pomodoroCount, focusDuration, breakDuration, totalStudySeconds, onSessionEnd]);
 
   // ── Sound ─────────────────────────────────────────────────
