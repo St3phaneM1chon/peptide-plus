@@ -10917,7 +10917,7 @@
       "badgesAndStreak": "Badges & Streak",
       "upcomingDeadlines": "Upcoming Deadlines",
       "dueBy": "Due:"
-    }    ,
+    },
     "flashcards": {
       "cardOf": "{current} of {total}",
       "shuffle": "Shuffle",
@@ -14158,5 +14158,53 @@
     "errorGeneric": "Ocurrió un error.",
     "errorNetwork": "Error de red. Inténtalo de nuevo.",
     "emailPlaceholder": "you@company.com"
+  },
+  "lms": {
+    "discussions": {
+      "title": "Discussion Forum",
+      "subtitle": "Exchange with your fellow students",
+      "enterCourseId": "Enter the course ID to view discussions",
+      "courseIdPlaceholder": "Course ID",
+      "load": "Load",
+      "publish": "Publish",
+      "publishing": "Publishing...",
+      "loading": "Loading...",
+      "empty": "No discussions yet. Be the first!",
+      "replies": "reply(ies)",
+      "titlePlaceholder": "Discussion title",
+      "messagePlaceholder": "Share your question or comment..."
+    },
+    "liveSessions": {
+      "title": "Live Sessions",
+      "subtitle": "Upcoming webinars and live sessions",
+      "loading": "Loading...",
+      "empty": "No sessions scheduled at this time.",
+      "registered": "registered",
+      "join": "Join"
+    },
+    "cohort": {
+      "title": "My Cohort",
+      "subtitle": "Your synchronized learning group",
+      "noCohort": "No active cohort",
+      "noCohortDescription": "You will be added to a cohort when you next enroll in a synchronized program."
+    },
+    "xp": {
+      "title": "Experience Points",
+      "subtitle": "Earn XP by completing lessons, quizzes and challenges.",
+      "loading": "Loading...",
+      "totalXp": "Total XP",
+      "levelPrefix": "Level",
+      "xpToNext": "to next",
+      "activeChallenges": "Active Challenges",
+      "cumulativeXp": "Total XP Earned",
+      "scaleTitle": "XP Scale",
+      "lessonCompleted": "Lesson completed",
+      "quizPassed": "Quiz passed",
+      "courseFinished": "Course completed",
+      "sevenDayStreak": "7-day streak",
+      "dailyLogin": "Daily login",
+      "challengeCompleted": "Challenge completed",
+      "variable": "Variable"
+    }
   }
 }
