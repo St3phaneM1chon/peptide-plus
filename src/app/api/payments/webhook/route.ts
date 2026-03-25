@@ -1743,6 +1743,11 @@ async function handleLmsRefund(charge: Stripe.Charge): Promise<boolean> {
       where: { tenantId: courseOrder.tenantId, courseId: courseOrder.courseId, userId: courseOrder.userId },
       data: { status: 'SUSPENDED' },
     });
+    // V2 FIX: Decrement course enrollment count on refund
+    await prisma.course.update({
+      where: { id: courseOrder.courseId },
+      data: { enrollmentCount: { decrement: 1 } },
+    }).catch(() => {}); // Non-blocking — count may already be 0
     await prisma.courseOrder.update({
       where: { id: courseOrder.id },
       data: { status: 'refunded', refundedAt: new Date(), refundAmount: (charge.amount_refunded ?? 0) / 100 },
