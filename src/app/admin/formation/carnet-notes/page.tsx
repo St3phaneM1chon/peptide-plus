@@ -1,11 +1,13 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { useTranslations } from '@/hooks/useTranslations';
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader, Button, EmptyState, DataTable, type Column } from '@/components/admin';
 import { BookOpen } from 'lucide-react';
 
 export default function Page() {
+  const { t } = useTranslations();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,11 +42,11 @@ export default function Page() {
       <PageHeader title="Carnet de notes" subtitle=""
 
       />
-      <div className="flex gap-2"><input type="text" placeholder="ID du cours" value={courseId} onChange={(e) => setCourseId(e.target.value)} className="rounded-md border px-3 py-2 text-sm w-64" /><Button onClick={fetchData} variant="outline">Charger</Button></div>
+      <div className="flex gap-2"><input type="text" placeholder="ID du cours" value={courseId} onChange={(e) => setCourseId(e.target.value)} className="rounded-md border px-3 py-2 text-sm w-64" /><Button onClick={fetchData} variant="outline">{t('common.load')}</Button></div>
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+        <div className="text-center py-12 text-muted-foreground">{t('common.loading')}</div>
       ) : data.length === 0 ? (
-        <EmptyState icon={BookOpen} title="Aucune donnee" description="Aucune donnee." />
+        <EmptyState icon={BookOpen} title={t('common.noData')} description={t('common.noData')} />
       ) : (
         <DataTable columns={columns} data={data} keyExtractor={(r: any) => r.id} />
       )}

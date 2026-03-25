@@ -1,11 +1,13 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { useTranslations } from '@/hooks/useTranslations';
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { PageHeader, Button, EmptyState, DataTable, type Column, Modal, FormField, Input, Textarea } from '@/components/admin';
 import { Database, Plus } from 'lucide-react';
 
 export default function Page() {
+  const { t } = useTranslations();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -47,13 +49,13 @@ export default function Page() {
   return (
     <div className="space-y-6">
       <PageHeader title="Banques de questions" subtitle=""
-        actions={<Button onClick={() => { setForm({}); setModalOpen(true); }}><Plus className="h-4 w-4 mr-2" /> Ajouter</Button>}
+        actions={<Button onClick={() => { setForm({}); setModalOpen(true); }}><Plus className="h-4 w-4 mr-2" /> {t('common.add')}</Button>}
       />
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+        <div className="text-center py-12 text-muted-foreground">{t('common.loading')}</div>
       ) : data.length === 0 ? (
-        <EmptyState icon={Database} title="Aucune donnee" description="Ajoutez-en un pour commencer." />
+        <EmptyState icon={Database} title={t('common.noData')} description={t('common.addToStart')} />
       ) : (
         <DataTable columns={columns} data={data} keyExtractor={(r: any) => r.id} />
       )}
@@ -64,8 +66,8 @@ export default function Page() {
           <FormField label="Description"><Textarea value={form.description || ""} onChange={(e) => setForm((f: any) => ({ ...f, description: e.target.value }))} /></FormField>
           <FormField label="Domaine"><Input value={form.domain || ""} onChange={(e) => setForm((f: any) => ({ ...f, domain: e.target.value }))} /></FormField>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Annuler</Button>
-            <Button type="submit" disabled={submitting}>{submitting ? 'En cours...' : 'Creer'}</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? t('common.inProgress') : t('common.create')}</Button>
           </div>
         </form>
       </Modal>

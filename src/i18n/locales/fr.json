@@ -10865,7 +10865,12 @@
     "status": "Statut",
     "title": "Titre",
     "clearSearch": "Effacer la recherche",
-    "dismiss": "Fermer"
+    "dismiss": "Fermer",
+    "noData": "Aucune donnee",
+    "inProgress": "En cours...",
+    "load": "Charger",
+    "addToStart": "Ajoutez-en un pour commencer.",
+    "validationFailed": "Erreur de validation"
   },
   "community": {
     "title": "Forum communautaire",

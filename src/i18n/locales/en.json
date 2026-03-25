@@ -10867,7 +10867,12 @@
     "status": "Status",
     "title": "Title",
     "clearSearch": "Clear search",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "noData": "No data",
+    "inProgress": "In progress...",
+    "load": "Load",
+    "addToStart": "Add one to get started.",
+    "validationFailed": "Validation error"
   },
   "community": {
     "allDiscussions": "All Discussions",

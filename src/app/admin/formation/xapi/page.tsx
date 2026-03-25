@@ -1,11 +1,13 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { useTranslations } from '@/hooks/useTranslations';
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader, EmptyState, DataTable, type Column } from '@/components/admin';
 import { Activity } from 'lucide-react';
 
 export default function Page() {
+  const { t } = useTranslations();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,9 +43,9 @@ export default function Page() {
       />
 
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+        <div className="text-center py-12 text-muted-foreground">{t('common.loading')}</div>
       ) : data.length === 0 ? (
-        <EmptyState icon={Activity} title="Aucune donnee" description="Aucune donnee." />
+        <EmptyState icon={Activity} title={t('common.noData')} description={t('common.noData')} />
       ) : (
         <DataTable columns={columns} data={data} keyExtractor={(r: any) => r.id} />
       )}
