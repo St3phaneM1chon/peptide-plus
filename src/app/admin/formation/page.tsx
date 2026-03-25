@@ -21,16 +21,29 @@ export default function LmsDashboardPage() {
   const { t } = useTranslations();
   const [stats, setStats] = useState<LmsStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/lms/analytics')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('API error');
+        return res.json();
+      })
       .then(data => {
         setStats(data.data ?? data);
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive font-medium mb-2">Impossible de charger les statistiques</p>
+        <button onClick={() => window.location.reload()} className="text-sm text-primary hover:underline">Reessayer</button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
