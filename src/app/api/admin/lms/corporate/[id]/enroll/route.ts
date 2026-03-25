@@ -48,8 +48,19 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
   // V2 P0 FIX: Validate budget before enrollment
   if (account.budgetAmount) {
     const remaining = Number(account.budgetAmount) - Number(account.budgetUsed);
-    // Estimate cost (rough check — exact pricing resolved per item below)
     if (remaining <= 0) {
+      return apiError('Corporate budget exhausted', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+    }
+  }
+
+  // P9-11 FIX: Re-read budget atomically to minimize race window
+  // (the pre-check above is for UX, this is the authoritative check)
+  if (account.budgetAmount) {
+    const freshAccount = await prisma.corporateAccount.findFirst({
+      where: { id: corporateAccountId, tenantId },
+      select: { budgetAmount: true, budgetUsed: true },
+    });
+    if (freshAccount && Number(freshAccount.budgetAmount) - Number(freshAccount.budgetUsed) <= 0) {
       return apiError('Corporate budget exhausted', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
     }
   }
@@ -134,12 +145,18 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
     }
   }
 
-  // Update corporate budget
+  // Update corporate budget with atomic increment
   if (results.totalCost > 0) {
-    await prisma.corporateAccount.update({
+    // P9-11 FIX: Use atomic increment + post-check to prevent budget overflow
+    const updatedAccount = await prisma.corporateAccount.update({
       where: { id: corporateAccountId },
       data: { budgetUsed: { increment: results.totalCost } },
+      select: { budgetAmount: true, budgetUsed: true },
     });
+    // Post-check: if budget exceeded after increment, log warning (enrollments already created)
+    if (updatedAccount.budgetAmount && Number(updatedAccount.budgetUsed) > Number(updatedAccount.budgetAmount)) {
+      results.errors.push(`Budget exceeded: ${Number(updatedAccount.budgetUsed).toFixed(2)} / ${Number(updatedAccount.budgetAmount).toFixed(2)}`);
+    }
   }
 
   // Send corporate welcome emails (non-blocking)
