@@ -12767,6 +12767,23 @@
       "enrollFree": "Enroll for free",
       "sponsoredBy": "Sponsored by your employer",
       "youSave": "You save"
+    },
+    "xp": {
+      "title": "Experience Points",
+      "desc": "Earn XP by completing lessons, quizzes and challenges.",
+      "xpTotal": "Total XP",
+      "level": "Level",
+      "xpToNext": "XP to next",
+      "activeChallenges": "Active challenges",
+      "totalEarned": "Total earned",
+      "baremes": "XP Rates",
+      "lessonComplete": "Lesson complete",
+      "quizPass": "Quiz passed",
+      "courseComplete": "Course complete",
+      "streak7": "7-day streak",
+      "dailyLogin": "Daily login",
+      "challengeComplete": "Challenge complete",
+      "variable": "Variable"
     }
   },
   "legal": {

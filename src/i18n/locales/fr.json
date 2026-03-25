@@ -12765,6 +12765,23 @@
       "enrollFree": "S'inscrire gratuitement",
       "sponsoredBy": "Parraine par votre employeur",
       "youSave": "Vous economisez"
+    },
+    "xp": {
+      "title": "Points d'experience",
+      "desc": "Gagnez des XP en completant des lecons, quiz et defis.",
+      "xpTotal": "XP Total",
+      "level": "Niveau",
+      "xpToNext": "XP au prochain",
+      "activeChallenges": "Defis actifs",
+      "totalEarned": "XP cumules",
+      "baremes": "Baremes XP",
+      "lessonComplete": "Lecon completee",
+      "quizPass": "Quiz reussi",
+      "courseComplete": "Cours termine",
+      "streak7": "Serie 7 jours",
+      "dailyLogin": "Connexion quotidienne",
+      "challengeComplete": "Defi complete",
+      "variable": "Variable"
     }
   },
   "legal": {
