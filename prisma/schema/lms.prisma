@@ -2283,3 +2283,227 @@ model LmsAuditLog {
   @@index([tenantId, entity, createdAt])
   @@index([tenantId, userId, createdAt])
 }
+
+// =============================================================================
+// xAPI / LEARNING RECORD STORE (LRS)
+// =============================================================================
+
+model XapiStatement {
+  id          String   @id @default(cuid())
+  tenantId    String
+  actorId     String                        // userId (agent)
+  verb        String                        // experienced, completed, passed, failed, answered, attempted, interacted
+  objectType  String                        // course, lesson, quiz, video, document
+  objectId    String                        // ID of the object
+  objectName  String?                       // Human-readable name
+  result      Json?                         // { score, success, completion, duration, response }
+  context     Json?                         // { courseId, chapterId, platform, language, extensions }
+  timestamp   DateTime @default(now())
+  stored      DateTime @default(now())
+
+  @@index([tenantId, actorId, timestamp])
+  @@index([tenantId, verb, timestamp])
+  @@index([tenantId, objectType, objectId])
+}
+
+// =============================================================================
+// LTI 1.3 — TOOL INTEGRATION
+// =============================================================================
+
+model LtiTool {
+  id              String   @id @default(cuid())
+  tenantId        String
+  name            String                     // "Kahoot", "Padlet", "GeoGebra"
+  description     String?
+  issuer          String                     // Platform issuer URL
+  clientId        String                     // OAuth2 client ID
+  deploymentId    String?
+  authLoginUrl    String                     // OIDC auth endpoint
+  authTokenUrl    String                     // Token endpoint
+  jwksUrl         String                     // JSON Web Key Set URL
+  publicKey       String?                    // Platform public key (PEM)
+  customParams    Json?                      // Custom launch parameters
+  isActive        Boolean  @default(true)
+
+  launches        LtiLaunch[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, clientId])
+  @@index([tenantId, isActive])
+}
+
+model LtiLaunch {
+  id          String   @id @default(cuid())
+  tenantId    String
+  toolId      String
+  tool        LtiTool  @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  userId      String
+  lessonId    String?                       // Lesson where the tool was launched
+  courseId    String?
+  launchUrl   String                        // Deep link to tool content
+  state       String?                       // OIDC state
+  nonce       String?                       // OIDC nonce
+  scoreReturn Decimal? @db.Decimal(5, 2)    // Score returned by tool (0-100)
+
+  launchedAt  DateTime @default(now())
+
+  @@index([tenantId, userId])
+  @@index([toolId])
+}
+
+// =============================================================================
+// CONTENT VERSION CONTROL
+// =============================================================================
+
+model ContentVersion {
+  id          String   @id @default(cuid())
+  tenantId    String
+  entityType  String                        // lesson, course, quiz
+  entityId    String
+  version     Int      @default(1)
+  content     Json                          // Snapshot of the entity at this version
+  changeNote  String?                       // "Updated manual text", "Added video"
+  changedBy   String?                       // userId who made the change
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, entityType, entityId, version])
+  @@unique([tenantId, entityType, entityId, version])
+}
+
+// =============================================================================
+// PEER REVIEW
+// =============================================================================
+
+model PeerReviewAssignment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  courseId     String
+  lessonId    String                        // The lesson/exercise being reviewed
+  title       String
+  instructions String?
+  rubricId    String?                       // Link to grading rubric
+  rubric      GradingRubric? @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  maxReviewers Int     @default(3)          // Each submission reviewed by N peers
+  isAnonymous Boolean  @default(true)
+  deadline    DateTime?
+  isActive    Boolean  @default(true)
+
+  submissions PeerReviewSubmission[]
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, courseId])
+}
+
+model PeerReviewSubmission {
+  id             String   @id @default(cuid())
+  tenantId       String
+  assignmentId   String
+  assignment     PeerReviewAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId         String                     // Student who submitted
+  content        String                     // Submission text
+  fileUrl        String?                    // Uploaded file
+  status         String   @default("submitted") // submitted, under_review, reviewed, graded
+
+  reviews        PeerReview[]
+
+  submittedAt    DateTime @default(now())
+
+  @@unique([assignmentId, userId])
+}
+
+model PeerReview {
+  id             String   @id @default(cuid())
+  tenantId       String
+  submissionId   String
+  submission     PeerReviewSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewerId     String                     // Student doing the review
+  score          Decimal? @db.Decimal(5, 2)
+  feedback       String?
+  rubricScores   Json?                      // { criterionId: score, ... }
+  isComplete     Boolean  @default(false)
+
+  createdAt      DateTime @default(now())
+
+  @@unique([submissionId, reviewerId])
+}
+
+// =============================================================================
+// GRADING RUBRICS
+// =============================================================================
+
+model GradingRubric {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String                        // "Rubrique analyse de besoins"
+  description String?
+  criteria    Json                          // [{ id, name, description, levels: [{ score, label, description }] }]
+  maxScore    Int      @default(100)
+  isActive    Boolean  @default(true)
+
+  peerReviewAssignments PeerReviewAssignment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, isActive])
+}
+
+// =============================================================================
+// COHORT-BASED LEARNING
+// =============================================================================
+
+model LmsCohort {
+  id          String   @id @default(cuid())
+  tenantId    String
+  courseId     String
+  name        String                        // "Cohorte Janvier 2026"
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  maxMembers  Int?
+  isActive    Boolean  @default(true)
+
+  members     LmsCohortMember[]
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, courseId])
+}
+
+model LmsCohortMember {
+  id        String    @id @default(cuid())
+  tenantId  String
+  cohortId  String
+  cohort    LmsCohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  userId    String
+  role      String    @default("student") // student, facilitator, mentor
+
+  joinedAt  DateTime  @default(now())
+
+  @@unique([cohortId, userId])
+}
+
+// =============================================================================
+// CONTENT TEMPLATES
+// =============================================================================
+
+model CourseTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String?                       // null = global template
+  name        String                        // "PQAP Conformite", "Formation Produit"
+  description String?
+  industry    String?                       // insurance, finance, healthcare
+  category    String?                       // compliance, product, onboarding, ethics
+  structure   Json                          // { chapters: [{ title, lessons: [{ title, type, estimatedMinutes }] }] }
+  defaultSettings Json?                     // { passingScore, requireSequential, isCompliance }
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([industry, category])
+}
