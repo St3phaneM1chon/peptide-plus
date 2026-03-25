@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, tenantId: true },
+    // FIX P2: Don't fetch email (PII minimization)
+    select: { id: true, name: true, tenantId: true },
   });
   if (!user?.tenantId) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
