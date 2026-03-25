@@ -1238,6 +1238,14 @@ async function logObservation(
 
     if (!profile) return;
 
+    // FIX P3: Rate limit observations to prevent flooding (max 20 per day per user)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const recentCount = await prisma.studentProfileNote.count({
+      where: { userId, createdAt: { gte: today } },
+    });
+    if (recentCount >= 20) return;
+
     await prisma.studentProfileNote.create({
       data: {
         tenantId,
