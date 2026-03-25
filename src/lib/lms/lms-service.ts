@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import type { Prisma, CourseStatus } from '@prisma/client';
 import { sendEmail } from '@/lib/email';
 import { buildCertificateIssuedEmail } from '@/lib/email/templates/lms-emails';
+import { awardXp } from '@/lib/lms/xp-service';
 
 // ── Courses ──────────────────────────────────────────────────
 
@@ -219,7 +220,7 @@ export async function updateLessonProgress(
   // Verify the enrollment belongs to this user and tenant
   const enrollment = await prisma.enrollment.findFirst({
     where: { id: enrollmentId, tenantId, userId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, tenantId: true, userId: true, courseId: true },
   });
   if (!enrollment) {
     throw new Error('Enrollment not found or access denied');
@@ -263,6 +264,13 @@ export async function updateLessonProgress(
     await recalculateEnrollmentProgress(enrollmentId);
   }
 
+  // Award XP for lesson completion
+  if (data.isCompleted === true) {
+    try {
+      await awardXp(enrollment.tenantId, enrollment.userId, 'lesson_complete', lessonId);
+    } catch { /* XP failure should not block progress */ }
+  }
+
   return progress;
 }
 
@@ -290,11 +298,16 @@ async function recalculateEnrollmentProgress(enrollmentId: string) {
       updateData.complianceStatus = 'COMPLETED';
     }
 
-    // Increment course completion count
+    // Increment course completion count + award XP
     await prisma.course.update({
       where: { id: enrollment.courseId },
       data: { completionCount: { increment: 1 } },
     });
+
+    // Award XP for course completion
+    try {
+      await awardXp(enrollment.tenantId, enrollment.userId, 'course_complete', enrollment.courseId);
+    } catch { /* XP failure should not block completion */ }
 
     // C3-LMS FIX: Auto-issue certificate on course completion
     const course = await prisma.course.findUnique({

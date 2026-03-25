@@ -2054,3 +2054,58 @@ model LmsNotification {
   @@index([tenantId, userId, isRead, createdAt])
   @@index([tenantId, userId, createdAt])
 }
+
+// =============================================================================
+// XP POINTS & CHALLENGES
+// =============================================================================
+
+model LmsXpTransaction {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  amount    Int                             // XP gained (positive) or spent (negative)
+  reason    String                          // lesson_complete, quiz_pass, course_complete, streak_bonus, challenge, daily_login
+  sourceId  String?                         // ID of the triggering entity
+  balance   Int                             // Running balance after this transaction
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, userId, createdAt])
+}
+
+model LmsChallenge {
+  id          String   @id @default(cuid())
+  tenantId    String
+  title       String                        // "Complete 3 lecons cette semaine"
+  description String?
+  type        String                        // weekly, monthly, one_time, daily
+  criteria    Json                          // { action: "lesson_complete", count: 3 }
+  xpReward    Int      @default(50)
+  badgeId     String?                       // Optional badge reward
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean  @default(true)
+
+  participants LmsChallengeParticipant[]
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, isActive, startsAt])
+}
+
+model LmsChallengeParticipant {
+  id           String       @id @default(cuid())
+  tenantId     String
+  challengeId  String
+  challenge    LmsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId       String
+  progress     Int          @default(0)
+  isCompleted  Boolean      @default(false)
+  completedAt  DateTime?
+  xpAwarded    Boolean      @default(false)
+
+  joinedAt     DateTime     @default(now())
+
+  @@unique([challengeId, userId])
+  @@index([tenantId, userId])
+}
