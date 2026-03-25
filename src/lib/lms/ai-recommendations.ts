@@ -40,9 +40,12 @@ export async function getRecommendations(
       where: { tenantId, userId },
       select: { workProvince: true, specializations: true, primaryGoal: true, licenseTypes: true },
     }),
+    // FIX P2: Limit courses fetched (large tenants could have 1000+ courses)
     prisma.course.findMany({
       where: { tenantId, status: 'PUBLISHED' },
       select: { id: true, title: true, slug: true, tags: true, level: true, isCompliance: true, complianceDeadlineDays: true, categoryId: true },
+      take: 200,
+      orderBy: { enrollmentCount: 'desc' },
     }),
   ]);
 
