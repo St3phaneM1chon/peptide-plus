@@ -1762,11 +1762,8 @@ async function handleLmsRefund(charge: Stripe.Charge): Promise<boolean> {
         where: { tenantId: courseOrder.tenantId, courseId: courseOrder.courseId, userId: courseOrder.userId },
         data: { status: 'SUSPENDED' },
       });
-      // V2 FIX: Decrement course enrollment count on refund
-      await prisma.course.update({
-        where: { id: courseOrder.courseId },
-        data: { enrollmentCount: { decrement: 1 } },
-      }).catch(() => {}); // Non-blocking — count may already be 0
+      // V2 FIX: Decrement course enrollment count on refund (prevent negative via GREATEST)
+      await prisma.$executeRaw`UPDATE "Course" SET "enrollmentCount" = GREATEST("enrollmentCount" - 1, 0) WHERE id = ${courseOrder.courseId}`.catch(() => {}); // Non-blocking
 
       // P11-03 FIX: Revoke certificate if one was issued
       const enrollment = await prisma.enrollment.findFirst({

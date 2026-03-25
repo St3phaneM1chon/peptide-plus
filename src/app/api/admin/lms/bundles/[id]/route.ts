@@ -82,6 +82,6 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
   const existing = await prisma.courseBundle.findFirst({ where: { id, tenantId } });
   if (!existing) return apiError('Bundle not found', ErrorCode.NOT_FOUND, { request, status: 404 });
 
-  await prisma.courseBundle.delete({ where: { id } });
+  await prisma.courseBundle.update({ where: { id }, data: { isActive: false } });
   return apiSuccess({ deleted: true }, { request });
 });

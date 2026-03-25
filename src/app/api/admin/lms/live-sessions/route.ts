@@ -50,6 +50,12 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
   }
 
+  const startsAtDate = new Date(parsed.data.startsAt);
+  const endsAtDate = new Date(parsed.data.endsAt);
+  if (endsAtDate <= startsAtDate) {
+    return apiError('End time must be after start time', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+  }
+
   const liveSession = await prisma.liveSession.create({
     data: {
       tenantId,

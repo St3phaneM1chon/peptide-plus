@@ -30,6 +30,7 @@ export const GET = withUserGuard(async (request: NextRequest, { session }) => {
     include: {
       answers: {
         orderBy: [{ isAccepted: 'desc' }, { upvotes: 'desc' }, { createdAt: 'asc' }],
+        take: 10,
         select: { id: true, userId: true, content: true, isAccepted: true, isInstructor: true, upvotes: true, createdAt: true },
       },
     },

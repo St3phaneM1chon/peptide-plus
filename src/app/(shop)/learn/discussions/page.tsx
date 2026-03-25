@@ -16,7 +16,7 @@ export default function DiscussionsPage() {
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
-    fetch(`/api/lms/discussions?courseId=${courseId}`)
+    fetch(`/api/lms/discussions?courseId=${encodeURIComponent(courseId)}`)
       .then(r => r.json())
       .then(d => setDiscussions(d.data ?? []))
       .catch(() => setDiscussions([]))
@@ -35,7 +35,7 @@ export default function DiscussionsPage() {
       });
       setNewTitle(''); setNewContent('');
       // Refresh
-      const res = await fetch(`/api/lms/discussions?courseId=${courseId}`);
+      const res = await fetch(`/api/lms/discussions?courseId=${encodeURIComponent(courseId)}`);
       const data = await res.json();
       setDiscussions(data.data ?? []);
     } catch { /* */ }
