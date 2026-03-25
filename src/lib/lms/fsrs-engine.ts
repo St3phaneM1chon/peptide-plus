@@ -158,11 +158,16 @@ function nextInterval(stability: number, desiredRetention: number): number {
 /**
  * Convertit un score de quiz (0-100) en rating FSRS (1-4)
  */
-export function quizScoreToRating(score: number, passingScore: number): Rating {
-  if (score < passingScore * 0.5) return 1; // Again — très mauvais
-  if (score < passingScore) return 2;        // Hard — en dessous du seuil
-  if (score < passingScore * 1.2) return 3;  // Good — passé correctement
-  return 4;                                   // Easy — bien au-dessus
+// FIX P3: Configurable thresholds with sensible defaults
+export function quizScoreToRating(
+  score: number,
+  passingScore: number,
+  thresholds = { again: 0.5, hard: 1.0, good: 1.2 }
+): Rating {
+  if (score < passingScore * thresholds.again) return 1; // Again — très mauvais
+  if (score < passingScore * thresholds.hard) return 2;  // Hard — en dessous du seuil
+  if (score < passingScore * thresholds.good) return 3;  // Good — passé correctement
+  return 4;                                               // Easy — bien au-dessus
 }
 
 /**
