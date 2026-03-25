@@ -34,35 +34,50 @@ export async function awardXp(
   const amount = customAmount ?? XP_VALUES[reason] ?? 0;
   if (amount === 0) return { amount: 0, newBalance: 0 };
 
-  // Get current balance
-  const lastTransaction = await prisma.lmsXpTransaction.findFirst({
-    where: { tenantId, userId },
-    orderBy: { createdAt: 'desc' },
-    select: { balance: true },
+  // FIX P2: Deduplication — prevent double XP for same event
+  if (sourceId) {
+    const existing = await prisma.lmsXpTransaction.findFirst({
+      where: { tenantId, userId, sourceId },
+      select: { balance: true },
+    });
+    if (existing) return { amount: 0, newBalance: existing.balance };
+  }
+
+  // FIX P1: Use transaction to prevent race condition on balance
+  const newBalance = await prisma.$transaction(async (tx) => {
+    const lastTransaction = await tx.lmsXpTransaction.findFirst({
+      where: { tenantId, userId },
+      orderBy: { createdAt: 'desc' },
+      select: { balance: true },
+    });
+
+    const currentBalance = lastTransaction?.balance ?? 0;
+    const balance = currentBalance + amount;
+
+    await tx.lmsXpTransaction.create({
+      data: {
+        tenantId,
+        userId,
+        amount,
+        reason,
+        sourceId: sourceId ?? null,
+        balance,
+      },
+    });
+
+    return balance;
   });
 
-  const currentBalance = lastTransaction?.balance ?? 0;
-  const newBalance = currentBalance + amount;
-
-  await prisma.lmsXpTransaction.create({
-    data: {
-      tenantId,
-      userId,
-      amount,
-      reason,
-      sourceId: sourceId ?? null,
-      balance: newBalance,
-    },
-  });
-
-  // Update leaderboard
+  // Update leaderboard (non-blocking, create if missing)
   await prisma.lmsLeaderboard.updateMany({
     where: { tenantId, userId },
     data: { totalPoints: newBalance },
-  });
+  }).catch(() => {}); // Non-blocking — leaderboard refresh cron will create entries
 
-  // Check challenge progress
-  await updateChallengeProgress(tenantId, userId, reason);
+  // Check challenge progress (guard against recursive calls)
+  if (reason !== 'challenge') {
+    await updateChallengeProgress(tenantId, userId, reason);
+  }
 
   return { amount, newBalance };
 }

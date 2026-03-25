@@ -33,13 +33,14 @@ export async function logAudit(params: {
         action: params.action,
         entity: params.entity,
         entityId: params.entityId ?? null,
-        details: (params.details ?? undefined) as unknown as undefined,
+        details: params.details ? JSON.parse(JSON.stringify(params.details)) : undefined,
         ipAddress,
         userAgent,
       },
     });
-  } catch {
-    // Non-blocking: audit failure should never break the main flow
+  } catch (e) {
+    // Non-blocking but log for monitoring
+    console.error('[audit-trail] Failed to log action', params.action, params.entity, e instanceof Error ? e.message : e);
   }
 }
 
@@ -81,6 +82,12 @@ export async function getAuditLogs(tenantId: string, options?: {
         ...(entity ? { entity } : {}),
         ...(userId ? { userId } : {}),
         ...(action ? { action } : {}),
+        ...(from || to ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        } : {}),
       },
     }),
   ]);

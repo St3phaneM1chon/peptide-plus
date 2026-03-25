@@ -4,8 +4,14 @@
  * Badges can be shared on LinkedIn, imported into digital wallets, and verified by employers.
  */
 
+import { createHash } from 'crypto';
+
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://attitudes.vip';
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Aptitudes by Attitudes VIP';
+
+function hashEmail(email: string): string {
+  return createHash('sha256').update(email.toLowerCase().trim()).digest('hex');
+}
 
 export interface OpenBadge {
   '@context': string[];
@@ -90,8 +96,8 @@ export function generateBadgeAssertion(params: {
     id: `${SITE_URL}/api/lms/badges/assertions/${params.awardId}.json`,
     recipient: {
       type: 'email',
-      identity: params.recipientEmail,
-      hashed: false,
+      identity: `sha256$${hashEmail(params.recipientEmail)}`,
+      hashed: true,
     },
     badge: generateBadgeClass(params.badge),
     issuedOn: params.issuedOn.toISOString(),
