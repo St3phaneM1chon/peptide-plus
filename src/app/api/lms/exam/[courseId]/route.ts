@@ -6,9 +6,17 @@ export const dynamic = 'force-dynamic';
  * POST /api/lms/exam/[courseId] — Submit exam attempt
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { canAccessExam, submitQuizAttempt } from '@/lib/lms/lms-service';
 import { withUserGuard } from '@/lib/user-api-guard';
+
+const examSubmitSchema = z.object({
+  answers: z.array(z.object({
+    questionId: z.string(),
+    answer: z.union([z.string(), z.array(z.string())]),
+  })).min(1),
+});
 
 // Helper: extract courseId from URL path
 function extractCourseId(url: string): string | null {
@@ -87,7 +95,11 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   }
 
   const body = await request.json();
-  const result = await submitQuizAttempt(tenantId, enrollment.course.examQuizId, userId, body.answers ?? {});
+  const parsed = examSubmitSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid answers format' }, { status: 400 });
+  }
+  const result = await submitQuizAttempt(tenantId, enrollment.course.examQuizId, userId, parsed.data.answers);
 
   return NextResponse.json({ data: result });
 });
