@@ -8,10 +8,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getBundles } from '@/lib/lms/lms-service';
 import { prisma } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
-  // Get tenantId from header or default
-  const tenantId = request.headers.get('x-tenant-id') ||
-    (await prisma.tenant.findFirst({ where: { status: 'ACTIVE' } }))?.id || '';
+export async function GET(_request: NextRequest) {
+  // FIX P0: Never trust client-supplied tenant ID. Use server-side tenant resolution.
+  let tenantId: string | null = null;
+  try {
+    const { getCurrentTenantIdFromContext } = await import('@/lib/db');
+    tenantId = getCurrentTenantIdFromContext();
+  } catch {
+    // Fallback: use first active tenant (public catalog)
+    const tenant = await prisma.tenant.findFirst({ where: { status: 'ACTIVE' }, select: { id: true } });
+    tenantId = tenant?.id ?? null;
+  }
 
   if (!tenantId) {
     return NextResponse.json({ error: 'No tenant context' }, { status: 400 });
