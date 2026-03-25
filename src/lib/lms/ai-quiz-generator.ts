@@ -122,8 +122,10 @@ ${isFr ? 'Reponds en JSON valide' : 'Respond in valid JSON'}:
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+    // FIX P3: Validate question types against allowed values
+    const validTypes = new Set(['MULTIPLE_CHOICE', 'TRUE_FALSE', 'FILL_IN']);
     const questions: GeneratedQuestion[] = (parsed.questions || []).map((q: GeneratedQuestion) => ({
-      type: q.type,
+      type: validTypes.has(q.type) ? q.type : 'MULTIPLE_CHOICE',
       question: q.question,
       options: q.options,
       correctAnswer: q.correctAnswer,
