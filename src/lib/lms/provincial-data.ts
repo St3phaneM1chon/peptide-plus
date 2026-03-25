@@ -726,7 +726,9 @@ export function getApplicableLaws(provinceCode: string, topic?: string): string[
   // Add topic-specific laws
   if (topic) {
     const lower = topic.toLowerCase();
-    if (lower.includes('auto') || lower.includes('vehicle') || lower.includes('voiture')) {
+    // FIX P3: Use word boundary matching to avoid false positives (auto != automation)
+    const matchWord = (text: string, word: string) => new RegExp(`\\b${word}\\b`, 'i').test(text);
+    if (matchWord(lower, 'auto') || matchWord(lower, 'automobile') || lower.includes('vehicle') || lower.includes('voiture')) {
       if (province.autoInsurance.provider) {
         laws.push(`${province.autoInsurance.provider} legislation`);
       }
