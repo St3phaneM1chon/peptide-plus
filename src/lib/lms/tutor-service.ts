@@ -611,23 +611,28 @@ async function retrieveKnowledge(
   limit = 5
 ): Promise<KnowledgeItem[]> {
   try {
-    const sanitizedQuery = query.replace(/'/g, "''").slice(0, 500);
+    // FIX P0 F01: Replace $queryRawUnsafe with safe Prisma.sql tagged template
+    const safeQuery = query.slice(0, 500);
+    const safeLimit = Math.min(Math.max(limit, 1), 20);
 
-    const results = await prisma.$queryRawUnsafe<
-      Array<KnowledgeItem & { similarity: number }>
-    >(
-      `SELECT id, title, content, domain, source,
-              similarity(title || ' ' || content, $1) as similarity
-       FROM "AiTutorKnowledge"
-       WHERE "tenantId" = $2
-         AND "isActive" = true
-         ${domain ? `AND domain = $3` : ''}
-       ORDER BY similarity DESC
-       LIMIT $${domain ? '4' : '3'}`,
-      sanitizedQuery,
-      tenantId,
-      ...(domain ? [domain, limit] : [limit])
-    );
+    const results = domain
+      ? await prisma.$queryRaw<Array<KnowledgeItem & { similarity: number }>>`
+          SELECT id, title, content, domain, source,
+                 similarity(title || ' ' || content, ${safeQuery}) as similarity
+          FROM "AiTutorKnowledge"
+          WHERE "tenantId" = ${tenantId}
+            AND "isActive" = true
+            AND domain = ${domain}
+          ORDER BY similarity DESC
+          LIMIT ${safeLimit}`
+      : await prisma.$queryRaw<Array<KnowledgeItem & { similarity: number }>>`
+          SELECT id, title, content, domain, source,
+                 similarity(title || ' ' || content, ${safeQuery}) as similarity
+          FROM "AiTutorKnowledge"
+          WHERE "tenantId" = ${tenantId}
+            AND "isActive" = true
+          ORDER BY similarity DESC
+          LIMIT ${safeLimit}`;
 
     if (results.length > 0) {
       return results.filter(r => r.similarity > 0.05);
