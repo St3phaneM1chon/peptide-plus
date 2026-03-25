@@ -51,6 +51,9 @@ export interface IndustryBody {
 
 // ── Province Data ──
 // EVERY province must have COMPLETE, ACCURATE data.
+// FIX P3: Added metadata for data provenance tracking
+export const PROVINCIAL_DATA_VERSION = '2026-03-24';
+export const PROVINCIAL_DATA_SOURCE = 'CanLII, provincial regulator websites, CCIR harmonization reports';
 
 export const PROVINCES: ProvinceRegulation[] = [
   // ALBERTA
