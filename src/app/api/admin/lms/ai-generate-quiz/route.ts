@@ -25,7 +25,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   const parsed = generateSchema.safeParse(body);
 
   if (!parsed.success) {
-    return apiError('Validation failed: ' + parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+    return apiError('Validation failed: ' + 'Validation failed', ErrorCode.VALIDATION_ERROR, { request });
   }
 
   const { lessonId, questionCount, difficulty, types } = parsed.data;

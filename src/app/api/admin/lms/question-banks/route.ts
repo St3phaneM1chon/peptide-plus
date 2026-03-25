@@ -46,7 +46,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   // Add question to existing bank
   if (body.bankId) {
     const parsed = addQuestionSchema.safeParse(body);
-    if (!parsed.success) return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+    if (!parsed.success) return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
 
     const question = await prisma.questionBankItem.create({
       data: {
@@ -69,7 +69,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
   // Create new bank
   const parsed = createBankSchema.safeParse(body);
-  if (!parsed.success) return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+  if (!parsed.success) return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
 
   const bank = await prisma.questionBank.create({
     data: {

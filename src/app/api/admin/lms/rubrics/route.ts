@@ -38,7 +38,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
 
-  if (!parsed.success) return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+  if (!parsed.success) return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
 
   const rubric = await prisma.gradingRubric.create({
     data: {

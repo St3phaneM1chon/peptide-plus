@@ -23,7 +23,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
   const parsed = enrollSchema.safeParse(body);
 
   if (!parsed.success) {
-    return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+    return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
   }
 
   const { type, itemId, userIds } = parsed.data;

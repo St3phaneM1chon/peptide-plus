@@ -47,7 +47,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   const parsed = createSchema.safeParse(body);
 
   if (!parsed.success) {
-    return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+    return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
   }
 
   const liveSession = await prisma.liveSession.create({

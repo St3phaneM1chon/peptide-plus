@@ -36,7 +36,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
   const parsed = updateCorporateSchema.safeParse(body);
 
   if (!parsed.success) {
-    return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+    return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
   }
 
   const existing = await prisma.corporateAccount.findFirst({ where: { id, tenantId } });

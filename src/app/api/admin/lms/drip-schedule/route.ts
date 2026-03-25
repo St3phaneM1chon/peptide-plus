@@ -35,7 +35,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   const body = await request.json();
   const parsed = createSchema.safeParse(body);
 
-  if (!parsed.success) return apiError(parsed.error.message, ErrorCode.VALIDATION_ERROR, { request });
+  if (!parsed.success) return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
 
   const schedule = await prisma.dripSchedule.upsert({
     where: { tenantId_courseId_chapterId: { tenantId, courseId: parsed.data.courseId, chapterId: parsed.data.chapterId } },
