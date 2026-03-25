@@ -1,8 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withUserGuard } from '@/lib/user-api-guard';
 import { prisma } from '@/lib/db';
+
+// FIX P1: Add Zod validation for POST body
+const markReadSchema = z.object({
+  notificationIds: z.array(z.string()).max(100).optional(),
+  markAll: z.boolean().optional(),
+});
 
 export const GET = withUserGuard(async (request: NextRequest, { session }) => {
   const tenantId = session.user.tenantId;
@@ -32,7 +39,11 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   if (!tenantId) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
 
   const body = await request.json();
-  const { notificationIds, markAll } = body;
+  const parsed = markReadSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
+  const { notificationIds, markAll } = parsed.data;
 
   if (markAll) {
     await prisma.lmsNotification.updateMany({
