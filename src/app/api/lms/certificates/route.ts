@@ -83,7 +83,7 @@ export const GET = withUserGuard(async (_request: NextRequest, { session }) => {
     logger.error('Failed to fetch user certificates', {
       userId,
       tenantId,
-      error: error instanceof Error ? error.message : String(error),
+      error: 'Operation failed',
     });
     return NextResponse.json({ error: 'Failed to load certificates' }, { status: 500 });
   }

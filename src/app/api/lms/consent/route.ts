@@ -163,7 +163,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
     logger.error('[LMS Consent] Failed to record consent', {
       userId,
       tenantId,
-      error: error instanceof Error ? error.message : String(error),
+      error: 'Operation failed',
     });
     return NextResponse.json(
       { error: 'Failed to record consent' },
