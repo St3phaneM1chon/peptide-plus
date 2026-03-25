@@ -60,6 +60,8 @@ export async function generateQuizQuestions(
   if (!content || content.length < 50) {
     throw new Error('Content too short to generate meaningful questions');
   }
+  // FIX P2: Cap questionCount to prevent excessive API cost
+  const safeQuestionCount = Math.min(questionCount, 20);
 
   // Truncate content if too long (Claude context limit)
   const truncatedContent = content.length > 15000 ? content.slice(0, 15000) + '\n[...]' : content;
@@ -84,7 +86,7 @@ REGLES:
 ${truncatedContent}
 ---
 
-${isFr ? 'Genere' : 'Generate'} ${questionCount} ${isFr ? 'questions' : 'questions'} (${isFr ? 'difficulte' : 'difficulty'}: ${difficulty}).
+${isFr ? 'Genere' : 'Generate'} ${safeQuestionCount} ${isFr ? 'questions' : 'questions'} (${isFr ? 'difficulte' : 'difficulty'}: ${difficulty}).
 ${isFr ? 'Types autorises' : 'Allowed types'}: ${types.join(', ')}
 
 ${isFr ? 'Reponds en JSON valide' : 'Respond in valid JSON'}:
