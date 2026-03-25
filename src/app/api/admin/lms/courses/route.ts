@@ -6,6 +6,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { getCourses, createCourse } from '@/lib/lms/lms-service';
+import { logAudit } from '@/lib/lms/audit-trail';
 
 const createCourseSchema = z.object({
   title: z.string().min(1).max(200),
@@ -54,6 +55,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
   try {
     const course = await createCourse(tenantId, parsed.data as never);
+    logAudit({ tenantId, userId: session.user.id, action: 'create', entity: 'course', entityId: course.id, details: { title: course.title } }).catch(() => {});
     return apiSuccess(course, { request, status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message.includes('Unique constraint')) {

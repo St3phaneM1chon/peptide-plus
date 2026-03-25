@@ -26,6 +26,51 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
     },
   });
 
+  // --- Batch-fetch data to avoid N+1 per-enrollment DB calls ---
+  const userIds = enrollments.map(e => e.userId);
+
+  // Collect all unique examQuizIds from enrollments
+  const examQuizIds = [...new Set(
+    enrollments.map(e => e.course.examQuizId).filter((id): id is string => id !== null)
+  )];
+
+  // Batch: all passing quiz attempts for exam quizzes
+  const allExamAttempts = examQuizIds.length > 0
+    ? await prisma.quizAttempt.findMany({
+        where: { tenantId, userId: { in: userIds }, quizId: { in: examQuizIds }, passed: true },
+        select: { userId: true, quizId: true, score: true },
+        orderBy: { score: 'desc' },
+      })
+    : [];
+  // Map: `${userId}:${quizId}` → best score (first match since ordered desc)
+  const examScoreMap = new Map<string, number>();
+  for (const attempt of allExamAttempts) {
+    const key = `${attempt.userId}:${attempt.quizId}`;
+    if (!examScoreMap.has(key)) {
+      examScoreMap.set(key, Number(attempt.score));
+    }
+  }
+
+  // Batch: discussion counts grouped by userId
+  const discussionGroups = await prisma.courseDiscussion.groupBy({
+    by: ['userId'],
+    where: { tenantId, courseId, userId: { in: userIds } },
+    _count: true,
+  });
+  const discussionCountMap = new Map<string, number>(
+    discussionGroups.map(g => [g.userId, g._count])
+  );
+
+  // Batch: QA counts grouped by userId
+  const qaGroups = await prisma.lessonQA.groupBy({
+    by: ['userId'],
+    where: { tenantId, userId: { in: userIds } },
+    _count: true,
+  });
+  const qaCountMap = new Map<string, number>(
+    qaGroups.map(g => [g.userId, g._count])
+  );
+
   const grades = await Promise.all(enrollments.map(async (enrollment) => {
     // Quiz average
     const quizScores = enrollment.lessonProgress
@@ -35,22 +80,15 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       ? quizScores.reduce((a, b) => a + b, 0) / quizScores.length
       : null;
 
-    // Exam score
+    // Exam score (from batch map)
     let examScore: number | null = null;
     if (enrollment.course.examQuizId) {
-      const examAttempt = await prisma.quizAttempt.findFirst({
-        where: { tenantId, userId: enrollment.userId, quizId: enrollment.course.examQuizId, passed: true },
-        orderBy: { score: 'desc' },
-        select: { score: true },
-      });
-      examScore = examAttempt ? Number(examAttempt.score) : null;
+      examScore = examScoreMap.get(`${enrollment.userId}:${enrollment.course.examQuizId}`) ?? null;
     }
 
-    // Participation score (discussions + Q&A)
-    const [discussionCount, qaCount] = await Promise.all([
-      prisma.courseDiscussion.count({ where: { tenantId, courseId, userId: enrollment.userId } }),
-      prisma.lessonQA.count({ where: { tenantId, userId: enrollment.userId } }),
-    ]);
+    // Participation score (from batch maps)
+    const discussionCount = discussionCountMap.get(enrollment.userId) ?? 0;
+    const qaCount = qaCountMap.get(enrollment.userId) ?? 0;
     const participationScore = Math.min(100, (discussionCount + qaCount) * 10);
 
     // Weighted final grade (30% quiz, 40% exam, 20% assignments, 10% participation)

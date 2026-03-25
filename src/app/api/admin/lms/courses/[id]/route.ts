@@ -6,6 +6,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { getCourseById, updateCourse, deleteCourse } from '@/lib/lms/lms-service';
+import { logAudit } from '@/lib/lms/audit-trail';
 
 const updateCourseSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -61,6 +62,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
   }
 
   const course = await updateCourse(tenantId, id, updateData as never);
+  logAudit({ tenantId, userId: session.user.id, action: 'update', entity: 'course', entityId: id, details: parsed.data }).catch(() => {});
   return apiSuccess(course, { request });
 });
 
@@ -69,6 +71,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
   const { id } = params;
   try {
     await deleteCourse(tenantId, id);
+    logAudit({ tenantId, userId: session.user.id, action: 'delete', entity: 'course', entityId: id }).catch(() => {});
     return apiSuccess({ deleted: true }, { request });
   } catch (error) {
     if (error instanceof Error && error.message === 'Course not found') {
