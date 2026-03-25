@@ -68,7 +68,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   let skipped = 0;
   const errors: BulkError[] = [];
 
-  // Process each row
+  // Process each row sequentially — enrollUser() runs a $transaction with
+  // duplicate check + capacity check. Batching would require a dedicated
+  // bulkEnrollUsers() function. P9-09: Acceptable for admin bulk ops (<1000 rows).
   for (const row of rows) {
     const emailLower = row.email.toLowerCase();
     const userId = userMap.get(emailLower);
