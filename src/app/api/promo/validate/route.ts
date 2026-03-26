@@ -63,40 +63,38 @@ export async function POST(request: NextRequest) {
 
     // FIX: F-033 - Return semantic HTTP status codes (404 not found, 410 expired, 400 limit reached)
     // FLAW-024 FIX: Return i18n error codes alongside French text so frontend can translate
+    // ECOM-F6 FIX: All invalid promo states return 400 (anti-enumeration)
+    // JSON errorCode still differentiates for frontend, but HTTP status is uniform
     if (!promoCode) {
       return NextResponse.json({
         valid: false,
         errorCode: 'PROMO_INVALID',
-        error: 'Code promo invalide',
-      }, { status: 404 });
+        error: 'Code promo invalide ou expiré',
+      }, { status: 400 });
     }
 
-    // FIX: FLAW-071 - Differentiate between non-existent and deactivated promo codes
     if (!promoCode.isActive) {
       return NextResponse.json({
         valid: false,
-        errorCode: 'PROMO_DEACTIVATED',
-        error: 'Ce code promo a été désactivé',
-      }, { status: 410 }); // FIX: F-033 - 410 Gone for deactivated promo codes
+        errorCode: 'PROMO_INVALID',
+        error: 'Code promo invalide ou expiré',
+      }, { status: 400 });
     }
 
-    // FIX: FLAW-048 - All date comparisons use UTC (JS Date objects are UTC-based).
-    // Promo code startsAt/endsAt should be stored in UTC. If admin enters local time,
-    // ensure the frontend converts to UTC before saving.
     const now = new Date();
     if (promoCode.startsAt && promoCode.startsAt > now) {
       return NextResponse.json({
         valid: false,
-        errorCode: 'PROMO_NOT_YET_ACTIVE',
-        error: 'Ce code promo n\'est pas encore actif',
-      }, { status: 400 }); // FIX: F-033 - 400 Bad Request for not-yet-active promo codes
+        errorCode: 'PROMO_INVALID',
+        error: 'Code promo invalide ou expiré',
+      }, { status: 400 });
     }
     if (promoCode.endsAt && promoCode.endsAt < now) {
       return NextResponse.json({
         valid: false,
-        errorCode: 'PROMO_EXPIRED',
-        error: 'Ce code promo a expiré',
-      }, { status: 410 }); // FIX: F-033 - 410 Gone for expired promo codes
+        errorCode: 'PROMO_INVALID',
+        error: 'Code promo invalide ou expiré',
+      }, { status: 400 });
     }
 
     // COMMERCE-003 FIX: Do NOT increment usageCount during validation.

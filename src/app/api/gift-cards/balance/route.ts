@@ -64,12 +64,13 @@ export async function GET(request: NextRequest) {
     // Check expiration
     const isExpired = giftCard.expiresAt && new Date() > giftCard.expiresAt;
 
+    // ECOM-F3 FIX: Expired cards return same shape as non-existent (anti-enumeration)
     if (isExpired) {
       return NextResponse.json({
         balance: 0,
-        currency: giftCard.currency,
-        isExpired: true,
-        expiresAt: giftCard.expiresAt,
+        currency: 'CAD',
+        isExpired: false,
+        expiresAt: null,
       });
     }
 
