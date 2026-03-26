@@ -232,6 +232,11 @@ export async function reopenPeriod(
     throw new Error(`Period ${periodCode} is not locked (current status: ${period.status})`);
   }
 
+  // ACCT-F7 FIX: Segregation of duties — person who locked cannot reopen
+  if (period.closedBy === reopenedBy) {
+    throw new Error(`Segregation of duties: the user who locked period ${periodCode} cannot reopen it. A different authorized user must approve.`);
+  }
+
   // #100 Log the reopen action for audit trail before making the change
   logger.info('Period reopen', {
     periodCode,
