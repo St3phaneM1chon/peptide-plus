@@ -107,3 +107,45 @@ rules:
     languages: [typescript]
     metadata:
       cwe: "CWE-639"
+
+  # ── Auth-specific Rules (from Audit Forge findings) ─────────────
+
+  - id: mfa-verify-no-totp-check
+    pattern-regex: 'code\.length\s*!==\s*6.*\n(?!.*verifyMFACode|.*verifyTOTP)'
+    paths:
+      include:
+        - "src/app/api/auth/mfa/**"
+    message: >
+      MFA verify checks code length but may not validate TOTP.
+      Always call verifyMFACode() or verifyTOTP() after length check.
+    severity: ERROR
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-287"
+
+  - id: webhook-placeholder-secret
+    pattern-regex: "webhookSecret\\.includes\\('to_configure'\\)"
+    message: >
+      Webhook handler accepts placeholder secret. In production,
+      this must reject with 503 instead of silently accepting.
+    severity: ERROR
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-345"
+
+  - id: timing-unsafe-secret-comparison
+    pattern: |
+      if ($VAR !== $SECRET) {
+        ...
+      }
+    paths:
+      include:
+        - "src/app/api/**/webhook/**"
+        - "src/app/api/**/activate/**"
+    message: >
+      Secret comparison using !== is timing-unsafe. Use
+      crypto.timingSafeEqual() instead.
+    severity: WARNING
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-208"
