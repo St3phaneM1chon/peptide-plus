@@ -24,14 +24,14 @@ export const revalidate = 300;
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
   return {
-    title: 'Blog - BioCycle Peptides',
+    title: 'Blog - Koraline',
     description:
-      'Read the latest articles about research peptides, lab protocols, and scientific discoveries from the BioCycle Peptides team.',
+      'Read the latest articles about research peptides, lab protocols, and scientific discoveries from the Koraline team.',
     alternates: {
       canonical: `${siteUrl}/blog`,
     },
     openGraph: {
-      title: 'Blog - BioCycle Peptides',
+      title: 'Blog - Koraline',
       description:
         'Read the latest articles about research peptides, lab protocols, and scientific discoveries.',
       url: `${siteUrl}/blog`,
@@ -94,13 +94,13 @@ function blogListSchema(posts: BlogPostRow[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'BioCycle Peptides Blog',
+    name: 'Koraline Blog',
     url: `${siteUrl}/blog`,
     description:
-      'Research articles, lab protocols, and peptide science from BioCycle Peptides.',
+      'Research articles, lab protocols, and peptide science from Koraline.',
     publisher: {
       '@type': 'Organization',
-      name: 'BioCycle Peptides',
+      name: 'Koraline',
       url: siteUrl,
     },
     blogPost: posts.slice(0, 10).map((post) => ({
@@ -111,7 +111,7 @@ function blogListSchema(posts: BlogPostRow[]) {
       datePublished: post.publishedAt?.toISOString(),
       author: {
         '@type': 'Organization',
-        name: post.author || 'BioCycle Peptides',
+        name: post.author || 'Koraline',
       },
       ...(post.excerpt ? { description: post.excerpt } : {}),
     })),

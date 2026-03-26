@@ -20,12 +20,12 @@ export async function generateMetadata({ params }: TrackingPageProps): Promise<M
 
   return {
     title: `Suivi de commande - ${orderId}`,
-    description: 'Suivez le statut et la livraison de votre commande BioCycle Peptides.',
+    description: 'Suivez le statut et la livraison de votre commande Koraline.',
     robots: { index: false, follow: false },
     openGraph: {
-      title: 'Suivi de commande | BioCycle Peptides',
+      title: 'Suivi de commande | Koraline',
       description: 'Suivez le statut et la livraison de votre commande.',
-      siteName: 'BioCycle Peptides',
+      siteName: 'Koraline',
       type: 'website',
     },
   };
@@ -71,7 +71,7 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
     notFound();
   }
 
-  // Tous les produits BioCycle sont physiques et nécessitent une livraison
+  // Tous les produits Koraline sont physiques et nécessitent une livraison
   return (
     <div style={{ backgroundColor: 'var(--gray-100)', minHeight: '100vh' }}>
       {/* Header commun */}

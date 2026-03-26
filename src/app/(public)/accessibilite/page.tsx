@@ -62,8 +62,8 @@ export default function AccessibilityPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">{t('legal.accessibility.contactTitle')}</h2>
               <p>
                 {t('legal.accessibility.contactText')}{' '}
-                <a href="mailto:support@biocyclepeptides.com" className="text-blue-600 hover:underline">
-                  support@biocyclepeptides.com
+                <a href="mailto:support@koraline.com" className="text-blue-600 hover:underline">
+                  support@koraline.com
                 </a>
               </p>
             </div>

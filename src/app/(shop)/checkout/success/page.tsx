@@ -182,8 +182,8 @@ function CheckoutSuccessContent() {
         {/* Support */}
         <p className="text-center text-sm text-gray-500 mt-8">
           {t('checkout.questionsContact')}{' '}
-          <a href="mailto:support@biocyclepeptides.com" className="text-primary-600 hover:underline">
-            support@biocyclepeptides.com
+          <a href="mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@koraline.app'}" className="text-primary-600 hover:underline">
+            ${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@koraline.app'}
           </a>
         </p>
       </div>

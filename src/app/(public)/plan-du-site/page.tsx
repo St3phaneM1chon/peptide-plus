@@ -6,22 +6,22 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Plan du site | BioCycle Peptides',
-  description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages produits, ressources et informations.',
+  title: 'Plan du site | Koraline',
+  description: 'Navigation complète du site Koraline. Trouvez rapidement toutes nos pages produits, ressources et informations.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/plan-du-site`,
   },
   openGraph: {
-    title: 'Plan du site | BioCycle Peptides',
-    description: 'Navigation complète du site BioCycle Peptides.',
+    title: 'Plan du site | Koraline',
+    description: 'Navigation complète du site Koraline.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/plan-du-site`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Plan du site | BioCycle Peptides',
-    description: 'Navigation complète du site BioCycle Peptides. Trouvez rapidement toutes nos pages.',
+    title: 'Plan du site | Koraline',
+    description: 'Navigation complète du site Koraline. Trouvez rapidement toutes nos pages.',
   },
 };
 

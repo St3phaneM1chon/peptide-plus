@@ -6,21 +6,21 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Espace presse | BioCycle Peptides',
-  description: 'Espace presse BioCycle Peptides : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
+  title: 'Espace presse | Koraline',
+  description: 'Espace presse Koraline : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/presse`,
   },
   openGraph: {
-    title: 'Espace presse | BioCycle Peptides',
-    description: 'Espace presse BioCycle Peptides : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
+    title: 'Espace presse | Koraline',
+    description: 'Espace presse Koraline : communiqués de presse, ressources médias et contact pour les journalistes et professionnels.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/presse`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Espace presse | BioCycle Peptides',
+    title: 'Espace presse | Koraline',
     description: 'Communiqués de presse, ressources médias et contact pour les journalistes.',
   },
 };

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useI18n } from '@/i18n/client';
 
 /**
- * PAGE POLITIQUE DE COOKIES - BioCycle Peptides
+ * PAGE POLITIQUE DE COOKIES - Koraline
  * i18n: All text from legal.cookies namespace
  */
 

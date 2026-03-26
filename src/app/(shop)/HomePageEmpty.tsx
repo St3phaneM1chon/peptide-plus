@@ -11,7 +11,7 @@ interface HomePageEmptyProps {
 /**
  * Clean branded welcome page for tenants with no products and no courses.
  * Shown when the tenant is setting up their store — looks professional even when empty.
- * Dark glass styling, centered, no BioCycle references.
+ * Dark glass styling, centered, no hardcoded company references.
  */
 export default function HomePageEmpty({ branding }: HomePageEmptyProps) {
   const { t } = useI18n();

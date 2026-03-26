@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Help Center',
-  description: 'Find help and support for using the BioCycle Peptides platform. FAQ, guides, and technical assistance.',
+  description: 'Find help and support for using the Koraline platform. FAQ, guides, and technical assistance.',
   openGraph: {
-    title: 'Help Center | BioCycle Peptides',
-    description: 'Find help and support for using the BioCycle Peptides platform.',
+    title: 'Help Center | Koraline',
+    description: 'Find help and support for using the Koraline platform.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/aide`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
 };

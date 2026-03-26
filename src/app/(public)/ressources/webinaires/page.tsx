@@ -6,12 +6,12 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Webinaires',
-  description: 'Webinaires en direct et rediffusions sur la recherche peptidique, les protocoles et les meilleures pratiques par BioCycle Peptides.',
+  description: 'Webinaires en direct et rediffusions sur la recherche peptidique, les protocoles et les meilleures pratiques par Koraline.',
   openGraph: {
-    title: 'Webinaires | BioCycle Peptides',
+    title: 'Webinaires | Koraline',
     description: 'Webinaires sur la recherche peptidique et les meilleures pratiques.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/ressources/webinaires`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
 };

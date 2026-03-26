@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * REFERRAL PROGRAM PAGE - BioCycle Peptides
+ * REFERRAL PROGRAM PAGE - Koraline
  * Customer-facing page for managing referral codes and tracking referral stats
  */
 
@@ -241,7 +241,7 @@ export default function ReferralsPage() {
   // Share via Twitter/X
   const handleShareTwitter = () => {
     const text = encodeURIComponent(
-      `I'm loving @BioCyclePeptides! Sign up with my link and we both earn rewards:`
+      `I'm loving our platform! Sign up with my link and we both earn rewards:`
     );
     const url = encodeURIComponent(referralLink);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');

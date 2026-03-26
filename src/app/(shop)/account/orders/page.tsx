@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE MES COMMANDES - BioCycle Peptides
+ * PAGE MES COMMANDES - Koraline
  * Avec génération de factures PDF
  */
 
@@ -458,7 +458,7 @@ export default function OrdersPage() {
       doc.setFontSize(9);
       doc.setTextColor(150, 150, 150);
       doc.text(t('account.orders.pdfFooterDisclaimer'), 20, y);
-      doc.text('support@biocyclepeptides.com | attitudes.vip', 20, y + 5);
+      doc.text((process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@koraline.app'), 20, y + 5);
       
       // Save
       doc.save(`Facture_${order.orderNumber}.pdf`);
@@ -1380,7 +1380,7 @@ function InvoiceModal({
               <div>
                 <h1 className="text-2xl font-bold text-primary-500">{process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP'}</h1>
                 <p className="text-gray-500 text-sm">{t('account.orders.pdfSubtitle')}</p>
-                <p className="text-gray-500 text-sm mt-2">support@biocyclepeptides.com</p>
+                <p className="text-gray-500 text-sm mt-2">support@koraline.com</p>
                 <p className="text-gray-500 text-sm">attitudes.vip</p>
               </div>
               <div className="text-end">

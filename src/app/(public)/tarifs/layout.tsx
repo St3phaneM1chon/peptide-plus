@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Tarifs',
-  description: 'Consultez les tarifs BioCycle Peptides. Prix compétitifs sur les peptides de recherche premium avec rabais de volume et options d\'abonnement.',
+  description: 'Consultez les tarifs Koraline. Prix compétitifs sur les peptides de recherche premium avec rabais de volume et options d\'abonnement.',
   openGraph: {
-    title: 'Tarifs | BioCycle Peptides',
+    title: 'Tarifs | Koraline',
     description: 'Prix compétitifs sur les peptides de recherche premium avec rabais de volume.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/tarifs`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
 };

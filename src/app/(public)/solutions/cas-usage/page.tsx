@@ -6,22 +6,22 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Cas d\'usage des peptides de recherche | BioCycle Peptides',
-  description: 'Explorez les applications concretes des peptides BioCycle Peptides dans la recherche scientifique, les etudes precliniques et le developpement.',
+  title: 'Cas d\'usage des peptides de recherche | Koraline',
+  description: 'Explorez les applications concretes des peptides Koraline dans la recherche scientifique, les etudes precliniques et le developpement.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/cas-usage`,
   },
   openGraph: {
-    title: 'Cas d\'usage des peptides de recherche | BioCycle Peptides',
-    description: 'Explorez les applications concretes des peptides BioCycle Peptides dans la recherche scientifique et les etudes precliniques.',
+    title: 'Cas d\'usage des peptides de recherche | Koraline',
+    description: 'Explorez les applications concretes des peptides Koraline dans la recherche scientifique et les etudes precliniques.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/cas-usage`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cas d\'usage des peptides de recherche | BioCycle Peptides',
-    description: 'Explorez les applications concretes des peptides BioCycle Peptides dans la recherche scientifique et les etudes precliniques.',
+    title: 'Cas d\'usage des peptides de recherche | Koraline',
+    description: 'Explorez les applications concretes des peptides Koraline dans la recherche scientifique et les etudes precliniques.',
   },
 };
 

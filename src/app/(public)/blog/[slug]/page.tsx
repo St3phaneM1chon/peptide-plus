@@ -169,11 +169,11 @@ function blogPostSchema(post: {
     ...(post.excerpt ? { description: post.excerpt } : {}),
     author: {
       '@type': 'Organization',
-      name: post.author || 'BioCycle Peptides',
+      name: post.author || 'Koraline',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'BioCycle Peptides',
+      name: 'Koraline',
       logo: {
         '@type': 'ImageObject',
         url: `${siteUrl}/images/logo.png`,

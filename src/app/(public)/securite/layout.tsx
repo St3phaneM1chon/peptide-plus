@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Security & Compliance',
-  description: 'Discover how BioCycle Peptides protects your data and ensures platform security. Encryption, authentication, and compliance.',
+  description: 'Discover how Koraline protects your data and ensures platform security. Encryption, authentication, and compliance.',
   openGraph: {
-    title: 'Security | BioCycle Peptides',
-    description: 'How BioCycle Peptides protects your data and ensures platform security.',
+    title: 'Security | Koraline',
+    description: 'How Koraline protects your data and ensures platform security.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/securite`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
 };

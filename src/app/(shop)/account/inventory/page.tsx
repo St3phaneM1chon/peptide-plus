@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE MON INVENTAIRE DE RECHERCHE - BioCycle Peptides
+ * PAGE MON INVENTAIRE DE RECHERCHE - Koraline
  * Gestion complète des peptides commandés par le client
  */
 
@@ -322,7 +322,7 @@ export default function InventoryPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `inventaire-biocycle-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `inventaire-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
 

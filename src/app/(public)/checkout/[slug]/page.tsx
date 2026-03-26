@@ -24,17 +24,17 @@ export async function generateMetadata({ params }: CheckoutPageProps): Promise<M
 
   const title = product ? `Paiement - ${product.name}` : 'Paiement';
   const description = product
-    ? `Complétez votre achat de ${product.name} chez BioCycle Peptides.`
-    : 'Complétez votre achat chez BioCycle Peptides.';
+    ? `Complétez votre achat de ${product.name} chez Koraline.`
+    : 'Complétez votre achat chez Koraline.';
 
   return {
     title,
     description,
     robots: { index: false, follow: false },
     openGraph: {
-      title: `${title} | BioCycle Peptides`,
+      title: `${title} | Koraline`,
       description,
-      siteName: 'BioCycle Peptides',
+      siteName: 'Koraline',
       type: 'website',
     },
   };
@@ -68,13 +68,13 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
     orderBy: { isDefault: 'desc' },
   });
 
-  // Récupérer les adresses sauvegardées (tous les produits sont physiques pour BioCycle)
+  // Récupérer les adresses sauvegardées (tous les produits sont physiques pour Koraline)
   const savedAddresses = await prisma.userAddress.findMany({
     where: { userId: session.user.id },
     orderBy: { isDefault: 'desc' },
   });
 
-  // Tous les produits BioCycle sont physiques et nécessitent une livraison
+  // Tous les produits Koraline sont physiques et nécessitent une livraison
   const isPhysical = true;
 
   return (

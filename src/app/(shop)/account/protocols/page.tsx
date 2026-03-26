@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE SUIVI DES PROTOCOLES DE RECHERCHE - BioCycle Peptides
+ * PAGE SUIVI DES PROTOCOLES DE RECHERCHE - Koraline
  * Aide les chercheurs à suivre leurs protocoles pour maximiser les résultats
  */
 

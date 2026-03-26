@@ -92,10 +92,10 @@ export default function EquipePage() {
             {t('about.team.joinText')}
           </p>
           <a
-            href="mailto:careers@biocyclepeptides.com"
+            href="mailto:careers@koraline.com"
             className="inline-block px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors"
           >
-            careers@biocyclepeptides.com
+            careers@koraline.com
           </a>
         </section>
       </div>

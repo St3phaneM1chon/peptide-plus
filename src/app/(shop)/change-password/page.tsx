@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE CHANGER MOT DE PASSE - BioCycle Peptides
+ * PAGE CHANGER MOT DE PASSE - Koraline
  */
 
 import { useState } from 'react';

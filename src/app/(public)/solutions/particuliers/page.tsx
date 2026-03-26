@@ -6,21 +6,21 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Peptides de recherche pour chercheurs individuels | BioCycle Peptides',
+  title: 'Peptides de recherche pour chercheurs individuels | Koraline',
   description: 'Commandez des peptides de recherche en petites quantites. Guides de reconstitution, certificats d\'analyse et support technique pour chercheurs.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/particuliers`,
   },
   openGraph: {
-    title: 'Peptides de recherche pour chercheurs individuels | BioCycle Peptides',
+    title: 'Peptides de recherche pour chercheurs individuels | Koraline',
     description: 'Commandez des peptides de recherche en petites quantites. Guides de reconstitution, certificats d\'analyse et support technique.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/particuliers`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Peptides de recherche pour chercheurs individuels | BioCycle Peptides',
+    title: 'Peptides de recherche pour chercheurs individuels | Koraline',
     description: 'Commandez des peptides de recherche en petites quantites. Guides de reconstitution, certificats d\'analyse et support technique.',
   },
 };

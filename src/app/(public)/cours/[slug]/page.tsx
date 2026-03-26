@@ -45,16 +45,16 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
   const title = product?.name ?? 'Cours';
   const description = product?.shortDescription
     ? String(product.shortDescription).slice(0, 160)
-    : 'Consultez les détails, modules et avis sur les cours BioCycle Peptides.';
+    : 'Consultez les détails, modules et avis sur les cours Koraline.';
 
   return {
     title,
     description,
     openGraph: {
-      title: `${title} | BioCycle Peptides`,
+      title: `${title} | Koraline`,
       description,
       url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/cours/${slug}`,
-      siteName: 'BioCycle Peptides',
+      siteName: 'Koraline',
       type: 'website',
     },
   };

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE MON PROFIL - BioCycle Peptides
+ * PAGE MON PROFIL - Koraline
  */
 
 import { useState, useEffect, useRef } from 'react';

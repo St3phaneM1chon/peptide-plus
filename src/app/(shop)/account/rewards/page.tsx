@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE RÉCOMPENSES & FIDÉLITÉ - BioCycle Peptides
+ * PAGE RÉCOMPENSES & FIDÉLITÉ - Koraline
  * Programme de fidélité avec points et niveaux
  */
 

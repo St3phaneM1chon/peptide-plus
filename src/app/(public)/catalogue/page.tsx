@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   title: 'Catalogue',
   description: 'Parcourez notre catalogue complet de peptides de recherche premium. Filtrez par catégorie, type et prix. Testés en laboratoire, pureté 99 %+.',
   openGraph: {
-    title: 'Catalogue | BioCycle Peptides',
+    title: 'Catalogue | Koraline',
     description: 'Catalogue complet de peptides de recherche premium. Testés en laboratoire, pureté 99 %+.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/catalogue`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
 };

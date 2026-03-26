@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Support',
-  description: 'Support et assistance BioCycle Peptides. Contactez notre équipe bilingue.',
+  description: 'Support et assistance Koraline. Contactez notre équipe bilingue.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/contact`,
   },

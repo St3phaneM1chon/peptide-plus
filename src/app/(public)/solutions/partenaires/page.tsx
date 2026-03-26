@@ -6,22 +6,22 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Programme partenaires et revendeurs peptides | BioCycle Peptides',
-  description: 'Devenez partenaire BioCycle Peptides. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche au Canada et a l\'international.',
+  title: 'Programme partenaires et revendeurs peptides | Koraline',
+  description: 'Devenez partenaire Koraline. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche au Canada et a l\'international.',
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/partenaires`,
   },
   openGraph: {
-    title: 'Programme partenaires et revendeurs peptides | BioCycle Peptides',
-    description: 'Devenez partenaire BioCycle Peptides. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche.',
+    title: 'Programme partenaires et revendeurs peptides | Koraline',
+    description: 'Devenez partenaire Koraline. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche.',
     url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/solutions/partenaires`,
-    siteName: 'BioCycle Peptides',
+    siteName: 'Koraline',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Programme partenaires et revendeurs peptides | BioCycle Peptides',
-    description: 'Devenez partenaire BioCycle Peptides. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche.',
+    title: 'Programme partenaires et revendeurs peptides | Koraline',
+    description: 'Devenez partenaire Koraline. Programme d\'affiliation, revendeurs agrees et distributeurs de peptides de recherche.',
   },
 };
 

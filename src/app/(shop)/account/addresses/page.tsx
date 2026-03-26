@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE GESTION DES ADRESSES - BioCycle Peptides
+ * PAGE GESTION DES ADRESSES - Koraline
  * Gérer les adresses de livraison et facturation
  */
 
