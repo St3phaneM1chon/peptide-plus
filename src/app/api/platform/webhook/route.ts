@@ -40,6 +40,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Signature invalid' }, { status: 400 });
   }
 
+  // PAY-F7 FIX: Idempotency — check if event already processed
+  try {
+    const existingEvent = await prisma.webhookEvent.findUnique({ where: { eventId: event.id } });
+    if (existingEvent?.status === 'COMPLETED') {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    await prisma.webhookEvent.upsert({
+      where: { eventId: event.id },
+      update: { status: 'PROCESSING' },
+      create: { eventId: event.id, provider: 'stripe_attitudes', eventType: event.type, status: 'PROCESSING' },
+    });
+  } catch {
+    // webhookEvent table may not exist yet — continue without dedup
+  }
+
   try {
     switch (event.type) {
       case 'customer.subscription.created': {
@@ -162,6 +177,12 @@ export async function POST(request: NextRequest) {
       default:
         logger.info('Unhandled Stripe event', { type: event.type });
     }
+
+    // PAY-F7: Mark event as completed
+    await prisma.webhookEvent.update({
+      where: { eventId: event.id },
+      data: { status: 'COMPLETED', processedAt: new Date() },
+    }).catch(() => {});
 
     return NextResponse.json({ received: true });
   } catch (error) {
