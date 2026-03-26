@@ -1,5 +1,5 @@
 /**
- * Workflow Automation Engine - BioCycle Peptides
+ * Workflow Automation Engine — Koraline
  *
  * Executes email automation flows stored in EmailAutomationFlow.
  * Flows are designed as directed graphs (React Flow) with typed nodes

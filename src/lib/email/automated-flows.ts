@@ -34,7 +34,7 @@ export const DEFAULT_FLOWS: EmailFlow[] = [
     description: '3-email welcome series for new customers',
     isActive: true,
     steps: [
-      { id: 'w1', type: 'email', subject: 'Bienvenue chez BioCycle Peptides!', templateId: 'welcome-1' },
+      { id: 'w1', type: 'email', subject: 'Bienvenue!', templateId: 'welcome-1' },
       { id: 'w2', type: 'wait', delayHours: 48 },
       { id: 'w3', type: 'email', subject: 'Découvrez nos peptides les plus populaires', templateId: 'welcome-2' },
       { id: 'w4', type: 'wait', delayHours: 120 },

@@ -1,6 +1,6 @@
 /**
  * Meeting Invitation Email Template
- * Sends branded BioCycle Peptides email with meeting details
+ * Sends branded meeting invitation email with meeting details
  */
 
 import { sendEmail, type EmailResult } from '@/lib/email/email-service';

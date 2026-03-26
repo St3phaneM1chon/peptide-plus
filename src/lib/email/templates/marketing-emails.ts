@@ -1,5 +1,5 @@
 /**
- * Templates d'emails marketing - BioCycle Peptides
+ * Templates d'emails marketing — Koraline Multi-Tenant
  * Anniversaire, bienvenue, réactivation, etc.
  *
  * NOTE: FLAW-083 - Templates support fr/en only. Full i18n for email templates deferred;
@@ -442,9 +442,9 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 24px;">
-      ${isFr 
-        ? 'Des questions? Contactez-nous à support@biocyclepeptides.com'
-        : 'Questions? Contact us at support@biocyclepeptides.com'}
+      ${isFr
+        ? `Des questions? Contactez-nous à ${SUPPORT_EMAIL_ADDR}`
+        : `Questions? Contact us at ${SUPPORT_EMAIL_ADDR}`}
     </p>
   `;
 
@@ -1629,7 +1629,7 @@ export const LOYALTY_TIERS: Record<string, {
         'Livraison gratuite + prioritaire sur toutes les commandes',
         'Support VIP dédié par téléphone et email',
         'Cadeaux exclusifs et échantillons gratuits',
-        'Invitations aux événements privés BioCycle',
+        `Invitations aux événements privés ${BRAND_NAME}`,
       ],
       en: [
         '15% permanent discount on all orders',
@@ -1638,7 +1638,7 @@ export const LOYALTY_TIERS: Record<string, {
         'Free + priority shipping on all orders',
         'Dedicated VIP support by phone and email',
         'Exclusive gifts and free samples',
-        'Invitations to private BioCycle events',
+        `Invitations to private ${BRAND_NAME} events`,
       ],
     },
     minPoints: 5000,

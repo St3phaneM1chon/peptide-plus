@@ -196,9 +196,9 @@ function resolveTenantFromHost(hostname: string): { tenantSlug: string; isSuperA
     return { tenantSlug: koralineMatch[1], isSuperAdmin: false };
   }
 
-  // Localhost / dev → default to attitudes (platform tenant)
+  // Localhost / dev → check ?tenant= query param for tenant switching, default to attitudes
   if (cleanHost === 'localhost' || cleanHost === '127.0.0.1') {
-    return { tenantSlug: 'attitudes', isSuperAdmin: false };
+    return { tenantSlug: 'attitudes', isSuperAdmin: true };
   }
 
   // Unknown domain → try to resolve via slug from first subdomain part
@@ -222,7 +222,16 @@ export async function middleware(request: NextRequest) {
 
   // Multi-Tenant: Resolve tenant from hostname and inject into request headers
   const host = request.headers.get('host') || request.headers.get('x-forwarded-host') || 'localhost';
-  const { tenantSlug, isSuperAdmin } = resolveTenantFromHost(host);
+  let { tenantSlug, isSuperAdmin } = resolveTenantFromHost(host);
+
+  // Dev-only: ?tenant=slug query param overrides tenant resolution for testing
+  if (process.env.NODE_ENV !== 'production') {
+    const tenantParam = request.nextUrl.searchParams.get('tenant');
+    if (tenantParam) {
+      tenantSlug = tenantParam;
+      isSuperAdmin = false;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Super-Admin Tenant (attitudes.vip): Serve SaaS landing pages

@@ -1,5 +1,5 @@
 /**
- * Service d'envoi d'emails - BioCycle Peptides
+ * Service d'envoi d'emails — Koraline Multi-Tenant
  * Compatible avec Resend, SendGrid, ou SMTP
  */
 
