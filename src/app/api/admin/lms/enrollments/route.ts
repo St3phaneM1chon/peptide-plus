@@ -24,14 +24,31 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   const courseId = searchParams.get('courseId') ?? undefined;
   const status = searchParams.get('status') as 'ACTIVE' | 'COMPLETED' | 'SUSPENDED' | undefined;
   const complianceStatus = searchParams.get('complianceStatus') as 'OVERDUE' | 'NOT_STARTED' | undefined;
+  const search = searchParams.get('search') ?? undefined;
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 100);
 
-  const where = {
+  // If search is provided, find matching userIds first
+  let searchUserIds: string[] | undefined;
+  if (search) {
+    const matchingUsers = await prisma.user.findMany({
+      where: { tenantId, OR: [{ name: { contains: search, mode: 'insensitive' } }, { email: { contains: search, mode: 'insensitive' } }] },
+      select: { id: true },
+      take: 200,
+    });
+    searchUserIds = matchingUsers.map(u => u.id);
+    if (searchUserIds.length === 0) {
+      return apiSuccess({ enrollments: [], total: 0, page, limit, totalPages: 0 }, { request });
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {
     tenantId,
     ...(courseId && { courseId }),
     ...(status && { status }),
     ...(complianceStatus && { complianceStatus }),
+    ...(searchUserIds && { userId: { in: searchUserIds } }),
   };
 
   const [enrollments, total] = await Promise.all([
@@ -45,7 +62,20 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
     prisma.enrollment.count({ where }),
   ]);
 
-  return apiSuccess({ enrollments, total, page, limit, totalPages: Math.ceil(total / limit) }, { request });
+  // Resolve user names for the response
+  const userIds = [...new Set(enrollments.map(e => e.userId))];
+  const users = userIds.length > 0
+    ? await prisma.user.findMany({ where: { id: { in: userIds }, tenantId }, select: { id: true, name: true, email: true } })
+    : [];
+  const userMap = new Map(users.map(u => [u.id, u]));
+
+  const enriched = enrollments.map(e => ({
+    ...e,
+    userName: userMap.get(e.userId)?.name ?? 'N/A',
+    userEmail: userMap.get(e.userId)?.email ?? 'N/A',
+  }));
+
+  return apiSuccess({ enrollments: enriched, total, page, limit, totalPages: Math.ceil(total / limit) }, { request });
 });
 
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
