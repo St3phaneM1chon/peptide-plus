@@ -164,3 +164,6 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
   await prisma.certificateTemplate.delete({ where: { id } });
   return apiSuccess({ success: true }, { request });
 });
+
+// Admin pages send PUT for updates — alias to PATCH handler
+export const PUT = PATCH;

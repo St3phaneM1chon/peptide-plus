@@ -111,3 +111,6 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session }) =>
 
   return apiSuccess(updatedLms, { request });
 });
+
+// Admin pages send PUT for updates — alias to PATCH handler
+export const PUT = PATCH;

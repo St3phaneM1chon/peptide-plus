@@ -91,3 +91,6 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session }) =>
 
   return apiSuccess({ success: true, action: parsed.data.action }, { request });
 });
+
+// Admin pages send PUT for updates — alias to PATCH handler
+export const PUT = PATCH;
