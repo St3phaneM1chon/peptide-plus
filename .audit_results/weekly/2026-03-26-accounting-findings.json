@@ -5,18 +5,129 @@
   "grade": "D",
   "functionsAudited": 40,
   "findings": [
-    {"id": "ACCT-F1", "severity": "critical", "title": "Self-approval of accounting transactions (no segregation of duties)", "file": "src/app/api/accounting/approvals/[id]/route.ts", "line": 80, "cweId": "CWE-285", "confidence": 0.95, "status": "open"},
-    {"id": "ACCT-F2", "severity": "high", "title": "Client portal endpoints lack rate limiting (token brute-force)", "file": "src/app/api/accounting/client-portal/[token]/route.ts", "line": 19, "cweId": "CWE-307", "confidence": 0.95, "status": "open"},
-    {"id": "ACCT-F3", "severity": "high", "title": "TOCTOU race on webhook idempotency (duplicate journal entries)", "file": "src/lib/accounting/webhook-accounting.service.ts", "line": 178, "cweId": "CWE-362", "confidence": 0.90, "status": "open"},
-    {"id": "ACCT-F4", "severity": "medium", "title": "GST/QST loads 150K records into memory", "file": "src/app/api/accounting/gst-qst-declaration/route.ts", "line": 138, "cweId": "CWE-400", "confidence": 0.85, "status": "open"},
-    {"id": "ACCT-F5", "severity": "medium", "title": "General ledger opening balance loads all prior lines", "file": "src/app/api/admin/accounting/general-ledger/route.ts", "line": 121, "cweId": "CWE-400", "confidence": 0.90, "status": "open"},
-    {"id": "ACCT-F6", "severity": "medium", "title": "P&L loads all journal lines without limit", "file": "src/app/api/admin/accounting/profit-loss/route.ts", "line": 83, "cweId": "CWE-400", "confidence": 0.85, "status": "open"},
-    {"id": "ACCT-F7", "severity": "medium", "title": "Period reopen without dual authorization", "file": "src/lib/accounting/period-close.service.ts", "line": 221, "cweId": "CWE-285", "confidence": 0.85, "status": "open"},
-    {"id": "ACCT-F8", "severity": "medium", "title": "Portal statement allows 2-year unbounded extraction", "file": "src/app/api/accounting/client-portal/[token]/statement/route.ts", "line": 62, "cweId": "CWE-200", "confidence": 0.80, "status": "open"},
-    {"id": "ACCT-F9", "severity": "medium", "title": "Token logged in plaintext on portal revocation", "file": "src/lib/accounting/client-portal.service.ts", "line": 572, "cweId": "CWE-532", "confidence": 0.90, "status": "open"},
-    {"id": "ACCT-F10", "severity": "medium", "title": "CSV export vulnerable to formula injection", "file": "src/lib/accounting/audit-trail.service.ts", "line": 382, "cweId": "CWE-1236", "confidence": 0.90, "status": "open"},
-    {"id": "ACCT-F11", "severity": "medium", "title": "RBC bank CSV date parsing falls through to wrong format", "file": "src/lib/accounting/reconciliation.service.ts", "line": 326, "cweId": "CWE-704", "confidence": 0.80, "status": "open"},
-    {"id": "ACCT-F12", "severity": "medium", "title": "Webhook vs auto-entries accounting inconsistency", "file": "src/lib/accounting/webhook-accounting.service.ts", "line": 275, "cweId": "CWE-682", "confidence": 0.85, "status": "open"}
+    {
+      "id": "ACCT-F1",
+      "severity": "critical",
+      "title": "Self-approval of accounting transactions (no segregation of duties)",
+      "file": "src/app/api/accounting/approvals/[id]/route.ts",
+      "line": 80,
+      "cweId": "CWE-285",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "ACCT-F2",
+      "severity": "high",
+      "title": "Client portal endpoints lack rate limiting (token brute-force)",
+      "file": "src/app/api/accounting/client-portal/[token]/route.ts",
+      "line": 19,
+      "cweId": "CWE-307",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "ACCT-F3",
+      "severity": "high",
+      "title": "TOCTOU race on webhook idempotency (duplicate journal entries)",
+      "file": "src/lib/accounting/webhook-accounting.service.ts",
+      "line": 178,
+      "cweId": "CWE-362",
+      "confidence": 0.9,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F4",
+      "severity": "medium",
+      "title": "GST/QST loads 150K records into memory",
+      "file": "src/app/api/accounting/gst-qst-declaration/route.ts",
+      "line": 138,
+      "cweId": "CWE-400",
+      "confidence": 0.85,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F5",
+      "severity": "medium",
+      "title": "General ledger opening balance loads all prior lines",
+      "file": "src/app/api/admin/accounting/general-ledger/route.ts",
+      "line": 121,
+      "cweId": "CWE-400",
+      "confidence": 0.9,
+      "status": "fixed"
+    },
+    {
+      "id": "ACCT-F6",
+      "severity": "medium",
+      "title": "P&L loads all journal lines without limit",
+      "file": "src/app/api/admin/accounting/profit-loss/route.ts",
+      "line": 83,
+      "cweId": "CWE-400",
+      "confidence": 0.85,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F7",
+      "severity": "medium",
+      "title": "Period reopen without dual authorization",
+      "file": "src/lib/accounting/period-close.service.ts",
+      "line": 221,
+      "cweId": "CWE-285",
+      "confidence": 0.85,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F8",
+      "severity": "medium",
+      "title": "Portal statement allows 2-year unbounded extraction",
+      "file": "src/app/api/accounting/client-portal/[token]/statement/route.ts",
+      "line": 62,
+      "cweId": "CWE-200",
+      "confidence": 0.8,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F9",
+      "severity": "medium",
+      "title": "Token logged in plaintext on portal revocation",
+      "file": "src/lib/accounting/client-portal.service.ts",
+      "line": 572,
+      "cweId": "CWE-532",
+      "confidence": 0.9,
+      "status": "fixed"
+    },
+    {
+      "id": "ACCT-F10",
+      "severity": "medium",
+      "title": "CSV export vulnerable to formula injection",
+      "file": "src/lib/accounting/audit-trail.service.ts",
+      "line": 382,
+      "cweId": "CWE-1236",
+      "confidence": 0.9,
+      "status": "fixed"
+    },
+    {
+      "id": "ACCT-F11",
+      "severity": "medium",
+      "title": "RBC bank CSV date parsing falls through to wrong format",
+      "file": "src/lib/accounting/reconciliation.service.ts",
+      "line": 326,
+      "cweId": "CWE-704",
+      "confidence": 0.8,
+      "status": "open"
+    },
+    {
+      "id": "ACCT-F12",
+      "severity": "medium",
+      "title": "Webhook vs auto-entries accounting inconsistency",
+      "file": "src/lib/accounting/webhook-accounting.service.ts",
+      "line": 275,
+      "cweId": "CWE-682",
+      "confidence": 0.85,
+      "status": "open"
+    }
   ],
-  "criticals": 1, "highs": 2, "mediums": 9, "lows": 0
+  "criticals": 1,
+  "highs": 2,
+  "mediums": 9,
+  "lows": 0
 }
