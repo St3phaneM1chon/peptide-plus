@@ -28,7 +28,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
   try {
     const url = new URL(request.url);
     const type = url.searchParams.get('type') || undefined;
-    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+    const page = Math.min(10000, Math.max(1, parseInt(url.searchParams.get('page') || '1', 10)));
     const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)));
     const skip = (page - 1) * limit;
 

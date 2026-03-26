@@ -18,6 +18,11 @@ function isSuperAdmin(session: { user: { role?: string; tenantId?: string } }): 
   return session.user.role === 'OWNER' && session.user.tenantId === process.env.PLATFORM_TENANT_ID;
 }
 
+/** Escape HTML special characters to prevent XSS in email templates (P1-34 fix) */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ---------------------------------------------------------------------------
 // POST — Broadcast notification to multiple tenants
 // ---------------------------------------------------------------------------
@@ -71,6 +76,14 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       },
     });
 
+    // Batch-load all owners to avoid N+1 queries (P1-10 fix)
+    const ownerIds = tenants.map(t => t.ownerUserId).filter((id): id is string => Boolean(id));
+    const owners = await prisma.user.findMany({
+      where: { id: { in: ownerIds } },
+      select: { id: true, email: true, name: true },
+    });
+    const ownerMap = new Map(owners.map(o => [o.id, o]));
+
     let sent = 0;
     let failed = 0;
 
@@ -101,12 +114,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
             },
           });
 
-          // Send email to owner
+          // Send email to owner (from pre-loaded ownerMap)
           if (tenant.ownerUserId) {
-            const owner = await prisma.user.findUnique({
-              where: { id: tenant.ownerUserId },
-              select: { email: true, name: true },
-            });
+            const owner = ownerMap.get(tenant.ownerUserId);
             if (owner?.email) {
               const typeLabel = type === 'urgent' ? 'URGENT' : type === 'warning' ? 'Avertissement' : 'Information';
               await sendEmail({
@@ -125,8 +135,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
                           ? 'background: rgba(245,158,11,0.15); color: #fbbf24;'
                           : 'background: rgba(59,130,246,0.15); color: #60a5fa;'
                       }">${typeLabel}</div>
-                      <h2 style="color: #f1f5f9; margin: 0 0 12px 0; font-size: 18px;">${title}</h2>
-                      <p style="color: #94a3b8; margin: 0; line-height: 1.6;">${message}</p>
+                      <h2 style="color: #f1f5f9; margin: 0 0 12px 0; font-size: 18px;">${escapeHtml(title)}</h2>
+                      <p style="color: #94a3b8; margin: 0; line-height: 1.6;">${escapeHtml(message)}</p>
                       <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 24px 0;" />
                       <p style="color: #64748b; font-size: 12px; margin: 0;">Ce message a ete envoye par Koraline pour ${tenant.name}.</p>
                     </div>

@@ -92,7 +92,9 @@ export async function computeHealthScore(tenantId: string): Promise<TenantHealth
       modules = Array.isArray(tenant.modulesEnabled)
         ? (tenant.modulesEnabled as string[])
         : JSON.parse(tenant.modulesEnabled as string);
-    } catch { /* fallback empty */ }
+    } catch (err) {
+      logger.error('Corrupt modulesEnabled for tenant', { tenantId, raw: String(tenant.modulesEnabled), error: err instanceof Error ? err.message : String(err) });
+    }
     const hasMultipleModules = modules.length > 3;
 
     // Build signals

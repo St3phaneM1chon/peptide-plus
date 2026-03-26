@@ -163,7 +163,9 @@ function getTenantOrigin(tenantSlug: string): string {
 }
 
 // Known custom domains mapped to tenant slugs (Edge Runtime cannot query DB).
-// For new custom domains, add them here or use Koraline subdomain routing.
+// TODO: Load custom domains from DB via Edge-compatible cache (KV store or build-time generation)
+// Current approach: hardcoded for known domains. New domains require code update.
+// For self-service, tenants use {slug}.koraline.app (always works, no code change needed).
 const CUSTOM_DOMAIN_TO_TENANT: Record<string, string> = {
   'biocyclepeptides.com': 'biocycle',
   'www.biocyclepeptides.com': 'biocycle',
@@ -171,6 +173,10 @@ const CUSTOM_DOMAIN_TO_TENANT: Record<string, string> = {
   'www.aptitudes.vip': 'aptitudes',
 };
 
+// Tenant resolution from hostname is not an enumeration risk because:
+// 1. It only works for known hostnames (not brute-forceable slugs)
+// 2. Unknown hosts default to 'attitudes' (no information leak)
+// 3. API routes behind withAdminGuard have rate limiting
 function resolveTenantFromHost(hostname: string): { tenantSlug: string; isSuperAdmin: boolean } {
   const cleanHost = hostname.split(':')[0].toLowerCase();
 
@@ -501,6 +507,26 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
+  }
+
+  // P0-6 FIX: Verify tenant context matches for non-super-admin users on admin routes.
+  // Prevents a user authenticated on tenant A from accessing admin routes on tenant B's domain.
+  // Super-admins (platform tenant owners) are exempt as they manage all tenants.
+  if (isAdmin && token && !isSuperAdmin) {
+    const tokenTenantId = token.tenantId as string | undefined;
+    const platformTenantId = process.env.PLATFORM_TENANT_ID;
+    // If the user belongs to the platform tenant, they are super-admin (already allowed above)
+    // Otherwise, the resolved host tenant must match their token's tenant
+    if (tokenTenantId && platformTenantId && tokenTenantId !== platformTenantId) {
+      // Non-platform user on a tenant domain — the x-tenant-slug was resolved from hostname.
+      // We set it on the response header; the API layer will do the definitive DB-level check.
+      // Here we only block obvious cross-tenant access: if the token carries a tenantSlug
+      // and it doesn't match the resolved tenantSlug from the hostname.
+      const tokenTenantSlug = token.tenantSlug as string | undefined;
+      if (tokenTenantSlug && tokenTenantSlug !== tenantSlug) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+    }
   }
 
   // Granular admin sub-route permission check

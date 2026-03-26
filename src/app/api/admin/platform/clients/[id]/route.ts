@@ -138,8 +138,8 @@ const updateClientSchema = z.object({
   country: z.string().max(2).optional(),
 
   // Branding
-  primaryColor: z.string().max(20).optional(),
-  secondaryColor: z.string().max(20).optional(),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be hex color').optional(),
+  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be hex color').optional(),
   font: z.string().max(50).optional(),
 
   // Plan

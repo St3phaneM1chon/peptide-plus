@@ -36,6 +36,9 @@ function generateRandomPassword(length = 16): string {
   return password;
 }
 
+// All base module keys across all plans (union of includedModules)
+const BASE_MODULE_KEYS = ['commerce', 'catalogue', 'marketing', 'emails', 'comptabilite', 'systeme', 'crm', 'communaute', 'media', 'loyalty'];
+
 function computeMRR(plan: string, modulesEnabled: string[]): number {
   const planPrice = KORALINE_PLANS[plan as KoralinePlan]?.monthlyPrice || 0;
   const modulePrice = modulesEnabled.reduce((sum, key) => {
@@ -100,7 +103,9 @@ const createClientSchema = z.object({
   // Company
   companyName: z.string().min(1).max(200),
   legalName: z.string().max(200).optional(),
-  slug: z.string().min(2).max(60).regex(/^[a-z0-9-]+$/),
+  slug: z.string().min(2).max(60)
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid slug format')
+    .refine(s => !['api', 'admin', 'mail', 'platform', 'app', 'www', 'ftp', 'smtp', 'imap', 'cdn', 'static', 'assets', 'attitudes', 'koraline'].includes(s), 'Reserved slug'),
   shortDescription: z.string().max(200).optional(),
   longDescription: z.string().max(2000).optional(),
   industry: z.string().max(50).optional(),
@@ -108,22 +113,22 @@ const createClientSchema = z.object({
 
   // Owner
   ownerName: z.string().min(1).max(200),
-  ownerEmail: z.string().email(),
+  ownerEmail: z.string().email().refine(e => !e.includes('\n') && !e.includes('\r'), 'Invalid email characters'),
   ownerPhone: z.string().max(30).optional(),
   ownerTitle: z.string().max(100).optional(),
 
   // Department contacts
   contactFinanceName: z.string().max(200).optional(),
-  contactFinanceEmail: z.string().email().optional().or(z.literal('')),
+  contactFinanceEmail: z.string().email().refine(e => !e.includes('\n') && !e.includes('\r'), 'Invalid email characters').optional().or(z.literal('')),
   contactFinancePhone: z.string().max(30).optional(),
   contactSupportName: z.string().max(200).optional(),
-  contactSupportEmail: z.string().email().optional().or(z.literal('')),
+  contactSupportEmail: z.string().email().refine(e => !e.includes('\n') && !e.includes('\r'), 'Invalid email characters').optional().or(z.literal('')),
   contactSupportPhone: z.string().max(30).optional(),
   contactTechName: z.string().max(200).optional(),
-  contactTechEmail: z.string().email().optional().or(z.literal('')),
+  contactTechEmail: z.string().email().refine(e => !e.includes('\n') && !e.includes('\r'), 'Invalid email characters').optional().or(z.literal('')),
   contactTechPhone: z.string().max(30).optional(),
   contactMarketingName: z.string().max(200).optional(),
-  contactMarketingEmail: z.string().email().optional().or(z.literal('')),
+  contactMarketingEmail: z.string().email().refine(e => !e.includes('\n') && !e.includes('\r'), 'Invalid email characters').optional().or(z.literal('')),
   contactMarketingPhone: z.string().max(30).optional(),
 
   // Address
@@ -135,15 +140,22 @@ const createClientSchema = z.object({
 
   // Plan & Modules
   plan: z.enum(['essential', 'pro', 'enterprise']).default('essential'),
-  modulesEnabled: z.array(z.string()).optional(),
+  modulesEnabled: z.array(
+    z.string().refine(
+      m => m in KORALINE_MODULES || BASE_MODULE_KEYS.includes(m),
+      'Invalid module key'
+    )
+  ).optional(),
 
   // Branding
-  primaryColor: z.string().max(20).default('#0066CC'),
-  secondaryColor: z.string().max(20).default('#003366'),
-  font: z.string().max(50).default('Inter'),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be hex color').default('#0066CC'),
+  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be hex color').default('#003366'),
+  font: z.enum(['Inter', 'Montserrat', 'DM Sans', 'Space Grotesk', 'Poppins', 'Roboto', 'Georgia']).default('Inter'),
 
   // Domain
-  domainCustom: z.string().max(200).optional().or(z.literal('')),
+  domainCustom: z.string().max(200)
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i, 'Invalid domain format')
+    .optional().or(z.literal('')),
 
   // Fiscal
   taxProvince: z.string().max(5).optional(),
@@ -293,7 +305,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           slug: data.slug,
           plan: data.plan,
         },
-      });
+      }, { idempotencyKey: `tenant-${tenant.id}-customer` });
 
       // 2. Resolve price IDs for plan + add-on modules
       const priceItems: { price: string; quantity: number }[] = [];
@@ -328,7 +340,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
             plan: data.plan,
           },
           collection_method: 'charge_automatically',
-        });
+        }, { idempotencyKey: `tenant-${tenant.id}-subscription` });
         stripeSubscriptionId = subscription.id;
       }
 
@@ -369,20 +381,24 @@ export const POST = withAdminGuard(async (request, { session }) => {
       });
     }
 
-    // Send welcome email (non-blocking)
+    // Send welcome email (non-blocking, track status)
     const baseUrl = process.env.NEXTAUTH_URL || `https://${data.slug}.koraline.app`;
     const resetPasswordUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
 
-    sendEmail({
-      to: { email: ownerUser.email, name: ownerUser.name || undefined },
-      subject: 'Bienvenue sur Koraline — Votre compte est pret',
-      html: `<p>Votre espace ${tenant.name} a ete cree. Connectez-vous sur ${data.slug}.koraline.app avec votre email et le mot de passe temporaire ci-dessous, puis changez-le immediatement.</p><p>Mot de passe: <code>${temporaryPassword}</code></p><p><a href="${resetPasswordUrl}">Definir mon mot de passe</a></p>`,
-      emailType: 'transactional',
-    }).catch((err) => {
+    let emailSent = false;
+    try {
+      await sendEmail({
+        to: { email: ownerUser.email, name: ownerUser.name || undefined },
+        subject: 'Bienvenue sur Koraline — Votre compte est pret',
+        html: `<p>Votre espace ${tenant.name} a ete cree. Connectez-vous sur ${data.slug}.koraline.app avec votre email et le mot de passe temporaire ci-dessous, puis changez-le immediatement.</p><p>Mot de passe: <code>${temporaryPassword}</code></p><p><a href="${resetPasswordUrl}">Definir mon mot de passe</a></p>`,
+        emailType: 'transactional',
+      });
+      emailSent = true;
+    } catch (err) {
       logger.error('Failed to send welcome email', { tenantId: tenant.id, error: err instanceof Error ? err.message : String(err) });
-    });
+    }
 
-    return NextResponse.json({ tenant, ownerId: ownerUser.id }, { status: 201 });
+    return NextResponse.json({ tenant, ownerId: ownerUser.id, emailSent }, { status: 201 });
   } catch (error) {
     logger.error('Failed to create client', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -45,15 +45,17 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
     }
 
-    let modules: string[];
+    let currentModules: string[];
     try {
-      modules = Array.isArray(tenant.modulesEnabled)
+      currentModules = Array.isArray(tenant.modulesEnabled)
         ? (tenant.modulesEnabled as string[])
         : JSON.parse(tenant.modulesEnabled as string);
-    } catch {
-      modules = [];
+    } catch (err) {
+      logger.error('Corrupt modulesEnabled for tenant', { tenantId, raw: String(tenant.modulesEnabled), error: err instanceof Error ? err.message : String(err) });
+      currentModules = [];
     }
 
+    let modules = [...currentModules];
     if (enabled && !modules.includes(moduleKey)) {
       modules.push(moduleKey);
     } else if (!enabled) {
@@ -70,7 +72,12 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
           tenantId,
           type: enabled ? 'MODULE_ENABLED' : 'MODULE_DISABLED',
           actor: session.user.email || 'super-admin',
-          details: { moduleKey, enabled },
+          details: {
+            moduleKey,
+            action: enabled ? 'ENABLED' : 'DISABLED',
+            modulesBefore: currentModules,
+            modulesAfter: modules,
+          },
         },
       }),
     ]);
