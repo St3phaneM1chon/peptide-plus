@@ -10,9 +10,18 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createTenantCheckoutSession, KORALINE_PLANS, type KoralinePlan } from '@/lib/stripe-attitudes';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function POST(request: NextRequest) {
   try {
+    // PAY-F2 FIX: Rate limit platform checkout (10/hour per IP)
+    const ip = getClientIpFromRequest(request);
+    const rl = await rateLimitMiddleware(ip, '/api/platform/checkout');
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json();
     const { plan, slug, name, email } = body;
 
