@@ -72,16 +72,35 @@ The V2 Mega Audit analyzed the LMS module through **12 complete user journeys** 
 
 ---
 
-## New API Endpoints (6)
+## New API Endpoints (19)
 
+### Student Endpoints
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
+| `/api/lms/badges` | GET | Student badges/achievements |
+| `/api/lms/challenges` | GET/POST | Active challenges + join |
+| `/api/lms/cohort` | GET | Cohort membership + peers |
 | `/api/lms/course-completion` | POST | Trigger completion check |
-| `/api/lms/reviews` | POST | Submit course review |
-| `/api/lms/certificates/verify/[code]` | GET | Public cert verification (PII-safe) |
 | `/api/lms/daily-login` | POST | Award daily login XP |
+| `/api/lms/reviews` | POST | Submit course review |
 | `/api/lms/vote` | POST | Upvote discussions/QA |
-| `/api/admin/lms/enrollments/[id]` | PATCH | Enrollment status management |
+| `/api/lms/certificates/verify/[code]` | GET | Public cert verification (PII-safe) |
+| `/api/lms/certificates/[id]/download` | GET | Certificate HTML download |
+| `/api/lms/certificates/[id]/share` | GET | LinkedIn + Open Badge 3.0 |
+
+### Admin Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/admin/lms/badges` | GET/POST | Badge management |
+| `/api/admin/lms/challenges` | GET/POST | Challenge CRUD + auto-enroll |
+| `/api/admin/lms/certificates` | PATCH | Certificate revocation |
+| `/api/admin/lms/certificate-templates` | GET/POST/PATCH | Template management |
+| `/api/admin/lms/enrollments/[id]` | PATCH | Enrollment status transitions |
+| `/api/admin/lms/leaderboard` | GET | Admin leaderboard view |
+| `/api/admin/lms/media` | GET/POST | Media file management |
+| `/api/admin/lms/notifications` | GET/POST | Broadcast announcements |
+| `/api/admin/lms/reviews` | GET/PATCH | Review moderation |
+| `/api/admin/lms/settings` | GET/PATCH | LMS configuration |
 
 ---
 
