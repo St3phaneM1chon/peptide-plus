@@ -59,9 +59,9 @@ export default function AIInsightsWidget() {
   }, [fetchInsights]);
 
   return (
-    <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <section className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-indigo-50/60 dark:bg-indigo-950/30">
+      <div className="px-5 py-3.5 border-b border-[var(--k-border-subtle)] bg-[#6366f1]/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">

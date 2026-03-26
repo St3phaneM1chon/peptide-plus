@@ -167,21 +167,21 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
   // F1.17: Order status labels with translated text + hardcoded fallbacks
   // so raw enum values (PENDING, CONFIRMED, etc.) never appear in the UI
   const ORDER_STATUS_CONFIG: Record<string, { i18nKey: string; fallback: string; classes: string }> = {
-    PENDING:    { i18nKey: 'admin.dashboard.orderStatus.pending',    fallback: 'Pending',    classes: 'bg-yellow-100 text-yellow-700' },
-    CONFIRMED:  { i18nKey: 'admin.dashboard.orderStatus.confirmed',  fallback: 'Confirmed',  classes: 'bg-indigo-100 text-indigo-700' },
-    PROCESSING: { i18nKey: 'admin.dashboard.orderStatus.processing', fallback: 'Processing', classes: 'bg-indigo-100 text-indigo-700' },
-    SHIPPED:    { i18nKey: 'admin.dashboard.orderStatus.shipped',    fallback: 'Shipped',    classes: 'bg-indigo-100 text-indigo-700' },
-    DELIVERED:  { i18nKey: 'admin.dashboard.orderStatus.delivered',  fallback: 'Delivered',  classes: 'bg-green-100 text-green-700' },
-    CANCELLED:  { i18nKey: 'admin.dashboard.orderStatus.cancelled',  fallback: 'Cancelled',  classes: 'bg-red-100 text-red-700' },
-    RETURNED:   { i18nKey: 'admin.dashboard.orderStatus.returned',   fallback: 'Returned',   classes: 'bg-orange-100 text-orange-700' },
+    PENDING:    { i18nKey: 'admin.dashboard.orderStatus.pending',    fallback: 'Pending',    classes: 'bg-yellow-500/15 text-yellow-400' },
+    CONFIRMED:  { i18nKey: 'admin.dashboard.orderStatus.confirmed',  fallback: 'Confirmed',  classes: 'bg-indigo-500/15 text-indigo-400' },
+    PROCESSING: { i18nKey: 'admin.dashboard.orderStatus.processing', fallback: 'Processing', classes: 'bg-indigo-500/15 text-indigo-400' },
+    SHIPPED:    { i18nKey: 'admin.dashboard.orderStatus.shipped',    fallback: 'Shipped',    classes: 'bg-indigo-500/15 text-indigo-400' },
+    DELIVERED:  { i18nKey: 'admin.dashboard.orderStatus.delivered',  fallback: 'Delivered',  classes: 'bg-emerald-500/15 text-emerald-400' },
+    CANCELLED:  { i18nKey: 'admin.dashboard.orderStatus.cancelled',  fallback: 'Cancelled',  classes: 'bg-red-500/15 text-red-400' },
+    RETURNED:   { i18nKey: 'admin.dashboard.orderStatus.returned',   fallback: 'Returned',   classes: 'bg-orange-500/15 text-orange-400' },
   };
 
   const PAYMENT_STATUS_CONFIG: Record<string, { i18nKey: string; fallback: string; classes: string }> = {
-    PAID:                { i18nKey: 'admin.dashboard.paymentStatus.paid',                fallback: 'Paid',                classes: 'bg-green-100 text-green-700' },
-    PENDING:             { i18nKey: 'admin.dashboard.paymentStatus.pending',             fallback: 'Pending',             classes: 'bg-yellow-100 text-yellow-700' },
-    FAILED:              { i18nKey: 'admin.dashboard.paymentStatus.failed',              fallback: 'Failed',              classes: 'bg-red-100 text-red-700' },
-    REFUNDED:            { i18nKey: 'admin.dashboard.paymentStatus.refunded',            fallback: 'Refunded',            classes: 'bg-slate-100 text-slate-700' },
-    PARTIALLY_REFUNDED:  { i18nKey: 'admin.dashboard.paymentStatus.partiallyRefunded',  fallback: 'Partially Refunded',  classes: 'bg-orange-100 text-orange-700' },
+    PAID:                { i18nKey: 'admin.dashboard.paymentStatus.paid',                fallback: 'Paid',                classes: 'bg-emerald-500/15 text-emerald-400' },
+    PENDING:             { i18nKey: 'admin.dashboard.paymentStatus.pending',             fallback: 'Pending',             classes: 'bg-yellow-500/15 text-yellow-400' },
+    FAILED:              { i18nKey: 'admin.dashboard.paymentStatus.failed',              fallback: 'Failed',              classes: 'bg-red-500/15 text-red-400' },
+    REFUNDED:            { i18nKey: 'admin.dashboard.paymentStatus.refunded',            fallback: 'Refunded',            classes: 'bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)]' },
+    PARTIALLY_REFUNDED:  { i18nKey: 'admin.dashboard.paymentStatus.partiallyRefunded',  fallback: 'Partially Refunded',  classes: 'bg-orange-500/15 text-orange-400' },
   };
 
   function getOrderStatusLabel(status: string): { label: string; classes: string } {
@@ -193,7 +193,7 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
       return { label, classes: cfg.classes };
     }
     // Unknown status: capitalize it nicely instead of showing raw enum
-    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-slate-100 text-slate-700' };
+    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)]' };
   }
 
   function getPaymentStatusLabel(status: string): { label: string; classes: string } {
@@ -203,7 +203,7 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
       const label = translated && !translated.includes('.') ? translated : cfg.fallback;
       return { label, classes: cfg.classes };
     }
-    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-slate-100 text-slate-700' };
+    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)]' };
   }
 
   return (
@@ -211,20 +211,20 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('admin.dashboard.title')}</h1>
-          <p className="text-slate-500 mt-1">{t('admin.dashboard.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">{t('admin.dashboard.title')}</h1>
+          <p className="text-[var(--k-text-secondary)] mt-1">{t('admin.dashboard.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/admin/commandes"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--k-text-secondary)] bg-[var(--k-glass-thin)] border border-[var(--k-border-default)] rounded-lg hover:bg-[var(--k-glass-regular)] backdrop-blur-sm transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             {t('admin.dashboard.orders')}
           </Link>
           <Link
             href="/admin/produits/nouveau"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#6366f1] to-[#818cf8] rounded-lg hover:opacity-90 transition-colors"
           >
             <Package className="w-4 h-4" />
             {t('admin.dashboard.newProduct')}
@@ -238,21 +238,21 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
           label={t('admin.dashboard.totalOrders')}
           value={stats.totalOrders.toLocaleString(locale)}
           icon={<ShoppingCart className="w-5 h-5" />}
-          iconBg="bg-indigo-100 text-indigo-600"
+          iconBg="bg-indigo-500/10 text-indigo-400"
           href="/admin/commandes"
         />
         <StatCard
           label={`${t('admin.dashboard.monthlyRevenue')} (CAD)`}
           value={formatCurrency(stats.monthlyRevenue, locale, 'CAD')}
           icon={<DollarSign className="w-5 h-5" />}
-          iconBg="bg-green-100 text-green-600"
+          iconBg="bg-green-500/10 text-green-400"
           href="/admin/comptabilite"
         />
         <StatCard
           label={t('admin.dashboard.pendingOrders')}
           value={stats.pendingOrders.toLocaleString(locale)}
           icon={<Clock className="w-5 h-5" />}
-          iconBg="bg-yellow-100 text-yellow-600"
+          iconBg="bg-yellow-500/10 text-yellow-400"
           href="/admin/commandes"
           alert={stats.pendingOrders > 0}
         />
@@ -260,7 +260,7 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
           label={t('admin.dashboard.stockAlerts')}
           value={stats.lowStockFormats.toLocaleString(locale)}
           icon={<AlertTriangle className="w-5 h-5" />}
-          iconBg="bg-red-100 text-red-600"
+          iconBg="bg-red-500/10 text-red-400"
           href="/admin/inventaire"
           alert={stats.lowStockFormats > 0}
         />
@@ -272,21 +272,21 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
           label={t('admin.dashboard.b2bClients')}
           value={stats.totalClients.toLocaleString(locale)}
           icon={<Building2 className="w-5 h-5" />}
-          iconBg="bg-indigo-100 text-indigo-600"
+          iconBg="bg-indigo-500/10 text-indigo-400"
           href="/admin/clients"
         />
         <StatCard
           label={t('admin.dashboard.customers')}
           value={stats.totalCustomers.toLocaleString(locale)}
           icon={<Users className="w-5 h-5" />}
-          iconBg="bg-violet-100 text-violet-600"
+          iconBg="bg-violet-500/10 text-violet-400"
           href="/admin/clients"
         />
         <StatCard
           label={t('admin.dashboard.activeProducts')}
           value={stats.totalProducts.toLocaleString(locale)}
           icon={<Package className="w-5 h-5" />}
-          iconBg="bg-indigo-100 text-indigo-600"
+          iconBg="bg-indigo-500/10 text-indigo-400"
           href="/admin/produits"
         />
       </div>
@@ -299,32 +299,32 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
 
       {/* LMS Formation Widget */}
       {lmsStats && (lmsStats.courses > 0 || lmsStats.activeEnrollments > 0) && (
-        <div className="rounded-xl border bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 p-5">
+        <div className="rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-[var(--k-border-subtle)] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-600" />
+            <h3 className="font-semibold flex items-center gap-2 text-[var(--k-text-primary)]">
+              <BookOpen className="w-5 h-5 text-blue-400" />
               Formation continue
             </h3>
-            <Link href="/admin/formation" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+            <Link href="/admin/formation" className="text-xs text-[#818cf8] hover:underline flex items-center gap-1">
               Voir tout <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold">{lmsStats.courses}</p>
-              <p className="text-xs text-muted-foreground">Cours</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{lmsStats.courses}</p>
+              <p className="text-xs text-[var(--k-text-tertiary)]">Cours</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{lmsStats.activeEnrollments}</p>
-              <p className="text-xs text-muted-foreground">Inscrits</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{lmsStats.activeEnrollments}</p>
+              <p className="text-xs text-[var(--k-text-tertiary)]">Inscrits</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-green-600">{lmsStats.completions}</p>
-              <p className="text-xs text-muted-foreground">Termines</p>
+              <p className="text-2xl font-bold text-emerald-400">{lmsStats.completions}</p>
+              <p className="text-xs text-[var(--k-text-tertiary)]">Termines</p>
             </div>
             <div>
-              <p className={`text-2xl font-bold ${lmsStats.overdueCompliance > 0 ? 'text-red-600' : ''}`}>{lmsStats.overdueCompliance}</p>
-              <p className="text-xs text-muted-foreground">En retard</p>
+              <p className={`text-2xl font-bold ${lmsStats.overdueCompliance > 0 ? 'text-red-400' : 'text-[var(--k-text-primary)]'}`}>{lmsStats.overdueCompliance}</p>
+              <p className="text-xs text-[var(--k-text-tertiary)]">En retard</p>
             </div>
           </div>
         </div>
@@ -357,23 +357,23 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
       {/* Recent Data Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <section className="bg-white rounded-xl border border-slate-200">
-          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+        <section className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl border border-[var(--k-border-subtle)]">
+          <div className="p-5 border-b border-[var(--k-border-subtle)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-slate-400" />
-              <h2 className="text-base font-semibold text-slate-900">{t('admin.dashboard.recentOrders')}</h2>
+              <ShoppingCart className="w-4 h-4 text-[var(--k-text-tertiary)]" />
+              <h2 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.dashboard.recentOrders')}</h2>
             </div>
             <Link
               href="/admin/commandes"
-              className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              className="inline-flex items-center gap-1 text-sm text-[#818cf8] hover:text-[#a5b4fc] font-medium"
             >
               {t('admin.dashboard.viewAll')}
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[var(--k-border-subtle)]">
             {recentOrders.length === 0 && (
-              <div className="p-8 text-center text-slate-400 text-sm">
+              <div className="p-8 text-center text-[var(--k-text-muted)] text-sm">
                 {t('admin.dashboard.noOrdersYet')}
               </div>
             )}
@@ -382,22 +382,22 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
               const paymentStatus = getPaymentStatusLabel(order.paymentStatus);
               const itemCount = order._count.items;
               return (
-                <div key={order.id} className="p-4 hover:bg-slate-50/50 transition-colors">
+                <div key={order.id} className="p-4 hover:bg-[var(--k-glass-thin)] transition-colors">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-medium text-slate-900 text-sm truncate">
+                      <span className="font-medium text-[var(--k-text-primary)] text-sm truncate">
                         {order.orderNumber}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${orderStatus.classes}`}>
                         {orderStatus.label}
                       </span>
                     </div>
-                    <span className="font-semibold text-slate-900 text-sm">
+                    <span className="font-semibold text-[var(--k-text-primary)] text-sm">
                       {formatCurrency(Number(order.total), locale, order.currency?.code || 'CAD')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3 text-slate-500">
+                    <div className="flex items-center gap-3 text-[var(--k-text-tertiary)]">
                       <span>
                         {itemCount > 1
                           ? t('admin.dashboard.itemCountPlural', { count: itemCount })
@@ -417,43 +417,43 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
         </section>
 
         {/* Recent Users */}
-        <section className="bg-white rounded-xl border border-slate-200">
-          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+        <section className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl border border-[var(--k-border-subtle)]">
+          <div className="p-5 border-b border-[var(--k-border-subtle)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-slate-400" />
-              <h2 className="text-base font-semibold text-slate-900">{t('admin.dashboard.recentSignups')}</h2>
+              <UserPlus className="w-4 h-4 text-[var(--k-text-tertiary)]" />
+              <h2 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.dashboard.recentSignups')}</h2>
             </div>
             <Link
               href="/admin/clients"
-              className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              className="inline-flex items-center gap-1 text-sm text-[#818cf8] hover:text-[#a5b4fc] font-medium"
             >
               {t('admin.dashboard.viewAll')}
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[var(--k-border-subtle)]">
             {recentUsers.length === 0 && (
-              <div className="p-8 text-center text-slate-400 text-sm">
+              <div className="p-8 text-center text-[var(--k-text-muted)] text-sm">
                 {t('admin.dashboard.noSignupsYet')}
               </div>
             )}
             {recentUsers.map((user) => (
-              <div key={user.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+              <div key={user.id} className="p-4 flex items-center justify-between hover:bg-[var(--k-glass-thin)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-9 h-9 bg-[var(--k-glass-regular)] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {user.image ? (
                       <Image src={user.image} alt={user.name ? `${user.name} avatar` : 'User avatar'} width={36} height={36} className="w-9 h-9 rounded-full object-cover" />
                     ) : (
-                      <span className="text-slate-600 font-semibold text-sm">
+                      <span className="text-[var(--k-text-secondary)] font-semibold text-sm">
                         {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}
                       </span>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900 text-sm truncate">
+                    <p className="font-medium text-[var(--k-text-primary)] text-sm truncate">
                       {user.name || user.email}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[var(--k-text-muted)]">
                       {new Date(user.createdAt).toLocaleDateString(locale)}
                     </p>
                   </div>
@@ -461,14 +461,14 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                     user.role === 'CLIENT'
-                      ? 'bg-indigo-100 text-indigo-700'
-                      : 'bg-slate-100 text-slate-600'
+                      ? 'bg-[#6366f1]/15 text-[#818cf8]'
+                      : 'bg-[var(--k-glass-thin)] text-[var(--k-text-tertiary)]'
                   }`}>
                     {user.role === 'CLIENT' ? t('admin.dashboard.clientB2B') : t('admin.dashboard.client')}
                   </span>
                   <Link
                     href={`/admin/clients`}
-                    className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                    className="p-1 text-[var(--k-text-muted)] hover:text-[#818cf8] transition-colors"
                     title={t('admin.dashboard.viewProfile')}
                   >
                     <Eye className="w-4 h-4" />
@@ -483,104 +483,104 @@ export default function DashboardClient({ stats, lmsStats, recentOrders, recentU
       {/* ── Cross-Module Widgets (Bridge #18) ───────────────────── */}
       {crossModule && (
         <section>
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">
+          <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-3">
             {t('admin.dashboard.crossModuleTitle')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {crossModule.modules.crm && (
-              <Link href="/admin/crm/pipeline" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all">
+              <Link href="/admin/crm/pipeline" className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-indigo-600" />
+                  <div className="w-9 h-9 bg-indigo-500/10 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-indigo-400" />
                   </div>
-                  <span className="font-medium text-slate-900">CRM</span>
+                  <span className="font-medium text-[var(--k-text-primary)]">CRM</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.openDeals')}</p>
-                    <p className="font-bold text-slate-900">{crossModule.modules.crm.openDeals}</p>
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.openDeals')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.crm.openDeals}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.pipelineValue')}</p>
-                    <p className="font-bold text-green-700 truncate">{formatCurrency(crossModule.modules.crm.pipelineValue, locale)}</p>
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.pipelineValue')}</p>
+                    <p className="font-bold text-emerald-400 truncate">{formatCurrency(crossModule.modules.crm.pipelineValue, locale)}</p>
                   </div>
                 </div>
               </Link>
             )}
 
             {crossModule.modules.accounting && (
-              <Link href="/admin/comptabilite/ecritures" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-emerald-200 hover:shadow-sm transition-all">
+              <Link href="/admin/comptabilite/ecritures" className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-emerald-600" />
+                  <div className="w-9 h-9 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <span className="font-medium text-slate-900">{t('admin.dashboard.accounting')}</span>
+                  <span className="font-medium text-[var(--k-text-primary)]">{t('admin.dashboard.accounting')}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.draftEntries')}</p>
-                    <p className="font-bold text-slate-900">{crossModule.modules.accounting.draftEntries}</p>
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.draftEntries')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.accounting.draftEntries}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.entriesThisMonth')}</p>
-                    <p className="font-bold text-slate-900">{crossModule.modules.accounting.entriesThisMonth}</p>
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.entriesThisMonth')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.accounting.entriesThisMonth}</p>
                   </div>
                 </div>
               </Link>
             )}
 
             {crossModule.modules.loyalty && (
-              <Link href="/admin/fidelite" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-purple-200 hover:shadow-sm transition-all">
+              <Link href="/admin/fidelite" className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <Star className="w-5 h-5 text-purple-600" />
+                  <div className="w-9 h-9 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                    <Star className="w-5 h-5 text-purple-400" />
                   </div>
-                  <span className="font-medium text-slate-900">{t('admin.dashboard.loyalty')}</span>
+                  <span className="font-medium text-[var(--k-text-primary)]">{t('admin.dashboard.loyalty')}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-slate-500">{t('admin.dashboard.newMembers')}</p>
-                    <p className="font-bold text-slate-900">{crossModule.modules.loyalty.newMembersToday}</p>
+                    <p className="text-[var(--k-text-tertiary)]">{t('admin.dashboard.newMembers')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.loyalty.newMembersToday}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500">{t('admin.dashboard.pointsDistributed')}</p>
-                    <p className="font-bold text-purple-700">{crossModule.modules.loyalty.pointsDistributedToday.toLocaleString(locale)}</p>
+                    <p className="text-[var(--k-text-tertiary)]">{t('admin.dashboard.pointsDistributed')}</p>
+                    <p className="font-bold text-purple-400">{crossModule.modules.loyalty.pointsDistributedToday.toLocaleString(locale)}</p>
                   </div>
                 </div>
               </Link>
             )}
 
             {crossModule.modules.marketing && (
-              <Link href="/admin/promo-codes" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-primary-200 hover:shadow-sm transition-all">
+              <Link href="/admin/promo-codes" className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-primary-50 rounded-lg flex items-center justify-center">
-                    <Megaphone className="w-5 h-5 text-primary-600" />
+                  <div className="w-9 h-9 bg-indigo-500/10 rounded-lg flex items-center justify-center">
+                    <Megaphone className="w-5 h-5 text-indigo-400" />
                   </div>
-                  <span className="font-medium text-slate-900">{t('admin.dashboard.marketing')}</span>
+                  <span className="font-medium text-[var(--k-text-primary)]">{t('admin.dashboard.marketing')}</span>
                 </div>
                 <div className="text-sm">
-                  <p className="text-slate-500">{t('admin.dashboard.activePromos')}</p>
-                  <p className="font-bold text-slate-900">{crossModule.modules.marketing.activePromoCodes}</p>
+                  <p className="text-[var(--k-text-tertiary)]">{t('admin.dashboard.activePromos')}</p>
+                  <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.marketing.activePromoCodes}</p>
                 </div>
               </Link>
             )}
 
             {crossModule.modules.telephony && (
-              <Link href="/admin/telephonie/journal" className="bg-white rounded-xl p-4 border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all">
+              <Link href="/admin/telephonie/journal" className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] transition-all">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <PhoneCall className="w-5 h-5 text-indigo-600" />
+                  <div className="w-9 h-9 bg-indigo-500/10 rounded-lg flex items-center justify-center">
+                    <PhoneCall className="w-5 h-5 text-indigo-400" />
                   </div>
-                  <span className="font-medium text-slate-900">{t('admin.dashboard.telephony')}</span>
+                  <span className="font-medium text-[var(--k-text-primary)]">{t('admin.dashboard.telephony')}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.callsToday')}</p>
-                    <p className="font-bold text-slate-900">{crossModule.modules.telephony.callsToday}</p>
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.callsToday')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">{crossModule.modules.telephony.callsToday}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500 truncate">{t('admin.dashboard.avgDuration')}</p>
-                    <p className="font-bold text-slate-900">
+                    <p className="text-[var(--k-text-tertiary)] truncate">{t('admin.dashboard.avgDuration')}</p>
+                    <p className="font-bold text-[var(--k-text-primary)]">
                       {Math.floor(crossModule.modules.telephony.avgDurationSeconds / 60)}m {crossModule.modules.telephony.avgDurationSeconds % 60}s
                     </p>
                   </div>
@@ -616,7 +616,7 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="group relative bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all"
+      className="group relative bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-5 border border-[var(--k-border-subtle)] hover:border-[var(--k-border-default)] hover:shadow-[var(--k-glow-primary)] transition-all"
     >
       {alert && (
         <span className="absolute top-3 end-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
@@ -626,11 +626,11 @@ function StatCard({
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="text-sm text-slate-500 truncate">{label}</p>
-          <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
+          <p className="text-sm text-[var(--k-text-secondary)] truncate">{label}</p>
+          <p className="text-xl font-bold text-[var(--k-text-primary)] mt-0.5">{value}</p>
         </div>
       </div>
-      <TrendingUp className="absolute bottom-3 end-3 w-4 h-4 text-slate-200 group-hover:text-indigo-300 transition-colors" />
+      <TrendingUp className="absolute bottom-3 end-3 w-4 h-4 text-[var(--k-text-muted)] group-hover:text-[#818cf8] transition-colors" />
     </Link>
   );
 }
@@ -651,12 +651,12 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="bg-white rounded-xl p-4 border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all flex items-center gap-3 group"
+      className="bg-[var(--k-glass-thin)] backdrop-blur-sm rounded-xl p-4 border border-[var(--k-border-subtle)] hover:border-[#6366f1]/30 transition-all flex items-center gap-3 group"
     >
-      <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:bg-indigo-100 transition-colors flex-shrink-0">
+      <div className="w-9 h-9 bg-[#6366f1]/10 rounded-lg flex items-center justify-center text-[#818cf8] group-hover:bg-[#6366f1]/20 transition-colors flex-shrink-0">
         {icon}
       </div>
-      <span className="font-medium text-slate-900 text-sm">{title}</span>
+      <span className="font-medium text-[var(--k-text-primary)] text-sm">{title}</span>
     </Link>
   );
 }
