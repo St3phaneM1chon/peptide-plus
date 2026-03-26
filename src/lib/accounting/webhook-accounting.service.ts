@@ -270,13 +270,23 @@ async function generateSaleEntry(order: OrderWithItems, tx?: Parameters<Paramete
     credit: 0,
   });
 
-  // CREDIT: Sales revenue (subtotal - discount)
+  // ACCT-F12 FIX: Credit gross subtotal (matches auto-entries pattern: FIX A8-P0-001)
   lines.push({
     accountId: accountMap.get(salesAccountCode)!,
     description: `Vente ${order.orderNumber}`,
     debit: 0,
-    credit: subtract(subtotal, discount),
+    credit: subtotal, // Gross, not net — discount tracked separately
   });
+
+  // ACCT-F12 FIX: Debit discount to contra-revenue (was netted into sales credit)
+  if (discount > 0) {
+    lines.push({
+      accountId: accountMap.get(ACCOUNT_CODES.DISCOUNTS_RETURNS || '4900')!,
+      description: `Rabais ${order.orderNumber}`,
+      debit: discount,
+      credit: 0,
+    });
+  }
 
   // CREDIT: Shipping charged
   if (shipping > 0) {
