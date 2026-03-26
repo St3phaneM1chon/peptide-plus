@@ -33,7 +33,7 @@
       "line": 61,
       "cweId": "CWE-290",
       "confidence": 1.0,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "AUTH-F4",
