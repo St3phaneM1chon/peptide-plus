@@ -138,6 +138,19 @@ export const POST = withAdminGuard(
         deleted.activities = activitiesResult.count + tasksResult.count;
         deleted.dialerEntries = dialerResult.count;
 
+        // CRM-F8 FIX: Phase 2.5 — Delete deals linked to these leads (was missing)
+        const dealIds = (await tx.crmDeal.findMany({
+          where: { leadId: { in: leadIds } },
+          select: { id: true },
+        })).map(d => d.id);
+        if (dealIds.length > 0) {
+          await tx.crmDealStageHistory.deleteMany({ where: { dealId: { in: dealIds } } }).catch(() => {});
+          await tx.crmActivity.deleteMany({ where: { dealId: { in: dealIds } } }).catch(() => {});
+          await tx.crmTask.deleteMany({ where: { dealId: { in: dealIds } } }).catch(() => {});
+          const dealsResult = await tx.crmDeal.deleteMany({ where: { id: { in: dealIds } } });
+          (deleted as Record<string, number>).deals = dealsResult.count;
+        }
+
         // Phase 3: Delete leads themselves (after all FK children are gone)
         const leadsResult = await tx.crmLead.deleteMany({
           where: { id: { in: leadIds } },

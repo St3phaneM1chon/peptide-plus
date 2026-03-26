@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { apiPaginated, apiSuccess, apiError } from '@/lib/api-response';
@@ -122,10 +123,13 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     }
   }
 
+  // CRM-F1 FIX: Sanitize free-text fields (matches leads pattern)
+  const sanitize = (s: string | undefined | null) => s ? stripControlChars(stripHtml(s)).trim() : null;
+
   const contact = await prisma.crmLead.create({
     data: {
-      contactName,
-      companyName: companyName || null,
+      contactName: sanitize(contactName)!,
+      companyName: sanitize(companyName),
       email: email || null,
       phone: phone || null,
       source: source || 'MANUAL',
