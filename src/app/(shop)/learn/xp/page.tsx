@@ -9,7 +9,8 @@ interface XpSummary {
   totalEarned: number;
   level: number;
   xpToNextLevel: number;
-  recentTransactions: Array<{ amount: number; reason: string; createdAt: string }>;
+  recentTransactions: Array<{ id: string; amount: number; reason: string; createdAt: string }>;
+  activeChallenges: Array<{ id: string; title: string; xpReward: number; progress: number; criteria: { count?: number } }>;
 }
 
 export default function XpPage() {
@@ -22,8 +23,8 @@ export default function XpPage() {
     // FIX P2-09: Fetch real XP data instead of mock
     fetch('/api/lms/xp')
       .then(r => r.json())
-      .then(d => setXp(d.data ?? { balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [] }))
-      .catch(() => setXp({ balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [] }))
+      .then(d => setXp(d.data ?? { balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [], activeChallenges: [] }))
+      .catch(() => setXp({ balance: 0, totalEarned: 0, level: 1, xpToNextLevel: 500, recentTransactions: [], activeChallenges: [] }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -48,13 +49,51 @@ export default function XpPage() {
           </div>
           <div className="rounded-xl border p-4 text-center">
             <Target className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-            <p className="text-3xl font-bold">0</p>
+            <p className="text-3xl font-bold">{xp.activeChallenges?.length ?? 0}</p>
             <p className="text-xs text-muted-foreground">{t('lms.xp.activeChallenges')}</p>
           </div>
           <div className="rounded-xl border p-4 text-center">
             <TrendingUp className="h-6 w-6 text-green-500 mx-auto mb-2" />
             <p className="text-3xl font-bold">{xp.totalEarned}</p>
             <p className="text-xs text-muted-foreground">{t('lms.xp.cumulativeXp')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Active challenges */}
+      {xp && xp.activeChallenges && xp.activeChallenges.length > 0 && (
+        <div className="rounded-xl border p-6 mb-6">
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><Target className="h-5 w-5 text-blue-500" /> {t('lms.xp.activeChallenges')}</h2>
+          <div className="space-y-3">
+            {xp.activeChallenges.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="font-medium text-sm">{c.title}</p>
+                  <p className="text-xs text-muted-foreground">{c.progress}/{c.criteria?.count ?? '?'}</p>
+                </div>
+                <span className="text-sm font-semibold text-yellow-600">+{c.xpReward} XP</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent XP transactions */}
+      {xp && xp.recentTransactions && xp.recentTransactions.length > 0 && (
+        <div className="rounded-xl border p-6 mb-6">
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500" /> Historique XP</h2>
+          <div className="space-y-2">
+            {xp.recentTransactions.slice(0, 10).map(tx => (
+              <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div>
+                  <p className="text-sm font-medium">{tx.reason.replace(/_/g, ' ')}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString('fr-CA')}</p>
+                </div>
+                <span className={`text-sm font-semibold ${tx.amount > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {tx.amount > 0 ? '+' : ''}{tx.amount} XP
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
