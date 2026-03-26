@@ -1,5 +1,5 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-03-12 (Scraper mega-audit: 46 issues fixed, E2E tested, 6 API routes + 13 components + 5 libs documented)
+# LAST UPDATED: 2026-03-25 (V2 Mega Audit LMS: 122 findings, 113 fixed, 14 new API routes, 60 commits, 97 files)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
