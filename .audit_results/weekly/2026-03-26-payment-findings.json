@@ -5,15 +5,96 @@
   "grade": "C",
   "functionsAudited": 35,
   "findings": [
-    {"id": "PAY-F1", "severity": "critical", "title": "Platform webhook sig bypass on placeholder secret", "file": "src/app/api/platform/webhook/route.ts", "line": 26, "cweId": "CWE-345", "confidence": 0.95, "status": "open"},
-    {"id": "PAY-F2", "severity": "high", "title": "Platform checkout no rate limit/CSRF", "file": "src/app/api/platform/checkout/route.ts", "line": 14, "cweId": "CWE-770", "confidence": 0.95, "status": "open"},
-    {"id": "PAY-F3", "severity": "high", "title": "LMS checkout no rate limit/CSRF", "file": "src/app/api/lms/checkout/route.ts", "line": 26, "cweId": "CWE-352", "confidence": 0.93, "status": "open"},
-    {"id": "PAY-F4", "severity": "medium", "title": "LMS checkout new Stripe instance per request", "file": "src/app/api/lms/checkout/route.ts", "line": 15, "cweId": "CWE-400", "confidence": 0.98, "status": "open"},
-    {"id": "PAY-F5", "severity": "medium", "title": "Gift card secret timing-unsafe comparison", "file": "src/app/api/gift-cards/activate/route.ts", "line": 62, "cweId": "CWE-208", "confidence": 0.85, "status": "open"},
-    {"id": "PAY-F6", "severity": "medium", "title": "Guest checkout weak rate limiting", "file": "src/app/api/payments/create-checkout/route.ts", "line": 151, "cweId": "CWE-799", "confidence": 0.80, "status": "open"},
-    {"id": "PAY-F7", "severity": "medium", "title": "Platform webhook no idempotency", "file": "src/app/api/platform/webhook/route.ts", "line": 43, "cweId": "CWE-837", "confidence": 0.90, "status": "open"},
-    {"id": "PAY-F8", "severity": "medium", "title": "PayPal capture trusts client discount", "file": "src/app/api/payments/paypal/capture/route.ts", "line": 366, "cweId": "CWE-20", "confidence": 0.88, "status": "open"},
-    {"id": "PAY-F9", "severity": "medium", "title": "Multi-owner tenant selection non-deterministic", "file": "src/app/api/platform/subscription/route.ts", "line": 94, "cweId": "CWE-863", "confidence": 0.75, "status": "open"}
+    {
+      "id": "PAY-F1",
+      "severity": "critical",
+      "title": "Platform webhook sig bypass on placeholder secret",
+      "file": "src/app/api/platform/webhook/route.ts",
+      "line": 26,
+      "cweId": "CWE-345",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "PAY-F2",
+      "severity": "high",
+      "title": "Platform checkout no rate limit/CSRF",
+      "file": "src/app/api/platform/checkout/route.ts",
+      "line": 14,
+      "cweId": "CWE-770",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "PAY-F3",
+      "severity": "high",
+      "title": "LMS checkout no rate limit/CSRF",
+      "file": "src/app/api/lms/checkout/route.ts",
+      "line": 26,
+      "cweId": "CWE-352",
+      "confidence": 0.93,
+      "status": "open"
+    },
+    {
+      "id": "PAY-F4",
+      "severity": "medium",
+      "title": "LMS checkout new Stripe instance per request",
+      "file": "src/app/api/lms/checkout/route.ts",
+      "line": 15,
+      "cweId": "CWE-400",
+      "confidence": 0.98,
+      "status": "fixed"
+    },
+    {
+      "id": "PAY-F5",
+      "severity": "medium",
+      "title": "Gift card secret timing-unsafe comparison",
+      "file": "src/app/api/gift-cards/activate/route.ts",
+      "line": 62,
+      "cweId": "CWE-208",
+      "confidence": 0.85,
+      "status": "fixed"
+    },
+    {
+      "id": "PAY-F6",
+      "severity": "medium",
+      "title": "Guest checkout weak rate limiting",
+      "file": "src/app/api/payments/create-checkout/route.ts",
+      "line": 151,
+      "cweId": "CWE-799",
+      "confidence": 0.8,
+      "status": "open"
+    },
+    {
+      "id": "PAY-F7",
+      "severity": "medium",
+      "title": "Platform webhook no idempotency",
+      "file": "src/app/api/platform/webhook/route.ts",
+      "line": 43,
+      "cweId": "CWE-837",
+      "confidence": 0.9,
+      "status": "open"
+    },
+    {
+      "id": "PAY-F8",
+      "severity": "medium",
+      "title": "PayPal capture trusts client discount",
+      "file": "src/app/api/payments/paypal/capture/route.ts",
+      "line": 366,
+      "cweId": "CWE-20",
+      "confidence": 0.88,
+      "status": "fixed"
+    },
+    {
+      "id": "PAY-F9",
+      "severity": "medium",
+      "title": "Multi-owner tenant selection non-deterministic",
+      "file": "src/app/api/platform/subscription/route.ts",
+      "line": 94,
+      "cweId": "CWE-863",
+      "confidence": 0.75,
+      "status": "fixed"
+    }
   ],
   "criticals": 1,
   "highs": 2,

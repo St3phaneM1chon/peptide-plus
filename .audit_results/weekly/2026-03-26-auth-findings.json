@@ -5,18 +5,126 @@
   "grade": "D",
   "functionsAudited": 40,
   "findings": [
-    {"id": "AUTH-F1", "severity": "critical", "title": "MFA verify accepts ANY 6-digit code", "file": "src/app/api/auth/mfa/verify/route.ts", "line": 51, "cweId": "CWE-287", "confidence": 1.0, "status": "open"},
-    {"id": "AUTH-F2", "severity": "critical", "title": "Login API issues full JWT before MFA verified", "file": "src/app/api/auth/login/route.ts", "line": 104, "cweId": "CWE-306", "confidence": 0.95, "status": "open"},
-    {"id": "AUTH-F3", "severity": "high", "title": "OAuth trusts client email without id_token verification", "file": "src/app/api/auth/oauth/route.ts", "line": 61, "cweId": "CWE-290", "confidence": 1.0, "status": "open"},
-    {"id": "AUTH-F4", "severity": "high", "title": "MFA verify no rate limiting", "file": "src/app/api/auth/mfa/verify/route.ts", "line": 14, "cweId": "CWE-307", "confidence": 0.95, "status": "open"},
-    {"id": "AUTH-F7", "severity": "high", "title": "mfaVerified session update has no server-side proof", "file": "src/lib/auth-config.ts", "line": 479, "cweId": "CWE-302", "confidence": 0.9, "status": "open"},
-    {"id": "AUTH-F5", "severity": "medium", "title": "Brute-force protection passes IP='unknown'", "file": "src/lib/auth-config.ts", "line": 161, "cweId": "CWE-799", "confidence": 0.85, "status": "open"},
-    {"id": "AUTH-F6", "severity": "medium", "title": "Invite token stored in plaintext", "file": "src/app/api/auth/accept-invite/route.ts", "line": 63, "cweId": "CWE-312", "confidence": 0.9, "status": "open"},
-    {"id": "AUTH-F8", "severity": "medium", "title": "Super-admin determined by client header", "file": "src/lib/admin-api-guard.ts", "line": 145, "cweId": "CWE-807", "confidence": 0.8, "status": "open"},
-    {"id": "AUTH-F9", "severity": "medium", "title": "Password policy inconsistency (no special chars)", "file": "src/lib/auth-jwt.ts", "line": 100, "cweId": "CWE-521", "confidence": 1.0, "status": "open"},
-    {"id": "AUTH-F10", "severity": "medium", "title": "Account deletion no session invalidation", "file": "src/app/api/auth/account/route.ts", "line": 11, "cweId": "CWE-613", "confidence": 0.95, "status": "open"},
-    {"id": "AUTH-F11", "severity": "medium", "title": "Register API reveals email existence", "file": "src/app/api/auth/register/route.ts", "line": 94, "cweId": "CWE-204", "confidence": 1.0, "status": "open"},
-    {"id": "AUTH-F12", "severity": "low", "title": "Forgot-password logs full email (PII)", "file": "src/app/api/auth/forgot-password/route.ts", "line": 63, "cweId": "CWE-532", "confidence": 1.0, "status": "open"}
+    {
+      "id": "AUTH-F1",
+      "severity": "critical",
+      "title": "MFA verify accepts ANY 6-digit code",
+      "file": "src/app/api/auth/mfa/verify/route.ts",
+      "line": 51,
+      "cweId": "CWE-287",
+      "confidence": 1.0,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F2",
+      "severity": "critical",
+      "title": "Login API issues full JWT before MFA verified",
+      "file": "src/app/api/auth/login/route.ts",
+      "line": 104,
+      "cweId": "CWE-306",
+      "confidence": 0.95,
+      "status": "open"
+    },
+    {
+      "id": "AUTH-F3",
+      "severity": "high",
+      "title": "OAuth trusts client email without id_token verification",
+      "file": "src/app/api/auth/oauth/route.ts",
+      "line": 61,
+      "cweId": "CWE-290",
+      "confidence": 1.0,
+      "status": "open"
+    },
+    {
+      "id": "AUTH-F4",
+      "severity": "high",
+      "title": "MFA verify no rate limiting",
+      "file": "src/app/api/auth/mfa/verify/route.ts",
+      "line": 14,
+      "cweId": "CWE-307",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F7",
+      "severity": "high",
+      "title": "mfaVerified session update has no server-side proof",
+      "file": "src/lib/auth-config.ts",
+      "line": 479,
+      "cweId": "CWE-302",
+      "confidence": 0.9,
+      "status": "open"
+    },
+    {
+      "id": "AUTH-F5",
+      "severity": "medium",
+      "title": "Brute-force protection passes IP='unknown'",
+      "file": "src/lib/auth-config.ts",
+      "line": 161,
+      "cweId": "CWE-799",
+      "confidence": 0.85,
+      "status": "open"
+    },
+    {
+      "id": "AUTH-F6",
+      "severity": "medium",
+      "title": "Invite token stored in plaintext",
+      "file": "src/app/api/auth/accept-invite/route.ts",
+      "line": 63,
+      "cweId": "CWE-312",
+      "confidence": 0.9,
+      "status": "open"
+    },
+    {
+      "id": "AUTH-F8",
+      "severity": "medium",
+      "title": "Super-admin determined by client header",
+      "file": "src/lib/admin-api-guard.ts",
+      "line": 145,
+      "cweId": "CWE-807",
+      "confidence": 0.8,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F9",
+      "severity": "medium",
+      "title": "Password policy inconsistency (no special chars)",
+      "file": "src/lib/auth-jwt.ts",
+      "line": 100,
+      "cweId": "CWE-521",
+      "confidence": 1.0,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F10",
+      "severity": "medium",
+      "title": "Account deletion no session invalidation",
+      "file": "src/app/api/auth/account/route.ts",
+      "line": 11,
+      "cweId": "CWE-613",
+      "confidence": 0.95,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F11",
+      "severity": "medium",
+      "title": "Register API reveals email existence",
+      "file": "src/app/api/auth/register/route.ts",
+      "line": 94,
+      "cweId": "CWE-204",
+      "confidence": 1.0,
+      "status": "fixed"
+    },
+    {
+      "id": "AUTH-F12",
+      "severity": "low",
+      "title": "Forgot-password logs full email (PII)",
+      "file": "src/app/api/auth/forgot-password/route.ts",
+      "line": 63,
+      "cweId": "CWE-532",
+      "confidence": 1.0,
+      "status": "fixed"
+    }
   ],
   "criticals": 2,
   "highs": 3,
