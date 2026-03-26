@@ -399,8 +399,22 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Search result highlighting for standard path
+      const stdHighlighted = q ? products.map((prod: Record<string, unknown>) => {
+        const queryTerms = q.split(/\s+/).filter(Boolean);
+        const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const markPattern = new RegExp(`(${queryTerms.map(escRe).join('|')})`, 'gi');
+        return {
+          ...prod,
+          nameHighlighted: typeof prod.name === 'string' ? prod.name.replace(markPattern, '<mark>$1</mark>') : prod.name,
+          descriptionSnippet: typeof prod.shortDescription === 'string'
+            ? (prod.shortDescription as string).replace(markPattern, '<mark>$1</mark>').slice(0, 200)
+            : undefined,
+        };
+      }) : products;
+
       return {
-        products,
+        products: stdHighlighted,
         categories: translatedCategories,
         total: totalCount,
         query: q,
