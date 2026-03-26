@@ -67,3 +67,19 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
   return apiSuccess(liveSession, { request, status: 201 });
 });
+
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return apiError('Session ID required', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const liveSession = await prisma.liveSession.findFirst({
+    where: { id, tenantId },
+    select: { id: true },
+  });
+  if (!liveSession) return apiError('Session not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  await prisma.liveSession.update({ where: { id }, data: { isPublished: false } });
+  return apiSuccess({ success: true }, { request });
+});
