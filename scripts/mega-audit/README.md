@@ -1,6 +1,9 @@
-# Mega-Audit System
+# Audit Forge v5.0
 
-Exhaustive, reproducible audit system for peptide-plus. Audits every exported function across 5 dimensions with adversarial validation.
+Systeme de mega audit recurrent pour la plateforme Koraline SaaS.
+14 domaines, 4 couches anti-generalisation, pipeline 3 passes + consensus.
+
+**Research-backed**: RepoAudit (ICML 2025), OWASP 2025, Meta FSE 2025, Chain-of-Verification.
 
 ## Architecture (5 Layers)
 
