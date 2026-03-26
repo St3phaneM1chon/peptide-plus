@@ -163,3 +163,74 @@ test.describe('LMS Admin: Analytics', () => {
     expect(body?.length).toBeGreaterThan(0);
   });
 });
+
+// ── V2 API Health Checks (new endpoints) ───────────────────────
+
+publicTest.describe('LMS V2 API — Public endpoints', () => {
+  publicTest('certificate verify [code] returns 404 for invalid code', async ({ request }) => {
+    const resp = await request.get('/api/lms/certificates/verify/invalid-code-000');
+    publicExpect(resp.status()).toBe(404);
+  });
+});
+
+publicTest.describe('LMS V2 API — Student endpoints (unauthenticated)', () => {
+  publicTest('badges API returns 401 without auth', async ({ request }) => {
+    const resp = await request.get('/api/lms/badges');
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('challenges API returns 401 without auth', async ({ request }) => {
+    const resp = await request.get('/api/lms/challenges');
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('cohort API returns 401 without auth', async ({ request }) => {
+    const resp = await request.get('/api/lms/cohort');
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('xp API returns 401 without auth', async ({ request }) => {
+    const resp = await request.get('/api/lms/xp');
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('daily-login API returns 401 without auth', async ({ request }) => {
+    const resp = await request.post('/api/lms/daily-login');
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('vote API returns 401 without auth', async ({ request }) => {
+    const resp = await request.post('/api/lms/vote', { data: { targetId: 'x', targetType: 'qa' } });
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('reviews API returns 401 without auth', async ({ request }) => {
+    const resp = await request.post('/api/lms/reviews', { data: { courseId: 'x', rating: 5 } });
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+
+  publicTest('course-completion API returns 401 without auth', async ({ request }) => {
+    const resp = await request.post('/api/lms/course-completion', { data: { courseId: 'x' } });
+    publicExpect([401, 403]).toContain(resp.status());
+  });
+});
+
+test.describe('LMS V2 Admin — New endpoints load', () => {
+  test('admin badges page loads', async ({ adminPage }) => {
+    const response = await adminPage.goto('/admin/formation/badges');
+    expect(response?.status()).toBeLessThan(400);
+    await waitForPageReady(adminPage);
+  });
+
+  test('admin conformite page loads', async ({ adminPage }) => {
+    const response = await adminPage.goto('/admin/formation/conformite');
+    expect(response?.status()).toBeLessThan(400);
+    await waitForPageReady(adminPage);
+  });
+
+  test('admin cohortes page loads', async ({ adminPage }) => {
+    const response = await adminPage.goto('/admin/formation/cohortes');
+    expect(response?.status()).toBeLessThan(400);
+    await waitForPageReady(adminPage);
+  });
+});
