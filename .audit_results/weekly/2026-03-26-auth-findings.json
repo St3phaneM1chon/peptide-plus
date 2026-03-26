@@ -63,7 +63,7 @@
       "line": 161,
       "cweId": "CWE-799",
       "confidence": 0.85,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "AUTH-F6",
@@ -73,7 +73,7 @@
       "line": 63,
       "cweId": "CWE-312",
       "confidence": 0.9,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "AUTH-F8",
