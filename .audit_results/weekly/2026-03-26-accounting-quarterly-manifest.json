@@ -1,0 +1,28 @@
+{
+  "domain": "accounting",
+  "domainName": "Accounting & Journal",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/accounting*.ts",
+    "src/lib/journal*.ts",
+    "src/lib/tax*.ts",
+    "src/app/api/admin/accounting/**/*.ts",
+    "src/app/api/admin/journal/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "reliability",
+    "compliance"
+  ],
+  "threatModel": "## THREAT MODEL — Accounting & Journal\n\n**Description:** Journal comptable, grand livre, rapports financiers, taxes TPS/TVQ, rapprochement bancaire.\n**Attaquant:** Employe malveillant tentant manipulation des ecritures, erreur comptable causant desequilibre.\n**Donnees a risque:** Ecritures comptables, soldes de comptes, rapports fiscaux, donnees bancaires.\n**Conformite:** PCGR/IFRS, Lois fiscales QC/Canada, audit trail obligatoire, principe de double entree.\n\n### Focus prioritaire:\n1. Double-entry violation (debit != credit in journal entry)\n2. Unbalanced transactions ($transaction missing, partial commits)\n3. Audit trail gaps (modifications without logging)\n4. Tax calculation errors (TPS/TVQ rates, rounding)\n5. Reconciliation integrity (bank sync data mismatch)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"missing encryption\" sur les montants comptables (pas des donnees sensibles)\n- NE PAS rapporter: \"XSS\" sur les pages admin de comptabilite (protegees par withAdminGuard)",
+  "priority": 1.5,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "domain": "loyalty",
+  "domainName": "Loyalty & Rewards",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/loyalty/**/*.ts",
+    "src/app/api/loyalty/**/*.ts",
+    "src/app/api/admin/loyalty/**/*.ts",
+    "src/app/api/gift-cards/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "reliability",
+    "compliance"
+  ],
+  "threatModel": "## THREAT MODEL — Loyalty & Rewards\n\n**Description:** Programme de fidelite, points, niveaux, cadeaux, cartes-cadeaux, promotions.\n**Attaquant:** Client tentant: accumulation frauduleuse de points, duplication carte-cadeau, exploitation promotions.\n**Donnees a risque:** Solde de points, historique transactions, codes de cartes-cadeaux.\n**Conformite:** Loi sur la protection du consommateur QC, normes PCI pour cartes-cadeaux.\n\n### Focus prioritaire:\n1. Points duplication (race condition on concurrent point awards)\n2. Gift card code enumeration (predictable codes)\n3. Negative balance exploitation (spending more points than available)\n4. Promotion stacking abuse\n5. Cross-tenant point transfer\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"hardcoded values\" pour les taux de conversion points (configures en DB)",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

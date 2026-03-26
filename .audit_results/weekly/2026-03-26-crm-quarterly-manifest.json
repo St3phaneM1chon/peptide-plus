@@ -1,0 +1,26 @@
+{
+  "domain": "crm",
+  "domainName": "CRM (Leads, Deals, Pipelines)",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/crm/**/*.ts",
+    "src/app/api/crm/**/*.ts",
+    "src/app/api/admin/crm/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "security",
+    "reliability"
+  ],
+  "threatModel": "## THREAT MODEL — CRM (Leads, Deals, Pipelines)\n\n**Description:** Gestion des leads, deals, pipelines de vente, contacts, tickets, workflows automatises.\n**Attaquant:** Utilisateur CRM tentant acces aux leads d'un autre vendeur, cross-tenant data leak.\n**Donnees a risque:** Noms, emails, telephones des contacts, historique interactions, valeur des deals.\n**Conformite:** RGPD/Loi 25 (PII contacts), CASL (consentement marketing), PIPEDA.\n\n### Focus prioritaire:\n1. Cross-tenant isolation (user sees leads from another tenant)\n2. PII exposure in API responses (emails, phones in list endpoints)\n3. Lead assignment race conditions (concurrent assignments)\n4. Workflow automation loops (infinite trigger chains)\n5. Bulk operations without transaction (CSV import partial failure)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"missing pagination\" si take/limit est deja present\n- NE PAS rapporter: \"unauthorized access\" si withAdminGuard verifie le role",
+  "priority": 1.2,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

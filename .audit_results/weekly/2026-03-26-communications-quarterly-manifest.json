@@ -1,0 +1,29 @@
+{
+  "domain": "communications",
+  "domainName": "Emails, Chat & Notifications",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/email/**/*.ts",
+    "src/lib/chat/**/*.ts",
+    "src/app/api/email/**/*.ts",
+    "src/app/api/emails/**/*.ts",
+    "src/app/api/chat/**/*.ts",
+    "src/app/api/admin/emails/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "reliability",
+    "compliance"
+  ],
+  "threatModel": "## THREAT MODEL — Emails, Chat & Notifications\n\n**Description:** Envoi emails transactionnels/marketing, chat en temps reel, notifications push, SMS.\n**Attaquant:** Spammeur tentant: abus envoi emails, injection HTML dans templates, phishing via redirect.\n**Donnees a risque:** Adresses email, contenu messages, tokens de desinscription, historique chat.\n**Conformite:** LCAP/CASL (consentement email obligatoire), CAN-SPAM, RGPD droit a l'oubli.\n\n### Focus prioritaire:\n1. Email injection (header injection via user input in subject/from)\n2. Template injection (user content rendered in email HTML)\n3. Unsubscribe token prediction (missing HMAC)\n4. Chat message XSS (stored XSS via message content)\n5. Rate limiting on email sending (prevent abuse)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"email sent without consent\" pour les emails transactionnels (pas soumis a LCAP)",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

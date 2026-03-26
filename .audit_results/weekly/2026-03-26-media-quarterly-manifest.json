@@ -1,0 +1,26 @@
+{
+  "domain": "media",
+  "domainName": "Media & Content Management",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/media/**/*.ts",
+    "src/app/api/media/**/*.ts",
+    "src/app/api/admin/media/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "performance",
+    "security"
+  ],
+  "threatModel": "## THREAT MODEL — Media & Content Management\n\n**Description:** Upload fichiers, images, videos, transcoding, CDN, galerie media.\n**Attaquant:** Utilisateur tentant: upload malveillant (web shell, virus), SSRF via URL distante, DoS via fichier enorme.\n**Donnees a risque:** Fichiers uploades, metadata EXIF (localisation GPS), URLs signees.\n**Conformite:** Limites de taille fichier, types MIME whiteliste, nettoyage metadata.\n\n### Focus prioritaire:\n1. Unrestricted file upload (missing type validation, size limit)\n2. Path traversal in file download (../../etc/passwd)\n3. SSRF via remote URL fetch (internal network scanning)\n4. Missing access control on media files (public CDN URLs)\n5. EXIF metadata not stripped (GPS location leak)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"public URLs\" pour les images produit (intentionnellement publiques via CDN)",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

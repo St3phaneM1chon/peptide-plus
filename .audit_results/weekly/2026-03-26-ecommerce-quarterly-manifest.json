@@ -1,0 +1,30 @@
+{
+  "domain": "ecommerce",
+  "domainName": "E-commerce (Products, Cart, Orders)",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/product*.ts",
+    "src/lib/cart*.ts",
+    "src/lib/order*.ts",
+    "src/lib/inventory*.ts",
+    "src/app/api/products/**/*.ts",
+    "src/app/api/cart/**/*.ts",
+    "src/app/api/orders/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "performance",
+    "reliability"
+  ],
+  "threatModel": "## THREAT MODEL — E-commerce (Products, Cart, Orders)\n\n**Description:** Catalogue produits, panier, commandes, variantes, prix, inventaire, livraison.\n**Attaquant:** Acheteur malveillant tentant: manipulation de prix, exploitation promotions, commande sans paiement.\n**Donnees a risque:** Adresses de livraison, historique commandes, preferences client.\n**Conformite:** Loi sur la protection du consommateur QC, CASL (marketing), normes e-commerce.\n\n### Focus prioritaire:\n1. Price manipulation (cart price != database price at checkout)\n2. Inventory race condition (overselling on concurrent orders)\n3. Coupon/discount abuse (stacking, expired codes)\n4. Order state machine violations (invalid status transitions)\n5. N+1 queries on product listing pages\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"missing auth\" sur les pages catalogue public (intentionnellement public)\n- NE PAS rapporter: \"PII exposure\" pour les adresses dans les commandes admin (admin a besoin de ces donnees)",
+  "priority": 1.5,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

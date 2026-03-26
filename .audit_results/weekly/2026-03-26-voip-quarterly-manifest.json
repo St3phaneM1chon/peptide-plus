@@ -1,0 +1,28 @@
+{
+  "domain": "voip",
+  "domainName": "VoIP & Telephony",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/voip/**/*.ts",
+    "src/lib/telnyx*.ts",
+    "src/lib/crm/voice*.ts",
+    "src/app/api/voip/**/*.ts",
+    "src/app/api/admin/telephonie/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "security",
+    "reliability"
+  ],
+  "threatModel": "## THREAT MODEL — VoIP & Telephony\n\n**Description:** Appels VoIP via Telnyx, IVR, enregistrements, transcriptions, SIP, WebRTC.\n**Attaquant:** Attaquant tentant: toll fraud (appels internationaux non-autorises), ecoute non-autorisee, spoofing CallerID.\n**Donnees a risque:** Enregistrements audio d'appels, transcriptions, numeros de telephone, metadata appels.\n**Conformite:** Loi sur l'ecoute privee QC, CRTC reglementations, consentement enregistrement.\n\n### Focus prioritaire:\n1. Toll fraud (missing call destination whitelist/limit)\n2. Recording access control (unauthorized download of call recordings)\n3. Telnyx webhook signature validation\n4. Call direction normalization (inbound vs incoming mismatch)\n5. WebRTC credential exposure\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"sensitive data in logs\" pour les metadata d'appels (necessaire au debugging)",
+  "priority": 1.2,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

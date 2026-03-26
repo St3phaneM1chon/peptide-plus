@@ -1,0 +1,25 @@
+{
+  "domain": "i18n",
+  "domainName": "Internationalization",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/i18n/**/*.ts",
+    "src/i18n/**/*.tsx",
+    "src/hooks/useTranslations*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "maintainability"
+  ],
+  "threatModel": "",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

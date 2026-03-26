@@ -1,0 +1,27 @@
+{
+  "domain": "lms",
+  "domainName": "LMS (Formation / Aptitudes)",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/lms/**/*.ts",
+    "src/app/api/lms/**/*.ts",
+    "src/app/api/admin/lms/**/*.ts",
+    "src/app/api/cron/compliance-reminders/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "compliance",
+    "reliability"
+  ],
+  "threatModel": "## THREAT MODEL — LMS (Formation / Aptitudes)\n\n**Description:** Cours, lecons, quiz, examens, certificats, progression, gamification, AI Tutor, conformite UFC.\n**Attaquant:** Etudiant tentant: triche aux examens, bypass progression sequentielle, usurpation certificat.\n**Donnees a risque:** Resultats d'examens, certificats professionnels, credits UFC (reglementaire AMF).\n**Conformite:** AMF/CSF (credits UFC obligatoires), PQAP, Open Badges 3.0, RGPD (profil etudiant).\n\n### Focus prioritaire:\n1. Quiz timer bypass (server-side enforcement)\n2. Sequential gate bypass (client-side only checks)\n3. Certificate forgery (verification code predictability)\n4. Cross-tenant enrollment (accessing other tenant courses)\n5. UFC credit manipulation (false completion → real credits)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"quiz answers exposed\" si showResults=true (intentionnel)\n- NE PAS rapporter: \"missing auth\" sur /certificates/verify/[code] (endpoint PUBLIC par design)",
+  "priority": 1.2,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

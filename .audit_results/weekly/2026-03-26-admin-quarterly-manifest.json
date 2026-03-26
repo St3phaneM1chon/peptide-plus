@@ -1,0 +1,29 @@
+{
+  "domain": "admin",
+  "domainName": "Admin Dashboard",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/app/admin/**/*.tsx",
+    "src/app/api/admin/**/*.ts"
+  ],
+  "excludePatterns": [
+    "src/app/api/admin/accounting/**/*.ts",
+    "src/app/api/admin/journal/**/*.ts",
+    "src/app/api/admin/invoices/**/*.ts"
+  ],
+  "emphasizedDimensions": [
+    "security",
+    "maintainability"
+  ],
+  "threatModel": "",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "domain": "api_core",
+  "domainName": "Core API Infrastructure",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/db*.ts",
+    "src/lib/prisma*.ts",
+    "src/lib/logger*.ts",
+    "src/lib/email*.ts",
+    "src/lib/cache*.ts",
+    "src/lib/rate-limit*.ts",
+    "src/middleware*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "security",
+    "performance"
+  ],
+  "threatModel": "",
+  "priority": 1,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}

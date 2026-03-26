@@ -1,0 +1,29 @@
+{
+  "domain": "payment",
+  "domainName": "Payment & Billing",
+  "quarter": "2026-Q1",
+  "date": "2026-03-26",
+  "type": "quarterly",
+  "patterns": [
+    "src/lib/stripe*.ts",
+    "src/lib/payment*.ts",
+    "src/lib/invoice*.ts",
+    "src/app/api/checkout/**/*.ts",
+    "src/app/api/webhooks/stripe/**/*.ts",
+    "src/app/api/admin/invoices/**/*.ts"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "security",
+    "reliability"
+  ],
+  "threatModel": "## THREAT MODEL — Payment & Billing\n\n**Description:** Integration Stripe, checkout, webhooks, remboursements, abonnements, facturation.\n**Attaquant:** Attaquant externe tentant: card testing via checkout, manipulation de prix, double-charge, contournement paiement.\n**Donnees a risque:** Donnees de carte (jamais stockees — Stripe tokenise), montants de transaction, historique achats.\n**Conformite:** PCI-DSS (delegue a Stripe), OWASP A04:2025 Insecure Design, Loi sur la protection du consommateur QC.\n\n### Focus prioritaire:\n1. Price manipulation (client-side price sent to server without validation)\n2. Double-charge (missing idempotency on payment creation)\n3. Webhook signature bypass (missing Stripe signature verification)\n4. Refund fraud (unauthorized refund triggering, missing amount validation)\n5. Race condition on inventory/enrollment (concurrent purchases)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"credit card data exposure\" si seul le Stripe paymentIntentId est stocke\n- NE PAS rapporter: \"missing encryption\" sur les montants (montants ne sont pas des donnees sensibles)\n- NE PAS rapporter: \"webhook not authenticated\" si le handler verifie stripe.webhooks.constructEvent()",
+  "priority": 2,
+  "pipeline": {
+    "pass1": "Deep audit per function (5 dimensions)",
+    "pass2": "Adversarial critic review",
+    "pass3": "Cross-module consistency (after all domains)",
+    "consensus": "Triple-run for Critical/High findings",
+    "mutation": "Deliberate bug injection to test audit quality"
+  }
+}
