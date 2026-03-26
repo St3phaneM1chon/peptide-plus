@@ -13,7 +13,7 @@
       "line": 55,
       "cweId": "CWE-20",
       "confidence": 0.75,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "ECOM-F2",
@@ -23,7 +23,7 @@
       "line": 58,
       "cweId": "CWE-208",
       "confidence": 0.7,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "ECOM-F3",
