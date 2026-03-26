@@ -180,6 +180,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // VOIP-F7 FIX: Rate limit public VoIP API (was zero rate limiting)
+    const { rateLimitMiddleware } = await import('@/lib/rate-limiter');
+    const { getClientIpFromRequest } = await import('@/lib/admin-audit');
+    const ip = getClientIpFromRequest(request);
+    const rl = await rateLimitMiddleware(ip, '/api/voip/public');
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const tenant = await authenticateApiKey(request);
     if (!tenant) {
       return NextResponse.json(

@@ -20,6 +20,36 @@ import { handleIncomingSMS } from '@/lib/voip/sms-engine';
 
 export async function POST(request: NextRequest) {
   try {
+    // VOIP-F2 CRITICAL FIX: Verify Telnyx webhook signature (was missing entirely)
+    const publicKeyBase64 = process.env.TELNYX_WEBHOOK_SECRET;
+    if (!publicKeyBase64) {
+      logger.error('[SMS Webhook] TELNYX_WEBHOOK_SECRET not set — rejecting');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+    }
+
+    const signature = request.headers.get('telnyx-signature-ed25519');
+    const timestamp = request.headers.get('telnyx-timestamp');
+    if (!signature || !timestamp) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 403 });
+    }
+
+    // Ed25519 verification (same as call webhook)
+    try {
+      const { verify } = await import('crypto');
+      const rawBody = await request.clone().text();
+      const publicKeyDer = Buffer.from(publicKeyBase64, 'base64');
+      const signedPayload = `${timestamp}|${rawBody}`;
+      const signatureBuffer = Buffer.from(signature, 'base64');
+      const isValid = verify(null, Buffer.from(signedPayload), { key: publicKeyDer, format: 'der', type: 'spki' }, signatureBuffer);
+      if (!isValid) {
+        logger.warn('[SMS Webhook] Invalid signature');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    } catch {
+      logger.warn('[SMS Webhook] Signature verification error');
+      return NextResponse.json({ error: 'Signature verification failed' }, { status: 401 });
+    }
+
     const body = await request.json();
     const data = body?.data;
     const eventType = data?.event_type || body?.event_type;

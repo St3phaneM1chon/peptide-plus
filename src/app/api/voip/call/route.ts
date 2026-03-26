@@ -21,6 +21,7 @@ const WEBHOOK_BASE_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP
 /**
  * POST - Initiate an outbound call via Telnyx Call Control.
  */
+// VOIP-F6 FIX: VoIP-specific rate limit (5 calls/min per user)
 export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
     const raw = await request.json();
