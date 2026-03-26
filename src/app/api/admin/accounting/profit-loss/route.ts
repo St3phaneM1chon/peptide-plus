@@ -79,7 +79,9 @@ export const GET = withAdminGuard(async (request) => {
     const endOfDay = new Date(endDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // ------ Fetch all posted journal lines for REVENUE & EXPENSE accounts ------
+    // ACCT-F6: TODO — Replace findMany with groupBy/raw SQL for large datasets
+    // Current: loads all lines into memory for monthly bucketing
+    // Future: use DATE_TRUNC + GROUP BY in raw SQL for O(accounts) instead of O(lines)
     const lines = await prisma.journalLine.findMany({
       where: {
         account: { type: { in: ['REVENUE', 'EXPENSE'] } },
