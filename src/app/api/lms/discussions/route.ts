@@ -154,6 +154,55 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
   return NextResponse.json({ data: discussion }, { status: 201 });
 });
 
+// P8-13 FIX: Edit own discussion or reply
+const editSchema = z.object({
+  discussionId: z.string().min(1).optional(),
+  replyId: z.string().min(1).optional(),
+  content: z.string().min(1).max(10000),
+  title: z.string().min(3).max(300).optional(), // Only for discussion edits
+}).refine(d => d.discussionId || d.replyId, { message: 'discussionId or replyId required' });
+
+export const PUT = withUserGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
+
+  const body = await request.json();
+  const parsed = editSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+
+  if (parsed.data.replyId) {
+    const reply = await prisma.courseDiscussionReply.findFirst({
+      where: { id: parsed.data.replyId, tenantId, userId: session.user.id },
+      select: { id: true },
+    });
+    if (!reply) return NextResponse.json({ error: 'Reply not found or not yours' }, { status: 404 });
+    const updated = await prisma.courseDiscussionReply.update({
+      where: { id: reply.id },
+      data: { content: parsed.data.content },
+    });
+    return NextResponse.json({ data: updated });
+  }
+
+  if (parsed.data.discussionId) {
+    const discussion = await prisma.courseDiscussion.findFirst({
+      where: { id: parsed.data.discussionId, tenantId, userId: session.user.id },
+      select: { id: true, isLocked: true },
+    });
+    if (!discussion) return NextResponse.json({ error: 'Discussion not found or not yours' }, { status: 404 });
+    if (discussion.isLocked) return NextResponse.json({ error: 'Discussion is locked' }, { status: 403 });
+    const updated = await prisma.courseDiscussion.update({
+      where: { id: discussion.id },
+      data: {
+        content: parsed.data.content,
+        ...(parsed.data.title ? { title: parsed.data.title } : {}),
+      },
+    });
+    return NextResponse.json({ data: updated });
+  }
+
+  return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+});
+
 // P8-13 FIX: Delete own discussion or reply
 const deleteSchema = z.object({
   discussionId: z.string().min(1).optional(),
