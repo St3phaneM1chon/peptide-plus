@@ -67,8 +67,15 @@ export async function POST(request: NextRequest) {
 
     const token = await generateToken(user.id, user.email, user.role);
 
+    // AUTH-F7 FIX: Generate server-signed proof for session update
+    const crypto = await import('crypto');
+    const mfaProof = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || '')
+      .update(`mfa-verified:${user.id}`)
+      .digest('hex');
+
     return NextResponse.json({
       token,
+      mfaProof, // Client passes this in session update({ mfaVerified: true, mfaProof })
       user: formatUser(user),
     });
   } catch (error) {
