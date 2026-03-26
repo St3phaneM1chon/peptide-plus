@@ -1,249 +1,173 @@
-'use client';
+export const revalidate = 300; // ISR: revalidate every 5 minutes
 
+import { Metadata } from 'next';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { getContentPage } from '@/lib/content-pages';
 
-export default function ShippingPolicyPage() {
-  const { t } = useTranslations();
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getContentPage('shipping-policy');
+  return {
+    title: page?.metaTitle || `Shipping Policy - ${siteName}`,
+    description: page?.metaDescription || `Shipping policy and delivery information for ${siteName}.`,
+    alternates: { canonical: `${appUrl}/shipping-policy` },
+  };
+}
+
+export default async function ShippingPolicyPage() {
+  const page = await getContentPage('shipping-policy');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--k-bg, #0a0a0f)' }}>
       {/* Hero */}
-      <section className="bg-[#143C78] text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {t('legal.shipping.title')}
+      <section
+        className="py-16 text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(59,130,246,0.10) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1
+            className="text-4xl md:text-5xl font-bold mb-4"
+            style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}
+          >
+            {page?.title || 'Shipping Policy'}
           </h1>
-          <p className="text-xl text-neutral-300 max-w-2xl mx-auto">
-            {t('legal.shipping.subtitle')}
-          </p>
+          {page?.excerpt && (
+            <p
+              className="text-lg max-w-2xl mx-auto"
+              style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}
+            >
+              {page.excerpt}
+            </p>
+          )}
         </div>
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-xl shadow-sm p-8 space-y-8">
-
-          {/* Processing Time */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">📦</span>
-              {t('legal.shipping.processing.title')}
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <ul className="space-y-2">
-                <li>{t('legal.shipping.processing.item1')}</li>
-                <li>{t('legal.shipping.processing.item2')}</li>
-                <li>{t('legal.shipping.processing.item3')}</li>
-                <li>{t('legal.shipping.processing.item4')}</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Shipping Options */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">🚚</span>
-              {t('legal.shipping.options.title')}
-            </h2>
-
-            {/* Canada */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
-                🇨🇦 {t('legal.shipping.options.canada')}
-              </h3>
-              <div className="bg-gray-50 rounded-lg overflow-x-auto">
-                <table className="w-full min-w-[450px]">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.method')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.deliveryTime')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.cost')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.canadaPostXpresspost')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.oneToThreeDays')}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-green-600">{t('legal.shipping.options.freeOver150')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.canadaPostXpresspost')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.oneToThreeDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.under150')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.priority')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.nextBusinessDay')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.priorityCost')}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* USA */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
-                🇺🇸 {t('legal.shipping.options.unitedStates')}
-              </h3>
-              <div className="bg-gray-50 rounded-lg overflow-x-auto">
-                <table className="w-full min-w-[450px]">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.method')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.deliveryTime')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.cost')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.standardInternational')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.fiveToSevenDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.standardUSCost')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.expressInternational')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.threeToFiveDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.expressUSCost')}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* International */}
-            <div>
-              <h3 className="font-semibold text-lg text-gray-800 mb-3 flex items-center gap-2">
-                🌍 {t('legal.shipping.options.international')}
-              </h3>
-              <div className="bg-gray-50 rounded-lg overflow-x-auto">
-                <table className="w-full min-w-[450px]">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.region')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.deliveryTime')}</th>
-                      <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">{t('legal.shipping.options.cost')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.europe')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.sevenToFourteenDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.europeCost')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.australia')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.tenToFourteenDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.australiaCost')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.asia')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.tenToFourteenDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.asiaCost')}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.restOfWorld')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.fourteenToTwentyOneDays')}</td>
-                      <td className="px-4 py-3 text-sm">{t('legal.shipping.options.calculatedAtCheckout')}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-
-          {/* Packaging */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">📋</span>
-              {t('legal.shipping.packaging.title')}
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <ul className="space-y-2">
-                <li>{t('legal.shipping.packaging.item1')}</li>
-                <li>{t('legal.shipping.packaging.item2')}</li>
-                <li>{t('legal.shipping.packaging.item3')}</li>
-                <li>{t('legal.shipping.packaging.item4')}</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Tracking */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">📍</span>
-              {t('legal.shipping.tracking.title')}
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <p>{t('legal.shipping.tracking.intro')}</p>
-              <ul className="space-y-2">
-                <li>{t('legal.shipping.tracking.item1')}</li>
-                <li>{t('legal.shipping.tracking.item2')}</li>
-                <li>{t('legal.shipping.tracking.item3')}</li>
-              </ul>
-              <p className="mt-4">
-                <Link href="/track-order" className="text-primary-600 hover:underline font-medium">
-                  {t('legal.shipping.tracking.trackOrderLink')}
-                </Link>
+        {page ? (
+          /* DB content found -- render admin-authored HTML */
+          <div
+            className="rounded-2xl p-8 md:p-12"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            <div
+              className="prose prose-invert max-w-none"
+              style={{
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                lineHeight: '1.8',
+              }}
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+            {page.updatedAt && (
+              <p
+                className="text-sm mt-8 pt-4 text-center"
+                style={{
+                  color: 'var(--k-text-tertiary, rgba(255,255,255,0.40))',
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                Last updated: {new Date(page.updatedAt).toLocaleDateString('fr-CA')}
               </p>
-            </div>
-          </section>
-
-          {/* Customs */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">🛃</span>
-              {t('legal.shipping.customs.title')}
+            )}
+          </div>
+        ) : (
+          /* No DB content -- show "coming soon" placeholder */
+          <div
+            className="rounded-2xl p-12 text-center"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            <div className="text-5xl mb-6">📦</div>
+            <h2
+              className="text-2xl font-bold mb-4"
+              style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}
+            >
+              Shipping Policy
             </h2>
-            <div className="prose prose-gray max-w-none">
-              <p>{t('legal.shipping.customs.intro')}</p>
-              <ul className="space-y-2">
-                <li>{t('legal.shipping.customs.item1')}</li>
-                <li>{t('legal.shipping.customs.item2')}</li>
-                <li>{t('legal.shipping.customs.item3')}</li>
-                <li>{t('legal.shipping.customs.item4')}</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Lost/Damaged */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <span className="text-primary-500">⚠️</span>
-              {t('legal.shipping.lostDamaged.title')}
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <p>{t('legal.shipping.lostDamaged.intro')}</p>
-              <ul className="space-y-2">
-                <li>{t('legal.shipping.lostDamaged.item1')}</li>
-                <li>{t('legal.shipping.lostDamaged.item2')}</li>
-                <li>{t('legal.shipping.lostDamaged.item3')}</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Contact */}
-          <section className="bg-primary-50 rounded-xl p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('legal.shipping.contact.title')}</h2>
-            <p className="text-gray-600 mb-4">
-              {t('legal.shipping.contact.description')}
+            <p
+              className="text-lg mb-8 max-w-lg mx-auto"
+              style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}
+            >
+              Our shipping policy is being prepared. Please contact us for any shipping-related questions.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/contact"
-                className="inline-flex items-center px-6 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+                className="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-colors"
+                style={{
+                  background: 'var(--k-accent, #6366f1)',
+                  color: '#fff',
+                }}
               >
-                {t('legal.shipping.contact.contactSupport')}
+                Contact Us
               </Link>
               <Link
                 href="/faq"
-                className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-colors"
+                style={{
+                  background: 'var(--k-glass-thick, rgba(255,255,255,0.12))',
+                  color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                }}
               >
-                {t('legal.shipping.contact.viewFaq')}
+                FAQ
               </Link>
             </div>
-          </section>
+          </div>
+        )}
 
+        {/* Navigation links -- always visible */}
+        <div
+          className="mt-8 rounded-2xl p-6 flex flex-wrap justify-center gap-4"
+          style={{
+            background: 'var(--k-glass-thin, rgba(255,255,255,0.05))',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <Link
+            href="/contact"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            Contact Support
+          </Link>
+          <Link
+            href="/faq"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            FAQ
+          </Link>
+          <Link
+            href="/refund-policy"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            Refund Policy
+          </Link>
         </div>
       </div>
     </div>

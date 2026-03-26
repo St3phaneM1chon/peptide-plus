@@ -14,6 +14,7 @@ import CartDrawer from './CartDrawer';
 import SearchModal from './SearchModal';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTenantBranding } from './TenantBrandingProvider';
+import type { HeaderNavItem } from '@/lib/tenant-branding';
 
 
 // Build languages array from config (all 22 languages)
@@ -22,6 +23,13 @@ const LANGUAGES = locales.map(code => ({
   name: localeNames[code],
   flag: localeFlags[code],
 }));
+
+/** Minimal fallback nav when headerNav from SiteSettings is empty */
+const DEFAULT_HEADER_NAV: HeaderNavItem[] = [
+  { label: 'Home', href: '/', type: 'link' },
+  { label: 'Shop', href: '/shop', type: 'link' },
+  { label: 'Contact', href: '/contact', type: 'link' },
+];
 
 
 export default function Header() {
@@ -141,57 +149,38 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Desktop Navigation - Simplified */}
+            {/* Desktop Navigation — dynamic from SiteSettings headerNav */}
             <nav aria-label={t('nav.aria.mainNavigation')} className="hidden lg:flex items-center gap-1">
-              <NavLink href="/">{t('nav.home') || 'Home'}</NavLink>
-
-              <NavLink href="/shop">{t('nav.shop') || 'Shop'}</NavLink>
-
-              <NavLink href="/calculator">{t('nav.calculator') || 'Calculator'}</NavLink>
-
-              {/* Resources Dropdown */}
-              <div className="relative" data-dropdown="resources">
-                <button
-                  onClick={() => toggleDropdown('resources')}
-                  aria-expanded={openDropdown === 'resources'}
-                  aria-haspopup="menu"
-                  aria-label={t('nav.aria.resourcesMenu')}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                    openDropdown === 'resources'
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {t('nav.resources') || 'Resources'}
-                  <ChevronIcon isOpen={openDropdown === 'resources'} />
-                </button>
-                {openDropdown === 'resources' && (
-                  <DropdownMenu>
-                    <DropdownItem href="/lab-results">
-                      🔬 {t('nav.labResults') || 'Lab Results'}
-                    </DropdownItem>
-                    <DropdownItem href="/calculator">
-                      🧮 {t('nav.injectionCalculator') || 'Injection Calculator'}
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem href="/learn">
-                      📚 {t('nav.articles') || 'Articles'}
-                    </DropdownItem>
-                    <DropdownItem href="/videos">
-                      🎬 {t('nav.videos') || 'Videos'}
-                    </DropdownItem>
-                    <DropdownItem href="/faq">
-                      ❓ {t('nav.faq') || 'FAQ'}
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem href="/rewards" highlight>
-                      🎁 {t('nav.rewards') || 'Rewards'}
-                    </DropdownItem>
-                  </DropdownMenu>
-                )}
-              </div>
-
-              <NavLink href="/contact">{t('nav.contact') || 'Contact'}</NavLink>
+              {(tenant.headerNav.length > 0 ? tenant.headerNav : DEFAULT_HEADER_NAV).map((item) =>
+                item.type === 'dropdown' && item.children?.length ? (
+                  <div key={item.href} className="relative" data-dropdown={item.href}>
+                    <button
+                      onClick={() => toggleDropdown(item.href)}
+                      aria-expanded={openDropdown === item.href}
+                      aria-haspopup="menu"
+                      className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+                        openDropdown === item.href
+                          ? 'text-primary-600 bg-primary-50'
+                          : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronIcon isOpen={openDropdown === item.href} />
+                    </button>
+                    {openDropdown === item.href && (
+                      <DropdownMenu>
+                        {item.children.map((child) => (
+                          <DropdownItem key={child.href} href={child.href}>
+                            {child.label}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    )}
+                  </div>
+                ) : (
+                  <NavLink key={item.href} href={item.href}>{item.label}</NavLink>
+                )
+              )}
             </nav>
 
             {/* Right Actions - Compact */}
@@ -388,35 +377,22 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu — dynamic from SiteSettings headerNav */}
           {isMobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-gray-100 animate-slide-down" style={{ animation: 'slideDown 0.2s ease-out' }}>
               <nav aria-label={t('nav.aria.mobileNavigation')} className="flex flex-col gap-1">
-                <MobileNavLink href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.home') || 'Home'}
-                </MobileNavLink>
-                <MobileNavLink href="/shop" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.shop') || 'Shop'}
-                </MobileNavLink>
-
-                <MobileNavLink href="/calculator" onClick={() => setIsMobileMenuOpen(false)}>
-                  🧮 {t('nav.calculator') || 'Calculator'}
-                </MobileNavLink>
-                <MobileNavLink href="/lab-results" onClick={() => setIsMobileMenuOpen(false)}>
-                  🔬 {t('nav.labResults') || 'Lab Results'}
-                </MobileNavLink>
-                <MobileNavLink href="/learn" onClick={() => setIsMobileMenuOpen(false)}>
-                  📚 {t('nav.articles') || 'Articles'}
-                </MobileNavLink>
-                <MobileNavLink href="/faq" onClick={() => setIsMobileMenuOpen(false)}>
-                  ❓ {t('nav.faq') || 'FAQ'}
-                </MobileNavLink>
-                <MobileNavLink href="/rewards" onClick={() => setIsMobileMenuOpen(false)}>
-                  🎁 {t('nav.rewards') || 'Rewards'}
-                </MobileNavLink>
-                <MobileNavLink href="/contact" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.contact') || 'Contact'}
-                </MobileNavLink>
+                {(tenant.headerNav.length > 0 ? tenant.headerNav : DEFAULT_HEADER_NAV).map((item) => (
+                  <div key={item.href}>
+                    <MobileNavLink href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                      {item.label}
+                    </MobileNavLink>
+                    {item.type === 'dropdown' && item.children?.map((child) => (
+                      <MobileNavLink key={child.href} href={child.href} onClick={() => setIsMobileMenuOpen(false)} indent>
+                        {child.label}
+                      </MobileNavLink>
+                    ))}
+                  </div>
+                ))}
                 
                 {/* Mobile Currency Selector */}
                 <div className="border-t border-gray-100 pt-3 mt-2 mb-2" role="group" aria-label={t('nav.aria.currencySelector')}>
@@ -607,10 +583,6 @@ function DropdownItem({
       {children}
     </Link>
   );
-}
-
-function DropdownDivider() {
-  return <div className="border-t border-gray-100 my-1" />;
 }
 
 function IconButton({

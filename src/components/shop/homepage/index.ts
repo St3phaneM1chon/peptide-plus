@@ -1,0 +1,10 @@
+export { default as SectionRenderer } from './SectionRenderer';
+export { default as HeroSection } from './HeroSection';
+export { default as FeaturedProductsSection } from './FeaturedProductsSection';
+export { default as FeaturedCoursesSection } from './FeaturedCoursesSection';
+export { default as TestimonialsSection } from './TestimonialsSection';
+export { default as FeaturesSection } from './FeaturesSection';
+export { default as CTASection } from './CTASection';
+export { default as StatsSection } from './StatsSection';
+export { default as NewsletterSection } from './NewsletterSection';
+export { default as CustomHTMLSection } from './CustomHTMLSection';

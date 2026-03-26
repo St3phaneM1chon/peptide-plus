@@ -29,7 +29,15 @@ export default function FreeShippingBanner() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const freeShippingThreshold = 150; // CAD ($150 for peptides/accessories, $300 for lab supplies)
+  const freeShippingThreshold = tenant.freeShippingThreshold;
+
+  // If no threshold configured, hide the banner entirely
+  if (!freeShippingThreshold) {
+    return null;
+  }
+
+  // Pick first 2 trust badges for the banner (if available)
+  const bannerBadges = tenant.trustBadges.slice(0, 2);
 
   return (
     <div
@@ -45,20 +53,29 @@ export default function FreeShippingBanner() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
           </svg>
-          🚚 {t('shop.freeShipping')}
+          {t('shop.freeShipping')}
         </span>
         <span className="hidden sm:inline">|</span>
         <span>
-          {t('shop.freeShippingOver', { amount: formatPrice(freeShippingThreshold) }) || 
+          {t('shop.freeShippingOver', { amount: formatPrice(freeShippingThreshold) }) ||
            `Free shipping on orders over ${formatPrice(freeShippingThreshold)}`}
         </span>
-        <span className="hidden md:inline">|</span>
-        <span className="hidden md:flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          {t('shop.labTested')} • {t('shop.avgPurity')}
-        </span>
+        {bannerBadges.length > 0 && (
+          <>
+            <span className="hidden md:inline">|</span>
+            <span className="hidden md:flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              {bannerBadges.map((b, i) => (
+                <span key={i}>
+                  {i > 0 && ' \u2022 '}
+                  {b.icon ? `${b.icon} ` : ''}{b.label}
+                </span>
+              ))}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

@@ -7,6 +7,15 @@ import type { TestimonialData } from './HomePageClient';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getTenantBranding } from '@/lib/tenant-branding';
 import { headers } from 'next/headers';
+import { SectionRenderer } from '@/components/shop/homepage';
+import {
+  parseHomepageSections,
+  type HomepageSection,
+  type HomepageSectionData,
+  type FeaturedProductData,
+  type FeaturedCourseData,
+  type TestimonialDisplayData,
+} from '@/lib/homepage-sections';
 
 // Revalidate hero slides every 60 seconds (ISR) for fresh content without blocking render
 export const revalidate = 60;
@@ -43,6 +52,8 @@ export const metadata: Metadata = {
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/opengraph-image`],
   },
 };
+
+// ── Data Fetchers ────────────────────────────────────────────────────
 
 /** Fetch active hero slides server-side for instant LCP (no client-side loading flash). */
 async function getHeroSlides() {
@@ -152,17 +163,164 @@ async function getPublishedCourses() {
   }
 }
 
+// ── Dynamic Section Data Loaders ─────────────────────────────────────
+
+/** Load homepage sections config from SiteSetting key-value store. */
+async function getHomepageSections(): Promise<HomepageSection[]> {
+  try {
+    const setting = await prisma.siteSetting.findUnique({
+      where: { key: 'homepageSections' },
+    });
+    if (!setting?.value) return [];
+    const raw = JSON.parse(setting.value);
+    return parseHomepageSections(raw);
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch featured products for the section-based homepage. */
+async function getFeaturedProducts(limit: number): Promise<FeaturedProductData[]> {
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true, isFeatured: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        imageUrl: true,
+        isFeatured: true,
+        category: { select: { name: true } },
+        options: {
+          where: { isActive: true },
+          select: { price: true, comparePrice: true },
+          orderBy: { price: 'asc' },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    return products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      imageUrl: p.imageUrl,
+      price: p.options[0] ? Number(p.options[0].price) : 0,
+      compareAtPrice: p.options[0]?.comparePrice ? Number(p.options[0].comparePrice) : null,
+      isFeatured: p.isFeatured,
+      category: p.category?.name || null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch featured courses for the section-based homepage. */
+async function getFeaturedCourses(limit: number): Promise<FeaturedCourseData[]> {
+  try {
+    const courses = await prisma.course.findMany({
+      where: { status: 'PUBLISHED' },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        subtitle: true,
+        thumbnailUrl: true,
+        level: true,
+        isFree: true,
+        price: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    return courses.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      title: c.title,
+      subtitle: c.subtitle,
+      thumbnailUrl: c.thumbnailUrl,
+      level: c.level,
+      isFree: c.isFree,
+      price: c.price ? Number(c.price) : null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch testimonials for the section-based homepage (simplified display data). */
+async function getTestimonialsForSections(limit: number): Promise<TestimonialDisplayData[]> {
+  try {
+    const testimonials = await prisma.testimonial.findMany({
+      where: { isPublished: true },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        company: true,
+        content: true,
+        rating: true,
+        imageUrl: true,
+      },
+      orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
+      take: limit,
+    });
+    return testimonials;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Resolve all dynamic data needed by the configured sections.
+ * Only fetches data for section types actually present in the config.
+ */
+async function resolveSectionData(sections: HomepageSection[]): Promise<HomepageSectionData> {
+  const needsProducts = sections.some((s) => s.type === 'featured_products');
+  const needsCourses = sections.some((s) => s.type === 'featured_courses');
+  const needsTestimonials = sections.some((s) => s.type === 'testimonials');
+
+  // Determine limits from section configs (use largest if multiple sections of same type)
+  const productLimit = needsProducts
+    ? Math.max(
+        ...sections
+          .filter((s): s is Extract<HomepageSection, { type: 'featured_products' }> => s.type === 'featured_products')
+          .map((s) => s.limit || 6)
+      )
+    : 0;
+
+  const courseLimit = needsCourses
+    ? Math.max(
+        ...sections
+          .filter((s): s is Extract<HomepageSection, { type: 'featured_courses' }> => s.type === 'featured_courses')
+          .map((s) => s.limit || 6)
+      )
+    : 0;
+
+  const [products, courses, testimonials] = await Promise.all([
+    needsProducts ? getFeaturedProducts(productLimit) : Promise.resolve([]),
+    needsCourses ? getFeaturedCourses(courseLimit) : Promise.resolve([]),
+    needsTestimonials ? getTestimonialsForSections(6) : Promise.resolve([]),
+  ]);
+
+  return { products, courses, testimonials };
+}
+
+// ── Page Component ───────────────────────────────────────────────────
+
 export default async function HomePage() {
   const headersList = await headers();
   const tenantSlug = headersList.get('x-tenant-slug') || 'attitudes';
 
-  const [heroSlides, testimonials, branding, productCount, courseCount, lmsEnabled] = await Promise.all([
+  const [heroSlides, testimonials, branding, productCount, courseCount, lmsEnabled, homepageSections] = await Promise.all([
     getHeroSlides(),
     getTestimonials(),
     getTenantBranding(),
     getProductCount(),
     getCourseCount(),
     isModuleEnabled(tenantSlug, 'lms'),
+    getHomepageSections(),
   ]);
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
@@ -196,17 +354,31 @@ export default async function HomePage() {
   };
 
   // ---------------------------------------------------------------------------
-  // Dynamic Homepage: Choose the right layout based on tenant content
+  // Dynamic Homepage: Section-based engine with fallback
   // ---------------------------------------------------------------------------
-  // 1. Tenant has products → full shop homepage (existing)
-  // 2. Tenant has courses but no products → learning-focused homepage
-  // 3. Tenant has neither → clean branded welcome page
+  // Priority 1: If homepageSections are configured in SiteSetting → render them
+  // Priority 2: Tenant has no content → clean branded welcome page
+  // Priority 3: Courses-only tenant → learning-focused homepage
+  // Priority 4: Legacy fallback → existing HomePageClient (deprecated)
   // ---------------------------------------------------------------------------
 
   const hasProducts = productCount > 0;
   const hasCourses = lmsEnabled && courseCount > 0;
 
-  // Case 3: No products AND no courses → clean welcome page
+  // Priority 1: Dynamic section-based homepage (new engine)
+  if (homepageSections.length > 0) {
+    const sectionData = await resolveSectionData(homepageSections);
+    return (
+      <>
+        <JsonLd data={organizationSchema} />
+        <JsonLd data={webSiteSchema} />
+        <h1 className="sr-only">{tenantName}</h1>
+        <SectionRenderer sections={homepageSections} data={sectionData} />
+      </>
+    );
+  }
+
+  // Priority 2: No products AND no courses → clean welcome page
   if (!hasProducts && !hasCourses) {
     return (
       <>
@@ -218,7 +390,7 @@ export default async function HomePage() {
     );
   }
 
-  // Case 2: Courses but no products → learning-focused homepage
+  // Priority 3: Courses but no products → learning-focused homepage
   if (!hasProducts && hasCourses) {
     const courses = await getPublishedCourses();
     return (
@@ -231,7 +403,7 @@ export default async function HomePage() {
     );
   }
 
-  // Case 1: Has products → full shop homepage
+  // Priority 4: Legacy fallback — has products but no sections configured (deprecated)
   return (
     <>
       <JsonLd data={organizationSchema} />

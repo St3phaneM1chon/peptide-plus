@@ -4,10 +4,19 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, ShoppingCart, Package, Bell, Lock, Link2,
   Save, Monitor, LogOut, Smartphone, Globe,
-  Mail, AlertTriangle, TrendingUp, Users,
+  Mail, AlertTriangle, TrendingUp, Users, Navigation,
 } from 'lucide-react';
 import { Button, FormField, Input, MediaUploader } from '@/components/admin';
 import ThemeToggle from '@/components/admin/ThemeToggle';
+import {
+  HeaderNavEditor,
+  FooterNavEditor,
+  TrustBadgesEditor,
+  FooterContentEditor,
+  type HeaderNavItem,
+  type FooterColumn,
+  type TrustBadge,
+} from '@/components/admin/NavigationEditor';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -75,6 +84,13 @@ export default function ParametresPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('general');
+
+  // ─── Navigation & content state ────────────────────────────
+  const [headerNav, setHeaderNav] = useState<HeaderNavItem[]>([]);
+  const [footerNav, setFooterNav] = useState<FooterColumn[]>([]);
+  const [trustBadges, setTrustBadges] = useState<TrustBadge[]>([]);
+  const [companyDescription, setCompanyDescription] = useState('');
+  const [disclaimerContent, setDisclaimerContent] = useState('');
 
   // ─── Session management state ──────────────────────────────
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([
@@ -165,6 +181,13 @@ export default function ParametresPage() {
         sessionTimeout: parseInt(getSettingValue(kv, 'sessionTimeout', '30')) || 30,
         maxLoginAttempts: parseInt(getSettingValue(kv, 'maxLoginAttempts', '5')) || 5,
       });
+
+      // Load navigation & content data
+      if (Array.isArray(ss.headerNav)) setHeaderNav(ss.headerNav);
+      if (Array.isArray(ss.footerNav)) setFooterNav(ss.footerNav);
+      if (Array.isArray(ss.trustBadges)) setTrustBadges(ss.trustBadges);
+      if (ss.companyDescription) setCompanyDescription(ss.companyDescription);
+      if (ss.disclaimerContent) setDisclaimerContent(ss.disclaimerContent);
     } catch (err) {
       console.error('Error loading settings:', err);
     }
@@ -190,6 +213,11 @@ export default function ParametresPage() {
             phone: settings.phone,
             defaultCurrency: settings.currency,
             freeShippingThreshold: settings.freeShippingThreshold,
+            headerNav,
+            footerNav,
+            trustBadges,
+            companyDescription,
+            disclaimerContent,
           },
           settings: [
             { key: 'timezone', value: settings.timezone, module: 'general', type: 'text' },
@@ -322,6 +350,7 @@ export default function ParametresPage() {
     { id: 'general', label: t('admin.settingsPage.general'), icon: Settings },
     { id: 'store', label: t('admin.settingsPage.store'), icon: ShoppingCart },
     { id: 'orders', label: t('admin.settingsPage.orders'), icon: Package },
+    { id: 'navigation', label: t('admin.settingsPage.navigation') || 'Navigation & Contenu', icon: Navigation },
     { id: 'notifications', label: t('admin.settingsPage.notifications'), icon: Bell },
     { id: 'notifPrefs', label: 'Alertes admin', icon: Mail },
     { id: 'security', label: t('admin.settingsPage.security'), icon: Lock },
@@ -524,6 +553,36 @@ export default function ParametresPage() {
                   <span className="text-slate-700">{t('admin.settingsPage.guestCheckout')}</span>
                 </label>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Navigation & Contenu ─────────────────────────────── */}
+        {activeSection === 'navigation' && (
+          <div className="space-y-6">
+            {/* Header Navigation */}
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+              <HeaderNavEditor items={headerNav} onChange={setHeaderNav} />
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+              <FooterNavEditor columns={footerNav} onChange={setFooterNav} />
+            </div>
+
+            {/* Trust Badges */}
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+              <TrustBadgesEditor badges={trustBadges} onChange={setTrustBadges} />
+            </div>
+
+            {/* Footer Content (Description + Disclaimer) */}
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+              <FooterContentEditor
+                companyDescription={companyDescription}
+                disclaimerContent={disclaimerContent}
+                onChangeDescription={setCompanyDescription}
+                onChangeDisclaimer={setDisclaimerContent}
+              />
             </div>
           </div>
         )}

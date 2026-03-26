@@ -1,185 +1,174 @@
-'use client';
+export const revalidate = 300; // ISR: revalidate every 5 minutes
 
+import { Metadata } from 'next';
 import Link from 'next/link';
-import { useI18n } from '@/i18n/client';
+import { getContentPage, getSiteSettings } from '@/lib/content-pages';
 
-/**
- * PAGE À PROPOS - BioCycle Peptides
- * i18n-enabled with 22 locales
- */
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
 
-export default function AboutPage() {
-  const { t } = useI18n();
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getContentPage('about');
+  return {
+    title: page?.metaTitle || `About - ${siteName}`,
+    description: page?.metaDescription || `Learn more about ${siteName}.`,
+    alternates: { canonical: `${appUrl}/a-propos` },
+  };
+}
+
+export default async function AboutPage() {
+  const [page, settings] = await Promise.all([
+    getContentPage('about'),
+    getSiteSettings(),
+  ]);
+
+  const companyName = settings.companyName;
 
   return (
-    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
+    <div className="min-h-screen" style={{ background: 'var(--k-bg, #0a0a0f)' }}>
       {/* Hero Section */}
-      <div style={{
-        background: '#143C78',
-        color: 'white',
-        padding: '80px 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 className="font-heading" style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
-            {t('about.heroTitle')}
+      <section
+        className="py-20 text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(59,130,246,0.10) 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1
+            className="font-heading text-4xl md:text-5xl font-bold mb-6"
+            style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}
+          >
+            {page?.title || companyName}
           </h1>
-          <p style={{ fontSize: '18px', lineHeight: 1.7, color: '#d1d5db' }}>
-            {t('about.heroDescription')}
-          </p>
+          {page?.excerpt && (
+            <p
+              className="text-lg"
+              style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))', lineHeight: '1.8' }}
+            >
+              {page.excerpt}
+            </p>
+          )}
         </div>
-      </div>
+      </section>
 
-      {/* Main Content */}
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '64px 24px' }}>
-        {/* Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '32px',
-          marginBottom: '64px',
-          textAlign: 'center'
-        }}>
-          <StatCard number="99%+" label={t('about.statPurity')} />
-          <StatCard number="500+" label={t('about.statProducts')} />
-          <StatCard number="10K+" label={t('about.statResearchers')} />
-          <StatCard number="24-48h" label={t('about.statShipping')} />
-        </div>
-
-        {/* Notre histoire */}
-        <section style={{ marginBottom: '64px' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '24px', color: '#1f2937' }}>
-            {t('about.historyTitle')}
-          </h2>
-          <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#4b5563', marginBottom: '16px' }}>
-            {t('about.historyP1')}
-          </p>
-          <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#4b5563', marginBottom: '16px' }}>
-            {t('about.historyP2')}
-          </p>
-          <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#4b5563' }}>
-            {t('about.historyP3')}
-          </p>
-        </section>
-
-        {/* Notre engagement */}
-        <section style={{ marginBottom: '64px' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '24px', color: '#1f2937' }}>
-            {t('about.qualityTitle')}
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            <FeatureCard
-              icon="🔬"
-              title={t('about.labTestsTitle')}
-              description={t('about.labTestsDescription')}
-            />
-            <FeatureCard
-              icon="📋"
-              title={t('about.coaTitle')}
-              description={t('about.coaDescription')}
-            />
-            <FeatureCard
-              icon="❄️"
-              title={t('about.coldChainTitle')}
-              description={t('about.coldChainDescription')}
-            />
-            <FeatureCard
-              icon="🛡️"
-              title={t('about.complianceTitle')}
-              description={t('about.complianceDescription')}
-            />
-          </div>
-        </section>
-
-        {/* Navigation vers autres pages */}
-        <section style={{
-          padding: '40px',
-          backgroundColor: '#f9fafb',
-          borderRadius: '16px',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: '#1f2937' }}>
-            {t('about.learnMoreTitle')}
-          </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
-            <NavLink href="/a-propos/mission">{t('about.missionLink')}</NavLink>
-            <NavLink href="/a-propos/valeurs">{t('about.valuesLink')}</NavLink>
-            <NavLink href="/a-propos/histoire">{t('about.historyLink')}</NavLink>
-            <NavLink href="/a-propos/engagements">{t('about.commitmentsLink')}</NavLink>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section style={{ marginTop: '64px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '16px', color: '#1f2937' }}>
-            {t('about.ctaTitle')}
-          </h2>
-          <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '24px' }}>
-            {t('about.ctaDescription')}
-          </p>
-          <Link
-            href="/shop"
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {page ? (
+          /* DB content found -- render admin-authored HTML */
+          <div
+            className="rounded-2xl p-8 md:p-12"
             style={{
-              display: 'inline-block',
-              padding: '14px 32px',
-              backgroundColor: '#238838',
-              color: 'white',
-              borderRadius: '8px',
-              fontWeight: 600,
-              textDecoration: 'none'
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
             }}
           >
-            {t('about.ctaButton')} →
+            <div
+              className="prose prose-invert max-w-none"
+              style={{
+                color: 'var(--k-text-primary, rgba(255,255,255,0.95))',
+                lineHeight: '1.8',
+              }}
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+            {page.updatedAt && (
+              <p
+                className="text-sm mt-8 pt-4 text-center"
+                style={{
+                  color: 'var(--k-text-tertiary, rgba(255,255,255,0.40))',
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                Last updated: {new Date(page.updatedAt).toLocaleDateString('fr-CA')}
+              </p>
+            )}
+          </div>
+        ) : (
+          /* No DB content -- show branded "coming soon" page */
+          <div
+            className="rounded-2xl p-12 text-center"
+            style={{
+              background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            <div className="text-5xl mb-6">🏢</div>
+            <h2
+              className="text-2xl font-bold mb-4"
+              style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}
+            >
+              {companyName}
+            </h2>
+            <p
+              className="text-lg mb-8 max-w-lg mx-auto"
+              style={{ color: 'var(--k-text-secondary, rgba(255,255,255,0.60))' }}
+            >
+              {settings.companyDescription || `Welcome to ${companyName}. Our about page is being prepared.`}
+            </p>
+            <Link
+              href="/contact"
+              className="inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-colors"
+              style={{
+                background: 'var(--k-accent, #6366f1)',
+                color: '#fff',
+              }}
+            >
+              Contact Us
+            </Link>
+          </div>
+        )}
+
+        {/* Sub-page navigation -- always visible */}
+        <div
+          className="mt-8 rounded-2xl p-6 text-center"
+          style={{
+            background: 'var(--k-glass-thin, rgba(255,255,255,0.05))',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <h3
+            className="text-lg font-semibold mb-4"
+            style={{ color: 'var(--k-text-primary, rgba(255,255,255,0.95))' }}
+          >
+            Learn More
+          </h3>
+          <div className="flex flex-wrap justify-center gap-3">
+            <AboutNavLink href="/a-propos/mission">Mission</AboutNavLink>
+            <AboutNavLink href="/a-propos/valeurs">Values</AboutNavLink>
+            <AboutNavLink href="/a-propos/histoire">History</AboutNavLink>
+            <AboutNavLink href="/a-propos/engagements">Commitments</AboutNavLink>
+            <AboutNavLink href="/a-propos/equipe">Team</AboutNavLink>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/shop"
+            className="inline-flex items-center px-8 py-3.5 rounded-xl font-semibold text-lg transition-colors"
+            style={{
+              background: 'var(--k-accent, #6366f1)',
+              color: '#fff',
+            }}
+          >
+            Explore Our Products
           </Link>
-        </section>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ number, label }: { number: string; label: string }) {
-  return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ fontSize: '36px', fontWeight: 700, color: '#238838', marginBottom: '8px' }}>
-        {number}
-      </div>
-      <div style={{ fontSize: '14px', color: '#6b7280' }}>{label}</div>
-    </div>
-  );
-}
-
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div style={{
-      padding: '24px',
-      backgroundColor: '#f9fafb',
-      borderRadius: '12px',
-      border: '1px solid #e5e7eb'
-    }}>
-      <div style={{ fontSize: '32px', marginBottom: '16px' }}>{icon}</div>
-      <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
-        {title}
-      </h3>
-      <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#6b7280' }}>
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function AboutNavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
+      className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
       style={{
-        padding: '12px 24px',
-        backgroundColor: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        color: '#374151',
-        textDecoration: 'none',
-        fontWeight: 500,
-        transition: 'all 0.2s'
+        background: 'var(--k-glass-regular, rgba(255,255,255,0.08))',
+        color: 'var(--k-text-secondary, rgba(255,255,255,0.60))',
+        border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
       {children}

@@ -50,10 +50,22 @@ export default function Footer() {
     }, 5000);
   };
 
+  // Build location string from SiteSettings fields
+  const locationParts = [tenant.city, tenant.province, tenant.country].filter(Boolean);
+  const locationStr = locationParts.length > 0 ? locationParts.join(', ') : '';
+
   return (
     <footer className="bg-navy-900 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <div className={`grid grid-cols-2 md:grid-cols-3 gap-8 ${
+          tenant.footerNav.length > 0
+            ? tenant.footerNav.length <= 2
+              ? 'lg:grid-cols-4'
+              : tenant.footerNav.length <= 4
+                ? 'lg:grid-cols-6'
+                : 'lg:grid-cols-' + Math.min(tenant.footerNav.length + 2, 8)
+            : 'lg:grid-cols-6'
+        }`}>
           {/* Logo & Info — uses tenant branding */}
           <div className="col-span-2">
             <div className="mb-4">
@@ -71,104 +83,47 @@ export default function Footer() {
                 </span>
               )}
             </div>
-            <p className="text-neutral-300 text-sm leading-relaxed mb-4">
-              {t('footer.description')}
-            </p>
-            <p className="text-neutral-300 text-sm">
-              📍 {t('footer.location') || 'Montréal, Québec, Canada'}
-            </p>
+            {tenant.companyDescription && (
+              <p className="text-neutral-300 text-sm leading-relaxed mb-4">
+                {tenant.companyDescription}
+              </p>
+            )}
+            {locationStr && (
+              <p className="text-neutral-300 text-sm">
+                {locationStr}
+              </p>
+            )}
+            {tenant.phone && (
+              <p className="text-neutral-300 text-sm mt-1">
+                {tenant.phone}
+              </p>
+            )}
 
-            {/* Trust Badges */}
-            <div className="flex items-center gap-4 mt-4 text-xs text-neutral-300">
-              <span>✓ {t('footer.trustPurity')}</span>
-              <span>✓ {t('footer.trustLabTested')}</span>
-              <span>✓ {t('footer.trustMadeInCanada')}</span>
-            </div>
+            {/* Trust Badges — dynamic from SiteSettings */}
+            {tenant.trustBadges.length > 0 && (
+              <div className="flex items-center gap-4 mt-4 text-xs text-neutral-300">
+                {tenant.trustBadges.map((badge, i) => (
+                  <span key={i}>{badge.icon ? `${badge.icon} ` : ''}{badge.label}</span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Shop — generic links (categories are tenant-specific) */}
-          <nav aria-label={t('footer.aria.shopLinks')}>
-            <h3 className="font-bold mb-4 text-white">{t('footer.shop') || 'Shop'}</h3>
-            <ul className="space-y-2 text-neutral-300 text-sm">
-              <li>
-                <Link href="/shop" className="hover:text-white transition-colors">{t('nav.allProducts') || 'All Products'}</Link>
-              </li>
-              <li>
-                <Link href="/shop?sort=newest" className="hover:text-white transition-colors">{t('nav.newArrivals') || 'New Arrivals'}</Link>
-              </li>
-              <li>
-                <Link href="/shop?sort=bestselling" className="hover:text-white transition-colors">{t('nav.bestsellers') || 'Bestsellers'}</Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Resources */}
-          <nav aria-label={t('footer.aria.resourcesLinks')}>
-            <h3 className="font-bold mb-4 text-white">{t('footer.resources') || 'Resources'}</h3>
-            <ul className="space-y-2 text-neutral-300 text-sm">
-              <li>
-                <Link href="/learn" className="hover:text-white transition-colors">{t('nav.learn') || 'Learning Center'}</Link>
-              </li>
-              <li>
-                <Link href="/videos" className="hover:text-white transition-colors">{t('nav.videos') || 'Video Tutorials'}</Link>
-              </li>
-              <li>
-                <Link href="/webinars" className="hover:text-white transition-colors">{t('nav.webinars') || 'Webinars'}</Link>
-              </li>
-              <li>
-                <Link href="/lab-results" className="hover:text-white transition-colors">{t('nav.labResults') || 'Lab Results'}</Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:text-white transition-colors">{t('nav.faq') || 'FAQ'}</Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Community */}
-          <nav aria-label={t('footer.aria.communityLinks')}>
-            <h3 className="font-bold mb-4 text-white">{t('footer.community') || 'Community'}</h3>
-            <ul className="space-y-2 text-neutral-300 text-sm">
-              <li>
-                <Link href="/rewards" className="hover:text-primary-400 transition-colors flex items-center gap-1">
-                  🎁 {t('nav.rewards') || 'Rewards Program'}
-                </Link>
-              </li>
-              <li>
-                <Link href="/subscriptions" className="hover:text-white transition-colors">{t('nav.subscriptions') || 'Subscribe & Save'}</Link>
-              </li>
-              <li>
-                <Link href="/community" className="hover:text-white transition-colors">{t('nav.community') || 'Forum'}</Link>
-              </li>
-              <li>
-                <Link href="/ambassador" className="hover:text-white transition-colors">{t('nav.ambassador') || 'Become Ambassador'}</Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Support */}
-          <nav aria-label={t('footer.aria.supportLinks')}>
-            <h3 className="font-bold mb-4 text-white">{t('footer.customerService') || 'Support'}</h3>
-            <ul className="space-y-2 text-neutral-300 text-sm">
-              <li>
-                <Link href="/contact" className="hover:text-white transition-colors">{t('nav.contact') || 'Contact Us'}</Link>
-              </li>
-              <li>
-                <Link href="/track-order" className="hover:text-white transition-colors">{t('nav.trackOrder') || 'Track Order'}</Link>
-              </li>
-              <li>
-                <Link href="/shipping-policy" className="hover:text-white transition-colors">{t('nav.shippingPolicy') || 'Shipping Policy'}</Link>
-              </li>
-              <li>
-                <Link href="/refund-policy" className="hover:text-white transition-colors">{t('nav.refundPolicy') || 'Refund Policy'}</Link>
-              </li>
-              <li>
-                <Link href="/mentions-legales/conditions" className="hover:text-white transition-colors">{t('footer.terms') || 'Terms & Conditions'}</Link>
-              </li>
-              <li>
-                <Link href="/mentions-legales/confidentialite" className="hover:text-white transition-colors">{t('footer.privacy') || 'Privacy Policy'}</Link>
-              </li>
-            </ul>
-          </nav>
+          {/* Dynamic footer columns from SiteSettings footerNav */}
+          {tenant.footerNav.map((column, idx) => (
+            <nav key={idx} aria-label={column.title}>
+              <h3 className="font-bold mb-4 text-white">{column.title}</h3>
+              <ul className="space-y-2 text-neutral-300 text-sm">
+                {column.links.map((link, linkIdx) => (
+                  <li key={linkIdx}>
+                    <Link href={link.href} className="hover:text-white transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
 
         {/* Newsletter Section */}
@@ -215,19 +170,23 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Disclaimer */}
+        {/* Disclaimer — dynamic from SiteSettings */}
         <div className="mt-8 pt-8 border-t border-neutral-800">
-          <p className="text-xs text-neutral-300 leading-relaxed mb-4">
-            <strong className="text-primary-400">DISCLAIMER:</strong> {t('disclaimer.text') || 'All products are intended for laboratory and research use only. Not for human consumption. Products have not been evaluated by Health Canada or the FDA. Purchasers must be 18+ years of age. By using this website, you agree that these products are being purchased for research purposes only.'}
-          </p>
+          {tenant.disclaimerText && (
+            <p className="text-xs text-neutral-300 leading-relaxed mb-4">
+              <strong className="text-primary-400">DISCLAIMER:</strong> {tenant.disclaimerText}
+            </p>
+          )}
 
-          {/* Company Legal Identification — tenant name used */}
-          <div className="mb-4 text-xs text-neutral-300 leading-relaxed">
-            <p className="font-semibold text-neutral-200 mb-1">{t('footer.companyInfo')}</p>
-            <p>{tenant.name}</p>
-            <p>{t('footer.companyAddress')}</p>
-            <p>{t('footer.companyPhone')}</p>
-          </div>
+          {/* Company Legal Identification — from SiteSettings */}
+          {(tenant.name || tenant.address || tenant.phone) && (
+            <div className="mb-4 text-xs text-neutral-300 leading-relaxed">
+              <p className="font-semibold text-neutral-200 mb-1">{tenant.name}</p>
+              {tenant.address && <p>{tenant.address}</p>}
+              {locationStr && <p>{locationStr}</p>}
+              {tenant.phone && <p>{tenant.phone}</p>}
+            </div>
+          )}
 
           {/* Payment Methods */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
