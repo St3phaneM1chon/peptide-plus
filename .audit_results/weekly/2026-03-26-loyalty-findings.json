@@ -1,0 +1,23 @@
+{
+  "domain": "loyalty",
+  "date": "2026-03-26",
+  "score": 42,
+  "grade": "F",
+  "functionsAudited": 35,
+  "findings": [
+    {"id": "LOY-F1", "severity": "high", "title": "Referral milestone TOCTOU double-award (up to 43K pts)", "file": "src/lib/loyalty/referral-milestones.ts", "line": 68, "cweId": "CWE-367", "confidence": 0.90, "status": "open"},
+    {"id": "LOY-F2", "severity": "high", "title": "EMPLOYEE creates unlimited active gift cards without payment", "file": "src/app/api/gift-cards/route.ts", "line": 235, "cweId": "CWE-269", "confidence": 0.85, "status": "open"},
+    {"id": "LOY-F3", "severity": "high", "title": "Admin awards points to own account (self-enrichment)", "file": "src/app/api/loyalty/earn/route.ts", "line": 76, "cweId": "CWE-269", "confidence": 0.90, "status": "open"},
+    {"id": "LOY-F4", "severity": "critical", "title": "PURCHASE earn accepts arbitrary amount, no order verification", "file": "src/app/api/loyalty/earn/route.ts", "line": 103, "cweId": "CWE-345", "confidence": 0.95, "status": "open"},
+    {"id": "LOY-F5", "severity": "medium", "title": "Gift card balance leaks expiresAt for valid cards", "file": "src/app/api/gift-cards/balance/route.ts", "line": 77, "cweId": "CWE-203", "confidence": 0.85, "status": "open"},
+    {"id": "LOY-F6", "severity": "medium", "title": "Admin points adjustment TOCTOU on balance check", "file": "src/app/api/admin/users/[id]/points/route.ts", "line": 44, "cweId": "CWE-367", "confidence": 0.85, "status": "open"},
+    {"id": "LOY-F7", "severity": "medium", "title": "No self-referral prevention", "file": "src/lib/referral-qualify.ts", "line": 37, "cweId": "CWE-837", "confidence": 0.75, "status": "open"},
+    {"id": "LOY-F8", "severity": "medium", "title": "Promo code from redemption not bound to user", "file": "src/app/api/loyalty/redeem/route.ts", "line": 161, "cweId": "CWE-284", "confidence": 0.90, "status": "open"},
+    {"id": "LOY-F9", "severity": "medium", "title": "Config write ignored by earn endpoint (hardcoded constants)", "file": "src/app/api/admin/loyalty/config/route.ts", "line": 125, "cweId": "CWE-1295", "confidence": 0.95, "status": "open"},
+    {"id": "LOY-F10", "severity": "medium", "title": "CSRF blocks webhook gift card activation", "file": "src/app/api/gift-cards/activate/route.ts", "line": 55, "cweId": "CWE-863", "confidence": 0.90, "status": "open"},
+    {"id": "LOY-F11", "severity": "low", "title": "Birthday cron bypasses earning caps", "file": "src/app/api/cron/birthday-bonus/route.ts", "line": 228, "cweId": "CWE-799", "confidence": 0.70, "status": "open"},
+    {"id": "LOY-F12", "severity": "medium", "title": "Review dedup uses description substring, bypassable", "file": "src/app/api/loyalty/earn/route.ts", "line": 137, "cweId": "CWE-20", "confidence": 0.85, "status": "open"},
+    {"id": "LOY-F13", "severity": "low", "title": "GET /api/loyalty has write side effects", "file": "src/app/api/loyalty/route.ts", "line": 71, "cweId": "CWE-362", "confidence": 0.80, "status": "open"}
+  ],
+  "criticals": 1, "highs": 3, "mediums": 7, "lows": 2
+}

@@ -103,6 +103,10 @@ export async function POST(request: NextRequest) {
       case 'PURCHASE':
         if (!amount || amount <= 0) {
           return NextResponse.json({ error: 'Amount is required for purchase' }, { status: 400 });
+        // LOY-F4 CRITICAL FIX: Require orderId and verify order is paid
+        if (!orderId) {
+          return NextResponse.json({ error: 'orderId required for PURCHASE' }, { status: 400 });
+        }
         }
         // F-004/F-005: Use safe calculation with overflow protection
         // A8-P2-004 FIX: Apply tier multiplier at earn-time

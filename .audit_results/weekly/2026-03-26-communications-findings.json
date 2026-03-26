@@ -1,0 +1,21 @@
+{
+  "domain": "communications",
+  "date": "2026-03-26",
+  "score": 77,
+  "grade": "C",
+  "functionsAudited": 30,
+  "findings": [
+    {"id": "COMM-F1", "severity": "high", "title": "Open redirect via click tracking with invalid eid", "file": "src/app/api/tracking/click/route.ts", "line": 68, "cweId": "CWE-601", "confidence": 0.90, "status": "open"},
+    {"id": "COMM-F2", "severity": "high", "title": "personalizeContent injects unescaped values into HTML", "file": "src/lib/email/dynamic-content.ts", "line": 61, "cweId": "CWE-79", "confidence": 0.90, "status": "open"},
+    {"id": "COMM-F3", "severity": "medium", "title": "Mailing list unsubscribe GET mutates state (CSRF)", "file": "src/app/api/mailing-list/unsubscribe/route.ts", "line": 23, "cweId": "CWE-352", "confidence": 0.80, "status": "open"},
+    {"id": "COMM-F4", "severity": "medium", "title": "Tracking HMAC non-constant-time comparison", "file": "src/lib/email/tracking.ts", "line": 70, "cweId": "CWE-208", "confidence": 0.85, "status": "open"},
+    {"id": "COMM-F5", "severity": "medium", "title": "Chat message CSRF log-only not enforced", "file": "src/app/api/chat/message/route.ts", "line": 50, "cweId": "CWE-352", "confidence": 0.80, "status": "open"},
+    {"id": "COMM-F6", "severity": "medium", "title": "Social link URLs in base template not escaped", "file": "src/lib/email/templates/base-template.ts", "line": 143, "cweId": "CWE-79", "confidence": 0.85, "status": "open"},
+    {"id": "COMM-F7", "severity": "medium", "title": "Admin reply htmlBody stored/sent without sanitization", "file": "src/app/api/admin/emails/inbox/[id]/reply/route.ts", "line": 84, "cweId": "CWE-79", "confidence": 0.85, "status": "open"},
+    {"id": "COMM-F8", "severity": "medium", "title": "Mobile email send passes raw bodyHtml", "file": "src/app/api/email/send/route.ts", "line": 62, "cweId": "CWE-79", "confidence": 0.80, "status": "open"},
+    {"id": "COMM-F9", "severity": "low", "title": "Chat creation CSRF bypass for visitors", "file": "src/app/api/chat/route.ts", "line": 129, "cweId": "CWE-352", "confidence": 0.70, "status": "open"},
+    {"id": "COMM-F10", "severity": "low", "title": "Marketing email log leaks full email address", "file": "src/app/api/emails/send-marketing-email/route.ts", "line": 235, "cweId": "CWE-532", "confidence": 0.90, "status": "open"},
+    {"id": "COMM-F11", "severity": "low", "title": "GDPR delete logs email being deleted", "file": "src/app/api/admin/emails/gdpr-delete/route.ts", "line": 117, "cweId": "CWE-532", "confidence": 0.95, "status": "open"}
+  ],
+  "criticals": 0, "highs": 2, "mediums": 6, "lows": 3
+}

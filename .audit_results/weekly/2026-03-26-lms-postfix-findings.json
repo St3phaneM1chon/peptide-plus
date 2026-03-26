@@ -1,0 +1,15 @@
+{
+  "domain": "lms",
+  "date": "2026-03-26",
+  "score": 85,
+  "grade": "B",
+  "functionsAudited": 30,
+  "findings": [
+    {"id": "LMS2-F1", "severity": "high", "title": "Prompt injection bypass: 4 XML tags missing from sanitizer", "file": "src/lib/lms/tutor-service.ts", "line": 1460, "cweId": "CWE-77", "confidence": 0.90, "status": "fixed"},
+    {"id": "LMS2-F2", "severity": "high", "title": "resolvePricing missing tenantId in checkout (cross-tenant)", "file": "src/app/api/lms/checkout/route.ts", "line": 88, "cweId": "CWE-863", "confidence": 0.85, "status": "fixed"},
+    {"id": "LMS2-F3", "severity": "medium", "title": "enrollUserInBundle not in $transaction (race condition)", "file": "src/lib/lms/lms-service.ts", "line": 924, "cweId": "CWE-362", "confidence": 0.85, "status": "open"},
+    {"id": "LMS2-F4", "severity": "medium", "title": "Tutor daily limit reset+increment not atomic", "file": "src/lib/lms/tutor-service.ts", "line": 1062, "cweId": "CWE-362", "confidence": 0.80, "status": "open"},
+    {"id": "LMS2-F5", "severity": "low", "title": "Zod error details leaked in tutor chat route", "file": "src/app/api/lms/tutor/chat/route.ts", "line": 74, "cweId": "CWE-209", "confidence": 0.90, "status": "open"}
+  ],
+  "criticals": 0, "highs": 2, "mediums": 2, "lows": 1
+}

@@ -51,13 +51,7 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    // CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    // PAY-F5 FIX: Use timing-safe comparison to prevent side-channel attack
+    // LOY-F10 FIX: Check internal secret FIRST (webhooks don't have CSRF tokens)
     const authHeader = request.headers.get('x-internal-secret') ?? '';
     const headerBuf = Buffer.from(authHeader);
     const secretBuf = Buffer.from(INTERNAL_SECRET);

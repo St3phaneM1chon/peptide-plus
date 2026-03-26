@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
     // Decode and verify the tracking ID
     const emailLogId = decodeTrackingId(eid);
     if (!emailLogId) {
-      // Invalid tracking ID - still redirect to avoid breaking the user experience
-      return NextResponse.redirect(url, 302);
+      // COMM-F1 FIX: Don't redirect to attacker-controlled URL on invalid tracking ID
+      return NextResponse.redirect(new URL('/', request.url), 302);
     }
 
     // Record the click event (non-blocking - redirect immediately)

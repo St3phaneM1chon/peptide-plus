@@ -58,10 +58,15 @@ export function generateSocialProofHTML(count: number, productName: string): str
 </div>`;
 }
 
+// COMM-F2 FIX: HTML-escape all variable values before replacement
+function escapeHtmlValue(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export function personalizeContent(template: string, variables: Record<string, string>): string {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), escapeHtmlValue(value));
   }
   return result;
 }
