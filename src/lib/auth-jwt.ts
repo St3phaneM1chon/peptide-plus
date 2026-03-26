@@ -39,11 +39,32 @@ export async function generateToken(
 }
 
 /**
- * Verify and decode a JWT token.
+ * AUTH-F2 FIX: Generate a limited-scope MFA challenge token.
+ * This token can ONLY be used at /api/auth/mfa/verify — not for general API access.
  */
-export async function verifyToken(token: string) {
+export async function generateMfaChallengeToken(
+  userId: string,
+  email: string
+): Promise<string> {
+  return await new SignJWT({ sub: userId, email, purpose: 'mfa-challenge' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('5m') // Short-lived: 5 minutes to complete MFA
+    .sign(getJwtSecret());
+}
+
+/**
+ * Verify and decode a JWT token.
+ * If requireFullAccess is true, rejects tokens with purpose='mfa-challenge'.
+ */
+export async function verifyToken(token: string, options?: { requireFullAccess?: boolean }) {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
+    // AUTH-F2 FIX: Reject MFA challenge tokens when full access is required
+    if (options?.requireFullAccess && payload.purpose === 'mfa-challenge') {
+      logger.warn('MFA challenge token used where full access required');
+      return null;
+    }
     return payload;
   } catch (error) {
     logger.warn('JWT verification failed', {

@@ -100,18 +100,27 @@ export async function POST(request: NextRequest) {
     // Success — clear brute-force counter
     await clearFailedAttempts(normalizedEmail);
 
-    // C-01 + C-04 FIX: Shared JWT module (no fallback secret, 1h expiry)
-    const token = await generateToken(user.id, user.email, user.role);
+    // AUTH-F2 FIX: Issue limited MFA challenge token when MFA is enabled
+    // (was issuing full JWT before MFA verification — complete MFA bypass)
+    if (user.mfaEnabled) {
+      const { generateMfaChallengeToken } = await import('@/lib/auth-jwt');
+      const mfaToken = await generateMfaChallengeToken(user.id, user.email);
+      logger.info('MFA challenge issued', { userId: user.id, ip });
+      return NextResponse.json({
+        mfaToken,
+        requiresMfa: true,
+        user: formatUser(user),
+      });
+    }
 
-    logger.info('Direct API login success', {
-      userId: user.id,
-      ip,
-    });
+    // No MFA required — issue full access token
+    const token = await generateToken(user.id, user.email, user.role);
+    logger.info('Direct API login success', { userId: user.id, ip });
 
     return NextResponse.json({
       token,
       user: formatUser(user),
-      requiresMfa: user.mfaEnabled || false,
+      requiresMfa: false,
     });
   } catch (error) {
     logger.error('[API] /auth/login error', {
