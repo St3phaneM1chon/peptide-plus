@@ -39,6 +39,7 @@ const createPipelineSchema = z.object({
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
+    // CRM-F15 FIX: Add safety cap (was unlimited)
     const pipelines = await prisma.crmPipeline.findMany({
       include: {
         stages: {
@@ -46,6 +47,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
         },
       },
       orderBy: { createdAt: 'asc' },
+      take: 100,
     });
 
     return apiSuccess(pipelines, { request });
