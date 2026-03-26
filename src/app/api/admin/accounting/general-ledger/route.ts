@@ -118,21 +118,17 @@ export const GET = withAdminGuard(async (request) => {
         }
       }
 
-      const priorLines = await prisma.journalLine.findMany({
+      // ACCT-F5 FIX: Use aggregate instead of loading all lines into memory
+      const agg = await prisma.journalLine.aggregate({
         where: priorWhere,
-        select: { debit: true, credit: true },
+        _sum: { debit: true, credit: true },
       });
 
-      for (const pl of priorLines) {
-        const debit = Number(pl.debit);
-        const credit = Number(pl.credit);
-        if (account.normalBalance === 'DEBIT') {
-          openingBalance += debit - credit;
-        } else {
-          openingBalance += credit - debit;
-        }
-      }
-      openingBalance = roundCurrency(openingBalance);
+      const totalDebit = Number(agg._sum.debit ?? 0);
+      const totalCredit = Number(agg._sum.credit ?? 0);
+      openingBalance = roundCurrency(
+        account.normalBalance === 'DEBIT' ? totalDebit - totalCredit : totalCredit - totalDebit
+      );
     }
 
     // ------ Build entries with running balance ------
