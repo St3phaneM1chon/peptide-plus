@@ -70,30 +70,30 @@
   --list-width: 380px;
   --list-min-width: 280px;
   --topbar-height: 48px;
-  --rail-bg: #1e2463;
-  --rail-active: #4f46e5;
-  --rail-hover: #2a306e;
-  --selected-bg: #eef2ff;
-  --selected-border: #6366f1;
-  --accent: #4f46e5;
-  --border-color: #E2E8F0;
+  --rail-bg: var(--k-bg-surface);
+  --rail-active: var(--k-accent-indigo);
+  --rail-hover: var(--k-glass-thin);
+  --selected-bg: var(--k-glass-regular);
+  --selected-border: var(--k-accent-indigo);
+  --accent: var(--k-accent-indigo);
+  --border-color: var(--k-border-subtle);
 }
 
-/* Marble texture background for the icon rail */
+/* Glass material for the icon rail (replaces marble texture) */
 .admin-marble-rail {
-  background:
-    url('/images/admin-marble-bg.png') repeat-y center / cover,
-    #1e2463;
+  background: var(--k-bg-surface);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 
-/* Marble for wider panels */
+/* Glass for wider panels (replaces marble texture) */
 .admin-marble-wide {
-  background:
-    url('/images/admin-marble-wide.png') repeat-y center / cover,
-    #1e2463;
+  background: var(--k-bg-surface);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 
-/* Thin scrollbar for admin panels */
+/* Thin scrollbar for admin panels (dark glass theme) */
 .admin-outlook .outlook-scroll::-webkit-scrollbar {
   width: 6px;
 }
@@ -101,41 +101,42 @@
   background: transparent;
 }
 .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
 .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #94A3B8;
+  background-color: rgba(255, 255, 255, 0.25);
 }
 .admin-outlook .outlook-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* =====================================================
-   DARK MODE — Admin-specific overrides
+   DARK MODE — Admin is dark-first via koraline tokens.
+   These overrides are kept for legacy html.dark toggles.
    ===================================================== */
 
-/* Admin outlook dark overrides */
+/* Admin outlook dark overrides (now matches base since dark-first) */
 html.dark .admin-outlook {
-  --rail-bg: #0f1235;
-  --rail-active: #818cf8;
-  --rail-hover: #1a1f4d;
-  --selected-bg: #1e1b4b;
-  --selected-border: #818cf8;
-  --accent: #818cf8;
-  --border-color: #2E2E32;
+  --rail-bg: var(--k-bg-surface);
+  --rail-active: var(--k-accent-indigo);
+  --rail-hover: var(--k-glass-thin);
+  --selected-bg: var(--k-glass-regular);
+  --selected-border: var(--k-accent-indigo);
+  --accent: var(--k-accent-indigo);
+  --border-color: var(--k-border-subtle);
 }
 
-/* Admin scrollbars dark */
+/* Admin scrollbars dark — already dark-first, kept for html.dark compat */
 html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb {
-  background-color: #3F3F46;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 html.dark .admin-outlook .outlook-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #52525B;
+  background-color: rgba(255, 255, 255, 0.25);
 }
 html.dark .admin-outlook .outlook-scroll {
-  scrollbar-color: #3F3F46 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* =====================================================

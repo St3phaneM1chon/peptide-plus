@@ -84,17 +84,17 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-slate-500 mb-4">
-      <Link href="/admin" className="hover:text-indigo-600 transition-colors">
+    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-[var(--k-text-tertiary)] mb-4">
+      <Link href="/admin" className="hover:text-[#818cf8] transition-colors">
         <Home className="w-4 h-4" />
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.path} className="flex items-center gap-1">
-          <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+          <ChevronRight className="w-3.5 h-3.5 text-[var(--k-text-muted)]" />
           {crumb.isLast ? (
-            <span className="font-medium text-slate-700">{crumb.label}</span>
+            <span className="font-medium text-[var(--k-text-primary)]">{crumb.label}</span>
           ) : (
-            <Link href={crumb.path} className="hover:text-indigo-600 transition-colors">
+            <Link href={crumb.path} className="hover:text-[#818cf8] transition-colors">
               {crumb.label}
             </Link>
           )}

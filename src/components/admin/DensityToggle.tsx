@@ -21,13 +21,11 @@ export default function DensityToggle() {
   return (
     <button
       onClick={() => setDensity(next.value)}
-      className="p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100
-                 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700
-                 transition-colors"
+      className="p-1.5 rounded-md text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] transition-colors"
       aria-label={t('admin.density.toggle') || 'Toggle density'}
       title={t(`admin.density.${density}`) || density}
     >
-      <CurrentIcon className="w-5 h-5" />
+      <CurrentIcon className="w-4.5 h-4.5" />
     </button>
   );
 }

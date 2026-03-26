@@ -135,7 +135,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
 
   return (
     <header
-      className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-3 sticky top-0 z-30"
+      className="h-12 bg-[var(--k-bg-surface)]/80 backdrop-blur-xl border-b border-[var(--k-border-subtle)] flex items-center justify-between px-3 sticky top-0 z-30"
       role="banner"
     >
       {/* ── Left section ──────────────────────────────────────── */}
@@ -151,9 +151,9 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
             }
           }}
           aria-label={t('admin.outlook.toggleNavigation') || 'Toggle navigation'}
-          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-[var(--k-glass-thin)] rounded-lg transition-colors"
         >
-          <Menu className="w-5 h-5 text-slate-600" />
+          <Menu className="w-5 h-5 text-[var(--k-text-secondary)]" />
         </button>
 
         {/* Logo — Suite Kor@line signature */}
@@ -172,7 +172,7 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
       {/* ── Center section: Search ────────────────────────────── */}
       <div className="flex-1 flex justify-center px-4">
         <div className="relative max-w-md w-full" ref={searchRef}>
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--k-text-muted)] pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
@@ -180,20 +180,23 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
             onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
             placeholder={t('admin.outlook.searchPlaceholder')}
             aria-label={t('admin.outlook.searchPlaceholder')}
-            className="w-full ps-9 pe-3 py-1.5 text-sm bg-slate-100 border border-transparent
-                       rounded-lg placeholder:text-slate-400
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-indigo-300
+            className="w-full ps-9 pe-10 py-1.5 text-sm bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)]
+                       rounded-lg text-[var(--k-text-primary)] placeholder:text-[var(--k-text-muted)]
+                       focus:outline-none focus:ring-2 focus:ring-[#6366f1]/30 focus:border-[#6366f1]/50 focus:bg-[var(--k-glass-regular)]
                        transition-colors"
           />
+          <kbd className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-[var(--k-text-muted)] bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded">
+            <span className="text-xs">&#8984;</span>K
+          </kbd>
           {/* Search results dropdown */}
           {showResults && (
-            <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-slate-200 max-h-80 overflow-y-auto z-50">
+            <div className="absolute top-full mt-1 w-full bg-[var(--k-bg-overlay)] rounded-lg shadow-2xl border border-[var(--k-border-default)] max-h-80 overflow-y-auto z-50 backdrop-blur-xl">
               {searchLoading ? (
-                <div className="p-3 text-center text-sm text-slate-400">
-                  <div className="animate-spin inline-block w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
+                <div className="p-3 text-center text-sm text-[var(--k-text-muted)]">
+                  <div className="animate-spin inline-block w-4 h-4 border-2 border-[#6366f1] border-t-transparent rounded-full" />
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="p-3 text-center text-sm text-slate-400">
+                <div className="p-3 text-center text-sm text-[var(--k-text-muted)]">
                   {t('common.noResults') || 'No results found'}
                 </div>
               ) : (
@@ -204,16 +207,16 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
                       key={`${result.type}-${result.id}`}
                       type="button"
                       onClick={() => handleResultClick(result)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 text-start transition-colors border-b border-slate-100 last:border-0"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--k-glass-thin)] text-start transition-colors border-b border-[var(--k-border-subtle)] last:border-0"
                     >
-                      <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <Icon className="w-4 h-4 text-[var(--k-text-tertiary)] flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-slate-900 truncate">{result.title}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)] truncate">{result.title}</p>
                         {result.subtitle && (
-                          <p className="text-xs text-slate-500 truncate">{result.subtitle}</p>
+                          <p className="text-xs text-[var(--k-text-tertiary)] truncate">{result.subtitle}</p>
                         )}
                       </div>
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded flex-shrink-0">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-[var(--k-glass-thin)] text-[var(--k-text-tertiary)] rounded flex-shrink-0">
                         {TYPE_LABEL_KEYS[result.type] ? t(TYPE_LABEL_KEYS[result.type]) : result.type}
                       </span>
                     </button>
@@ -235,9 +238,9 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
           href="/admin/commandes"
           title={t('admin.nav.orders')}
           aria-label={t('admin.nav.orders')}
-          className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          className="relative p-2 hover:bg-[var(--k-glass-thin)] rounded-lg transition-colors"
         >
-          <ShoppingCart className="w-[18px] h-[18px] text-slate-500" />
+          <ShoppingCart className="w-[18px] h-[18px] text-[var(--k-text-secondary)]" />
           {pendingOrders > 0 && (
             <span
               className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-red-500 text-white
@@ -254,9 +257,9 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
           href="/admin/chat"
           title={t('admin.nav.chatSupport')}
           aria-label={t('admin.nav.chatSupport')}
-          className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          className="relative p-2 hover:bg-[var(--k-glass-thin)] rounded-lg transition-colors"
         >
-          <MessageCircle className="w-[18px] h-[18px] text-slate-500" />
+          <MessageCircle className="w-[18px] h-[18px] text-[var(--k-text-secondary)]" />
           {unreadChats > 0 && (
             <span
               className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-indigo-500 text-white
@@ -269,22 +272,27 @@ export default function OutlookTopBar({ onMobileMenuToggle, extraIcons }: { onMo
         </Link>
 
         {/* Separator */}
-        <div className="w-px h-6 bg-slate-200 mx-1" />
+        <div className="w-px h-6 bg-[var(--k-border-subtle)] mx-1" />
 
         {/* User */}
         <div className="flex items-center gap-2">
           <div
-            className={`w-8 h-8 ${avatarColor} rounded-full flex items-center justify-center flex-shrink-0`}
+            className="w-8 h-8 rounded-full p-[2px] flex-shrink-0"
+            style={{ background: 'var(--k-gradient-brand)' }}
           >
-            <span className="text-white font-medium text-sm leading-none">
-              {userInitial}
-            </span>
+            <div
+              className={`w-full h-full ${avatarColor} rounded-full flex items-center justify-center`}
+            >
+              <span className="text-white font-medium text-sm leading-none">
+                {userInitial}
+              </span>
+            </div>
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-slate-800 leading-tight truncate max-w-[120px]">
+            <p className="text-sm font-medium text-[var(--k-text-primary)] leading-tight truncate max-w-[120px]">
               {userName}
             </p>
-            <p className="text-[11px] text-slate-400 leading-tight">
+            <p className="text-[11px] text-[var(--k-text-tertiary)] leading-tight">
               {userRole}
             </p>
           </div>

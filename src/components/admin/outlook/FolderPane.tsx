@@ -51,16 +51,16 @@ function FolderGroup({
           }}
           className={`
             w-full flex items-center gap-1.5 px-2 py-1.5
-            text-[11px] font-semibold text-slate-500 uppercase tracking-wider
-            ${isCollapsible ? 'hover:text-slate-700 cursor-pointer' : 'cursor-default'}
+            text-[11px] font-semibold text-[var(--k-text-tertiary)] uppercase tracking-wider
+            ${isCollapsible ? 'hover:text-[var(--k-text-secondary)] cursor-pointer' : 'cursor-default'}
             transition-colors
           `}
           aria-expanded={isCollapsible ? open : undefined}
         >
           {isCollapsible && (
             open
-              ? <ChevronDown className="w-3 h-3 flex-shrink-0" />
-              : <ChevronRight className="w-3 h-3 flex-shrink-0" />
+              ? <ChevronDown className="w-3 h-3 flex-shrink-0 text-[var(--k-text-tertiary)]" />
+              : <ChevronRight className="w-3 h-3 flex-shrink-0 text-[var(--k-text-tertiary)]" />
           )}
           <span>{group.labelKey?.startsWith('_dynamic_:') ? group.labelKey.slice(10) : t(group.labelKey)}</span>
         </button>
@@ -124,8 +124,8 @@ function FolderItem({
           flex items-center gap-2.5 px-2.5 py-[6px] rounded-sm transition-colors
           text-[13px] group
           ${isActive
-            ? 'bg-indigo-50 text-indigo-900 border-s-[3px] border-s-indigo-600'
-            : 'border-s-[3px] border-s-transparent text-slate-700 hover:bg-indigo-50/50'
+            ? 'bg-[var(--k-glass-regular)] text-white border-s-[3px] border-s-[#6366f1]'
+            : 'border-s-[3px] border-s-transparent text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)]'
           }
           ${depth > 0 ? 'ps-8' : ''}
         `}
@@ -140,13 +140,13 @@ function FolderItem({
             className="w-[18px] h-[18px] object-contain flex-shrink-0 transition-transform duration-200 group-hover:scale-125"
           />
         ) : (
-          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#6366f1]' : 'text-[var(--k-text-tertiary)] group-hover:text-[#818cf8]'}`} />
         )}
         <span className="flex-1 truncate">{item.labelKey.startsWith('_dynamic_:') ? item.labelKey.slice(10) : t(item.labelKey)}</span>
 
         {/* Badge */}
         {badgeCount > 0 && (
-          <span className="text-xs bg-slate-100 text-slate-600 rounded-full px-1.5 py-0.5 leading-none font-medium flex-shrink-0">
+          <span className="text-xs bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)] rounded-full px-1.5 py-0.5 leading-none font-medium flex-shrink-0">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}
@@ -160,12 +160,12 @@ function FolderItem({
               e.stopPropagation();
               setChildrenOpen((prev) => !prev);
             }}
-            className="p-0.5 hover:bg-slate-200 rounded transition-colors flex-shrink-0"
+            className="p-0.5 hover:bg-[var(--k-glass-thin)] rounded transition-colors flex-shrink-0"
             aria-label={t('admin.outlook.toggleSubItems') || 'Toggle sub-items'}
           >
             {childrenOpen
-              ? <ChevronDown className="w-3 h-3 text-slate-400" />
-              : <ChevronRight className="w-3 h-3 text-slate-400" />
+              ? <ChevronDown className="w-3 h-3 text-[var(--k-text-tertiary)]" />
+              : <ChevronRight className="w-3 h-3 text-[var(--k-text-tertiary)]" />
             }
           </button>
         )}
@@ -204,12 +204,12 @@ export default function FolderPane() {
 
   return (
     <aside
-      className="w-[260px] h-full bg-white border-e border-slate-200 flex flex-col flex-shrink-0"
+      className="w-[260px] h-full bg-[var(--k-bg-surface)] border-e border-[var(--k-border-subtle)] flex flex-col flex-shrink-0"
       aria-label={t('admin.outlook.sectionNavigation') || 'Section navigation'}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
-        <h2 className="text-sm font-semibold text-slate-900 truncate">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-[var(--k-border-subtle)]">
+        <h2 className="text-sm font-semibold text-[var(--k-text-primary)] truncate">
           {t(section.title)}
         </h2>
         <button
@@ -217,9 +217,9 @@ export default function FolderPane() {
           onClick={toggleFolderPane}
           title={t('admin.outlook.collapsePane')}
           aria-label={t('admin.outlook.collapsePane')}
-          className="p-1 hover:bg-slate-100 rounded transition-colors flex-shrink-0"
+          className="p-1 hover:bg-[var(--k-glass-thin)] rounded transition-colors flex-shrink-0"
         >
-          <ChevronRight className={`w-4 h-4 text-slate-400 ${dir === 'rtl' ? '' : 'rotate-180'}`} />
+          <ChevronRight className={`w-4 h-4 text-[var(--k-text-tertiary)] ${dir === 'rtl' ? '' : 'rotate-180'}`} />
         </button>
       </div>
 

@@ -102,10 +102,10 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="admin-outlook min-h-screen bg-slate-50">
+    <div className="admin-outlook min-h-screen bg-[var(--k-bg-base)]">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-white focus:text-indigo-600 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-indigo-400"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[100] focus:bg-[var(--k-glass-thick)] focus:backdrop-blur-xl focus:text-[var(--k-text-primary)] focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-[#6366f1]/50 focus:border focus:border-[var(--k-border-default)]"
       >
         {t('admin.skipToContent')}
       </a>
@@ -118,7 +118,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
           <>
             <button
               onClick={() => setCopilotOpen((v) => !v)}
-              className={`p-1.5 rounded-md transition-colors ${copilotOpen ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
+              className={`p-1.5 rounded-md transition-colors ${copilotOpen ? 'bg-[var(--k-glass-regular)] text-[#818cf8] shadow-[var(--k-glow-primary)]' : 'text-[var(--k-text-secondary)] hover:text-[#818cf8] hover:bg-[var(--k-glass-thin)]'}`}
               title={`${t('admin.copilot.title')} (⌘J)`}
               aria-label={t('admin.copilot.title')}
             >
@@ -137,7 +137,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
       {/* Mobile overlay backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={handleCloseMobileMenu}
           aria-hidden="true"
         />
@@ -172,7 +172,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main content area */}
-        <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll dark:bg-slate-900" tabIndex={-1}>
+        <main id="main-content" className="flex-1 overflow-y-auto outlook-scroll bg-[var(--k-bg-base)]" tabIndex={-1}>
           <div className="p-4 pb-16 lg:p-6 lg:pb-6">
             <Breadcrumbs />
             {children}

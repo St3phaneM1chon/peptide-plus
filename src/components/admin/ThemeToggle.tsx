@@ -9,7 +9,11 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const stored = localStorage.getItem('admin-theme');
-    if (stored === 'dark') {
+    // Dark-first: default to dark unless explicitly set to light
+    if (stored === 'light') {
+      setDark(false);
+      document.documentElement.classList.remove('dark');
+    } else {
       setDark(true);
       document.documentElement.classList.add('dark');
     }
@@ -34,11 +38,11 @@ export default function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+        className="p-1.5 rounded-md text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] transition-colors"
         aria-label="Mode sombre"
         title="Mode sombre"
       >
-        <Moon className="w-5 h-5" />
+        <Moon className="w-4.5 h-4.5" />
       </button>
     );
   }
@@ -46,11 +50,11 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700 transition-colors"
+      className="p-1.5 rounded-md text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] transition-colors"
       aria-label={dark ? 'Mode clair' : 'Mode sombre'}
       title={dark ? 'Mode clair' : 'Mode sombre'}
     >
-      {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      {dark ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
     </button>
   );
 }

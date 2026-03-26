@@ -31,8 +31,8 @@ function DropdownGroup({
         <button
           type="button"
           onClick={isCollapsible ? () => setExpanded((v) => !v) : undefined}
-          className={`flex items-center gap-1 w-full px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 ${
-            isCollapsible ? 'cursor-pointer hover:text-slate-600' : 'cursor-default'
+          className={`flex items-center gap-1 w-full px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--k-text-tertiary)] ${
+            isCollapsible ? 'cursor-pointer hover:text-[var(--k-text-secondary)]' : 'cursor-default'
           }`}
         >
           {isCollapsible && (
@@ -48,10 +48,10 @@ function DropdownGroup({
           <a
             key={item.href}
             href={item.href}
-            className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded transition-colors"
+            className="flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] hover:text-[#818cf8] rounded transition-colors"
             onClick={onClose}
           >
-            <item.icon className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+            <item.icon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--k-text-tertiary)]" />
             <span className="truncate">{t(item.labelKey)}</span>
           </a>
         ))}
@@ -108,8 +108,8 @@ function NavDropdownTab({
           onClick={() => { setOpen(!open); onSelect(tab.key); }}
           className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
             isActive || open
-              ? 'text-indigo-700 border-b-2 border-indigo-700 -mb-px'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'text-[#818cf8] border-b-2 border-[#6366f1] -mb-px'
+              : 'text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)]'
           }`}
         >
           {t(tab.labelKey)}
@@ -138,8 +138,8 @@ function NavDropdownTab({
         onClick={() => { setOpen(!open); onSelect(tab.key); }}
         className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
           isActive || open
-            ? 'text-indigo-700 border-b-2 border-indigo-700 -mb-px'
-            : 'text-slate-500 hover:text-slate-700'
+            ? 'text-[#818cf8] border-b-2 border-[#6366f1] -mb-px'
+            : 'text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)]'
         }`}
       >
         {t(tab.labelKey)}
@@ -149,7 +149,7 @@ function NavDropdownTab({
       {open && (
         <div
           ref={panelRef}
-          className={`absolute top-full mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg p-2 max-h-[70vh] overflow-y-auto ${gridClass} ${
+          className={`absolute top-full mt-px z-50 bg-[var(--k-bg-overlay)] border border-[var(--k-border-default)] rounded-md shadow-2xl backdrop-blur-xl p-2 max-h-[70vh] overflow-y-auto ${gridClass} ${
             alignRight ? 'end-0' : 'start-0'
           }`}
         >
@@ -158,10 +158,10 @@ function NavDropdownTab({
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] hover:text-[#818cf8] rounded transition-colors"
                   onClick={close}
                 >
-                  <item.icon className="w-3.5 h-3.5 text-slate-400" />
+                  <item.icon className="w-3.5 h-3.5 text-[var(--k-text-tertiary)]" />
                   {t(item.labelKey)}
                 </a>
               ))
@@ -197,7 +197,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 whitespace-nowrap"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] whitespace-nowrap"
         title={t(action.labelKey)}
       >
         <Icon className="w-3.5 h-3.5" />
@@ -206,13 +206,13 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
       </button>
 
       {open && action.dropdownItems && (
-        <div className="absolute top-full start-0 mt-px z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[160px]">
+        <div className="absolute top-full start-0 mt-px z-50 bg-[var(--k-bg-overlay)] border border-[var(--k-border-default)] rounded-md shadow-2xl backdrop-blur-xl py-1 min-w-[160px]">
           {action.dropdownItems.map((item) => (
             item.href ? (
               <a
                 key={item.key}
                 href={item.href}
-                className="block px-3 py-1.5 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                className="block px-3 py-1.5 text-xs text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] hover:text-[#818cf8] transition-colors"
                 onClick={() => setOpen(false)}
               >
                 {t(item.labelKey)}
@@ -221,7 +221,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
               <button
                 key={item.key}
                 type="button"
-                className="block w-full text-start px-3 py-1.5 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                className="block w-full text-start px-3 py-1.5 text-xs text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] hover:text-[#818cf8] transition-colors"
                 onClick={() => { dispatchRibbonAction(item.key); setOpen(false); }}
               >
                 {t(item.labelKey)}
@@ -232,7 +232,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
       )}
 
       {action.separator && (
-        <div className="w-px h-5 bg-slate-200 mx-1 flex-shrink-0" />
+        <div className="w-px h-5 bg-[var(--k-border-subtle)] mx-1 flex-shrink-0" />
       )}
     </div>
   );
@@ -261,9 +261,9 @@ export default function OutlookRibbon() {
   if (config.tabs.length === 0 && actions.length === 0) return null;
 
   return (
-    <div className="bg-white border-b border-slate-200 select-none">
+    <div className="bg-[var(--k-bg-surface)]/60 backdrop-blur-lg border-b border-[var(--k-border-subtle)] select-none">
       {/* Ribbon tabs */}
-      <div className="flex items-center border-b border-slate-100 px-2">
+      <div className="flex items-center border-b border-[var(--k-border-subtle)] px-2">
         {config.tabs.map((tab) => {
           // Dashboard mega-nav dropdown tabs
           if (tab.type === 'navDropdown') {
@@ -284,8 +284,8 @@ export default function OutlookRibbon() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'text-indigo-700 border-b-2 border-indigo-700 -mb-px'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'text-[#818cf8] border-b-2 border-[#6366f1] -mb-px'
+                  : 'text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)]'
               }`}
             >
               {t(tab.labelKey)}
@@ -315,10 +315,10 @@ export default function OutlookRibbon() {
                   className={`
                     flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap
                     ${isP
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      ? 'bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white hover:opacity-90'
                       : isD
-                        ? 'text-red-600 hover:bg-red-50'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'text-rose-400 hover:bg-rose-500/10'
+                        : 'text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)]'
                     }
                   `}
                   title={t(action.labelKey)}
@@ -327,7 +327,7 @@ export default function OutlookRibbon() {
                   <span className="hidden sm:inline">{t(action.labelKey)}</span>
                 </button>
                 {action.separator && (
-                  <div className="w-px h-5 bg-slate-200 mx-1 flex-shrink-0" />
+                  <div className="w-px h-5 bg-[var(--k-border-subtle)] mx-1 flex-shrink-0" />
                 )}
               </div>
             );

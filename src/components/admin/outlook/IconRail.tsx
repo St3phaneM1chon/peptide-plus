@@ -49,7 +49,7 @@ export default function IconRail() {
 
   return (
     <nav
-      className="w-12 h-full admin-marble-rail flex flex-col flex-shrink-0"
+      className="w-12 h-full bg-[var(--k-bg-surface)]/80 backdrop-blur-xl border-e border-[var(--k-border-subtle)] flex flex-col flex-shrink-0"
       aria-label={t('admin.outlook.mainNavigationRail') || 'Main navigation rail'}
     >
       {/* Rail items */}
@@ -71,17 +71,17 @@ export default function IconRail() {
               className={`
                 relative w-12 h-12 flex items-center justify-center transition-colors
                 ${isActive
-                  ? 'bg-white/20 border-s-[3px] border-s-indigo-400'
-                  : 'border-s-[3px] border-s-transparent hover:bg-white/10'
+                  ? 'bg-[var(--k-glass-regular)] border-s-[3px] border-s-[#6366f1]'
+                  : 'border-s-[3px] border-s-transparent hover:bg-[var(--k-glass-thin)]'
                 }
               `}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+              <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--k-text-secondary)]'}`} />
 
               {/* Badge */}
               {badgeCount > 0 && (
                 <span
-                  className="absolute top-1.5 end-1.5 min-w-[16px] h-4 bg-red-500 text-white
+                  className="absolute top-1.5 end-1.5 min-w-[16px] h-4 bg-gradient-to-r from-rose-500 to-red-500 text-white
                              text-[10px] font-bold rounded-full flex items-center justify-center
                              leading-none px-1"
                 >
@@ -94,16 +94,16 @@ export default function IconRail() {
       </div>
 
       {/* Bottom section */}
-      <div className="border-t border-white/20 flex flex-col items-center py-1">
+      <div className="border-t border-[var(--k-border-subtle)] flex flex-col items-center py-1">
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
           title={t('admin.outlook.viewSite')}
           aria-label={t('admin.outlook.viewSite')}
-          className="w-12 h-12 flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="w-12 h-12 flex items-center justify-center hover:bg-[var(--k-glass-thin)] transition-colors"
         >
-          <ExternalLink className="w-5 h-5 text-white/60" />
+          <ExternalLink className="w-5 h-5 text-[var(--k-text-secondary)]" />
         </a>
       </div>
     </nav>
