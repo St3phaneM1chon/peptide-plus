@@ -149,3 +149,42 @@ rules:
     languages: [typescript]
     metadata:
       cwe: "CWE-208"
+
+  # ── CRM-specific Rules (from Audit Forge CRM scan) ─────────────
+
+  - id: gdpr-delete-logs-pii
+    pattern-regex: 'logger\.\w+\([^)]*(?:email|phone|contactName|name)[^)]*\)'
+    paths:
+      include:
+        - "src/app/api/**/gdpr*/**"
+        - "src/app/api/**/delete*/**"
+    message: >
+      GDPR deletion handler logs PII. Under RGPD Article 17,
+      personal data should not persist in logs after erasure.
+    severity: WARNING
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-532"
+
+  - id: ssrf-unvalidated-webhook-url
+    pattern-regex: "webhookUrl.*fetch|fetch.*webhookUrl"
+    message: >
+      Webhook URL fetched without validation. Validate against
+      private IP blocklist to prevent SSRF.
+    severity: WARNING
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-918"
+
+  - id: self-approval-no-check
+    pattern-regex: 'approval\.update.*status.*APPROVED(?!.*requestedBy)'
+    paths:
+      include:
+        - "src/app/api/**/approvals/**"
+    message: >
+      Approval handler may allow self-approval. Check requestedBy
+      against respondedBy for segregation of duties.
+    severity: ERROR
+    languages: [typescript]
+    metadata:
+      cwe: "CWE-285"
