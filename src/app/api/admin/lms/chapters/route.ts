@@ -15,6 +15,13 @@ const createChapterSchema = z.object({
   isPublished: z.boolean().optional(),
 });
 
+const updateChapterSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  sortOrder: z.number().int().min(0).optional(),
+  isPublished: z.boolean().optional(),
+}).refine(data => Object.keys(data).length > 0, { message: 'At least one field required' });
+
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   const tenantId = session.user.tenantId;
   const courseId = new URL(request.url).searchParams.get('courseId');
@@ -67,4 +74,50 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
   });
 
   return apiSuccess(chapter, { request, status: 201 });
+});
+
+export const PATCH = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) return apiError('id query param required', ErrorCode.VALIDATION_ERROR, { request });
+
+  const body = await request.json();
+  const parsed = updateChapterSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError('Validation failed', ErrorCode.VALIDATION_ERROR, { request });
+  }
+
+  const existing = await prisma.courseChapter.findFirst({ where: { id, tenantId } });
+  if (!existing) return apiError('Chapter not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  const chapter = await prisma.courseChapter.update({
+    where: { id },
+    data: parsed.data,
+  });
+
+  return apiSuccess(chapter, { request });
+});
+
+export const PUT = PATCH;
+
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) return apiError('id query param required', ErrorCode.VALIDATION_ERROR, { request });
+
+  const existing = await prisma.courseChapter.findFirst({ where: { id, tenantId } });
+  if (!existing) return apiError('Chapter not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  const lessonCount = await prisma.lesson.count({ where: { chapterId: id, tenantId } });
+  if (lessonCount > 0) {
+    return apiError(
+      `Cannot delete chapter with ${lessonCount} lesson(s). Remove lessons first.`,
+      ErrorCode.VALIDATION_ERROR,
+      { request, status: 409 },
+    );
+  }
+
+  await prisma.courseChapter.delete({ where: { id } });
+
+  return apiSuccess({ deleted: true, id }, { request });
 });
