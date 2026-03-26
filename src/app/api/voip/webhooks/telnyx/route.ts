@@ -133,8 +133,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else {
-      // TELNYX_WEBHOOK_SECRET not set — allow requests but log warning
-      logger.warn('[Telnyx Webhook] TELNYX_WEBHOOK_SECRET not set — skipping signature verification');
+      // VOIP-F1 CRITICAL FIX: Reject when secret not configured (was silently accepting)
+      logger.error('[Telnyx Webhook] TELNYX_WEBHOOK_SECRET not set — REJECTING request');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
     }
 
     // Parse the webhook event

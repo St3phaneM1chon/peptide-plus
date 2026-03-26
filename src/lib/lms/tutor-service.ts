@@ -1457,7 +1457,8 @@ REGLES:
   // V2 P0 FIX: Sanitize ALL messages (history + current) against prompt injection
   // Expanded tag list to cover all context block names used in system prompt
   const sanitizeForInjection = (text: string) =>
-    text.replace(/<\/?(?:student-profile|system|context|instructions|admin|knowledge|emotion-detected|provincial-context|tutor-mode|scaffolding|course-context|mastery-data)[^>]*>/gi, '')
+    // LMS-F1 FIX: Added 4 missing tags (mastery-state, analogies-disponibles, concepts-a-reviser, session-state)
+    text.replace(/<\/?(?:student-profile|system|context|instructions|admin|knowledge|emotion-detected|provincial-context|tutor-mode|scaffolding|course-context|mastery-data|mastery-state|analogies-disponibles|concepts-a-reviser|session-state)[^>]*>/gi, '')
       .slice(0, 5000);
 
   // Add conversation history (last 20 messages for context window management)

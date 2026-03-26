@@ -1,0 +1,24 @@
+{
+  "domain": "voip",
+  "date": "2026-03-26",
+  "score": 46,
+  "grade": "F",
+  "functionsAudited": 45,
+  "findings": [
+    {"id": "VOIP-F1", "severity": "critical", "title": "Webhook sig bypass when TELNYX_WEBHOOK_SECRET not set", "file": "src/app/api/voip/webhooks/telnyx/route.ts", "line": 91, "cweId": "CWE-347", "confidence": 0.95, "status": "open"},
+    {"id": "VOIP-F2", "severity": "critical", "title": "SMS webhook has ZERO signature verification", "file": "src/app/api/voip/webhooks/sms/route.ts", "line": 21, "cweId": "CWE-345", "confidence": 0.95, "status": "open"},
+    {"id": "VOIP-F3", "severity": "high", "title": "SIP password returned in plaintext", "file": "src/app/api/voip/credentials/route.ts", "line": 56, "cweId": "CWE-312", "confidence": 0.90, "status": "open"},
+    {"id": "VOIP-F4", "severity": "high", "title": "WebRTC token response includes SIP password", "file": "src/app/api/admin/voip/webrtc-token/route.ts", "line": 62, "cweId": "CWE-200", "confidence": 0.90, "status": "open"},
+    {"id": "VOIP-F5", "severity": "high", "title": "Unauthenticated debug endpoint exposes API key", "file": "src/app/api/voip/debug/route.ts", "line": 9, "cweId": "CWE-215", "confidence": 0.95, "status": "open"},
+    {"id": "VOIP-F6", "severity": "high", "title": "No rate limiting on call initiation (toll fraud)", "file": "src/app/api/voip/call/route.ts", "line": 24, "cweId": "CWE-770", "confidence": 0.85, "status": "open"},
+    {"id": "VOIP-F7", "severity": "high", "title": "Public API zero rate limiting on call initiation", "file": "src/app/api/voip/public/route.ts", "line": 181, "cweId": "CWE-770", "confidence": 0.90, "status": "open"},
+    {"id": "VOIP-F8", "severity": "high", "title": "Raw Azure blob URLs exposed for recordings", "file": "src/app/api/voip/public/route.ts", "line": 139, "cweId": "CWE-359", "confidence": 0.85, "status": "open"},
+    {"id": "VOIP-F9", "severity": "medium", "title": "SMS inbound uses wrong sig algorithm (HMAC vs Ed25519)", "file": "src/app/api/webhooks/sms-inbound/route.ts", "line": 32, "cweId": "CWE-347", "confidence": 0.85, "status": "open"},
+    {"id": "VOIP-F10", "severity": "medium", "title": "Streaming transcription no authorization check", "file": "src/app/api/voip/streaming-transcription/route.ts", "line": 95, "cweId": "CWE-862", "confidence": 0.85, "status": "open"},
+    {"id": "VOIP-F11", "severity": "medium", "title": "Dialer view=all exposes all sessions to any auth user", "file": "src/app/api/voip/dialer/route.ts", "line": 94, "cweId": "CWE-862", "confidence": 0.90, "status": "open"},
+    {"id": "VOIP-F12", "severity": "medium", "title": "No caller ID ownership validation on admin route", "file": "src/app/api/voip/call/route.ts", "line": 27, "cweId": "CWE-290", "confidence": 0.80, "status": "open"},
+    {"id": "VOIP-F13", "severity": "medium", "title": "Recording upload: unauthenticated fetch from PBX", "file": "src/lib/voip/recording-upload.ts", "line": 78, "cweId": "CWE-306", "confidence": 0.75, "status": "open"},
+    {"id": "VOIP-F14", "severity": "low", "title": "VoIP.ms credentials in URL query string", "file": "src/lib/voip/connection.ts", "line": 159, "cweId": "CWE-598", "confidence": 0.90, "status": "open"}
+  ],
+  "criticals": 2, "highs": 6, "mediums": 5, "lows": 1
+}

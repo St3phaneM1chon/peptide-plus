@@ -86,7 +86,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
 
     const pricing = await resolvePricing(
       { price: course.price, corporatePrice: course.corporatePrice, currency: course.currency },
-      corporateAccountId
+      corporateAccountId, tenantId
     );
 
     // Corporate-sponsored free enrollment
@@ -146,7 +146,7 @@ export const POST = withUserGuard(async (request: NextRequest, { session }) => {
 
     const pricing = await resolvePricing(
       { price: bundle.price, corporatePrice: bundle.corporatePrice, currency: bundle.currency },
-      corporateAccountId
+      corporateAccountId, tenantId
     );
 
     // Corporate-sponsored free enrollment
