@@ -66,8 +66,8 @@ export interface TenantBranding {
 /** Default branding used as fallback when tenant is not found in DB. */
 const DEFAULT_BRANDING: TenantBranding = {
   id: '',
-  slug: 'attitudes',
-  name: 'Attitudes VIP',
+  slug: 'default',
+  name: process.env.NEXT_PUBLIC_SITE_NAME || '',
   logoUrl: null,
   primaryColor: '#0066CC',
   secondaryColor: '#003366',

@@ -71,25 +71,9 @@ interface Article {
   publishedAt: string | null;
 }
 
-// Map category slug to i18n key
-const SLUG_TO_CATEGORY_KEY: Record<string, string> = {
-  'peptides': 'peptides',
-  'weight-loss': 'weightLoss',
-  'muscle-growth': 'muscleGrowth',
-  'anti-aging': 'antiAging',
-  'recovery': 'recovery',
-  'cognitive': 'cognitive',
-  'sexual-health': 'sexual',
-  'skin-health': 'skin',
-  'blends': 'blends',
-  'supplements': 'supplements',
-  'accessories': 'accessories',
-  'lab-equipment': 'accessories',
-  'subscriptions': 'supplements',
-};
-
-function slugToCategoryKey(slug: string): string | undefined {
-  return SLUG_TO_CATEGORY_KEY[slug];
+// Category key is simply the slug itself — no hardcoded mapping needed
+function slugToCategoryKey(slug: string): string {
+  return slug;
 }
 
 // Map API product to ProductCard props
@@ -329,7 +313,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 <p className="text-neutral-500 mt-2">{t('home.featuredPeptidesDesc') || t('home.peptidesDesc')}</p>
               </div>
               <Link
-                href="/category/peptides"
+                href="/shop"
                 className="text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
@@ -360,7 +344,8 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
 
       <SectionDivider fromColor="#FFFFFF" toColor="#FAFAF9" variant="wave" />
 
-      {/* 5. Testimonials (monte juste apres les produits) */}
+      {/* 5. Testimonials — only from DB, nothing hardcoded */}
+      {initialTestimonials.length > 0 && (
       <section ref={testimonialsRef} className="py-16 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className={`font-heading text-3xl md:text-4xl text-center text-neutral-900 mb-12 transition-all duration-700 ${testimonialsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
@@ -368,8 +353,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
           </h2>
 
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-700 delay-200 ${testimonialsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            {initialTestimonials.length > 0 ? (
-              initialTestimonials.slice(0, 3).map((testimonial) => {
+            {initialTestimonials.slice(0, 3).map((testimonial) => {
                 const translation = testimonial.translations.find((tr) => tr.locale === locale);
                 const displayContent = translation?.content || testimonial.content;
                 const displayRole = translation?.role || testimonial.role;
@@ -399,24 +383,11 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                     </div>
                   </div>
                 );
-              })
-            ) : (
-              [1, 2, 3].map((index) => (
-                <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                  <StarRating rating={5} />
-                  <p className="text-neutral-700 mb-4 leading-relaxed">
-                    &ldquo;{t(`home.testimonial${index}Quote`)}&rdquo;
-                  </p>
-                  <div className="pt-4">
-                    <p className="font-bold text-neutral-900">{t(`home.testimonial${index}Author`)}</p>
-                    <p className="text-sm text-neutral-500">{t(`home.testimonial${index}Source`)}</p>
-                  </div>
-                </div>
-              ))
-            )}
+              })}
           </div>
         </div>
       </section>
+      )}
 
       <SectionDivider fromColor="#FAFAF9" toColor="#F3F9F4" variant="curve" />
 
@@ -527,7 +498,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 <p className="text-neutral-500 mt-1">{t('home.accessoriesDesc')}</p>
               </div>
               <Link
-                href="/category/lab-accessories"
+                href="/shop"
                 className="text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
@@ -562,7 +533,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 <p className="text-neutral-500 mt-1">{t('home.labEquipmentDesc')}</p>
               </div>
               <Link
-                href="/category/lab-equipment"
+                href="/shop"
                 className="text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}

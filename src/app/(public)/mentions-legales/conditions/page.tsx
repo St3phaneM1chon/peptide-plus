@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * PAGE CONDITIONS D'UTILISATION - BioCycle Peptides
- * Spécifique à la vente de peptides de recherche
+ * PAGE CONDITIONS D'UTILISATION
  * i18n: All text from legal.terms namespace
  */
 
@@ -11,7 +10,7 @@ import { useI18n } from '@/i18n/client';
 export default function TermsPage() {
   const { t } = useI18n();
   const lastUpdated = '2026-01-25';
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'BioCycle Peptides';
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '';
 
   return (
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>

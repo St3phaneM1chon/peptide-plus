@@ -46,7 +46,7 @@ export default function CookiesEN() {
           Essential Cookies (required)
         </h3>
         <p>
-          These cookies are necessary for the Attitudes VIP site to function:
+          These cookies are necessary for the site to function:
         </p>
         <ul>
           <li>Authentication and session security</li>

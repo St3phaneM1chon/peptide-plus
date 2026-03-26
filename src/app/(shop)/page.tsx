@@ -21,35 +21,35 @@ import {
 export const revalidate = 60;
 
 // Static fallback metadata — overridden at render time by JSON-LD with tenant name
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Attitudes VIP';
-const siteDescription = "Canada's trusted source for premium research peptides. Lab-tested, 99%+ purity, fast shipping.";
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip';
+const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || (siteName ? `${siteName} - Powered by Koraline` : 'Powered by Koraline');
 
 export const metadata: Metadata = {
-  title: `${siteName} - Premium Research Peptides Canada`,
-  description:
-    `${siteDescription} Shop BPC-157, TB-500, Semaglutide and more.`,
+  title: siteName ? `${siteName}` : 'Home',
+  description: siteDescription,
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip',
+    canonical: siteUrl,
   },
   openGraph: {
-    title: `${siteName} - Premium Research Peptides Canada`,
+    title: siteName || 'Home',
     description: siteDescription,
-    url: process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip',
+    url: siteUrl,
     type: 'website',
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/opengraph-image`,
+        url: `${siteUrl}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: `${siteName} - Premium Research Peptides Canada`,
+        alt: siteName || 'Home',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteName} - Premium Research Peptides Canada`,
+    title: siteName || 'Home',
     description: siteDescription,
-    images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://attitudes.vip'}/opengraph-image`],
+    images: [`${siteUrl}/opengraph-image`],
   },
 };
 

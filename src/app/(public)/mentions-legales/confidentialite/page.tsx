@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PAGE POLITIQUE DE CONFIDENTIALITÉ - BioCycle Peptides
+ * PAGE POLITIQUE DE CONFIDENTIALITÉ
  * Conforme RGPD, PIPEDA, Loi 25 Québec
  * i18n: All text from legal.privacy namespace
  */
@@ -11,7 +11,7 @@ import { useI18n } from '@/i18n/client';
 export default function PrivacyPage() {
   const { t } = useI18n();
   const lastUpdated = '2026-01-25';
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'BioCycle Peptides';
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || '';
 
   return (
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>

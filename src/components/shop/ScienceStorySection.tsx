@@ -13,8 +13,8 @@ const pillars = [
     ),
     titleKey: 'home.pillarPurity',
     descKey: 'home.pillarPurityDesc',
-    fallbackTitle: 'Purity',
-    fallbackDesc: '99%+ purity verified by independent third-party laboratories. Every batch tested.',
+    fallbackTitle: 'Quality',
+    fallbackDesc: 'Verified quality through rigorous testing and independent third-party laboratories.',
   },
   {
     icon: (
@@ -25,7 +25,7 @@ const pillars = [
     titleKey: 'home.pillarInnovation',
     descKey: 'home.pillarInnovationDesc',
     fallbackTitle: 'Innovation',
-    fallbackDesc: 'Cutting-edge synthesis methods ensuring maximum bioavailability and stability.',
+    fallbackDesc: 'Cutting-edge methods ensuring maximum performance and reliability.',
   },
   {
     icon: (
@@ -35,8 +35,8 @@ const pillars = [
     ),
     titleKey: 'home.pillarNature',
     descKey: 'home.pillarNatureDesc',
-    fallbackTitle: 'Nature',
-    fallbackDesc: 'Bio-inspired cycles reflecting natural peptide processes for optimal research outcomes.',
+    fallbackTitle: 'Excellence',
+    fallbackDesc: 'Committed to optimal outcomes through continuous improvement and rigorous standards.',
   },
 ];
 
@@ -52,10 +52,10 @@ export default function ScienceStorySection() {
       <MoleculeBackground opacity={0.05} count={8} />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className={`font-heading text-3xl md:text-4xl text-neutral-900 mb-4 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          {t('home.scienceTitle') || 'The Science of Longevity'}
+          {t('home.scienceTitle') || t('home.ourValues') || 'Our Values'}
         </h2>
         <p className={`text-lg text-neutral-500 max-w-2xl mx-auto mb-14 transition-all duration-700 delay-150 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          {t('home.scienceDesc') || 'Premium research peptides engineered for scientific excellence, backed by rigorous quality standards.'}
+          {t('home.scienceDesc') || ''}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
