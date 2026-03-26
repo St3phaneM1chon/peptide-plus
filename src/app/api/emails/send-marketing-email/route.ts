@@ -232,7 +232,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
-    logger.info(`Marketing email sent: ${emailType} to ${user.email}`);
+    // COMM-F10 FIX: Mask email in logs
+    logger.info(`Marketing email sent: ${emailType} to ${user.email.replace(/^(.{2}).*(@.*)$/, "$1***$2")}`);
 
     return NextResponse.json({
       success: true,

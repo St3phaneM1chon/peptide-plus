@@ -59,12 +59,11 @@ export const POST = withAdminGuard(async (request) => {
       tokenId: tokenData?.id,
     });
 
+    // VOIP-F4 FIX: Don't return SIP credentials — JWT token is sufficient for WebRTC
     return apiSuccess(
       {
         token: tokenData?.token,
         tokenId: tokenData?.id,
-        sip_username: tokenData?.sip_username,
-        sip_password: tokenData?.sip_password,
         connectionId,
       },
       { request, status: 201 }
