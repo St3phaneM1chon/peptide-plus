@@ -29,18 +29,23 @@ export interface NavRailItem {
   labelKey: string;
   icon: LucideIcon;
   badge?: 'pendingOrders' | 'unreadChats' | 'inboxCount';
+  /** If set, this rail item requires a specific module to be enabled on the tenant */
+  requiredModule?: string;
+  /** If true, only super-admin (platform owner) can see this item */
+  superAdminOnly?: boolean;
 }
 
 export const railItems: NavRailItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', icon: LayoutDashboard },
-  { id: 'commerce', labelKey: 'admin.nav.commerce', icon: ShoppingCart, badge: 'pendingOrders' },
-  { id: 'marketing', labelKey: 'admin.nav.marketing', icon: Megaphone },
-  { id: 'media', labelKey: 'admin.nav.mediaSection', icon: Video },
-  { id: 'emails', labelKey: 'admin.nav.emails', icon: Mail, badge: 'inboxCount' },
-  { id: 'telephony', labelKey: 'admin.nav.telephony', icon: Phone },
-  { id: 'crm', labelKey: 'admin.nav.crm', icon: Briefcase, badge: 'unreadChats' },
-  { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator },
-  { id: 'formation', labelKey: 'admin.nav.formation', icon: GraduationCap },
+  { id: 'clients', labelKey: 'admin.nav.clients', icon: Building2, superAdminOnly: true },
+  { id: 'commerce', labelKey: 'admin.nav.commerce', icon: ShoppingCart, badge: 'pendingOrders', requiredModule: 'commerce' },
+  { id: 'marketing', labelKey: 'admin.nav.marketing', icon: Megaphone, requiredModule: 'marketing' },
+  { id: 'media', labelKey: 'admin.nav.mediaSection', icon: Video, requiredModule: 'media' },
+  { id: 'emails', labelKey: 'admin.nav.emails', icon: Mail, badge: 'inboxCount', requiredModule: 'emails' },
+  { id: 'telephony', labelKey: 'admin.nav.telephony', icon: Phone, requiredModule: 'telephonie' },
+  { id: 'crm', labelKey: 'admin.nav.crm', icon: Briefcase, badge: 'unreadChats', requiredModule: 'crm' },
+  { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator, requiredModule: 'comptabilite' },
+  { id: 'formation', labelKey: 'admin.nav.formation', icon: GraduationCap, requiredModule: 'formation' },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
   { id: 'dev', labelKey: 'admin.nav.development', icon: FlaskConical },
 ];
@@ -89,6 +94,30 @@ export const folderSections: Record<string, NavFolderSection> = {
         ],
         collapsible: true,
         defaultOpen: false,
+      },
+    ],
+  },
+
+  clients: {
+    railId: 'clients',
+    title: 'admin.nav.clients',
+    groups: [
+      {
+        labelKey: 'admin.nav.clientsManagement',
+        items: [
+          { href: '/admin/platform/clients', labelKey: 'admin.nav.allClients', icon: Building2 },
+          { href: '/admin/platform/clients/nouveau', labelKey: 'admin.nav.newClient', icon: UserPlus },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.clientsTools',
+        items: [
+          { href: '/admin/platform/assisted-setup', labelKey: 'admin.nav.assistedSetup', icon: Sparkles },
+          { href: '/admin/platform', labelKey: 'admin.nav.platformConfig', icon: Settings },
+        ],
+        collapsible: true,
+        defaultOpen: true,
       },
     ],
   },
@@ -720,6 +749,7 @@ export const folderSections: Record<string, NavFolderSection> = {
 
 /** Determine which rail section is active based on the current pathname */
 export function getActiveRailId(pathname: string): string {
+  if (pathname.startsWith('/admin/platform')) return 'clients';
   if (pathname.startsWith('/admin/formation')) return 'formation';
   if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails') || pathname.startsWith('/admin/newsletter')) return 'emails';
@@ -732,4 +762,36 @@ export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/crm') || pathname.startsWith('/admin/scraper') || pathname.startsWith('/admin/chat')) return 'crm';
   if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/webhooks') || pathname.startsWith('/admin/securite') || pathname.startsWith('/admin/tutoriels')) return 'system';
   return 'dashboard';
+}
+
+/**
+ * Filter rail items based on the tenant's enabled modules and super-admin status.
+ * - Dashboard, System, Dev are always visible (no requiredModule).
+ * - Items with `superAdminOnly` are only visible to super-admin.
+ * - Items with `requiredModule` are only visible if that module is in the enabled list.
+ * - Super-admin sees everything (all modules).
+ */
+export function getVisibleRailItems(
+  tenantModules: string[],
+  isSuperAdmin: boolean,
+): NavRailItem[] {
+  return railItems.filter((item) => {
+    // Super-admin-only items
+    if (item.superAdminOnly) {
+      return isSuperAdmin;
+    }
+
+    // Items without a required module are always visible (dashboard, system, dev)
+    if (!item.requiredModule) {
+      return true;
+    }
+
+    // Super-admin sees all modules
+    if (isSuperAdmin) {
+      return true;
+    }
+
+    // Regular tenant: check if the module is enabled
+    return tenantModules.includes(item.requiredModule);
+  });
 }

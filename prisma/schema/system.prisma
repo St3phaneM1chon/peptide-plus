@@ -113,7 +113,7 @@ model SiteSetting {
 model SiteSettings {
   id                    String   @id @default("default")
   tenantId              String?
-  companyName           String   @default("BioCycle Peptides")
+  companyName           String   @default("")
   companyLegalName      String?
   companyDescription    String?
   logoUrl               String?

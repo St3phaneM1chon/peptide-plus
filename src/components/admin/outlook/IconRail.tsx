@@ -1,11 +1,13 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { ExternalLink } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
-import { railItems, folderSections } from '@/lib/admin/outlook-nav';
+import { railItems, folderSections, getVisibleRailItems } from '@/lib/admin/outlook-nav';
 import type { NavRailItem } from '@/lib/admin/outlook-nav';
 
 // ── Badge value resolver ────────────────────────────────────────
@@ -41,6 +43,17 @@ export default function IconRail() {
   const { t } = useI18n();
   const { activeRailId, setActiveRail } = useAdminLayout();
   const badgeCounts = useBadgeCounts();
+  const { data: session } = useSession();
+
+  // Determine visible rail items based on tenant modules and super-admin status
+  const visibleItems = useMemo(() => {
+    if (!session?.user) return railItems; // Fallback: show all while loading
+
+    const tenantModules = session.user.tenantModules ?? [];
+    const isSuperAdmin = session.user.isSuperAdmin ?? false;
+
+    return getVisibleRailItems(tenantModules, isSuperAdmin);
+  }, [session?.user]);
 
   const handleClick = (item: NavRailItem) => {
     setActiveRail(item.id);
@@ -54,7 +67,7 @@ export default function IconRail() {
     >
       {/* Rail items */}
       <div className="flex-1 flex flex-col items-center pt-1">
-        {railItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeRailId === item.id;
           const badgeCount = item.badge ? badgeCounts[item.badge] : 0;

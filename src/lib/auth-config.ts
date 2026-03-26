@@ -427,6 +427,18 @@ export const authConfig: NextAuthConfig = {
             if (userTenant?.tenantId) {
               // User already associated with a tenant
               token.tenantId = userTenant.tenantId;
+
+              // Load tenant modules for rail filtering
+              try {
+                const tenantData = await prisma.tenant.findUnique({
+                  where: { id: userTenant.tenantId },
+                  select: { modulesEnabled: true },
+                });
+                const modules = tenantData?.modulesEnabled;
+                token.tenantModules = Array.isArray(modules) ? modules as string[] : [];
+              } catch {
+                token.tenantModules = [];
+              }
             } else {
               // User has no tenant — resolve from current hostname via headers
               // and assign them to this tenant (Phase 6: Tenant-Aware Login)
@@ -438,10 +450,13 @@ export const authConfig: NextAuthConfig = {
                 if (tenantSlug) {
                   const tenant = await prisma.tenant.findUnique({
                     where: { slug: tenantSlug },
-                    select: { id: true },
+                    select: { id: true, modulesEnabled: true },
                   });
                   if (tenant) {
                     resolvedTenantId = tenant.id;
+                    // Load tenant modules for rail filtering
+                    const modules = tenant.modulesEnabled;
+                    token.tenantModules = Array.isArray(modules) ? modules as string[] : [];
                     // Assign user to this tenant (fire-and-forget, non-blocking)
                     prisma.user.update({
                       where: { id: user.id! },
@@ -463,6 +478,7 @@ export const authConfig: NextAuthConfig = {
             }
           } catch {
             token.tenantId = null;
+            token.tenantModules = [];
           }
 
           // Pour OAuth, le user object de l'adapter n'a pas le role custom
@@ -557,6 +573,9 @@ export const authConfig: NextAuthConfig = {
       if (token) {
         session.user.id = token.id as string;
         session.user.tenantId = (token.tenantId as string) || '';
+        session.user.tenantModules = (token.tenantModules as string[]) || [];
+        session.user.isSuperAdmin = token.role === UserRole.OWNER &&
+          (token.tenantId as string) === (process.env.PLATFORM_TENANT_ID || '');
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
         // SECURITY FIX (FAILLE-059): Propagate actual MFA verification state from JWT.
@@ -722,6 +741,8 @@ declare module 'next-auth' {
     user: {
       id: string;
       tenantId: string;
+      tenantModules: string[];
+      isSuperAdmin: boolean;
       email: string;
       name: string;
       image: string | null;
@@ -742,6 +763,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     tenantId: string | null;
+    tenantModules: string[];
     role: UserRole;
     mfaEnabled: boolean;
     mfaVerified: boolean;
