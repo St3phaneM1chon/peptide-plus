@@ -57,9 +57,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
-    // SECURITY: Verify internal secret to prevent external calls
-    const authHeader = request.headers.get('x-internal-secret');
-    if (authHeader !== INTERNAL_SECRET) {
+    // PAY-F5 FIX: Use timing-safe comparison to prevent side-channel attack
+    const authHeader = request.headers.get('x-internal-secret') ?? '';
+    const headerBuf = Buffer.from(authHeader);
+    const secretBuf = Buffer.from(INTERNAL_SECRET);
+    if (headerBuf.length !== secretBuf.length || !require('crypto').timingSafeEqual(headerBuf, secretBuf)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
