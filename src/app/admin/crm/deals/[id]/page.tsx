@@ -232,7 +232,7 @@ export default function DealDetailPage() {
       </div>
 
       {/* Stage Progress Bar */}
-      <div className="bg-white rounded-lg border p-4 mb-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 mb-6">
         <div className="flex items-center gap-1">
           {stages.filter(s => !s.isLost).map((stage, i) => {
             const currentPos = stages.find(s => s.id === deal.stage.id)?.position || 0;
@@ -265,7 +265,7 @@ export default function DealDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Tabs */}
-          <div className="bg-white rounded-lg border">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border">
             <div className="flex border-b">
               {(['timeline', 'tasks', 'notes'] as const).map((tab) => (
                 <button
@@ -340,7 +340,7 @@ export default function DealDetailPage() {
           </div>
 
           {/* Stage History */}
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.stageHistory')}</h3>
               <Link
@@ -387,7 +387,7 @@ export default function DealDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Deal Details Card */}
-          <div className="bg-white rounded-lg border p-4 space-y-3">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
             <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.dealDetails')}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -423,7 +423,7 @@ export default function DealDetailPage() {
 
           {/* Contact Card */}
           {(deal.contact || deal.lead) && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.contact')}</h3>
               <div className="space-y-2 text-sm">
                 <p className="font-medium text-gray-900">{deal.contact?.name || deal.lead?.contactName}</p>
@@ -445,7 +445,7 @@ export default function DealDetailPage() {
 
           {/* Purchase History Card (e-commerce bridge) */}
           {deal.purchaseHistory && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <ShoppingCart className="h-4 w-4" />
                 {t('admin.crm.purchaseHistory')}
@@ -491,7 +491,7 @@ export default function DealDetailPage() {
 
           {/* Bridge #7: CRM → Telephonie (Call History) */}
           {deal.callHistory && deal.callHistory.totalCalls > 0 && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <PhoneCall className="h-4 w-4" />
                 {t('admin.crm.callHistory')}
@@ -532,7 +532,7 @@ export default function DealDetailPage() {
 
           {/* Bridge #11: CRM → Email (Email History) */}
           {deal.emailHistory && deal.emailHistory.totalSent > 0 && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Inbox className="h-4 w-4" />
                 {t('admin.crm.emailHistory')}
@@ -569,7 +569,7 @@ export default function DealDetailPage() {
 
           {/* Bridge #15: CRM → Fidélité */}
           {deal.loyaltyInfo && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Star className="h-4 w-4" />
                 {t('admin.crm.loyaltyInfo')}
@@ -589,7 +589,7 @@ export default function DealDetailPage() {
 
           {/* Bridge #50: CRM → Accounting */}
           {deal.accountingInfo && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Calculator className="h-4 w-4" />
                 {t('admin.bridges.accountingInfo')}
@@ -632,7 +632,7 @@ export default function DealDetailPage() {
 
           {/* Bridge #49: CRM → Media */}
           {mediaBridge?.enabled && (mediaBridge.videos ?? []).length > 0 && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Video className="h-4 w-4" />
                 {t('admin.bridges.dealMedia')}
@@ -663,7 +663,7 @@ export default function DealDetailPage() {
 
           {/* Tags */}
           {deal.tags.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.tags')}</h3>
               <div className="flex flex-wrap gap-1.5">
                 {deal.tags.map((tag) => (

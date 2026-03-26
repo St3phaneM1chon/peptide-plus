@@ -412,48 +412,48 @@ export default function PayrollPage() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg">
               <Users className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{employees.filter(e => e.status === 'ACTIVE').length}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{employees.filter(e => e.status === 'ACTIVE').length}</p>
               <p className="text-xs text-slate-500">Employes actifs</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 rounded-lg">
               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">
                 {formatMoney(runs.filter(r => r.status === 'PAID').reduce((s, r) => s + r.totalNet, 0))}
               </p>
               <p className="text-xs text-slate-500">Net paye (total)</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-50 rounded-lg">
               <Calendar className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{runs.length}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{runs.length}</p>
               <p className="text-xs text-slate-500">Cycles de paie</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-violet-50 rounded-lg">
               <FileText className="w-5 h-5 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{payStubs.length}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{payStubs.length}</p>
               <p className="text-xs text-slate-500">Bulletins generes</p>
             </div>
           </div>
@@ -470,8 +470,8 @@ export default function PayrollPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
+                  : 'text-slate-600 hover:text-[var(--k-text-primary)]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -498,7 +498,7 @@ export default function PayrollPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Periode</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Date de paie</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Statut</th>
@@ -511,7 +511,7 @@ export default function PayrollPage() {
                 </thead>
                 <tbody>
                   {runs.map((run) => (
-                    <tr key={run.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={run.id} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-3">
                         <span className="font-medium">{run.periodStart}</span>
                         <span className="text-slate-400 mx-1">-</span>
@@ -616,7 +616,7 @@ export default function PayrollPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Nom</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Email</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Type</th>
@@ -630,7 +630,7 @@ export default function PayrollPage() {
                 </thead>
                 <tbody>
                   {employees.map((emp) => (
-                    <tr key={emp.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={emp.id} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-3 font-medium">
                         {emp.firstName} {emp.lastName}
                       </td>
@@ -705,7 +705,7 @@ export default function PayrollPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Periode</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Date de paie</th>
@@ -719,7 +719,7 @@ export default function PayrollPage() {
                 </thead>
                 <tbody>
                   {payStubs.map((stub) => (
-                    <tr key={stub.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={stub.id} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-3 font-medium">
                         {stub.employee.firstName} {stub.employee.lastName}
                       </td>
@@ -786,8 +786,8 @@ export default function PayrollPage() {
             </div>
 
             {reportData && (
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <h4 className="font-medium text-slate-900 mb-3">
+              <div className="bg-white/5 rounded-lg p-4 border border-[var(--k-border-subtle)]">
+                <h4 className="font-medium text-[var(--k-text-primary)] mb-3">
                   {(reportData as Record<string, unknown>).type === 'summary' && 'Sommaire de la paie'}
                   {(reportData as Record<string, unknown>).type === 't4' && 'Donnees T4 (federal)'}
                   {(reportData as Record<string, unknown>).type === 'rl1' && 'Donnees RL-1 (Quebec)'}
@@ -802,24 +802,24 @@ export default function PayrollPage() {
                       return (
                         <>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="bg-white rounded-lg p-3 border">
+                            <div className="bg-[var(--k-glass-thin)] rounded-lg p-3 border">
                               <p className="text-xs text-slate-500">Cycles</p>
                               <p className="text-lg font-bold">{summary.runsCount as number}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-3 border">
+                            <div className="bg-[var(--k-glass-thin)] rounded-lg p-3 border">
                               <p className="text-xs text-slate-500">Employes</p>
                               <p className="text-lg font-bold">{summary.employeeCount as number}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-3 border">
+                            <div className="bg-[var(--k-glass-thin)] rounded-lg p-3 border">
                               <p className="text-xs text-slate-500">Brut total</p>
                               <p className="text-lg font-bold font-mono">{formatMoney(totals.grossPay)}</p>
                             </div>
-                            <div className="bg-white rounded-lg p-3 border">
+                            <div className="bg-[var(--k-glass-thin)] rounded-lg p-3 border">
                               <p className="text-xs text-slate-500">Net total</p>
                               <p className="text-lg font-bold font-mono text-emerald-700">{formatMoney(totals.netPay)}</p>
                             </div>
                           </div>
-                          <div className="bg-white rounded-lg p-4 border">
+                          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 border">
                             <h5 className="text-sm font-medium text-slate-700 mb-3">Ventilation des deductions et cotisations</h5>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                               <div><span className="text-slate-500">RRQ/RPC:</span> <span className="font-mono">{formatMoney(totals.cppContribution)}</span></div>
@@ -855,7 +855,7 @@ export default function PayrollPage() {
                         </span>
                       </div>
                     )}
-                    <pre className="text-xs bg-white p-3 rounded-lg border overflow-auto max-h-96">
+                    <pre className="text-xs bg-[var(--k-glass-thin)] p-3 rounded-lg border overflow-auto max-h-96">
                       {JSON.stringify((reportData as Record<string, unknown>).data, null, 2)}
                     </pre>
                   </div>

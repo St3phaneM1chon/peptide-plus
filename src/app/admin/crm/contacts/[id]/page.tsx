@@ -235,7 +235,7 @@ export default function ContactDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Tabs */}
-          <div className="bg-white rounded-lg border">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border">
             <div className="flex border-b">
               {(['timeline', 'tasks'] as const).map((tab) => (
                 <button
@@ -337,7 +337,7 @@ export default function ContactDetailPage() {
           />
 
           {/* Details with inline edit */}
-          <div className="bg-white rounded-lg border p-4 space-y-2.5">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-2.5">
             <h3 className="font-semibold text-gray-700 text-sm mb-2">
               {t('admin.crm.details')}
             </h3>
@@ -432,7 +432,7 @@ export default function ContactDetailPage() {
 
           {/* Deals */}
           {contact.deals.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
                 <DollarSign className="h-4 w-4" />
                 {t('admin.crm.deals')}
@@ -464,7 +464,7 @@ export default function ContactDetailPage() {
 
           {/* Tags */}
           {contact.tags.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">
                 {t('admin.crm.tags')}
               </h3>

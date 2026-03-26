@@ -141,7 +141,7 @@ export default function SecurityAuditPage() {
 
       {/* Empty State (before first run) */}
       {!report && !loading && !error && (
-        <div className="rounded-xl border-2 border-dashed border-slate-200 p-12 text-center">
+        <div className="rounded-xl border-2 border-dashed border-[var(--k-border-subtle)] p-12 text-center">
           <Shield className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-500">Aucun audit lance</h3>
           <p className="text-sm text-slate-400 mt-2">
@@ -212,7 +212,7 @@ export default function SecurityAuditPage() {
           </div>
 
           {/* Checks List */}
-          <div className="bg-white rounded-xl border border-slate-200">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
             <div className="px-6 py-4 border-b border-slate-100">
               <h2 className="font-semibold text-slate-800 flex items-center gap-2">
                 <FileSearch className="w-5 h-5 text-slate-500" />
@@ -221,7 +221,7 @@ export default function SecurityAuditPage() {
             </div>
             <div className="divide-y divide-slate-50">
               {report.checks.map((check) => (
-                <div key={check.header} className="px-6 py-4 hover:bg-slate-50">
+                <div key={check.header} className="px-6 py-4 hover:bg-white/5">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 mt-0.5">
                       {statusIcon(check.status)}

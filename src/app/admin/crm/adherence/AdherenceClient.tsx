@@ -194,7 +194,7 @@ export default function AdherenceClient() {
             className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
               autoRefresh
                 ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                : 'bg-white/20 text-gray-600 border-gray-200 hover:bg-gray-50'
             }`}
           >
             <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
@@ -208,7 +208,7 @@ export default function AdherenceClient() {
         <button
           onClick={() => setTab('realtime')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            tab === 'realtime' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            tab === 'realtime' ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <span className="flex items-center gap-1.5">
@@ -219,7 +219,7 @@ export default function AdherenceClient() {
         <button
           onClick={() => setTab('historical')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            tab === 'historical' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            tab === 'historical' ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <span className="flex items-center gap-1.5">
@@ -234,20 +234,20 @@ export default function AdherenceClient() {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-4">
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                 <Users className="h-4 w-4" />
                 {t('admin.crm.adherence.totalAgents')}
               </div>
               <div className="text-2xl font-bold text-gray-900">{realtimeData.length}</div>
             </div>
-            <div className="bg-white rounded-xl border border-green-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-green-200 p-4">
               <div className="text-sm text-green-600 mb-1">
                 {t('admin.crm.adherence.inAdherence')}
               </div>
               <div className="text-2xl font-bold text-green-700">{inAdherenceCount}</div>
             </div>
-            <div className="bg-white rounded-xl border border-red-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-red-200 p-4">
               <div className="text-sm text-red-600 mb-1">
                 {t('admin.crm.adherence.outOfAdherence')}
               </div>
@@ -261,7 +261,7 @@ export default function AdherenceClient() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : realtimeData.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <ShieldCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.adherence.noAgents')}
@@ -271,7 +271,7 @@ export default function AdherenceClient() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
@@ -332,7 +332,7 @@ export default function AdherenceClient() {
       {tab === 'historical' && (
         <>
           {/* Date picker */}
-          <div className="flex items-center gap-3 mb-6 bg-white rounded-xl border border-gray-200 p-3 w-fit">
+          <div className="flex items-center gap-3 mb-6 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-3 w-fit">
             <button
               onClick={() => {
                 const d = new Date(selectedDate);
@@ -369,7 +369,7 @@ export default function AdherenceClient() {
           ) : historicalData ? (
             <>
               {/* Team average card */}
-              <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5 mb-6">
                 <div className="text-sm text-gray-500 mb-2">
                   {t('admin.crm.adherence.teamAverage')}
                 </div>
@@ -383,7 +383,7 @@ export default function AdherenceClient() {
 
               {/* Bar chart */}
               {historicalData.agents.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5 mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-4">
                     {t('admin.crm.adherence.adherenceByAgent')}
                   </h3>
@@ -408,7 +408,7 @@ export default function AdherenceClient() {
               )}
 
               {/* Agent detail table */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
                 <table className="w-full">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
@@ -453,7 +453,7 @@ export default function AdherenceClient() {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.adherence.noData')}

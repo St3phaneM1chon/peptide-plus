@@ -98,7 +98,7 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
     return (
       <div className="p-6 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">{t('admin.fiscalCountry.countryNotFound')}</h1>
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)] mb-4">{t('admin.fiscalCountry.countryNotFound')}</h1>
           <p className="text-slate-600 mb-6">{t('admin.fiscalCountry.countryNotConfigured', { code: countryCode })}</p>
           <Link href="/admin/fiscal" className="text-indigo-600 hover:underline">
             &larr; {t('admin.fiscalCountry.backToList')}
@@ -153,8 +153,8 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
-        <div className="border-b border-slate-200">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-[var(--k-border-subtle)] mb-6">
+        <div className="border-b border-[var(--k-border-subtle)]">
           <nav className="flex -mb-px">
             {[
               { id: 'overview', label: t('admin.fiscalCountry.tabOverview') },
@@ -212,25 +212,25 @@ function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
           {t('admin.fiscalCountry.canadianExportObligations')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4">
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.canadianTaxes')}</div>
             <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-indigo-600'}`}>
               {country.canadianObligations.zeroRated ? t('admin.fiscalCountry.zeroRated') : t('admin.fiscalCountry.taxable')}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4">
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.cersDeclaration')}</div>
             <div className={`font-bold ${country.canadianObligations.cersRequired ? 'text-purple-600' : 'text-slate-600'}`}>
               {country.canadianObligations.cersRequired ? t('admin.fiscalCountry.cersRequired', { threshold: country.canadianObligations.cersThreshold }) : t('admin.fiscalCountry.notRequired')}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4">
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.certificateOfOrigin')}</div>
             <div className={`font-bold ${country.canadianObligations.certificateOfOrigin ? 'text-green-600' : 'text-slate-600'}`}>
               {country.canadianObligations.certificateOfOrigin ? t('admin.fiscalCountry.required') : t('admin.fiscalCountry.notRequired')}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4">
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.exportPermit')}</div>
             <div className={`font-bold ${country.canadianObligations.exportPermit ? 'text-red-600' : 'text-slate-600'}`}>
               {country.canadianObligations.exportPermit ? t('admin.fiscalCountry.required') : t('admin.fiscalCountry.notRequired')}
@@ -240,8 +240,8 @@ function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
       </div>
 
       {/* Shipping Info */}
-      <div className="bg-slate-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">
+      <div className="bg-white/5 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">
           {t('admin.fiscalCountry.shippingInfo')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -282,7 +282,7 @@ function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
 function ObligationsTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">
+      <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">
         {t('admin.fiscalCountry.obligationsFor', { name: country.name })}
       </h3>
 
@@ -295,10 +295,10 @@ function ObligationsTab({ country, t }: { country: CountryCompliance; t: TFunc }
       ) : (
         <div className="space-y-4">
           {country.destinationObligations.map((obligation, index) => (
-            <div key={index} className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+            <div key={index} className="bg-white/5 rounded-lg p-6 border border-[var(--k-border-subtle)]">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h4 className="font-semibold text-slate-900">{obligation.name}</h4>
+                  <h4 className="font-semibold text-[var(--k-text-primary)]">{obligation.name}</h4>
                   <p className="text-sm text-slate-500">{obligation.nameFr}</p>
                 </div>
                 <StatusBadge variant={obligation.required ? 'error' : 'neutral'}>
@@ -353,7 +353,7 @@ function TasksTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">
           {t('admin.fiscalCountry.tasksAndDeadlines')}
         </h3>
         <div className="text-sm text-slate-500">
@@ -375,7 +375,7 @@ function TasksTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
               className={`rounded-lg p-4 border ${
                 task.status === 'completed'
                   ? 'bg-green-50 border-green-200'
-                  : 'bg-white border-slate-200'
+                  : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)]'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -394,7 +394,7 @@ function TasksTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
 
                 <div className="flex-grow">
                   <div className="flex items-center justify-between">
-                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-green-800 line-through' : 'text-slate-900'}`}>
+                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-green-800 line-through' : 'text-[var(--k-text-primary)]'}`}>
                       {task.name}
                     </h4>
                     <StatusBadge variant={
@@ -437,7 +437,7 @@ function OrdersTab({ country, orders, t }: { country: CountryCompliance; orders:
     {
       key: 'customer',
       header: t('admin.fiscalCountry.customerCol'),
-      render: (order) => <span className="text-slate-900">{order.customer}</span>,
+      render: (order) => <span className="text-[var(--k-text-primary)]">{order.customer}</span>,
     },
     {
       key: 'total',
@@ -469,7 +469,7 @@ function OrdersTab({ country, orders, t }: { country: CountryCompliance; orders:
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">
           {t('admin.fiscalCountry.recentOrders', { name: country.name })}
         </h3>
         <Button variant="primary" icon={FileSpreadsheet} size="sm">
@@ -547,7 +547,7 @@ function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompl
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">
           {t('admin.fiscalCountry.monthlyReports', { name: country.name })}
         </h3>
         <div className="flex gap-2">

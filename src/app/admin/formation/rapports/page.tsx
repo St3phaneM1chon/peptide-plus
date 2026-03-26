@@ -84,7 +84,7 @@ export default function RapportsPage() {
     switch (activeReport) {
       case 'completionByDept':
         return [
-          { key: 'department', header: t('admin.lms.reports.department'), render: (r) => <span className="font-medium text-slate-900">{r.department ?? r.name ?? '—'}</span> },
+          { key: 'department', header: t('admin.lms.reports.department'), render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.department ?? r.name ?? '—'}</span> },
           { key: 'totalEnrolled', header: t('admin.lms.reports.totalEnrolled'), align: 'center', render: (r) => <span className="tabular-nums">{r.totalEnrolled ?? r.enrolled ?? 0}</span> },
           { key: 'completed', header: t('admin.lms.reports.completedCount'), align: 'center', render: (r) => <span className="tabular-nums">{r.completedCount ?? r.completed ?? 0}</span> },
           {
@@ -103,13 +103,13 @@ export default function RapportsPage() {
         ];
       case 'ufcCredits':
         return [
-          { key: 'name', header: t('admin.lms.reports.studentName'), render: (r) => <span className="font-medium text-slate-900">{r.studentName ?? r.name ?? '—'}</span> },
+          { key: 'name', header: t('admin.lms.reports.studentName'), render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.studentName ?? r.name ?? '—'}</span> },
           { key: 'totalUfc', header: t('admin.lms.reports.totalUfc'), align: 'center', render: (r) => <span className="tabular-nums font-medium">{r.totalUfc ?? r.ufcCredits ?? 0}</span> },
           { key: 'earned', header: t('admin.lms.reports.earnedThisPeriod'), align: 'center', render: (r) => <span className="tabular-nums text-emerald-600">{r.earnedThisPeriod ?? r.periodCredits ?? 0}</span> },
         ];
       case 'complianceStatus':
         return [
-          { key: 'name', header: t('admin.lms.reports.employeeName'), render: (r) => <span className="font-medium text-slate-900">{r.employeeName ?? r.name ?? '—'}</span> },
+          { key: 'name', header: t('admin.lms.reports.employeeName'), render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.employeeName ?? r.name ?? '—'}</span> },
           { key: 'required', header: t('admin.lms.reports.requiredTrainings'), align: 'center', render: (r) => <span className="tabular-nums">{r.requiredTrainings ?? r.required ?? 0}</span> },
           { key: 'completed', header: t('admin.lms.reports.completedTrainings'), align: 'center', render: (r) => <span className="tabular-nums text-emerald-600">{r.completedTrainings ?? r.completed ?? 0}</span> },
           { key: 'overdue', header: t('admin.lms.reports.overdueTrainings'), align: 'center', render: (r) => <span className={`tabular-nums ${(r.overdueTrainings ?? r.overdue ?? 0) > 0 ? 'text-red-600 font-medium' : 'text-slate-500'}`}>{r.overdueTrainings ?? r.overdue ?? 0}</span> },
@@ -126,7 +126,7 @@ export default function RapportsPage() {
         ];
       case 'courseEffectiveness':
         return [
-          { key: 'name', header: t('admin.lms.reports.courseName'), render: (r) => <span className="font-medium text-slate-900">{r.courseName ?? r.name ?? '—'}</span> },
+          { key: 'name', header: t('admin.lms.reports.courseName'), render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.courseName ?? r.name ?? '—'}</span> },
           { key: 'enrolled', header: t('admin.lms.reports.totalEnrolled'), align: 'center', render: (r) => <span className="tabular-nums">{r.totalEnrolled ?? r.enrolled ?? 0}</span> },
           {
             key: 'completionRate', header: t('admin.lms.reports.completionRate'), render: (r) => {
@@ -171,14 +171,14 @@ export default function RapportsPage() {
                 text-left p-4 rounded-xl border-2 transition-all duration-200
                 ${isActive
                   ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                  : 'border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)] hover:border-slate-300 hover:shadow-sm'
                 }
               `}
             >
               <div className={`p-2 rounded-lg inline-flex mb-2 ${isActive ? 'bg-indigo-100' : 'bg-slate-100'}`}>
                 <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
               </div>
-              <h3 className={`text-sm font-medium ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>
+              <h3 className={`text-sm font-medium ${isActive ? 'text-indigo-900' : 'text-[var(--k-text-primary)]'}`}>
                 {t(report.titleKey)}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">

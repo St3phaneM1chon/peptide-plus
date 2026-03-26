@@ -161,7 +161,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               activeTab === key
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white/20 text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -174,7 +174,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
       {/* Results */}
       <div className="space-y-3">
         {filteredItems.map((item) => (
-          <div key={`${item.type}-${item.id}`} className="bg-white border border-gray-200 rounded-xl p-4">
+          <div key={`${item.type}-${item.id}`} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 {/* Type icon */}
@@ -288,7 +288,7 @@ export default function RecordingsClient({ recordings: initialRecordings }: { re
         ))}
 
         {filteredItems.length === 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             {isSearching ? t('common.loading') : t('voip.recordings.empty')}
           </div>
         )}

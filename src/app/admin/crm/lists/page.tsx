@@ -223,7 +223,7 @@ export default function ProspectListsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowImportModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[var(--k-glass-thin)] px-4 py-2 text-sm font-medium hover:bg-gray-50"
           >
             <Upload className="h-4 w-4" />
             {t('admin.crmLists.importCSV')}
@@ -273,7 +273,7 @@ export default function ProspectListsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-[var(--k-glass-thin)]">
         <table className="w-full text-sm">
           <thead className="border-b bg-gray-50 text-start text-gray-600">
             <tr>
@@ -371,7 +371,7 @@ export default function ProspectListsPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="create-list-modal-title">
+          <div className="w-full max-w-md rounded-xl bg-[var(--k-glass-thin)] p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="create-list-modal-title">
             <h2 id="create-list-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.newList')}</h2>
             <div className="space-y-4">
               <div>
@@ -425,7 +425,7 @@ export default function ProspectListsPage() {
       {/* Import CSV Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="import-csv-list-modal-title">
+          <div className="w-full max-w-md rounded-xl bg-[var(--k-glass-thin)] p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="import-csv-list-modal-title">
             <h2 id="import-csv-list-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.importCSV')}</h2>
             <div className="space-y-4">
               <div>

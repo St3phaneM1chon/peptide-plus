@@ -171,7 +171,7 @@ export default function CallAnalyticsClient() {
                 onClick={() => setDateRange(range)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                   dateRange === range
-                    ? 'bg-white text-indigo-600 shadow-sm'
+                    ? 'bg-white/20 text-indigo-600 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -188,7 +188,7 @@ export default function CallAnalyticsClient() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* AHT */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <Timer className="h-4 w-4 text-indigo-500" />
             <span className="text-xs text-gray-500 font-medium">AHT</span>
@@ -198,7 +198,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* ASA */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="h-4 w-4 text-purple-500" />
             <span className="text-xs text-gray-500 font-medium">ASA</span>
@@ -208,7 +208,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* FCR */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <UserCheck className="h-4 w-4 text-green-500" />
             <span className="text-xs text-gray-500 font-medium">FCR</span>
@@ -218,7 +218,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* Abandon Rate */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <PhoneOff className="h-4 w-4 text-red-500" />
             <span className="text-xs text-gray-500 font-medium">Abandon</span>
@@ -230,7 +230,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* Service Level */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-indigo-500" />
             <span className="text-xs text-gray-500 font-medium">SL</span>
@@ -242,7 +242,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* Occupancy */}
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <Headphones className="h-4 w-4 text-indigo-500" />
             <span className="text-xs text-gray-500 font-medium">Occupancy</span>
@@ -280,7 +280,7 @@ export default function CallAnalyticsClient() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Hourly Distribution */}
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {t('admin.crm.hourlyDistribution')}
@@ -309,7 +309,7 @@ export default function CallAnalyticsClient() {
         </div>
 
         {/* Daily Trend */}
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             {t('admin.crm.dailyTrend')}

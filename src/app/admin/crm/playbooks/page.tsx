@@ -298,9 +298,9 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="playbook-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="playbook-modal-title">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-[var(--k-glass-thin)] z-10">
           <h2 id="playbook-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-indigo-600" />
             {playbook
@@ -405,7 +405,7 @@ function PlaybookModal({ playbook, pipelines, onClose, onSave }: PlaybookModalPr
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 sticky bottom-0 bg-white">
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 sticky bottom-0 bg-[var(--k-glass-thin)]">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
@@ -499,7 +499,7 @@ export default function PlaybooksPage() {
           <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         </div>
       ) : playbooks.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.playbooks.noPlaybooks')}
@@ -514,7 +514,7 @@ export default function PlaybooksPage() {
             <div
               key={pb.id}
               onClick={() => setModal({ playbook: pb })}
-              className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>

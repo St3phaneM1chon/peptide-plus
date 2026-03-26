@@ -174,13 +174,13 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
       {/* Main thread area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-slate-200 bg-white">
+        <div className="flex items-center gap-3 p-4 border-b border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)]">
           <button onClick={onBack} className="p-1 hover:bg-slate-100 rounded" aria-label="Retour a la boite de reception">
             <ArrowLeft className="h-5 w-5 text-slate-500" />
           </button>
 
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-slate-900 truncate">{conversation.subject}</h2>
+            <h2 className="text-lg font-semibold text-[var(--k-text-primary)] truncate">{conversation.subject}</h2>
             <div className="flex items-center gap-3 mt-1">
               {/* Status dropdown */}
               <select
@@ -229,16 +229,16 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
         </div>
 
         {/* Timeline */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/5">
           {timeline.map((item) => (
             <div key={`${item.type}-${item.id}`}>
               {item.type === 'inbound' && (
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+                <div className="bg-[var(--k-glass-thin)] rounded-lg shadow-sm border border-[var(--k-border-subtle)] p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
                       <User className="h-3 w-3 text-slate-500" />
                     </div>
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-sm font-medium text-[var(--k-text-primary)]">
                       {(item.data.fromName as string) || (item.data.from as string)}
                     </span>
                     <span className="text-xs text-slate-400">
@@ -314,7 +314,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
         </div>
 
         {/* Reply / Note bar */}
-        <div className="border-t border-slate-200 bg-white p-3">
+        <div className="border-t border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)] p-3">
           {replyMode ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-1">
@@ -332,7 +332,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder={replyMode === 'reply' ? t('admin.emails.inbox.replyPlaceholder') : t('admin.emails.inbox.notePlaceholder')}
                 className={`w-full p-3 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 ${
-                  replyMode === 'note' ? 'bg-yellow-50 border-yellow-200 focus:ring-yellow-400' : 'border-slate-200 focus:ring-indigo-500'
+                  replyMode === 'note' ? 'bg-yellow-50 border-yellow-200 focus:ring-yellow-400' : 'border-[var(--k-border-subtle)] focus:ring-indigo-500'
                 }`}
                 rows={4}
                 autoFocus

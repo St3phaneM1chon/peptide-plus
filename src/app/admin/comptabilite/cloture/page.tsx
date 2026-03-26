@@ -254,12 +254,12 @@ export default function CloturePage() {
             <div
               key={period.id}
               onClick={() => setSelectedPeriod(period.code)}
-              className={`bg-white rounded-xl p-5 border cursor-pointer transition-all hover:shadow-md ${
-                selectedPeriod === period.code ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'
+              className={`bg-[var(--k-glass-thin)] rounded-xl p-5 border cursor-pointer transition-all hover:shadow-md ${
+                selectedPeriod === period.code ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-[var(--k-border-subtle)]'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-slate-900">{period.name}</h3>
+                <h3 className="font-semibold text-[var(--k-text-primary)]">{period.name}</h3>
                 <StatusBadge variant={statusConfig[period.status]?.variant || 'neutral'}>
                   {statusConfig[period.status]?.label || period.status}
                 </StatusBadge>
@@ -287,7 +287,7 @@ export default function CloturePage() {
 
       {/* Completion Percentage Overview */}
       {currentPeriod && checklist.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${
@@ -302,14 +302,14 @@ export default function CloturePage() {
                 )}
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{t('admin.closing.stepByStep')}</h3>
+                <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.closing.stepByStep')}</h3>
                 <p className="text-sm text-slate-500">
                   {t('admin.closing.stepsCompleted').replace('{done}', String(okTasks)).replace('{total}', String(checklist.length))}
                 </p>
               </div>
             </div>
             <div className="text-end">
-              <p className="text-3xl font-bold text-slate-900">
+              <p className="text-3xl font-bold text-[var(--k-text-primary)]">
                 {checklist.length > 0 ? Math.round((okTasks / checklist.length) * 100) : 0}%
               </p>
               <p className="text-xs text-slate-500">
@@ -379,7 +379,7 @@ export default function CloturePage() {
                       task.status === 'ok' ? 'bg-green-50 border-green-200' :
                       task.status === 'warning' ? 'bg-yellow-50 border-yellow-200' :
                       task.status === 'error' ? 'bg-red-50 border-red-200' :
-                      'bg-slate-50 border-slate-200'
+                      'bg-white/5 border-[var(--k-border-subtle)]'
                     }`}
                   >
                     <div className="flex-shrink-0">
@@ -403,7 +403,7 @@ export default function CloturePage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-slate-900">{task.label}</h4>
+                        <h4 className="font-medium text-[var(--k-text-primary)]">{task.label}</h4>
                         {task.count !== undefined && task.count > 0 && (
                           <span className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs">{task.count}</span>
                         )}
@@ -442,7 +442,7 @@ export default function CloturePage() {
             )}
           </div>
 
-          <div className="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div className="p-6 border-t border-[var(--k-border-subtle)] bg-white/5 flex items-center justify-between">
             <p className="text-sm text-slate-600">
               {currentPeriod.status === 'LOCKED' ? (
                 <span className="text-slate-500">&#128274; {t('admin.closing.periodLocked')}</span>

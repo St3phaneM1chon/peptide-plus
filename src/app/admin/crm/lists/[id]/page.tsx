@@ -581,7 +581,7 @@ export default function ProspectListDetailPage() {
           { label: t('admin.crmLists.integratedCount'), value: list.integratedCount, color: 'text-purple-600' },
           { label: t('admin.crmLists.excludedCount'), value: list.statusBreakdown?.EXCLUDED || 0, color: 'text-red-600' },
         ].map((s) => (
-          <div key={s.label} className="rounded-lg border bg-white p-4 text-center">
+          <div key={s.label} className="rounded-lg border bg-[var(--k-glass-thin)] p-4 text-center">
             <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
             <div className="text-xs text-gray-500 mt-1">{s.label}</div>
           </div>
@@ -651,7 +651,7 @@ export default function ProspectListDetailPage() {
           </div>
 
           {/* Prospects Table */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-[var(--k-glass-thin)]">
             <table className="w-full text-sm">
               <thead className="border-b bg-gray-50 text-start text-gray-600">
                 <tr>
@@ -752,7 +752,7 @@ export default function ProspectListDetailPage() {
       {/* ========== TAB: Google Maps ========== */}
       {tab === 'googleMaps' && (
         <div className="space-y-4">
-          <div className="rounded-lg border bg-white p-6 space-y-4">
+          <div className="rounded-lg border bg-[var(--k-glass-thin)] p-6 space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <MapPin className="h-5 w-5 text-red-500" />
               {t('admin.crmLists.searchGoogleMaps')}
@@ -811,7 +811,7 @@ export default function ProspectListDetailPage() {
                   {prospects.filter((p) => p.googlePlaceId).length} {t('admin.crmLists.prospects').toLowerCase()}
                 </h4>
               </div>
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-[var(--k-glass-thin)]">
                 <table className="w-full text-sm">
                   <thead className="border-b bg-gray-50 text-start text-gray-600">
                     <tr>
@@ -897,7 +897,7 @@ export default function ProspectListDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border bg-white p-8 text-center text-gray-400">
+            <div className="rounded-lg border bg-[var(--k-glass-thin)] p-8 text-center text-gray-400">
               <MapPin className="mx-auto mb-2 h-10 w-10 text-gray-300" />
               <p className="font-medium text-gray-500">{t('admin.crmLists.noGoogleMapsResults')}</p>
               <p className="text-sm mt-1">{t('admin.crmLists.noGoogleMapsResultsDesc')}</p>
@@ -909,7 +909,7 @@ export default function ProspectListDetailPage() {
       {/* ========== TAB: Enrichment ========== */}
       {tab === 'enrichment' && (
         <div className="space-y-4">
-          <div className="rounded-lg border bg-white p-6 space-y-6">
+          <div className="rounded-lg border bg-[var(--k-glass-thin)] p-6 space-y-6">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <Zap className="h-5 w-5 text-amber-500" />
               {t('admin.crmLists.enrichment')}
@@ -1062,14 +1062,14 @@ export default function ProspectListDetailPage() {
           </div>
 
           {duplicateProspects.length === 0 ? (
-            <div className="rounded-lg border bg-white p-8 text-center text-gray-400">
+            <div className="rounded-lg border bg-[var(--k-glass-thin)] p-8 text-center text-gray-400">
               <GitMerge className="mx-auto mb-2 h-10 w-10 text-gray-300" />
               <p>{t('admin.crmLists.noDuplicatesFound')}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {duplicateProspects.map((p) => (
-                <div key={p.id} className="rounded-lg border bg-white p-4">
+                <div key={p.id} className="rounded-lg border bg-[var(--k-glass-thin)] p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="font-medium">{p.contactName}</span>
@@ -1104,7 +1104,7 @@ export default function ProspectListDetailPage() {
       {/* ========== TAB: Assignment ========== */}
       {tab === 'assignment' && (
         <div className="space-y-4">
-          <div className="rounded-lg border bg-white p-6 space-y-4">
+          <div className="rounded-lg border bg-[var(--k-glass-thin)] p-6 space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <Users className="h-5 w-5 text-indigo-500" />
               {t('admin.crmLists.assignment')}
@@ -1176,7 +1176,7 @@ export default function ProspectListDetailPage() {
       {/* ========== TAB: Campaign ========== */}
       {tab === 'campaign' && (
         <div className="space-y-4">
-          <div className="rounded-lg border bg-white p-6 space-y-6">
+          <div className="rounded-lg border bg-[var(--k-glass-thin)] p-6 space-y-6">
             <h3 className="text-lg font-medium flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-indigo-600" />
               {t('admin.crmLists.campaignTab')}
@@ -1358,7 +1358,7 @@ export default function ProspectListDetailPage() {
                       className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
                         campaignActiveDays.includes(day)
                           ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
-                          : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                          : 'bg-white/20 text-gray-500 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       {day.charAt(0).toUpperCase() + day.slice(1)}
@@ -1411,7 +1411,7 @@ export default function ProspectListDetailPage() {
       {/* Add Prospect Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="add-prospect-modal-title">
+          <div className="w-full max-w-md rounded-xl bg-[var(--k-glass-thin)] p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="add-prospect-modal-title">
             <h2 id="add-prospect-modal-title" className="text-lg font-bold mb-4">{t('admin.crmLists.addProspect')}</h2>
             <div className="space-y-3">
               {(['contactName', 'companyName', 'email', 'phone', 'city'] as const).map((field) => (

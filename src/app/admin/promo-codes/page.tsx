@@ -789,7 +789,7 @@ export default function PromoCodesPage() {
                         <div className="flex justify-between text-sm">
                           <span className="text-[var(--k-text-secondary)]">{t('admin.promoCodes.toDate')}</span>
                           <span className={`font-medium ${
-                            new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-slate-900'
+                            new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-[var(--k-text-primary)]'
                           }`}>
                             {new Date(selectedPromo.endsAt).toLocaleDateString(locale)}
                           </span>
@@ -802,7 +802,7 @@ export default function PromoCodesPage() {
                   </div>
 
                   {/* Meta info */}
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                  <div className="text-xs text-slate-400 pt-2 border-t border-[var(--k-border-subtle)]">
                     <p>ID: {selectedPromo.id}</p>
                     <p>{t('admin.promoCodes.colCode')}: {selectedPromo.code}</p>
                     <p>
@@ -973,7 +973,7 @@ export default function PromoCodesPage() {
             <span className="text-sm text-slate-700">{t('admin.promoCodes.firstOrderOnlyCheckbox')}</span>
           </label>
 
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <div className="flex gap-3 pt-4 border-t border-[var(--k-border-subtle)]">
             <Button type="button" variant="secondary" onClick={resetForm} className="flex-1">
               {t('admin.promoCodes.cancel')}
             </Button>

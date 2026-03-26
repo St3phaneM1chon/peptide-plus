@@ -85,7 +85,7 @@ export default function AdminBlogPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                filter === f ? 'bg-white text-[var(--k-text-primary)] shadow-sm' : 'text-[var(--k-text-secondary)] hover:text-slate-900'
+                filter === f ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm' : 'text-[var(--k-text-secondary)] hover:text-[var(--k-text-primary)]'
               }`}
             >
               {f === 'all' ? t('admin.blog.filterAll') : f === 'published' ? t('admin.blog.filterPublished') : t('admin.blog.filterDraft')}
@@ -124,7 +124,7 @@ export default function AdminBlogPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                      post.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-white/10 text-slate-600'
+                      post.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-white/10 text-[var(--k-text-secondary)]'
                     }`}>
                       {post.isPublished ? t('admin.blog.filterPublished') : t('admin.blog.filterDraft')}
                     </span>

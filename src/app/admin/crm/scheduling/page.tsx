@@ -183,7 +183,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 id="schedule-modal-title" className="text-lg font-semibold text-gray-900">
             {data.existing
@@ -231,7 +231,7 @@ function ScheduleModal({ data, onClose, onSaved }: ScheduleModalProps) {
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                         form.shiftType === key
                           ? SHIFT_CONFIG[key].color + ' ring-2 ring-offset-1 ring-indigo-400'
-                          : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                          : 'bg-white/20 text-gray-500 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       {SHIFT_CONFIG[key].label}
@@ -541,7 +541,7 @@ export default function SchedulingPage() {
             key={key}
             onClick={() => setActiveTab(key)}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              activeTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              activeTab === key ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <span className="flex items-center gap-1.5">
@@ -558,7 +558,7 @@ export default function SchedulingPage() {
       {activeTab === 'schedule' && (
         <>
           {/* Controls Bar */}
-          <div className="flex items-center justify-between mb-4 bg-white rounded-xl border border-gray-200 p-3">
+          <div className="flex items-center justify-between mb-4 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-3">
             <div className="flex items-center gap-2">
               <button onClick={goToPrevWeek} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
                 <ChevronLeft className="h-5 w-5" />
@@ -597,7 +597,7 @@ export default function SchedulingPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : displayAgents.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.scheduling.noSchedules')}
@@ -607,7 +607,7 @@ export default function SchedulingPage() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
@@ -697,7 +697,7 @@ export default function SchedulingPage() {
       {activeTab === 'bidding' && (
         <div className="space-y-6">
           {/* Submit a Bid */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4 text-indigo-600" />
               {t('admin.crm.scheduling.submitBid')}
@@ -756,7 +756,7 @@ export default function SchedulingPage() {
           </div>
 
           {/* Bids List */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900">
                 {t('admin.crm.scheduling.pendingBids')} ({bids.length})
@@ -839,7 +839,7 @@ export default function SchedulingPage() {
       {activeTab === 'skills' && (
         <div className="space-y-6">
           {/* Skill filter */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-4 flex items-center gap-3">
             <Filter className="h-4 w-4 text-gray-400" />
             <select
               value={filterSkill}
@@ -862,7 +862,7 @@ export default function SchedulingPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
@@ -947,7 +947,7 @@ export default function SchedulingPage() {
           )}
 
           {filteredDisplayAgents.length === 0 && !loading && (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-8 text-center">
               <Zap className="h-10 w-10 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-gray-500">
                 {t('admin.crm.scheduling.noAgentsWithSkill')}
@@ -975,7 +975,7 @@ export default function SchedulingPage() {
 
           {/* Training sessions list */}
           {trainingSessions.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.scheduling.noTraining')}
@@ -987,7 +987,7 @@ export default function SchedulingPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {trainingSessions.map(session => (
-                <div key={session.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                <div key={session.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <GraduationCap className={`h-5 w-5 ${
@@ -1035,7 +1035,7 @@ export default function SchedulingPage() {
           {/* Training Modal */}
           {showTrainingModal && (
             <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="training-modal-title">
+              <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-md" role="dialog" aria-modal="true" aria-labelledby="training-modal-title">
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                   <h3 id="training-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-green-600" />

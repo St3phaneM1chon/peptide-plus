@@ -206,7 +206,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="translations-modal-title">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 id="translations-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -320,7 +320,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
                       key={model}
                       onClick={() => toggleModel(model)}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border transition text-start ${
-                        selected ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+                        selected ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-[var(--k-glass-thin)] hover:bg-gray-50'
                       }`}
                     >
                       {selected ? (
@@ -922,7 +922,7 @@ export default function TranslationsDashboard() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setLoading(true); fetchStatus(); }}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--k-glass-thin)] border rounded-lg hover:bg-gray-50 transition"
           >
             <RefreshCw className="w-4 h-4" />
             {t('admin.translationsDashboard.refresh')}
@@ -949,7 +949,7 @@ export default function TranslationsDashboard() {
 
       {/* Global Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-100 rounded-lg">
               <Globe className="w-5 h-5 text-indigo-600" />
@@ -961,7 +961,7 @@ export default function TranslationsDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -973,7 +973,7 @@ export default function TranslationsDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <BarChart3 className="w-5 h-5 text-yellow-600" />
@@ -985,7 +985,7 @@ export default function TranslationsDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
               <Clock className="w-5 h-5 text-purple-600" />
@@ -1001,7 +1001,7 @@ export default function TranslationsDashboard() {
       </div>
 
       {/* Model Coverage Table */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <div className="px-6 py-4 border-b">
           <h2 className="font-semibold text-gray-900">{t('admin.translationsDashboard.coverageByType')}</h2>
         </div>
@@ -1078,7 +1078,7 @@ export default function TranslationsDashboard() {
       </div>
 
       {/* Queue Section */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <button
           onClick={() => setShowQueue(!showQueue)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
@@ -1175,7 +1175,7 @@ export default function TranslationsDashboard() {
       </div>
 
       {/* Progress Tracking per Locale */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <button
           onClick={() => setShowLocaleProgress(!showLocaleProgress)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
@@ -1241,7 +1241,7 @@ export default function TranslationsDashboard() {
       </div>
 
       {/* Missing Translations Highlighter */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <button
           onClick={() => setShowMissingTranslations(!showMissingTranslations)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
@@ -1312,7 +1312,7 @@ export default function TranslationsDashboard() {
       </div>
 
       {/* Glossary Management Section */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <button
           onClick={() => setShowGlossary(!showGlossary)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"

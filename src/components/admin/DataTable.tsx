@@ -211,7 +211,7 @@ export function DataTable<T>({
                   className={`
                     transition-colors duration-150
                     ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/70' : ''}
-                    ${selectedIds?.has(id) ? 'bg-indigo-100 dark:bg-indigo-900/30' : ''}
+                    ${selectedIds?.has(id) ? 'bg-indigo-500/15' : ''}
                   `}
                   onClick={() => onRowClick?.(row)}
                 >

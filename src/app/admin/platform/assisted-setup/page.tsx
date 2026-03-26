@@ -105,7 +105,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 1: Client info */}
       {step === 1 && (
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h2 className="text-lg font-bold mb-4">1. Informations client</h2>
           <div className="space-y-4">
             <div>
@@ -142,7 +142,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 2: Plan */}
       {step === 2 && (
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h2 className="text-lg font-bold mb-4">2. Sélection du plan</h2>
           <div className="space-y-3 mb-4">
             {plans.map(([key, p]) => (
@@ -181,7 +181,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 3: Modules */}
       {step === 3 && (
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h2 className="text-lg font-bold mb-4">3. Modules optionnels</h2>
           <div className="grid grid-cols-2 gap-2 mb-4">
             {modules.map(([key, mod]) => (
@@ -204,7 +204,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 4: Branding */}
       {step === 4 && (
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h2 className="text-lg font-bold mb-4">4. Branding (optionnel)</h2>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
@@ -243,7 +243,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 5: Review */}
       {step === 5 && (
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
           <h2 className="text-lg font-bold mb-4">5. Révision et confirmation</h2>
           <div className="space-y-3 mb-6 text-sm">
             <div className="flex justify-between py-2 border-b">
@@ -287,7 +287,7 @@ export default function AssistedSetupPage() {
 
       {/* Step 6: Success */}
       {step === 6 && result && (
-        <div className="bg-white rounded-xl border p-6 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-green-600 text-3xl">&#10003;</span>
           </div>

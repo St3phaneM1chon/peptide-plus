@@ -159,22 +159,22 @@ export default function FunnelAnalysisPage() {
         <>
           {/* Overall stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-xl border p-5 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">Entered Pipeline</p>
               <p className="text-3xl font-bold text-indigo-600">{totalInitial}</p>
             </div>
-            <div className="bg-white rounded-xl border p-5 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">Reached Final Stage</p>
               <p className="text-3xl font-bold text-green-600">{totalFinal}</p>
             </div>
-            <div className="bg-white rounded-xl border p-5 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">Overall Conversion</p>
               <p className="text-3xl font-bold text-purple-600">{overallConversion}%</p>
             </div>
           </div>
 
           {/* Visual Funnel */}
-          <div className="bg-white rounded-xl border p-6 mb-8">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-8">
             <h3 className="text-sm font-semibold text-gray-700 mb-6">Pipeline Funnel</h3>
             <div className="space-y-1">
               {stages.map((stage, i) => {
@@ -210,7 +210,7 @@ export default function FunnelAnalysisPage() {
           </div>
 
           {/* Drop-off Analysis */}
-          <div className="bg-white rounded-xl border p-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingDown className="h-4 w-4" /> Drop-off Analysis
             </h3>

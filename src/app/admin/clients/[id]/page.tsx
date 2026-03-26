@@ -575,8 +575,8 @@ export default function ClientDetailPage() {
       {/* Points Adjustment Modal */}
       {showPointsModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="points-modal-title">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 id="points-modal-title" className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 id="points-modal-title" className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">
               {t('admin.customerDetail.pointsModal.title')}
             </h3>
             <p className="text-sm text-slate-500 mb-4">
@@ -632,7 +632,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* Profile Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
@@ -647,11 +647,11 @@ export default function ClientDetailPage() {
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.name')}</p>
-              <p className="font-semibold text-slate-900">{user.name || '-'}</p>
+              <p className="font-semibold text-[var(--k-text-primary)]">{user.name || '-'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.email')}</p>
-              <p className="text-sm text-slate-900">{user.email}</p>
+              <p className="text-sm text-[var(--k-text-primary)]">{user.email}</p>
               {user.emailVerified && (
                 <span className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
                   <CheckCircle className="w-3 h-3" /> {t('admin.customerDetail.profile.verified')}
@@ -669,12 +669,12 @@ export default function ClientDetailPage() {
                   <Phone className="w-3 h-3" /> {user.phone}
                 </button>
               ) : (
-                <p className="text-sm text-slate-900">-</p>
+                <p className="text-sm text-[var(--k-text-primary)]">-</p>
               )}
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.birthDate')}</p>
-              <p className="text-sm text-slate-900">
+              <p className="text-sm text-[var(--k-text-primary)]">
                 {user.birthDate ? formatDate(user.birthDate) : '-'}
               </p>
             </div>
@@ -692,7 +692,7 @@ export default function ClientDetailPage() {
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.localeTimezone')}</p>
-              <p className="text-sm text-slate-900">{user.locale.toUpperCase()} / {user.timezone}</p>
+              <p className="text-sm text-[var(--k-text-primary)]">{user.locale.toUpperCase()} / {user.timezone}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.security')}</p>
@@ -760,7 +760,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 overflow-x-auto">
+      <div className="border-b border-[var(--k-border-subtle)] overflow-x-auto">
         <div className="flex gap-1 min-w-max">
           {tabs.map((tab) => (
             <button
@@ -835,7 +835,7 @@ export default function ClientDetailPage() {
             />
           )}
           {orders.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <ShoppingCart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.orders.empty')}</p>
             </div>
@@ -855,11 +855,11 @@ export default function ClientDetailPage() {
               const isOpen = conv.status === 'open' || conv.status === 'OPEN';
 
               return (
-                <div key={conv.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div key={conv.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
                   {/* Conversation header */}
                   <button
                     onClick={() => toggleConversation(conv.id)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <StatusBadge variant={isOpen ? 'success' : 'neutral'} dot>
@@ -906,7 +906,7 @@ export default function ClientDetailPage() {
                           msg.role === 'user'
                             ? 'bg-indigo-50'
                             : msg.role === 'assistant'
-                              ? 'bg-slate-50'
+                              ? 'bg-white/5'
                               : 'bg-emerald-50';
                         const roleColor =
                           msg.role === 'user'
@@ -945,7 +945,7 @@ export default function ClientDetailPage() {
               );
             })
           ) : (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.communications.empty')}</p>
             </div>
@@ -959,8 +959,8 @@ export default function ClientDetailPage() {
       {activeTab === 'loyalty' && (
         <div className="space-y-4">
           {/* Tier Progress Bar */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="font-semibold text-slate-900 mb-3">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-5">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">
               {t('admin.customerDetail.loyalty.tierProgress')}
             </h3>
             <div className="flex items-center gap-3 mb-2">
@@ -1007,8 +1007,8 @@ export default function ClientDetailPage() {
           </div>
 
           {/* Quick Adjust Points inline */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="font-semibold text-slate-900 mb-3">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-5">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">
               {t('admin.customerDetail.loyalty.quickAdjust')}
             </h3>
             <div className="flex items-end gap-3">
@@ -1054,9 +1054,9 @@ export default function ClientDetailPage() {
           </div>
 
           {/* Transaction History */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50">
-              <h3 className="font-semibold text-slate-900">{t('admin.customerDetail.loyalty.history')}</h3>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
+            <div className="p-4 border-b border-slate-100 bg-white/5">
+              <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.customerDetail.loyalty.history')}</h3>
               <p className="text-sm text-slate-500">
                 {user.loyaltyPoints.toLocaleString(locale)} {t('admin.customerDetail.loyalty.currentPoints')} / {user.lifetimePoints.toLocaleString(locale)} {t('admin.customerDetail.loyalty.cumulativePoints')}
               </p>
@@ -1066,7 +1066,7 @@ export default function ClientDetailPage() {
                 {user.loyaltyTransactions.map((tx) => (
                   <div key={tx.id} className="px-4 py-3 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-900">{tx.description || tx.type}</p>
+                      <p className="text-sm text-[var(--k-text-primary)]">{tx.description || tx.type}</p>
                       <p className="text-xs text-slate-500">{formatDateTime(tx.createdAt)}</p>
                     </div>
                     <div className="text-end">
@@ -1104,7 +1104,7 @@ export default function ClientDetailPage() {
                 XCircle;
 
               return (
-                <div key={sub.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                <div key={sub.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                   <div className="flex items-start gap-4">
                     {/* Product image */}
                     <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -1124,7 +1124,7 @@ export default function ClientDetailPage() {
                     {/* Subscription details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-slate-900 truncate">
+                        <p className="font-semibold text-[var(--k-text-primary)] truncate">
                           {sub.product?.name || t('admin.customerDetail.subscriptions.unknownProduct')}
                         </p>
                         <StatusBadge variant={statusVariant}>
@@ -1178,7 +1178,7 @@ export default function ClientDetailPage() {
               );
             })
           ) : (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <Repeat className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.subscriptions.empty')}</p>
             </div>
@@ -1193,7 +1193,7 @@ export default function ClientDetailPage() {
         <div className="space-y-4">
           {reviews.length > 0 ? (
             reviews.map((review) => (
-              <div key={review.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div key={review.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -1226,7 +1226,7 @@ export default function ClientDetailPage() {
                   </div>
                 </div>
                 {review.title && (
-                  <p className="font-medium text-slate-900 mb-1">{review.title}</p>
+                  <p className="font-medium text-[var(--k-text-primary)] mb-1">{review.title}</p>
                 )}
                 {review.comment && (
                   <p className="text-sm text-slate-600">{review.comment}</p>
@@ -1242,7 +1242,7 @@ export default function ClientDetailPage() {
               </div>
             ))
           ) : (
-            <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <Star className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.reviews.empty')}</p>
             </div>
@@ -1257,9 +1257,9 @@ export default function ClientDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {user.addresses.length > 0 ? (
             user.addresses.map((addr) => (
-              <div key={addr.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div key={addr.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-slate-900">{addr.label || addr.recipientName}</span>
+                  <span className="font-semibold text-[var(--k-text-primary)]">{addr.label || addr.recipientName}</span>
                   {addr.isDefault && (
                     <StatusBadge variant="success">{t('admin.customerDetail.addresses.default')}</StatusBadge>
                   )}
@@ -1277,7 +1277,7 @@ export default function ClientDetailPage() {
               </div>
             ))
           ) : (
-            <div className="col-span-2 text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="col-span-2 text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.addresses.empty')}</p>
             </div>
@@ -1292,9 +1292,9 @@ export default function ClientDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {user.savedCards.length > 0 ? (
             user.savedCards.map((card) => (
-              <div key={card.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div key={card.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-slate-900 uppercase">{card.brand}</span>
+                  <span className="font-bold text-[var(--k-text-primary)] uppercase">{card.brand}</span>
                   {card.isDefault && <StatusBadge variant="success">{t('admin.customerDetail.cards.default')}</StatusBadge>}
                 </div>
                 <p className="font-mono text-lg text-slate-700">{'\u2022\u2022\u2022\u2022'} {'\u2022\u2022\u2022\u2022'} {'\u2022\u2022\u2022\u2022'} {card.last4}</p>
@@ -1304,7 +1304,7 @@ export default function ClientDetailPage() {
               </div>
             ))
           ) : (
-            <div className="col-span-3 text-center py-12 bg-white rounded-xl border border-slate-200">
+            <div className="col-span-3 text-center py-12 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
               <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.cards.empty')}</p>
             </div>
@@ -1330,9 +1330,9 @@ export default function ClientDetailPage() {
                   {t('admin.customerDetail.content.consents')} ({clientConsents.length})
                 </h3>
                 {clientConsents.length > 0 ? (
-                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
                     <table className="w-full text-sm">
-                      <thead className="bg-slate-50 border-b">
+                      <thead className="bg-white/5 border-b">
                         <tr>
                           <th className="text-start px-4 py-2 font-medium text-slate-600">{t('admin.consents.consentType')}</th>
                           <th className="text-start px-4 py-2 font-medium text-slate-600">Status</th>
@@ -1343,7 +1343,7 @@ export default function ClientDetailPage() {
                       </thead>
                       <tbody className="divide-y">
                         {clientConsents.map(consent => (
-                          <tr key={consent.id} className="hover:bg-slate-50">
+                          <tr key={consent.id} className="hover:bg-white/5">
                             <td className="px-4 py-2">
                               <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
                                 {t(`consentType.${consent.type}`)}
@@ -1380,7 +1380,7 @@ export default function ClientDetailPage() {
                     </table>
                   </div>
                 ) : (
-                  <div className="text-center py-8 bg-white rounded-xl border border-slate-200">
+                  <div className="text-center py-8 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
                     <FileCheck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">{t('admin.customerDetail.content.noConsents')}</p>
                   </div>
@@ -1399,10 +1399,10 @@ export default function ClientDetailPage() {
                       <Link
                         key={video.id}
                         href={`/admin/media/videos/${video.id}`}
-                        className="bg-white rounded-xl border border-slate-200 p-4 hover:border-orange-300 hover:shadow-sm transition-all"
+                        className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 hover:border-orange-300 hover:shadow-sm transition-all"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-slate-900 text-sm">{video.title}</span>
+                          <span className="font-medium text-[var(--k-text-primary)] text-sm">{video.title}</span>
                           <StatusBadge variant={video.status === 'PUBLISHED' ? 'success' : video.status === 'DRAFT' ? 'neutral' : 'warning'}>
                             {video.status}
                           </StatusBadge>
@@ -1416,7 +1416,7 @@ export default function ClientDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 bg-white rounded-xl border border-slate-200">
+                  <div className="text-center py-8 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
                     <Video className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">{t('admin.customerDetail.content.noVideos')}</p>
                   </div>
@@ -1435,14 +1435,14 @@ export default function ClientDetailPage() {
               <div className="animate-spin h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full" />
             </div>
           ) : calls.length === 0 ? (
-            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-8 text-center text-slate-400">
               <Phone className="w-8 h-8 mx-auto mb-2 text-slate-300" />
               {t('voip.dashboard.noCalls')}
             </div>
           ) : (
             <div className="space-y-2">
               {calls.map((call) => (
-                <div key={call.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                <div key={call.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -1451,7 +1451,7 @@ export default function ClientDetailPage() {
                         <Phone className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className="text-sm font-medium text-[var(--k-text-primary)]">
                           {call.direction === 'INBOUND' ? call.callerNumber : call.calledNumber}
                           {call.callerName && <span className="text-slate-500 ms-1">({call.callerName})</span>}
                         </div>
@@ -1513,7 +1513,7 @@ export default function ClientDetailPage() {
             <>
               {/* Health Score */}
               {typeof (c360Data as { healthScore?: number }).healthScore === 'number' && (
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3 p-4 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
                   <div className={`px-3 py-1.5 rounded-lg text-lg font-bold ${healthScoreColor((c360Data as { healthScore: number }).healthScore)}`}>
                     {(c360Data as { healthScore: number }).healthScore}
                   </div>
@@ -1537,7 +1537,7 @@ export default function ClientDetailPage() {
 
       {/* Timeline Tab */}
       {activeTab === 'timeline' && id && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <UnifiedTimeline userId={id} limit={30} />
         </div>
       )}
@@ -1575,11 +1575,11 @@ function OrderSection({
           <Link
             key={order.id}
             href={`/admin/commandes?order=${order.id}`}
-            className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
+            className="block bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="font-mono font-bold text-slate-900">{order.orderNumber}</span>
+                <span className="font-mono font-bold text-[var(--k-text-primary)]">{order.orderNumber}</span>
                 <StatusBadge variant={statusConfig[order.status]?.variant || 'neutral'}>
                   {order.status}
                 </StatusBadge>
@@ -1588,7 +1588,7 @@ function OrderSection({
                 </StatusBadge>
               </div>
               <div className="text-end">
-                <p className="font-bold text-slate-900">{formatCurrency(order.total)}</p>
+                <p className="font-bold text-[var(--k-text-primary)]">{formatCurrency(order.total)}</p>
                 <p className="text-xs text-slate-500">{formatDateTime(order.createdAt)}</p>
               </div>
             </div>
@@ -1596,7 +1596,7 @@ function OrderSection({
             {/* Order Items */}
             <div className="flex flex-wrap gap-3">
               {order.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                <div key={item.id} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                   {item.product?.imageUrl && (
                     <Image
                       src={item.product.imageUrl}

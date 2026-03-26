@@ -370,7 +370,7 @@ export default function QuestionsPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.questions.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.questions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.questions.subtitle')}</p>
           </div>
         </div>
@@ -465,8 +465,8 @@ export default function QuestionsPage() {
                   </div>
 
                   {/* Question */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="font-medium text-slate-900 flex items-start gap-2">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <p className="font-medium text-[var(--k-text-primary)] flex items-start gap-2">
                       <span className="text-indigo-500 flex-shrink-0">Q:</span>
                       <span>{selectedQuestion.question}</span>
                     </p>
@@ -507,8 +507,8 @@ export default function QuestionsPage() {
 
                   {/* Contact info */}
                   {selectedQuestion.userEmail && (
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-slate-900 mb-2">{t('admin.questions.contactInfo')}</h4>
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h4 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.questions.contactInfo')}</h4>
                       <p className="text-sm text-slate-600">{selectedQuestion.userEmail}</p>
                     </div>
                   )}
@@ -547,11 +547,11 @@ export default function QuestionsPage() {
         }
       >
         <div className="space-y-4">
-          <div className="bg-slate-50 rounded-lg p-3">
+          <div className="bg-white/5 rounded-lg p-3">
             <p className="text-sm text-slate-500 mb-1">
               {selectedQuestion?.userName} - {selectedQuestion?.productName}
             </p>
-            <p className="font-medium text-slate-900">{selectedQuestion?.question}</p>
+            <p className="font-medium text-[var(--k-text-primary)]">{selectedQuestion?.question}</p>
           </div>
           <FormField label={t('admin.questions.yourAnswer')}>
             <Textarea

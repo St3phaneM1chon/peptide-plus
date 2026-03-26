@@ -122,7 +122,7 @@ export default function ModulesPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] divide-y divide-slate-100">
         {modules.map((mod) => {
           const Icon = MODULE_ICONS[mod.key] || Package;
           return (
@@ -135,7 +135,7 @@ export default function ModulesPage() {
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-[var(--k-text-primary)]">
                     {t(mod.labelKey)}
                   </p>
                   <p className="text-xs text-slate-500 mt-0.5">

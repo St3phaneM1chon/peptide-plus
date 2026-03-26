@@ -313,7 +313,7 @@ export default function VideoCategoriesPage() {
       <div key={cat.id}>
         {/* Category row */}
         <div
-          className={`flex items-center gap-2 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 border-b border-slate-100 hover:bg-white/5 transition-colors ${
             !cat.isActive ? 'opacity-60' : ''
           }`}
           style={{ paddingLeft: `${16 + depth * 28}px` }}
@@ -392,7 +392,7 @@ export default function VideoCategoriesPage() {
               </div>
             ) : (
               <div>
-                <p className="font-medium text-slate-900 truncate">{cat.name}</p>
+                <p className="font-medium text-[var(--k-text-primary)] truncate">{cat.name}</p>
                 {cat.description && (
                   <p className="text-xs text-slate-500 truncate">{cat.description}</p>
                 )}
@@ -402,7 +402,7 @@ export default function VideoCategoriesPage() {
 
           {/* Video count badge */}
           {!isEditing && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg flex-shrink-0" title={`${totalVideos} ${t('admin.videoCategories.videos')}`}>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-lg flex-shrink-0" title={`${totalVideos} ${t('admin.videoCategories.videos')}`}>
               <Video className="w-3.5 h-3.5 text-indigo-500" />
               <span className="text-xs font-semibold text-slate-700">{totalVideos}</span>
             </div>
@@ -425,7 +425,7 @@ export default function VideoCategoriesPage() {
               title={cat.isActive ? (t('admin.videoCategories.active')) : (t('admin.videoCategories.inactive'))}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 w-4 h-4 bg-[var(--k-glass-thin)] rounded-full shadow transition-transform ${
                   cat.isActive ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
               />
@@ -487,7 +487,7 @@ export default function VideoCategoriesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">
             {t('admin.videoCategories.title')}
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
@@ -496,7 +496,7 @@ export default function VideoCategoriesPage() {
         </div>
         <button
           onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
           {t('admin.videoCategories.create')}
@@ -505,7 +505,7 @@ export default function VideoCategoriesPage() {
 
       {/* Create form */}
       {showCreateForm && (
-        <form onSubmit={handleCreate} className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
+        <form onSubmit={handleCreate} className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-4 space-y-3">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-semibold text-slate-700">
               {t('admin.videoCategories.create')}
@@ -573,14 +573,14 @@ export default function VideoCategoriesPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-slate-50"
+                className="px-3 py-2 text-slate-600 border border-slate-300 rounded text-sm hover:bg-white/5"
               >
                 {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 {t('admin.videoCategories.create')}
@@ -596,7 +596,7 @@ export default function VideoCategoriesPage() {
           <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
         </div>
       ) : categories.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-slate-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)]">
           <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 mb-1">
             {t('admin.videoCategories.empty')}
@@ -606,16 +606,16 @@ export default function VideoCategoriesPage() {
           </p>
           <button
             onClick={() => { setCreateForm({ ...emptyForm }); setShowCreateForm(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             {t('admin.videoCategories.create')}
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden">
           {/* Table header */}
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-b border-[var(--k-border-subtle)] text-xs font-semibold text-slate-500 uppercase tracking-wider">
             <span className="w-5" /> {/* expand toggle spacer */}
             <span className="w-4" /> {/* grip spacer */}
             <span className="w-8" /> {/* icon spacer */}

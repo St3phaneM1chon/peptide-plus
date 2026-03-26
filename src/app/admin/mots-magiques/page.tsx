@@ -238,7 +238,7 @@ export default async function MotsMagiquesPage() {
           {METHODOLOGY_STEPS.map(({ step, labelKey, icon: Icon, detail }) => (
             <div
               key={step}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-[var(--k-glass-thin)] dark:bg-gray-800 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-2">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-bold">
@@ -272,7 +272,7 @@ export default async function MotsMagiquesPage() {
               {items.map((word) => (
                 <div
                   key={word.command}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-[var(--k-glass-thin)] dark:bg-gray-800 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-0.5">

@@ -188,7 +188,7 @@ function ContractModal({ contract, onClose, onSave }: ContractModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="contract-modal-title">
-      <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 id="contract-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function ContractsPage() {
           onClick={() => setActiveTab('all')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === 'all'
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white/20 text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -444,7 +444,7 @@ export default function ContractsPage() {
           onClick={() => setActiveTab('renewals')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === 'renewals'
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white/20 text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -464,7 +464,7 @@ export default function ContractsPage() {
           <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         </div>
       ) : contracts.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {activeTab === 'renewals'
@@ -478,7 +478,7 @@ export default function ContractsPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

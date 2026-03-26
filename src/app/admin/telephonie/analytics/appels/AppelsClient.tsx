@@ -115,7 +115,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
               onClick={() => setDateRange(range)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 dateRange === range
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                  ? 'bg-[var(--k-glass-thin)] dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -134,7 +134,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
 
       {/* Direction Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
               <Phone className="w-5 h-5 text-indigo-600" />
@@ -145,7 +145,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
               <PhoneIncoming className="w-5 h-5 text-emerald-600" />
@@ -156,7 +156,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
               <PhoneOutgoing className="w-5 h-5 text-indigo-600" />
@@ -167,7 +167,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
               <PhoneForwarded className="w-5 h-5 text-purple-600" />
@@ -182,7 +182,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Duration Breakdown */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
             {t('voip.admin.callAnalytics.duration')}
           </h3>
@@ -221,7 +221,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
         </div>
 
         {/* Disposition Chart */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
             {t('voip.admin.callAnalytics.disposition')}
           </h3>
@@ -259,7 +259,7 @@ export default function AppelsClient({ stats }: { stats: CallStats }) {
       </div>
 
       {/* Direction Distribution Bar */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+      <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           {t('voip.admin.callAnalytics.trends')}
         </h3>

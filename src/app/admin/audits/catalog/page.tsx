@@ -97,7 +97,7 @@ export default function AuditCatalogPage() {
         <button
           onClick={() => setTypeFilter('')}
           className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-            !typeFilter ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            !typeFilter ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-600 hover:bg-white/5'
           }`}
         >
           {isFr ? 'Tous' : 'All'} ({totalFunctions})
@@ -111,7 +111,7 @@ export default function AuditCatalogPage() {
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                 typeFilter === type
                   ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-600 hover:bg-white/5'
               }`}
             >
               {type} ({count})
@@ -126,14 +126,14 @@ export default function AuditCatalogPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={isFr ? 'Rechercher par nom, fichier ou description...' : 'Search by name, file, or description...'}
-          className="w-full sm:w-96 text-sm border border-slate-300 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full sm:w-96 text-sm border border-slate-300 rounded-lg px-4 py-2 bg-white/5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
         />
       </div>
 
       {/* Results */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th className="text-start px-4 py-2.5 font-medium text-slate-600 w-20">{isFr ? 'Type' : 'Type'}</th>
               <th className="text-start px-4 py-2.5 font-medium text-slate-600">{isFr ? 'Nom' : 'Name'}</th>
@@ -147,7 +147,7 @@ export default function AuditCatalogPage() {
               <>
                 <tr
                   key={fn.id}
-                  className="hover:bg-slate-50 cursor-pointer"
+                  className="hover:bg-white/5 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === fn.id ? null : fn.id)}
                 >
                   <td className="px-4 py-2.5">
@@ -164,7 +164,7 @@ export default function AuditCatalogPage() {
                 </tr>
                 {expandedId === fn.id && (
                   <tr key={`${fn.id}-detail`}>
-                    <td colSpan={5} className="px-4 py-3 bg-slate-50">
+                    <td colSpan={5} className="px-4 py-3 bg-white/5">
                       <div className="space-y-2 text-xs">
                         {fn.description && <p className="text-slate-700">{fn.description}</p>}
                         <p className="text-slate-500 font-mono">{fn.filePath}</p>
@@ -197,7 +197,7 @@ export default function AuditCatalogPage() {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)]">
             <span className="text-xs text-slate-500">
               {isFr ? 'Page' : 'Page'} {pagination.page} / {pagination.totalPages} ({pagination.total} {isFr ? 'fonctions' : 'functions'})
             </span>

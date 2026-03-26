@@ -117,7 +117,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-green-600">{uptime}%</div>
             <div className="text-xs text-slate-500">Uptime (30j)</div>
           </div>
-          <button onClick={refreshHealth} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">
+          <button onClick={refreshHealth} className="px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">
             Actualiser
           </button>
         </div>
@@ -126,7 +126,7 @@ export default function MonitoringPage() {
       {/* Health Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {health.map((h) => (
-          <div key={h.service} className="bg-white rounded-xl border border-slate-200 p-4">
+          <div key={h.service} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-slate-700">{h.service}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(h.status)}`}>
@@ -144,7 +144,7 @@ export default function MonitoringPage() {
       </div>
 
       {/* Web Vitals Summary */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Zap className="w-5 h-5 text-yellow-500" />
           Web Vitals
@@ -157,7 +157,7 @@ export default function MonitoringPage() {
             { name: 'TTFB', value: '350ms', rating: 'good' },
             { name: 'INP', value: '120ms', rating: 'good' },
           ].map((vital) => (
-            <div key={vital.name} className="text-center p-3 rounded-lg bg-slate-50">
+            <div key={vital.name} className="text-center p-3 rounded-lg bg-white/5">
               <div className="text-xs font-semibold text-slate-500 mb-1">{vital.name}</div>
               <div className={`text-lg font-bold ${vital.rating === 'good' ? 'text-green-600' : vital.rating === 'needs-improvement' ? 'text-yellow-600' : 'text-red-600'}`}>
                 {vital.value}
@@ -171,7 +171,7 @@ export default function MonitoringPage() {
       </div>
 
       {/* Route Performance */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5 text-indigo-500" />
           Performance par route
@@ -189,7 +189,7 @@ export default function MonitoringPage() {
             </thead>
             <tbody>
               {metrics.map((m) => (
-                <tr key={m.route} className="border-b border-slate-50 hover:bg-slate-50">
+                <tr key={m.route} className="border-b border-slate-50 hover:bg-white/5">
                   <td className="py-3 font-medium text-slate-700">{m.route}</td>
                   <td className="py-3 text-end text-green-600">{m.p50}ms</td>
                   <td className="py-3 text-end text-yellow-600">{m.p95}ms</td>

@@ -186,13 +186,13 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
     `px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
       activeTab === tab
         ? 'border-indigo-600 text-indigo-700 bg-indigo-50'
-        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-white/5'
     }`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
+      <div className="flex gap-1 border-b border-[var(--k-border-subtle)]">
         <button type="button" className={tabClass('general')} onClick={() => setActiveTab('general')}>
           {t('admin.suppliers.generalInfo')}
         </button>
@@ -274,7 +274,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
       {activeTab === 'contacts' && (
         <div className="space-y-4">
           {contacts.map((contact, idx) => (
-            <div key={idx} className="border border-slate-200 rounded-lg p-4 space-y-3 relative">
+            <div key={idx} className="border border-[var(--k-border-subtle)] rounded-lg p-4 space-y-3 relative">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">
                   {t('admin.suppliers.contacts')} #{idx + 1}
@@ -304,7 +304,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
                     id={`contact-dept-${idx}`}
                     value={contact.department}
                     onChange={e => updateContact(idx, 'department', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
                   >
                     {DEPARTMENT_OPTIONS.map(d => (
                       <option key={d} value={d}>{t(`admin.suppliers.departments.${d}`)}</option>
@@ -367,7 +367,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
       {activeTab === 'links' && (
         <div className="space-y-4">
           {links.map((link, idx) => (
-            <div key={idx} className="border border-slate-200 rounded-lg p-4 space-y-3">
+            <div key={idx} className="border border-[var(--k-border-subtle)] rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">
                   {t('admin.suppliers.links')} #{idx + 1}
@@ -403,7 +403,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
                     id={`link-type-${idx}`}
                     value={link.type}
                     onChange={e => updateLink(idx, 'type', e.target.value)}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
                   >
                     {LINK_TYPES.map(lt => (
                       <option key={lt} value={lt}>
@@ -423,7 +423,7 @@ export default function SupplierForm({ initialData, onSubmit, onCancel, loading 
       )}
 
       {/* ── Footer ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200">
+      <div className="flex items-center justify-end gap-2 pt-4 border-t border-[var(--k-border-subtle)]">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>
           {t('admin.suppliers.cancel')}
         </Button>

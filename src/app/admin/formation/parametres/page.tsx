@@ -71,7 +71,7 @@ function ToggleField({
       className="flex items-center justify-between py-3 cursor-pointer group"
     >
       <div className="flex-1 pr-4">
-        <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
+        <span className="text-sm font-medium text-slate-700 group-hover:text-[var(--k-text-primary)]">{label}</span>
         {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
       </div>
       <button
@@ -89,7 +89,7 @@ function ToggleField({
       >
         <span
           className={`
-            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white/20 shadow ring-0
             transition duration-200 ease-in-out
             ${checked ? 'translate-x-5' : 'translate-x-0'}
           `}
@@ -109,7 +109,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
         <div className="p-1.5 rounded-lg bg-indigo-50">
           <Icon className="w-4 h-4 text-indigo-600" />
@@ -246,7 +246,7 @@ export default function ParametresPage() {
               value={settings.defaultLanguage}
               onChange={(e) => update('defaultLanguage', e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
-                bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               <option value="fr">Francais</option>
               <option value="en">English</option>
@@ -371,7 +371,7 @@ export default function ParametresPage() {
                   value={settings.aiModel}
                   onChange={(e) => update('aiModel', e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
-                    bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                    bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
                 >
                   <option value="gpt-4o-mini">GPT-4o Mini</option>
                   <option value="gpt-4o">GPT-4o</option>

@@ -128,7 +128,7 @@ export default function CallCenterKPIsClient() {
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {kpiCards.map(kpi => (
-              <div key={kpi.label} className="bg-white rounded-xl border p-4">
+              <div key={kpi.label} className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
                 <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
                   <kpi.icon className="h-4 w-4" /> {kpi.label}
                 </div>
@@ -141,7 +141,7 @@ export default function CallCenterKPIsClient() {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Trend Line Chart */}
-            <div className="bg-white rounded-xl border p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" /> Call Volume Trend
               </h3>
@@ -159,7 +159,7 @@ export default function CallCenterKPIsClient() {
             </div>
 
             {/* Agent Comparison Bar Chart */}
-            <div className="bg-white rounded-xl border p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <Users className="h-4 w-4" /> Agent Comparison
               </h3>
@@ -178,7 +178,7 @@ export default function CallCenterKPIsClient() {
           </div>
 
           {/* Agent Breakdown Table */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
             <div className="px-6 py-4 border-b">
               <h3 className="text-sm font-semibold text-gray-700">Agent Performance Breakdown</h3>
             </div>

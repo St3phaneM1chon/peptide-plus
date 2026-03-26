@@ -179,7 +179,7 @@ export default function CampagnesClient({
       </div>
 
       {/* Campaigns table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -266,7 +266,7 @@ export default function CampagnesClient({
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingCampaign ? t('voip.admin.campaigns.editCampaign') : t('voip.admin.campaigns.addCampaign')}
@@ -405,7 +405,7 @@ export default function CampagnesClient({
                       className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                         form.activeDays.includes(day)
                           ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-500 border-gray-300 hover:border-indigo-400'
+                          : 'bg-white/20 text-gray-500 border-gray-300 hover:border-indigo-400'
                       }`}
                     >
                       {DAY_LABELS[day]}

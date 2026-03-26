@@ -195,7 +195,7 @@ export default function CohortAnalysisPage() {
         {/* Metric Selector */}
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-gray-400" />
-          <div className="flex bg-white border rounded-lg overflow-hidden">
+          <div className="flex bg-[var(--k-glass-thin)] border rounded-lg overflow-hidden">
             {METRIC_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -218,7 +218,7 @@ export default function CohortAnalysisPage() {
           <select
             value={months}
             onChange={(e) => setMonths(Number(e.target.value))}
-            className="border rounded-lg px-3 py-2 text-sm bg-white"
+            className="border rounded-lg px-3 py-2 text-sm bg-[var(--k-glass-thin)]"
           >
             {MONTHS_OPTIONS.map((m) => (
               <option key={m} value={m}>
@@ -237,7 +237,7 @@ export default function CohortAnalysisPage() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Users className="h-4 w-4" /> Cohorts
               </div>
@@ -245,7 +245,7 @@ export default function CohortAnalysisPage() {
                 {data?.summary.totalCohorts || 0}
               </p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <BarChart3 className="h-4 w-4" /> Total Entities
               </div>
@@ -253,7 +253,7 @@ export default function CohortAnalysisPage() {
                 {data?.summary.totalEntities || 0}
               </p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <TrendingUp className="h-4 w-4" /> First Period Avg
               </div>
@@ -263,7 +263,7 @@ export default function CohortAnalysisPage() {
                   : `${data?.summary.avgFirstPeriodValue || 0}%`}
               </p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <TrendingUp className="h-4 w-4" /> Last Period Avg
               </div>
@@ -276,7 +276,7 @@ export default function CohortAnalysisPage() {
           </div>
 
           {/* Heatmap Grid */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
             <div className="px-6 py-4 border-b">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -306,7 +306,7 @@ export default function CohortAnalysisPage() {
                 <tbody className="divide-y">
                   {(data?.rows || []).map((row) => (
                     <tr key={row.cohortKey} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-2 font-medium text-gray-900 sticky start-0 bg-white z-10">
+                      <td className="px-4 py-2 font-medium text-gray-900 sticky start-0 bg-[var(--k-glass-thin)] z-10">
                         {row.cohortKey}
                       </td>
                       <td className="text-end px-3 py-2 text-gray-500">

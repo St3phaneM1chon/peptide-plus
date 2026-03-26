@@ -41,7 +41,7 @@ function RepAvatar({ name, image }: { name: string | null; image: string | null 
 
 function SkeletonCard() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
+    <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
       <div className="flex items-center gap-4 mb-4">
         <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700" />
         <div className="flex-1">
@@ -124,7 +124,7 @@ export default function RepsListPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full ps-9 pe-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full ps-9 pe-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-[var(--k-glass-thin)] dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function RepsListPage() {
             <div
               key={rep.id}
               onClick={() => router.push(`/admin/crm/reps/${rep.id}`)}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-all cursor-pointer group"
+              className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-all cursor-pointer group"
             >
               {/* Rep Info */}
               <div className="flex items-center gap-4 mb-4">

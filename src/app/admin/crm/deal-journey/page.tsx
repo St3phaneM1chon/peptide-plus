@@ -323,7 +323,7 @@ export default function DealJourneyPage() {
 
         {/* Search Results Dropdown */}
         {searchResults.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+          <div className="absolute z-10 w-full mt-1 bg-[var(--k-glass-thin)] border rounded-lg shadow-lg max-h-64 overflow-y-auto">
             {searchResults.map((deal) => (
               <button
                 key={deal.id}
@@ -384,7 +384,7 @@ export default function DealJourneyPage() {
           ) : (
             <>
               {/* Deal Summary Card */}
-              <div className="bg-white rounded-xl border p-5 mb-6">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 mb-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{journey.dealTitle}</h2>
@@ -424,7 +424,7 @@ export default function DealJourneyPage() {
 
               {/* Stage Progress Bar */}
               {journey.stageTimeline.length > 0 && (
-                <div className="bg-white rounded-xl border p-5 mb-6">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 mb-6">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                     <Layers className="h-4 w-4" />
                     {t('admin.crm.stageProgression')}
@@ -460,7 +460,7 @@ export default function DealJourneyPage() {
                     className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                       eventFilter === f
                         ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        : 'bg-[var(--k-glass-thin)] border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {f === 'all' ? 'All' : f.replace('_', ' ')}
@@ -479,7 +479,7 @@ export default function DealJourneyPage() {
                       <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border ${colorClass}`}>
                         <IconComp className="h-4 w-4" />
                       </div>
-                      <div className="flex-1 bg-white rounded-lg border p-3 hover:shadow-sm transition-shadow">
+                      <div className="flex-1 bg-[var(--k-glass-thin)] rounded-lg border p-3 hover:shadow-sm transition-shadow">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
                           <span className="text-xs text-gray-400">{formatDate(event.timestamp)}</span>
@@ -539,7 +539,7 @@ export default function DealJourneyPage() {
             <>
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-white rounded-xl border p-4">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4 text-indigo-600" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
@@ -548,7 +548,7 @@ export default function DealJourneyPage() {
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{analytics.avgDaysToClose}</p>
                 </div>
-                <div className="bg-white rounded-xl border p-4">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="h-4 w-4 text-yellow-500" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
@@ -557,7 +557,7 @@ export default function DealJourneyPage() {
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{analytics.avgTouchpoints}</p>
                 </div>
-                <div className="bg-white rounded-xl border p-4">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Layers className="h-4 w-4 text-green-500" />
                     <span className="text-xs font-medium text-gray-500 uppercase">
@@ -569,7 +569,7 @@ export default function DealJourneyPage() {
               </div>
 
               {/* Stage Metrics Table */}
-              <div className="bg-white rounded-xl border mb-6">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border mb-6">
                 <div className="p-4 border-b">
                   <h3 className="font-semibold text-gray-900">{t('admin.crm.stageMetrics')}</h3>
                 </div>
@@ -607,7 +607,7 @@ export default function DealJourneyPage() {
 
               {/* Common Paths */}
               {analytics.commonPaths.length > 0 && (
-                <div className="bg-white rounded-xl border mb-6">
+                <div className="bg-[var(--k-glass-thin)] rounded-xl border mb-6">
                   <div className="p-4 border-b">
                     <h3 className="font-semibold text-gray-900">{t('admin.crm.commonPaths')}</h3>
                   </div>
@@ -662,7 +662,7 @@ export default function DealJourneyPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Winning Patterns */}
-              <div className="bg-white rounded-xl border">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border">
                 <div className="p-4 border-b flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-green-600" />
                   <h3 className="font-semibold text-gray-900">{t('admin.crm.winningPatterns')}</h3>
@@ -710,7 +710,7 @@ export default function DealJourneyPage() {
               </div>
 
               {/* Losing Patterns */}
-              <div className="bg-white rounded-xl border">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border">
                 <div className="p-4 border-b flex items-center gap-2">
                   <TrendingDown className="h-5 w-5 text-red-600" />
                   <h3 className="font-semibold text-gray-900">{t('admin.crm.losingPatterns')}</h3>

@@ -145,7 +145,7 @@ export default function DomainConfigPage() {
       )}
 
       {/* Koraline subdomain (readonly) */}
-      <div className="bg-white rounded-xl border p-5 mb-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 mb-6">
         <h3 className="font-semibold text-gray-900 mb-2">Sous-domaine Koraline</h3>
         <div className="flex items-center gap-2">
           <span className="font-mono text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg text-sm">
@@ -157,7 +157,7 @@ export default function DomainConfigPage() {
       </div>
 
       {/* Custom domain */}
-      <div className="bg-white rounded-xl border p-5">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
         <h3 className="font-semibold text-gray-900 mb-4">Domaine personnalis&eacute;</h3>
 
         <div className="space-y-4">
@@ -200,7 +200,7 @@ export default function DomainConfigPage() {
               <p className="text-gray-600">
                 Ajoutez un enregistrement <strong>TXT</strong> chez votre registraire DNS :
               </p>
-              <div className="bg-white border rounded-lg p-3 font-mono text-xs">
+              <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 font-mono text-xs">
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <span className="text-gray-400">Type</span>
@@ -240,7 +240,7 @@ export default function DomainConfigPage() {
               <p className="text-gray-600">
                 Ajoutez un enregistrement <strong>CNAME</strong> pour pointer vers votre boutique :
               </p>
-              <div className="bg-white border rounded-lg p-3 font-mono text-xs">
+              <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 font-mono text-xs">
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <span className="text-gray-400">Type</span>

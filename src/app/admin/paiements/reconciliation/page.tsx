@@ -122,7 +122,7 @@ export default function ReconciliationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('admin.paymentReconciliation.title')}</h1>
+          <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.paymentReconciliation.title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {t('admin.paymentReconciliation.subtitle')}
           </p>
@@ -130,7 +130,7 @@ export default function ReconciliationPage() {
       </div>
 
       {/* Date range selector */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-4">
         <div className="flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
@@ -192,9 +192,9 @@ export default function ReconciliationPage() {
 
       {/* No report yet */}
       {!loading && !report && (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+        <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-12 text-center">
           <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.paymentReconciliation.noReport')}</h3>
+          <h3 className="text-lg font-semibold text-[var(--k-text-primary)] mb-1">{t('admin.paymentReconciliation.noReport')}</h3>
           <p className="text-sm text-slate-500 mb-4">
             {t('admin.paymentReconciliation.noReportDesc')}
           </p>
@@ -223,8 +223,8 @@ export default function ReconciliationPage() {
           </div>
 
           {/* Revenue breakdown visual */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <h3 className="text-base font-semibold text-slate-900 mb-4">{t('admin.paymentReconciliation.revenueBreakdown')}</h3>
+          <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-6">
+            <h3 className="text-base font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.paymentReconciliation.revenueBreakdown')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-4 bg-emerald-50 rounded-lg">
                 <p className="text-2xl font-bold text-emerald-700">{formatCurrency(report.summary.totalRevenue)}</p>
@@ -243,8 +243,8 @@ export default function ReconciliationPage() {
 
           {/* Stripe match rate */}
           {report.summary.totalOrders > 0 && (
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="text-base font-semibold text-slate-900 mb-3">{t('admin.paymentReconciliation.stripeMatchRate')}</h3>
+            <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-6">
+              <h3 className="text-base font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.paymentReconciliation.stripeMatchRate')}</h3>
               <div className="flex items-center gap-4">
                 <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
                   <div
@@ -266,10 +266,10 @@ export default function ReconciliationPage() {
 
           {/* Unmatched orders table */}
           {report.unmatched.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-[var(--k-border-subtle)] flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">{t('admin.paymentReconciliation.unmatchedOrders')}</h3>
+                  <h3 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.paymentReconciliation.unmatchedOrders')}</h3>
                   <p className="text-sm text-slate-500">
                     {t('admin.paymentReconciliation.unmatchedOrdersDesc', { count: report.unmatched.length })}
                   </p>
@@ -280,7 +280,7 @@ export default function ReconciliationPage() {
                 </div>
               </div>
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
                   <tr>
                     <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colOrderNumber')}</th>
                     <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.paymentReconciliation.colTotal')}</th>
@@ -290,13 +290,13 @@ export default function ReconciliationPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {report.unmatched.map((order, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <tr key={idx} className="hover:bg-white/5 transition-colors">
                       <td className="px-6 py-3">
-                        <span className="font-mono text-sm font-medium text-slate-900">
+                        <span className="font-mono text-sm font-medium text-[var(--k-text-primary)]">
                           {order.orderNumber}
                         </span>
                       </td>
-                      <td className="px-6 py-3 font-medium text-slate-900">
+                      <td className="px-6 py-3 font-medium text-[var(--k-text-primary)]">
                         {formatCurrency(order.total)}
                       </td>
                       <td className="px-6 py-3">

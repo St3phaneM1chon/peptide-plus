@@ -568,7 +568,7 @@ export default function CourseEditorPage() {
   ];
 
   const selectClasses =
-    'w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700';
+    'w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700';
 
   return (
     <div className="space-y-6">
@@ -582,7 +582,7 @@ export default function CourseEditorPage() {
           {t('admin.lms.courses')}
         </Link>
         <span>/</span>
-        <span className="text-slate-900 font-medium truncate max-w-[200px]">{title}</span>
+        <span className="text-[var(--k-text-primary)] font-medium truncate max-w-[200px]">{title}</span>
       </nav>
 
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -643,7 +643,7 @@ export default function CourseEditorPage() {
       )}
 
       {/* ── Tabs ────────────────────────────────────────────────── */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-[var(--k-border-subtle)]">
         <nav className="flex gap-0 -mb-px">
           {tabs.map((tab) => (
             <button
@@ -942,7 +942,7 @@ export default function CourseEditorPage() {
           {chapters.map((chapter, chapterIdx) => (
             <SectionCard key={chapter.id} noPadding>
               {/* Chapter Header */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+              <div className="flex items-center gap-2 px-4 py-3 bg-white/5 border-b border-[var(--k-border-subtle)]">
                 <GripVertical className="h-4 w-4 text-slate-400 flex-shrink-0" />
 
                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -997,7 +997,7 @@ export default function CourseEditorPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between flex-1 min-w-0">
-                    <span className="font-medium text-sm text-slate-900 truncate">
+                    <span className="font-medium text-sm text-[var(--k-text-primary)] truncate">
                       {chapter.title}
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -1038,7 +1038,7 @@ export default function CourseEditorPage() {
                   return (
                     <div
                       key={lesson.id}
-                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-slate-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-white/5 transition-colors"
                     >
                       <div className="w-8" />
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -1113,7 +1113,7 @@ export default function CourseEditorPage() {
                     <select
                       value={newLessonType}
                       onChange={(e) => setNewLessonType(e.target.value)}
-                      className="h-7 px-2 text-xs rounded border border-slate-300 bg-white"
+                      className="h-7 px-2 text-xs rounded border border-slate-300 bg-[var(--k-glass-thin)]"
                     >
                       <option value="TEXT">Text</option>
                       <option value="VIDEO">Video</option>
@@ -1225,7 +1225,7 @@ export default function CourseEditorPage() {
                 {courseQuizzes.map((quiz) => (
                   <div key={quiz.id} className="flex items-center justify-between py-3">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{quiz.title}</p>
+                      <p className="text-sm font-medium text-[var(--k-text-primary)]">{quiz.title}</p>
                       {quiz.description && (
                         <p className="text-xs text-slate-500 mt-0.5">{quiz.description}</p>
                       )}
@@ -1439,13 +1439,13 @@ export default function CourseEditorPage() {
       {/* ── Delete Confirmation Modal ───────────────────────────── */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('admin.lms.confirmDeleteCourse')}</h3>
+                <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.lms.confirmDeleteCourse')}</h3>
                 <p className="text-sm text-slate-500">{t('admin.lms.deleteWarning')}</p>
               </div>
             </div>

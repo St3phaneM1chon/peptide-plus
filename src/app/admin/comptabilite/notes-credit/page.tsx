@@ -208,7 +208,7 @@ export default function NotesCreditPage() {
       header: t('admin.creditNotes.client'),
       render: (cn) => (
         <div>
-          <p className="text-sm font-medium text-slate-900">{cn.customerName}</p>
+          <p className="text-sm font-medium text-[var(--k-text-primary)]">{cn.customerName}</p>
           {cn.customerEmail && <p className="text-xs text-slate-500">{cn.customerEmail}</p>}
         </div>
       ),
@@ -336,7 +336,7 @@ export default function NotesCreditPage() {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="text-sm font-medium text-slate-500 mb-2">{t('admin.creditNotes.client')}</h4>
-                <p className="font-medium text-slate-900">{cn.customerName}</p>
+                <p className="font-medium text-[var(--k-text-primary)]">{cn.customerName}</p>
                 {cn.customerEmail && <p className="text-sm text-slate-600">{cn.customerEmail}</p>}
               </div>
               <div className="text-end">
@@ -372,27 +372,27 @@ export default function NotesCreditPage() {
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.creditNotes.subtotal')}</span>
-                  <span className="text-slate-900">-{formatCurrency(cn.subtotal)}</span>
+                  <span className="text-[var(--k-text-primary)]">-{formatCurrency(cn.subtotal)}</span>
                 </div>
                 {cn.taxTps > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tps')}</span>
-                    <span className="text-slate-900">-{formatCurrency(cn.taxTps)}</span>
+                    <span className="text-[var(--k-text-primary)]">-{formatCurrency(cn.taxTps)}</span>
                   </div>
                 )}
                 {cn.taxTvq > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tvq')}</span>
-                    <span className="text-slate-900">-{formatCurrency(cn.taxTvq)}</span>
+                    <span className="text-[var(--k-text-primary)]">-{formatCurrency(cn.taxTvq)}</span>
                   </div>
                 )}
                 {cn.taxTvh > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tvh')}</span>
-                    <span className="text-slate-900">-{formatCurrency(cn.taxTvh)}</span>
+                    <span className="text-[var(--k-text-primary)]">-{formatCurrency(cn.taxTvh)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
+                <div className="flex justify-between text-lg font-bold border-t border-[var(--k-border-subtle)] pt-2">
                   <span>{t('admin.creditNotes.total')}</span>
                   <span className="text-red-600">-{formatCurrency(cn.total)}</span>
                 </div>

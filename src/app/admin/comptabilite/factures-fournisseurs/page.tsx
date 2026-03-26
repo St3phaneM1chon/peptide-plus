@@ -213,7 +213,7 @@ export default function FacturesFournisseursPage() {
       key: 'supplier',
       header: t('admin.supplierInvoices.supplier'),
       render: (invoice) => (
-        <p className="text-sm font-medium text-slate-900">{invoice.supplier.name}</p>
+        <p className="text-sm font-medium text-[var(--k-text-primary)]">{invoice.supplier.name}</p>
       ),
     },
     {
@@ -240,7 +240,7 @@ export default function FacturesFournisseursPage() {
       header: t('admin.supplierInvoices.total'),
       align: 'right',
       render: (invoice) => (
-        <span className="font-medium text-slate-900">{formatCAD(invoice.total)}</span>
+        <span className="font-medium text-[var(--k-text-primary)]">{formatCAD(invoice.total)}</span>
       ),
     },
     {
@@ -393,7 +393,7 @@ export default function FacturesFournisseursPage() {
             <SectionCard theme={theme} noPadding>
               <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-white/5">
                   <tr>
                     <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
                     <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
@@ -402,8 +402,8 @@ export default function FacturesFournisseursPage() {
                 <tbody className="divide-y divide-slate-200">
                   {inv.items.map((item, index) => (
                     <tr key={`vendor-item-${index}`}>
-                      <td className="px-4 py-3 text-slate-900">{item.description}</td>
-                      <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.amount)}</td>
+                      <td className="px-4 py-3 text-[var(--k-text-primary)]">{item.description}</td>
+                      <td className="px-4 py-3 text-end font-medium text-[var(--k-text-primary)]">{formatCurrency(item.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -423,7 +423,7 @@ export default function FacturesFournisseursPage() {
                     <span>{formatCurrency(inv.taxes)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
+                <div className="flex justify-between text-lg font-bold border-t border-[var(--k-border-subtle)] pt-2">
                   <span>{t('admin.supplierInvoices.total')}</span>
                   <span className="text-emerald-600">{formatCurrency(inv.total)}</span>
                 </div>

@@ -170,7 +170,7 @@ export default function TransfertsClient({
       </div>
 
       {/* Rules table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -237,7 +237,7 @@ export default function TransfertsClient({
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-5">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingRule ? t('voip.admin.forwarding.editRule') : t('voip.admin.forwarding.addRule')}

@@ -462,9 +462,9 @@ export default function TutorielsPage() {
 
       <div className="flex gap-4" style={{ height: 'calc(100vh - 220px)' }}>
         {/* ── Sidebar ────────────────────────────────── */}
-        <div className="w-80 flex-shrink-0 bg-white rounded-xl border border-slate-200 flex flex-col overflow-hidden">
+        <div className="w-80 flex-shrink-0 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] flex flex-col overflow-hidden">
           {/* Search */}
-          <div className="p-3 border-b border-slate-200">
+          <div className="p-3 border-b border-[var(--k-border-subtle)]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -492,7 +492,7 @@ export default function TutorielsPage() {
                   {/* Section header */}
                   <button
                     onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-50 transition-colors border-b border-slate-100"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 transition-colors border-b border-slate-100"
                   >
                     {isExpanded ? (
                       <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -540,16 +540,16 @@ export default function TutorielsPage() {
         </div>
 
         {/* ── Main content area ──────────────────────── */}
-        <div className="flex-1 bg-white rounded-xl border border-slate-200 flex flex-col overflow-hidden">
+        <div className="flex-1 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] flex flex-col overflow-hidden">
           {/* Breadcrumb */}
           {currentPage && (
-            <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 flex items-center gap-2 text-sm">
+            <div className="px-6 py-3 border-b border-[var(--k-border-subtle)] bg-white/5 flex items-center gap-2 text-sm">
               <Book className="w-4 h-4 text-indigo-500" />
               <span className="text-slate-500">{t('admin.tutorials.title')}</span>
               <ChevronRight className="w-3 h-3 text-slate-400" />
               <span className="text-slate-500">{currentPage.section.title}</span>
               <ChevronRight className="w-3 h-3 text-slate-400" />
-              <span className="text-slate-900 font-medium">{currentPage.page.title}</span>
+              <span className="text-[var(--k-text-primary)] font-medium">{currentPage.page.title}</span>
             </div>
           )}
 

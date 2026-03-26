@@ -181,8 +181,8 @@ export default function AgingPage() {
                 onClick={() => setReportType('RECEIVABLE')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   reportType === 'RECEIVABLE'
-                    ? 'bg-white text-slate-900 shadow'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white/20 text-[var(--k-text-primary)] shadow'
+                    : 'text-slate-600 hover:text-[var(--k-text-primary)]'
                 }`}
               >
                 {t('admin.aging.receivables')}
@@ -191,8 +191,8 @@ export default function AgingPage() {
                 onClick={() => setReportType('PAYABLE')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   reportType === 'PAYABLE'
-                    ? 'bg-white text-slate-900 shadow'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white/20 text-[var(--k-text-primary)] shadow'
+                    : 'text-slate-600 hover:text-[var(--k-text-primary)]'
                 }`}
               >
                 {t('admin.aging.payables')}
@@ -300,7 +300,7 @@ export default function AgingPage() {
             <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
+                <tr className="border-b border-[var(--k-border-subtle)]">
                   <th scope="col" className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
                   <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
                   <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
@@ -309,7 +309,7 @@ export default function AgingPage() {
               </thead>
               <tbody>
                 {report.buckets.map((bucket, index) => (
-                  <tr key={bucket.label} className="border-b border-slate-100 hover:bg-slate-50">
+                  <tr key={bucket.label} className="border-b border-slate-100 hover:bg-white/5">
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getBucketColor(index)}`}>
                         {bucket.label}
@@ -324,7 +324,7 @@ export default function AgingPage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-slate-50 font-semibold">
+                <tr className="bg-white/5 font-semibold">
                   <td className="py-3 px-4">Total</td>
                   <td className="text-end py-3 px-4">{report.buckets.reduce((s, b) => s + b.count, 0)}</td>
                   <td className="text-end py-3 px-4">
@@ -346,7 +346,7 @@ export default function AgingPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th scope="col" className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
                     <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
                     <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
@@ -358,10 +358,10 @@ export default function AgingPage() {
                 </thead>
                 <tbody>
                   {report.byCustomer.slice(0, 15).map((customer) => (
-                    <tr key={customer.name} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={customer.name} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-4">
                         <div>
-                          <p className="font-medium text-slate-900">{customer.name}</p>
+                          <p className="font-medium text-[var(--k-text-primary)]">{customer.name}</p>
                           {customer.email && (
                             <p className="text-xs text-slate-500">{customer.email}</p>
                           )}

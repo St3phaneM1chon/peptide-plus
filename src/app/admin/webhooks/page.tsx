@@ -209,7 +209,7 @@ export default function WebhooksPage() {
       )}
 
       {/* Available Events */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
         <h3 className="text-sm font-semibold text-slate-700 mb-3">
           Evenements disponibles ({events.length})
         </h3>
@@ -228,7 +228,7 @@ export default function WebhooksPage() {
                 }}
                 className={`px-2 py-1 rounded text-xs font-mono transition-colors ${
                   eventFilter === evt.event
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
                 title={evt.description}
@@ -255,7 +255,7 @@ export default function WebhooksPage() {
             onClick={() => { setStatusFilter(opt.value); setPage(1); }}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               statusFilter === opt.value
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -271,10 +271,10 @@ export default function WebhooksPage() {
       </div>
 
       {/* Deliveries List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
               <tr>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">Evenement</th>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">Endpoint</th>
@@ -289,7 +289,7 @@ export default function WebhooksPage() {
               {deliveries.map((d) => (
                 <Fragment key={d.id}>
                   <tr
-                    className="hover:bg-slate-50 cursor-pointer"
+                    className="hover:bg-white/5 cursor-pointer"
                     onClick={() => setExpandedDeliveryId(expandedDeliveryId === d.id ? null : d.id)}
                   >
                     <td className="px-4 py-3">
@@ -352,7 +352,7 @@ export default function WebhooksPage() {
                   </tr>
                   {expandedDeliveryId === d.id && (
                     <tr key={`${d.id}-detail`}>
-                      <td colSpan={7} className="px-4 py-4 bg-slate-50">
+                      <td colSpan={7} className="px-4 py-4 bg-white/5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Payload</h4>
@@ -394,7 +394,7 @@ export default function WebhooksPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between">
+          <div className="px-4 py-3 border-t border-[var(--k-border-subtle)] flex items-center justify-between">
             <span className="text-sm text-slate-500">
               Page {page} sur {totalPages}
             </span>

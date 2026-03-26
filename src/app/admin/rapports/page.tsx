@@ -339,8 +339,8 @@ export default function RapportsPage() {
       </div>
 
       {/* Revenue Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.dailyRevenue')}</h3>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+        <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.reports.dailyRevenue')}</h3>
         {salesData.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-slate-400">
             {t('admin.reports.noDataForPeriod')}
@@ -372,8 +372,8 @@ export default function RapportsPage() {
 
       <div className="grid grid-cols-2 gap-6">
         {/* Top Products */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.topProducts')}</h3>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+          <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.reports.topProducts')}</h3>
           {topProducts.length === 0 ? (
             <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
           ) : (
@@ -384,7 +384,7 @@ export default function RapportsPage() {
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 truncate">{product.name}</p>
+                    <p className="font-medium text-[var(--k-text-primary)] truncate">{product.name}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
                         className="bg-indigo-500 h-2 rounded-full"
@@ -393,7 +393,7 @@ export default function RapportsPage() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="font-semibold text-slate-900">{formatCurrency(product.revenue)}</p>
+                    <p className="font-semibold text-[var(--k-text-primary)]">{formatCurrency(product.revenue)}</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.salesCount', { count: product.sales })}</p>
                   </div>
                 </div>
@@ -403,8 +403,8 @@ export default function RapportsPage() {
         </div>
 
         {/* By Region */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.reports.salesByRegion')}</h3>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+          <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.reports.salesByRegion')}</h3>
           {regionData.length === 0 ? (
             <div className="py-8 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
           ) : (
@@ -412,7 +412,7 @@ export default function RapportsPage() {
               {regionData.map((region) => (
                 <div key={region.region} className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900">{region.region}</p>
+                    <p className="font-medium text-[var(--k-text-primary)]">{region.region}</p>
                     <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
                       <div
                         className="bg-indigo-500 h-2 rounded-full"
@@ -421,7 +421,7 @@ export default function RapportsPage() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="font-semibold text-slate-900">{formatCurrency(region.revenue)}</p>
+                    <p className="font-semibold text-[var(--k-text-primary)]">{formatCurrency(region.revenue)}</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.ordersCount', { count: region.orders })}</p>
                   </div>
                 </div>
@@ -432,8 +432,8 @@ export default function RapportsPage() {
       </div>
 
       {/* Revenue Distribution by Region (percentage breakdown) */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h4 className="font-semibold text-slate-900 mb-3">{t('admin.reports.revenueDistribution')}</h4>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+        <h4 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.reports.revenueDistribution')}</h4>
         {regionData.length === 0 ? (
           <div className="py-4 text-center text-slate-400">{t('admin.reports.noDataForPeriod')}</div>
         ) : (

@@ -481,13 +481,13 @@ export default function CalendrierFiscalPage() {
                     key={event.id}
                     className={`flex items-start gap-4 p-4 rounded-lg border border-s-4 bg-white
                       ${authorityBorderColors[event.authority] || 'border-s-slate-300'}
-                      ${overdue ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}
+                      ${overdue ? 'border-red-200 bg-red-50/30' : 'border-[var(--k-border-subtle)]'}
                       hover:shadow-sm transition-shadow`}
                   >
                     {/* Left: Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-slate-900 truncate">
+                        <h3 className="font-semibold text-[var(--k-text-primary)] truncate">
                           {getEventTitle(event)}
                         </h3>
                         {overdue && (
@@ -526,7 +526,7 @@ export default function CalendrierFiscalPage() {
                         )}
 
                         {/* Category badge */}
-                        <span className="inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-[var(--k-border-subtle)]">
                           {getCategoryLabel(event.category)}
                         </span>
 
@@ -664,7 +664,7 @@ export default function CalendrierFiscalPage() {
               <select
                 value={formCategory}
                 onChange={(e) => setFormCategory(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
                 aria-label={t('admin.accounting.fiscal.category')}
               >
@@ -677,7 +677,7 @@ export default function CalendrierFiscalPage() {
               <select
                 value={formAuthority}
                 onChange={(e) => setFormAuthority(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
                 aria-label={t('admin.accounting.fiscal.authority')}
               >
@@ -694,7 +694,7 @@ export default function CalendrierFiscalPage() {
               <select
                 value={formFrequency}
                 onChange={(e) => setFormFrequency(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white
                   focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-shadow"
                 aria-label={t('admin.accounting.fiscal.frequency')}
               >

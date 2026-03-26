@@ -137,7 +137,7 @@ export default function AgentPerformancePage() {
           <p className="text-lg">No agent data for this period</p>
         </div>
       ) : (
-        <div className="bg-white border rounded-xl overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] border rounded-xl overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -195,7 +195,7 @@ export default function AgentPerformancePage() {
 
 function SummaryCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white border rounded-lg p-4">
+    <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
       <div className="flex items-center gap-2 mb-1">{icon}<span className="text-xs text-gray-500">{label}</span></div>
       <p className="text-xl font-bold text-gray-900">{value}</p>
       {sub && <p className="text-xs text-gray-400">{sub}</p>}

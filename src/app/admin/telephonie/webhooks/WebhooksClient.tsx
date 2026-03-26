@@ -291,7 +291,7 @@ export default function WebhooksClient({
 
       {/* Webhooks table */}
       {webhooks.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <Webhook className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">No webhooks configured yet.</p>
           <button
@@ -302,7 +302,7 @@ export default function WebhooksClient({
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
@@ -469,7 +469,7 @@ export default function WebhooksClient({
                   ?.deliveryLog.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between py-1.5 px-3 bg-white rounded border border-gray-100 text-xs"
+                      className="flex items-center justify-between py-1.5 px-3 bg-[var(--k-glass-thin)] rounded border border-gray-100 text-xs"
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -503,7 +503,7 @@ export default function WebhooksClient({
       {/* Add / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">
                 {editingId ? 'Edit Webhook' : t('voip.enterprise.addWebhook')}
@@ -546,7 +546,7 @@ export default function WebhooksClient({
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
                       formEvents.includes(event)
                         ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                        : 'border-gray-200 bg-[var(--k-glass-thin)] text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {event}
@@ -578,7 +578,7 @@ export default function WebhooksClient({
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[var(--k-glass-thin)] transition-transform ${
                     formActive ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />

@@ -178,7 +178,7 @@ export default function LeadDetailPage() {
 
           {/* Tasks */}
           {lead.tasks.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.tasks')}</h3>
               <div className="space-y-2">
                 {lead.tasks.map(task => (
@@ -211,7 +211,7 @@ export default function LeadDetailPage() {
           />
 
           {/* Details with inline edit */}
-          <div className="bg-white rounded-lg border p-4 space-y-2.5">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 space-y-2.5">
             <h3 className="font-semibold text-gray-700 text-sm mb-2">{t('admin.crm.details')}</h3>
             <InlineEdit
               label="Email"
@@ -285,7 +285,7 @@ export default function LeadDetailPage() {
 
           {/* Deals */}
           {lead.deals.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.deals')}</h3>
               <div className="space-y-2">
                 {lead.deals.map(deal => (
@@ -304,7 +304,7 @@ export default function LeadDetailPage() {
 
           {/* Tags */}
           {lead.tags.length > 0 && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('admin.crm.tags')}</h3>
               <div className="flex flex-wrap gap-1.5">
                 {lead.tags.map(tag => (
@@ -360,7 +360,7 @@ function ConvertModal({ leadId, onClose, onConverted }: { leadId: string; onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="convert-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="convert-modal-title">
         <h2 id="convert-modal-title" className="text-lg font-semibold">{t('admin.crm.convertToDeal')}</h2>
         <div>
           <label className="block text-sm font-medium mb-1">Deal Title *</label>

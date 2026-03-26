@@ -237,7 +237,7 @@ export default function RecordingImportsPage() {
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md bg-[var(--k-glass-thin)] px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
             {syncing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -335,7 +335,7 @@ export default function RecordingImportsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-gray-200 bg-[var(--k-glass-thin)]">
               {imports.map((imp) => {
                 const statusStyle = STATUS_STYLES[imp.status] || STATUS_STYLES.pending;
                 return (

@@ -51,7 +51,7 @@ export default function SegmentBuilder() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">{t('admin.emails.segments.title')}</h3>
+          <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.emails.segments.title')}</h3>
           <p className="text-sm text-slate-500">{totalUsers} {t('admin.emails.segments.totalUsers')}</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function SegmentBuilder() {
           {rfmSegments.map((segment) => (
             <div
               key={segment.id}
-              className="bg-white rounded-xl border border-slate-200 p-4 hover:border-indigo-300 transition-colors cursor-pointer"
+              className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 hover:border-indigo-300 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -74,9 +74,9 @@ export default function SegmentBuilder() {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: segment.color }}
                   />
-                  <h5 className="font-semibold text-slate-900 text-sm">{segment.name}</h5>
+                  <h5 className="font-semibold text-[var(--k-text-primary)] text-sm">{segment.name}</h5>
                 </div>
-                <span className="text-lg font-bold text-slate-900">{segment.count}</span>
+                <span className="text-lg font-bold text-[var(--k-text-primary)]">{segment.count}</span>
               </div>
               <p className="text-xs text-slate-500">{segment.description}</p>
               <div className="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -111,14 +111,14 @@ export default function SegmentBuilder() {
             return (
               <div
                 key={segment.id}
-                className="bg-white rounded-xl border border-slate-200 p-4 hover:border-indigo-300 transition-colors cursor-pointer"
+                className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 hover:border-indigo-300 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Icon className="h-4 w-4" style={{ color: segment.color }} />
-                    <h5 className="font-semibold text-slate-900 text-sm">{segment.name}</h5>
+                    <h5 className="font-semibold text-[var(--k-text-primary)] text-sm">{segment.name}</h5>
                   </div>
-                  <span className="text-lg font-bold text-slate-900">{segment.count}</span>
+                  <span className="text-lg font-bold text-[var(--k-text-primary)]">{segment.count}</span>
                 </div>
                 <p className="text-xs text-slate-500">{segment.description}</p>
               </div>

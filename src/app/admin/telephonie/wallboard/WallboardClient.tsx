@@ -246,7 +246,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Agent Status List */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               {t('voip.admin.wallboard.agentList')}
@@ -288,7 +288,7 @@ export default function WallboardClient({ initialData }: { initialData: Wallboar
         </div>
 
         {/* Queue Status List */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               {t('voip.admin.wallboard.queueList')}

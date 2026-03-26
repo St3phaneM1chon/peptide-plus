@@ -119,23 +119,23 @@ export default function PlatformDashboard() {
 
       {/* Stats globales */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <p className="text-sm text-gray-500">Tenants</p>
           <p className="text-2xl font-bold">{tenants.length}</p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <p className="text-sm text-gray-500">Utilisateurs</p>
           <p className="text-2xl font-bold">
             {tenants.reduce((acc, t) => acc + t.stats.users, 0)}
           </p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <p className="text-sm text-gray-500">Produits</p>
           <p className="text-2xl font-bold">
             {tenants.reduce((acc, t) => acc + t.stats.products, 0)}
           </p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <p className="text-sm text-gray-500">Commandes</p>
           <p className="text-2xl font-bold">
             {tenants.reduce((acc, t) => acc + t.stats.orders, 0)}
@@ -144,7 +144,7 @@ export default function PlatformDashboard() {
       </div>
 
       {/* Liste des tenants */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
@@ -206,7 +206,7 @@ export default function PlatformDashboard() {
       {/* Formulaire création tenant */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-4">Nouveau Client Koraline</h2>
             <form onSubmit={handleCreateTenant} className="space-y-4">
               <div>

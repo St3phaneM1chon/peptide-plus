@@ -107,7 +107,7 @@ function ReviewsPageInner() {
       key: 'studentName',
       header: t('admin.lms.reviews.student'),
       render: (row) => (
-        <span className="font-medium text-slate-900">{row.studentName}</span>
+        <span className="font-medium text-[var(--k-text-primary)]">{row.studentName}</span>
       ),
     },
     {
@@ -201,14 +201,14 @@ function ReviewsPageInner() {
 
       {/* Average rating card */}
       {!loading && stats.total > 0 && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center gap-4 w-fit">
+        <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-5 flex items-center gap-4 w-fit">
           <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-50">
             <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
           </div>
           <div>
             <p className="text-sm text-slate-500">{t('admin.lms.reviews.averageRating')}</p>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-slate-900 tabular-nums">
+              <span className="text-2xl font-bold text-[var(--k-text-primary)] tabular-nums">
                 {stats.avgRating.toFixed(1)}
               </span>
               {renderStars(Math.round(stats.avgRating))}

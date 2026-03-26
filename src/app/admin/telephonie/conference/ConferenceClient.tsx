@@ -152,11 +152,11 @@ export default function ConferenceClient() {
           {rooms.map((room) => (
             <div
               key={room.id}
-              className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow"
+              className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-semibold text-slate-900">{room.displayName}</h3>
+                  <h3 className="font-semibold text-[var(--k-text-primary)]">{room.displayName}</h3>
                   <p className="text-sm text-slate-500">
                     {t('admin.telephonie.conference.createdBy')} {room.createdBy.name || room.createdBy.email}
                   </p>
@@ -208,8 +208,8 @@ export default function ConferenceClient() {
       {/* Create Room Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">
               {t('admin.telephonie.conference.createTitle')}
             </h2>
 

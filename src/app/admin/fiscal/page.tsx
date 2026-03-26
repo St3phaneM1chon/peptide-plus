@@ -342,7 +342,7 @@ export default function FiscalPage() {
       header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
-          <p className="font-medium text-slate-900">{r.region}</p>
+          <p className="font-medium text-[var(--k-text-primary)]">{r.region}</p>
           <p className="text-xs text-slate-500">{r.regionCode}</p>
         </div>
       ),
@@ -351,7 +351,7 @@ export default function FiscalPage() {
       key: 'totalSales',
       header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{formatCurrency(r.totalSales)}</span>,
+      render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{formatCurrency(r.totalSales)}</span>,
     },
     {
       key: 'taxableAmount',
@@ -404,7 +404,7 @@ export default function FiscalPage() {
     {
       key: 'region',
       header: t('admin.fiscal.columns.region'),
-      render: (r) => <p className="font-medium text-slate-900">{r.region}</p>,
+      render: (r) => <p className="font-medium text-[var(--k-text-primary)]">{r.region}</p>,
     },
     {
       key: 'period',
@@ -415,7 +415,7 @@ export default function FiscalPage() {
       key: 'totalSales',
       header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{formatCurrency(r.totalSales)}</span>,
+      render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{formatCurrency(r.totalSales)}</span>,
     },
     {
       key: 'taxCollected',
@@ -470,7 +470,7 @@ export default function FiscalPage() {
       header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
-          <p className="font-medium text-slate-900">{r.name}</p>
+          <p className="font-medium text-[var(--k-text-primary)]">{r.name}</p>
           <p className="text-xs text-slate-500">{r.code}</p>
         </div>
       ),
@@ -484,7 +484,7 @@ export default function FiscalPage() {
       key: 'taxRate',
       header: t('admin.fiscal.columns.rate'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
+      render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
     },
     {
       key: 'taxName',
@@ -526,7 +526,7 @@ export default function FiscalPage() {
       header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
-          <p className="font-medium text-slate-900">{r.name}</p>
+          <p className="font-medium text-[var(--k-text-primary)]">{r.name}</p>
           <p className="text-xs text-slate-500">{r.code}</p>
         </div>
       ),
@@ -540,7 +540,7 @@ export default function FiscalPage() {
       key: 'taxRate',
       header: t('admin.fiscal.columns.rate'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
+      render: (r) => <span className="font-medium text-[var(--k-text-primary)]">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
     },
     {
       key: 'taxName',
@@ -751,7 +751,7 @@ export default function FiscalPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-[var(--k-border-subtle)]">
         <nav className="flex gap-8">
           {tabs.map((tab) => (
             <button
@@ -801,7 +801,7 @@ export default function FiscalPage() {
 
           {/* Annual Reports */}
           <div>
-            <div className="px-4 py-3 bg-indigo-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+            <div className="px-4 py-3 bg-indigo-50 border border-[var(--k-border-subtle)] border-b-0 rounded-t-lg flex items-center gap-2">
               <FileBarChart className="w-5 h-5 text-indigo-700" />
               <h3 className="font-semibold text-indigo-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
@@ -813,7 +813,7 @@ export default function FiscalPage() {
               emptyDescription={t('admin.fiscal.annualReports.emptyDescription')}
             />
             {annualReports.length > 0 && (
-              <div className="bg-indigo-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
+              <div className="bg-indigo-50 border border-[var(--k-border-subtle)] border-t-0 rounded-b-lg px-4 py-3">
                 <div className="flex items-center text-sm">
                   <span className="font-bold text-indigo-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
                   <span className="font-bold text-indigo-900 flex-1 text-end">
@@ -838,7 +838,7 @@ export default function FiscalPage() {
 
           {/* Monthly Reports */}
           <div>
-            <div className="px-4 py-3 bg-indigo-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
+            <div className="px-4 py-3 bg-indigo-50 border border-[var(--k-border-subtle)] border-b-0 rounded-t-lg flex items-center gap-2">
               <Calendar className="w-5 h-5 text-indigo-700" />
               <h3 className="font-semibold text-indigo-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
@@ -858,8 +858,8 @@ export default function FiscalPage() {
       {activeTab === 'regions' && (
         <>
           {/* Global Settings */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.settings.title')}</h3>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscal.settings.title')}</h3>
             <div className="space-y-4">
               <ToggleSetting
                 title={t('admin.fiscal.settings.taxIncluded')}
@@ -884,8 +884,8 @@ export default function FiscalPage() {
 
           {/* Tax Regions */}
           <div>
-            <div className="px-4 py-3 bg-slate-50 border border-slate-200 border-b-0 rounded-t-lg">
-              <h3 className="font-semibold text-slate-900">{t('admin.fiscal.regionsTables.title')}</h3>
+            <div className="px-4 py-3 bg-white/5 border border-[var(--k-border-subtle)] border-b-0 rounded-t-lg">
+              <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.fiscal.regionsTables.title')}</h3>
             </div>
             <DataTable
               columns={regionColumns}
@@ -898,8 +898,8 @@ export default function FiscalPage() {
 
           {/* Tax Regions Table (configured) */}
           <div>
-            <div className="px-4 py-3 bg-slate-50 border border-slate-200 border-b-0 rounded-t-lg">
-              <h3 className="font-semibold text-slate-900">{t('admin.fiscal.regionsTables.configuredTitle')}</h3>
+            <div className="px-4 py-3 bg-white/5 border border-[var(--k-border-subtle)] border-b-0 rounded-t-lg">
+              <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.fiscal.regionsTables.configuredTitle')}</h3>
             </div>
             <DataTable
               columns={regionColumns2}
@@ -915,8 +915,8 @@ export default function FiscalPage() {
       {activeTab === 'tasks' && (
         <>
           {/* Upcoming Deadlines */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.deadlines.title')}</h3>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscal.deadlines.title')}</h3>
             <div className="space-y-3">
               {reports
                 .filter(r => r.status === 'GENERATED' || r.status === 'FILED')
@@ -932,7 +932,7 @@ export default function FiscalPage() {
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         isPast ? 'bg-red-50 border-red-200' :
                         isUrgent ? 'bg-yellow-50 border-yellow-200' :
-                        'bg-slate-50 border-slate-200'
+                        'bg-white/5 border-[var(--k-border-subtle)]'
                       }`}
                     >
                       <div>
@@ -967,8 +967,8 @@ export default function FiscalPage() {
           </div>
 
           {/* Annual Tasks */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.annualTasks.title')}</h3>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscal.annualTasks.title')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div>
@@ -984,14 +984,14 @@ export default function FiscalPage() {
                 </div>
                 <StatusBadge variant="success">{t('admin.fiscal.annualTasks.statusCompleted')}</StatusBadge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
                 <div>
                   <p className="font-medium text-slate-800">{t('admin.fiscal.annualTasks.annualReport')}</p>
                   <p className="text-sm text-slate-600">{t('admin.fiscal.annualTasks.annualReportDue')}</p>
                 </div>
                 <StatusBadge variant="neutral">{t('admin.fiscal.annualTasks.statusUpcoming')}</StatusBadge>
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
                 <div>
                   <p className="font-medium text-slate-800">{t('admin.fiscal.annualTasks.renewTaxNumbers')}</p>
                   <p className="text-sm text-slate-600">{t('admin.fiscal.annualTasks.renewTaxNumbersDue')}</p>
@@ -1002,12 +1002,12 @@ export default function FiscalPage() {
           </div>
 
           {/* Summary by Region */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.regionSummary.title').replace('{year}', String(selectedYear))}</h3>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscal.regionSummary.title').replace('{year}', String(selectedYear))}</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {annualReports.map((report) => (
-                <div key={report.id} className="p-4 bg-slate-50 rounded-lg">
-                  <p className="font-medium text-slate-900">{report.region}</p>
+                <div key={report.id} className="p-4 bg-white/5 rounded-lg">
+                  <p className="font-medium text-[var(--k-text-primary)]">{report.region}</p>
                   <p className="text-2xl font-bold text-green-600 mt-1">{formatCurrency(report.taxCollected)}</p>
                   <p className="text-xs text-slate-500 mt-1">{t('admin.fiscal.regionSummary.orders').replace('{count}', String(report.orderCount))}</p>
                   <p className="text-xs text-slate-500">{t('admin.fiscal.regionSummary.rate').replace('{rate}', String(report.taxRate))}</p>
@@ -1069,13 +1069,13 @@ export default function FiscalPage() {
           <div className="space-y-6">
             {/* Summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-slate-50 rounded-lg text-center">
+              <div className="p-4 bg-white/5 rounded-lg text-center">
                 <p className="text-sm text-slate-500">{t('admin.fiscal.modal.totalSales')}</p>
-                <p className="text-xl font-bold text-slate-900">{formatCurrency(selectedReport.totalSales)}</p>
+                <p className="text-xl font-bold text-[var(--k-text-primary)]">{formatCurrency(selectedReport.totalSales)}</p>
               </div>
-              <div className="p-4 bg-slate-50 rounded-lg text-center">
+              <div className="p-4 bg-white/5 rounded-lg text-center">
                 <p className="text-sm text-slate-500">{t('admin.fiscal.modal.taxableAmount')}</p>
-                <p className="text-xl font-bold text-slate-900">{formatCurrency(selectedReport.taxableAmount)}</p>
+                <p className="text-xl font-bold text-[var(--k-text-primary)]">{formatCurrency(selectedReport.taxableAmount)}</p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg text-center">
                 <p className="text-sm text-green-600">{t('admin.fiscal.modal.taxCollected')}</p>
@@ -1090,7 +1090,7 @@ export default function FiscalPage() {
             {/* Details */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.information')}</h4>
+                <h4 className="font-medium text-[var(--k-text-primary)] mb-3">{t('admin.fiscal.modal.information')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t('admin.fiscal.modal.region')}</span>
@@ -1111,7 +1111,7 @@ export default function FiscalPage() {
                 </div>
               </div>
               <div>
-                <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.statusSection')}</h4>
+                <h4 className="font-medium text-[var(--k-text-primary)] mb-3">{t('admin.fiscal.modal.statusSection')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t('admin.fiscal.modal.currentStatus')}</span>
@@ -1144,8 +1144,8 @@ export default function FiscalPage() {
             </div>
 
             {/* Calculation Breakdown */}
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.calculationDetail')}</h4>
+            <div className="bg-white/5 rounded-lg p-4">
+              <h4 className="font-medium text-[var(--k-text-primary)] mb-3">{t('admin.fiscal.modal.calculationDetail')}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">{t('admin.fiscal.modal.grossSales')}</span>
@@ -1155,7 +1155,7 @@ export default function FiscalPage() {
                   <span className="text-slate-600">{t('admin.fiscal.modal.nonTaxableSales')}</span>
                   <span>-{formatCurrency(selectedReport.totalSales - selectedReport.taxableAmount)}</span>
                 </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2">
+                <div className="flex justify-between border-t border-[var(--k-border-subtle)] pt-2">
                   <span className="font-medium">{t('admin.fiscal.modal.taxableAmountCalc')}</span>
                   <span className="font-medium">{formatCurrency(selectedReport.taxableAmount)}</span>
                 </div>
@@ -1163,7 +1163,7 @@ export default function FiscalPage() {
                   <span className="text-slate-600">{t('admin.fiscal.modal.taxRateCalc')}</span>
                   <span>x {selectedReport.taxRate}%</span>
                 </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2">
+                <div className="flex justify-between border-t border-[var(--k-border-subtle)] pt-2">
                   <span className="font-bold text-green-700">{t('admin.fiscal.modal.taxToRemit')}</span>
                   <span className="font-bold text-green-700">{formatCurrency(selectedReport.taxCollected)}</span>
                 </div>

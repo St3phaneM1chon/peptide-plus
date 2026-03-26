@@ -165,7 +165,7 @@ export default function ConferenceRoomClient({ roomName }: ConferenceRoomClientP
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="text-center">
           <Video className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('admin.telephonie.conference.connectionError')}</h2>
+          <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.telephonie.conference.connectionError')}</h2>
           <p className="text-slate-500 mb-4">{error}</p>
           <Button variant="primary" onClick={leaveRoom}>
             {t('admin.telephonie.conference.backToLobby')}
@@ -283,8 +283,8 @@ export default function ConferenceRoomClient({ roomName }: ConferenceRoomClientP
 
       {/* Participants sidebar (small) */}
       {participants.length > 0 && (
-        <div className="mt-4 bg-white border border-slate-200 rounded-xl p-4">
-          <h3 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
+        <div className="mt-4 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-4">
+          <h3 className="font-medium text-[var(--k-text-primary)] mb-3 flex items-center gap-2">
             <Users className="w-4 h-4" />
             {t('admin.telephonie.conference.participants')} ({participants.length})
           </h3>

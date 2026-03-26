@@ -138,7 +138,7 @@ export default function AdminConsentDetailPage() {
       </div>
 
       {/* Client Info */}
-      <section className="bg-white border rounded-lg p-5">
+      <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3 flex items-center gap-2">
           <User className="h-4 w-4" /> {t('admin.consents.clientInfo')}
         </h2>
@@ -170,7 +170,7 @@ export default function AdminConsentDetailPage() {
 
       {/* Related Video */}
       {consent.video && (
-        <section className="bg-white border rounded-lg p-5">
+        <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3 flex items-center gap-2">
             <Video className="h-4 w-4" /> {t('admin.consents.relatedVideo')}
           </h2>
@@ -187,7 +187,7 @@ export default function AdminConsentDetailPage() {
 
       {/* Questions & Answers */}
       {questions.length > 0 && consent.responses && (
-        <section className="bg-white border rounded-lg p-5">
+        <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4" /> {t('admin.consents.questionsAnswers')}
           </h2>
@@ -216,7 +216,7 @@ export default function AdminConsentDetailPage() {
       )}
 
       {/* Dates & Timeline */}
-      <section className="bg-white border rounded-lg p-5">
+      <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3 flex items-center gap-2">
           <Calendar className="h-4 w-4" /> {t('admin.consents.timeline')}
         </h2>
@@ -264,7 +264,7 @@ export default function AdminConsentDetailPage() {
 
       {/* Electronic Proof */}
       {(consent.ipAddress || consent.userAgent || consent.signatureHash) && (
-        <section className="bg-white border rounded-lg p-5">
+        <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
           <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3 flex items-center gap-2">
             <Shield className="h-4 w-4" /> {t('admin.consents.electronicProof')}
           </h2>
@@ -295,7 +295,7 @@ export default function AdminConsentDetailPage() {
       )}
 
       {/* Actions */}
-      <section className="bg-white border rounded-lg p-5">
+      <section className="bg-[var(--k-glass-thin)] border rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-500 uppercase mb-3">{t('common.actions')}</h2>
         <div className="flex flex-wrap gap-3">
           {consent.pdfUrl && (

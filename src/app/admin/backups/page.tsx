@@ -143,7 +143,7 @@ export default function BackupsPage() {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Chargement...' : 'Actualiser'}
@@ -179,7 +179,7 @@ export default function BackupsPage() {
                   className={`rounded-lg border p-3 text-center ${
                     isOk ? 'bg-emerald-50 border-emerald-200' :
                     isWarn ? 'bg-amber-50 border-amber-200' :
-                    'bg-slate-50 border-slate-200'
+                    'bg-white/5 border-[var(--k-border-subtle)]'
                   }`}
                 >
                   <Icon className={`w-5 h-5 mx-auto mb-1 ${isOk ? 'text-emerald-600' : isWarn ? 'text-amber-600' : 'text-slate-500'}`} />
@@ -195,7 +195,7 @@ export default function BackupsPage() {
 
           {/* ─── Storage Summary ─── */}
           {data.status.storage && (
-            <div className="mb-6 flex items-center gap-4 text-sm text-slate-600 bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+            <div className="mb-6 flex items-center gap-4 text-sm text-slate-600 bg-white/5 rounded-lg px-4 py-3 border border-[var(--k-border-subtle)]">
               <HardDrive className="w-4 h-4 text-slate-400" />
               <span>Backups: <strong>{data.status.storage.total_backups_gb} GB</strong> utilises</span>
               <span className="text-slate-300">|</span>
@@ -215,11 +215,11 @@ export default function BackupsPage() {
               const isExpanded = expandedProject === key;
 
               return (
-                <div key={key} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div key={key} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] shadow-sm overflow-hidden">
                   {/* Header */}
                   <button
                     onClick={() => toggleProject(key)}
-                    className="w-full px-5 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors text-start"
+                    className="w-full px-5 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors text-start"
                   >
                     <div className={`p-2.5 rounded-lg ${
                       project.health === 'OK' ? 'bg-emerald-100' :
@@ -233,7 +233,7 @@ export default function BackupsPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-slate-900">{meta.label}</h3>
+                        <h3 className="font-semibold text-[var(--k-text-primary)]">{meta.label}</h3>
                         <HealthBadge health={project.health} />
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">{meta.desc}</p>
@@ -263,7 +263,7 @@ export default function BackupsPage() {
                           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                             Verification d&apos;integrite
                           </h4>
-                          <div className="bg-white rounded-lg border border-slate-200 p-3 text-sm">
+                          <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-3 text-sm">
                             {verification.valid ? (
                               <div className="flex items-center gap-2 text-emerald-700">
                                 <CheckCircle2 className="w-4 h-4" />
@@ -294,11 +294,11 @@ export default function BackupsPage() {
                       {versions.length === 0 ? (
                         <div className="text-sm text-slate-400 italic py-2">Aucune sauvegarde disponible</div>
                       ) : (
-                        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden">
                           <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="bg-slate-50 text-start text-xs text-slate-500 uppercase tracking-wider">
+                              <tr className="bg-white/5 text-start text-xs text-slate-500 uppercase tracking-wider">
                                 <th className="px-3 py-2">Date</th>
                                 <th className="px-3 py-2">Fichier</th>
                                 <th className="px-3 py-2 text-end">Taille</th>
@@ -308,7 +308,7 @@ export default function BackupsPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                               {versions.slice(0, 20).map((v, i) => (
-                                <tr key={i} className="hover:bg-slate-50">
+                                <tr key={i} className="hover:bg-white/5">
                                   <td className="px-3 py-2 text-slate-700 whitespace-nowrap">{v.date}</td>
                                   <td className="px-3 py-2 font-mono text-xs text-slate-600 truncate max-w-[250px]">{v.name}</td>
                                   <td className="px-3 py-2 text-end text-slate-600 whitespace-nowrap">{v.size_mb} MB</td>
@@ -336,7 +336,7 @@ export default function BackupsPage() {
                           </table>
                           </div>
                           {versions.length > 20 && (
-                            <div className="px-3 py-2 text-xs text-slate-400 bg-slate-50 border-t">
+                            <div className="px-3 py-2 text-xs text-slate-400 bg-white/5 border-t">
                               ... et {versions.length - 20} autres versions
                             </div>
                           )}
@@ -365,8 +365,8 @@ export default function BackupsPage() {
           </div>
 
           {/* ─── Schedule Info ─── */}
-          <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+          <div className="mt-6 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] shadow-sm p-5">
+            <h3 className="font-semibold text-[var(--k-text-primary)] mb-3 flex items-center gap-2">
               <Clock className="w-5 h-5 text-indigo-500" />
               Planning des sauvegardes automatiques
             </h3>

@@ -429,13 +429,13 @@ export default function MediaImagesPage() {
         <span className="text-slate-700 font-medium">{t('admin.media.imagesTitle')}</span>
       </nav>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.imagesTitle')}</h1>
+        <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">{t('admin.media.imagesTitle')}</h1>
         <div>
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} aria-label={t('admin.media.upload')} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F37 - Use i18n instead of hardcoded "Upload" */}
@@ -451,7 +451,7 @@ export default function MediaImagesPage() {
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete')}
           </button>
-          <button onClick={handleOrganizeImage} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
+          <button onClick={handleOrganizeImage} className="px-3 py-1 bg-[var(--k-glass-thin)] border border-slate-300 text-slate-700 rounded hover:bg-white/5 text-xs">
             {t('admin.media.moveToFolder')}
           </button>
           <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
@@ -477,7 +477,7 @@ export default function MediaImagesPage() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
-          isDragOver ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50'
+          isDragOver ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-white/5 hover:border-indigo-300 hover:bg-indigo-50/50'
         }`}
         onClick={() => bulkInputRef.current?.click()}
       >
@@ -501,9 +501,9 @@ export default function MediaImagesPage() {
 
       {/* Bulk Upload Progress */}
       {showBulkUpload && bulkFiles.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+        <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--k-text-primary)] flex items-center gap-2">
               <Upload className="w-4 h-4" />
               Envoi groupé ({bulkFiles.filter(f => f.status === 'done').length}/{bulkFiles.length})
             </h3>
@@ -511,7 +511,7 @@ export default function MediaImagesPage() {
               {bulkFiles.some(f => f.status === 'pending') && (
                 <button
                   onClick={startBulkUpload}
-                  className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700"
+                  className="px-3 py-1 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded text-xs hover:bg-indigo-700"
                 >
                   Démarrer l&apos;envoi
                 </button>
@@ -556,7 +556,7 @@ export default function MediaImagesPage() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden animate-pulse">
+            <div key={i} className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden animate-pulse">
               <div className="aspect-square bg-slate-200" />
               <div className="p-2 space-y-1.5">
                 <div className="h-3 bg-slate-200 rounded w-3/4" />
@@ -580,7 +580,7 @@ export default function MediaImagesPage() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {images.map(img => (
-            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(img.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}>
+            <div key={img.id} className={`group relative bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(img.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-[var(--k-border-subtle)]'}`}>
               {/* Selection checkbox */}
               <div className="absolute top-2 start-2 z-10">
                 <input
@@ -639,7 +639,7 @@ export default function MediaImagesPage() {
               <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowCropPresets(showCropPresets === img.id ? null : img.id); }}
-                  className="p-1.5 bg-white/80 rounded-full hover:bg-white"
+                  className="p-1.5 bg-white/80 rounded-full hover:bg-[var(--k-glass-thin)]"
                   title="Recadrage intelligent"
                   aria-label="Recadrage intelligent"
                 >
@@ -647,7 +647,7 @@ export default function MediaImagesPage() {
                 </button>
                 <button
                   onClick={() => copyUrl(img)}
-                  className="p-1.5 bg-white/80 rounded-full hover:bg-white"
+                  className="p-1.5 bg-white/80 rounded-full hover:bg-[var(--k-glass-thin)]"
                   title="Copier l'URL"
                   aria-label="Copier l'URL de l'image"
                 >
@@ -657,7 +657,7 @@ export default function MediaImagesPage() {
 
               {/* Smart Crop Presets Dropdown */}
               {showCropPresets === img.id && (
-                <div className="absolute top-10 end-2 z-20 bg-white border border-slate-200 rounded-lg shadow-lg p-2 w-48" onClick={e => e.stopPropagation()}>
+                <div className="absolute top-10 end-2 z-20 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg shadow-lg p-2 w-48" onClick={e => e.stopPropagation()}>
                   <p className="text-[10px] font-semibold text-slate-500 uppercase mb-1 px-1">Recadrage rapide</p>
                   {CROP_PRESETS.map(preset => (
                     <button
@@ -715,14 +715,14 @@ export default function MediaImagesPage() {
             }
           }}
         >
-          <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
+          <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-[var(--k-glass-thin)] rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-[var(--k-glass-thin)] z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F3 - Use NextImage instead of native <img> */}
             <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} />
             <div className="p-4 border-t">
-              <p className="font-medium text-slate-900">{preview.originalName}</p>
+              <p className="font-medium text-[var(--k-text-primary)]">{preview.originalName}</p>
               <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                 <span>{formatSize(preview.size)}</span>
                 <span>{preview.mimeType}</span>

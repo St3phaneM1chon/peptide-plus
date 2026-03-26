@@ -177,7 +177,7 @@ export default function WorkflowAnalyticsClient() {
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 dateRange === r
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                  : 'bg-[var(--k-glass-thin)] border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
               {r === 'all' ? 'All Time' : r === '7d' ? '7 Days' : r === '30d' ? '30 Days' : '90 Days'}
@@ -201,7 +201,7 @@ export default function WorkflowAnalyticsClient() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Activity className="h-4 w-4 text-gray-400" />
                 <span className="text-xs font-medium text-gray-500 uppercase">
@@ -210,7 +210,7 @@ export default function WorkflowAnalyticsClient() {
               </div>
               <p className="text-2xl font-bold text-gray-900">{s.total}</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span className="text-xs font-medium text-gray-500 uppercase">
@@ -220,7 +220,7 @@ export default function WorkflowAnalyticsClient() {
               <p className="text-2xl font-bold text-green-600">{s.successRate}%</p>
               <p className="text-xs text-gray-400 mt-0.5">{s.completed} completed</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <XCircle className="h-4 w-4 text-red-500" />
                 <span className="text-xs font-medium text-gray-500 uppercase">
@@ -230,7 +230,7 @@ export default function WorkflowAnalyticsClient() {
               <p className="text-2xl font-bold text-red-600">{s.failureRate}%</p>
               <p className="text-xs text-gray-400 mt-0.5">{s.failed} failed</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="h-4 w-4 text-indigo-500" />
                 <span className="text-xs font-medium text-gray-500 uppercase">
@@ -246,7 +246,7 @@ export default function WorkflowAnalyticsClient() {
           {chartData.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Executions bar chart */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-indigo-500" />
                   {t('admin.crm.executionsByWorkflow')}
@@ -266,7 +266,7 @@ export default function WorkflowAnalyticsClient() {
               </div>
 
               {/* Success rate line chart */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-green-500" />
                   {t('admin.crm.successRateByWorkflow')}
@@ -285,7 +285,7 @@ export default function WorkflowAnalyticsClient() {
           )}
 
           {/* Per-workflow breakdown table */}
-          <div className="bg-white rounded-lg border border-gray-200 mb-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 mb-6">
             <div className="px-4 py-3 border-b border-gray-100">
               <h3 className="text-sm font-semibold text-gray-700">
                 {t('admin.crm.perWorkflowBreakdown')}
@@ -345,7 +345,7 @@ export default function WorkflowAnalyticsClient() {
 
           {/* Recent errors */}
           {(data?.recentErrors ?? []).length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200">
               <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 <h3 className="text-sm font-semibold text-gray-700">

@@ -145,7 +145,7 @@ export default function KnowledgeBasePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)] flex items-center gap-2">
             <BookOpen className="w-7 h-7 text-purple-600" />
             {t('admin.kb.title')}
           </h1>
@@ -171,13 +171,13 @@ export default function KnowledgeBasePage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.kb.searchPlaceholder')}
-            className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full ps-10 pe-4 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
         >
           <option value="">{t('admin.kb.allStatuses')}</option>
           <option value="DRAFT">{t('admin.kb.draft')}</option>
@@ -187,7 +187,7 @@ export default function KnowledgeBasePage() {
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
         >
           <option value="">{t('admin.kb.allCategories')}</option>
           {categories.map((cat) => (
@@ -205,7 +205,7 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Articles Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-slate-400">{t('common.loading')}</div>
         ) : articles.length === 0 ? (
@@ -215,7 +215,7 @@ export default function KnowledgeBasePage() {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
               <tr>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.articleTitle')}</th>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.kb.category')}</th>
@@ -228,9 +228,9 @@ export default function KnowledgeBasePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {articles.map((article) => (
-                <tr key={article.id} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                <tr key={article.id} className="hover:bg-white/5 cursor-pointer transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{article.title}</div>
+                    <div className="font-medium text-[var(--k-text-primary)]">{article.title}</div>
                     <div className="text-xs text-slate-400 mt-0.5">/{article.slug}</div>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{article.category?.name || '-'}</td>
@@ -268,7 +268,7 @@ export default function KnowledgeBasePage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)] bg-white/5">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
@@ -293,9 +293,9 @@ export default function KnowledgeBasePage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" role="dialog" aria-modal="true" aria-labelledby="kb-article-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" role="dialog" aria-modal="true" aria-labelledby="kb-article-modal-title">
             <div className="flex items-center justify-between mb-6">
-              <h2 id="kb-article-modal-title" className="text-lg font-bold text-slate-900">
+              <h2 id="kb-article-modal-title" className="text-lg font-bold text-[var(--k-text-primary)]">
                 {t('admin.kb.createArticle')}
               </h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1 hover:bg-slate-100 rounded">
@@ -312,7 +312,7 @@ export default function KnowledgeBasePage() {
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                   placeholder={t('admin.kb.titlePlaceholder')}
                 />
               </div>
@@ -325,7 +325,7 @@ export default function KnowledgeBasePage() {
                   value={formContent}
                   onChange={(e) => setFormContent(e.target.value)}
                   rows={12}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm font-mono focus:ring-2 focus:ring-purple-500"
                   placeholder={t('admin.kb.contentPlaceholder')}
                 />
               </div>
@@ -338,7 +338,7 @@ export default function KnowledgeBasePage() {
                   type="text"
                   value={formExcerpt}
                   onChange={(e) => setFormExcerpt(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   placeholder={t('admin.kb.excerptPlaceholder')}
                 />
               </div>
@@ -351,7 +351,7 @@ export default function KnowledgeBasePage() {
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   >
                     <option value="">{t('admin.kb.noCategory')}</option>
                     {categories.map((cat) => (
@@ -366,7 +366,7 @@ export default function KnowledgeBasePage() {
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   >
                     <option value="DRAFT">{t('admin.kb.draft')}</option>
                     <option value="PUBLISHED">{t('admin.kb.published')}</option>
@@ -382,13 +382,13 @@ export default function KnowledgeBasePage() {
                   type="text"
                   value={formTags}
                   onChange={(e) => setFormTags(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   placeholder="peptide, bpc-157, research"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[var(--k-border-subtle)]">
               <button
                 onClick={() => { setShowModal(false); resetForm(); }}
                 className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"

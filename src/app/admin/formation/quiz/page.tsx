@@ -135,7 +135,7 @@ function createEmptyQuestion(sortOrder: number): QuestionData {
 }
 
 const selectClass =
-  'w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100';
+  'w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100';
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN PAGE
@@ -620,7 +620,7 @@ export default function QuizBuilderPage() {
         header: t('admin.lms.quiz.title'),
         render: (row) => (
           <div>
-            <span className="font-medium text-slate-900 dark:text-slate-100">{row.title}</span>
+            <span className="font-medium text-[var(--k-text-primary)] dark:text-slate-100">{row.title}</span>
             {row.lesson && (
               <p className="text-xs text-slate-500 mt-0.5">
                 {row.lesson.chapter.course.title}
@@ -906,18 +906,18 @@ export default function QuizBuilderPage() {
       </SectionCard>
 
       {/* ── Summary bar ── */}
-      <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+      <div className="flex items-center justify-between bg-white/5 dark:bg-slate-800/50 rounded-xl p-4 border border-[var(--k-border-subtle)] dark:border-slate-700">
         <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
           <span>
-            <strong className="text-slate-900 dark:text-slate-100">{validQuestionCount}</strong>{' '}
+            <strong className="text-[var(--k-text-primary)] dark:text-slate-100">{validQuestionCount}</strong>{' '}
             {t('admin.lms.quiz.questionsLabel')}
           </span>
           <span>
-            <strong className="text-slate-900 dark:text-slate-100">{totalPoints}</strong>{' '}
+            <strong className="text-[var(--k-text-primary)] dark:text-slate-100">{totalPoints}</strong>{' '}
             {t('admin.lms.quiz.pointsTotal')}
           </span>
           <span>
-            {t('admin.lms.quiz.passingAt')} <strong className="text-slate-900 dark:text-slate-100">{passingScore}%</strong>
+            {t('admin.lms.quiz.passingAt')} <strong className="text-[var(--k-text-primary)] dark:text-slate-100">{passingScore}%</strong>
           </span>
         </div>
         <Button onClick={addQuestion}>
@@ -1345,7 +1345,7 @@ export default function QuizBuilderPage() {
           {questions
             .filter((q) => q.question.trim())
             .map((q, idx) => (
-              <div key={q._uid} className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+              <div key={q._uid} className="border border-[var(--k-border-subtle)] dark:border-slate-700 rounded-xl p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <p className="font-medium text-sm">
                     {idx + 1}. {q.question}
@@ -1370,7 +1370,7 @@ export default function QuizBuilderPage() {
                                 ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
                                 : selected
                                   ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/20'
-                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                                  : 'border-[var(--k-border-subtle)] dark:border-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <input
@@ -1407,7 +1407,7 @@ export default function QuizBuilderPage() {
                                 ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
                                 : selected
                                   ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900/20'
-                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                                  : 'border-[var(--k-border-subtle)] dark:border-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <input

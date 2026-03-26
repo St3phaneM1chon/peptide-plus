@@ -141,7 +141,7 @@ export default function RepDashboardPage({ params }: { params: Promise<{ id: str
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+            className="appearance-none bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
           >
             {periods.map((p) => (
               <option key={p.value} value={p.value}>

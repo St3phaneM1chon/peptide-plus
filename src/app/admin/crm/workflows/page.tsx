@@ -287,7 +287,7 @@ function StepEditor({ step, index, onUpdate, onRemove }: StepEditorProps) {
                 config: {},
               })
             }
-            className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-white"
+            className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-[var(--k-glass-thin)]"
           >
             {ACTION_TYPES.map(a => (
               <option key={a} value={a}>
@@ -303,7 +303,7 @@ function StepEditor({ step, index, onUpdate, onRemove }: StepEditorProps) {
             min={0}
             value={step.delayMinutes}
             onChange={e => onUpdate(index, { ...step, delayMinutes: parseInt(e.target.value, 10) || 0 })}
-            className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-white"
+            className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-[var(--k-glass-thin)]"
           />
         </div>
       </div>
@@ -318,7 +318,7 @@ function StepEditor({ step, index, onUpdate, onRemove }: StepEditorProps) {
                 onUpdate(index, { ...step, config: { ...step.config, [field.key]: e.target.value } })
               }
               rows={2}
-              className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-white resize-none"
+              className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-[var(--k-glass-thin)] resize-none"
             />
           ) : (
             <input
@@ -327,7 +327,7 @@ function StepEditor({ step, index, onUpdate, onRemove }: StepEditorProps) {
               onChange={e =>
                 onUpdate(index, { ...step, config: { ...step.config, [field.key]: e.target.value } })
               }
-              className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-white"
+              className="w-full border border-gray-200 rounded-md px-2.5 py-1.5 text-sm bg-[var(--k-glass-thin)]"
             />
           )}
         </div>
@@ -346,7 +346,7 @@ function WorkflowCard({ workflow, onToggleStatus, onDelete }: WorkflowCardProps)
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 overflow-hidden">
       <div className="flex items-center gap-4 px-4 py-3">
         <div className="flex-shrink-0">
           <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center">
@@ -616,7 +616,7 @@ export default function WorkflowsPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-2 text-sm bg-white text-gray-700"
+            className="border border-gray-200 rounded-md px-3 py-2 text-sm bg-[var(--k-glass-thin)] text-gray-700"
           >
             <option value="">All Statuses</option>
             <option value="DRAFT">Draft</option>
@@ -643,7 +643,7 @@ export default function WorkflowsPage() {
               key={s}
               onClick={() => setStatusFilter(prev => (prev === s ? '' : s))}
               className={`rounded-lg border p-3 text-start transition-colors ${
-                statusFilter === s ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+                statusFilter === s ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-[var(--k-glass-thin)] hover:bg-gray-50'
               }`}
             >
               <p className="text-xl font-bold text-gray-900">{count}</p>
@@ -659,7 +659,7 @@ export default function WorkflowsPage() {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
         </div>
       ) : workflows.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-lg border border-dashed border-gray-200">
           <Workflow className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">{t('admin.crm.noWorkflows')}</p>
           <button
@@ -685,7 +685,7 @@ export default function WorkflowsPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-8">
-          <div className={`bg-white rounded-xl shadow-2xl w-full mx-4 flex flex-col ${editorMode === 'visual' ? 'max-w-5xl' : 'max-w-2xl'}`}>
+          <div className={`bg-[var(--k-glass-thin)] rounded-xl shadow-2xl w-full mx-4 flex flex-col ${editorMode === 'visual' ? 'max-w-5xl' : 'max-w-2xl'}`}>
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <div className="flex items-center gap-2">
@@ -747,7 +747,7 @@ export default function WorkflowsPage() {
                       triggerConfig: {},
                     }))
                   }
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-white/5 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 >
                   {TRIGGER_TYPES.map(t => (
                     <option key={t} value={t}>
@@ -796,7 +796,7 @@ export default function WorkflowsPage() {
                         onClick={() => setEditorMode('visual')}
                         className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                           editorMode === 'visual'
-                            ? 'bg-white text-purple-700 shadow-sm'
+                            ? 'bg-white/20 text-purple-700 shadow-sm'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
@@ -808,7 +808,7 @@ export default function WorkflowsPage() {
                         onClick={() => setEditorMode('list')}
                         className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                           editorMode === 'list'
-                            ? 'bg-white text-purple-700 shadow-sm'
+                            ? 'bg-white/20 text-purple-700 shadow-sm'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
@@ -886,7 +886,7 @@ export default function WorkflowsPage() {
             <div className="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
               <button
                 onClick={() => { setShowCreate(false); setForm(DEFAULT_FORM); }}
-                className="px-4 py-2 text-sm font-medium bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium bg-[var(--k-glass-thin)] border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>

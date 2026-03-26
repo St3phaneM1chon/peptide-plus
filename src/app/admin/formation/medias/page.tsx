@@ -168,7 +168,7 @@ function MediaLibraryPageInner() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('admin.lms.mediaLibrary.searchPlaceholder')}
             className="w-full h-9 pl-10 pr-3 rounded-lg border border-slate-300 text-sm text-slate-900
-              bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+              bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             aria-label={t('admin.lms.mediaLibrary.searchPlaceholder')}
           />
         </div>
@@ -184,7 +184,7 @@ function MediaLibraryPageInner() {
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all
                   ${typeFilter === opt.value
-                    ? 'bg-white text-slate-900 shadow-sm'
+                    ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                   }
                 `}
@@ -202,7 +202,7 @@ function MediaLibraryPageInner() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-            <div key={i} className="animate-pulse bg-white border border-slate-200 rounded-xl">
+            <div key={i} className="animate-pulse bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl">
               <div className="h-40 bg-slate-100 rounded-t-xl" />
               <div className="p-4 space-y-2">
                 <div className="h-4 bg-slate-100 rounded w-2/3" />
@@ -230,10 +230,10 @@ function MediaLibraryPageInner() {
             return (
               <div
                 key={item.id}
-                className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
+                className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
               >
                 {/* Thumbnail / Icon area */}
-                <div className="relative h-40 bg-slate-50 flex items-center justify-center">
+                <div className="relative h-40 bg-white/5 flex items-center justify-center">
                   {category === 'image' && (item.thumbnailUrl || item.url) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -260,11 +260,11 @@ function MediaLibraryPageInner() {
 
                 {/* Info */}
                 <div className="p-4 space-y-2">
-                  <p className="text-sm font-medium text-slate-900 truncate" title={item.filename}>
+                  <p className="text-sm font-medium text-[var(--k-text-primary)] truncate" title={item.filename}>
                     {item.filename}
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${typeBadgeColors[category] ?? 'bg-slate-50 text-slate-700'}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${typeBadgeColors[category] ?? 'bg-white/5 text-slate-700'}`}>
                       {t(`admin.lms.mediaLibrary.type_${category}`)}
                     </span>
                     <span className="text-xs text-slate-400">{formatFileSize(item.size)}</span>

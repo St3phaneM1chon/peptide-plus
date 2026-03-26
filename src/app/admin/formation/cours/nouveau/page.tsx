@@ -182,7 +182,7 @@ export default function NewCoursePage() {
                 id="level"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               >
                 <option value="BEGINNER">{t('admin.lms.level.beginner')}</option>
                 <option value="INTERMEDIATE">{t('admin.lms.level.intermediate')}</option>
@@ -196,7 +196,7 @@ export default function NewCoursePage() {
                 id="categoryId"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               >
                 <option value="">{t('admin.lms.selectCategory')}</option>
                 {categories.map((cat) => (
@@ -210,7 +210,7 @@ export default function NewCoursePage() {
                 id="instructorId"
                 value={instructorId}
                 onChange={(e) => setInstructorId(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               >
                 <option value="">{t('admin.lms.selectInstructor')}</option>
                 {instructors.map((inst) => (

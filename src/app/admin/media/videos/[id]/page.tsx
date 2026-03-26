@@ -490,7 +490,7 @@ export default function VideoDetailPage() {
           <p className="text-sm text-slate-500 mt-1">{t('admin.media.videoNotFoundDesc')}</p>
           <Link
             href="/admin/media/videos"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('admin.media.backToVideos')}
@@ -539,7 +539,7 @@ export default function VideoDetailPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900 truncate">{video.title}</h1>
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)] truncate">{video.title}</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             {t('admin.media.slug')}: <span className="font-mono text-slate-600">{video.slug}</span>
             {video.createdBy && (
@@ -555,7 +555,7 @@ export default function VideoDetailPage() {
       {/* ============================================================ */}
       {/* SECTION 1: Main Form (two-column) */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left column: Main info */}
           <div className="space-y-4">
@@ -584,7 +584,7 @@ export default function VideoDetailPage() {
               </label>
               <input
                 type="text"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                className="w-full border border-[var(--k-border-subtle)] rounded-lg px-3 py-2 text-sm bg-white/5 text-slate-500 cursor-not-allowed"
                 value={video.slug}
                 readOnly
                 tabIndex={-1}
@@ -631,7 +631,7 @@ export default function VideoDetailPage() {
                 onChange={e => setField('thumbnailUrl', e.target.value)}
               />
               {(getFormValue('thumbnailUrl', video.thumbnailUrl || '') as string) && (
-                <div className="mt-2 relative w-40 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                <div className="mt-2 relative w-40 h-24 rounded-lg overflow-hidden border border-[var(--k-border-subtle)] bg-slate-100">
                   <Image
                     src={getFormValue('thumbnailUrl', video.thumbnailUrl || '') as string}
                     alt={t('admin.media.thumbnailPreview')}
@@ -684,7 +684,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.contentTypeLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[var(--k-glass-thin)]"
                 value={getFormValue('contentType', video.contentType)}
                 onChange={e => setField('contentType', e.target.value)}
               >
@@ -700,7 +700,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.sourceLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[var(--k-glass-thin)]"
                 value={getFormValue('source', video.source)}
                 onChange={e => setField('source', e.target.value)}
               >
@@ -716,7 +716,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.videoCategoryLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[var(--k-glass-thin)]"
                 value={getFormValue('videoCategoryId', video.videoCategoryId || '')}
                 onChange={e => setField('videoCategoryId', e.target.value || null)}
               >
@@ -733,7 +733,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.statusLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[var(--k-glass-thin)]"
                 value={getFormValue('status', video.status)}
                 onChange={e => setField('status', e.target.value)}
               >
@@ -750,7 +750,7 @@ export default function VideoDetailPage() {
                 {t('admin.media.visibilityLabel')}
               </label>
               <select
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[var(--k-glass-thin)]"
                 value={getFormValue('visibility', video.visibility)}
                 onChange={e => setField('visibility', e.target.value)}
               >
@@ -797,7 +797,7 @@ export default function VideoDetailPage() {
             </div>
 
             {/* Meta info (read-only) */}
-            <div className="mt-4 p-3 bg-slate-50 rounded-lg text-xs text-slate-500 space-y-1">
+            <div className="mt-4 p-3 bg-white/5 rounded-lg text-xs text-slate-500 space-y-1">
               <p>{t('admin.media.videoId')}: <span className="font-mono">{video.id}</span></p>
               <p>{t('admin.media.views')}: <span className="font-semibold text-slate-700">{video.views.toLocaleString()}</span></p>
               <p>{t('admin.media.createdAt')}: {new Date(video.createdAt).toLocaleString(locale)}</p>
@@ -818,7 +818,7 @@ export default function VideoDetailPage() {
         </div>
 
         {/* Save button for main form */}
-        <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+        <div className="mt-6 pt-4 border-t border-[var(--k-border-subtle)] flex items-center justify-end gap-3">
           {hasChanges && (
             <span className="text-xs text-amber-600 me-auto">
               {t('admin.media.unsavedChanges')}
@@ -827,7 +827,7 @@ export default function VideoDetailPage() {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t('common.save')}
@@ -838,7 +838,7 @@ export default function VideoDetailPage() {
       {/* ============================================================ */}
       {/* SECTION 2: Tags */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <Tag className="w-4 h-4 text-slate-400" />
           {t('admin.media.tagsSection')}
@@ -880,14 +880,14 @@ export default function VideoDetailPage() {
           <button
             onClick={addTag}
             disabled={!tagInput.trim()}
-            className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button
             onClick={saveTags}
             disabled={savingTags}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
           >
             {savingTags ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t('admin.media.saveTags')}
@@ -898,7 +898,7 @@ export default function VideoDetailPage() {
       {/* ============================================================ */}
       {/* SECTION 3: Placements */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <MapPin className="w-4 h-4 text-slate-400" />
           {t('admin.media.placementsSection')}
@@ -917,7 +917,7 @@ export default function VideoDetailPage() {
                 className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
                   active
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                    : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-600 hover:border-slate-300'
                 }`}
               >
                 {toggling ? (
@@ -940,7 +940,7 @@ export default function VideoDetailPage() {
       {/* ============================================================ */}
       {/* SECTION 4: Linked Products */}
       {/* ============================================================ */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
           <Package className="w-4 h-4 text-slate-400" />
           {t('admin.media.linkedProducts')}
@@ -955,7 +955,7 @@ export default function VideoDetailPage() {
             {productLinks.map(pl => (
               <div
                 key={pl.id}
-                className="flex items-center gap-3 p-2.5 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+                className="flex items-center gap-3 p-2.5 border border-[var(--k-border-subtle)] rounded-lg hover:border-slate-300 transition-colors"
               >
                 {pl.product.imageUrl ? (
                   <div className="relative w-10 h-10 rounded overflow-hidden bg-slate-100 flex-shrink-0">
@@ -999,7 +999,7 @@ export default function VideoDetailPage() {
       {/* Bridge #39: Video Product Sales */}
       {/* ============================================================ */}
       {salesBridge?.enabled && (salesBridge.totalUnits ?? 0) > 0 && (
-        <div className="bg-white rounded-xl border border-emerald-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-emerald-200 p-6">
           <h2 className="text-sm font-semibold text-emerald-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             {t('admin.bridges.videoSales')}
@@ -1010,7 +1010,7 @@ export default function VideoDetailPage() {
               <p className="text-xs text-slate-500">{t('admin.bridges.totalRevenue')}</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{salesBridge.totalUnits}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{salesBridge.totalUnits}</p>
               <p className="text-xs text-slate-500">{t('admin.bridges.unitsSold')}</p>
             </div>
           </div>
@@ -1031,7 +1031,7 @@ export default function VideoDetailPage() {
       {/* Bridge #42: Video Community Reviews */}
       {/* ============================================================ */}
       {communityBridge?.enabled && (communityBridge.reviewCount ?? 0) > 0 && (
-        <div className="bg-white rounded-xl border border-violet-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-violet-200 p-6">
           <h2 className="text-sm font-semibold text-violet-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <MessageSquare className="w-4 h-4 text-violet-500" />
             {t('admin.bridges.videoCommunity')}
@@ -1062,14 +1062,14 @@ export default function VideoDetailPage() {
       {/* SECTION 5: Consent (only if featuredClientId is set) */}
       {/* ============================================================ */}
       {video.featuredClientId && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <ShieldCheck className="w-4 h-4 text-slate-400" />
             {t('admin.media.consentSection')}
           </h2>
 
           {/* Featured client info */}
-          <div className="mb-4 p-3 bg-slate-50 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-white/5 rounded-lg text-sm">
             <p className="text-slate-600">
               <span className="font-medium text-slate-700">{t('admin.media.featuredClient')}:</span>{' '}
               {video.featuredClient?.name || video.featuredClient?.email || video.featuredClientId}
@@ -1101,7 +1101,7 @@ export default function VideoDetailPage() {
                   {consentData.consents.map(consent => (
                     <div
                       key={consent.id}
-                      className="flex items-center gap-3 p-2.5 border border-slate-200 rounded-lg text-sm"
+                      className="flex items-center gap-3 p-2.5 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                     >
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CONSENT_STATUS_COLORS[consent.status] || CONSENT_STATUS_COLORS.PENDING}`}>
                         {formatEnum(consent.status)}
@@ -1145,7 +1145,7 @@ export default function VideoDetailPage() {
       {/* SECTION 6: Recording Source (only if imported from platform) */}
       {/* ============================================================ */}
       {video.recordingImport && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <MonitorPlay className="w-4 h-4 text-slate-400" />
             {t('admin.media.recordingSource')}
@@ -1197,7 +1197,7 @@ export default function VideoDetailPage() {
       {/* SECTION 7: YouTube Publish */}
       {/* ============================================================ */}
       {video.videoUrl && video.source !== 'YOUTUBE' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
             <Youtube className="w-4 h-4 text-red-500" />
             {t('admin.media.publishYouTube')}
@@ -1243,7 +1243,7 @@ export default function VideoDetailPage() {
       {/* YouTube Publish Modal */}
       {showYTModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !ytPublishing && setShowYTModal(false)}>
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
               <Youtube className="w-5 h-5 text-red-500" />
               {t('admin.media.publishYouTube')}
@@ -1259,7 +1259,7 @@ export default function VideoDetailPage() {
                   type="text"
                   value={ytForm.title}
                   onChange={e => setYtForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                   maxLength={100}
                 />
               </div>
@@ -1273,7 +1273,7 @@ export default function VideoDetailPage() {
                   value={ytForm.description}
                   onChange={e => setYtForm(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 resize-none"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 resize-none"
                   maxLength={5000}
                 />
               </div>
@@ -1287,7 +1287,7 @@ export default function VideoDetailPage() {
                   type="text"
                   value={ytForm.tags}
                   onChange={e => setYtForm(prev => ({ ...prev, tags: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                   placeholder="peptides, research, biocycle"
                 />
               </div>
@@ -1300,7 +1300,7 @@ export default function VideoDetailPage() {
                 <select
                   value={ytForm.privacyStatus}
                   onChange={e => setYtForm(prev => ({ ...prev, privacyStatus: e.target.value as 'public' | 'unlisted' | 'private' }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                 >
                   <option value="unlisted">{t('admin.media.ytUnlisted')}</option>
                   <option value="public">{t('admin.media.ytPublic')}</option>
@@ -1366,14 +1366,14 @@ export default function VideoDetailPage() {
       <div className="flex items-center justify-end gap-3 pb-4">
         <Link
           href="/admin/media/videos"
-          className="px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition-colors"
+          className="px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-white/5 transition-colors"
         >
           {t('common.cancel')}
         </Link>
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {t('common.save')}

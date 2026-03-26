@@ -162,7 +162,7 @@ export default function ActivityReportsClient() {
               const Icon = ACTIVITY_ICONS[type] || Activity;
               const total = data?.agents?.reduce((s, a) => s + (a[type] || 0), 0) || 0;
               return (
-                <div key={type} className="bg-white rounded-xl border p-4">
+                <div key={type} className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
                   <div className="flex items-center gap-2 text-gray-500 text-xs mb-2">
                     <Icon className="h-4 w-4" /> {type}s
                   </div>
@@ -173,7 +173,7 @@ export default function ActivityReportsClient() {
           </div>
 
           {/* Daily Chart */}
-          <div className="bg-white rounded-xl border p-6 mb-8">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-8">
             <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <Activity className="h-4 w-4" /> Daily Activity Volume
             </h3>
@@ -189,7 +189,7 @@ export default function ActivityReportsClient() {
           </div>
 
           {/* Agent Table */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
             <div className="px-6 py-4 border-b flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-500" />
               <h3 className="text-sm font-semibold text-gray-700">Agent Breakdown</h3>

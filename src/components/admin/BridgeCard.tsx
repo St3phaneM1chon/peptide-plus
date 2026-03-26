@@ -50,10 +50,10 @@ export function BridgeCard({
 
   return (
     <div
-      className={`bg-white rounded-lg border border-slate-200 overflow-hidden ${className}`}
+      className={`bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--k-border-subtle)] bg-white/5">
         <div className="flex items-center gap-2">
           {icon && (
             <span className="text-slate-500 flex-shrink-0">{icon}</span>

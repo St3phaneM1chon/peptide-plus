@@ -490,7 +490,7 @@ export default function AdminChatPage() {
               onClick={toggleOnlineStatus}
               className={settings?.isAdminOnline ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800' : ''}
             >
-              <span className={`w-2.5 h-2.5 rounded-full ${settings?.isAdminOnline ? 'bg-white' : 'bg-slate-400'}`} />
+              <span className={`w-2.5 h-2.5 rounded-full ${settings?.isAdminOnline ? 'bg-[var(--k-glass-thin)]' : 'bg-slate-400'}`} />
               {settings?.isAdminOnline ? t('admin.chat.online') : t('admin.chat.offline')}
             </Button>
           </div>
@@ -499,9 +499,9 @@ export default function AdminChatPage() {
 
       <div className="flex gap-6 h-[calc(100vh-220px)]">
         {/* Conversations List */}
-        <div className="w-80 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-slate-200 bg-slate-50">
-            <h2 className="font-semibold text-slate-900">{t('admin.chat.conversations')}</h2>
+        <div className="w-80 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-[var(--k-border-subtle)] bg-white/5">
+            <h2 className="font-semibold text-[var(--k-text-primary)]">{t('admin.chat.conversations')}</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
@@ -515,7 +515,7 @@ export default function AdminChatPage() {
                 <button
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
-                  className={`w-full p-4 text-start border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                  className={`w-full p-4 text-start border-b border-slate-100 hover:bg-white/5 transition-colors ${
                     selectedConversation?.id === conv.id ? 'bg-indigo-50 border-s-4 border-s-indigo-500' : ''
                   }`}
                 >
@@ -523,7 +523,7 @@ export default function AdminChatPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${conv.isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                        <span className="font-medium text-slate-900 truncate">
+                        <span className="font-medium text-[var(--k-text-primary)] truncate">
                           {conv.visitorName || conv.visitorEmail || `${t('admin.chat.visitor')} ${conv.visitorId.slice(0, 8)}`}
                         </span>
                       </div>
@@ -560,7 +560,7 @@ export default function AdminChatPage() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+        <div className="flex-1 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden flex flex-col">
           {!selectedConversation ? (
             <div className="flex-1 flex items-center justify-center">
               <EmptyState
@@ -572,10 +572,10 @@ export default function AdminChatPage() {
           ) : (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-slate-200 bg-slate-50">
+              <div className="p-4 border-b border-[var(--k-border-subtle)] bg-white/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-slate-900">
+                    <h3 className="font-semibold text-[var(--k-text-primary)]">
                       {selectedConversation.visitorName || selectedConversation.visitorEmail || t('admin.chat.visitor')}
                     </h3>
                     <div className="flex items-center gap-3 text-sm text-slate-500 mt-0.5">
@@ -607,7 +607,7 @@ export default function AdminChatPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/5">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -619,7 +619,7 @@ export default function AdminChatPage() {
                           ? 'bg-indigo-500 text-white rounded-br-md'
                           : message.sender === 'BOT'
                           ? 'bg-purple-100 text-purple-900 rounded-bl-md border border-purple-200'
-                          : 'bg-white text-slate-800 rounded-bl-md shadow-sm'
+                          : 'bg-white/20 text-slate-800 rounded-bl-md shadow-sm'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
@@ -683,7 +683,7 @@ export default function AdminChatPage() {
                 {/* Typing indicator */}
                 {typingUsers.length > 0 && (
                   <div className="flex justify-start">
-                    <div className="bg-white text-slate-500 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm text-sm italic">
+                    <div className="bg-white/20 text-slate-500 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm text-sm italic">
                       {t('admin.chat.typing', { name: typingUsers.map(u => u.userName).join(', ') })}
                       <span className="inline-flex ms-1 gap-0.5">
                         <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -698,7 +698,7 @@ export default function AdminChatPage() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-slate-200 bg-white">
+              <div className="p-4 border-t border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)]">
                 <div className="flex items-center gap-2">
                   {/* Image upload button */}
                   <label className="p-2 hover:bg-slate-100 rounded-full cursor-pointer transition-colors flex-shrink-0" title="Upload image">
@@ -724,7 +724,7 @@ export default function AdminChatPage() {
                       <Smile className="w-5 h-5 text-slate-500" />
                     </button>
                     {showEmojiPicker && (
-                      <div className="absolute bottom-10 start-0 bg-white border border-slate-200 rounded-lg shadow-xl p-2 w-64 z-50">
+                      <div className="absolute bottom-10 start-0 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg shadow-xl p-2 w-64 z-50">
                         <div className="grid grid-cols-8 gap-1">
                           {commonEmojis.map((emoji) => (
                             <button

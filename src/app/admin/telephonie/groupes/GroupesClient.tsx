@@ -185,7 +185,7 @@ export default function GroupesClient({
       {groups.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((group) => (
-            <div key={group.id} className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+            <div key={group.id} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-5 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-gray-900">{group.name}</h3>
@@ -231,7 +231,7 @@ export default function GroupesClient({
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-12 text-center text-gray-400">
           <Users className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p>{t('voip.admin.ringGroups.empty')}</p>
         </div>
@@ -240,7 +240,7 @@ export default function GroupesClient({
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingGroup ? t('voip.admin.ringGroups.editGroup') : t('voip.admin.ringGroups.addGroup')}

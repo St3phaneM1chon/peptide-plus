@@ -287,7 +287,7 @@ export default function PlatformConnectionsPage() {
         </div>
         <button
           onClick={() => loadData()}
-          className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
+          className="inline-flex items-center gap-2 rounded-md bg-[var(--k-glass-thin)] px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
         >
           <RefreshCw className="h-4 w-4" />
           {t('common.refresh')}
@@ -302,7 +302,7 @@ export default function PlatformConnectionsPage() {
             className={`rounded-lg border-2 p-6 shadow-sm transition-shadow hover:shadow-md ${
               p.isConnected
                 ? PLATFORM_COLORS[p.platform] || 'border-gray-300 bg-gray-50'
-                : 'border-gray-200 bg-white'
+                : 'border-gray-200 bg-[var(--k-glass-thin)]'
             }`}
           >
             {/* Platform Header */}
@@ -347,7 +347,7 @@ export default function PlatformConnectionsPage() {
                   <button
                     onClick={() => handleTest(p.platform)}
                     disabled={actionLoading === `test-${p.platform}`}
-                    className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-md bg-[var(--k-glass-thin)] px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
                   >
                     {actionLoading === `test-${p.platform}` ? (
                       <Loader2 className="h-3 w-3 animate-spin" />

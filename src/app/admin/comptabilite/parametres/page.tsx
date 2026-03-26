@@ -300,7 +300,7 @@ export default function ParametresComptablesPage() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-[var(--k-border-subtle)]">
         <nav className="flex gap-8">
           {tabs.map((tab) => (
             <button
@@ -344,7 +344,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={fiscalYearDisplay}
                   onChange={(e) => handleFiscalYearChange(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="12-31">{t('admin.accountingSettings.december31')}</option>
                   <option value="03-31">{t('admin.accountingSettings.march31')}</option>
@@ -356,7 +356,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.accountingMethod}
                   onChange={(e) => setSettings({ ...settings, accountingMethod: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="ACCRUAL">{t('admin.accountingSettings.accrualAccounting')}</option>
                   <option value="CASH">{t('admin.accountingSettings.cashAccounting')}</option>
@@ -366,7 +366,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.defaultCurrency}
                   onChange={(e) => setSettings({ ...settings, defaultCurrency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="CAD">{t('admin.accountingSettings.cadLabel')}</option>
                   <option value="USD">{t('admin.accountingSettings.usdLabel')}</option>
@@ -379,7 +379,7 @@ export default function ParametresComptablesPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.autoReconcileStripe')}</p>
+                  <p className="font-medium text-[var(--k-text-primary)]">{t('admin.accountingSettings.autoReconcileStripe')}</p>
                   <p className="text-sm text-slate-500">{t('admin.accountingSettings.autoReconcileStripeDesc')}</p>
                 </div>
                 <button
@@ -398,7 +398,7 @@ export default function ParametresComptablesPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.autoSaleEntries')}</p>
+                  <p className="font-medium text-[var(--k-text-primary)]">{t('admin.accountingSettings.autoSaleEntries')}</p>
                   <p className="text-sm text-slate-500">{t('admin.accountingSettings.autoSaleEntriesDesc')}</p>
                 </div>
                 <button
@@ -447,7 +447,7 @@ export default function ParametresComptablesPage() {
           <SectionCard title={t('admin.accountingSettings.taxRates')} theme={theme} noPadding>
             <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
                   <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
                   <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
@@ -479,7 +479,7 @@ export default function ParametresComptablesPage() {
                 <select
                   value={settings.taxFilingFrequency}
                   onChange={(e) => setSettings({ ...settings, taxFilingFrequency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
                   <option value="MONTHLY">{t('admin.accountingSettings.monthly')}</option>
                   <option value="QUARTERLY">{t('admin.accountingSettings.quarterly')}</option>
@@ -494,7 +494,7 @@ export default function ParametresComptablesPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.quickMethodEnable')}</p>
+                  <p className="font-medium text-[var(--k-text-primary)]">{t('admin.accountingSettings.quickMethodEnable')}</p>
                   <p className="text-sm text-slate-500">{t('admin.accountingSettings.quickMethodEnableDesc')}</p>
                 </div>
                 <button
@@ -518,7 +518,7 @@ export default function ParametresComptablesPage() {
                     <select
                       value={settings.quickMethodProvince}
                       onChange={(e) => setSettings({ ...settings, quickMethodProvince: e.target.value })}
-                      className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     >
                       <option value="QC">{t('admin.accountingSettings.quebec')} (QC)</option>
                       <option value="ON">{t('admin.accountingSettings.ontario')} (ON)</option>
@@ -555,9 +555,9 @@ export default function ParametresComptablesPage() {
             <div className="space-y-4">
               {/* Read-only retention rules table */}
               <p className="text-sm text-slate-600">{t('admin.accountingSettings.retentionDescription')}</p>
-              <div className="overflow-hidden overflow-x-auto rounded-lg border border-slate-200">
+              <div className="overflow-hidden overflow-x-auto rounded-lg border border-[var(--k-border-subtle)]">
                 <table className="w-full">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-white/5">
                     <tr>
                       <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionDocType')}</th>
                       <th scope="col" className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionYears')}</th>
@@ -580,11 +580,11 @@ export default function ParametresComptablesPage() {
               </div>
 
               {/* Block deletion toggle */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-4 border-t border-[var(--k-border-subtle)]">
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-slate-900">{t('admin.accountingSettings.retentionBlockDelete')}</p>
+                    <p className="font-medium text-[var(--k-text-primary)]">{t('admin.accountingSettings.retentionBlockDelete')}</p>
                     <p className="text-sm text-slate-500">{t('admin.accountingSettings.retentionBlockDeleteDesc')}</p>
                   </div>
                 </div>
@@ -622,7 +622,7 @@ export default function ParametresComptablesPage() {
           >
             <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
                   <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
@@ -633,9 +633,9 @@ export default function ParametresComptablesPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {currencies.map((currency) => (
-                  <tr key={currency.code} className="hover:bg-slate-50">
+                  <tr key={currency.code} className="hover:bg-white/5">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900">{currency.code}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{currency.code}</p>
                       <p className="text-sm text-slate-500">{currency.name}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{currency.symbol}</td>
@@ -677,7 +677,7 @@ export default function ParametresComptablesPage() {
                   <span className="text-3xl">{integration.icon}</span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-slate-900">{integration.name}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">{integration.name}</h3>
                       <StatusBadge
                         variant={integration.status === 'connected' ? 'success' : 'neutral'}
                         dot

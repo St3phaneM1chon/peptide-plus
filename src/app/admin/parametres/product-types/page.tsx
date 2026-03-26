@@ -125,7 +125,7 @@ export default function ProductTypesPage() {
         </div>
 
         {/* Add new type form */}
-        <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6 mb-6">
           <h2 className="text-sm font-semibold text-neutral-900 mb-4">{t('admin.productTypes.addNew')}</h2>
           <div className="flex gap-3 items-end">
             <div className="flex-1">
@@ -160,7 +160,7 @@ export default function ProductTypesPage() {
         </div>
 
         {/* Types list */}
-        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 overflow-hidden">
           {loading ? (
             <div className="p-12 text-center text-neutral-400">{t('common.loading')}</div>
           ) : types.length === 0 ? (

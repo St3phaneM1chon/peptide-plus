@@ -304,7 +304,7 @@ export default function BankImportPage() {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? `${theme.btnPrimary} text-white`
-                : 'text-slate-500 hover:text-slate-900'
+                : 'text-slate-500 hover:text-[var(--k-text-primary)]'
             }`}
           >
             {tab.label}
@@ -325,7 +325,7 @@ export default function BankImportPage() {
                       <span className={`text-lg font-bold ${theme.statIconColor}`}>B</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{conn.bankName}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">{conn.bankName}</h3>
                       <p className="text-sm text-slate-500">{conn.accountName} &bull; {conn.accountMask}</p>
                       <p className="text-xs text-slate-400 mt-1">
                         {t('admin.bankImport.lastSync')} {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(conn.lastSync)}
@@ -333,7 +333,7 @@ export default function BankImportPage() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-xl font-bold text-[var(--k-text-primary)]">
                       {new Intl.NumberFormat(locale, { style: 'currency', currency: conn.currency }).format(conn.balance)}
                     </p>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -371,9 +371,9 @@ export default function BankImportPage() {
           </div>
 
           {/* Add new connection */}
-          <div className="bg-white rounded-xl p-6 border-2 border-dashed border-slate-300">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl p-6 border-2 border-dashed border-slate-300">
             <div className="text-center">
-              <p className="text-lg font-medium text-slate-900 mb-2">{t('admin.bankImport.connectNewAccount')}</p>
+              <p className="text-lg font-medium text-[var(--k-text-primary)] mb-2">{t('admin.bankImport.connectNewAccount')}</p>
               <p className="text-sm text-slate-500 mb-4">{t('admin.bankImport.connectNewAccountDesc')}</p>
               <div className="flex justify-center gap-4">
                 <button className={`px-4 py-2 ${theme.btnPrimary} text-white rounded-lg`}>
@@ -392,19 +392,19 @@ export default function BankImportPage() {
       {activeTab === 'import' && (
         <div className="space-y-6">
           {importedTransactions.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 border-2 border-dashed border-slate-300">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl p-8 border-2 border-dashed border-slate-300">
               <div className="text-center">
                 <div className={`w-16 h-16 mx-auto mb-4 ${theme.statIconBg} rounded-2xl flex items-center justify-center`}>
                   <span className={`text-2xl font-bold ${theme.statIconColor}`}>CSV</span>
                 </div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('admin.bankImport.importBankStatement')}</h3>
+                <h3 className="text-lg font-medium text-[var(--k-text-primary)] mb-2">{t('admin.bankImport.importBankStatement')}</h3>
                 <p className="text-sm text-slate-500 mb-4">{t('admin.bankImport.supportedFormats')}</p>
 
                 <div className="flex justify-center gap-4 mb-4">
                   <select
                     value={csvFormat}
                     onChange={e => setCsvFormat(e.target.value as typeof csvFormat)}
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="desjardins">Desjardins</option>
                     <option value="td">TD Canada Trust</option>
@@ -416,7 +416,7 @@ export default function BankImportPage() {
                     <select
                       value={selectedBankAccountId}
                       onChange={e => setSelectedBankAccountId(e.target.value)}
-                      className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       {bankAccounts.map(acc => (
                         <option key={acc.id} value={acc.id}>
@@ -456,7 +456,7 @@ export default function BankImportPage() {
                   <select
                     value={selectedBankAccountId}
                     onChange={e => setSelectedBankAccountId(e.target.value)}
-                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     {bankAccounts.map(acc => (
                       <option key={acc.id} value={acc.id}>
@@ -471,7 +471,7 @@ export default function BankImportPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.transactions')}</p>
-                  <p className="text-2xl font-bold text-slate-900">{importedTransactions.length}</p>
+                  <p className="text-2xl font-bold text-[var(--k-text-primary)]">{importedTransactions.length}</p>
                 </SectionCard>
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.selected')}</p>
@@ -522,7 +522,7 @@ export default function BankImportPage() {
               }>
                 <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-white/5">
                     <tr>
                       <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase w-10"></th>
                       <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.dateCol')}</th>
@@ -536,7 +536,7 @@ export default function BankImportPage() {
                     {importedTransactions.map(tx => (
                       <tr
                         key={tx.id}
-                        className={`hover:bg-slate-50 ${tx.confidence < 0.7 ? 'bg-yellow-50/50' : ''}`}
+                        className={`hover:bg-white/5 ${tx.confidence < 0.7 ? 'bg-yellow-50/50' : ''}`}
                       >
                         <td className="px-4 py-3">
                           <input
@@ -546,11 +546,11 @@ export default function BankImportPage() {
                             className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                           />
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900">
+                        <td className="px-4 py-3 text-sm text-[var(--k-text-primary)]">
                           {formatDate(tx.date instanceof Date ? tx.date : new Date(tx.date))}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-sm text-slate-900">{tx.description}</p>
+                          <p className="text-sm text-[var(--k-text-primary)]">{tx.description}</p>
                         </td>
                         <td className={`px-4 py-3 text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
                           {tx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -558,7 +558,7 @@ export default function BankImportPage() {
                         <td className="px-4 py-3">
                           <select
                             defaultValue={tx.suggestedAccount || ''}
-                            className="px-2 py-1 bg-white border border-slate-300 rounded text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="px-2 py-1 bg-[var(--k-glass-thin)] border border-slate-300 rounded text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           >
                             <option value="">{t('admin.bankImport.unclassified')}</option>
                             <option value="1040">1040 - Stripe</option>
@@ -589,7 +589,7 @@ export default function BankImportPage() {
         <SectionCard title={t('admin.bankImport.tabHistory')} theme={theme} noPadding>
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-white/5">
               <tr>
                 <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.dateCol')}</th>
                 <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.sourceCol')}</th>
@@ -599,10 +599,10 @@ export default function BankImportPage() {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {importHistory.map((item, i) => (
-                <tr key={i} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-sm text-slate-900">{formatDate(item.date)}</td>
+                <tr key={i} className="hover:bg-white/5">
+                  <td className="px-4 py-3 text-sm text-[var(--k-text-primary)]">{formatDate(item.date)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{item.source}</td>
-                  <td className="px-4 py-3 text-end text-sm font-medium text-slate-900">{item.count}</td>
+                  <td className="px-4 py-3 text-end text-sm font-medium text-[var(--k-text-primary)]">{item.count}</td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">{t('admin.bankImport.completed')}</span>
                   </td>

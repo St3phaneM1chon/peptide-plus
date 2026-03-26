@@ -368,7 +368,7 @@ export default function QuotesPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[var(--k-glass-thin)]"
           >
             <option value="">{t('admin.crm.quotes.allStatuses')}</option>
             {STATUS_OPTIONS.filter(Boolean).map((s) => (
@@ -385,7 +385,7 @@ export default function QuotesPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : quotes.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.quotes.empty')}
@@ -395,7 +395,7 @@ export default function QuotesPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -499,14 +499,14 @@ export default function QuotesPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-[var(--k-glass-thin)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('common.previous')}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-[var(--k-glass-thin)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('common.next')}
                 </button>
@@ -520,8 +520,8 @@ export default function QuotesPage() {
       {selectedQuote && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/30" onClick={() => setSelectedQuote(null)} />
-          <div className="relative w-full max-w-xl bg-white shadow-xl overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <div className="relative w-full max-w-xl bg-white/20 shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-[var(--k-glass-thin)] border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">{selectedQuote.number}</h2>
                 <p className="text-sm text-gray-500">{selectedQuote.deal?.title}</p>
@@ -665,8 +665,8 @@ export default function QuotesPage() {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowCreateModal(false)} />
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4" role="dialog" aria-modal="true" aria-labelledby="create-quote-modal-title">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+          <div className="relative w-full max-w-3xl bg-[var(--k-glass-thin)] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto mx-4" role="dialog" aria-modal="true" aria-labelledby="create-quote-modal-title">
+            <div className="sticky top-0 bg-[var(--k-glass-thin)] border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
               <h2 id="create-quote-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-indigo-600" />
                 {t('admin.crm.quotes.createTitle')}

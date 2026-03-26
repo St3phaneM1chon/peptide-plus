@@ -324,7 +324,7 @@ export default function UatPage() {
       {/* Launch Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="uat-modal-title">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-2xl w-full max-w-md p-6">
             <h2 id="uat-modal-title" className="text-lg font-bold text-slate-800 mb-4">{t('admin.uat.newRunTitle')}</h2>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
@@ -351,7 +351,7 @@ export default function UatPage() {
                 </div>
               )}
 
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <div className="text-xs text-slate-500 space-y-1">
                   <p>{t('admin.uat.provincesInfo')}</p>
                   <p>{t('admin.uat.scenariosInfo')}</p>
@@ -363,7 +363,7 @@ export default function UatPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-600 hover:bg-white/5"
               >
                 {t('admin.uat.cancelBtn')}
               </button>
@@ -381,7 +381,7 @@ export default function UatPage() {
       )}
 
       {/* Runs List */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-[var(--k-border-subtle)]">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="font-semibold text-slate-800">{t('admin.uat.runHistory')}</h2>
           <button onClick={fetchRuns} className="text-slate-400 hover:text-slate-600">
@@ -416,7 +416,7 @@ export default function UatPage() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {runs.map(run => (
-                  <tr key={run.id} className="hover:bg-slate-50">
+                  <tr key={run.id} className="hover:bg-white/5">
                     <td className="px-5 py-3 font-mono text-slate-600">#{run.runNumber}</td>
                     <td className="px-5 py-3 text-slate-600">
                       {new Date(run.startedAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -537,7 +537,7 @@ function RunDetailPanel({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center" role="status" aria-label="Loading">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-[var(--k-border-subtle)] p-8 text-center" role="status" aria-label="Loading">
         <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-500" />
         <p className="text-sm text-slate-400 mt-2">{t('admin.uat.loadingDetail')}</p>
         <span className="sr-only">Loading...</span>
@@ -551,7 +551,7 @@ function RunDetailPanel({
   const allErrors = testCases.flatMap(tc => tc.errors.map(e => ({ ...e, scenarioCode: tc.scenarioCode, region: tc.region })));
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+    <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-[var(--k-border-subtle)]">
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -572,7 +572,7 @@ function RunDetailPanel({
               {t('admin.uat.cleanup')}
             </button>
           )}
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs px-3 py-1.5 border border-slate-200 rounded-lg">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs px-3 py-1.5 border border-[var(--k-border-subtle)] rounded-lg">
             {t('admin.uat.close')}
           </button>
         </div>
@@ -635,7 +635,7 @@ function RunDetailPanel({
 
 function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="bg-slate-50 rounded-lg p-3 text-center">
+    <div className="bg-white/5 rounded-lg p-3 text-center">
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
       <div className="text-xs text-slate-500 mt-0.5">{label}</div>
     </div>
@@ -658,7 +658,7 @@ function TestCasesTable({
         <div key={tc.id} className="border border-slate-100 rounded-lg overflow-hidden">
           <button
             onClick={() => onToggle(expandedCase === tc.id ? null : tc.id)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-slate-50 text-sm"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-white/5 text-sm"
           >
             {expandedCase === tc.id ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
             <StatusBadge status={tc.status} />
@@ -673,7 +673,7 @@ function TestCasesTable({
           </button>
 
           {expandedCase === tc.id && (
-            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 space-y-3">
+            <div className="px-4 py-3 border-t border-slate-100 bg-white/5 space-y-3">
               {/* Taxes comparison */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -751,7 +751,7 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-start text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
+          <tr className="text-start text-xs text-slate-500 uppercase tracking-wider border-b border-[var(--k-border-subtle)]">
             <th className="px-3 py-2">{t('admin.uat.region')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.sales')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.totalSales')}</th>
@@ -766,7 +766,7 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
         </thead>
         <tbody className="divide-y divide-slate-50">
           {taxReport.rows.map(row => (
-            <tr key={row.region} className="hover:bg-slate-50">
+            <tr key={row.region} className="hover:bg-white/5">
               <td className="px-3 py-2 font-medium">{row.region}</td>
               <td className="px-3 py-2 text-end font-mono">{row.salesCount}</td>
               <td className="px-3 py-2 text-end font-mono">{formatCurrency(row.totalSales)}</td>
@@ -783,7 +783,7 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t-2 border-slate-200 font-bold">
+          <tr className="border-t-2 border-[var(--k-border-subtle)] font-bold">
             <td className="px-3 py-2">{t('admin.uat.totalRow')}</td>
             <td className="px-3 py-2 text-end">{taxReport.rows.reduce((s, r) => s + r.salesCount, 0)}</td>
             <td className="px-3 py-2 text-end font-mono">{formatCurrency(taxReport.totalSales)}</td>
@@ -854,7 +854,7 @@ function ErrorCard({
     ERROR: 'border-red-200 bg-red-50',
     WARNING: 'border-amber-200 bg-amber-50',
     INFO: 'border-indigo-200 bg-indigo-50',
-  }[error.severity] || 'border-slate-200 bg-slate-50';
+  }[error.severity] || 'border-[var(--k-border-subtle)] bg-white/5';
 
   const severityIcon = {
     ERROR: <XCircle className="w-3.5 h-3.5 text-red-500" />,
@@ -879,7 +879,7 @@ function ErrorCard({
         </div>
       </div>
       {expanded && error.context && (
-        <div className="px-3 py-2 border-t border-slate-200 bg-white/50">
+        <div className="px-3 py-2 border-t border-[var(--k-border-subtle)] bg-white/50">
           <pre className="text-[10px] text-slate-600 overflow-x-auto">{JSON.stringify(error.context, null, 2)}</pre>
         </div>
       )}

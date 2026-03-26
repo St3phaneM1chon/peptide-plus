@@ -128,28 +128,28 @@ export default function CLVClient() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <DollarSign className="h-4 w-4" /> Average CLV
               </div>
               <p className="text-2xl font-bold text-green-700">{fmt(data?.averageCLV || 0)}</p>
               <p className="text-xs text-gray-400 mt-1">per customer</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Users className="h-4 w-4" /> Customers
               </div>
               <p className="text-2xl font-bold text-indigo-600">{data?.customerCount || 0}</p>
               <p className="text-xs text-gray-400 mt-1">with orders</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <TrendingUp className="h-4 w-4" /> Total CLV
               </div>
               <p className="text-2xl font-bold text-purple-600">{fmtCompact(totalCLV)}</p>
               <p className="text-xs text-gray-400 mt-1">estimated total</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Award className="h-4 w-4" /> Top CLV
               </div>
@@ -163,7 +163,7 @@ export default function CLVClient() {
           </div>
 
           {/* Distribution Chart */}
-          <div className="bg-white rounded-xl border p-6 mb-8">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-8">
             <h3 className="text-sm font-semibold text-gray-700 mb-4">CLV Distribution</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={data?.distribution || []}>
@@ -177,7 +177,7 @@ export default function CLVClient() {
           </div>
 
           {/* Top Customers Table */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
             <div className="px-6 py-4 border-b">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Award className="h-4 w-4" /> Top Customers by CLV

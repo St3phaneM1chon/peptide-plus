@@ -296,32 +296,41 @@ export const authConfig: NextAuthConfig = {
   //
   // Only the session token stays 'lax' because it's set AFTER the callback
   // completes and is only needed on same-site requests going forward.
-  cookies: {
-    pkceCodeVerifier: {
-      name: '__Secure-authjs.pkce.code_verifier',
-      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true, maxAge: 900 },
-    },
-    state: {
-      name: '__Secure-authjs.state',
-      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true, maxAge: 900 },
-    },
-    nonce: {
-      name: '__Secure-authjs.nonce',
-      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
-    },
-    callbackUrl: {
-      name: '__Secure-authjs.callback-url',
-      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
-    },
-    csrfToken: {
-      name: '__Secure-authjs.csrf-token',
-      options: { httpOnly: true, sameSite: 'none' as const, path: '/', secure: true },
-    },
-    sessionToken: {
-      name: '__Secure-authjs.session-token',
-      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
-    },
-  },
+  // __Secure- prefix + sameSite:'none' requires HTTPS (production/Railway).
+  // In dev (localhost HTTP): plain names + sameSite:'lax' so browsers accept cookies.
+  cookies: (() => {
+    const isProd = process.env.NODE_ENV === 'production';
+    const prefix = isProd ? '__Secure-' : '';
+    const secure = isProd;
+    // sameSite:'none' requires secure=true; in dev use 'lax' for OAuth callbacks
+    const oauthSameSite = isProd ? ('none' as const) : ('lax' as const);
+    return {
+      pkceCodeVerifier: {
+        name: `${prefix}authjs.pkce.code_verifier`,
+        options: { httpOnly: true, sameSite: oauthSameSite, path: '/', secure, maxAge: 900 },
+      },
+      state: {
+        name: `${prefix}authjs.state`,
+        options: { httpOnly: true, sameSite: oauthSameSite, path: '/', secure, maxAge: 900 },
+      },
+      nonce: {
+        name: `${prefix}authjs.nonce`,
+        options: { httpOnly: true, sameSite: oauthSameSite, path: '/', secure },
+      },
+      callbackUrl: {
+        name: `${prefix}authjs.callback-url`,
+        options: { httpOnly: true, sameSite: oauthSameSite, path: '/', secure },
+      },
+      csrfToken: {
+        name: `${prefix}authjs.csrf-token`,
+        options: { httpOnly: true, sameSite: oauthSameSite, path: '/', secure },
+      },
+      sessionToken: {
+        name: `${prefix}authjs.session-token`,
+        options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure },
+      },
+    };
+  })(),
 
   // Pages personnalisées
   pages: {

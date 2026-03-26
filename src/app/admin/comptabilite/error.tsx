@@ -18,7 +18,7 @@ export default function ComptabiliteError({
 
   return (
     <div className="min-h-[400px] flex items-center justify-center p-8">
-      <div className="bg-white rounded-xl shadow-sm border border-red-200 p-8 max-w-lg w-full text-center">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-red-500/30 p-8 max-w-lg w-full text-center">
         <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg
             className="w-6 h-6 text-red-600"
@@ -35,7 +35,7 @@ export default function ComptabiliteError({
           </svg>
         </div>
 
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">
+        <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-2">
           {t('admin.errors.comptabiliteError')}
         </h2>
         <p className="text-sm text-slate-500 mb-6">
@@ -66,7 +66,7 @@ export default function ComptabiliteError({
           <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600">
             {t('admin.errors.technicalDetails')}
           </summary>
-          <pre className="mt-2 p-3 bg-slate-50 rounded-lg text-xs text-slate-600 overflow-auto max-h-32 border border-slate-200">
+          <pre className="mt-2 p-3 bg-white/5 rounded-lg text-xs text-slate-600 overflow-auto max-h-32 border border-[var(--k-border-subtle)]">
             {error.message}
             {error.digest && `\nDigest: ${error.digest}`}
           </pre>

@@ -197,17 +197,17 @@ export default function SondagesClient({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">{t('voip.admin.surveys.results')}</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{totalResponses}</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">{t('voip.admin.surveys.averageScore')}</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {avgScore > 0 ? `${avgScore.toFixed(1)}/5` : '-'}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">{t('voip.admin.surveys.responseRate')}</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {totalResponses > 0 ? `${Math.round((totalResponses / Math.max(totalResponses, 1)) * 100)}%` : '-'}
@@ -216,7 +216,7 @@ export default function SondagesClient({
       </div>
 
       {/* Surveys Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -294,7 +294,7 @@ export default function SondagesClient({
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+          <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {editing ? t('voip.admin.surveys.editSurvey') : t('voip.admin.surveys.addSurvey')}
@@ -313,7 +313,7 @@ export default function SondagesClient({
                 <input
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-[var(--k-glass-thin)] dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder={t('voip.admin.surveys.name')}
                 />
               </div>
@@ -326,7 +326,7 @@ export default function SondagesClient({
                 <select
                   value={formMethod}
                   onChange={(e) => setFormMethod(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-[var(--k-glass-thin)] dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="dtmf">{t('voip.admin.surveys.dtmf')}</option>
                   <option value="web_form">{t('voip.admin.surveys.webForm')}</option>
@@ -373,12 +373,12 @@ export default function SondagesClient({
                           value={q.text}
                           onChange={(e) => updateQuestion(q.id, 'text', e.target.value)}
                           placeholder={`Question ${idx + 1}...`}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-[var(--k-glass-thin)] dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                         <select
                           value={q.type}
                           onChange={(e) => updateQuestion(q.id, 'type', e.target.value)}
-                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs bg-[var(--k-glass-thin)] dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           {QUESTION_TYPES.map((qt) => (
                             <option key={qt.value} value={qt.value}>

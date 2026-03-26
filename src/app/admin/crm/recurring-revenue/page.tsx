@@ -73,7 +73,7 @@ export default function RecurringRevenuePage() {
 
       {/* Primary Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-4 w-4 text-green-600" />
             <span className="text-xs font-medium text-gray-500 uppercase">MRR</span>
@@ -81,7 +81,7 @@ export default function RecurringRevenuePage() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(d.totalMRR, locale)}</p>
           <p className="text-xs text-gray-400 mt-1">{t('admin.crm.monthlyRecurring')}</p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 className="h-4 w-4 text-indigo-600" />
             <span className="text-xs font-medium text-gray-500 uppercase">ARR</span>
@@ -89,7 +89,7 @@ export default function RecurringRevenuePage() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(d.totalARR, locale)}</p>
           <p className="text-xs text-gray-400 mt-1">{t('admin.crm.annualRecurring')}</p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-emerald-600" />
             <span className="text-xs font-medium text-gray-500 uppercase">{t('admin.crm.newMrr')}</span>
@@ -97,7 +97,7 @@ export default function RecurringRevenuePage() {
           <p className="text-2xl font-bold text-emerald-600">+{formatCurrency(d.newMRR, locale)}</p>
           <p className="text-xs text-gray-400 mt-1">{t('admin.crm.thisMonth')}</p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="h-4 w-4 text-red-600" />
             <span className="text-xs font-medium text-gray-500 uppercase">{t('admin.crm.churnedMrr')}</span>
@@ -109,7 +109,7 @@ export default function RecurringRevenuePage() {
 
       {/* Secondary Metrics */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">{t('admin.crm.netNewMrr')}</span>
             {d.netNewMRR > 0 ? <ArrowUpRight className="h-4 w-4 text-green-500" /> : d.netNewMRR < 0 ? <ArrowDownRight className="h-4 w-4 text-red-500" /> : <Minus className="h-4 w-4 text-gray-400" />}
@@ -118,13 +118,13 @@ export default function RecurringRevenuePage() {
             {d.netNewMRR >= 0 ? '+' : ''}{formatCurrency(d.netNewMRR, locale)}
           </p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <span className="text-sm text-gray-500">{t('admin.crm.nrr')}</span>
           <p className={`text-xl font-bold mt-1 ${nrrPercent >= 100 ? 'text-green-600' : 'text-red-600'}`}>
             {nrrPercent}%
           </p>
         </div>
-        <div className="bg-white rounded-xl border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
           <span className="text-sm text-gray-500">{t('admin.crm.recurringDeals')}</span>
           <p className="text-xl font-bold text-gray-900 mt-1">{d.dealCount}</p>
           <p className="text-xs text-gray-400">{t('admin.crm.avgMrr')}: {formatCurrency(d.avgDealMRR, locale)}</p>
@@ -133,7 +133,7 @@ export default function RecurringRevenuePage() {
 
       {/* By Interval */}
       {d.byInterval.length > 0 && (
-        <div className="bg-white rounded-xl border p-4 mb-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4 mb-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.byInterval')}</h3>
           <div className="grid grid-cols-3 gap-3">
             {d.byInterval.map(item => (
@@ -149,7 +149,7 @@ export default function RecurringRevenuePage() {
 
       {/* Top Recurring Deals */}
       {d.topDeals.length > 0 && (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
           <div className="px-4 py-3 border-b">
             <h3 className="text-sm font-semibold text-gray-700">{t('admin.crm.topRecurringDeals')}</h3>
           </div>

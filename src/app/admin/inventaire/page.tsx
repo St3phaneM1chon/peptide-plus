@@ -407,7 +407,7 @@ function PurchaseOrdersTab() {
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
               statusFilter === s
                 ? 'bg-[#6366f1]/10 text-[#818cf8] border-[#6366f1]/20'
-                : 'bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)] border-slate-200 hover:bg-[var(--k-glass-thin)]'
+                : 'bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)] border-[var(--k-border-subtle)] hover:bg-[var(--k-glass-thin)]'
             }`}
           >
             {s === 'all' ? 'All' : s}
@@ -1211,7 +1211,7 @@ export default function InventairePage() {
             <TutorialLink guideSlug="02-commerce/05-inventaire" magazineSlug="Section_02_Commerce" compact />
           </div>
         </div>
-        <div className="flex gap-1 border-b border-slate-200 mb-4">
+        <div className="flex gap-1 border-b border-[var(--k-border-subtle)] mb-4">
           {([
             { key: 'stock' as InventoryTab, label: t('admin.inventory.tabStock'), icon: Package },
             { key: 'suppliers' as InventoryTab, label: t('admin.inventory.tabSuppliers'), icon: Building2 },
@@ -1224,7 +1224,7 @@ export default function InventairePage() {
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 activeTab === tab.key
                   ? 'border-indigo-500 text-[#818cf8]'
-                  : 'border-transparent text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)] hover:border-slate-300'
+                  : 'border-transparent text-[var(--k-text-tertiary)] hover:text-[var(--k-text-secondary)] hover:border-[var(--k-border-default)]'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -1306,7 +1306,7 @@ export default function InventairePage() {
               )}
             </Button>
             <label className="cursor-pointer inline-block">
-              <span className="inline-flex items-center justify-center font-medium rounded-lg border transition-colors duration-150 bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] active:bg-[var(--k-glass-thin)] border-slate-300 shadow-sm h-8 px-3 text-xs gap-1.5">
+              <span className="inline-flex items-center justify-center font-medium rounded-lg border transition-colors duration-150 bg-[var(--k-glass-thin)] text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-thin)] active:bg-[var(--k-glass-thin)] border-[var(--k-border-default)] shadow-sm h-8 px-3 text-xs gap-1.5">
                 <Upload className="w-4 h-4" />
                 {t('admin.inventory.importCsv')}
               </span>
@@ -1387,7 +1387,7 @@ export default function InventairePage() {
               />
               {/* A7-P2-006: Pagination controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 text-xs text-[var(--k-text-tertiary)] flex-shrink-0">
+                <div className="flex items-center justify-between px-3 py-2 border-t border-[var(--k-border-subtle)] text-xs text-[var(--k-text-tertiary)] flex-shrink-0">
                   <span>{filteredInventory.length} items</span>
                   <div className="flex items-center gap-1">
                     <button
@@ -1798,7 +1798,7 @@ export default function InventairePage() {
             <h4 className="text-sm font-semibold text-[var(--k-text-secondary)] mb-2">
               {t('admin.inventory.stockHealth')}
             </h4>
-            <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden flex">
+            <div className="w-full bg-[var(--k-glass-thin)] rounded-full h-3 overflow-hidden flex">
               {stats.total > 0 && (
                 <>
                   <div
@@ -1854,7 +1854,7 @@ export default function InventairePage() {
                   className="flex items-center gap-3 p-3 border border-[var(--k-border-subtle)] rounded-lg hover:bg-[var(--k-glass-thin)] transition-colors"
                 >
                   {/* Urgency bar */}
-                  <div className="w-1.5 h-12 rounded-full bg-slate-200 overflow-hidden flex flex-col-reverse">
+                  <div className="w-1.5 h-12 rounded-full bg-[var(--k-glass-thin)] overflow-hidden flex flex-col-reverse">
                     <div
                       className={`${urgencyColor} rounded-full transition-all`}
                       style={{ height: `${item.urgency}%` }}

@@ -270,7 +270,7 @@ export default function RecurringEntriesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('admin.recurringEntries.title')}</h1>
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">{t('admin.recurringEntries.title')}</h1>
           <p className="text-slate-500 mt-1">{t('admin.recurringEntries.subtitle')}</p>
         </div>
         <div className="flex gap-3">
@@ -311,7 +311,7 @@ export default function RecurringEntriesPage() {
       <SectionCard theme={theme} noPadding>
         <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.recurringEntries.name')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.recurringEntries.frequency')}</th>
@@ -324,9 +324,9 @@ export default function RecurringEntriesPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {entries.map(entry => (
-              <tr key={entry.id} className={`hover:bg-slate-50 ${!entry.isActive ? 'opacity-50' : ''}`}>
+              <tr key={entry.id} className={`hover:bg-white/5 ${!entry.isActive ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-slate-900">{entry.name}</p>
+                  <p className="font-medium text-[var(--k-text-primary)]">{entry.name}</p>
                   <p className="text-sm text-slate-500">{entry.description}</p>
                 </td>
                 <td className="px-4 py-3">
@@ -337,11 +337,11 @@ export default function RecurringEntriesPage() {
                     <span className="ms-1 text-sm text-slate-400">{t('admin.recurringEntries.theDay', { day: entry.dayOfMonth })}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-end font-semibold text-slate-900">
+                <td className="px-4 py-3 text-end font-semibold text-[var(--k-text-primary)]">
                   {formatCurrency(entry.amount)}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="text-slate-900">{new Date(entry.nextRunDate).toLocaleDateString(locale)}</p>
+                  <p className="text-[var(--k-text-primary)]">{new Date(entry.nextRunDate).toLocaleDateString(locale)}</p>
                   <p className="text-xs text-slate-400">
                     {t('admin.recurringEntries.inDays', { count: getDaysUntil(entry.nextRunDate) })}
                   </p>
@@ -402,9 +402,9 @@ export default function RecurringEntriesPage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}>
-            <div className="p-6 border-b border-slate-200">
-              <h2 id="create-modal-title" className="text-xl font-bold text-slate-900">{t('admin.recurringEntries.newRecurringEntry')}</h2>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}>
+            <div className="p-6 border-b border-[var(--k-border-subtle)]">
+              <h2 id="create-modal-title" className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.recurringEntries.newRecurringEntry')}</h2>
             </div>
 
             <div className="p-6 space-y-6">
@@ -431,7 +431,7 @@ export default function RecurringEntriesPage() {
                     type="text"
                     value={formData.name}
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder={t('admin.recurringEntries.namePlaceholder')}
                   />
                 </div>
@@ -442,7 +442,7 @@ export default function RecurringEntriesPage() {
                     step="0.01"
                     value={formData.amount}
                     onChange={e => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -453,7 +453,7 @@ export default function RecurringEntriesPage() {
                   type="text"
                   value={formData.description}
                   onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
 
@@ -463,7 +463,7 @@ export default function RecurringEntriesPage() {
                   <select
                     value={formData.frequency}
                     onChange={e => setFormData(prev => ({ ...prev, frequency: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     {Object.entries(frequencyLabels).map(([val, label]) => (
                       <option key={val} value={val}>{label}</option>
@@ -475,7 +475,7 @@ export default function RecurringEntriesPage() {
                   <select
                     value={formData.dayOfMonth}
                     onChange={e => setFormData(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
                       <option key={d} value={d}>{d}</option>
@@ -488,7 +488,7 @@ export default function RecurringEntriesPage() {
                     type="date"
                     value={formData.startDate}
                     onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -499,7 +499,7 @@ export default function RecurringEntriesPage() {
                   <select
                     value={formData.debitAccount}
                     onChange={e => setFormData(prev => ({ ...prev, debitAccount: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     <option value="6800">{t('admin.recurringEntries.opt6800')}</option>
                     <option value="6310">{t('admin.recurringEntries.opt6310')}</option>
@@ -513,7 +513,7 @@ export default function RecurringEntriesPage() {
                   <select
                     value={formData.creditAccount}
                     onChange={e => setFormData(prev => ({ ...prev, creditAccount: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     <option value="1590">{t('admin.recurringEntries.opt1590')}</option>
                     <option value="1010">{t('admin.recurringEntries.opt1010')}</option>
@@ -527,13 +527,13 @@ export default function RecurringEntriesPage() {
                   type="checkbox"
                   checked={formData.autoPost}
                   onChange={e => setFormData(prev => ({ ...prev, autoPost: e.target.checked }))}
-                  className="rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500"
+                  className="rounded border-slate-300 bg-[var(--k-glass-thin)] text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="text-slate-700">{t('admin.recurringEntries.autoValidate')}</span>
               </label>
             </div>
 
-            <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
+            <div className="p-6 border-t border-[var(--k-border-subtle)] flex justify-end gap-3">
               <button
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 text-slate-500 hover:text-slate-700"
@@ -570,13 +570,13 @@ export default function RecurringEntriesPage() {
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setShowPreview(null); }}>
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowPreview(null)}>
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h2 id="preview-modal-title" className="text-xl font-bold text-slate-900">{t('admin.recurringEntries.previewTitle')}</h2>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowPreview(null)}>
+            <div className="p-6 border-b border-[var(--k-border-subtle)] flex justify-between items-center">
+              <h2 id="preview-modal-title" className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.recurringEntries.previewTitle')}</h2>
               <button onClick={() => setShowPreview(null)} className="text-slate-400 hover:text-slate-600" aria-label="Fermer">&#10005;</button>
             </div>
             <div className="p-6">
-              <h3 className="font-medium text-slate-900 mb-4">{showPreview.name}</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)] mb-4">{showPreview.name}</h3>
               <div className="space-y-2">
                 {[0, 1, 2, 3, 4, 5].map(i => {
                   const date = new Date(showPreview.nextRunDate);
@@ -586,7 +586,7 @@ export default function RecurringEntriesPage() {
                   else if (showPreview.frequency === 'YEARLY') date.setFullYear(date.getFullYear() + i);
 
                   return (
-                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <div key={i} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                       <span className="text-slate-600">{date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                       <span className="font-semibold text-emerald-600">{formatCurrency(showPreview.amount)}</span>
                     </div>

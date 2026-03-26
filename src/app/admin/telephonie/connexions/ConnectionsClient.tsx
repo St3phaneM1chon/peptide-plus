@@ -113,7 +113,7 @@ export default function ConnectionsClient({ initialConnections }: { initialConne
           const isEditing = editing === prov.id;
 
           return (
-            <div key={prov.id} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div key={prov.id} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   {conn?.isEnabled ? (

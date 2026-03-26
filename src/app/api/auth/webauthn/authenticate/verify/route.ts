@@ -158,11 +158,10 @@ export async function POST(request: NextRequest) {
     cookieStore.delete('webauthn-challenge');
     cookieStore.delete('webauthn-email');
 
-    // Set the NextAuth session cookie with __Secure- prefix.
-    // Must match the cookie name in auth-config.ts (secure cookies on Railway HTTPS).
-    cookieStore.set('__Secure-authjs.session-token', token, {
+    const isProd = process.env.NODE_ENV === 'production';
+    cookieStore.set(isProd ? '__Secure-authjs.session-token' : 'authjs.session-token', token, {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: 'lax',
       maxAge: 3600,
       path: '/',

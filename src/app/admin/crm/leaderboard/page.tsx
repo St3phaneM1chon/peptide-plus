@@ -134,7 +134,7 @@ export default function LeaderboardPage() {
 
           {/* Rest of the list */}
           {agents.slice(3).map(agent => (
-            <div key={agent.id} className="flex items-center gap-4 bg-white border rounded-lg px-4 py-3 hover:bg-gray-50">
+            <div key={agent.id} className="flex items-center gap-4 bg-[var(--k-glass-thin)] border rounded-lg px-4 py-3 hover:bg-gray-50">
               <span className="w-8 text-center text-lg font-bold text-gray-300">{agent.rank}</span>
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-400">
                 {(agent.name || '?')[0]}
@@ -185,7 +185,7 @@ function PodiumCard({ agent, metric, formatCurrency, bgColor, borderColor, medal
   return (
     <div className={`${bgColor} border-2 ${borderColor} rounded-xl p-4 text-center ${featured ? 'transform -translate-y-2 shadow-lg' : ''}`}>
       <div className="flex justify-center mb-2">{medal}</div>
-      <div className="w-12 h-12 rounded-full bg-white mx-auto mb-2 flex items-center justify-center text-xl font-bold text-gray-600 border-2 border-white shadow">
+      <div className="w-12 h-12 rounded-full bg-[var(--k-glass-thin)] mx-auto mb-2 flex items-center justify-center text-xl font-bold text-gray-600 border-2 border-white shadow">
         {(agent.name || '?')[0]}
       </div>
       <p className="font-bold text-gray-900">{agent.name}</p>

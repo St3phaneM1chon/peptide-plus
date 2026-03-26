@@ -310,7 +310,7 @@ export default function SnapshotsPage() {
       ) : (
         <>
           {/* Snapshot List */}
-          <div className="bg-white rounded-xl border overflow-hidden mb-8">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden mb-8">
             <div className="px-6 py-4 border-b">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Camera className="h-4 w-4" /> Snapshots ({snapshots.length})
@@ -385,7 +385,7 @@ export default function SnapshotsPage() {
 
           {/* Comparison Results */}
           {diff && (
-            <div className="bg-white rounded-xl border overflow-hidden mb-8">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden mb-8">
               <div className="px-6 py-4 border-b">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <GitCompare className="h-4 w-4" /> Comparison Results
@@ -483,7 +483,7 @@ export default function SnapshotsPage() {
       {/* New Snapshot Dialog */}
       {showNewDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="new-snapshot-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="new-snapshot-modal-title">
             <h3 id="new-snapshot-modal-title" className="text-lg font-semibold text-gray-900 mb-4">Take Snapshot</h3>
 
             <div className="space-y-4">
@@ -514,7 +514,7 @@ export default function SnapshotsPage() {
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         selectedEntities.includes(opt.value)
                           ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          : 'bg-white/20 text-gray-600 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       {opt.label}
@@ -548,7 +548,7 @@ export default function SnapshotsPage() {
       {/* Auto-Schedule Dialog */}
       {showScheduleDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="schedule-snapshot-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md p-6" role="dialog" aria-modal="true" aria-labelledby="schedule-snapshot-modal-title">
             <h3 id="schedule-snapshot-modal-title" className="text-lg font-semibold text-gray-900 mb-4">Auto-Schedule Snapshots</h3>
 
             <div className="space-y-4">
@@ -559,7 +559,7 @@ export default function SnapshotsPage() {
                 <select
                   value={scheduleFrequency}
                   onChange={(e) => setScheduleFrequency(e.target.value as SnapshotFrequency)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm bg-white"
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-[var(--k-glass-thin)]"
                 >
                   <option value="daily">Daily (midnight)</option>
                   <option value="weekly">Weekly (Monday)</option>
@@ -581,7 +581,7 @@ export default function SnapshotsPage() {
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         scheduleEntities.includes(opt.value)
                           ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          : 'bg-white/20 text-gray-600 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       {opt.label}

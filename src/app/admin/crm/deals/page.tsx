@@ -368,7 +368,7 @@ export default function DealsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)] bg-gray-50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)]">
             <p className="text-sm text-[var(--k-text-tertiary)]">
               {((page - 1) * limit) + 1}-{Math.min(page * limit, total)} / {total}
             </p>

@@ -504,7 +504,7 @@ export default function WebinairesPage() {
                       selectedWebinar.status === 'SCHEDULED' ? 'bg-indigo-100 text-indigo-800' :
                       selectedWebinar.status === 'LIVE' ? 'bg-red-100 text-red-800' :
                       selectedWebinar.status === 'CANCELLED' ? 'bg-white/10 text-slate-700' :
-                      'bg-white/10 text-slate-600'
+                      'bg-white/10 text-[var(--k-text-secondary)]'
                     }`}>
                       {statusLabel(selectedWebinar.status, locale)}
                     </span>

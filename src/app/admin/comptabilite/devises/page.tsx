@@ -303,7 +303,7 @@ export default function CurrencyPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.multiCurrency.baseCurrency')}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">CAD</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)] mt-1">CAD</p>
           <p className="text-xs text-slate-400">{t('admin.multiCurrency.canadianDollar')}</p>
         </SectionCard>
         <SectionCard theme={theme}>
@@ -312,7 +312,7 @@ export default function CurrencyPage() {
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.multiCurrency.foreignHoldings')}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalForeignCAD)}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)] mt-1">{formatCurrency(totalForeignCAD)}</p>
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.multiCurrency.unrealizedGainLoss')}</p>
@@ -331,7 +331,7 @@ export default function CurrencyPage() {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? `${theme.btnPrimary} text-white`
-                : 'text-slate-500 hover:text-slate-900'
+                : 'text-slate-500 hover:text-[var(--k-text-primary)]'
             }`}
           >
             {tab.label}
@@ -354,7 +354,7 @@ export default function CurrencyPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">{currency.code === 'USD' ? '\ud83c\uddfa\ud83c\uddf8' : currency.code === 'EUR' ? '\ud83c\uddea\ud83c\uddfa' : currency.code === 'GBP' ? '\ud83c\uddec\ud83c\udde7' : currency.code === 'JPY' ? '\ud83c\uddef\ud83c\uddf5' : currency.code === 'CHF' ? '\ud83c\udde8\ud83c\udded' : currency.code === 'AUD' ? '\ud83c\udde6\ud83c\uddfa' : '\ud83c\uddf2\ud83c\uddfd'}</span>
                       <div>
-                        <p className="font-bold text-slate-900">{currency.code}</p>
+                        <p className="font-bold text-[var(--k-text-primary)]">{currency.code}</p>
                         <p className="text-xs text-slate-500">{currency.name}</p>
                       </div>
                     </div>
@@ -363,7 +363,7 @@ export default function CurrencyPage() {
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-2xl font-bold text-[var(--k-text-primary)]">
                     {currency.rate.toFixed(4)} <span className="text-sm text-slate-500">CAD</span>
                   </p>
                   <p className={`text-sm ${getTrendColor(currency.change24h)}`}>
@@ -379,8 +379,8 @@ export default function CurrencyPage() {
           ))}
 
           {/* Add currency card */}
-          <div className="bg-white rounded-xl p-4 border-2 border-dashed border-slate-300 flex items-center justify-center min-h-[160px]">
-            <button className="text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2" aria-label={t('admin.multiCurrency.addCurrency')}>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border-2 border-dashed border-slate-300 flex items-center justify-center min-h-[160px]">
+            <button className="text-slate-500 hover:text-[var(--k-text-primary)] flex flex-col items-center gap-2" aria-label={t('admin.multiCurrency.addCurrency')}>
               <span className="text-3xl">+</span>
               <span className="text-sm">{t('admin.multiCurrency.addCurrency')}</span>
             </button>
@@ -394,7 +394,7 @@ export default function CurrencyPage() {
           <SectionCard title={t('admin.multiCurrency.foreignAccounts')} theme={theme} noPadding>
             <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.multiCurrency.account')}</th>
                   <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.multiCurrency.currency')}</th>
@@ -407,17 +407,17 @@ export default function CurrencyPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {foreignAccounts.map(account => (
-                  <tr key={account.id} className="hover:bg-slate-50">
+                  <tr key={account.id} className="hover:bg-white/5">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900">{account.accountCode}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{account.accountCode}</p>
                       <p className="text-sm text-slate-500">{account.accountName}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-1 bg-slate-100 rounded text-sm text-slate-900">
+                      <span className="px-2 py-1 bg-slate-100 rounded text-sm text-[var(--k-text-primary)]">
                         {account.currency}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-slate-900">
+                    <td className="px-4 py-3 text-end font-mono text-[var(--k-text-primary)]">
                       {account.balance.toLocaleString(locale, { minimumFractionDigits: 2 })} {account.currency}
                     </td>
                     <td className="px-4 py-3 text-end font-mono text-indigo-600">
@@ -426,7 +426,7 @@ export default function CurrencyPage() {
                     <td className="px-4 py-3 text-end font-mono text-slate-500">
                       {account.originalRate.toFixed(4)}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-slate-900">
+                    <td className="px-4 py-3 text-end font-mono text-[var(--k-text-primary)]">
                       {account.currentRate.toFixed(4)}
                     </td>
                     <td className={`px-4 py-3 text-end font-mono font-medium ${account.unrealizedGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -435,7 +435,7 @@ export default function CurrencyPage() {
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-slate-50">
+              <tfoot className="bg-white/5">
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-end font-medium text-slate-600">{t('admin.supplierInvoices.total')}</td>
                   <td className="px-4 py-3 text-end font-bold text-indigo-600">
@@ -452,7 +452,7 @@ export default function CurrencyPage() {
           </SectionCard>
 
           {/* Add account */}
-          <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-400 transition-colors" aria-label={t('admin.multiCurrency.addForeignAccount')}>
+          <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:text-[var(--k-text-primary)] hover:border-slate-400 transition-colors" aria-label={t('admin.multiCurrency.addForeignAccount')}>
             + {t('admin.multiCurrency.addForeignAccount')}
           </button>
         </div>
@@ -472,13 +472,13 @@ export default function CurrencyPage() {
                 value={historyCurrency}
                 onChange={(e) => setHistoryCurrency(e.target.value)}
                 aria-label="Select currency for history"
-                className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 {currencies.map(c => (
                   <option key={c.code} value={c.code}>{c.code} / CAD</option>
                 ))}
               </select>
-              <select aria-label="Select time range for history" className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <select aria-label="Select time range for history" className="px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="7">{t('admin.multiCurrency.last7Days')}</option>
                 <option value="30">{t('admin.multiCurrency.last30Days')}</option>
                 <option value="90">{t('admin.multiCurrency.last90Days')}</option>
@@ -504,10 +504,10 @@ export default function CurrencyPage() {
           </div>
 
           {/* Stats -- only current rate is available, no historical min/max/volatility */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-t border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-t border-[var(--k-border-subtle)]">
             <div>
               <p className="text-xs text-slate-500">{t('admin.multiCurrency.average')}</p>
-              <p className="font-medium text-slate-900">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>
+              <p className="font-medium text-[var(--k-text-primary)]">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">{t('admin.multiCurrency.highest')}</p>
@@ -540,14 +540,14 @@ export default function CurrencyPage() {
               value={converterAmount}
               onChange={(e) => setConverterAmount(Number(e.target.value) || 0)}
               aria-label="Amount to convert"
-              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <select
             value={selectedConverterCurrency}
             onChange={(e) => setConverterCurrency(e.target.value)}
             aria-label="Select currency to convert"
-            className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-4 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>

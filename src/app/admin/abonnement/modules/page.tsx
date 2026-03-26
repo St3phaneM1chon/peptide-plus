@@ -155,7 +155,7 @@ export default function ModuleMarketplacePage() {
                 ? 'border-blue-200 bg-blue-50/30'
                 : mod.isAccumulating
                   ? 'border-amber-200 bg-amber-50/30'
-                  : 'border-gray-200 bg-white'
+                  : 'border-gray-200 bg-[var(--k-glass-thin)]'
             }`}
           >
             <div className="flex items-start justify-between mb-3">
@@ -237,7 +237,7 @@ export default function ModuleMarketplacePage() {
       {/* Confirm Modal */}
       {confirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+          <div className="bg-[var(--k-glass-thin)] rounded-2xl p-6 max-w-md w-full">
             {confirmModal.action === 'activate' ? (
               <>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">

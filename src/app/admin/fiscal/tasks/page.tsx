@@ -334,8 +334,8 @@ export default function FiscalTasksPage() {
             icon={<ListTodo className="w-5 h-5 text-slate-500" />}
             tasks={groupedTasks.later}
             onToggle={toggleTaskStatus}
-            bgColor="bg-slate-50"
-            borderColor="border-slate-200"
+            bgColor="bg-white/5"
+            borderColor="border-[var(--k-border-subtle)]"
             frequencyLabel={frequencyLabel}
           />
         )}
@@ -371,15 +371,15 @@ function TaskGroup({
 }) {
   return (
     <div className={`rounded-xl ${bgColor} border ${borderColor} overflow-hidden`}>
-      <div className="px-6 py-4 border-b border-slate-200">
+      <div className="px-6 py-4 border-b border-[var(--k-border-subtle)]">
         <div className="flex items-center gap-2">
           {icon}
-          <h3 className="font-semibold text-slate-900">{title}</h3>
+          <h3 className="font-semibold text-[var(--k-text-primary)]">{title}</h3>
         </div>
       </div>
       <div className="divide-y divide-slate-200">
         {tasks.map((task) => (
-          <div key={task.id} className="px-6 py-4 bg-white hover:bg-slate-50">
+          <div key={task.id} className="px-6 py-4 bg-[var(--k-glass-thin)] hover:bg-white/5">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => onToggle(task.id)}
@@ -398,7 +398,7 @@ function TaskGroup({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getCountryFlag(task.countryCode)}</span>
-                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-[var(--k-text-primary)]'}`}>
                       {task.name}
                     </h4>
                   </div>

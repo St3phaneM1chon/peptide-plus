@@ -254,7 +254,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
       case 'cta':
         return <div style={{ textAlign: 'center', padding: '16px' }}><span style={{ background: block.content.color || '#059669', color: 'white', padding: '12px 32px', borderRadius: '8px', fontWeight: 600, display: 'inline-block' }}>{block.content.text}</span></div>;
       case 'divider':
-        return <hr className="border-slate-200 my-4" />;
+        return <hr className="border-[var(--k-border-subtle)] my-4" />;
       default:
         return <div className="text-slate-400 text-sm">Block: {block.type}</div>;
     }
@@ -280,7 +280,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
             value={templateName}
             onChange={e => setTemplateName(e.target.value)}
             placeholder="ex: welcome-new-customer"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+            className="w-full px-3 py-2 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
           />
         </div>
         <div className="flex-1">
@@ -290,7 +290,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
             value={templateSubject}
             onChange={e => setTemplateSubject(e.target.value)}
             placeholder="ex: Bienvenue chez BioCycle Peptides!"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+            className="w-full px-3 py-2 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
           />
         </div>
       </div>
@@ -304,7 +304,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
               <button
                 key={bt.type}
                 onClick={() => addBlock(bt.type)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
               >
                 <bt.icon className="w-4 h-4" />
                 {bt.label}
@@ -319,7 +319,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full mt-2 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full mt-2 px-3 py-2 text-sm bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {saving && <Loader2 className="w-3 h-3 animate-spin" />}
             {saving ? 'Sauvegarde...' : (templateId ? 'Mettre a jour' : 'Sauvegarder')}
@@ -328,7 +328,7 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
 
         {/* Canvas */}
         <div className="flex-1 bg-slate-100 rounded-xl p-6">
-          <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          <div className="max-w-[600px] mx-auto bg-[var(--k-glass-thin)] rounded-lg shadow-sm border border-[var(--k-border-subtle)] overflow-hidden">
             {blocks.length === 0 ? (
               <div className="py-20 text-center text-slate-400">
                 <Plus className="w-8 h-8 mx-auto mb-2" />
@@ -343,10 +343,10 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
                 >
                   {!previewMode && (
                     <div className="absolute -start-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-                      <button onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up'); }} className="p-1 bg-white shadow rounded text-slate-400 hover:text-slate-600">
+                      <button onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up'); }} className="p-1 bg-white/20 shadow rounded text-slate-400 hover:text-slate-600">
                         <GripVertical className="w-3 h-3" />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }} className="p-1 bg-white shadow rounded text-red-400 hover:text-red-600">
+                      <button onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }} className="p-1 bg-white/20 shadow rounded text-red-400 hover:text-red-600">
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
@@ -377,14 +377,14 @@ export default function TemplateBuilder({ templateId, initialBlocks, onSaved }: 
                           value={val}
                           onChange={e => updateBlockContent(block.id, key, e.target.value)}
                           rows={4}
-                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+                          className="w-full px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
                         />
                       ) : (
                         <input
                           type="text"
                           value={val}
                           onChange={e => updateBlockContent(block.id, key, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
+                          className="w-full px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
                         />
                       )}
                     </div>

@@ -547,7 +547,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         </div>
 
         {/* Translation Status Bar */}
-        <div className="bg-white rounded-xl border border-neutral-200 p-4 mb-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-neutral-500" />
@@ -589,7 +589,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-4 py-2.5 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-white text-neutral-900 shadow-sm'
+                  ? 'bg-white/20 text-neutral-900 shadow-sm'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
@@ -605,7 +605,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         {/* ===== TAB: HEADER ===== */}
         {activeTab === 'header' && (
           <div className={`space-y-6 transition-opacity ${saving ? 'opacity-50 pointer-events-none' : ''}`} aria-disabled={saving || undefined}>
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.generalInfo')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -679,7 +679,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             </div>
 
             {/* Price */}
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.priceAndOptions')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
@@ -695,7 +695,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             </div>
 
             {/* Media & Status */}
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.mediaAndStatus')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
@@ -753,7 +753,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
             {/* Danger Zone */}
             {isOwner && (
-              <div className="bg-white rounded-xl border border-red-200 p-6">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-red-200 p-6">
                 <h2 className="text-lg font-semibold text-red-700 mb-2">{t('admin.productForm.dangerZone')}</h2>
                 <p className="text-sm text-neutral-500 mb-4">{t('admin.productForm.dangerZoneDescription')}</p>
                 <button
@@ -785,7 +785,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             </div>
 
             {productTexts.length === 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-12 text-center">
                 <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noProductTextsShort')}</p>
                 <button onClick={addProductText} className="text-indigo-600 hover:text-indigo-700 font-medium">
@@ -794,7 +794,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               </div>
             ) : (
               productTexts.map((pt) => (
-                <div key={pt.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                <div key={pt.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 overflow-hidden">
                   <div
                     onClick={() => setEditingTextId(editingTextId === pt.id ? null : pt.id)}
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
@@ -930,7 +930,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             </div>
 
             {options.length === 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormatsShort')}</p>
                 <button onClick={handleAddFormat} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   {t('admin.productForm.addFirstFormat')}
@@ -944,7 +944,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                 return (
                   <div
                     key={format.id}
-                    className={`bg-white rounded-xl border ${
+                    className={`bg-[var(--k-glass-thin)] rounded-xl border ${
                       format.stockQuantity === 0 ? 'border-red-200' :
                       format.stockQuantity <= format.lowStockThreshold ? 'border-amber-200' :
                       format.isDefault ? 'border-indigo-200' : 'border-neutral-200'
@@ -1025,21 +1025,21 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             ) : salesData ? (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 text-center">
                     <p className="text-2xl font-bold text-neutral-900">{salesData.totalUnitsSold}</p>
                     <p className="text-xs text-neutral-500">{t('admin.bridges.unitsSold')}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 text-center">
                     <p className="text-2xl font-bold text-neutral-900">{salesData.totalOrders}</p>
                     <p className="text-xs text-neutral-500">{t('admin.bridges.ordersWithProduct')}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 text-center">
                     <p className="text-2xl font-bold text-indigo-600">{formatCurrency(salesData.totalRevenue)}</p>
                     <p className="text-xs text-neutral-500">{t('admin.bridges.totalRevenue')}</p>
                   </div>
                 </div>
                 {salesData.recentOrders.length > 0 && (
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4">
                     <h3 className="text-sm font-semibold text-neutral-700 mb-3">{t('admin.bridges.recentOrders')}</h3>
                     <div className="space-y-2">
                       {salesData.recentOrders.map((o) => (
@@ -1069,7 +1069,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             {bridgeLoading.promos ? (
               <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
             ) : promosData && promosData.length > 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 p-4">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4">
                 <h3 className="text-sm font-semibold text-neutral-700 mb-3">{t('admin.bridges.activePromos')}</h3>
                 <div className="space-y-2">
                   {promosData.map((p) => (
@@ -1102,7 +1102,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             ) : videosData && videosData.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {videosData.map((v) => (
-                  <div key={v.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                  <div key={v.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 overflow-hidden">
                     {v.thumbnailUrl && (
                       <div className="relative aspect-video bg-neutral-100">
                         <Image src={v.thumbnailUrl} alt={v.title} width={200} height={200} className="w-full h-full object-cover" />
@@ -1133,19 +1133,19 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             ) : reviewsData ? (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-600 flex items-center justify-center gap-1">
                       <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" /> {reviewsData.avgRating}/5
                     </div>
                     <p className="text-xs text-neutral-500 mt-1">{t('admin.bridges.avgRating')}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-neutral-200 p-4 text-center">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-4 text-center">
                     <div className="text-2xl font-bold text-neutral-900">{reviewsData.reviewCount}</div>
                     <p className="text-xs text-neutral-500 mt-1">{t('admin.bridges.totalReviews')}</p>
                   </div>
                 </div>
                 {reviewsData.reviews.length > 0 && (
-                  <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 divide-y divide-neutral-100">
                     {reviewsData.reviews.map((r) => (
                       <div key={r.id} className="p-3">
                         <div className="flex items-center gap-2 mb-1">
@@ -1162,7 +1162,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   </div>
                 )}
                 {reviewsData.questions.length > 0 && (
-                  <div className="bg-white rounded-xl border border-neutral-200">
+                  <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200">
                     <div className="px-3 py-2 border-b border-neutral-100"><span className="text-sm font-medium text-neutral-700">{t('admin.bridges.recentQuestions')}</span></div>
                     <div className="divide-y divide-neutral-100">
                       {reviewsData.questions.map((q) => (
@@ -1187,7 +1187,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             {bridgeLoading.deals ? (
               <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>
             ) : dealsData && dealsData.length > 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50">
                     <tr>
@@ -1225,7 +1225,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl p-6 max-w-md w-full mx-4">
             <h3 id="delete-confirm-title" className="text-lg font-bold text-neutral-900 mb-2">{t('admin.productForm.deleteProductConfirm')}</h3>
             <p className="text-sm text-neutral-500 mb-6">
               {t('admin.productForm.deleteProductDescription', { name: product.name })}
@@ -1558,7 +1558,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-neutral-200">
           <h2 className="text-lg font-semibold text-neutral-900">{t('admin.optionTypes.title')}</h2>
@@ -1579,7 +1579,7 @@ function FormatTypeManager({ onClose }: { onClose: () => void }) {
             types.map((item, index) => (
               <div
                 key={item.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border ${item.isActive ? 'border-neutral-200 bg-white' : 'border-neutral-100 bg-neutral-50 opacity-60'} ${savingId === item.id ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`flex items-center gap-3 p-3 rounded-lg border ${item.isActive ? 'border-neutral-200 bg-[var(--k-glass-thin)]' : 'border-neutral-100 bg-neutral-50 opacity-60'} ${savingId === item.id ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 {/* Reorder buttons */}
                 <div className="flex flex-col gap-0.5">

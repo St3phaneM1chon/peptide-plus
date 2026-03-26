@@ -168,7 +168,7 @@ export default function DashboardBuilderPage() {
         {/* Sidebar */}
         <div className="w-64 shrink-0 space-y-4">
           {/* Add widgets */}
-          <div className="bg-white rounded-xl border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Plus className="h-4 w-4" /> Add Widget
             </h3>
@@ -187,7 +187,7 @@ export default function DashboardBuilderPage() {
 
           {/* Saved dashboards */}
           {savedDashboards.length > 0 && (
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" /> Saved
               </h3>
@@ -204,7 +204,7 @@ export default function DashboardBuilderPage() {
 
           {/* Widget editor */}
           {ew && (
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <Settings className="h-4 w-4" /> Edit Widget
               </h3>
@@ -254,7 +254,7 @@ export default function DashboardBuilderPage() {
               return (
                 <div
                   key={w.id}
-                  className={`bg-white rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md
+                  className={`bg-[var(--k-glass-thin)] rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md
                     ${editingWidget === w.id ? 'ring-2 ring-indigo-500' : ''}
                     ${draggedWidget === w.id ? 'opacity-50' : ''}`}
                   style={{ gridColumn: `span ${Math.min(w.position.w, 12)}`, gridRow: `span ${w.position.h}` }}

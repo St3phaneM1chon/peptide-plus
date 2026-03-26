@@ -568,7 +568,7 @@ export default function ReglesBancairesPage() {
 
                     {/* Name */}
                     <td className="px-4 py-3">
-                      <span className="font-medium text-slate-900">{rule.name}</span>
+                      <span className="font-medium text-[var(--k-text-primary)]">{rule.name}</span>
                     </td>
 
                     {/* Conditions */}
@@ -732,7 +732,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.transactionType}
                   onChange={e => updateForm('transactionType', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   aria-label={t('admin.bankRules.transactionType')}
                 >
                   <option value="">{t('admin.bankRules.anyType')}</option>
@@ -787,7 +787,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.accountId}
                   onChange={e => updateForm('accountId', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   aria-label={t('admin.bankRules.account')}
                 >
                   <option value="">{t('admin.bankRules.selectAccount')}</option>
@@ -807,7 +807,7 @@ export default function ReglesBancairesPage() {
                 <select
                   value={form.taxCode}
                   onChange={e => updateForm('taxCode', e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   aria-label={t('admin.bankRules.taxCode')}
                 >
                   {TAX_CODES.map(tc => (

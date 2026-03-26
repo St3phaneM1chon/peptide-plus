@@ -313,7 +313,7 @@ export default function NewProductClient({ categories }: Props) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-4 py-2.5 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-white text-neutral-900 shadow-sm'
+                  ? 'bg-white/20 text-neutral-900 shadow-sm'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
@@ -330,7 +330,7 @@ export default function NewProductClient({ categories }: Props) {
         {activeTab === 'header' && (
           <div className="space-y-6">
             {/* General info */}
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.generalInfo')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -442,7 +442,7 @@ export default function NewProductClient({ categories }: Props) {
             </div>
 
             {/* Price */}
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.priceAndOptions')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
@@ -460,7 +460,7 @@ export default function NewProductClient({ categories }: Props) {
             </div>
 
             {/* Image & Options */}
-            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.mediaAndStatus')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
@@ -538,7 +538,7 @@ export default function NewProductClient({ categories }: Props) {
             </div>
 
             {productTexts.length === 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-12 text-center">
                 <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noProductTexts')}</p>
                 <button onClick={addProductText} className="text-indigo-600 hover:text-indigo-700 font-medium">
@@ -547,7 +547,7 @@ export default function NewProductClient({ categories }: Props) {
               </div>
             ) : (
               productTexts.map((pt) => (
-                <div key={pt.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                <div key={pt.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 overflow-hidden">
                   {/* Text header - clickable */}
                   <div
                     onClick={() => setEditingTextId(editingTextId === pt.id ? null : pt.id)}
@@ -740,7 +740,7 @@ export default function NewProductClient({ categories }: Props) {
             </div>
 
             {options.length === 0 ? (
-              <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
+              <div className="bg-[var(--k-glass-thin)] rounded-xl border border-neutral-200 p-12 text-center">
                 <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormats')}</p>
                 <button onClick={addOption} className="text-indigo-600 hover:text-indigo-700 font-medium">
                   {t('admin.productForm.addFirstFormat')}
@@ -792,7 +792,7 @@ function OptionCard({
     : null;
 
   return (
-    <div className={`bg-white rounded-xl border ${
+    <div className={`bg-[var(--k-glass-thin)] rounded-xl border ${
       format.stockQuantity === 0 ? 'border-red-200' :
       format.stockQuantity <= format.lowStockThreshold ? 'border-amber-200' :
       format.isDefault ? 'border-indigo-200' :

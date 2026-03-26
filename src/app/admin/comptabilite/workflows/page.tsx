@@ -745,7 +745,7 @@ export default function WorkflowsPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-white text-indigo-700 shadow-sm'
+                ? 'bg-white/20 text-indigo-700 shadow-sm'
                 : 'text-slate-600 hover:text-slate-800'
             }`}
           >
@@ -868,7 +868,7 @@ export default function WorkflowsPage() {
       >
         <div className="space-y-4">
           {selectedApproval && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+            <div className="bg-white/5 border border-[var(--k-border-subtle)] rounded-lg p-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-slate-500">{t('admin.workflows.entitySummary')}</span>
                 <span className="text-sm font-medium">

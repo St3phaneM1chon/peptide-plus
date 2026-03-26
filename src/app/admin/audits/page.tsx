@@ -432,7 +432,7 @@ export default function AuditDashboardPage() {
       />
 
       {/* Batch Execution Buttons */}
-      <div className="flex flex-wrap gap-3 items-center bg-slate-50 border border-slate-200 rounded-lg p-4">
+      <div className="flex flex-wrap gap-3 items-center bg-white/5 border border-[var(--k-border-subtle)] rounded-lg p-4">
         <span className="text-sm font-semibold text-slate-700">
           {isFr ? 'Exécution:' : 'Execute:'}
         </span>
@@ -526,7 +526,7 @@ export default function AuditDashboardPage() {
         <select
           value={filterSeverity}
           onChange={(e) => setFilterSeverity(e.target.value)}
-          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-white"
+          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-[var(--k-glass-thin)]"
         >
           <option value="ALL">{isFr ? 'Toutes sévérités' : 'All severities'}</option>
           <option value="CRITICAL">Critical</option>
@@ -537,7 +537,7 @@ export default function AuditDashboardPage() {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-white"
+          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-[var(--k-glass-thin)]"
         >
           <option value="ALL">{isFr ? 'Toutes catégories' : 'All categories'}</option>
           {Object.entries(categoryLabels).map(([key, label]) => (
@@ -585,7 +585,7 @@ export default function AuditDashboardPage() {
               </div>
 
               {/* Last Run Info */}
-              <div className="mt-3 pt-3 border-t border-slate-200/60">
+              <div className="mt-3 pt-3 border-t border-[var(--k-border-subtle)]/60">
                 {at.lastRun ? (
                   <div className="flex items-center justify-between text-xs">
                     <div className="space-y-1">
@@ -604,14 +604,14 @@ export default function AuditDashboardPage() {
                     <div className="flex gap-1.5">
                       <Link
                         href={`/admin/audits/${at.code}`}
-                        className="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-700 hover:bg-slate-50 text-xs"
+                        className="px-2.5 py-1 bg-[var(--k-glass-thin)] border border-slate-300 rounded text-slate-700 hover:bg-white/5 text-xs"
                       >
                         {isFr ? 'Voir' : 'View'}
                       </Link>
                       <button
                         onClick={() => handleRunAudit(at.code)}
                         disabled={isAnyRunning}
-                        className="px-2.5 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-xs"
+                        className="px-2.5 py-1 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-xs"
                       >
                         {isRunning ? (
                           <span className="inline-block animate-spin">&#8635;</span>
@@ -627,14 +627,14 @@ export default function AuditDashboardPage() {
                     <div className="flex gap-1.5">
                       <Link
                         href={`/admin/audits/${at.code}`}
-                        className="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-700 hover:bg-slate-50 text-xs"
+                        className="px-2.5 py-1 bg-[var(--k-glass-thin)] border border-slate-300 rounded text-slate-700 hover:bg-white/5 text-xs"
                       >
                         {isFr ? 'Détails' : 'Details'}
                       </Link>
                       <button
                         onClick={() => handleRunAudit(at.code)}
                         disabled={isAnyRunning}
-                        className="px-2.5 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-xs"
+                        className="px-2.5 py-1 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-xs"
                       >
                         {isRunning ? (
                           <span className="inline-block animate-spin">&#8635;</span>
@@ -659,10 +659,10 @@ export default function AuditDashboardPage() {
       {/* ═══════════════════════════════════════════════════════════════
            AUDIT TRAIL / LOG SECTION
            ═══════════════════════════════════════════════════════════════ */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden">
+      <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden">
         <button
           onClick={() => setShowAuditTrail(!showAuditTrail)}
-          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-slate-100 transition-colors"
         >
           <div className="flex items-center gap-3">
             <Hash className="w-5 h-5 text-slate-600" />
@@ -688,7 +688,7 @@ export default function AuditDashboardPage() {
               <button
                 onClick={verifyHashChain}
                 disabled={auditLogs.length === 0}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--k-glass-thin)] border-slate-300 text-slate-700 hover:bg-white/5"
               >
                 {chainVerification.checked ? (
                   chainVerification.valid ? (
@@ -722,7 +722,7 @@ export default function AuditDashboardPage() {
               <button
                 onClick={() => setShowLogFilters(!showLogFilters)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                  showLogFilters ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  showLogFilters ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-[var(--k-glass-thin)] border-slate-300 text-slate-700 hover:bg-white/5'
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
@@ -733,7 +733,7 @@ export default function AuditDashboardPage() {
               <button
                 onClick={exportAuditCsv}
                 disabled={exportingCsv}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border bg-white border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border bg-[var(--k-glass-thin)] border-slate-300 text-slate-700 hover:bg-white/5 disabled:opacity-50 transition-colors"
               >
                 <FileDown className="w-3.5 h-3.5" />
                 {exportingCsv
@@ -745,7 +745,7 @@ export default function AuditDashboardPage() {
               {/* Refresh */}
               <button
                 onClick={() => fetchAuditLogs(auditLogPage)}
-                className="p-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 transition-colors"
+                className="p-1.5 rounded-md border border-slate-300 bg-[var(--k-glass-thin)] hover:bg-white/5 transition-colors"
                 title={isFr ? 'Actualiser' : 'Refresh'}
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${auditLogsLoading ? 'animate-spin' : ''}`} />
@@ -754,7 +754,7 @@ export default function AuditDashboardPage() {
 
             {/* Filter Panel */}
             {showLogFilters && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
                 <div>
                   <label className="block text-[10px] font-medium text-slate-500 mb-1">
                     {isFr ? 'Type d\'entite' : 'Entity Type'}
@@ -765,7 +765,7 @@ export default function AuditDashboardPage() {
                       setLogFilters(prev => ({ ...prev, entityType: e.target.value }));
                       setAuditLogPage(1);
                     }}
-                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)]"
                   >
                     <option value="">{isFr ? 'Tous' : 'All'}</option>
                     {ENTITY_TYPES.filter(Boolean).map(t => (
@@ -781,7 +781,7 @@ export default function AuditDashboardPage() {
                       setLogFilters(prev => ({ ...prev, action: e.target.value }));
                       setAuditLogPage(1);
                     }}
-                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)]"
                   >
                     <option value="">{isFr ? 'Toutes' : 'All'}</option>
                     {ACTION_TYPES.filter(Boolean).map(a => (
@@ -801,7 +801,7 @@ export default function AuditDashboardPage() {
                       setAuditLogPage(1);
                     }}
                     placeholder={isFr ? 'ID utilisateur...' : 'User ID...'}
-                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)]"
                   />
                 </div>
                 <div>
@@ -815,7 +815,7 @@ export default function AuditDashboardPage() {
                       setLogFilters(prev => ({ ...prev, dateFrom: e.target.value }));
                       setAuditLogPage(1);
                     }}
-                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)]"
                   />
                 </div>
                 <div>
@@ -829,7 +829,7 @@ export default function AuditDashboardPage() {
                       setLogFilters(prev => ({ ...prev, dateTo: e.target.value }));
                       setAuditLogPage(1);
                     }}
-                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-white"
+                    className="w-full h-8 px-2 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)]"
                   />
                 </div>
               </div>
@@ -845,10 +845,10 @@ export default function AuditDashboardPage() {
                 {isFr ? 'Aucune entree dans le journal d\'audit' : 'No audit log entries found'}
               </div>
             ) : (
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
                       <tr>
                         <th className="px-3 py-2 text-start text-xs font-medium text-slate-500">{isFr ? 'Date' : 'Date'}</th>
                         <th className="px-3 py-2 text-start text-xs font-medium text-slate-500">Action</th>
@@ -877,7 +877,7 @@ export default function AuditDashboardPage() {
                         }
 
                         return (
-                          <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                          <tr key={entry.id} className="hover:bg-white/5 transition-colors">
                             <td className="px-3 py-2 text-xs text-slate-600 whitespace-nowrap">
                               {new Date(entry.createdAt).toLocaleDateString(locale, {
                                 day: '2-digit',
@@ -937,7 +937,7 @@ export default function AuditDashboardPage() {
 
                 {/* Pagination */}
                 {auditLogTotalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)] bg-white/5">
                     <p className="text-xs text-slate-500">
                       {isFr
                         ? `Page ${auditLogPage} sur ${auditLogTotalPages} (${auditLogTotal} entrees)`
@@ -948,14 +948,14 @@ export default function AuditDashboardPage() {
                       <button
                         onClick={() => { setAuditLogPage(p => p - 1); fetchAuditLogs(auditLogPage - 1); }}
                         disabled={auditLogPage <= 1}
-                        className="px-3 py-1 text-xs border border-slate-300 rounded bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)] hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isFr ? 'Precedent' : 'Previous'}
                       </button>
                       <button
                         onClick={() => { setAuditLogPage(p => p + 1); fetchAuditLogs(auditLogPage + 1); }}
                         disabled={auditLogPage >= auditLogTotalPages}
-                        className="px-3 py-1 text-xs border border-slate-300 rounded bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 text-xs border border-slate-300 rounded bg-[var(--k-glass-thin)] hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isFr ? 'Suivant' : 'Next'}
                       </button>

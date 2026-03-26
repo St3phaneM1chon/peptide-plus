@@ -195,7 +195,7 @@ export default function DeclarationTpsTvqPage() {
   const Row = ({ label, value, negative, bold }: { label: string; value: string; negative?: boolean; bold?: boolean }) => (
     <div className={`flex justify-between text-sm ${bold ? 'border-t pt-2 font-semibold' : ''}`}>
       <span className={bold ? 'text-slate-800' : 'text-slate-600'}>{label}</span>
-      <span className={`font-medium ${negative ? 'text-red-600' : bold ? '' : 'text-slate-900'}`}>{value}</span>
+      <span className={`font-medium ${negative ? 'text-red-600' : bold ? '' : 'text-[var(--k-text-primary)]'}`}>{value}</span>
     </div>
   );
 
@@ -211,13 +211,13 @@ export default function DeclarationTpsTvqPage() {
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.accounting.declaration.startDate')}</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
               aria-label="Date de début de la période de déclaration"
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-[var(--k-glass-thin)] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.accounting.declaration.endDate')}</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
               aria-label="Date de fin de la période de déclaration"
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-[var(--k-glass-thin)] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.accounting.declaration.method')}</label>
@@ -225,7 +225,7 @@ export default function DeclarationTpsTvqPage() {
               {(['regular', 'quick'] as const).map(m => (
                 <button key={m} onClick={() => setMethod(m)}
                   className={`px-4 py-1.5 text-sm font-medium transition-colors ${m === 'quick' ? 'border-l border-slate-300' : ''} ${
-                    method === m ? 'bg-amber-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                    method === m ? 'bg-amber-600 text-white' : 'bg-white/20 text-slate-600 hover:bg-white/5'}`}>
                   {m === 'regular' ? t('admin.accounting.declaration.methodRegular') : t('admin.accounting.declaration.methodQuick')}
                 </button>
               ))}
@@ -245,7 +245,7 @@ export default function DeclarationTpsTvqPage() {
             icon={declaration.gst.net >= 0 ? TrendingUp : TrendingDown} theme={theme} />
           <StatCard label={t('admin.accounting.declaration.netQst')} value={fmt(declaration.qst.net)}
             icon={declaration.qst.net >= 0 ? TrendingUp : TrendingDown} theme={theme} />
-          <div className={`rounded-xl border p-4 ${declaration.totalRemittance < 0 ? 'bg-emerald-50 border-emerald-200' : declaration.totalRemittance > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+          <div className={`rounded-xl border p-4 ${declaration.totalRemittance < 0 ? 'bg-emerald-50 border-emerald-200' : declaration.totalRemittance > 0 ? 'bg-red-50 border-red-200' : 'bg-white/5 border-[var(--k-border-subtle)]'}`}>
             <p className="text-sm text-slate-500">{declaration.totalRemittance < 0 ? t('admin.accounting.declaration.refund') : t('admin.accounting.declaration.amountOwing')}</p>
             <p className={`text-2xl font-bold mt-1 ${rColor(declaration.totalRemittance)}`}>{fmt(Math.abs(declaration.totalRemittance))}</p>
             <div className="flex items-center gap-1 mt-1 text-xs">
@@ -289,11 +289,11 @@ export default function DeclarationTpsTvqPage() {
           <SectionCard title={t('admin.accounting.declaration.quickMethod')} theme={theme}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div><p className="text-sm text-slate-500">{t('admin.accounting.declaration.totalRevenue')}</p>
-                <p className="text-lg font-semibold text-slate-900">{fmt(declaration.quickMethod.revenue)}</p></div>
+                <p className="text-lg font-semibold text-[var(--k-text-primary)]">{fmt(declaration.quickMethod.revenue)}</p></div>
               <div><p className="text-sm text-slate-500">{t('admin.accounting.declaration.quickRateGst')}</p>
-                <p className="text-lg font-semibold text-slate-900">{declaration.quickMethod.gstRate}%</p></div>
+                <p className="text-lg font-semibold text-[var(--k-text-primary)]">{declaration.quickMethod.gstRate}%</p></div>
               <div><p className="text-sm text-slate-500">{t('admin.accounting.declaration.quickRateQst')}</p>
-                <p className="text-lg font-semibold text-slate-900">{declaration.quickMethod.qstRate}%</p></div>
+                <p className="text-lg font-semibold text-[var(--k-text-primary)]">{declaration.quickMethod.qstRate}%</p></div>
               <div><p className="text-sm text-slate-500">{t('admin.accounting.declaration.creditFirst30k')}</p>
                 <p className="text-lg font-semibold text-emerald-600">-{fmt(declaration.quickMethod.gstCredit)}</p></div>
             </div>
@@ -305,7 +305,7 @@ export default function DeclarationTpsTvqPage() {
         )}
 
         {/* Action Bar */}
-        <div className="flex flex-wrap items-center justify-end gap-3 bg-white border rounded-xl p-4">
+        <div className="flex flex-wrap items-center justify-end gap-3 bg-[var(--k-glass-thin)] border rounded-xl p-4">
           <Button variant="secondary" icon={Download} onClick={() => toast.info(t('admin.accounting.declaration.generatingPdf'))}>
             {t('admin.accounting.declaration.downloadPdf')}</Button>
           <Button variant="secondary" icon={FileText} onClick={handleExportCsv}>{t('admin.accounting.declaration.exportCsv')}</Button>
@@ -317,14 +317,14 @@ export default function DeclarationTpsTvqPage() {
         {/* Province Tax Rates Reference */}
         <div className="border rounded-xl overflow-hidden">
           <button onClick={() => setShowTaxRates(!showTaxRates)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-start">
+            className="w-full flex items-center justify-between px-4 py-3 bg-white/5 hover:bg-slate-100 transition-colors text-start">
             <span className="font-medium text-slate-700">{t('admin.accounting.declaration.taxRatesRef')}</span>
             <span className="text-slate-400 text-sm">{showTaxRates ? t('admin.accounting.declaration.hide') : t('admin.accounting.declaration.show')}</span>
           </button>
           {showTaxRates && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-50 border-t">
+                <thead><tr className="bg-white/5 border-t">
                   <th className="px-4 py-2 text-start font-medium text-slate-600">Province</th>
                   <th className="px-4 py-2 text-end font-medium text-slate-600">TPS/GST</th>
                   <th className="px-4 py-2 text-end font-medium text-slate-600">TVP/PST</th>
@@ -334,12 +334,12 @@ export default function DeclarationTpsTvqPage() {
                 </tr></thead>
                 <tbody className="divide-y">
                   {PROVINCIAL_TAX_RATES.map(p => (
-                    <tr key={p.provinceCode} className="hover:bg-slate-50">
-                      <td className="px-4 py-2 text-slate-900 font-medium">{locale === 'fr' ? p.provinceNameFr : p.provinceName} <span className="text-slate-400">({p.provinceCode})</span></td>
+                    <tr key={p.provinceCode} className="hover:bg-white/5">
+                      <td className="px-4 py-2 text-[var(--k-text-primary)] font-medium">{locale === 'fr' ? p.provinceNameFr : p.provinceName} <span className="text-slate-400">({p.provinceCode})</span></td>
                       <td className="px-4 py-2 text-end text-slate-700">{p.gstRate > 0 ? `${p.gstRate}%` : '-'}</td>
                       <td className="px-4 py-2 text-end text-slate-700">{p.pstRate > 0 ? `${p.pstRate}%` : '-'}</td>
                       <td className="px-4 py-2 text-end text-slate-700">{p.hstRate > 0 ? `${p.hstRate}%` : '-'}</td>
-                      <td className="px-4 py-2 text-end font-semibold text-slate-900">{p.totalRate}%</td>
+                      <td className="px-4 py-2 text-end font-semibold text-[var(--k-text-primary)]">{p.totalRate}%</td>
                       <td className="px-4 py-2 text-center">
                         <StatusBadge variant={p.hstRate > 0 ? 'info' : p.pstRate > 0 ? 'warning' : 'neutral'}>{p.pstName}</StatusBadge>
                       </td>
@@ -364,14 +364,14 @@ export default function DeclarationTpsTvqPage() {
       {/* Submit Confirmation Modal */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-amber-100 rounded-full"><AlertCircle className="w-6 h-6 text-amber-600" /></div>
-              <h3 id="submit-modal-title" className="text-lg font-semibold text-slate-900">{t('admin.accounting.declaration.confirmSubmission')}</h3>
+              <h3 id="submit-modal-title" className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.accounting.declaration.confirmSubmission')}</h3>
             </div>
             <p className="text-sm text-slate-600 mb-4">{t('admin.accounting.declaration.confirmSubmissionDesc')}</p>
             {declaration && (
-              <div className="bg-slate-50 rounded-lg p-3 mb-4 text-sm space-y-1">
+              <div className="bg-white/5 rounded-lg p-3 mb-4 text-sm space-y-1">
                 <div className="flex justify-between"><span className="text-slate-500">{t('admin.accounting.declaration.periodLabel')}</span><span className="font-medium">{startDate} - {endDate}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">{t('admin.accounting.declaration.method')}</span><span className="font-medium">{method === 'regular' ? t('admin.accounting.declaration.methodRegular') : t('admin.accounting.declaration.methodQuick')}</span></div>
                 <div className="flex justify-between font-semibold">

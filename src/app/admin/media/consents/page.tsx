@@ -134,19 +134,19 @@ export default function AdminConsentsPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
             <p className="text-sm text-gray-500">{t('admin.consents.total')}</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </div>
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
             <p className="text-sm text-yellow-600">{t('admin.consents.pending')}</p>
             <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
           </div>
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
             <p className="text-sm text-green-600">{t('admin.consents.grantedLabel')}</p>
             <p className="text-2xl font-bold text-green-700">{stats.granted}</p>
           </div>
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
             <p className="text-sm text-red-600">{t('admin.consents.revokedStatus')}</p>
             <p className="text-2xl font-bold text-red-700">{stats.revoked}</p>
           </div>
@@ -154,7 +154,7 @@ export default function AdminConsentsPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white border rounded-lg p-4">
+      <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="text-xs text-gray-500 mb-1 block">
@@ -217,7 +217,7 @@ export default function AdminConsentsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border rounded-lg overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border rounded-lg overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary-600" />

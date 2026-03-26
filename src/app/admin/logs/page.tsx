@@ -363,7 +363,7 @@ export default function LogsPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.logs.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.logs.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.logs.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -447,12 +447,12 @@ export default function LogsPage() {
                   </div>
 
                   {/* Metadata */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.colDetails')}</h3>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.logs.colDetails')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.logs.colUser')}</p>
-                        <p className="text-slate-900">{selectedLog.userName || '-'}</p>
+                        <p className="text-[var(--k-text-primary)]">{selectedLog.userName || '-'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.logs.colUserId')}</p>
@@ -478,8 +478,8 @@ export default function LogsPage() {
                   {/* Details JSON */}
                   {selectedLog.details && (
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.colDetails')}</h3>
-                      <pre className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm overflow-x-auto text-slate-700">
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.logs.colDetails')}</h3>
+                      <pre className="bg-white/5 border border-[var(--k-border-subtle)] rounded-lg p-4 text-sm overflow-x-auto text-slate-700">
                         {JSON.stringify(selectedLog.details, null, 2)}
                       </pre>
                     </div>
@@ -487,7 +487,7 @@ export default function LogsPage() {
 
                   {/* Full raw log */}
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.logs.view')}</h3>
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.logs.view')}</h3>
                     <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto">
                       {JSON.stringify(selectedLog, null, 2)}
                     </pre>

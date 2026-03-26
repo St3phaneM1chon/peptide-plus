@@ -516,7 +516,7 @@ export default function BonsCommandePage() {
       header: 'Fournisseur',
       render: (po) => (
         <div>
-          <p className="text-sm font-medium text-slate-900">{po.supplierName}</p>
+          <p className="text-sm font-medium text-[var(--k-text-primary)]">{po.supplierName}</p>
           {po.supplierEmail && <p className="text-xs text-slate-500">{po.supplierEmail}</p>}
         </div>
       ),
@@ -536,7 +536,7 @@ export default function BonsCommandePage() {
       header: 'Total',
       align: 'right',
       render: (po) => (
-        <span className="font-medium text-slate-900">{formatCAD(po.total)}</span>
+        <span className="font-medium text-[var(--k-text-primary)]">{formatCAD(po.total)}</span>
       ),
     },
     {
@@ -771,7 +771,7 @@ export default function BonsCommandePage() {
 
             {/* Supplier info */}
             {(po.supplierEmail || po.supplierAddress) && (
-              <div className="p-3 bg-slate-50 rounded-lg">
+              <div className="p-3 bg-white/5 rounded-lg">
                 <p className="text-xs text-slate-500 mb-1">Fournisseur</p>
                 {po.supplierEmail && <p className="text-sm">{po.supplierEmail}</p>}
                 {po.supplierAddress && <p className="text-sm text-slate-600">{po.supplierAddress}</p>}
@@ -782,7 +782,7 @@ export default function BonsCommandePage() {
             <SectionCard theme={theme} noPadding>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-white/5">
                     <tr>
                       <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">Produit</th>
                       <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">SKU</th>
@@ -811,7 +811,7 @@ export default function BonsCommandePage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-slate-50">
+                  <tfoot className="bg-white/5">
                     <tr>
                       <td colSpan={5} className="px-4 py-2 text-sm text-end text-slate-600">Sous-total</td>
                       <td className="px-4 py-2 text-sm text-end font-medium">{formatCAD(po.subtotal)}</td>
@@ -824,7 +824,7 @@ export default function BonsCommandePage() {
                       <td colSpan={5} className="px-4 py-1 text-sm text-end text-slate-500">TVQ (9.975%)</td>
                       <td className="px-4 py-1 text-sm text-end">{formatCAD(po.taxTvq)}</td>
                     </tr>
-                    <tr className="border-t-2 border-slate-200">
+                    <tr className="border-t-2 border-[var(--k-border-subtle)]">
                       <td colSpan={5} className="px-4 py-2 text-sm text-end font-bold text-slate-800">Total</td>
                       <td className="px-4 py-2 text-sm text-end font-bold text-indigo-700">{formatCAD(po.total)}</td>
                     </tr>
@@ -835,7 +835,7 @@ export default function BonsCommandePage() {
 
             {/* Notes */}
             {po.notes && (
-              <div className="p-3 bg-slate-50 rounded-lg">
+              <div className="p-3 bg-white/5 rounded-lg">
                 <p className="text-xs text-slate-500 mb-1">Notes</p>
                 <p className="text-sm">{po.notes}</p>
               </div>
@@ -981,7 +981,7 @@ export default function BonsCommandePage() {
 
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50">
+                <thead className="bg-white/5">
                   <tr>
                     <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">Produit *</th>
                     <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">SKU</th>
@@ -996,7 +996,7 @@ export default function BonsCommandePage() {
                     <tr key={item.id || `po-item-${idx}`}>
                       <td className="px-3 py-1.5">
                         <input
-                          className="w-full h-8 px-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full h-8 px-2 border border-[var(--k-border-subtle)] rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           value={item.productName}
                           onChange={(e) => updateFormItem(idx, 'productName', e.target.value)}
                           placeholder="Nom du produit"
@@ -1004,7 +1004,7 @@ export default function BonsCommandePage() {
                       </td>
                       <td className="px-3 py-1.5">
                         <input
-                          className="w-full h-8 px-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full h-8 px-2 border border-[var(--k-border-subtle)] rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           value={item.sku || ''}
                           onChange={(e) => updateFormItem(idx, 'sku', e.target.value)}
                           placeholder="SKU"
@@ -1015,7 +1015,7 @@ export default function BonsCommandePage() {
                           type="number"
                           min="0"
                           step="1"
-                          className="w-full h-8 px-2 border border-slate-200 rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full h-8 px-2 border border-[var(--k-border-subtle)] rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           value={item.quantity}
                           onChange={(e) => updateFormItem(idx, 'quantity', parseFloat(e.target.value) || 0)}
                         />
@@ -1025,7 +1025,7 @@ export default function BonsCommandePage() {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full h-8 px-2 border border-slate-200 rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full h-8 px-2 border border-[var(--k-border-subtle)] rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           value={item.unitCost}
                           onChange={(e) => updateFormItem(idx, 'unitCost', parseFloat(e.target.value) || 0)}
                         />
@@ -1127,7 +1127,7 @@ export default function BonsCommandePage() {
             </p>
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50">
+                <thead className="bg-white/5">
                   <tr>
                     <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">Produit</th>
                     <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">Commande</th>
@@ -1153,7 +1153,7 @@ export default function BonsCommandePage() {
                             max={remaining}
                             step="1"
                             disabled={fullyReceived}
-                            className="w-full h-8 px-2 border border-slate-200 rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100"
+                            className="w-full h-8 px-2 border border-[var(--k-border-subtle)] rounded text-sm text-end focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100"
                             value={item.id ? receiveItems[item.id] || 0 : 0}
                             onChange={(e) => {
                               if (!item.id) return;

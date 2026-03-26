@@ -232,7 +232,7 @@ export default function RapportsComptablesPage() {
       header: t('admin.reports.reportCol'),
       render: (report) => (
         <div>
-          <p className="font-medium text-slate-900">{t('admin.accounting.tax.tpsTvq')} - {report.period}</p>
+          <p className="font-medium text-[var(--k-text-primary)]">{t('admin.accounting.tax.tpsTvq')} - {report.period}</p>
           <p className="text-xs text-slate-500">{report.region}</p>
         </div>
       ),
@@ -241,13 +241,13 @@ export default function RapportsComptablesPage() {
       key: 'tpsCollected',
       header: t('admin.reports.tpsCollected'),
       align: 'right',
-      render: (report) => <span className="text-slate-900">{formatCurrency(report.tpsCollected)}</span>,
+      render: (report) => <span className="text-[var(--k-text-primary)]">{formatCurrency(report.tpsCollected)}</span>,
     },
     {
       key: 'tvqCollected',
       header: t('admin.reports.tvqCollected'),
       align: 'right',
-      render: (report) => <span className="text-slate-900">{formatCurrency(report.tvqCollected)}</span>,
+      render: (report) => <span className="text-[var(--k-text-primary)]">{formatCurrency(report.tvqCollected)}</span>,
     },
     {
       key: 'ctirti',
@@ -321,7 +321,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-[var(--k-glass-thin)] text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label={t('admin.reports.filterYear')}
             >
               <option value="2026">2026</option>
@@ -331,7 +331,7 @@ export default function RapportsComptablesPage() {
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-[var(--k-glass-thin)] text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label={t('admin.reports.filterRegion')}
             >
               {REGION_OPTIONS.map((opt) => (
@@ -370,7 +370,7 @@ export default function RapportsComptablesPage() {
 
       {/* Management Reports Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.reports.managementReports')}</h2>
+        <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.reports.managementReports')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {managementReports.map((report) => {
             const Icon = report.icon;
@@ -388,7 +388,7 @@ export default function RapportsComptablesPage() {
                     <Icon className={`w-6 h-6 ${theme.statIconColor}`} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-slate-900">{report.name}</h3>
+                    <h3 className="font-medium text-[var(--k-text-primary)]">{report.name}</h3>
                     <p className="text-sm text-slate-500 mt-1">{report.description}</p>
                     <button
                       className="mt-3 text-sm text-violet-600 hover:text-violet-700 font-medium inline-flex items-center gap-1"

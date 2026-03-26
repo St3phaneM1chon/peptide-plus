@@ -112,7 +112,7 @@ export default function SmsCampaignsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
             <tr>
@@ -175,7 +175,7 @@ export default function SmsCampaignsPage() {
       {/* Create Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="sms-campaign-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="sms-campaign-modal-title">
             <div className="flex items-center justify-between">
               <h2 id="sms-campaign-modal-title" className="text-lg font-semibold">{t('admin.crm.smsNewCampaign')}</h2>
               <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded" aria-label={t('common.close')}><X className="h-5 w-5" /></button>

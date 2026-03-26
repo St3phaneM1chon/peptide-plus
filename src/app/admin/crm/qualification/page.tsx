@@ -145,19 +145,19 @@ export default function QualificationPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-6">
-        <div className="bg-white border rounded-lg p-3 text-center">
+        <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-gray-900">{total}</p>
           <p className="text-xs text-gray-500">{t('admin.crm.totalLeads')}</p>
         </div>
-        <div className="bg-white border rounded-lg p-3 text-center">
+        <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-indigo-600">{leads.filter(l => l.qualificationFramework === 'BANT').length}</p>
           <p className="text-xs text-gray-500">BANT</p>
         </div>
-        <div className="bg-white border rounded-lg p-3 text-center">
+        <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-purple-600">{leads.filter(l => l.qualificationFramework === 'MEDDIC').length}</p>
           <p className="text-xs text-gray-500">MEDDIC</p>
         </div>
-        <div className="bg-white border rounded-lg p-3 text-center">
+        <div className="bg-[var(--k-glass-thin)] border rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-gray-400">{leads.filter(l => !l.qualificationFramework).length}</p>
           <p className="text-xs text-gray-500">{t('admin.crm.notQualified')}</p>
         </div>
@@ -167,7 +167,7 @@ export default function QualificationPage() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" /></div>
       ) : leads.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 bg-white rounded-lg border border-dashed">
+        <div className="text-center py-12 text-gray-400 bg-[var(--k-glass-thin)] rounded-lg border border-dashed">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
           <p>{t('admin.crm.noLeads')}</p>
         </div>
@@ -185,7 +185,7 @@ export default function QualificationPage() {
               const score = fw ? getQualificationScore(fw, lead.qualificationData) : null;
 
               return (
-                <div key={lead.id} className="bg-white rounded-lg border overflow-hidden">
+                <div key={lead.id} className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
                   <button onClick={() => expandLead(lead)} className="w-full text-start px-4 py-3 flex items-center gap-3 hover:bg-gray-50">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
                     <div className="flex-1 min-w-0">
@@ -225,7 +225,7 @@ export default function QualificationPage() {
                         <div className="flex gap-2">
                           {(['BANT', 'MEDDIC'] as Framework[]).map(fw => (
                             <button key={fw} onClick={() => setEditingFramework(fw)}
-                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-indigo-600 text-white' : 'bg-purple-600 text-white') : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>
+                              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${editingFramework === fw ? (fw === 'BANT' ? 'bg-indigo-600 text-white' : 'bg-purple-600 text-white') : 'bg-[var(--k-glass-thin)] border text-gray-700 hover:bg-gray-50'}`}>
                               {fw}
                             </button>
                           ))}
@@ -235,7 +235,7 @@ export default function QualificationPage() {
                       {/* Qualification Fields */}
                       <div className="space-y-3">
                         {(editingFramework === 'BANT' ? BANT_FIELDS : MEDDIC_FIELDS).map(field => (
-                          <div key={field.key} className="bg-white rounded-lg border p-3">
+                          <div key={field.key} className="bg-[var(--k-glass-thin)] rounded-lg border p-3">
                             <div className="flex items-start gap-2">
                               {getStatusIcon(editingData[field.key])}
                               <div className="flex-1">
@@ -247,7 +247,7 @@ export default function QualificationPage() {
                                   <div className="flex flex-wrap gap-1">
                                     {((field as { options: string[] }).options).map((opt: string) => (
                                       <button key={opt} onClick={() => setEditingData(d => ({ ...d, [field.key]: opt }))}
-                                        className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${editingData[field.key] === opt ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${editingData[field.key] === opt ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white/20 text-gray-700 hover:bg-gray-50'}`}>
                                         {opt}
                                       </button>
                                     ))}

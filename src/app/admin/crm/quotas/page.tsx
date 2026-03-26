@@ -188,7 +188,7 @@ export default function QuotasPage() {
 
       {/* Inline Create Form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+        <form onSubmit={handleCreate} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-5 mb-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">
             {t('admin.crm.quotas.createTitle')}
           </h2>
@@ -279,7 +279,7 @@ export default function QuotasPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : quotas.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.quotas.empty')}
@@ -289,7 +289,7 @@ export default function QuotasPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

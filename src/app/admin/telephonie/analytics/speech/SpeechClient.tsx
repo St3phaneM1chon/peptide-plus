@@ -59,7 +59,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <MessageSquare className="w-4 h-4 text-indigo-600" />
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -70,7 +70,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
             {stats.totalTranscriptions}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-emerald-600" />
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -81,7 +81,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
             {stats.sentimentPercentages.positive}%
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="w-4 h-4 text-red-600" />
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -92,7 +92,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
             {stats.sentimentPercentages.negative}%
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-purple-600" />
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -107,7 +107,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sentiment Breakdown */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
             {t('voip.admin.speechAnalytics.sentimentTrends')}
           </h3>
@@ -206,7 +206,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
         </div>
 
         {/* Keyword Trends */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
             {t('voip.admin.speechAnalytics.keywordTrends')}
           </h3>
@@ -247,7 +247,7 @@ export default function SpeechClient({ stats }: { stats: SpeechStats }) {
       </div>
 
       {/* Top Topics */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+      <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           {t('voip.admin.speechAnalytics.topTopics')}
         </h3>

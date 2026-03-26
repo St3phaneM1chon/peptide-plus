@@ -460,12 +460,12 @@ export default function LivraisonPage() {
         {zones.map((zone) => (
           <div
             key={zone.id}
-            className={`bg-white rounded-lg border ${zone.isActive ? 'border-slate-200' : 'border-slate-200 opacity-60'}`}
+            className={`bg-[var(--k-glass-thin)] rounded-lg border ${zone.isActive ? 'border-[var(--k-border-subtle)]' : 'border-[var(--k-border-subtle)] opacity-60'}`}
           >
             <div className="p-6 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-900 text-lg">{zone.name}</h3>
+                  <h3 className="font-semibold text-[var(--k-text-primary)] text-lg">{zone.name}</h3>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {zone.countries.map((code) => (
                       <span key={code} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
@@ -512,12 +512,12 @@ export default function LivraisonPage() {
                 <tbody className="divide-y divide-slate-100">
                   {zone.methods.map((method) => (
                     <tr key={method.id} className={!method.isActive ? 'opacity-50' : ''}>
-                      <td className="py-3 font-medium text-slate-900">{method.name}</td>
+                      <td className="py-3 font-medium text-[var(--k-text-primary)]">{method.name}</td>
                       <td className="py-3 text-slate-600">{method.carrier}</td>
                       <td className="py-3 text-center text-slate-600">
                         {method.minDays}-{method.maxDays} {t('admin.shipping.days')}
                       </td>
-                      <td className="py-3 text-end font-medium text-slate-900">
+                      <td className="py-3 text-end font-medium text-[var(--k-text-primary)]">
                         {formatCurrency(method.price)}
                       </td>
                       <td className="py-3 text-end text-slate-600">
@@ -551,11 +551,11 @@ export default function LivraisonPage() {
         ))}
 
         {zones.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-slate-200 rounded-lg">
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg">
             <div className="p-3 bg-slate-100 rounded-xl mb-4">
               <Package className="w-8 h-8 text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-slate-900">{t('admin.shipping.emptyTitle')}</h3>
+            <h3 className="text-sm font-medium text-[var(--k-text-primary)]">{t('admin.shipping.emptyTitle')}</h3>
             <p className="mt-1 text-sm text-slate-500 max-w-sm">
               {t('admin.shipping.emptyDescription')}
             </p>

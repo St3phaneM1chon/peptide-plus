@@ -229,7 +229,7 @@ export default function CompliancePage() {
           </div>
 
           {showAddDnc && (
-            <div className="bg-white border rounded-lg p-4 flex gap-3 items-end">
+            <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4 flex gap-3 items-end">
               <div className="flex-1">
                 <label className="block text-xs text-gray-500 mb-1">Phone Number</label>
                 <input type="tel" value={dncPhone} onChange={e => setDncPhone(e.target.value)}
@@ -244,7 +244,7 @@ export default function CompliancePage() {
             </div>
           )}
 
-          <div className="bg-white border rounded-lg">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg">
             <div className="p-4 border-b">
               <h3 className="font-medium">DNC Lists Summary</h3>
             </div>
@@ -271,7 +271,7 @@ export default function CompliancePage() {
       {/* Consent Tab */}
       {tab === 'consent' && (
         <div className="space-y-4">
-          <div className="bg-white border rounded-lg p-6 text-center text-gray-500">
+          <div className="bg-[var(--k-glass-thin)] border rounded-lg p-6 text-center text-gray-500">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>Consent records are automatically tracked when leads are created via web forms or import.</p>
             <p className="text-sm mt-1">Active: {stats?.activeConsents || 0} | Revoked: {stats?.revokedConsents || 0}</p>
@@ -287,7 +287,7 @@ export default function CompliancePage() {
           </button>
 
           {showAddRule && (
-            <div className="bg-white border rounded-lg p-4 space-y-3">
+            <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Rule Name</label>
@@ -343,7 +343,7 @@ export default function CompliancePage() {
 
           <div className="space-y-3">
             {rules.map(rule => (
-              <div key={rule.id} className="bg-white border rounded-lg p-4">
+              <div key={rule.id} className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-gray-900">{rule.name}</h3>
@@ -369,7 +369,7 @@ export default function CompliancePage() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
-    <div className="bg-white border rounded-lg p-4">
+    <div className="bg-[var(--k-glass-thin)] border rounded-lg p-4">
       <div className="flex items-center gap-3">
         {icon}
         <div>

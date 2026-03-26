@@ -158,7 +158,7 @@ export default function AttributionClient() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border p-4">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
         <div className="flex flex-wrap items-end gap-4">
           {/* Model Selector */}
           <div className="flex-1 min-w-[200px]">
@@ -212,7 +212,7 @@ export default function AttributionClient() {
       {/* Summary Cards */}
       {data && !loading && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <Users className="h-4 w-4" />
               {t('admin.crm.attribution.totalLeads') !== 'admin.crm.attribution.totalLeads'
@@ -224,7 +224,7 @@ export default function AttributionClient() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <Target className="h-4 w-4" />
               {t('admin.crm.attribution.totalDeals') !== 'admin.crm.attribution.totalDeals'
@@ -236,7 +236,7 @@ export default function AttributionClient() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <DollarSign className="h-4 w-4" />
               {t('admin.crm.attribution.totalRevenue') !== 'admin.crm.attribution.totalRevenue'
@@ -248,7 +248,7 @@ export default function AttributionClient() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <Award className="h-4 w-4" />
               {t('admin.crm.attribution.topSource') !== 'admin.crm.attribution.topSource'
@@ -263,7 +263,7 @@ export default function AttributionClient() {
       )}
 
       {/* Chart */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-purple-600" />
           {t('admin.crm.attribution.revenueBySource') !== 'admin.crm.attribution.revenueBySource'
@@ -307,7 +307,7 @@ export default function AttributionClient() {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
         <div className="px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-gray-900">
             {t('admin.crm.attribution.detailedBreakdown') !== 'admin.crm.attribution.detailedBreakdown'
@@ -357,7 +357,7 @@ export default function AttributionClient() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[var(--k-glass-thin)] divide-y divide-gray-200">
                 {data && data.results.length > 0 ? (
                   data.results.map((row, index) => (
                     <tr key={row.source} className="hover:bg-gray-50">

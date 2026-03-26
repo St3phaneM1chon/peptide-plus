@@ -122,12 +122,12 @@ function MergeModal({ pair, onClose, onMerged }: MergeModalProps) {
     `flex-1 p-4 rounded-xl border-2 cursor-pointer transition-all ${
       selectedSurvivor === side
         ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-        : 'border-gray-200 hover:border-gray-300 bg-white'
+        : 'border-gray-200 hover:border-gray-300 bg-[var(--k-glass-thin)]'
     }`;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="merge-modal-title">
-      <div ref={modalRef} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+      <div ref={modalRef} className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ function DuplicateCard({ pair, onMerge }: DuplicateCardProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+    <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
         {/* Lead A */}
         <div className="flex-1 min-w-0">
@@ -368,7 +368,7 @@ export default function DuplicatesPage() {
           <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
         </div>
       ) : duplicates.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.duplicates.empty')}

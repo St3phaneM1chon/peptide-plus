@@ -357,10 +357,10 @@ export default function DevisesPage() {
       />
 
       {/* Auto-update setting */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-slate-900">{t('admin.currencies.autoUpdate')}</h3>
+            <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.currencies.autoUpdate')}</h3>
             <p className="text-sm text-slate-500">{t('admin.currencies.autoUpdateDescription')}</p>
           </div>
           <button
@@ -382,9 +382,9 @@ export default function DevisesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.currency')}</th>
               <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.symbol')}</th>
@@ -404,7 +404,7 @@ export default function DevisesPage() {
                       {currency.code.slice(0, 2)}
                     </span>
                     <div>
-                      <p className="font-semibold text-slate-900">{currency.code}</p>
+                      <p className="font-semibold text-[var(--k-text-primary)]">{currency.code}</p>
                       <p className="text-xs text-slate-500">{currency.name}</p>
                     </div>
                   </div>
@@ -414,7 +414,7 @@ export default function DevisesPage() {
                   {currency.isDefault ? (
                     <span className="text-slate-500">{t('admin.currencies.base')}</span>
                   ) : (
-                    <span className="font-mono text-slate-900">{currency.exchangeRate.toFixed(4)}</span>
+                    <span className="font-mono text-[var(--k-text-primary)]">{currency.exchangeRate.toFixed(4)}</span>
                   )}
                 </td>
                 <td className="px-4 py-4">
@@ -471,14 +471,14 @@ export default function DevisesPage() {
       </div>
 
       {/* Conversion Preview */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.currencies.conversionPreview')}</h3>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
+        <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.currencies.conversionPreview')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {currencies
             .filter((c) => c.isActive && !c.isDefault)
             .map((currency) => (
-              <div key={currency.code} className="text-center p-3 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-slate-900">{(100 * currency.exchangeRate).toFixed(2)}</p>
+              <div key={currency.code} className="text-center p-3 bg-white/5 rounded-lg">
+                <p className="text-2xl font-bold text-[var(--k-text-primary)]">{(100 * currency.exchangeRate).toFixed(2)}</p>
                 <p className="text-sm text-slate-500">{currency.code}</p>
               </div>
             ))}
@@ -520,7 +520,7 @@ export default function DevisesPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel')}</label>
-            <input type="text" value={form.code} disabled aria-label="Currency code" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500" />
+            <input type="text" value={form.code} disabled aria-label="Currency code" className="w-full border border-[var(--k-border-subtle)] bg-white/5 rounded-lg px-3 py-2 text-sm text-slate-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel')}</label>
@@ -550,13 +550,13 @@ export default function DevisesPage() {
 
 function MiniStat({ icon: Icon, label, value, bg }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number | string; bg: string }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-3">
+    <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)] flex items-center gap-3">
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
         <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-xl font-bold text-slate-900">{value}</p>
+        <p className="text-xl font-bold text-[var(--k-text-primary)]">{value}</p>
       </div>
     </div>
   );

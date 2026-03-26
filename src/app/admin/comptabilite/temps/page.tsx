@@ -669,11 +669,11 @@ export default function TimeTrackingPage() {
       {/* ================================================================= */}
       {/* Timer Widget */}
       {/* ================================================================= */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <Clock className={`w-5 h-5 ${timerRunning ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-            <span className="text-2xl font-mono font-bold text-slate-900">{formatElapsed(timerElapsed)}</span>
+            <span className="text-2xl font-mono font-bold text-[var(--k-text-primary)]">{formatElapsed(timerElapsed)}</span>
           </div>
 
           <input
@@ -682,14 +682,14 @@ export default function TimeTrackingPage() {
             value={timerDescription}
             onChange={(e) => setTimerDescription(e.target.value)}
             disabled={timerRunning}
-            className="flex-1 min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50"
+            className="flex-1 min-w-[200px] px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-white/5"
           />
 
           <select
             value={timerProject}
             onChange={(e) => setTimerProject(e.target.value)}
             disabled={timerRunning}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50"
+            className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-white/5"
           >
             <option value="">Projet (optionnel)</option>
             {projects.filter((p) => p.status === 'ACTIVE').map((p) => (
@@ -701,7 +701,7 @@ export default function TimeTrackingPage() {
             value={timerCategory}
             onChange={(e) => setTimerCategory(e.target.value)}
             disabled={timerRunning}
-            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50"
+            className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-white/5"
           >
             <option value="">Categorie</option>
             {TASK_CATEGORIES.map((c) => (
@@ -731,48 +731,48 @@ export default function TimeTrackingPage() {
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg">
               <Clock className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{formatHours(entries.reduce((s, e) => s + e.hoursWorked, 0))}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{formatHours(entries.reduce((s, e) => s + e.hoursWorked, 0))}</p>
               <p className="text-xs text-slate-500">Heures totales</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 rounded-lg">
               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">
                 {formatHours(entries.filter((e) => e.isBillable).reduce((s, e) => s + e.hoursWorked, 0))}
               </p>
               <p className="text-xs text-slate-500">Heures facturables</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-50 rounded-lg">
               <FolderOpen className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{projects.filter((p) => p.status === 'ACTIVE').length}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{projects.filter((p) => p.status === 'ACTIVE').length}</p>
               <p className="text-xs text-slate-500">Projets actifs</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-violet-50 rounded-lg">
               <FileText className="w-5 h-5 text-violet-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{pendingEntries.length}</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{pendingEntries.length}</p>
               <p className="text-xs text-slate-500">En attente d&apos;approbation</p>
             </div>
           </div>
@@ -789,8 +789,8 @@ export default function TimeTrackingPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
+                  : 'text-slate-600 hover:text-[var(--k-text-primary)]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -817,7 +817,7 @@ export default function TimeTrackingPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-2 py-1.5 border border-slate-200 rounded-md text-sm"
+                className="px-2 py-1.5 border border-[var(--k-border-subtle)] rounded-md text-sm"
               >
                 <option value="">Tous les statuts</option>
                 <option value="DRAFT">Brouillon</option>
@@ -831,7 +831,7 @@ export default function TimeTrackingPage() {
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="px-2 py-1.5 border border-slate-200 rounded-md text-sm"
+                className="px-2 py-1.5 border border-[var(--k-border-subtle)] rounded-md text-sm"
                 placeholder="Du"
               />
               <span className="text-slate-400">-</span>
@@ -839,7 +839,7 @@ export default function TimeTrackingPage() {
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => setFilterDateTo(e.target.value)}
-                className="px-2 py-1.5 border border-slate-200 rounded-md text-sm"
+                className="px-2 py-1.5 border border-[var(--k-border-subtle)] rounded-md text-sm"
                 placeholder="Au"
               />
             </div>
@@ -857,7 +857,7 @@ export default function TimeTrackingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Date</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Description</th>
@@ -871,7 +871,7 @@ export default function TimeTrackingPage() {
                 </thead>
                 <tbody>
                   {entries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={entry.id} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-3 font-medium">{entry.date}</td>
                       <td className="py-3 px-3">{entry.userName}</td>
                       <td className="py-3 px-3 max-w-[200px] truncate" title={entry.description || ''}>
@@ -960,7 +960,7 @@ export default function TimeTrackingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Code</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Nom</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Client</th>
@@ -976,7 +976,7 @@ export default function TimeTrackingPage() {
                   {projects.map((project) => {
                     const budgetPct = project.budget ? Math.min(100, Math.round((project.hoursUsed / project.budget) * 100)) : null;
                     return (
-                      <tr key={project.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <tr key={project.id} className="border-b border-slate-100 hover:bg-white/5">
                         <td className="py-3 px-3 font-mono text-sm font-medium">{project.code}</td>
                         <td className="py-3 px-3 font-medium">{project.name}</td>
                         <td className="py-3 px-3">{project.clientName || '-'}</td>
@@ -1035,7 +1035,7 @@ export default function TimeTrackingPage() {
             <select
               value={reportGroupBy}
               onChange={(e) => setReportGroupBy(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+              className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
             >
               <option value="employee">Par employe</option>
               <option value="project">Par projet</option>
@@ -1045,13 +1045,13 @@ export default function TimeTrackingPage() {
               type="date"
               value={reportDateFrom}
               onChange={(e) => setReportDateFrom(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+              className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
             />
             <input
               type="date"
               value={reportDateTo}
               onChange={(e) => setReportDateTo(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+              className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
             />
             <Button variant="primary" icon={BarChart3} onClick={loadSummary} disabled={reportLoading}>
               {reportLoading ? 'Chargement...' : 'Generer le rapport'}
@@ -1074,21 +1074,21 @@ export default function TimeTrackingPage() {
             <div className="space-y-6">
               {/* Summary totals */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-slate-50 rounded-lg p-3">
+                <div className="bg-white/5 rounded-lg p-3">
                   <p className="text-xs text-slate-500">Entrees</p>
-                  <p className="text-xl font-bold text-slate-900">{summaryData.summary.totalEntries}</p>
+                  <p className="text-xl font-bold text-[var(--k-text-primary)]">{summaryData.summary.totalEntries}</p>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3">
+                <div className="bg-white/5 rounded-lg p-3">
                   <p className="text-xs text-slate-500">Heures totales</p>
-                  <p className="text-xl font-bold text-slate-900">{formatHours(summaryData.summary.totalHours)}</p>
+                  <p className="text-xl font-bold text-[var(--k-text-primary)]">{formatHours(summaryData.summary.totalHours)}</p>
                 </div>
                 <div className="bg-emerald-50 rounded-lg p-3">
                   <p className="text-xs text-emerald-600">Heures facturables</p>
                   <p className="text-xl font-bold text-emerald-700">{formatHours(summaryData.summary.billableHours)}</p>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3">
+                <div className="bg-white/5 rounded-lg p-3">
                   <p className="text-xs text-slate-500">Non facturables</p>
-                  <p className="text-xl font-bold text-slate-900">{formatHours(summaryData.summary.nonBillableHours)}</p>
+                  <p className="text-xl font-bold text-[var(--k-text-primary)]">{formatHours(summaryData.summary.nonBillableHours)}</p>
                 </div>
                 <div className="bg-emerald-50 rounded-lg p-3">
                   <p className="text-xs text-emerald-600">Montant facturable</p>
@@ -1100,7 +1100,7 @@ export default function TimeTrackingPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200">
+                    <tr className="border-b border-[var(--k-border-subtle)]">
                       <th className="text-start py-3 px-3 font-medium text-slate-600">
                         {reportGroupBy === 'employee' ? 'Employe' : reportGroupBy === 'project' ? 'Projet' : 'Categorie'}
                       </th>
@@ -1112,7 +1112,7 @@ export default function TimeTrackingPage() {
                   </thead>
                   <tbody>
                     {summaryData.groups.map((g) => (
-                      <tr key={g.key} className="border-b border-slate-100 hover:bg-slate-50">
+                      <tr key={g.key} className="border-b border-slate-100 hover:bg-white/5">
                         <td className="py-3 px-3 font-medium">{g.key}</td>
                         <td className="py-3 px-3 text-end">{g.entryCount}</td>
                         <td className="py-3 px-3 text-end font-mono">{formatHours(g.totalHours)}</td>
@@ -1149,7 +1149,7 @@ export default function TimeTrackingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Date</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Employe</th>
                     <th className="text-start py-3 px-3 font-medium text-slate-600">Description</th>
@@ -1161,7 +1161,7 @@ export default function TimeTrackingPage() {
                 </thead>
                 <tbody>
                   {pendingEntries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={entry.id} className="border-b border-slate-100 hover:bg-white/5">
                       <td className="py-3 px-3 font-medium">{entry.date}</td>
                       <td className="py-3 px-3">{entry.userName}</td>
                       <td className="py-3 px-3 max-w-[200px] truncate" title={entry.description || ''}>
@@ -1220,7 +1220,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={entryForm.userName}
                   onChange={(e) => setEntryForm({ ...entryForm, userName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Jean Dupont"
                 />
               </div>
@@ -1230,7 +1230,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={entryForm.date}
                   onChange={(e) => setEntryForm({ ...entryForm, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -1245,7 +1245,7 @@ export default function TimeTrackingPage() {
                   max="24"
                   value={entryForm.hoursWorked}
                   onChange={(e) => setEntryForm({ ...entryForm, hoursWorked: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="8.00"
                 />
               </div>
@@ -1254,7 +1254,7 @@ export default function TimeTrackingPage() {
                 <select
                   value={entryForm.taskCategory}
                   onChange={(e) => setEntryForm({ ...entryForm, taskCategory: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Selectionner...</option>
                   {TASK_CATEGORIES.map((c) => (
@@ -1269,7 +1269,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={entryForm.description}
                 onChange={(e) => setEntryForm({ ...entryForm, description: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={2}
                 placeholder="Description de la tache..."
               />
@@ -1281,7 +1281,7 @@ export default function TimeTrackingPage() {
                 <select
                   value={entryForm.projectName}
                   onChange={(e) => setEntryForm({ ...entryForm, projectName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Aucun projet</option>
                   {projects.filter((p) => p.status === 'ACTIVE').map((p) => (
@@ -1307,7 +1307,7 @@ export default function TimeTrackingPage() {
                       min="0"
                       value={entryForm.billableRate}
                       onChange={(e) => setEntryForm({ ...entryForm, billableRate: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Taux $/h"
                     />
                   </div>
@@ -1320,7 +1320,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={entryForm.notes}
                 onChange={(e) => setEntryForm({ ...entryForm, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={2}
                 placeholder="Notes internes (non visibles sur rapports)..."
               />
@@ -1355,7 +1355,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.name}
                   onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Site Web BioCycle"
                 />
               </div>
@@ -1365,7 +1365,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.code}
                   onChange={(e) => setProjectForm({ ...projectForm, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="WEB-001"
                 />
               </div>
@@ -1376,7 +1376,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={projectForm.description}
                 onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={2}
                 placeholder="Description du projet..."
               />
@@ -1389,7 +1389,7 @@ export default function TimeTrackingPage() {
                   type="text"
                   value={projectForm.clientName}
                   onChange={(e) => setProjectForm({ ...projectForm, clientName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Nom du client"
                 />
               </div>
@@ -1401,7 +1401,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.defaultRate}
                   onChange={(e) => setProjectForm({ ...projectForm, defaultRate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="75.00"
                 />
               </div>
@@ -1416,7 +1416,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.budget}
                   onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="100"
                 />
               </div>
@@ -1428,7 +1428,7 @@ export default function TimeTrackingPage() {
                   min="0"
                   value={projectForm.budgetAmount}
                   onChange={(e) => setProjectForm({ ...projectForm, budgetAmount: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="7500.00"
                 />
               </div>
@@ -1441,7 +1441,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={projectForm.startDate}
                   onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
@@ -1450,7 +1450,7 @@ export default function TimeTrackingPage() {
                   type="date"
                   value={projectForm.endDate}
                   onChange={(e) => setProjectForm({ ...projectForm, endDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -1482,7 +1482,7 @@ export default function TimeTrackingPage() {
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 rows={3}
                 placeholder="Indiquez la raison du rejet..."
                 autoFocus

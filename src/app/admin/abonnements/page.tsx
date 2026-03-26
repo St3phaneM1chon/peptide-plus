@@ -432,7 +432,7 @@ export default function AbonnementsPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.subscriptions.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.subscriptions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.subscriptions.subtitle')}</p>
             <TutorialLink guideSlug="02-commerce/04-abonnements" magazineSlug="Section_02_Commerce" compact />
           </div>
@@ -467,22 +467,22 @@ export default function AbonnementsPage() {
         </div>
 
         {/* Config section */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-          <h3 className="font-semibold text-slate-900 mb-3">{t('admin.subscriptions.subscriptionConfig')}</h3>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 mb-4">
+          <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.subscriptions.subscriptionConfig')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-3 bg-slate-50 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center">
               <p className="font-bold text-lg">{cfgDiscount}%</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberDiscount')}</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center">
               <p className="font-bold text-lg">{cfgFreeShipping ? t('admin.subscriptions.free') : t('admin.subscriptions.paid')}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberShipping')}</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center">
               <p className="font-bold text-lg">{t('admin.subscriptions.days', { count: cfgReminderDays })}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.reminderBeforeDelivery')}</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg text-center">
+            <div className="p-3 bg-white/5 rounded-lg text-center">
               <p className="font-bold text-lg">{t('admin.subscriptions.pausePerYear', { count: cfgMaxPauses })}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.allowedPause')}</p>
             </div>
@@ -570,29 +570,29 @@ export default function AbonnementsPage() {
                   </div>
 
                   {/* Client info */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-2">{t('admin.subscriptions.client')}</h4>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h4 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.subscriptions.client')}</h4>
                     <p className="font-medium text-slate-700">{selectedSub.userName}</p>
                     <p className="text-sm text-slate-500">{selectedSub.userEmail}</p>
                   </div>
 
                   {/* Product details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.product')}</p>
-                      <p className="font-medium text-slate-900">{selectedSub.productName}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{selectedSub.productName}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.format')}</p>
-                      <p className="font-medium text-slate-900">{selectedSub.optionName} x {selectedSub.quantity}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{selectedSub.optionName} x {selectedSub.quantity}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.frequency')}</p>
-                      <p className="font-medium text-slate-900">{frequencyLabels[selectedSub.frequency]}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{frequencyLabels[selectedSub.frequency]}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.price')}</p>
-                      <p className="font-medium text-slate-900">{formatCurrency(selectedSub.price * (1 - selectedSub.discount / 100))}</p>
+                      <p className="font-medium text-[var(--k-text-primary)]">{formatCurrency(selectedSub.price * (1 - selectedSub.discount / 100))}</p>
                       {selectedSub.discount > 0 && (
                         <p className="text-xs text-green-600">-{selectedSub.discount}%</p>
                       )}
@@ -601,15 +601,15 @@ export default function AbonnementsPage() {
 
                   {/* Dates */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.createdAt')}</p>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-[var(--k-text-primary)]">
                         {new Date(selectedSub.createdAt).toLocaleDateString(locale)}
                       </p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.subscriptions.nextDelivery')}</p>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-[var(--k-text-primary)]">
                         {selectedSub.status === 'ACTIVE'
                           ? new Date(selectedSub.nextDelivery).toLocaleDateString(locale)
                           : '-'
@@ -713,8 +713,8 @@ export default function AbonnementsPage() {
       >
         <div className="space-y-4">
           {selectedSub && (
-            <div className="bg-slate-50 rounded-lg p-3 mb-2">
-              <p className="font-medium text-slate-900">{selectedSub.productName}</p>
+            <div className="bg-white/5 rounded-lg p-3 mb-2">
+              <p className="font-medium text-[var(--k-text-primary)]">{selectedSub.productName}</p>
               <p className="text-sm text-slate-500">{selectedSub.optionName}</p>
             </div>
           )}
@@ -722,7 +722,7 @@ export default function AbonnementsPage() {
             <select
               value={modFrequency}
               onChange={(e) => setModFrequency(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="EVERY_2_MONTHS">{frequencyLabels.EVERY_2_MONTHS}</option>
               <option value="EVERY_4_MONTHS">{frequencyLabels.EVERY_4_MONTHS}</option>

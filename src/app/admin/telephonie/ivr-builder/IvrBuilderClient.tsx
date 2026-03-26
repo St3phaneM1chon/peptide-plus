@@ -310,7 +310,7 @@ export default function IvrBuilderClient({
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-0">
       {/* Left sidebar: menu list */}
-      <div className="w-72 flex-shrink-0 bg-white border-e border-gray-200 flex flex-col">
+      <div className="w-72 flex-shrink-0 bg-[var(--k-glass-thin)] border-e border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -364,7 +364,7 @@ export default function IvrBuilderClient({
       <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
         {showEditor ? (
           /* ===================== EDITOR MODE ===================== */
-          <div className="max-w-2xl mx-auto bg-white rounded-xl border border-gray-200 p-6">
+          <div className="max-w-2xl mx-auto bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-900">
                 {editingMenuId ? t('voip.admin.ivrEditor.editMenu') : t('voip.admin.ivrEditor.newMenu')}
@@ -605,7 +605,7 @@ export default function IvrBuilderClient({
           /* ===================== VISUAL FLOW VIEW ===================== */
           <div className="max-w-3xl mx-auto">
             {/* Menu header card */}
-            <div className="bg-white rounded-xl border border-indigo-200 shadow-sm p-5 mb-2">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-indigo-200 shadow-sm p-5 mb-2">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
@@ -655,7 +655,7 @@ export default function IvrBuilderClient({
 
             {/* DTMF Options as cards */}
             {selectedMenu.options.length === 0 ? (
-              <div className="text-center py-8 bg-white rounded-xl border border-dashed border-gray-200">
+              <div className="text-center py-8 bg-[var(--k-glass-thin)] rounded-xl border border-dashed border-gray-200">
                 <Hash className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">{t('voip.admin.ivrEditor.noDtmfConfigured')}</p>
                 <button
@@ -674,7 +674,7 @@ export default function IvrBuilderClient({
                   return (
                     <div
                       key={opt.id}
-                      className={`bg-white rounded-lg border p-3 transition-colors ${
+                      className={`bg-[var(--k-glass-thin)] rounded-lg border p-3 transition-colors ${
                         isSubMenu
                           ? 'border-indigo-200 hover:border-indigo-300'
                           : 'border-gray-200 hover:border-gray-300'

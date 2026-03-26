@@ -292,7 +292,7 @@ export default function SocialSchedulerPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
-            className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+            className="flex items-center gap-2 px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm text-slate-600 hover:bg-white/5"
           >
             {viewMode === 'list' ? <Calendar className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {viewMode === 'list'
@@ -301,14 +301,14 @@ export default function SocialSchedulerPage() {
           </button>
           <button
             onClick={() => { loadPosts(); loadStats(); }}
-            className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50"
+            className="p-2 border border-[var(--k-border-subtle)] rounded-lg text-slate-500 hover:bg-white/5"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowComposer(!showComposer)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" /> {t('admin.media.socialScheduler.newPost')}
           </button>
@@ -323,7 +323,7 @@ export default function SocialSchedulerPage() {
           { label: t('admin.media.socialScheduler.statsPublished'), count: stats.published, color: 'text-green-600' },
           { label: t('admin.media.socialScheduler.statsFailed'), count: stats.failed, color: 'text-red-600' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+          <div key={s.label} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 text-center">
             <div className={`text-2xl font-bold ${s.color}`}>{s.count}</div>
             <div className="text-xs text-slate-500">{s.label}</div>
           </div>
@@ -338,7 +338,7 @@ export default function SocialSchedulerPage() {
         <select
           value={filterPlatform}
           onChange={e => { setFilterPlatform(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
         >
           <option value="">{t('admin.media.socialScheduler.allPlatforms')}</option>
           {PLATFORMS.map(p => (
@@ -348,7 +348,7 @@ export default function SocialSchedulerPage() {
         <select
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
         >
           <option value="">{t('admin.media.socialScheduler.allStatuses')}</option>
           <option value="draft">{t('admin.media.socialScheduler.statusDraft')}</option>
@@ -360,7 +360,7 @@ export default function SocialSchedulerPage() {
 
       {/* Composer */}
       {showComposer && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <h3 className="font-semibold text-slate-800 mb-4">{t('admin.media.socialScheduler.composer')}</h3>
           <div className="space-y-4">
             {/* Platform selector */}
@@ -373,7 +373,7 @@ export default function SocialSchedulerPage() {
                     key={key}
                     onClick={() => setNewPost(prev => ({ ...prev, platform: key }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                      newPost.platform === key ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      newPost.platform === key ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-[var(--k-border-subtle)] text-slate-500 hover:bg-white/5'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -391,7 +391,7 @@ export default function SocialSchedulerPage() {
                 placeholder={t('admin.media.socialScheduler.writePlaceholder')}
                 rows={4}
                 maxLength={platformConfig[newPost.platform].maxChars}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-sm resize-none"
+                className="w-full px-4 py-3 border border-[var(--k-border-subtle)] rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-sm resize-none"
               />
               <div className="absolute bottom-2 end-2 text-xs text-slate-400">
                 {newPost.content.length}/{platformConfig[newPost.platform].maxChars}
@@ -406,7 +406,7 @@ export default function SocialSchedulerPage() {
                 value={newPost.imageUrl}
                 onChange={e => setNewPost(prev => ({ ...prev, imageUrl: e.target.value }))}
                 placeholder={t('admin.media.socialScheduler.imageUrlPlaceholder')}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+                className="flex-1 px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               />
             </div>
 
@@ -416,12 +416,12 @@ export default function SocialSchedulerPage() {
                 type="datetime-local"
                 value={newPost.scheduledAt}
                 onChange={e => setNewPost(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+                className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               />
               <select
                 value={newPost.status}
                 onChange={e => setNewPost(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' }))}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+                className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
               >
                 <option value="scheduled">{t('admin.media.socialScheduler.statusScheduled')}</option>
                 <option value="draft">{t('admin.media.socialScheduler.statusDraft')}</option>
@@ -436,7 +436,7 @@ export default function SocialSchedulerPage() {
               <button
                 onClick={createPost}
                 disabled={creating}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
                 {t('admin.media.socialScheduler.schedule')}
@@ -448,7 +448,7 @@ export default function SocialSchedulerPage() {
 
       {/* Calendar View */}
       {viewMode === 'calendar' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))} className="p-2 hover:bg-slate-100 rounded-lg">
               <ChevronLeft className="w-4 h-4" />
@@ -465,7 +465,7 @@ export default function SocialSchedulerPage() {
               <div key={d} className="text-xs text-center text-slate-400 font-medium py-2">{d}</div>
             ))}
             {calendarDays().map((day, i) => (
-              <div key={i} className={`min-h-[60px] border border-slate-100 rounded p-1 text-xs ${day ? 'bg-white' : 'bg-slate-50'}`}>
+              <div key={i} className={`min-h-[60px] border border-slate-100 rounded p-1 text-xs ${day ? 'bg-[var(--k-glass-thin)]' : 'bg-white/5'}`}>
                 {day && (
                   <>
                     <div className="font-medium text-slate-600 mb-0.5">{day}</div>
@@ -492,7 +492,7 @@ export default function SocialSchedulerPage() {
       {viewMode === 'list' && (
         <div className="space-y-3">
           {posts.length === 0 ? (
-            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-8 text-center">
               <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
               <p className="text-sm text-slate-500">{t('admin.media.socialScheduler.noPosts')}</p>
             </div>
@@ -501,7 +501,7 @@ export default function SocialSchedulerPage() {
               const cfg = platformConfig[post.platform as Platform] || platformConfig.twitter;
               const Icon = cfg.icon;
               return (
-                <div key={post.id} className="bg-white rounded-xl border border-slate-200 p-5 flex items-start gap-4">
+                <div key={post.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-5 flex items-start gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
@@ -559,7 +559,7 @@ export default function SocialSchedulerPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-2 border border-slate-200 rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                className="p-2 border border-[var(--k-border-subtle)] rounded-lg disabled:opacity-50 hover:bg-white/5"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -569,7 +569,7 @@ export default function SocialSchedulerPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-2 border border-slate-200 rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                className="p-2 border border-[var(--k-border-subtle)] rounded-lg disabled:opacity-50 hover:bg-white/5"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

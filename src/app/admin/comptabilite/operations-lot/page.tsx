@@ -673,7 +673,7 @@ export default function BatchOperationsPage() {
               {/* Preview table */}
               <div className="max-h-[300px] overflow-auto border rounded-lg">
                 <table className="min-w-full text-xs">
-                  <thead className="bg-slate-50 sticky top-0">
+                  <thead className="bg-white/5 sticky top-0">
                     <tr>
                       <th className="px-3 py-2 text-start font-medium text-slate-500">#</th>
                       {importPreview.headers.slice(0, 6).map((h) => (
@@ -685,7 +685,7 @@ export default function BatchOperationsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {importPreview.preview.slice(0, 10).map((item, idx) => (
-                      <tr key={`preview-row-${idx}`} className="hover:bg-slate-50">
+                      <tr key={`preview-row-${idx}`} className="hover:bg-white/5">
                         <td className="px-3 py-1.5 text-slate-400">{idx + 1}</td>
                         {importPreview.headers.slice(0, 6).map((h) => (
                           <td key={h} className="px-3 py-1.5 truncate max-w-[120px]">
@@ -745,17 +745,17 @@ export default function BatchOperationsPage() {
           <div className="space-y-4">
             {/* Summary */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Type</p>
                 <p className="text-sm font-medium">{BATCH_TYPE_LABELS[selectedJob.type] || selectedJob.type}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Statut</p>
                 <StatusBadge variant={STATUS_VARIANT[selectedJob.status] || 'neutral'}>
                   {STATUS_LABEL[selectedJob.status] || selectedJob.status}
                 </StatusBadge>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Progres</p>
                 <p className="text-sm font-medium">
                   {selectedJob.processedItems}/{selectedJob.totalItems}
@@ -766,7 +766,7 @@ export default function BatchOperationsPage() {
                   )}
                 </p>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Duree</p>
                 <p className="text-sm font-medium">
                   {selectedJob.durationMs != null

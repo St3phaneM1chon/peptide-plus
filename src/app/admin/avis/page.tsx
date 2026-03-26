@@ -560,7 +560,7 @@ export default function AvisPage() {
                 ) : (
                   <ToggleLeft className="w-5 h-5 text-slate-400" />
                 )}
-                <span className={`font-medium ${autoRequestEnabled ? 'text-green-700' : 'text-slate-500'}`}>
+                <span className={`font-medium ${autoRequestEnabled ? 'text-green-700' : 'text-[var(--k-text-secondary)]'}`}>
                   Demandes auto
                 </span>
               </button>
@@ -908,7 +908,7 @@ export default function AvisPage() {
 
       {/* F-021 FIX: Pagination navigation */}
       {totalPages > 1 && (
-        <div className="flex-shrink-0 flex items-center justify-between px-4 lg:px-6 py-3 border-t border-slate-200 bg-white">
+        <div className="flex-shrink-0 flex items-center justify-between px-4 lg:px-6 py-3 border-t border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)]">
           <p className="text-sm text-[var(--k-text-secondary)]">
             {t('common.page')} {currentPage} / {totalPages}
             {' '}({totalReviews} {t('admin.reviews.totalReviews')})

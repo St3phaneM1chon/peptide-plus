@@ -52,7 +52,7 @@ function ToggleField({
       className="flex items-center justify-between py-3 cursor-pointer group"
     >
       <div className="flex-1 pr-4">
-        <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
+        <span className="text-sm font-medium text-slate-700 group-hover:text-[var(--k-text-primary)]">
           {label}
         </span>
         {description && (
@@ -74,7 +74,7 @@ function ToggleField({
       >
         <span
           className={`
-            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white/20 shadow ring-0
             transition duration-200 ease-in-out
             ${checked ? 'translate-x-5' : 'translate-x-0'}
           `}
@@ -94,7 +94,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
         <div className="p-1.5 rounded-lg bg-indigo-50">
           <Icon className="w-4 h-4 text-indigo-600" />
@@ -114,7 +114,7 @@ function PortalPreview({
   t: (key: string) => string;
 }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+    <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
         <div className="p-1.5 rounded-lg bg-indigo-50">
           <Eye className="w-4 h-4 text-indigo-600" />
@@ -125,7 +125,7 @@ function PortalPreview({
       </div>
       <div className="p-5">
         <div
-          className="rounded-xl border border-slate-200 overflow-hidden shadow-sm"
+          className="rounded-xl border border-[var(--k-border-subtle)] overflow-hidden shadow-sm"
           style={{ minHeight: 280 }}
         >
           {/* Header bar */}
@@ -191,7 +191,7 @@ function PortalPreview({
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="rounded-lg border border-slate-200 overflow-hidden"
+                className="rounded-lg border border-[var(--k-border-subtle)] overflow-hidden"
               >
                 <div
                   className="h-12"
@@ -403,7 +403,7 @@ export default function PortailPage() {
                   placeholder={t('admin.lms.portal.subdomainPlaceholder')}
                   className="rounded-r-none"
                 />
-                <span className="inline-flex items-center px-3 h-9 border border-l-0 border-slate-300 rounded-r-lg bg-slate-50 text-xs text-slate-500 whitespace-nowrap">
+                <span className="inline-flex items-center px-3 h-9 border border-l-0 border-slate-300 rounded-r-lg bg-white/5 text-xs text-slate-500 whitespace-nowrap">
                   {t('admin.lms.portal.subdomainSuffix')}
                 </span>
               </div>
@@ -420,7 +420,7 @@ export default function PortailPage() {
                 placeholder={t('admin.lms.portal.logoUrlPlaceholder')}
               />
               {config.logoUrl && (
-                <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="mt-2 p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
                   <p className="text-xs text-slate-500 mb-2">
                     {t('admin.lms.portal.logoPreview')}
                   </p>
@@ -506,7 +506,7 @@ export default function PortailPage() {
                 placeholder={t('admin.lms.portal.customCssPlaceholder')}
                 rows={5}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900
-                  bg-slate-50 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                  bg-white/5 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               />
             </FormField>
           </SectionCard>

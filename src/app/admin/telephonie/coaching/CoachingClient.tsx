@@ -254,7 +254,7 @@ export default function CoachingClient({
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {agentScores.slice(0, 8).map((agent, idx) => (
-              <div key={agent.id} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div key={agent.id} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     idx === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
@@ -297,7 +297,7 @@ export default function CoachingClient({
             {activeSessions.map((session) => {
               const badge = statusBadge(session.status);
               return (
-                <div key={session.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                <div key={session.id} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {/* Coach */}
@@ -374,7 +374,7 @@ export default function CoachingClient({
             })}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-12 text-center text-gray-400">
             <GraduationCap className="w-10 h-10 mx-auto mb-3 text-gray-300" />
             <p>{t('voip.admin.coaching.noSessions')}</p>
           </div>
@@ -385,7 +385,7 @@ export default function CoachingClient({
       {completedSessions.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Recent Sessions</h2>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -431,7 +431,7 @@ export default function CoachingClient({
       {/* New Session Modal */}
       {showNewSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-5">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 {t('voip.admin.coaching.startSession')}

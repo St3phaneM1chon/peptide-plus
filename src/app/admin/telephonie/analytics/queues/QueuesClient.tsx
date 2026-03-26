@@ -106,7 +106,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {t('voip.admin.queueAnalytics.totalOffered')}
           </div>
@@ -114,7 +114,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
             {queues.reduce((sum, q) => sum + q.totalOffered, 0)}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {t('voip.admin.queueAnalytics.totalAnswered')}
           </div>
@@ -122,7 +122,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
             {queues.reduce((sum, q) => sum + q.totalAnswered, 0)}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {t('voip.admin.queueAnalytics.totalAbandoned')}
           </div>
@@ -130,7 +130,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
             {queues.reduce((sum, q) => sum + q.totalAbandoned, 0)}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {t('voip.admin.queueAnalytics.avgWaitTime')}
           </div>
@@ -143,7 +143,7 @@ export default function QueuesClient({ queues: initial }: { queues: QueueMetrics
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
+      <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>

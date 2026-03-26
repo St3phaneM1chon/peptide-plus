@@ -208,7 +208,7 @@ export default function HeatmapsPage() {
       ) : (
         <>
           {/* Heatmap Grid */}
-          <div className="bg-white rounded-xl border p-6 mb-6">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <Grid3X3 className="h-4 w-4" /> 7-Day x 24-Hour Grid
             </h3>

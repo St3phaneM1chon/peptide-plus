@@ -98,7 +98,7 @@ export function IntegrationCard({
   const isSaving = externalSaving || saving;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] shadow-sm overflow-hidden">
       {/* Header */}
       <div className={`px-6 py-4 border-b border-slate-100 ${enabled ? color : 'bg-slate-50'}`}>
         <div className="flex items-center justify-between">

@@ -145,7 +145,7 @@ export default function MediaAnalyticsClient() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+          <div key={stat.label} className="bg-[var(--k-glass-thin)] dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.color}`}>
                 <stat.icon className="w-5 h-5" />
@@ -162,7 +162,7 @@ export default function MediaAnalyticsClient() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily trend — Area Chart */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
           <h3 className="font-semibold mb-4">{t('admin.media.viewsTrend')}</h3>
           {chartData.length === 0 ? (
             <p className="text-sm text-gray-400">{t('admin.media.noData')}</p>
@@ -183,7 +183,7 @@ export default function MediaAnalyticsClient() {
         </div>
 
         {/* Platform breakdown — Pie chart + bar */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
           <h3 className="font-semibold mb-4">{t('admin.media.platformBreakdown')}</h3>
           {platformPieData.length === 0 ? (
             <p className="text-sm text-gray-400">{t('admin.media.noData')}</p>
@@ -220,7 +220,7 @@ export default function MediaAnalyticsClient() {
 
       {/* Top Content — Bar chart */}
       {analytics.topContent.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+        <div className="bg-[var(--k-glass-thin)] dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
           <h3 className="font-semibold mb-4">{t('admin.media.topContent')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.topContent.slice(0, 10).map((c, i) => ({ ...c, label: `#${i + 1}` }))}>

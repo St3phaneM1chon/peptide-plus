@@ -888,9 +888,9 @@ export default function ProductsListClient({
                           {(() => {
                             const abc = abcClassification[selectedProduct.id];
                             const configs = {
-                              A: { label: 'A - ' + (t('admin.products.abcA')), className: 'text-emerald-700 bg-emerald-100' },
-                              B: { label: 'B - ' + (t('admin.products.abcB')), className: 'text-indigo-700 bg-indigo-100' },
-                              C: { label: 'C - ' + (t('admin.products.abcC')), className: 'text-[var(--k-text-secondary)] bg-slate-100' },
+                              A: { label: 'A - ' + (t('admin.products.abcA')), className: 'text-emerald-400 bg-emerald-500/15' },
+                              B: { label: 'B - ' + (t('admin.products.abcB')), className: 'text-[#818cf8] bg-[#6366f1]/15' },
+                              C: { label: 'C - ' + (t('admin.products.abcC')), className: 'text-[var(--k-text-secondary)] bg-[var(--k-glass-thin)]' },
                             };
                             const config = configs[abc || 'C'];
                             return (
@@ -1013,7 +1013,7 @@ export default function ProductsListClient({
                   className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
                     statusFilter === tab.key
                       ? 'bg-indigo-100 text-indigo-800'
-                      : 'bg-white/10 text-[var(--k-text-secondary)] hover:bg-slate-200'
+                      : 'bg-white/10 text-[var(--k-text-secondary)] hover:bg-[var(--k-glass-regular)]'
                   }`}
                 >
                   {tab.label} ({tab.count})
@@ -1069,8 +1069,8 @@ export default function ProductsListClient({
                       )}
                       {/* Status overlay */}
                       {!product.isActive && (
-                        <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
-                          <span className="px-2 py-1 bg-slate-900/70 text-white text-xs font-medium rounded">
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="px-2 py-1 bg-black/70 text-white text-xs font-medium rounded">
                             {t('admin.products.inactive')}
                           </span>
                         </div>
@@ -1080,7 +1080,7 @@ export default function ProductsListClient({
                         <span className={`absolute top-2 start-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           abc === 'A' ? 'bg-emerald-500 text-white' :
                           abc === 'B' ? 'bg-indigo-500 text-white' :
-                          'bg-slate-400 text-white'
+                          'bg-[var(--k-glass-regular)] text-white'
                         }`}>
                           {abc}
                         </span>
@@ -1100,7 +1100,7 @@ export default function ProductsListClient({
                       <p className="text-lg font-bold text-indigo-700 mt-1 truncate">{priceDisplay}</p>
 
                       {/* Bottom row: stock + badges */}
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--k-border-subtle)]">
                         <div className="flex items-center gap-1.5">
                           <StatusBadge variant={stockStatus.variant}>
                             {stockStatus.label}

@@ -144,7 +144,7 @@ function SalesFunnelTab({ days, fmt }: { days: number; fmt: (n: number) => strin
       </div>
 
       {/* Funnel visualization */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Conversion Funnel</h3>
         <div className="space-y-3">
           {funnel.map((step, i) => (
@@ -173,15 +173,15 @@ function SalesFunnelTab({ days, fmt }: { days: number; fmt: (n: number) => strin
 
       {/* Conversion rates */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border p-4 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 text-center">
           <div className="text-2xl font-bold text-indigo-600">{summary.leadToDeadRate}%</div>
           <div className="text-sm text-gray-500">Lead → Deal</div>
         </div>
-        <div className="bg-white rounded-lg border p-4 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 text-center">
           <div className="text-2xl font-bold text-green-600">{summary.dealWinRate}%</div>
           <div className="text-sm text-gray-500">Deal Win Rate</div>
         </div>
-        <div className="bg-white rounded-lg border p-4 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 text-center">
           <div className="text-2xl font-bold text-purple-600">{summary.orderPayRate}%</div>
           <div className="text-sm text-gray-500">Order → Payment</div>
         </div>
@@ -232,7 +232,7 @@ function ClvTab({ fmt }: { fmt: (n: number) => string }) {
       </div>
 
       {/* Distribution */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
         <h3 className="font-semibold text-gray-900 mb-4">CLV Distribution</h3>
         <div className="flex items-end gap-3 h-40">
           {distribution.map((bucket) => (
@@ -249,7 +249,7 @@ function ClvTab({ fmt }: { fmt: (n: number) => string }) {
       </div>
 
       {/* Top customers table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
         <div className="px-4 py-3 border-b">
           <h3 className="font-semibold text-gray-900">Top Customers by Spend</h3>
         </div>
@@ -329,7 +329,7 @@ function AttributionTab({ days, fmt }: { days: number; fmt: (n: number) => strin
       </div>
 
       {/* Organic vs promo split */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
         <h3 className="font-semibold text-gray-900 mb-3">Order Source</h3>
         <div className="flex gap-4">
           <div className="flex-1 bg-indigo-50 rounded-lg p-4 text-center">
@@ -344,7 +344,7 @@ function AttributionTab({ days, fmt }: { days: number; fmt: (n: number) => strin
       </div>
 
       {/* Promo codes table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
         <div className="px-4 py-3 border-b">
           <h3 className="font-semibold text-gray-900">Promo Code Performance</h3>
         </div>
@@ -421,7 +421,7 @@ function SupportImpactTab({ days, fmt }: { days: number; fmt: (n: number) => str
       {/* Channel comparison */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Phone */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
           <div className="flex items-center gap-2 mb-4">
             <Phone className="w-5 h-5 text-indigo-600" />
             <h3 className="font-semibold text-gray-900">Phone Support</h3>
@@ -435,7 +435,7 @@ function SupportImpactTab({ days, fmt }: { days: number; fmt: (n: number) => str
         </div>
 
         {/* Email */}
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
           <div className="flex items-center gap-2 mb-4">
             <Mail className="w-5 h-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Email Support</h3>
@@ -493,7 +493,7 @@ function ProductPerformanceTab({ days, fmt }: { days: number; fmt: (n: number) =
       </div>
 
       {/* Product table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden">
         <div className="px-4 py-3 border-b">
           <h3 className="font-semibold text-gray-900">Product 360 Performance</h3>
         </div>
@@ -591,7 +591,7 @@ function EngagementTab({ days }: { days: number }) {
       </div>
 
       {/* Activity heatmap / bar chart */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border p-6">
         <h3 className="font-semibold text-gray-900 mb-4">Module Activity</h3>
         <div className="space-y-3">
           {activityShare.map((m) => (

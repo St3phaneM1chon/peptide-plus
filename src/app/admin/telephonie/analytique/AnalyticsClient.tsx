@@ -82,7 +82,7 @@ export default function AnalyticsClient() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Direction Pie */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('voip.analytics.byDirection')}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -104,7 +104,7 @@ export default function AnalyticsClient() {
         </div>
 
         {/* Status Bar */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('voip.analytics.byStatus')}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={statusData}>
@@ -119,7 +119,7 @@ export default function AnalyticsClient() {
       </div>
 
       {/* Period summary */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('voip.analytics.periodSummary')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>

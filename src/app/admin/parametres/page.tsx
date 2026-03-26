@@ -692,7 +692,7 @@ export default function ParametresPage() {
                 <div
                   key={session.id}
                   className={`flex items-center justify-between p-4 rounded-lg border ${
-                    session.current ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'
+                    session.current ? 'border-green-200 bg-green-50' : 'border-[var(--k-border-subtle)] bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -735,7 +735,7 @@ export default function ParametresPage() {
               ))}
             </div>
             {activeSessions.length > 1 && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="mt-4 pt-4 border-t border-[var(--k-border-subtle)]">
                 <Button
                   variant="ghost"
                   size="sm"

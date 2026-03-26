@@ -155,7 +155,7 @@ export default function ProgressionPage() {
       header: t('admin.lms.studentName'),
       render: (row) => (
         <div>
-          <span className="font-medium text-slate-900">{row.userName}</span>
+          <span className="font-medium text-[var(--k-text-primary)]">{row.userName}</span>
           <p className="text-xs text-slate-500 mt-0.5">{row.userEmail}</p>
         </div>
       ),
@@ -244,7 +244,7 @@ export default function ProgressionPage() {
             expandedIds.has(student.userId) && (
               <div
                 key={`detail-${student.userId}`}
-                className="bg-slate-50 border border-t-0 border-slate-200 rounded-b-lg px-6 py-4 mb-2 -mt-1"
+                className="bg-white/5 border border-t-0 border-[var(--k-border-subtle)] rounded-b-lg px-6 py-4 mb-2 -mt-1"
               >
                 <h4 className="text-sm font-medium text-slate-700 mb-3">
                   {t('admin.lms.progressTracking.courseProgress')} — {student.userName}

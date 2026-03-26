@@ -137,7 +137,7 @@ export default function SubscriptionDashboardPage() {
 
       {/* Plan actuel */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <p className="text-sm text-gray-500 mb-1">Plan actuel</p>
           <p className="text-xl font-bold text-gray-900">{sub.plan.name}</p>
           <p className="text-2xl font-bold text-blue-600 mt-2">
@@ -148,7 +148,7 @@ export default function SubscriptionDashboardPage() {
           </a>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <p className="text-sm text-gray-500 mb-1">Modules actifs</p>
           <p className="text-xl font-bold text-gray-900">{moduleCount}</p>
           <p className="text-sm text-gray-500 mt-2">{sub.modules.join(', ')}</p>
@@ -157,7 +157,7 @@ export default function SubscriptionDashboardPage() {
           </a>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <p className="text-sm text-gray-500 mb-1">Total mensuel</p>
           <p className="text-2xl font-bold text-gray-900">
             {(totalMonthly / 100).toFixed(2)} $
@@ -178,7 +178,7 @@ export default function SubscriptionDashboardPage() {
 
       {/* Licences employés */}
       {licenses && (
-        <div className="bg-white rounded-xl border p-5 mb-8">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Licences employés</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -219,7 +219,7 @@ export default function SubscriptionDashboardPage() {
       )}
 
       {/* Historique factures */}
-      <div className="bg-white rounded-xl border p-5">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Historique des factures</h2>
         {invoices.length === 0 ? (
           <p className="text-gray-500 text-sm">Aucune facture pour le moment.</p>
@@ -262,7 +262,7 @@ export default function SubscriptionDashboardPage() {
       </div>
 
       {/* Domain config link */}
-      <div className="mt-8 bg-white rounded-xl border p-5">
+      <div className="mt-8 bg-[var(--k-glass-thin)] rounded-xl border p-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Domaine personnalisé</h2>

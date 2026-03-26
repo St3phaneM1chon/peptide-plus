@@ -445,7 +445,7 @@ export default function PowerDialerPage() {
             )}
 
             {/* Current Lead Card */}
-            <div className="bg-white rounded-xl border-2 border-indigo-200 p-6 mb-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border-2 border-indigo-200 p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -484,7 +484,7 @@ export default function PowerDialerPage() {
             </div>
 
             {/* Call Controls */}
-            <div className="bg-white rounded-xl border p-6 mb-6">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-6">
               <div className="flex items-center justify-center gap-4">
                 {dialerState === 'idle' && (
                   <>
@@ -570,7 +570,7 @@ export default function PowerDialerPage() {
             </div>
 
             {/* Lead Queue Preview */}
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('admin.crm.dialer.nextInQueue')}</h3>
               <div className="space-y-2">
                 {leads.slice(currentIndex + 1, currentIndex + 6).map((lead, i) => (
@@ -595,7 +595,7 @@ export default function PowerDialerPage() {
       {/* Right: Session Stats + Filters */}
       <div className="w-80 border-l bg-gray-50 p-4 overflow-y-auto">
         {/* Session Stats */}
-        <div className="bg-white rounded-lg border p-4 mb-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 mb-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <BarChart3 className="h-4 w-4" /> {t('admin.crm.dialer.sessionStats')}
           </h3>
@@ -626,7 +626,7 @@ export default function PowerDialerPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg border p-4 mb-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4 mb-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.filters')}</h3>
           <div className="space-y-3">
             <div>
@@ -664,7 +664,7 @@ export default function PowerDialerPage() {
         </div>
 
         {/* Settings */}
-        <div className="bg-white rounded-lg border p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('common.settings')}</h3>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input

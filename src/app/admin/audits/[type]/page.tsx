@@ -55,7 +55,7 @@ const severityBadge: Record<string, string> = {
   HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
   MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   LOW: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  INFO: 'bg-slate-100 text-slate-800 border-slate-200',
+  INFO: 'bg-slate-100 text-slate-800 border-[var(--k-border-subtle)]',
 };
 
 export default function AuditDetailPage() {
@@ -190,7 +190,7 @@ export default function AuditDetailPage() {
         <button
           onClick={handleRunAudit}
           disabled={runningAudit}
-          className="ms-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium"
+          className="ms-auto px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium"
         >
           {runningAudit
             ? (isFr ? 'Exécution en cours...' : 'Running...')
@@ -200,7 +200,7 @@ export default function AuditDetailPage() {
 
       {/* Run History */}
       {runs.length > 0 && (
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-4">
           <h2 className="text-sm font-semibold text-slate-700 mb-3">
             {isFr ? 'Historique des exécutions' : 'Run History'}
           </h2>
@@ -212,7 +212,7 @@ export default function AuditDetailPage() {
                 className={`text-xs px-3 py-1.5 rounded border transition-colors ${
                   (selectedRun === run.id || (!selectedRun && run.id === runs[0]?.id))
                     ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-600 hover:bg-white/5'
                 }`}
               >
                 {new Date(run.startedAt).toLocaleDateString(locale)}{' '}
@@ -241,7 +241,7 @@ export default function AuditDetailPage() {
         <select
           value={filterSeverity}
           onChange={(e) => setFilterSeverity(e.target.value)}
-          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-white"
+          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-[var(--k-glass-thin)]"
         >
           <option value="">{isFr ? 'Toutes sévérités' : 'All severities'}</option>
           <option value="CRITICAL">Critical</option>
@@ -253,7 +253,7 @@ export default function AuditDetailPage() {
         <select
           value={filterFixed}
           onChange={(e) => setFilterFixed(e.target.value)}
-          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-white"
+          className="text-sm border border-slate-300 rounded-md px-3 py-1.5 bg-[var(--k-glass-thin)]"
         >
           <option value="">{isFr ? 'Tous statuts' : 'All statuses'}</option>
           <option value="false">{isFr ? 'Non corrigé' : 'Not fixed'}</option>
@@ -266,9 +266,9 @@ export default function AuditDetailPage() {
 
       {/* Findings Table */}
       {findings.length > 0 ? (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50">
+            <thead className="bg-white/5">
               <tr>
                 <th className="text-start px-4 py-2.5 font-medium text-slate-600 w-24">{isFr ? 'Sévérité' : 'Severity'}</th>
                 <th className="text-start px-4 py-2.5 font-medium text-slate-600">{isFr ? 'Titre' : 'Title'}</th>
@@ -282,7 +282,7 @@ export default function AuditDetailPage() {
                 <>
                   <tr
                     key={f.id}
-                    className={`hover:bg-slate-50 cursor-pointer ${f.fixed ? 'opacity-60' : ''} ${f.falsePositive ? 'opacity-40 line-through' : ''}`}
+                    className={`hover:bg-white/5 cursor-pointer ${f.fixed ? 'opacity-60' : ''} ${f.falsePositive ? 'opacity-40 line-through' : ''}`}
                     onClick={() => setExpandedFinding(expandedFinding === f.id ? null : f.id)}
                   >
                     <td className="px-4 py-2.5">
@@ -310,7 +310,7 @@ export default function AuditDetailPage() {
                           className={`text-xs px-2 py-1 rounded border ${
                             f.fixed
                               ? 'bg-green-50 border-green-200 text-green-700'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-green-50'
+                              : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-600 hover:bg-green-50'
                           }`}
                           title={f.fixed ? (isFr ? 'Marquer non corrigé' : 'Mark unfixed') : (isFr ? 'Marquer corrigé' : 'Mark fixed')}
                         >
@@ -321,7 +321,7 @@ export default function AuditDetailPage() {
                           className={`text-xs px-2 py-1 rounded border ${
                             f.falsePositive
                               ? 'bg-slate-100 border-slate-300 text-slate-600'
-                              : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50'
+                              : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-slate-400 hover:bg-white/5'
                           }`}
                           title={isFr ? 'Faux positif' : 'False positive'}
                         >
@@ -332,7 +332,7 @@ export default function AuditDetailPage() {
                   </tr>
                   {expandedFinding === f.id && (
                     <tr key={`${f.id}-detail`}>
-                      <td colSpan={5} className="px-4 py-3 bg-slate-50">
+                      <td colSpan={5} className="px-4 py-3 bg-white/5">
                         <div className="space-y-2 text-sm">
                           <p className="text-slate-700">{f.description}</p>
                           {f.filePath && (
@@ -366,7 +366,7 @@ export default function AuditDetailPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)]">
               <span className="text-xs text-slate-500">
                 {isFr ? 'Page' : 'Page'} {pagination.page} / {pagination.totalPages}
               </span>
@@ -390,7 +390,7 @@ export default function AuditDetailPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-400">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-8 text-center text-slate-400">
           {runs.length === 0
             ? (isFr ? 'Aucun audit exécuté. Lancez votre premier audit!' : 'No audits run yet. Launch your first audit!')
             : (isFr ? 'Aucune trouvaille pour ce filtre.' : 'No findings match this filter.')}
@@ -398,7 +398,7 @@ export default function AuditDetailPage() {
       )}
 
       {/* Checklist */}
-      <div className="bg-white rounded-lg border border-slate-200 p-4">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-4">
         <h2 className="text-sm font-semibold text-slate-700 mb-3">
           {isFr ? 'Liste de vérifications' : 'Checklist'} ({auditType.checklist.length})
         </h2>
@@ -420,7 +420,7 @@ export default function AuditDetailPage() {
 
 function SummaryCard({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className="bg-white rounded-lg border border-slate-200 px-4 py-3 text-center">
+    <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] px-4 py-3 text-center">
       <div className={`text-xl font-bold ${highlight ? 'text-red-600' : 'text-slate-800'}`}>{value}</div>
       <div className="text-xs text-slate-500">{label}</div>
     </div>

@@ -165,7 +165,7 @@ export default function ReportBuilderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Panel: Filters */}
         <div className="lg:col-span-1 space-y-5">
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-5">
             <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
               <Filter className="h-4 w-4" />
               {t('admin.crm.reports.filters')}
@@ -258,7 +258,7 @@ export default function ReportBuilderPage() {
         {/* Right Panel: Results */}
         <div className="lg:col-span-3">
           {!hasRun ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-12 text-center">
               <BarChart3 className="h-16 w-16 text-gray-200 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">
                 {t('admin.crm.reports.noReportYet')}
@@ -268,11 +268,11 @@ export default function ReportBuilderPage() {
               </p>
             </div>
           ) : loading ? (
-            <div className="bg-white border border-gray-200 rounded-xl flex items-center justify-center h-64">
+            <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
             </div>
           ) : results.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-12 text-center">
               <Table className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">
                 {t('admin.crm.reports.noResults')}
@@ -282,7 +282,7 @@ export default function ReportBuilderPage() {
               </p>
             </div>
           ) : (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                 <p className="text-sm text-gray-600">
                   {results.length} {t('admin.crm.reports.rows')} |{' '}

@@ -232,7 +232,7 @@ export default function GlobalReportsPage() {
       />
 
       {/* Period Selector */}
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm p-4 border border-slate-100">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-slate-600">{t('admin.fiscalReports.periodLabel')}</span>
           {periods.map((period) => (
@@ -278,15 +278,15 @@ export default function GlobalReportsPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales by Country */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100">
+        <div className="lg:col-span-2 bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-slate-100">
           <div className="p-6 border-b border-slate-100">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">{t('admin.fiscalReports.salesByCountry')}</h2>
+              <h2 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.fiscalReports.salesByCountry')}</h2>
               <div className="flex gap-2">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-sm border border-[var(--k-border-subtle)] rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="revenue">{t('admin.fiscalReports.sortByRevenue')}</option>
                   <option value="orders">{t('admin.fiscalReports.sortByOrders')}</option>
@@ -294,7 +294,7 @@ export default function GlobalReportsPage() {
                 </select>
                 <button
                   onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
-                  className="text-sm border border-slate-200 rounded-lg px-3 py-1 hover:bg-slate-50"
+                  className="text-sm border border-[var(--k-border-subtle)] rounded-lg px-3 py-1 hover:bg-white/5"
                 >
                   <ArrowUpDown className="w-4 h-4 text-slate-500" />
                 </button>
@@ -304,7 +304,7 @@ export default function GlobalReportsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
+                <tr className="border-b border-slate-100 bg-white/5">
                   <th className="text-start py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.countryCol')}</th>
                   <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.ordersCol')}</th>
                   <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.revenueCol')}</th>
@@ -315,7 +315,7 @@ export default function GlobalReportsPage() {
               </thead>
               <tbody>
                 {sortedCountries.map((country) => (
-                  <tr key={country.code} className="border-b border-slate-50 hover:bg-slate-50">
+                  <tr key={country.code} className="border-b border-slate-50 hover:bg-white/5">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">{country.flag}</span>
@@ -360,8 +360,8 @@ export default function GlobalReportsPage() {
         </div>
 
         {/* Revenue Distribution */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.fiscalReports.revenueDistribution')}</h2>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-slate-100 p-6">
+          <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscalReports.revenueDistribution')}</h2>
           <div className="space-y-3">
             {sortedCountries.length === 0 ? (
               <div className="text-sm text-slate-500">{t('admin.fiscalReports.noDataAvailable')}</div>
@@ -399,8 +399,8 @@ export default function GlobalReportsPage() {
       </div>
 
       {/* Monthly Trend */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.fiscalReports.monthlyEvolution')}</h2>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-slate-100 p-6">
+        <h2 className="text-lg font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.fiscalReports.monthlyEvolution')}</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -448,10 +448,10 @@ export default function GlobalReportsPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-sm border border-slate-100">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">{t('admin.fiscalReports.recentOrdersAllCountries')}</h2>
+            <h2 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.fiscalReports.recentOrdersAllCountries')}</h2>
             <Link href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
               {t('admin.fiscalReports.viewAll')}
             </Link>

@@ -159,7 +159,7 @@ function CreateCampaignForm({ onCreated, onClose }: CreateFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="campaign-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="campaign-modal-title">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 id="campaign-modal-title" className="text-lg font-semibold text-gray-900">
@@ -436,7 +436,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
       {/* Summary Row */}
-      <div className="bg-white p-4">
+      <div className="bg-[var(--k-glass-thin)] p-4">
         <div className="flex items-center gap-3">
           {/* Expand toggle */}
           <button
@@ -616,7 +616,7 @@ function CampaignRow({ campaign, onRefresh }: CampaignRowProps) {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {stats.byChannel.map(row => (
-                          <tr key={row.channel} className="hover:bg-white">
+                          <tr key={row.channel} className="hover:bg-[var(--k-glass-thin)]">
                             <td className="py-1.5 capitalize font-medium text-gray-700">{row.channel}</td>
                             <td className="py-1.5 text-end text-gray-500">{row.total}</td>
                             <td className="py-1.5 text-end text-green-600">{row.completed}</td>
@@ -691,7 +691,7 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3">
+    <div className="bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-3">
       <div className={`flex items-center gap-1.5 text-xs mb-1 ${color} opacity-80`}>
         {icon}
         <span>{label}</span>
@@ -785,7 +785,7 @@ export default function CampaignsPage() {
           <select
             value={filterStatus}
             onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">{t('admin.crm.campaigns.allStatuses')}</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => (
@@ -798,7 +798,7 @@ export default function CampaignsPage() {
           <select
             value={filterType}
             onChange={e => { setFilterType(e.target.value); setPage(1); }}
-            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="appearance-none ps-3 pe-8 py-2 text-sm border border-gray-200 rounded-lg bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">{t('admin.crm.campaigns.allTypes')}</option>
             {Object.entries(TYPE_CONFIG).map(([k, v]) => (
@@ -815,7 +815,7 @@ export default function CampaignsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.campaigns.empty')}

@@ -1382,7 +1382,7 @@ export default function EmailsPage() {
           style={{ height: 'calc(100vh - 380px)', minHeight: '500px' }}
         >
           {/* LEFT PANEL — Email list (resizable) */}
-          <div className="flex-shrink-0 border-r border-slate-200 overflow-hidden flex flex-col" style={{ width: splitWidth }}>
+          <div className="flex-shrink-0 border-r border-[var(--k-border-subtle)] overflow-hidden flex flex-col" style={{ width: splitWidth }}>
             {/* Folder header */}
             <div className="px-4 py-2.5 bg-white/5 border-b border-[var(--k-border-subtle)] flex items-center gap-2">
               <span className="text-sm font-semibold text-slate-700">
@@ -1613,7 +1613,7 @@ export default function EmailsPage() {
             <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emailConfig.smtpConfig')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label={t('admin.emailConfig.provider')}>
-                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} aria-label="Email service provider" className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} aria-label="Email service provider" className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                   <option value="Resend">Resend</option>
                   <option value="SendGrid">SendGrid</option>
                   <option value="SMTP">{t('admin.emailConfig.customSmtp')}</option>
@@ -1632,7 +1632,7 @@ export default function EmailsPage() {
           </div>
 
           {/* Inbound email webhook config */}
-          <div className="pt-4 border-t border-slate-200">
+          <div className="pt-4 border-t border-[var(--k-border-subtle)]">
             <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emailConfig.inboundTitle')}</h3>
             <div className="grid grid-cols-1 gap-4">
               <FormField label={t('admin.emailConfig.webhookUrl')} hint={t('admin.emailConfig.webhookUrlHint')}>
@@ -1648,7 +1648,7 @@ export default function EmailsPage() {
           </div>
 
           {/* Automations */}
-          <div className="pt-4 border-t border-slate-200">
+          <div className="pt-4 border-t border-[var(--k-border-subtle)]">
             <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emailConfig.automations')}</h3>
             <div className="space-y-3">
               <label className="flex items-center justify-between">
@@ -1671,7 +1671,7 @@ export default function EmailsPage() {
           </div>
 
           {/* DKIM/SPF/DMARC */}
-          <div className="pt-4 border-t border-slate-200">
+          <div className="pt-4 border-t border-[var(--k-border-subtle)]">
             <h3 className="font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emailConfig.emailAuthTitle')}</h3>
             <div className="space-y-3">
               {[
@@ -1754,7 +1754,7 @@ export default function EmailsPage() {
           </div>
 
           {/* ==================== EMAIL ACCOUNTS MANAGEMENT ==================== */}
-          <div className="mt-8 border-t border-slate-200 pt-6">
+          <div className="mt-8 border-t border-[var(--k-border-subtle)] pt-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-[var(--k-text-primary)]">Comptes email</h3>
               <Button variant="primary" icon={Plus} onClick={() => openAccountModal()}>
@@ -2186,7 +2186,7 @@ export default function EmailsPage() {
             <select
               value={newContactLocale}
               onChange={(e) => setNewContactLocale(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label="Contact language"
             >
               <option value="en">English</option>
@@ -2202,7 +2202,7 @@ export default function EmailsPage() {
             <select
               value={newContactSource}
               onChange={(e) => setNewContactSource(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               aria-label="Contact source"
             >
               <option value="manual">{t('admin.emailConfig.sourceManual')}</option>
@@ -2256,7 +2256,7 @@ export default function EmailsPage() {
               }}
             >
               <div className="flex items-center gap-2">
-                <code className="text-xs font-mono bg-white px-2 py-1 rounded border border-[var(--k-border-subtle)] text-indigo-700">
+                <code className="text-xs font-mono bg-white/10 px-2 py-1 rounded border border-[var(--k-border-subtle)] text-indigo-700">
                   {item.var}
                 </code>
                 <span className="text-sm text-[var(--k-text-secondary)]">{item.desc}</span>
@@ -2314,7 +2314,7 @@ export default function EmailsPage() {
             aria-hidden="true"
           />
           {/* Composer panel */}
-          <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 bg-white rounded-xl shadow-2xl border border-[var(--k-border-subtle)] overflow-hidden" style={{ height: '70vh', maxHeight: '600px' }}>
+          <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 bg-[var(--k-bg-surface-overlay,#1a1a2e)] backdrop-blur-xl rounded-xl shadow-2xl border border-[var(--k-border-subtle)] overflow-hidden" style={{ height: '70vh', maxHeight: '600px' }}>
             <EmailComposer
               onClose={() => { setShowComposer(false); setComposerReplyTo(null); }}
               replyTo={composerReplyTo}

@@ -377,7 +377,7 @@ export default function FidelitePage() {
 
   const handleRibbonEarningRules = useCallback(() => {
     // Scroll to basic settings section
-    const settingsSection = document.querySelector('.bg-white.rounded-xl');
+    const settingsSection = document.querySelector('.bg-\[var\(--k-glass-thin\)\].rounded-xl');
     if (settingsSection) {
       settingsSection.scrollIntoView({ behavior: 'smooth' });
       toast.info(t('admin.loyalty.editEarningRules'));
@@ -616,21 +616,21 @@ export default function FidelitePage() {
               type="number"
               value={simAmount}
               onChange={(e) => setSimAmount(parseFloat(e.target.value) || 0)}
-              className="border-indigo-300 bg-white"
+              className="border-indigo-500/30 bg-white/5"
             />
           </FormField>
           <FormField label={t('admin.loyalty.customerLevel')}>
             <select
               value={simTier || config.tiers[0]?.name || ''}
               onChange={(e) => setSimTier(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-indigo-300 text-sm text-[var(--k-text-primary)] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full h-9 px-3 rounded-lg border border-indigo-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {config.tiers.map((tier, idx) => (
                 <option key={`${idx}-${tier.name}`} value={tier.name}>{tier.name}</option>
               ))}
             </select>
           </FormField>
-          <div className="bg-white rounded-lg p-4 text-center">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 text-center">
             <p className="text-sm text-indigo-600">{t('admin.loyalty.pointsEarned')}</p>
             <p className="text-3xl font-bold text-indigo-900">{simResult.points.toLocaleString(locale)}</p>
             <p className="text-xs text-indigo-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
@@ -727,7 +727,7 @@ export default function FidelitePage() {
                         txn.type.startsWith('EARN') ? 'bg-green-100 text-green-700' :
                         txn.type.startsWith('REDEEM') ? 'bg-orange-100 text-orange-700' :
                         txn.type === 'EXPIRE' ? 'bg-red-100 text-red-700' :
-                        'bg-white/10 text-slate-600'
+                        'bg-white/10 text-[var(--k-text-secondary)]'
                       }`}>
                         {txn.type.replace('EARN_', '').replace('REDEEM_', '')}
                       </span>
@@ -781,7 +781,7 @@ export default function FidelitePage() {
           </h4>
           <div className="space-y-2">
             {activeChallenges.map((ch) => (
-              <div key={ch.id} className={`flex items-center justify-between rounded-lg border p-3 ${ch.isActive ? 'bg-green-50 border-green-200' : 'bg-white/5 border-slate-200'}`}>
+              <div key={ch.id} className={`flex items-center justify-between rounded-lg border p-3 ${ch.isActive ? 'bg-green-50 border-green-200' : 'bg-white/5 border-[var(--k-border-subtle)]'}`}>
                 <div className="flex items-center gap-3">
                   <Zap className={`w-4 h-4 ${ch.isActive ? 'text-green-600' : 'text-slate-400'}`} />
                   <div>
@@ -789,7 +789,7 @@ export default function FidelitePage() {
                     <p className="text-xs text-[var(--k-text-secondary)]">{t('admin.loyalty.challengeTarget')}: {ch.target} {ch.type} &middot; {t('admin.loyalty.challengeReward')}: +{ch.pointsReward} {t('admin.loyalty.pts')}</p>
                   </div>
                 </div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ch.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ch.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-[var(--k-text-secondary)]'}`}>
                   {ch.isActive ? t('admin.loyalty.challengeActive') : t('admin.loyalty.challengeInactive')}
                 </span>
               </div>
@@ -1054,7 +1054,7 @@ export default function FidelitePage() {
             <select
               value={tierFormColor}
               onChange={(e) => setTierFormColor(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+              className="w-full h-9 px-3 rounded-lg border border-[var(--k-border-subtle)] text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               {/* FIX: F-064/F-086 - Clarify that value is color key; label shows color + tier name */}
               <option value="orange">{t('admin.loyalty.colorOrange')}</option>

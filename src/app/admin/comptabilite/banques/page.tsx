@@ -309,8 +309,8 @@ export default function BanquesPage() {
             <div
               key={account.id}
               onClick={() => setSelectedAccount(account)}
-              className={`bg-white rounded-xl p-5 border cursor-pointer transition-all hover:shadow-md ${
-                selectedAccount?.id === account.id ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'
+              className={`bg-[var(--k-glass-thin)] rounded-xl p-5 border cursor-pointer transition-all hover:shadow-md ${
+                selectedAccount?.id === account.id ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-[var(--k-border-subtle)]'
               }`}
             >
               <div className="flex items-start justify-between mb-3">
@@ -319,7 +319,7 @@ export default function BanquesPage() {
                     <Icon className={`w-5 h-5 ${getAccountIconColor(account.type)}`} />
                   </span>
                   <div>
-                    <p className="font-medium text-slate-900">{account.name}</p>
+                    <p className="font-medium text-[var(--k-text-primary)]">{account.name}</p>
                     <p className="text-xs text-slate-500">{account.institution} &bull; {account.accountNumber}</p>
                   </div>
                 </div>
@@ -331,7 +331,7 @@ export default function BanquesPage() {
                   {account.currency}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">
                 {new Intl.NumberFormat(locale, { style: 'currency', currency: account.currency }).format(account.balance)}
               </p>
               <p className="text-xs text-slate-500 mt-2">
@@ -355,7 +355,7 @@ export default function BanquesPage() {
       >
         <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
@@ -366,11 +366,11 @@ export default function BanquesPage() {
           </thead>
           <tbody className="divide-y divide-slate-200">
             {recentTransactions.map((transaction) => (
-              <tr key={transaction.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-sm text-slate-900">
+              <tr key={transaction.id} className="hover:bg-white/5">
+                <td className="px-4 py-3 text-sm text-[var(--k-text-primary)]">
                   {transaction.date ? formatDate(transaction.date) : '-'}
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-900">{transaction.description}</td>
+                <td className="px-4 py-3 text-sm text-[var(--k-text-primary)]">{transaction.description}</td>
                 <td className="px-4 py-3">
                   {transaction.category && (
                     <span className="px-2 py-0.5 bg-slate-100 rounded text-xs text-slate-700">
@@ -402,9 +402,9 @@ export default function BanquesPage() {
       {/* Cash Flow Forecast */}
       <SectionCard title={t('admin.bankAccounts.cashFlowForecast')} theme={theme}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-slate-50 rounded-lg">
+          <div className="p-4 bg-white/5 rounded-lg">
             <p className="text-sm text-slate-500">{t('admin.bankAccounts.currentBalance')}</p>
-            <p className="text-xl font-bold text-slate-900">{formatCurrency(totalBalance)}</p>
+            <p className="text-xl font-bold text-[var(--k-text-primary)]">{formatCurrency(totalBalance)}</p>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
             <p className="text-sm text-green-600">{t('admin.bankAccounts.expectedInflows')}</p>

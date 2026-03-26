@@ -94,7 +94,7 @@ export default function InlineEditCell({
           onBlur={handleSave}
           disabled={saving}
           aria-label={`Edit ${value}`}
-          className="w-full px-1.5 py-0.5 text-sm border border-indigo-400 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+          className="w-full px-1.5 py-0.5 text-sm border border-indigo-500/40 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white/5 text-[var(--k-text-primary)]"
         />
         {suffix && <span className="text-slate-400 text-sm">{suffix}</span>}
         <button onClick={handleSave} disabled={saving} className="p-0.5 text-green-600 hover:bg-green-50 rounded" title="Save">

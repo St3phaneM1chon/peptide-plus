@@ -105,7 +105,7 @@ export default function BlogAnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('admin.blogAnalytics.title')}</h1>
+          <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.blogAnalytics.title')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {t('admin.blogAnalytics.subtitle')}
           </p>
@@ -142,10 +142,10 @@ export default function BlogAnalyticsPage() {
 
           {/* Activity */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.publishingActivity')}</h3>
+                <h3 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.blogAnalytics.publishingActivity')}</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-indigo-50 rounded-lg">
@@ -160,10 +160,10 @@ export default function BlogAnalyticsPage() {
             </div>
 
             {/* Categories breakdown */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Tag className="w-5 h-5 text-purple-600" />
-                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.categories')}</h3>
+                <h3 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.blogAnalytics.categories')}</h3>
               </div>
               {data.categories.length > 0 ? (
                 <div className="space-y-2">
@@ -194,10 +194,10 @@ export default function BlogAnalyticsPage() {
 
           {/* Authors */}
           {data.authors.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.authors')}</h3>
+                <h3 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.blogAnalytics.authors')}</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {data.authors.map((author) => (
@@ -211,14 +211,14 @@ export default function BlogAnalyticsPage() {
           )}
 
           {/* Recent Posts Table */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200">
-              <h3 className="text-base font-semibold text-slate-900">{t('admin.blogAnalytics.recentPosts')}</h3>
+          <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-[var(--k-border-subtle)]">
+              <h3 className="text-base font-semibold text-[var(--k-text-primary)]">{t('admin.blogAnalytics.recentPosts')}</h3>
               <p className="text-sm text-slate-500">{t('admin.blogAnalytics.recentPostsDesc')}</p>
             </div>
             {data.recentPosts.length > 0 ? (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
                   <tr>
                     <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colTitle')}</th>
                     <th className="text-start px-6 py-3 font-medium text-slate-600">{t('admin.blogAnalytics.colCategory')}</th>
@@ -230,10 +230,10 @@ export default function BlogAnalyticsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {data.recentPosts.map((post) => (
-                    <tr key={post.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={post.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-900 truncate max-w-[300px]">
+                          <span className="font-medium text-[var(--k-text-primary)] truncate max-w-[300px]">
                             {post.title}
                           </span>
                           {post.isFeatured && (
@@ -267,7 +267,7 @@ export default function BlogAnalyticsPage() {
             ) : (
               <div className="p-12 text-center">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.blogAnalytics.noPosts')}</h3>
+                <h3 className="text-lg font-semibold text-[var(--k-text-primary)] mb-1">{t('admin.blogAnalytics.noPosts')}</h3>
                 <p className="text-sm text-slate-500">{t('admin.blogAnalytics.noPostsDesc')}</p>
               </div>
             )}
@@ -277,9 +277,9 @@ export default function BlogAnalyticsPage() {
 
       {/* Empty state if fetch failed */}
       {!loading && !data && (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">
+        <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-12 text-center">
           <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('admin.blogAnalytics.loadError')}</h3>
+          <h3 className="text-lg font-semibold text-[var(--k-text-primary)] mb-1">{t('admin.blogAnalytics.loadError')}</h3>
           <p className="text-sm text-slate-500 mb-4">
             {t('admin.blogAnalytics.loadErrorDesc')}
           </p>

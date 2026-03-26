@@ -226,10 +226,10 @@ export default function AIAssistantPage() {
     if (!table || !table.rows.length) return null;
 
     return (
-      <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
+      <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--k-border-subtle)]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-white/5 border-b border-[var(--k-border-subtle)]">
               {table.headers.map((h, i) => (
                 <th key={i} className="px-3 py-2 text-start font-medium text-slate-600 whitespace-nowrap">
                   {h}
@@ -239,7 +239,7 @@ export default function AIAssistantPage() {
           </thead>
           <tbody>
             {table.rows.map((row, ri) => (
-              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+              <tr key={ri} className={ri % 2 === 0 ? 'bg-[var(--k-glass-thin)]' : 'bg-slate-50/50'}>
                 {row.map((cell, ci) => (
                   <td key={ci} className="px-3 py-1.5 text-slate-700 whitespace-nowrap">
                     {cell}
@@ -262,7 +262,7 @@ export default function AIAssistantPage() {
     const maxVal = Math.max(...chartData.values.map(Math.abs), 1);
 
     return (
-      <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+      <div className="mt-3 p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
         <p className="text-xs font-medium text-slate-500 mb-2">{chartData.label}</p>
         <div className="space-y-2">
           {chartData.labels.map((label, i) => {
@@ -346,7 +346,7 @@ export default function AIAssistantPage() {
                         key={i}
                         onClick={() => sendMessage(sq.query)}
                         disabled={isLoading}
-                        className="flex items-center gap-2 p-2.5 text-start text-sm bg-white rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
+                        className="flex items-center gap-2 p-2.5 text-start text-sm bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
                       >
                         <sq.icon className="w-4 h-4 text-slate-400 group-hover:text-violet-500 flex-shrink-0" />
                         <span className="text-slate-600 group-hover:text-slate-800 truncate">
@@ -367,7 +367,7 @@ export default function AIAssistantPage() {
                         className={`max-w-[85%] ${
                           msg.role === 'user'
                             ? 'bg-violet-600 text-white rounded-2xl rounded-br-md px-4 py-2.5'
-                            : 'bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3'
+                            : 'bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-2xl rounded-bl-md px-4 py-3'
                         }`}
                       >
                         {/* Role indicator */}
@@ -410,7 +410,7 @@ export default function AIAssistantPage() {
                   {/* Loading indicator */}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3">
+                      <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-2xl rounded-bl-md px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Bot className="w-3.5 h-3.5 text-violet-500" />
                           <span className="text-[10px] font-medium text-slate-400">
@@ -449,7 +449,7 @@ export default function AIAssistantPage() {
                     key={i}
                     onClick={() => sendMessage(qa.query)}
                     disabled={isLoading}
-                    className="text-[11px] px-2.5 py-1 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all whitespace-nowrap flex-shrink-0 disabled:opacity-50"
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-[var(--k-border-subtle)] bg-[var(--k-glass-thin)] text-slate-600 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-all whitespace-nowrap flex-shrink-0 disabled:opacity-50"
                   >
                     {qa.label}
                   </button>
@@ -470,7 +470,7 @@ export default function AIAssistantPage() {
                     placeholder={t('admin.aiAssistant.placeholder')}
                     disabled={isLoading}
                     maxLength={1000}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none text-sm text-slate-700 placeholder-slate-400 transition-all disabled:opacity-50 disabled:bg-slate-50"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--k-border-subtle)] focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none text-sm text-slate-700 placeholder-slate-400 transition-all disabled:opacity-50 disabled:bg-white/5"
                   />
                   {input.length > 0 && (
                     <span className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-300">

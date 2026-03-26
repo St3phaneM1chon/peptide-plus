@@ -361,7 +361,7 @@ export default function MediaLibraryPage() {
         <span className="text-slate-700 font-medium">{t('admin.media.libraryTitle')}</span>
       </nav>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.libraryTitle')}</h1>
+        <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">{t('admin.media.libraryTitle')}</h1>
         <div className="flex items-center gap-2">
           <div className="flex border border-slate-300 rounded-lg overflow-hidden">
             {/* FIX: F88 - Added aria-label for accessibility */}
@@ -372,7 +372,7 @@ export default function MediaLibraryPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {/* FIX: F36 - Use i18n instead of hardcoded "Upload" */}
@@ -388,7 +388,7 @@ export default function MediaLibraryPage() {
           <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
             <Trash2 className="w-3 h-3" /> {t('common.delete')}
           </button>
-          <button onClick={handleOrganizeFiles} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
+          <button onClick={handleOrganizeFiles} className="px-3 py-1 bg-[var(--k-glass-thin)] border border-slate-300 text-slate-700 rounded hover:bg-white/5 text-xs">
             {t('admin.media.moveToFolder')}
           </button>
           <button onClick={() => setSelectedIds(new Set())} className="ms-auto text-slate-500 hover:text-slate-700 text-xs">
@@ -433,7 +433,7 @@ export default function MediaLibraryPage() {
         </select>
         <button
           onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm hover:bg-slate-50"
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm hover:bg-white/5"
           aria-label={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
           title={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
         >
@@ -446,7 +446,7 @@ export default function MediaLibraryPage() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden animate-pulse">
+            <div key={i} className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] overflow-hidden animate-pulse">
               <div className="aspect-square bg-slate-200" />
               <div className="p-2 space-y-1.5">
                 <div className="h-3 bg-slate-200 rounded w-3/4" />
@@ -472,7 +472,7 @@ export default function MediaLibraryPage() {
           {/* A100 FIX: Animate-in on view switch with fade transition */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 animate-in fade-in duration-200">
             {items.map(item => (
-              <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(item.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}>
+              <div key={item.id} className={`group relative bg-[var(--k-glass-thin)] rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors ${selectedIds.has(item.id) ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-[var(--k-border-subtle)]'}`}>
                 {/* Selection checkbox */}
                 <div className="absolute top-2 start-2 z-10">
                   <input
@@ -490,7 +490,7 @@ export default function MediaLibraryPage() {
                   </span>
                 )}
                 {/* A79 FIX: Slight zoom on hover for image preview */}
-              <div className="aspect-square cursor-pointer flex items-center justify-center bg-slate-50 overflow-hidden" onClick={() => setPreview(item)}>
+              <div className="aspect-square cursor-pointer flex items-center justify-center bg-white/5 overflow-hidden" onClick={() => setPreview(item)}>
                   {/* FIX: F2 - Use NextImage instead of native <img> */}
                   {/* F99 FIX: NextImage provides lazy loading by default (loading="lazy" is the default) */}
                   {item.mimeType.startsWith('image/') ? (
@@ -509,7 +509,7 @@ export default function MediaLibraryPage() {
                 </div>
                 <button
                   onClick={() => copyUrl(item)}
-                  className="absolute top-2 end-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                  className="absolute top-2 end-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--k-glass-thin)]"
                   aria-label="Copier l'URL du fichier"
                 >
                   {copiedId === item.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-600" />}
@@ -520,13 +520,13 @@ export default function MediaLibraryPage() {
         </>
       ) : (
         // A100 FIX: Animate-in on view switch with fade transition
-        <div className="bg-white rounded-lg border border-slate-200 divide-y animate-in fade-in duration-200">
-          <div className="flex items-center gap-3 p-2 bg-slate-50 text-xs text-slate-600 font-medium border-b">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] divide-y animate-in fade-in duration-200">
+          <div className="flex items-center gap-3 p-2 bg-white/5 text-xs text-slate-600 font-medium border-b">
             <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 ms-1" aria-label="Select all files" />
             <span>{t('common.selectAll')}</span>
           </div>
           {items.map(item => (
-            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${selectedIds.has(item.id) ? 'bg-indigo-50' : ''}`}>
+            <div key={item.id} className={`flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${selectedIds.has(item.id) ? 'bg-indigo-50' : ''}`}>
               <input
                 type="checkbox"
                 checked={selectedIds.has(item.id)}
@@ -544,7 +544,7 @@ export default function MediaLibraryPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-900 truncate">{item.originalName}</p>
+                <p className="text-sm text-[var(--k-text-primary)] truncate">{item.originalName}</p>
                 <p className="text-xs text-slate-400">{item.folder} &middot; {formatSize(item.size)} &middot; {new Date(item.createdAt).toLocaleDateString(locale)}</p>
               </div>
               <div className="flex items-center gap-1">
@@ -595,8 +595,8 @@ export default function MediaLibraryPage() {
             }
           }}
         >
-          <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
+          <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-[var(--k-glass-thin)] rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreview(null)} className="absolute top-3 end-3 p-1.5 bg-white/80 rounded-full hover:bg-[var(--k-glass-thin)] z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F2 - Use NextImage instead of native <img> */}
@@ -614,7 +614,7 @@ export default function MediaLibraryPage() {
               </div>
             )}
             <div className="p-4 border-t">
-              <p className="font-medium text-slate-900">{preview.originalName}</p>
+              <p className="font-medium text-[var(--k-text-primary)]">{preview.originalName}</p>
               <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                 <span>{formatSize(preview.size)}</span>
                 <span>{preview.mimeType}</span>

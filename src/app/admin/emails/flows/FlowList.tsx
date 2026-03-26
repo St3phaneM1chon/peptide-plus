@@ -105,7 +105,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">{t('admin.emails.flows.title')}</h3>
+          <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.emails.flows.title')}</h3>
           <p className="text-sm text-slate-500">{flows.length} {t('admin.emails.flows.workflowCount')} - {flows.filter(f => f.isActive).length} {t('admin.emails.flows.activeCount')}</p>
         </div>
         <button
@@ -117,9 +117,9 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
       </div>
 
       {flows.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-12 text-center">
           <GitBranch className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h4 className="text-lg font-medium text-slate-900 mb-1">{t('admin.emails.flows.noFlows')}</h4>
+          <h4 className="text-lg font-medium text-[var(--k-text-primary)] mb-1">{t('admin.emails.flows.noFlows')}</h4>
           <p className="text-sm text-slate-500 mb-4">{t('admin.emails.flows.createFirstFlow')}</p>
           <button
             onClick={onCreateFlow}
@@ -135,25 +135,25 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
             const TriggerIcon = trigger.icon;
 
             return (
-              <div key={flow.id} className="bg-white rounded-xl border border-slate-200 p-5">
+              <div key={flow.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <TriggerIcon className={`h-5 w-5 ${trigger.color}`} />
                     <div>
-                      <h4 className="font-semibold text-slate-900">{flow.name}</h4>
+                      <h4 className="font-semibold text-[var(--k-text-primary)]">{flow.name}</h4>
                       <p className="text-xs text-slate-500">{trigger.label}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => toggleFlow(flow.id, flow.isActive)}
-                      className={`p-1.5 rounded ${flow.isActive ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-50'}`}
+                      className={`p-1.5 rounded ${flow.isActive ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-white/5'}`}
                       title={flow.isActive ? t('admin.emails.flows.deactivate') : t('admin.emails.flows.activate')}
                       aria-label={flow.isActive ? 'Desactiver le flux' : 'Activer le flux'}
                     >
                       {flow.isActive ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => onEditFlow(flow.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Modifier le flux">
+                    <button onClick={() => onEditFlow(flow.id)} className="p-1.5 rounded text-slate-400 hover:bg-white/5" aria-label="Modifier le flux">
                       <Edit className="h-4 w-4" />
                     </button>
                     <button onClick={() => setFlowToDelete(flow.id)} disabled={deletingId === flow.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50" aria-label="Supprimer le flux">
@@ -180,17 +180,17 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-2 bg-slate-50 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-2 bg-white/5 rounded-lg">
                   <div className="text-center">
-                    <div className="text-sm font-semibold text-slate-900">{flow.stats.triggered}</div>
+                    <div className="text-sm font-semibold text-[var(--k-text-primary)]">{flow.stats.triggered}</div>
                     <div className="text-[10px] text-slate-400">{t('admin.emails.flows.statsTriggered')}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-sm font-semibold text-slate-900">{flow.stats.sent}</div>
+                    <div className="text-sm font-semibold text-[var(--k-text-primary)]">{flow.stats.sent}</div>
                     <div className="text-[10px] text-slate-400">{t('admin.emails.flows.statsSent')}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-sm font-semibold text-slate-900">{flow.stats.opened}</div>
+                    <div className="text-sm font-semibold text-[var(--k-text-primary)]">{flow.stats.opened}</div>
                     <div className="text-[10px] text-slate-400">{t('admin.emails.flows.statsOpened')}</div>
                   </div>
                   <div className="text-center">

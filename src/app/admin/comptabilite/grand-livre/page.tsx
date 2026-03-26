@@ -254,7 +254,7 @@ export default function GrandLivrePage() {
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
-              className="w-full h-9 px-3 border border-slate-300 rounded-lg bg-white text-sm text-slate-700
+              className="w-full h-9 px-3 border border-slate-300 rounded-lg bg-[var(--k-glass-thin)] text-sm text-slate-700
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {accounts.map(account => (
@@ -323,7 +323,7 @@ export default function GrandLivrePage() {
       <SectionCard title={t('admin.generalLedger.totalPeriod')} theme={theme} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-white/5">
               <tr>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
@@ -337,8 +337,8 @@ export default function GrandLivrePage() {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {filteredTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-sm text-slate-900">
+                <tr key={transaction.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 text-sm text-[var(--k-text-primary)]">
                     {formatDate(transaction.date)}
                   </td>
                   <td className="px-4 py-3">
@@ -346,7 +346,7 @@ export default function GrandLivrePage() {
                       {transaction.journalEntry}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-900 max-w-xs truncate">
+                  <td className="px-4 py-3 text-sm text-[var(--k-text-primary)] max-w-xs truncate">
                     {transaction.description}
                   </td>
                   <td className="px-4 py-3">
@@ -358,7 +358,7 @@ export default function GrandLivrePage() {
                   </td>
                   <td className="px-4 py-3 text-end">
                     {transaction.debit > 0 && (
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-[var(--k-text-primary)]">
                         {formatCurrency(transaction.debit)}
                       </span>
                     )}
@@ -370,7 +370,7 @@ export default function GrandLivrePage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-end font-medium text-slate-900">
+                  <td className="px-4 py-3 text-end font-medium text-[var(--k-text-primary)]">
                     {formatCurrency(transaction.balance)}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -389,10 +389,10 @@ export default function GrandLivrePage() {
             </tbody>
             <tfoot className="bg-slate-100">
               <tr>
-                <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-slate-900">
+                <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-[var(--k-text-primary)]">
                   Total
                 </td>
-                <td className="px-4 py-3 text-end font-bold text-slate-900">
+                <td className="px-4 py-3 text-end font-bold text-[var(--k-text-primary)]">
                   {formatCurrency(totalDebit)}
                 </td>
                 <td className="px-4 py-3 text-end font-bold text-red-600">

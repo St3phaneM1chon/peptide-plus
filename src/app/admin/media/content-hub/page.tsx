@@ -117,7 +117,7 @@ export default function ContentHubPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Layout className="w-6 h-6 text-indigo-600" />
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">
             {t('admin.contentHub.title')}
           </h1>
         </div>
@@ -126,12 +126,12 @@ export default function ContentHubPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {kpiCards.map((card) => (
-          <div key={card.label} className="bg-white rounded-lg border border-slate-200 p-4">
+          <div key={card.label} className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-4">
             <div className={`flex items-center gap-2 ${card.color} mb-1`}>
               {card.icon}
               <span className="text-xs font-medium truncate">{card.label}</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{card.value}</p>
+            <p className="text-2xl font-bold text-[var(--k-text-primary)]">{card.value}</p>
           </div>
         ))}
       </div>
@@ -139,7 +139,7 @@ export default function ContentHubPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* By Content Type */}
-        <div className="bg-white rounded-lg border border-slate-200 p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-4">
             {t('admin.contentHub.byContentType')}
           </h2>
@@ -153,7 +153,7 @@ export default function ContentHubPage() {
                 <div key={item.type}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-slate-600 capitalize">{item.type}</span>
-                    <span className="font-medium text-slate-900">{item.count}</span>
+                    <span className="font-medium text-[var(--k-text-primary)]">{item.count}</span>
                   </div>
                   <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div
@@ -168,7 +168,7 @@ export default function ContentHubPage() {
         </div>
 
         {/* By Source */}
-        <div className="bg-white rounded-lg border border-slate-200 p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-4">
             {t('admin.contentHub.bySource')}
           </h2>
@@ -182,7 +182,7 @@ export default function ContentHubPage() {
                 <div key={item.source}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-slate-600 capitalize">{item.source}</span>
-                    <span className="font-medium text-slate-900">{item.count}</span>
+                    <span className="font-medium text-[var(--k-text-primary)]">{item.count}</span>
                   </div>
                   <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div
@@ -198,7 +198,7 @@ export default function ContentHubPage() {
       </div>
 
       {/* Recent Videos */}
-      <div className="bg-white rounded-lg border border-slate-200 p-5">
+      <div className="bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-5">
         <h2 className="text-sm font-semibold text-slate-700 mb-4">
           {t('admin.contentHub.recentVideos')}
         </h2>
@@ -234,7 +234,7 @@ export default function ContentHubPage() {
                   return (
                     <tr key={video.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="py-2.5 pe-4">
-                        <span className="font-medium text-slate-900 truncate block max-w-[280px]">
+                        <span className="font-medium text-[var(--k-text-primary)] truncate block max-w-[280px]">
                           {video.title}
                         </span>
                       </td>
@@ -266,12 +266,12 @@ export default function ContentHubPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/admin/media/videos">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] hover:border-indigo-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
               <Plus className="w-5 h-5" />
             </div>
             <div>
-              <p className="font-medium text-slate-900">
+              <p className="font-medium text-[var(--k-text-primary)]">
                 {t('admin.contentHub.createVideo')}
               </p>
               <p className="text-xs text-slate-500">
@@ -281,12 +281,12 @@ export default function ContentHubPage() {
           </div>
         </Link>
         <Link href="/admin/media/video-categories">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] hover:border-indigo-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
-              <p className="font-medium text-slate-900">
+              <p className="font-medium text-[var(--k-text-primary)]">
                 {t('admin.contentHub.manageCategories')}
               </p>
               <p className="text-xs text-slate-500">
@@ -296,12 +296,12 @@ export default function ContentHubPage() {
           </div>
         </Link>
         <Link href="/admin/media/consents">
-          <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-3 p-4 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] hover:border-indigo-300 hover:shadow-sm transition-all">
             <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
               <FileCheck className="w-5 h-5" />
             </div>
             <div>
-              <p className="font-medium text-slate-900">
+              <p className="font-medium text-[var(--k-text-primary)]">
                 {t('admin.contentHub.viewConsents')}
               </p>
               <p className="text-xs text-slate-500">

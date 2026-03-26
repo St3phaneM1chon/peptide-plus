@@ -65,7 +65,7 @@ export default function LeaderboardPage() {
         ? t('admin.lms.leaderboard.studentName')
         : t('admin.lms.leaderboard.teamName'),
       render: (row) => (
-        <span className="font-medium text-slate-900">{row.name}</span>
+        <span className="font-medium text-[var(--k-text-primary)]">{row.name}</span>
       ),
     },
     {
@@ -127,7 +127,7 @@ export default function LeaderboardPage() {
           className={`
             flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
             ${viewMode === 'individual'
-              ? 'bg-white text-slate-900 shadow-sm'
+              ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
               : 'text-slate-500 hover:text-slate-700'
             }
           `}
@@ -141,7 +141,7 @@ export default function LeaderboardPage() {
           className={`
             flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
             ${viewMode === 'team'
-              ? 'bg-white text-slate-900 shadow-sm'
+              ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
               : 'text-slate-500 hover:text-slate-700'
             }
           `}

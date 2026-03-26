@@ -539,7 +539,7 @@ export default function DepensesPage() {
       key: 'total',
       header: t('admin.expenses.colAmount'),
       render: (exp) => (
-        <span className="text-sm font-medium text-slate-900 tabular-nums">
+        <span className="text-sm font-medium text-[var(--k-text-primary)] tabular-nums">
           {formatCAD(exp.total)}
         </span>
       ),
@@ -699,14 +699,14 @@ export default function DepensesPage() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <span className="text-slate-400 text-sm">-</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </FilterBar>
@@ -750,7 +750,7 @@ export default function DepensesPage() {
                 onChange={(e) => {
                   setFormCategory(e.target.value);
                 }}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="">{t('admin.expenses.category')}...</option>
                 {CATEGORIES.map(cat => (
@@ -790,7 +790,7 @@ export default function DepensesPage() {
           </div>
 
           {/* Amounts */}
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <div className="bg-white/5 p-4 rounded-lg border border-[var(--k-border-subtle)]">
             <div className="grid grid-cols-2 gap-4">
               <FormField label={t('admin.expenses.subtotal')}>
                 <Input
@@ -833,9 +833,9 @@ export default function DepensesPage() {
                 />
               </FormField>
             </div>
-            <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
+            <div className="mt-3 pt-3 border-t border-[var(--k-border-subtle)] flex items-center justify-between">
               <span className="text-sm font-semibold text-slate-700">{t('admin.expenses.total')}</span>
-              <span className="text-lg font-bold text-slate-900 tabular-nums">{formatCAD(parseFloat(formTotal) || 0)}</span>
+              <span className="text-lg font-bold text-[var(--k-text-primary)] tabular-nums">{formatCAD(parseFloat(formTotal) || 0)}</span>
             </div>
           </div>
 
@@ -844,7 +844,7 @@ export default function DepensesPage() {
             <select
               value={formPaymentMethod}
               onChange={(e) => setFormPaymentMethod(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">{t('admin.expenses.paymentMethod')}...</option>
               {PAYMENT_METHODS.map(pm => (
@@ -854,11 +854,11 @@ export default function DepensesPage() {
           </FormField>
 
           {/* Mileage section (collapsible) */}
-          <div className="border border-slate-200 rounded-lg">
+          <div className="border border-[var(--k-border-subtle)] rounded-lg">
             <button
               type="button"
               onClick={() => setShowMileage(!showMileage)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white/5 rounded-lg"
             >
               <div className="flex items-center gap-2">
                 <Car className="w-4 h-4 text-slate-400" />
@@ -912,7 +912,7 @@ export default function DepensesPage() {
         </div>
 
         {/* Form actions */}
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[var(--k-border-subtle)]">
           <Button variant="secondary" onClick={() => setShowFormModal(false)}>
             {t('admin.expenses.cancel')}
           </Button>
@@ -941,7 +941,7 @@ export default function DepensesPage() {
             {/* Header info */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-mono text-lg font-semibold text-slate-900">{selectedExpense.expenseNumber}</p>
+                <p className="font-mono text-lg font-semibold text-[var(--k-text-primary)]">{selectedExpense.expenseNumber}</p>
                 <p className="text-sm text-slate-500">
                   {new Date(selectedExpense.date).toLocaleDateString(locale)}
                 </p>
@@ -988,7 +988,7 @@ export default function DepensesPage() {
             )}
 
             {/* Amounts */}
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="bg-white/5 p-4 rounded-lg border border-[var(--k-border-subtle)]">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-slate-500">{t('admin.expenses.subtotal')}</span><span className="tabular-nums">{formatCAD(selectedExpense.subtotal)}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">{t('admin.expenses.gst')}</span><span className="tabular-nums">{formatCAD(selectedExpense.taxGst)}</span></div>
@@ -996,7 +996,7 @@ export default function DepensesPage() {
                 {selectedExpense.taxOther > 0 && (
                   <div className="flex justify-between"><span className="text-slate-500">{t('admin.expenses.taxOther')}</span><span className="tabular-nums">{formatCAD(selectedExpense.taxOther)}</span></div>
                 )}
-                <div className="flex justify-between pt-2 border-t border-slate-200 font-semibold">
+                <div className="flex justify-between pt-2 border-t border-[var(--k-border-subtle)] font-semibold">
                   <span>{t('admin.expenses.total')}</span>
                   <span className="tabular-nums">{formatCAD(selectedExpense.total)}</span>
                 </div>
@@ -1068,7 +1068,7 @@ export default function DepensesPage() {
             )}
 
             {/* Action buttons based on status */}
-            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-200">
+            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[var(--k-border-subtle)]">
               {selectedExpense.status === 'DRAFT' && (
                 <>
                   <Button variant="secondary" onClick={() => { openEditForm(selectedExpense); setShowDetailModal(false); }}>

@@ -91,14 +91,14 @@ export default function AnalyticsDashboard() {
     <div className="space-y-6">
       {/* Period selector */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">{t('admin.emails.analytics.title')}</h3>
+        <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.emails.analytics.title')}</h3>
         <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
           {['7d', '30d', '90d', '1y'].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-3 py-1 text-xs font-medium rounded-md ${
-                period === p ? 'bg-white shadow text-slate-900' : 'text-slate-500'
+                period === p ? 'bg-white/20 shadow text-[var(--k-text-primary)]' : 'text-slate-500'
               }`}
             >
               {periodLabels[p]}
@@ -109,17 +109,17 @@ export default function AnalyticsDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
             <Send className="h-3.5 w-3.5" /> {t('admin.emails.analytics.emailsSent')}
           </div>
-          <div className="text-2xl font-bold text-slate-900">{overview.totalSent.toLocaleString(locale)}</div>
+          <div className="text-2xl font-bold text-[var(--k-text-primary)]">{overview.totalSent.toLocaleString(locale)}</div>
           <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
             <ArrowUpRight className="h-3 w-3" /> {t('admin.emails.analytics.deliveryRate')}: {overview.deliveryRate}%
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
             <XCircle className="h-3.5 w-3.5" /> {t('admin.emails.analytics.bounces')}
           </div>
@@ -129,19 +129,19 @@ export default function AnalyticsDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
             <GitBranch className="h-3.5 w-3.5" /> {t('admin.emails.analytics.activeWorkflows')}
           </div>
-          <div className="text-2xl font-bold text-slate-900">{overview.activeFlows}</div>
+          <div className="text-2xl font-bold text-[var(--k-text-primary)]">{overview.activeFlows}</div>
           <div className="text-xs text-slate-400 mt-1">{overview.activeCampaigns} {t('admin.emails.analytics.campaigns')}</div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
             <Mail className="h-3.5 w-3.5" /> {t('admin.emails.analytics.conversations')}
           </div>
-          <div className="text-2xl font-bold text-slate-900">
+          <div className="text-2xl font-bold text-[var(--k-text-primary)]">
             {Object.values(data.conversationStats).reduce((a, b) => a + b, 0)}
           </div>
           <div className="text-xs text-slate-400 mt-1">
@@ -153,8 +153,8 @@ export default function AnalyticsDashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Send volume chart */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4">
-          <h4 className="text-sm font-semibold text-slate-900 mb-4">{t('admin.emails.analytics.sendVolume')}</h4>
+        <div className="lg:col-span-2 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
+          <h4 className="text-sm font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emails.analytics.sendVolume')}</h4>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -168,8 +168,8 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Conversation status pie */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h4 className="text-sm font-semibold text-slate-900 mb-4">{t('admin.emails.analytics.conversationsByStatus')}</h4>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
+          <h4 className="text-sm font-semibold text-[var(--k-text-primary)] mb-4">{t('admin.emails.analytics.conversationsByStatus')}</h4>
           {convoData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
@@ -191,8 +191,8 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Top templates */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h4 className="text-sm font-semibold text-slate-900 mb-3">{t('admin.emails.analytics.topTemplates')}</h4>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
+        <h4 className="text-sm font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.emails.analytics.topTemplates')}</h4>
         <div className="space-y-2">
           {data.topTemplates.length > 0 ? data.topTemplates.map((tmpl, i) => (
             <div key={tmpl.templateId || i} className="flex items-center justify-between">
@@ -202,7 +202,7 @@ export default function AnalyticsDashboard() {
                 </span>
                 <span className="text-sm text-slate-700">{tmpl.templateName}</span>
               </div>
-              <span className="text-sm font-medium text-slate-900">{tmpl.count}</span>
+              <span className="text-sm font-medium text-[var(--k-text-primary)]">{tmpl.count}</span>
             </div>
           )) : (
             <p className="text-sm text-slate-400">{t('admin.emails.analytics.noData')}</p>
@@ -211,8 +211,8 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Recent activity */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h4 className="text-sm font-semibold text-slate-900 mb-3">{t('admin.emails.analytics.recentActivity')}</h4>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
+        <h4 className="text-sm font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.emails.analytics.recentActivity')}</h4>
         <div className="space-y-1">
           {data.recentLogs.map((log) => (
             <div key={log.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">

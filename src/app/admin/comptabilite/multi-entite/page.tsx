@@ -798,7 +798,7 @@ export default function MultiEntityPage() {
         <div className="space-y-6">
           {/* Interco Balances Summary */}
           {intercoBalances.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border p-4">
+            <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-4">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <GitBranch className="h-4 w-4" />
                 {t('admin.multiEntity.intercoBalances')}
@@ -845,7 +845,7 @@ export default function MultiEntityPage() {
           )}
 
           {/* Elimination controls */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <label className="text-sm text-gray-600">{t('admin.multiEntity.period')}:</label>
@@ -922,7 +922,7 @@ export default function MultiEntityPage() {
       {activeTab === 'consolidation' && (
         <div className="space-y-6">
           {/* Date range picker */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-4 flex items-center gap-3 flex-wrap">
+          <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-4 flex items-center gap-3 flex-wrap">
             <label className="text-sm text-gray-600">{t('admin.multiEntity.period')}:</label>
             <input
               type="date"
@@ -951,7 +951,7 @@ export default function MultiEntityPage() {
           ) : consolidatedReport ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Income Statement */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg border p-5">
+              <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <FileBarChart className="h-5 w-5 text-indigo-600" />
                   {t('admin.multiEntity.consolidatedPL')}
@@ -1003,7 +1003,7 @@ export default function MultiEntityPage() {
               </div>
 
               {/* Balance Sheet */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg border p-5">
+              <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-indigo-600" />
                   {t('admin.multiEntity.consolidatedBS')}
@@ -1034,7 +1034,7 @@ export default function MultiEntityPage() {
               </div>
 
               {/* Eliminations */}
-              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border p-5">
+              <div className="lg:col-span-2 bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-5">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Ban className="h-5 w-5 text-red-500" />
                   {t('admin.multiEntity.eliminations')} (
@@ -1098,7 +1098,7 @@ export default function MultiEntityPage() {
       {activeTab === 'comparison' && (
         <div className="space-y-6">
           {/* Entity selection */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-4">
+          <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-4">
             <h3 className="text-sm font-semibold mb-3">
               {t('admin.multiEntity.selectEntities')}
             </h3>
@@ -1152,7 +1152,7 @@ export default function MultiEntityPage() {
           {loadingComparison ? (
             <div className="text-center py-12 text-gray-500">{t('admin.multiEntity.loading')}</div>
           ) : comparison ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border p-5 overflow-x-auto">
+            <div className="bg-[var(--k-glass-thin)] dark:bg-gray-800 rounded-lg border p-5 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-start border-b">

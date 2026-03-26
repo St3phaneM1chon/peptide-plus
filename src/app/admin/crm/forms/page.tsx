@@ -179,7 +179,7 @@ ${form.fields.map(f => `
 
       {/* Create Form */}
       {showCreate && (
-        <div className="bg-white border rounded-xl p-6 mb-6">
+        <div className="bg-[var(--k-glass-thin)] border rounded-xl p-6 mb-6">
           <h2 className="font-semibold text-gray-900 mb-4">Create Lead Capture Form</h2>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
@@ -226,7 +226,7 @@ ${form.fields.map(f => `
       {/* Forms List */}
       <div className="space-y-3">
         {forms.map(form => (
-          <div key={form.id} className="bg-white border rounded-xl p-4">
+          <div key={form.id} className="bg-[var(--k-glass-thin)] border rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium text-gray-900">{form.name}</h3>

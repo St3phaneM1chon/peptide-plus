@@ -305,7 +305,7 @@ export default function ForecastingPage() {
             <select
               value={forecastPeriod}
               onChange={e => setForecastPeriod(parseInt(e.target.value))}
-              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white/5 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
             >
               <option value={3}>{t('admin.forecasts.months3')}</option>
               <option value={6}>{t('admin.forecasts.months6')}</option>
@@ -320,27 +320,27 @@ export default function ForecastingPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.forecasts.currentBalance')}</p>
-          <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(currentBalance)}</p>
+          <p className="text-xl font-bold text-[var(--k-text-primary)] mt-1">{formatCurrency(currentBalance)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.forecasts.expectedInflows')}</p>
           <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(totalInflows)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.forecasts.expectedOutflows')}</p>
           <p className="text-xl font-bold text-red-600 mt-1">{formatCurrency(totalOutflows)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.forecasts.projectedFinalBalance')}</p>
           <p className="text-xl font-bold text-violet-600 mt-1">
             {formatCurrency(baseProjections[baseProjections.length - 1]?.closingBalance || 0)}
           </p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.forecasts.lowestPoint')}</p>
-          <p className={`text-xl font-bold mt-1 ${lowestPoint < minimumCash ? 'text-red-600' : 'text-slate-900'}`}>
+          <p className={`text-xl font-bold mt-1 ${lowestPoint < minimumCash ? 'text-red-600' : 'text-[var(--k-text-primary)]'}`}>
             {formatCurrency(lowestPoint)}
           </p>
           <p className="text-xs text-slate-400">{lowestPeriod}</p>
@@ -360,7 +360,7 @@ export default function ForecastingPage() {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? `${theme.btnPrimary} text-white`
-                : 'text-slate-500 hover:text-slate-900'
+                : 'text-slate-500 hover:text-[var(--k-text-primary)]'
             }`}
           >
             {tab.label}
@@ -534,7 +534,7 @@ export default function ForecastingPage() {
           <SectionCard title={t('admin.forecasts.tabCashFlow')} theme={theme} noPadding>
             <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
                   <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.forecasts.periodCol')}</th>
                   <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.forecasts.openingBalance')}</th>
@@ -548,10 +548,10 @@ export default function ForecastingPage() {
                 {baseProjections.map((p, i) => (
                   <Fragment key={i}>
                     <tr
-                      className={`hover:bg-slate-50 cursor-pointer ${p.closingBalance < minimumCash ? 'bg-red-50' : ''}`}
+                      className={`hover:bg-white/5 cursor-pointer ${p.closingBalance < minimumCash ? 'bg-red-50' : ''}`}
                       onClick={() => setExpandedPeriod(expandedPeriod === i ? null : i)}
                     >
-                      <td className="px-4 py-3 font-medium text-slate-900">
+                      <td className="px-4 py-3 font-medium text-[var(--k-text-primary)]">
                         <div className="flex items-center gap-2">
                           {expandedPeriod === i ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
                           {p.period}
@@ -563,7 +563,7 @@ export default function ForecastingPage() {
                       <td className={`px-4 py-3 text-end font-medium ${p.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {p.netCashFlow >= 0 ? '+' : ''}{formatCurrency(p.netCashFlow)}
                       </td>
-                      <td className={`px-4 py-3 text-end font-bold ${p.closingBalance < minimumCash ? 'text-red-600' : 'text-slate-900'}`}>
+                      <td className={`px-4 py-3 text-end font-bold ${p.closingBalance < minimumCash ? 'text-red-600' : 'text-[var(--k-text-primary)]'}`}>
                         {formatCurrency(p.closingBalance)}
                       </td>
                     </tr>
@@ -572,17 +572,17 @@ export default function ForecastingPage() {
                         <td colSpan={6} className="px-8 py-3">
                           <div className="text-xs font-semibold text-slate-500 uppercase mb-2">{t('admin.forecasts.drillDownCategory')}</div>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                            <div className="p-2 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)]">
                               <p className="text-xs text-slate-500">{t('admin.forecasts.catOperating')}</p>
                               <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.85)}</p>
                               <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.7)}</p>
                             </div>
-                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                            <div className="p-2 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)]">
                               <p className="text-xs text-slate-500">{t('admin.forecasts.catInvesting')}</p>
                               <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.05)}</p>
                               <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.2)}</p>
                             </div>
-                            <div className="p-2 bg-white rounded-lg border border-slate-200">
+                            <div className="p-2 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)]">
                               <p className="text-xs text-slate-500">{t('admin.forecasts.catFinancing')}</p>
                               <p className="text-sm font-medium text-emerald-600">+{formatCurrency(p.inflows * 0.1)}</p>
                               <p className="text-sm font-medium text-red-500">-{formatCurrency(p.outflows * 0.1)}</p>
@@ -618,9 +618,9 @@ export default function ForecastingPage() {
                 : 0;
 
               return (
-                <div key={scenario.id} className={`bg-white rounded-xl p-4 border border-slate-200`}>
+                <div key={scenario.id} className={`bg-[var(--k-glass-thin)] rounded-xl p-4 border border-[var(--k-border-subtle)]`}>
                   <div className={`w-3 h-3 rounded-full bg-${scenario.color}-500 mb-2`}></div>
-                  <h4 className="font-medium text-slate-900">{scenario.name}</h4>
+                  <h4 className="font-medium text-[var(--k-text-primary)]">{scenario.name}</h4>
                   <p className="text-xs text-slate-500 mb-3">
                     {t('admin.forecasts.revLabel')} {scenario.revenueGrowth > 0 ? '+' : ''}{scenario.revenueGrowth}% • {t('admin.forecasts.expLabel')} +{scenario.expenseGrowth}%
                   </p>
@@ -633,7 +633,7 @@ export default function ForecastingPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">{t('admin.forecasts.lowPoint')}</span>
-                      <span className={lowestBalance < minimumCash ? 'text-red-600' : 'text-slate-900'}>
+                      <span className={lowestBalance < minimumCash ? 'text-red-600' : 'text-[var(--k-text-primary)]'}>
                         {formatCurrency(lowestBalance)}
                       </span>
                     </div>
@@ -647,7 +647,7 @@ export default function ForecastingPage() {
           <SectionCard title={t('admin.forecasts.tabScenarios')} theme={theme} noPadding>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-white/5">
                   <tr>
                     <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.forecasts.periodCol')}</th>
                     {scenarios.map(s => (
@@ -659,13 +659,13 @@ export default function ForecastingPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {baseProjections.map((_, i) => (
-                    <tr key={i} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-900">{baseProjections[i].period}</td>
+                    <tr key={i} className="hover:bg-white/5">
+                      <td className="px-4 py-3 font-medium text-[var(--k-text-primary)]">{baseProjections[i].period}</td>
                       {scenarios.map(s => (
                         <td key={s.id} className="px-4 py-3 text-end">
                           <span className={
                             s.projections[i]?.closingBalance < minimumCash ? 'text-red-600' :
-                            s.projections[i]?.closingBalance > baseProjections[i].closingBalance ? 'text-green-600' : 'text-slate-900'
+                            s.projections[i]?.closingBalance > baseProjections[i].closingBalance ? 'text-green-600' : 'text-[var(--k-text-primary)]'
                           }>
                             {formatCurrency(s.projections[i]?.closingBalance || 0)}
                           </span>
@@ -690,7 +690,7 @@ export default function ForecastingPage() {
                 type="number"
                 value={minimumCash}
                 onChange={e => setMinimumCash(parseInt(e.target.value) || 0)}
-                className="w-32 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                className="w-32 px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
               />
               <span className="text-sm text-slate-500">CAD</span>
             </div>
@@ -730,7 +730,7 @@ export default function ForecastingPage() {
                         )}
                       </p>
                       <div className="mt-2 flex gap-2">
-                        <button className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg border border-slate-200">
+                        <button className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg border border-[var(--k-border-subtle)]">
                           {t('admin.forecasts.viewDetails')}
                         </button>
                         <button className={`px-3 py-1 ${theme.surfaceLight} hover:opacity-80 text-violet-700 text-sm rounded-lg border ${theme.borderLight}`}>

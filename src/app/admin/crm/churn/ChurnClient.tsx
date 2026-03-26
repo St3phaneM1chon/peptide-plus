@@ -126,7 +126,7 @@ export default function ChurnClient() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <TrendingDown className="h-4 w-4" /> Current Churn Rate
               </div>
@@ -135,21 +135,21 @@ export default function ChurnClient() {
               </p>
               <p className="text-xs text-gray-400 mt-1">quarterly</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <AlertTriangle className="h-4 w-4" /> Critical Risk
               </div>
               <p className="text-2xl font-bold text-red-600">{criticalCount}</p>
               <p className="text-xs text-gray-400 mt-1">customers</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Users className="h-4 w-4" /> High Risk
               </div>
               <p className="text-2xl font-bold text-orange-600">{highCount}</p>
               <p className="text-xs text-gray-400 mt-1">customers</p>
             </div>
-            <div className="bg-white rounded-xl border p-5">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
               <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
                 <Shield className="h-4 w-4" /> Revenue at Risk
               </div>
@@ -159,7 +159,7 @@ export default function ChurnClient() {
           </div>
 
           {/* Churn Rate Over Time */}
-          <div className="bg-white rounded-xl border p-6 mb-8">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border p-6 mb-8">
             <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <TrendingDown className="h-4 w-4" /> Churn Rate Over Time
             </h3>
@@ -179,7 +179,7 @@ export default function ChurnClient() {
           </div>
 
           {/* At-Risk Customers */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
             <div className="px-6 py-4 border-b flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" /> At-Risk Customers

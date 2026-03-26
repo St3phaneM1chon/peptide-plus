@@ -154,9 +154,9 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-200px)] bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 p-3 border-b border-slate-200 bg-slate-50">
+      <div className="flex items-center gap-3 p-3 border-b border-[var(--k-border-subtle)] bg-white/5">
         <button onClick={onBack} className="p-1.5 hover:bg-slate-200 rounded" aria-label="Retour aux flux">
           <ArrowLeft className="h-4 w-4 text-slate-500" />
         </button>
@@ -165,14 +165,14 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
           type="text"
           value={flowName}
           onChange={(e) => setFlowName(e.target.value)}
-          className="text-sm font-semibold text-slate-900 bg-transparent border-0 focus:outline-none focus:ring-0 flex-1"
+          className="text-sm font-semibold text-[var(--k-text-primary)] bg-transparent border-0 focus:outline-none focus:ring-0 flex-1"
           placeholder={t('admin.emails.flows.workflowNamePlaceholder')}
         />
 
         <select
           value={flowTrigger}
           onChange={(e) => setFlowTrigger(e.target.value)}
-          className="text-xs px-2 py-1.5 border border-slate-200 rounded-lg"
+          className="text-xs px-2 py-1.5 border border-[var(--k-border-subtle)] rounded-lg"
         >
           <option value="order.created">{t('admin.emails.flows.triggerOrderCreated')}</option>
           <option value="order.shipped">{t('admin.emails.flows.triggerOrderShipped')}</option>
@@ -209,7 +209,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
 
       <div className="flex flex-1">
         {/* Node palette */}
-        <div className="w-48 border-r border-slate-200 p-3 bg-slate-50 space-y-2">
+        <div className="w-48 border-r border-[var(--k-border-subtle)] p-3 bg-white/5 space-y-2">
           <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">{t('admin.emails.flows.nodes')}</h4>
           {NODE_TEMPLATES.map((tmpl) => {
             const Icon = tmpl.icon;
@@ -237,7 +237,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
             fitView
-            className="bg-slate-50"
+            className="bg-white/5"
           >
             <Background color="#e2e8f0" gap={16} />
             <Controls />
@@ -247,8 +247,8 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
 
         {/* Node inspector */}
         {selectedNode && (
-          <div className="w-72 border-l border-slate-200 p-4 bg-white overflow-y-auto">
-            <h4 className="text-sm font-semibold text-slate-900 mb-3">
+          <div className="w-72 border-l border-[var(--k-border-subtle)] p-4 bg-[var(--k-glass-thin)] overflow-y-auto">
+            <h4 className="text-sm font-semibold text-[var(--k-text-primary)] mb-3">
               {t('admin.emails.flows.properties')}: {selectedNode.data.label}
             </h4>
 
@@ -259,7 +259,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                   type="text"
                   value={selectedNode.data.label || ''}
                   onChange={(e) => updateNodeData(selectedNode.id, { label: e.target.value })}
-                  className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                  className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                 />
               </div>
 
@@ -271,7 +271,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                       type="text"
                       value={selectedNode.data.subject || ''}
                       onChange={(e) => updateNodeData(selectedNode.id, { subject: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                     />
                   </div>
                   <div>
@@ -279,7 +279,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                     <textarea
                       value={selectedNode.data.htmlContent || ''}
                       onChange={(e) => updateNodeData(selectedNode.id, { htmlContent: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded font-mono"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded font-mono"
                       rows={6}
                     />
                   </div>
@@ -294,7 +294,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                       type="number"
                       value={selectedNode.data.delayAmount || 1}
                       onChange={(e) => updateNodeData(selectedNode.id, { delayAmount: parseInt(e.target.value) })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                       min={1}
                     />
                   </div>
@@ -303,7 +303,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                     <select
                       value={selectedNode.data.delayUnit || 'days'}
                       onChange={(e) => updateNodeData(selectedNode.id, { delayUnit: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                     >
                       <option value="minutes">{t('admin.emails.flows.unitMinutes')}</option>
                       <option value="hours">{t('admin.emails.flows.unitHours')}</option>
@@ -322,7 +322,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                       type="text"
                       value={selectedNode.data.conditionField || ''}
                       onChange={(e) => updateNodeData(selectedNode.id, { conditionField: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                       placeholder="ex: hasOrdered, tier, totalSpent"
                     />
                   </div>
@@ -331,7 +331,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                     <select
                       value={selectedNode.data.conditionOperator || 'equals'}
                       onChange={(e) => updateNodeData(selectedNode.id, { conditionOperator: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                     >
                       <option value="equals">{t('admin.emails.flows.opEquals')}</option>
                       <option value="not_equals">{t('admin.emails.flows.opNotEquals')}</option>
@@ -346,7 +346,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                       type="text"
                       value={selectedNode.data.conditionValue || ''}
                       onChange={(e) => updateNodeData(selectedNode.id, { conditionValue: e.target.value })}
-                      className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                      className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                     />
                   </div>
                 </>
@@ -358,7 +358,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
                   <textarea
                     value={selectedNode.data.smsMessage || ''}
                     onChange={(e) => updateNodeData(selectedNode.id, { smsMessage: e.target.value })}
-                    className="w-full mt-1 px-2 py-1.5 text-sm border border-slate-200 rounded"
+                    className="w-full mt-1 px-2 py-1.5 text-sm border border-[var(--k-border-subtle)] rounded"
                     rows={3}
                     maxLength={160}
                   />

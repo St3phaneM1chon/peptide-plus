@@ -1048,7 +1048,7 @@ export default function DevisPage() {
                   alt="Signature du client"
                   width={200}
                   height={96}
-                  className="max-h-24 border rounded bg-white p-2"
+                  className="max-h-24 border rounded bg-[var(--k-glass-thin)] p-2"
                 />
               </div>
             )}

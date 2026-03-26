@@ -206,14 +206,14 @@ export default function ApiPubliquePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowDocsSection(!showDocsSection)}
-            className="flex items-center gap-2 px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 text-slate-600 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg hover:bg-white/5 text-sm font-medium"
           >
             <Code className="w-4 h-4" />
             {t('admin.apiPublique.apiDocs')}
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             {t('admin.apiPublique.createKey')}
@@ -230,7 +230,7 @@ export default function ApiPubliquePage() {
               <h3 className="font-semibold text-amber-800">{t('admin.apiPublique.keyCreatedTitle')}</h3>
               <p className="text-amber-700 text-sm mt-1">{t('admin.apiPublique.keyCreatedWarning')}</p>
               <div className="mt-3 flex items-center gap-2">
-                <code className="flex-1 bg-white border border-amber-300 rounded px-3 py-2 font-mono text-sm text-slate-800 break-all">
+                <code className="flex-1 bg-[var(--k-glass-thin)] border border-amber-300 rounded px-3 py-2 font-mono text-sm text-slate-800 break-all">
                   {newKeyRevealed}
                 </code>
                 <button
@@ -254,28 +254,28 @@ export default function ApiPubliquePage() {
 
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
             <Key className="w-4 h-4" />
             {t('admin.apiPublique.totalKeys')}
           </div>
           <div className="text-2xl font-bold text-slate-800">{apiKeys.length}</div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
             <CheckCircle className="w-4 h-4 text-emerald-500" />
             {t('admin.apiPublique.activeKeys')}
           </div>
           <div className="text-2xl font-bold text-emerald-600">{apiKeys.filter((k) => k.isActive).length}</div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
             <Activity className="w-4 h-4 text-indigo-500" />
             {t('admin.apiPublique.requestsToday')}
           </div>
           <div className="text-2xl font-bold text-indigo-600">{apiKeys.reduce((sum, k) => sum + (k.usageToday || 0), 0).toLocaleString()}</div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-1">
             <Activity className="w-4 h-4 text-purple-500" />
             {t('admin.apiPublique.requestsMonth')}
@@ -285,8 +285,8 @@ export default function ApiPubliquePage() {
       </div>
 
       {/* API Keys List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[var(--k-border-subtle)] flex items-center justify-between">
           <h2 className="font-semibold text-slate-800">{t('admin.apiPublique.apiKeysTitle')}</h2>
           <button onClick={loadApiKeys} className="text-slate-400 hover:text-slate-600">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -312,7 +312,7 @@ export default function ApiPubliquePage() {
         ) : (
           <div className="divide-y divide-slate-100">
             {apiKeys.map((key) => (
-              <div key={key.id} className="px-5 py-4 hover:bg-slate-50 transition-colors">
+              <div key={key.id} className="px-5 py-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -404,7 +404,7 @@ export default function ApiPubliquePage() {
 
       {/* API Documentation Quick Reference */}
       {showDocsSection && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Code className="w-5 h-5 text-indigo-600" />
@@ -433,7 +433,7 @@ export default function ApiPubliquePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200">
+                    <tr className="border-b border-[var(--k-border-subtle)]">
                       <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.method')}</th>
                       <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.endpoint')}</th>
                       <th className="text-start py-2 px-3 font-medium text-slate-600">{t('admin.apiPublique.permission')}</th>
@@ -455,7 +455,7 @@ export default function ApiPubliquePage() {
                       { method: 'GET', path: '/api/v1/webhooks', perm: 'webhooks:read', desc: t('admin.apiPublique.descListWebhooks') },
                       { method: 'POST', path: '/api/v1/webhooks', perm: 'webhooks:write', desc: t('admin.apiPublique.descCreateWebhook') },
                     ].map((row, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
+                      <tr key={i} className="hover:bg-white/5">
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                             row.method === 'GET' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'
@@ -495,8 +495,8 @@ export default function ApiPubliquePage() {
       {/* Create API Key Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-slate-200">
+          <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-[var(--k-border-subtle)]">
               <h2 className="text-lg font-semibold text-slate-800">{t('admin.apiPublique.createKeyTitle')}</h2>
               <p className="text-sm text-slate-500 mt-1">{t('admin.apiPublique.createKeySubtitle')}</p>
             </div>
@@ -529,7 +529,7 @@ export default function ApiPubliquePage() {
                     const someSelected = groupPerms.some((p) => formPermissions.includes(p.key));
 
                     return (
-                      <div key={group} className="border border-slate-200 rounded-lg p-3">
+                      <div key={group} className="border border-[var(--k-border-subtle)] rounded-lg p-3">
                         <label className="flex items-center gap-2 cursor-pointer mb-2">
                           <input
                             type="checkbox"
@@ -598,7 +598,7 @@ export default function ApiPubliquePage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 border-t border-[var(--k-border-subtle)] flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
@@ -608,7 +608,7 @@ export default function ApiPubliquePage() {
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
+                className="px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? t('admin.apiPublique.creating') : t('admin.apiPublique.createKeyBtn')}
               </button>

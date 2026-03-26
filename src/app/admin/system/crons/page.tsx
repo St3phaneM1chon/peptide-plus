@@ -113,8 +113,8 @@ const STATUS_CONFIG: Record<string, {
   never_ran: {
     icon: CircleDot,
     color: 'text-slate-400',
-    bg: 'bg-slate-50',
-    border: 'border-slate-200',
+    bg: 'bg-white/5',
+    border: 'border-[var(--k-border-subtle)]',
     label: 'Never Ran',
   },
 };
@@ -306,7 +306,7 @@ export default function CronMonitoringPage() {
           <button
             onClick={fetchStatus}
             disabled={loading}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium flex items-center gap-2 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -322,7 +322,7 @@ export default function CronMonitoringPage() {
             value={summary.totalJobs}
             icon={Activity}
             color="text-slate-600"
-            bg="bg-slate-50"
+            bg="bg-white/5"
           />
           <SummaryCard
             label="OK"
@@ -357,7 +357,7 @@ export default function CronMonitoringPage() {
             value={summary.neverRanCount}
             icon={CircleDot}
             color="text-slate-400"
-            bg="bg-slate-50"
+            bg="bg-white/5"
           />
         </div>
       )}
@@ -371,7 +371,7 @@ export default function CronMonitoringPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search cron jobs..."
-            className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+            className="w-full pl-9 pr-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
           />
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </div>
@@ -399,11 +399,11 @@ export default function CronMonitoringPage() {
       </div>
 
       {/* ── Cron jobs table ────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] dark:bg-slate-800 rounded-xl border border-[var(--k-border-subtle)] dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
+              <tr className="bg-white/5 dark:bg-slate-700/50 border-b border-[var(--k-border-subtle)] dark:border-slate-600">
                 <th className="text-start px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Status</th>
                 <th className="text-start px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Cron Job</th>
                 <th className="text-start px-4 py-3 font-medium text-slate-500 dark:text-slate-400 hidden lg:table-cell">Category</th>
@@ -465,7 +465,7 @@ function SummaryCard({
   bg: string;
 }) {
   return (
-    <div className={`rounded-xl border border-slate-200 dark:border-slate-700 p-4 ${bg} dark:bg-slate-800`}>
+    <div className={`rounded-xl border border-[var(--k-border-subtle)] dark:border-slate-700 p-4 ${bg} dark:bg-slate-800`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon className={`w-4 h-4 ${color}`} />
         <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</span>
@@ -491,7 +491,7 @@ function CategoryPill({
       onClick={onClick}
       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
         active
-          ? 'bg-indigo-600 text-white'
+          ? 'bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white'
           : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
       }`}
     >
@@ -513,7 +513,7 @@ function CronJobRow({
   const StatusIcon = config.icon;
 
   return (
-    <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+    <tr className="border-b border-slate-100 dark:border-slate-700 hover:bg-white/5 dark:hover:bg-slate-700/30 transition-colors">
       {/* Status badge */}
       <td className="px-4 py-3">
         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.color} ${config.border} border`}>

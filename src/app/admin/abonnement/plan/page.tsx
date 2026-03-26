@@ -101,7 +101,7 @@ export default function ChangePlanPage() {
               className={`relative rounded-2xl border-2 p-6 transition-all ${
                 isCurrent
                   ? 'border-blue-600 bg-blue-50/50 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  : 'border-gray-200 bg-[var(--k-glass-thin)] hover:border-gray-300'
               }`}
             >
               {isPro && !isCurrent && (

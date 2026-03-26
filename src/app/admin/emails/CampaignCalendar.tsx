@@ -151,7 +151,7 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
   const weekDays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200">
+    <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
       <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100" aria-label="Previous month"><ChevronLeft className="w-5 h-5" /></button>
@@ -166,7 +166,7 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Envoye</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> Flow actif</span>
           </div>
-          <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700">
             <Plus className="w-4 h-4" /> Evenement
           </button>
         </div>
@@ -174,14 +174,14 @@ export default function CampaignCalendar({ onCampaignClick }: CampaignCalendarPr
 
       <div className="grid grid-cols-7">
         {weekDays.map(d => (
-          <div key={d} className="px-2 py-2 text-center text-xs font-semibold text-slate-500 bg-slate-50 border-b border-slate-100">{d}</div>
+          <div key={d} className="px-2 py-2 text-center text-xs font-semibold text-slate-500 bg-white/5 border-b border-slate-100">{d}</div>
         ))}
         {Array.from({ length: firstDayOfWeek }).map((_, i) => (
           <div key={`empty-${i}`} className="min-h-[100px] border-b border-e border-slate-100 bg-slate-50/50" />
         ))}
         {days.map(({ day, events: dayEvents, isToday }) => (
           <div key={day} className={`min-h-[100px] border-b border-e border-slate-100 p-1.5 ${isToday ? 'bg-indigo-50/50' : ''}`}>
-            <div className={`text-sm mb-1 ${isToday ? 'w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold' : 'text-slate-600 ps-1'}`}>
+            <div className={`text-sm mb-1 ${isToday ? 'w-7 h-7 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-full flex items-center justify-center font-bold' : 'text-slate-600 ps-1'}`}>
               {day}
             </div>
             <div className="space-y-1">

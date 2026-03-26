@@ -570,7 +570,7 @@ export default function RapportsPersonnalisesPage() {
         <button
           onClick={() => setActiveTab('saved')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'saved' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'saved' ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -579,7 +579,7 @@ export default function RapportsPersonnalisesPage() {
         <button
           onClick={() => setActiveTab('builder')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'builder' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'builder' ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <Settings2 className="w-4 h-4" />
@@ -588,7 +588,7 @@ export default function RapportsPersonnalisesPage() {
         <button
           onClick={() => setActiveTab('templates')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'templates' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'templates' ? 'bg-white/20 text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           <LayoutTemplate className="w-4 h-4" />
@@ -784,7 +784,7 @@ export default function RapportsPersonnalisesPage() {
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors border ${
                       selectedColumns.includes(col.key)
                         ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                        : 'bg-[var(--k-glass-thin)] border-gray-200 text-gray-500 hover:border-gray-300'
                     }`}
                   >
                     {selectedColumns.includes(col.key) ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -880,7 +880,7 @@ export default function RapportsPersonnalisesPage() {
                       <span className="text-sm flex-1">{ob.field}</span>
                       <button
                         onClick={() => toggleOrderDirection(ob.field)}
-                        className="text-xs px-2 py-0.5 rounded bg-white border border-gray-200"
+                        className="text-xs px-2 py-0.5 rounded bg-[var(--k-glass-thin)] border border-gray-200"
                       >
                         {ob.direction === 'asc' ? 'ASC' : 'DESC'}
                       </button>
@@ -1001,7 +1001,7 @@ export default function RapportsPersonnalisesPage() {
           </SectionCard>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 sticky bottom-0 bg-white py-4 border-t border-gray-200 -mx-6 px-6">
+          <div className="flex items-center gap-3 sticky bottom-0 bg-[var(--k-glass-thin)] py-4 border-t border-gray-200 -mx-6 px-6">
             <Button onClick={handlePreview} disabled={running}>
               {running ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Play className="w-4 h-4 me-1" />}
               {t('admin.customReports.preview')}
@@ -1142,7 +1142,7 @@ export default function RapportsPersonnalisesPage() {
                 </thead>
                 <tbody>
                   {result.rows.slice(0, 500).map((row, idx) => (
-                    <tr key={`row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                    <tr key={`row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-[var(--k-glass-thin)]' : 'bg-gray-50/50'}>
                       {result.columns.map((col) => (
                         <td
                           key={col.key}
@@ -1203,7 +1203,7 @@ export default function RapportsPersonnalisesPage() {
                     </thead>
                     <tbody>
                       {result.comparison.rows.slice(0, 500).map((row, idx) => (
-                        <tr key={`cmp-row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'}>
+                        <tr key={`cmp-row-${idx}-${JSON.stringify(row).slice(0, 20)}`} className={idx % 2 === 0 ? 'bg-[var(--k-glass-thin)]' : 'bg-amber-50/30'}>
                           {result.columns.map((col) => (
                             <td
                               key={col.key}

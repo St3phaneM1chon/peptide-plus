@@ -149,7 +149,7 @@ function CreateFormModal({ onClose, onCreated }: CreateFormModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-form-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-form-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 id="create-form-modal-title" className="text-lg font-semibold text-gray-900">
             {t('admin.crm.qa.createForm')}
@@ -346,7 +346,7 @@ function ScoreCallModal({ forms, onClose, onScored }: ScoreCallModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="score-call-modal-title">
+      <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="score-call-modal-title">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 id="score-call-modal-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
@@ -631,7 +631,7 @@ export default function QAClient() {
           onClick={() => setTab('forms')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             tab === 'forms'
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white/20 text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -644,7 +644,7 @@ export default function QAClient() {
           onClick={() => setTab('scores')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             tab === 'scores'
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white/20 text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -657,7 +657,7 @@ export default function QAClient() {
           onClick={() => setTab('calibration')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             tab === 'calibration'
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white/20 text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -676,7 +676,7 @@ export default function QAClient() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
           ) : forms.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <ClipboardCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.qa.noForms')}
@@ -697,7 +697,7 @@ export default function QAClient() {
               {forms.map((form) => (
                 <div
                   key={form.id}
-                  className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+                  className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold text-gray-900">{form.name}</h3>
@@ -746,7 +746,7 @@ export default function QAClient() {
               <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </button>
             {showFilters && (
-              <div className="mt-2 bg-white rounded-lg border border-gray-200 p-4 flex gap-4">
+              <div className="mt-2 bg-[var(--k-glass-thin)] rounded-lg border border-gray-200 p-4 flex gap-4">
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     {t('admin.crm.qa.filterByForm')}
@@ -783,7 +783,7 @@ export default function QAClient() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
             </div>
           ) : scores.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <BarChart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.qa.noScores')}
@@ -797,7 +797,7 @@ export default function QAClient() {
               {scores.map((score) => (
                 <div
                   key={score.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow"
+                  className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -893,7 +893,7 @@ export default function QAClient() {
           </div>
 
           {calibrationSessions.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-12 text-center">
               <Scale className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-700">
                 {t('admin.crm.qa.noCalibrations')}
@@ -912,7 +912,7 @@ export default function QAClient() {
                 }));
 
                 return (
-                  <div key={session.id} className="bg-white rounded-xl border border-gray-200 p-5">
+                  <div key={session.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-gray-200 p-5">
                     {/* Session header */}
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -1014,7 +1014,7 @@ export default function QAClient() {
           {/* Calibration Setup Modal */}
           {showCalibrationSetup && (
             <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-md">
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <Scale className="h-5 w-5 text-purple-600" />

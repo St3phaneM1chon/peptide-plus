@@ -168,7 +168,7 @@ export default function TicketsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)] flex items-center gap-2">
             <Ticket className="w-7 h-7 text-indigo-600" />
             {t('admin.tickets.title')}
           </h1>
@@ -178,7 +178,7 @@ export default function TicketsPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           {t('admin.tickets.newTicket')}
@@ -194,13 +194,13 @@ export default function TicketsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={t('admin.tickets.searchPlaceholder')}
-            className="w-full ps-10 pe-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full ps-10 pe-4 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
         >
           <option value="">{t('admin.tickets.allStatuses')}</option>
           {STATUSES.map((s) => (
@@ -210,7 +210,7 @@ export default function TicketsPage() {
         <select
           value={priorityFilter}
           onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
         >
           <option value="">{t('admin.tickets.allPriorities')}</option>
           {PRIORITIES.map((p) => (
@@ -220,7 +220,7 @@ export default function TicketsPage() {
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+          className="px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
         >
           <option value="">{t('admin.tickets.allCategories')}</option>
           {CATEGORIES.map((c) => (
@@ -238,7 +238,7 @@ export default function TicketsPage() {
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-slate-400">{t('common.loading')}</div>
         ) : tickets.length === 0 ? (
@@ -248,7 +248,7 @@ export default function TicketsPage() {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-white/5 border-b border-[var(--k-border-subtle)]">
               <tr>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">#</th>
                 <th className="px-4 py-3 text-start font-medium text-slate-600">{t('admin.tickets.subject')}</th>
@@ -263,10 +263,10 @@ export default function TicketsPage() {
               {tickets.map((ticket) => {
                 const StatusIcon = STATUS_ICONS[ticket.status] || Clock;
                 return (
-                  <tr key={ticket.id} className="hover:bg-slate-50 cursor-pointer transition-colors">
+                  <tr key={ticket.id} className="hover:bg-white/5 cursor-pointer transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{ticket.number}</td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">{ticket.subject}</div>
+                      <div className="font-medium text-[var(--k-text-primary)]">{ticket.subject}</div>
                       {ticket._count.comments > 0 && (
                         <span className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                           <MessageSquare className="w-3 h-3" /> {ticket._count.comments}
@@ -286,7 +286,7 @@ export default function TicketsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600 text-xs">{ticket.category.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-3">
-                      <div className="text-slate-900 text-xs">{ticket.contactName || '-'}</div>
+                      <div className="text-[var(--k-text-primary)] text-xs">{ticket.contactName || '-'}</div>
                       {ticket.contactEmail && (
                         <div className="text-slate-400 text-xs">{ticket.contactEmail}</div>
                       )}
@@ -301,7 +301,7 @@ export default function TicketsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--k-border-subtle)] bg-white/5">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
@@ -324,9 +324,9 @@ export default function TicketsPage() {
       {/* Create Ticket Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6" role="dialog" aria-modal="true" aria-labelledby="create-ticket-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6" role="dialog" aria-modal="true" aria-labelledby="create-ticket-modal-title">
             <div className="flex items-center justify-between mb-6">
-              <h2 id="create-ticket-modal-title" className="text-lg font-bold text-slate-900">
+              <h2 id="create-ticket-modal-title" className="text-lg font-bold text-[var(--k-text-primary)]">
                 {t('admin.tickets.createTicket')}
               </h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1 hover:bg-slate-100 rounded">
@@ -343,7 +343,7 @@ export default function TicketsPage() {
                   type="text"
                   value={formSubject}
                   onChange={(e) => setFormSubject(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -355,7 +355,7 @@ export default function TicketsPage() {
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -367,7 +367,7 @@ export default function TicketsPage() {
                   <select
                     value={formPriority}
                     onChange={(e) => setFormPriority(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   >
                     {PRIORITIES.map((p) => (
                       <option key={p} value={p}>{p}</option>
@@ -381,7 +381,7 @@ export default function TicketsPage() {
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
@@ -399,7 +399,7 @@ export default function TicketsPage() {
                     type="text"
                     value={formContactName}
                     onChange={(e) => setFormContactName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   />
                 </div>
                 <div>
@@ -410,7 +410,7 @@ export default function TicketsPage() {
                     type="email"
                     value={formContactEmail}
                     onChange={(e) => setFormContactEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   />
                 </div>
               </div>
@@ -423,13 +423,13 @@ export default function TicketsPage() {
                   type="text"
                   value={formTags}
                   onChange={(e) => setFormTags(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-[var(--k-border-subtle)] rounded-lg text-sm"
                   placeholder="billing, urgent, vip"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[var(--k-border-subtle)]">
               <button
                 onClick={() => { setShowModal(false); resetForm(); }}
                 className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -439,7 +439,7 @@ export default function TicketsPage() {
               <button
                 onClick={handleCreate}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? (t('common.saving')) : (t('admin.tickets.create'))}

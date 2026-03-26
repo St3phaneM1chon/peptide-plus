@@ -194,7 +194,7 @@ export default function ConsentTemplatesPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white border rounded-lg p-6 space-y-4">
+        <div className="bg-[var(--k-glass-thin)] border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold">{editingId ? t('admin.consentTemplates.edit') : t('admin.consentTemplates.create')}</h2>
             <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
@@ -323,7 +323,7 @@ export default function ConsentTemplatesPage() {
       )}
 
       {/* Templates List */}
-      <div className="bg-white border rounded-lg overflow-hidden">
+      <div className="bg-[var(--k-glass-thin)] border rounded-lg overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary-600" />

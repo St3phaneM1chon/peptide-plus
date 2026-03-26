@@ -116,7 +116,7 @@ export default function TenantDetailPage() {
 
       {/* Info grid */}
       <div className="grid md:grid-cols-2 gap-4 mb-8">
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <h3 className="font-semibold text-gray-900 mb-3">Informations</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-gray-500">Plan</span><span className="font-medium">{tenant.plan}</span></div>
@@ -130,7 +130,7 @@ export default function TenantDetailPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-5">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
           <h3 className="font-semibold text-gray-900 mb-3">Stripe</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-gray-500">Customer ID</span><span className="font-mono text-xs">{tenant.stripeCustomerId || '-'}</span></div>
@@ -140,7 +140,7 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Modules */}
-      <div className="bg-white rounded-xl border p-5 mb-8">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5 mb-8">
         <h3 className="font-semibold text-gray-900 mb-3">Modules actifs ({tenant.modulesEnabled.length})</h3>
         <div className="flex flex-wrap gap-2">
           {tenant.modulesEnabled.map(mod => (
@@ -152,7 +152,7 @@ export default function TenantDetailPage() {
       </div>
 
       {/* Actions */}
-      <div className="bg-white rounded-xl border p-5">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-5">
         <h3 className="font-semibold text-gray-900 mb-3">Actions</h3>
         <div className="flex flex-wrap gap-3">
           <button

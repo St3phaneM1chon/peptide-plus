@@ -121,7 +121,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">{t('admin.emails.campaigns.title')}</h3>
+          <h3 className="text-lg font-semibold text-[var(--k-text-primary)]">{t('admin.emails.campaigns.title')}</h3>
           <p className="text-sm text-slate-500">{campaigns.length} {t('admin.emails.campaigns.campaignCount')}</p>
         </div>
         <button
@@ -134,9 +134,9 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-12 text-center">
           <Megaphone className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-          <h4 className="text-lg font-medium text-slate-900 mb-1">{t('admin.emails.campaigns.noCampaigns')}</h4>
+          <h4 className="text-lg font-medium text-[var(--k-text-primary)] mb-1">{t('admin.emails.campaigns.noCampaigns')}</h4>
           <p className="text-sm text-slate-500 mb-4">{t('admin.emails.campaigns.createFirstCampaign')}</p>
           <button onClick={createCampaign} className="px-4 py-2 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg">
             {t('admin.emails.campaigns.createCampaign')}
@@ -147,11 +147,11 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
           {campaigns.map((campaign) => {
             const cfg = statusConfig[campaign.status] || statusConfig.DRAFT;
             return (
-              <div key={campaign.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div key={campaign.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-slate-900 truncate">{campaign.name}</h4>
+                      <h4 className="font-semibold text-[var(--k-text-primary)] truncate">{campaign.name}</h4>
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${cfg.color}`}>
                         {cfg.label}
                       </span>
@@ -159,7 +159,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
                     <p className="text-sm text-slate-600 truncate">{t('admin.emails.campaigns.subject')}: {campaign.subject}</p>
 
                     {campaign.stats && campaign.status === 'SENT' && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3 p-2 bg-slate-50 rounded-lg">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3 p-2 bg-white/5 rounded-lg">
                         <div className="text-center">
                           <div className="text-sm font-semibold">{campaign.stats.sent || 0}</div>
                           <div className="text-[10px] text-slate-400">{t('admin.emails.campaigns.statsSent')}</div>
@@ -195,7 +195,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
                         >
                           <Send className="h-4 w-4" />
                         </button>
-                        <button onClick={() => onEditCampaign(campaign.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Modifier la campagne">
+                        <button onClick={() => onEditCampaign(campaign.id)} className="p-1.5 rounded text-slate-400 hover:bg-white/5" aria-label="Modifier la campagne">
                           <Edit className="h-4 w-4" />
                         </button>
                         <button onClick={() => setCampaignToDelete(campaign.id)} disabled={deletingId === campaign.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50" aria-label="Supprimer la campagne">
@@ -204,7 +204,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
                       </>
                     )}
                     {campaign.status === 'SENT' && (
-                      <button className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Voir les statistiques">
+                      <button className="p-1.5 rounded text-slate-400 hover:bg-white/5" aria-label="Voir les statistiques">
                         <BarChart3 className="h-4 w-4" />
                       </button>
                     )}

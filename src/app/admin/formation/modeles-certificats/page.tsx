@@ -204,7 +204,7 @@ function CertificateTemplatesPageInner() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse bg-white border border-slate-200 rounded-xl">
+            <div key={i} className="animate-pulse bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl">
               <div className="h-32 bg-slate-100 rounded-t-xl" />
               <div className="p-5 space-y-2">
                 <div className="h-5 bg-slate-100 rounded w-2/3" />
@@ -230,7 +230,7 @@ function CertificateTemplatesPageInner() {
           {templates.map(tmpl => (
             <div
               key={tmpl.id}
-              className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group relative"
+              className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl overflow-hidden hover:shadow-md transition-shadow group relative"
             >
               {/* Preview header */}
               <div className={`h-28 bg-gradient-to-br ${STYLE_GRADIENTS[tmpl.style] ?? STYLE_GRADIENTS.classic} flex items-center justify-center relative`}>
@@ -249,7 +249,7 @@ function CertificateTemplatesPageInner() {
                   {!tmpl.isDefault && (
                     <button
                       onClick={() => handleSetDefault(tmpl.id)}
-                      className="p-1.5 rounded bg-white/80 backdrop-blur-sm hover:bg-white text-slate-400 hover:text-indigo-600 transition-colors"
+                      className="p-1.5 rounded bg-white/80 backdrop-blur-sm hover:bg-[var(--k-glass-thin)] text-slate-400 hover:text-indigo-600 transition-colors"
                       title={t('admin.lms.certTemplates.setDefault')}
                       aria-label={t('admin.lms.certTemplates.setDefault')}
                     >
@@ -258,7 +258,7 @@ function CertificateTemplatesPageInner() {
                   )}
                   <button
                     onClick={() => openEdit(tmpl)}
-                    className="p-1.5 rounded bg-white/80 backdrop-blur-sm hover:bg-white text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-1.5 rounded bg-white/80 backdrop-blur-sm hover:bg-[var(--k-glass-thin)] text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={t('admin.lms.certTemplates.editTemplate')}
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -276,7 +276,7 @@ function CertificateTemplatesPageInner() {
               {/* Content */}
               <div className="p-5 space-y-3">
                 <div>
-                  <h3 className="font-medium text-slate-900 text-sm">{tmpl.name}</h3>
+                  <h3 className="font-medium text-[var(--k-text-primary)] text-sm">{tmpl.name}</h3>
                   {tmpl.description && (
                     <p className="text-xs text-slate-500 mt-1 line-clamp-2">{tmpl.description}</p>
                   )}
@@ -287,7 +287,7 @@ function CertificateTemplatesPageInner() {
                     {styleOptions.find(s => s.value === tmpl.style)?.label ?? tmpl.style}
                   </span>
                   {tmpl.validForDays > 0 && (
-                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-50 text-slate-600">
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-white/5 text-slate-600">
                       {tmpl.validForDays} {t('admin.lms.certTemplates.daysValidity')}
                     </span>
                   )}
@@ -356,7 +356,7 @@ function CertificateTemplatesPageInner() {
               value={form.style}
               onChange={(e) => setForm(prev => ({ ...prev, style: e.target.value }))}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
-                bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               {styleOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>

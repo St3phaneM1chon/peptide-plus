@@ -177,7 +177,7 @@ function BadgesPageInner() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="animate-pulse bg-white border border-slate-200 rounded-xl p-5">
+            <div key={i} className="animate-pulse bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-5">
               <div className="h-12 w-12 bg-slate-100 rounded-xl mb-3" />
               <div className="h-4 bg-slate-100 rounded w-2/3 mb-2" />
               <div className="h-3 bg-slate-100 rounded w-full" />
@@ -200,7 +200,7 @@ function BadgesPageInner() {
           {badges.map(badge => (
             <div
               key={badge.id}
-              className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow group relative"
+              className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-5 hover:shadow-md transition-shadow group relative"
             >
               {/* Actions */}
               <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -226,7 +226,7 @@ function BadgesPageInner() {
               </div>
 
               {/* Name */}
-              <h3 className="font-medium text-slate-900 text-sm">{badge.name}</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)] text-sm">{badge.name}</h3>
 
               {/* Description */}
               {badge.description && (
@@ -274,7 +274,7 @@ function BadgesPageInner() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Icon picker */}
           <FormField label={t('admin.lms.badges.icon')} htmlFor="badgeIcon">
-            <div className="grid grid-cols-8 gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-8 gap-2 p-3 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
               {BADGE_ICONS.map(icon => (
                 <button
                   key={icon}
@@ -284,7 +284,7 @@ function BadgesPageInner() {
                     w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all
                     ${form.icon === icon
                       ? 'bg-indigo-100 ring-2 ring-indigo-500 scale-110'
-                      : 'hover:bg-white hover:shadow-sm'
+                      : 'hover:bg-[var(--k-glass-thin)] hover:shadow-sm'
                     }
                   `}
                   aria-label={t('admin.lms.badges.selectIcon')}
@@ -322,7 +322,7 @@ function BadgesPageInner() {
               value={form.criteriaType}
               onChange={(e) => setForm(prev => ({ ...prev, criteriaType: e.target.value }))}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
-                bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               {criteriaTypeOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>

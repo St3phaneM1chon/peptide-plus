@@ -81,7 +81,7 @@ export default function ExtensionsClient({ extensions: initial }: { extensions: 
       </div>
 
       {showAdd && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+        <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <input
               placeholder="Extension (1001)"
@@ -124,7 +124,7 @@ export default function ExtensionsClient({ extensions: initial }: { extensions: 
 
       <div className="space-y-2">
         {extensions.map((ext) => (
-          <div key={ext.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+          <div key={ext.id} className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Headphones className="w-5 h-5 text-indigo-600" />
               <div>
@@ -146,7 +146,7 @@ export default function ExtensionsClient({ extensions: initial }: { extensions: 
         ))}
 
         {extensions.length === 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             <Headphones className="w-8 h-8 mx-auto mb-2 text-gray-300" />
             No extensions configured
           </div>

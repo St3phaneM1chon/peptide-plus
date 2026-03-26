@@ -134,10 +134,10 @@ export default function AnalyticsPage() {
       />
 
       {/* Real-time Revenue Tracker */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-center gap-2 mb-4">
           <DollarSign className="w-5 h-5 text-emerald-600" />
-          <h3 className="font-semibold text-slate-900">{t('admin.analytics.realtimeRevenue')}</h3>
+          <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.analytics.realtimeRevenue')}</h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
@@ -168,10 +168,10 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Active Users — Note: real active users requires analytics integration */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-indigo-600" />
-          <h3 className="font-semibold text-slate-900">{t('admin.analytics.activeUsers')}</h3>
+          <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.analytics.activeUsers')}</h3>
           <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
             {t('admin.analytics.requiresAnalytics')}
           </span>
@@ -182,11 +182,11 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Conversion Funnel */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-purple-600" />
-            <h3 className="font-semibold text-slate-900">{t('admin.analytics.conversionFunnel')}</h3>
+            <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.analytics.conversionFunnel')}</h3>
             {funnel.visitors === 0 && (
               <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-medium">
                 {t('admin.analytics.estimatedData')}
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-slate-700">{step.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-900">{step.value.toLocaleString(locale)}</span>
+                      <span className="text-sm font-bold text-[var(--k-text-primary)]">{step.value.toLocaleString(locale)}</span>
                       {dropRate && (
                         <span className="text-[10px] text-red-500 font-medium">-{dropRate}%</span>
                       )}
@@ -233,10 +233,10 @@ export default function AnalyticsPage() {
       </div>
 
       {/* RFM Distribution */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <div className="flex items-center gap-2 mb-1">
           <BarChart3 className="w-5 h-5 text-indigo-600" />
-          <h3 className="font-semibold text-slate-900">{t('admin.analytics.rfmDistribution')}</h3>
+          <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.analytics.rfmDistribution')}</h3>
         </div>
         <p className="text-sm text-slate-500 mb-6">{t('admin.analytics.rfmDistributionSubtitle')}</p>
         <div className="space-y-2.5">
@@ -250,7 +250,7 @@ export default function AnalyticsPage() {
                   <span className="text-xs font-medium text-slate-700">{info.nameFr}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="h-6 bg-slate-50 rounded overflow-hidden relative">
+                  <div className="h-6 bg-white/5 rounded overflow-hidden relative">
                     <div
                       className="h-full rounded transition-all duration-700"
                       style={{ width: `${Math.max(widthPercent, 3)}%`, backgroundColor: info.color }}

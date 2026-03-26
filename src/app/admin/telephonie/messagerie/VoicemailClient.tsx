@@ -128,7 +128,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
               onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                 filter === f
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-white/20 text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -163,7 +163,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
           return (
             <div
               key={vm.id}
-              className={`bg-white border rounded-xl overflow-hidden transition-shadow ${
+              className={`bg-[var(--k-glass-thin)] border rounded-xl overflow-hidden transition-shadow ${
                 vm.isRead ? 'border-gray-200' : 'border-indigo-200 bg-indigo-50/30 shadow-sm'
               }`}
             >
@@ -287,7 +287,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
                           {t('voip.voicemail.transcriptionLabel')}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
+                      <p className="text-sm text-gray-700 bg-[var(--k-glass-thin)] rounded-lg p-3 border border-gray-200">
                         {vm.transcription}
                       </p>
                     </div>
@@ -348,7 +348,7 @@ export default function VoicemailClient({ voicemails: initial }: { voicemails: V
 
         {/* Empty state */}
         {filteredVoicemails.length === 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400">
+          <div className="bg-[var(--k-glass-thin)] border border-gray-200 rounded-xl p-8 text-center text-gray-400">
             <Voicemail className="w-8 h-8 mx-auto mb-2 text-gray-300" />
             {filter !== 'all'
               ? t('voip.voicemail.noResults')

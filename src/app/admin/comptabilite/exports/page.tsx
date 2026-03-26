@@ -237,11 +237,11 @@ export default function ExportsPage() {
             className={`p-4 rounded-xl border transition-all text-start ${
               exportConfig.format === format.id
                 ? `${theme.surfaceLight} ${theme.borderLight} ring-2 ring-violet-200`
-                : 'bg-white border-slate-200 hover:border-slate-300'
+                : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] hover:border-slate-300'
             }`}
           >
             <div className="text-2xl mb-2">{format.icon}</div>
-            <h3 className="font-medium text-slate-900">{format.name}</h3>
+            <h3 className="font-medium text-[var(--k-text-primary)]">{format.name}</h3>
             <p className="text-xs text-slate-500 mt-1">{format.description}</p>
             <span className="inline-block mt-2 px-2 py-0.5 bg-slate-100 rounded text-xs text-slate-600">
               .{format.fileType.toLowerCase()}
@@ -258,14 +258,14 @@ export default function ExportsPage() {
             <h3 className="text-sm font-medium text-slate-700 mb-3">{t('admin.exports.dataToExport')}</h3>
             <div className="space-y-2">
               {dataTypes.map(type => (
-                <label key={type.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100">
+                <label key={type.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-slate-100">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       defaultChecked={type.id === 'entries'}
-                      className="rounded border-slate-300 bg-white text-violet-600"
+                      className="rounded border-slate-300 bg-[var(--k-glass-thin)] text-violet-600"
                     />
-                    <span className="text-slate-900">{type.name}</span>
+                    <span className="text-[var(--k-text-primary)]">{type.name}</span>
                   </div>
                   <span className="text-sm text-slate-500">{type.count} {t('admin.exports.records')}</span>
                 </label>
@@ -284,7 +284,7 @@ export default function ExportsPage() {
                     type="date"
                     value={exportConfig.dateFrom}
                     onChange={e => setExportConfig(prev => ({ ...prev, dateFrom: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                   />
                 </div>
                 <div>
@@ -293,7 +293,7 @@ export default function ExportsPage() {
                     type="date"
                     value={exportConfig.dateTo}
                     onChange={e => setExportConfig(prev => ({ ...prev, dateTo: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                   />
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function ExportsPage() {
                     type="checkbox"
                     checked={exportConfig.includePosted}
                     onChange={e => setExportConfig(prev => ({ ...prev, includePosted: e.target.checked }))}
-                    className="rounded border-slate-300 bg-white text-violet-600"
+                    className="rounded border-slate-300 bg-[var(--k-glass-thin)] text-violet-600"
                   />
                   <span className="text-slate-700">{t('admin.exports.includePosted')}</span>
                 </label>
@@ -316,7 +316,7 @@ export default function ExportsPage() {
                     type="checkbox"
                     checked={exportConfig.includeDraft}
                     onChange={e => setExportConfig(prev => ({ ...prev, includeDraft: e.target.checked }))}
-                    className="rounded border-slate-300 bg-white text-violet-600"
+                    className="rounded border-slate-300 bg-[var(--k-glass-thin)] text-violet-600"
                   />
                   <span className="text-slate-700">{t('admin.exports.includeDrafts')}</span>
                 </label>
@@ -347,7 +347,7 @@ export default function ExportsPage() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-xl">&#128202;</div>
             <div>
-              <h3 className="font-medium text-slate-900">QuickBooks Online</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)]">QuickBooks Online</h3>
               <p className="text-xs text-slate-500">{t('admin.exports.realtimeSync')}</p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function ExportsPage() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
             <div>
-              <h3 className="font-medium text-slate-900">Sage 50</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)]">Sage 50</h3>
               <p className="text-xs text-slate-500">{t('admin.exports.manualExport')}</p>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function ExportsPage() {
       <SectionCard title={t('admin.exports.exportHistory')} theme={theme} noPadding>
         <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.dateCol')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.typeCol')}</th>
@@ -393,14 +393,14 @@ export default function ExportsPage() {
           </thead>
           <tbody className="divide-y divide-slate-200">
             {history.map(job => (
-              <tr key={job.id} className="hover:bg-slate-50">
+              <tr key={job.id} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-slate-600">
                   {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(job.createdAt))}
                 </td>
-                <td className="px-4 py-3 text-slate-900">{job.type}</td>
+                <td className="px-4 py-3 text-[var(--k-text-primary)]">{job.type}</td>
                 <td className="px-4 py-3 text-slate-600">{job.format}</td>
                 <td className="px-4 py-3 text-slate-600">{job.dateRange}</td>
-                <td className="px-4 py-3 text-end text-slate-900">{job.records}</td>
+                <td className="px-4 py-3 text-end text-[var(--k-text-primary)]">{job.records}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-1 rounded text-xs ${
                     job.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
@@ -415,7 +415,7 @@ export default function ExportsPage() {
                     <a
                       href={job.fileUrl}
                       download
-                      className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded inline-block border border-slate-200"
+                      className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded inline-block border border-[var(--k-border-subtle)]"
                     >
                       {t('admin.exports.download')}
                     </a>

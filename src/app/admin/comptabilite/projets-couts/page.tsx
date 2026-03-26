@@ -1294,7 +1294,7 @@ export default function ProjetsCoutsPage() {
       <div className="flex gap-2 border-b pb-2">
         <button
           onClick={() => setActiveTab('projects')}
-          className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'projects' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'projects' ? 'bg-[var(--k-glass-thin)] border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
         >
           <FolderKanban className="h-4 w-4 inline me-1" />
           Projets
@@ -1303,14 +1303,14 @@ export default function ProjetsCoutsPage() {
           <>
             <button
               onClick={() => { setActiveTab('detail'); fetchProjectDetail(selectedProject.id); }}
-              className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'detail' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'detail' ? 'bg-[var(--k-glass-thin)] border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <FileText className="h-4 w-4 inline me-1" />
               Detail: {selectedProject.code}
             </button>
             <button
               onClick={() => { setActiveTab('profitability'); fetchProfitability(selectedProject.id); }}
-              className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'profitability' ? 'bg-white border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 text-sm rounded-t-lg transition ${activeTab === 'profitability' ? 'bg-[var(--k-glass-thin)] border border-b-0 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <BarChart3 className="h-4 w-4 inline me-1" />
               Rentabilite

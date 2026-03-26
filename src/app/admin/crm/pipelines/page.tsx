@@ -52,7 +52,7 @@ export default function PipelinesPage() {
         actions={
           <button
             onClick={() => toast.info(t('admin.crm.pipelineCreateSoon'))}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             {t('admin.crm.pipelineNew')}
@@ -65,7 +65,7 @@ export default function PipelinesPage() {
           <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
         </div>
       ) : pipelines.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
+        <div className="text-center py-20 bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
           <Settings className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 mb-2">{t('admin.crm.pipelineNone')}</p>
           <p className="text-xs text-slate-400">{t('admin.crm.pipelineNoneDesc')}</p>
@@ -73,12 +73,12 @@ export default function PipelinesPage() {
       ) : (
         <div className="space-y-6">
           {pipelines.map(pipeline => (
-            <div key={pipeline.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div key={pipeline.id} className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden">
               {/* Pipeline Header */}
               <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900">{pipeline.name}</h3>
+                    <h3 className="font-semibold text-[var(--k-text-primary)]">{pipeline.name}</h3>
                     {pipeline.isDefault && (
                       <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
                         {t('admin.crm.pipelineDefault')}
@@ -89,7 +89,7 @@ export default function PipelinesPage() {
                     {pipeline._count?.deals || 0} deal(s) · {pipeline.stages.length} etape(s)
                   </p>
                 </div>
-                <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50">
+                <button className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-white/5">
                   <Settings className="w-4 h-4" />
                 </button>
               </div>
@@ -102,7 +102,7 @@ export default function PipelinesPage() {
                     .map(stage => (
                       <div
                         key={stage.id}
-                        className="flex-1 min-w-[140px] rounded-lg border border-slate-200 p-3 bg-slate-50 hover:bg-white transition-colors"
+                        className="flex-1 min-w-[140px] rounded-lg border border-[var(--k-border-subtle)] p-3 bg-white/5 hover:bg-[var(--k-glass-thin)] transition-colors"
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <div

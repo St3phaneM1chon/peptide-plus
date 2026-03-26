@@ -96,7 +96,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : t('common.aria.close')}
-        className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}
+        className={`relative bg-[var(--k-bg-surface-overlay,#1a1a2e)] border border-[var(--k-border-subtle)] backdrop-blur-xl rounded-lg shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}
       >
         {title && (
           <div className="flex items-center justify-between p-4 border-b">

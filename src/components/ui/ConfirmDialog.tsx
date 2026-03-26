@@ -97,7 +97,7 @@ export function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 animate-fade-in"
+        className="bg-[var(--k-bg-surface-overlay,#1a1a2e)] border border-[var(--k-border-subtle)] backdrop-blur-xl rounded-xl shadow-xl p-6 max-w-md w-full mx-4 animate-fade-in"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

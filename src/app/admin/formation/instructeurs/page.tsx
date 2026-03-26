@@ -179,7 +179,7 @@ function InstructorsPageInner() {
       header: t('admin.lms.instructors.name'),
       render: (row) => (
         <div>
-          <span className="font-medium text-slate-900">{row.name}</span>
+          <span className="font-medium text-[var(--k-text-primary)]">{row.name}</span>
           {row.title && (
             <p className="text-xs text-slate-500 mt-0.5">{row.title}</p>
           )}

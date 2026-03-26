@@ -576,7 +576,7 @@ export default function AmbassadeursPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.ambassadors.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.ambassadors.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.ambassadors.subtitle')}</p>
           </div>
           <div className="flex gap-3">
@@ -618,8 +618,8 @@ export default function AmbassadeursPage() {
         </div>
 
         {/* Tiers Info */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-          <h3 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionLevels')}</h3>
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 mb-4">
+          <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.ambassadors.commissionLevels')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {Object.entries(tierConfig).map(([tier, config]) => (
               <div key={tier} className={`p-3 rounded-lg ${config.color}`}>
@@ -633,16 +633,16 @@ export default function AmbassadeursPage() {
         </div>
 
         {/* Attribution des revenus par ambassadeur */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <DollarSign className="h-5 w-5 text-emerald-600" />
-            <h3 className="font-semibold text-slate-900">Attribution des revenus par code</h3>
+            <h3 className="font-semibold text-[var(--k-text-primary)]">Attribution des revenus par code</h3>
           </div>
           {ambassadors.filter(a => a.status === 'ACTIVE' && a.totalSales > 0).length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
+                  <tr className="border-b border-[var(--k-border-subtle)]">
                     <th className="text-start py-2 px-3 font-medium text-slate-600">Ambassadeur</th>
                     <th className="text-start py-2 px-3 font-medium text-slate-600">Code</th>
                     <th className="text-end py-2 px-3 font-medium text-slate-600">Ventes générées</th>
@@ -662,12 +662,12 @@ export default function AmbassadeursPage() {
                         ? ((amb.totalSales / stats.totalSales) * 100).toFixed(1)
                         : '0.0';
                       return (
-                        <tr key={amb.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-2 px-3 text-slate-900 font-medium">{amb.userName}</td>
+                        <tr key={amb.id} className="border-b border-slate-100 hover:bg-white/5">
+                          <td className="py-2 px-3 text-[var(--k-text-primary)] font-medium">{amb.userName}</td>
                           <td className="py-2 px-3">
                             <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-indigo-700">{amb.referralCode}</code>
                           </td>
-                          <td className="py-2 px-3 text-end text-slate-900">{formatCurrency(amb.totalSales)}</td>
+                          <td className="py-2 px-3 text-end text-[var(--k-text-primary)]">{formatCurrency(amb.totalSales)}</td>
                           <td className="py-2 px-3 text-end text-red-600">{formatCurrency(amb.totalEarnings)}</td>
                           <td className="py-2 px-3 text-end font-medium text-emerald-700">{formatCurrency(netRevenue)}</td>
                           <td className="py-2 px-3 text-end">
@@ -695,10 +695,10 @@ export default function AmbassadeursPage() {
         {/* ROI par ambassadeur et Métriques de campagne */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           {/* Calcul ROI par ambassadeur */}
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <ArrowUpRight className="h-5 w-5 text-indigo-600" />
-              <h3 className="font-semibold text-slate-900">ROI par ambassadeur</h3>
+              <h3 className="font-semibold text-[var(--k-text-primary)]">ROI par ambassadeur</h3>
             </div>
             <div className="space-y-2">
               {ambassadors
@@ -717,9 +717,9 @@ export default function AmbassadeursPage() {
                     ? amb.totalEarnings / amb.totalReferrals
                     : 0;
                   return (
-                    <div key={amb.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={amb.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{amb.userName}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)] truncate">{amb.userName}</p>
                         <p className="text-xs text-slate-500">
                           {amb.totalReferrals} référence{amb.totalReferrals > 1 ? 's' : ''} | Coût/réf: {formatCurrency(costPerReferral)}
                         </p>
@@ -738,7 +738,7 @@ export default function AmbassadeursPage() {
               )}
             </div>
             {stats.totalCommissions > 0 && (
-              <div className="mt-3 pt-3 border-t border-slate-200">
+              <div className="mt-3 pt-3 border-t border-[var(--k-border-subtle)]">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">ROI global du programme</span>
                   <span className="font-bold text-emerald-700">
@@ -750,10 +750,10 @@ export default function AmbassadeursPage() {
           </div>
 
           {/* Métriques de suivi des campagnes */}
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="h-5 w-5 text-violet-600" />
-              <h3 className="font-semibold text-slate-900">Métriques des campagnes</h3>
+              <h3 className="font-semibold text-[var(--k-text-primary)]">Métriques des campagnes</h3>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -788,7 +788,7 @@ export default function AmbassadeursPage() {
                   <p className="text-xs text-amber-600 mt-0.5">Valeur moy. / référence</p>
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-3">
+              <div className="bg-white/5 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-slate-700 mb-2">Performance par palier</h4>
                 {Object.entries(tierConfig).map(([tier, config]) => {
                   const tierAmbassadors = ambassadors.filter(a => a.tier === tier && a.status === 'ACTIVE');
@@ -799,7 +799,7 @@ export default function AmbassadeursPage() {
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${config.color}`}>{tier}</span>
                         <span className="text-xs text-slate-600">{tierAmbassadors.length} ambassadeur{tierAmbassadors.length > 1 ? 's' : ''}</span>
                       </div>
-                      <span className="text-xs font-medium text-slate-900">{formatCurrency(tierSales)}</span>
+                      <span className="text-xs font-medium text-[var(--k-text-primary)]">{formatCurrency(tierSales)}</span>
                     </div>
                   );
                 })}
@@ -915,27 +915,27 @@ export default function AmbassadeursPage() {
 
                   {/* Key stats grid */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.referralCode')}</p>
                       <code className="font-mono font-bold text-lg text-indigo-600">{selectedAmbassador.referralCode}</code>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.commissionLabel')}</p>
                       <p className="font-bold text-lg">{selectedAmbassador.commissionRate}%</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.referralsLabel')}</p>
                       <p className="font-bold text-lg">{selectedAmbassador.totalReferrals}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t('admin.ambassadors.generatedSalesLabel')}</p>
                       <p className="font-bold text-lg">{formatCurrency(selectedAmbassador.totalSales)}</p>
                     </div>
                   </div>
 
                   {/* Earnings */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.totalEarningsLabel')}</h4>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h4 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.ambassadors.totalEarningsLabel')}</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-slate-500">{t('admin.ambassadors.totalEarningsLabel')}</p>
@@ -964,8 +964,8 @@ export default function AmbassadeursPage() {
                   </div>
 
                   {/* Tier info */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-2">{t('admin.ambassadors.tierLabel')}</h4>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h4 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.ambassadors.tierLabel')}</h4>
                     <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${tierConfig[selectedAmbassador.tier].color}`}>
                       {selectedAmbassador.tier} ({selectedAmbassador.commissionRate}%)
                     </div>
@@ -975,8 +975,8 @@ export default function AmbassadeursPage() {
                   </div>
 
                   {/* FIX: F-072 - Commission history */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionHistory')}</h4>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h4 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.ambassadors.commissionHistory')}</h4>
                     {loadingHistory ? (
                       <div className="flex justify-center py-4">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-500" />
@@ -986,9 +986,9 @@ export default function AmbassadeursPage() {
                     ) : (
                       <div className="space-y-2">
                         {commissionHistory.map((c) => (
-                          <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-white rounded border border-slate-200">
+                          <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-[var(--k-glass-thin)] rounded border border-[var(--k-border-subtle)]">
                             <div>
-                              <p className="text-sm font-medium text-slate-900">{formatCurrency(c.commissionAmount)}</p>
+                              <p className="text-sm font-medium text-[var(--k-text-primary)]">{formatCurrency(c.commissionAmount)}</p>
                               <p className="text-xs text-slate-500">
                                 {c.orderId ? `Order: ${c.orderId.slice(0, 8)}...` : 'Manual'} - {new Date(c.createdAt).toLocaleDateString(locale)}
                               </p>
@@ -1035,14 +1035,14 @@ export default function AmbassadeursPage() {
           {pendingAmbassadors.length === 0 ? (
             <div className="text-center py-8">
               <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-900">{t('admin.ambassadors.noApplications')}</p>
+              <p className="text-sm font-medium text-[var(--k-text-primary)]">{t('admin.ambassadors.noApplications')}</p>
               <p className="text-sm text-slate-500 mt-1">{t('admin.ambassadors.noApplicationsDesc')}</p>
             </div>
           ) : (
             pendingAmbassadors.map((amb) => (
-              <div key={amb.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div key={amb.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-[var(--k-border-subtle)]">
                 <div>
-                  <p className="font-medium text-slate-900">{amb.userName}</p>
+                  <p className="font-medium text-[var(--k-text-primary)]">{amb.userName}</p>
                   {/* FIX: F-063 - Show placeholder when ambassador email is empty */}
                   <p className="text-sm text-slate-500">{amb.userEmail || (t('admin.ambassadors.noEmail'))}</p>
                   <p className="text-xs text-slate-400 mt-1">
@@ -1190,9 +1190,9 @@ export default function AmbassadeursPage() {
       >
         <div className="space-y-4">
           {selectedAmbassador && (
-            <div className="bg-slate-50 rounded-lg p-3">
+            <div className="bg-white/5 rounded-lg p-3">
               <p className="text-sm text-slate-500">{t('admin.ambassadors.currentRate')}</p>
-              <p className="text-2xl font-bold text-slate-900">{selectedAmbassador.commissionRate}%</p>
+              <p className="text-2xl font-bold text-[var(--k-text-primary)]">{selectedAmbassador.commissionRate}%</p>
             </div>
           )}
           <FormField label={t('admin.ambassadors.newRate')}>

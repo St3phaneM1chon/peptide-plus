@@ -494,9 +494,9 @@ export default function BannieresPage() {
       </div>
 
       {/* Slides List */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="font-semibold text-slate-900">{t('admin.banners.slidesCount', { count: slides.length })}</h2>
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)]">
+        <div className="p-4 border-b border-[var(--k-border-subtle)]">
+          <h2 className="font-semibold text-[var(--k-text-primary)]">{t('admin.banners.slidesCount', { count: slides.length })}</h2>
         </div>
 
         {slides.length > 0 ? (
@@ -542,7 +542,7 @@ export default function BannieresPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 truncate">{slide.title}</p>
+                  <p className="font-medium text-[var(--k-text-primary)] truncate">{slide.title}</p>
                   <p className="text-sm text-slate-500 truncate">slug: {slide.slug}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
                     <span>{t('admin.banners.translationCount', { count: slide.translations.length })}</span>
@@ -631,7 +631,7 @@ export default function BannieresPage() {
         footer={modalFooter}
       >
         {/* Tabs - F90 FIX: Separated main tabs from locale tabs with scroll indicator */}
-        <div className="border-b border-slate-200 -mx-5 px-5 -mt-5 mb-5">
+        <div className="border-b border-[var(--k-border-subtle)] -mx-5 px-5 -mt-5 mb-5">
           <div className="flex gap-1">
             <button onClick={() => setActiveTab('general')} className={tabCls('general')}>
               {t('admin.banners.tabGeneral')}
@@ -746,7 +746,7 @@ export default function BannieresPage() {
               <select
                 value={form.mediaType}
                 onChange={(e) => setForm({ ...form, mediaType: e.target.value })}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="IMAGE">{t('admin.banners.imageOption')}</option>
                 <option value="VIDEO">{t('admin.banners.videoOption')}</option>
@@ -797,7 +797,7 @@ export default function BannieresPage() {
         {activeTab === 'cta' && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.primaryCta')}</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)] mb-3">{t('admin.banners.primaryCta')}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField label={t('admin.banners.ctaText')}>
                   <Input
@@ -817,7 +817,7 @@ export default function BannieresPage() {
                   <select
                     value={form.ctaStyle}
                     onChange={(e) => setForm({ ...form, ctaStyle: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>
@@ -827,7 +827,7 @@ export default function BannieresPage() {
               </div>
             </div>
             <div>
-              <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.secondaryCta')}</h3>
+              <h3 className="font-medium text-[var(--k-text-primary)] mb-3">{t('admin.banners.secondaryCta')}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField label={t('admin.banners.ctaText')}>
                   <Input
@@ -845,7 +845,7 @@ export default function BannieresPage() {
                   <select
                     value={form.cta2Style}
                     onChange={(e) => setForm({ ...form, cta2Style: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="primary">{t('admin.banners.stylePrimary')}</option>
                     <option value="secondary">{t('admin.banners.styleSecondary')}</option>
@@ -897,7 +897,7 @@ export default function BannieresPage() {
           const tr = translations[loc] || { locale: loc, title: '' };
           return (
             <div key={loc} className="space-y-4">
-              <h3 className="font-medium text-slate-900">
+              <h3 className="font-medium text-[var(--k-text-primary)]">
                 {t('admin.banners.translationLabel', { language: LOCALE_LABELS[loc] || loc, code: loc.toUpperCase() })}
               </h3>
               <FormField label={t('admin.banners.trBadge')}>

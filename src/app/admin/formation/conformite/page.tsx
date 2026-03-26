@@ -65,7 +65,7 @@ export default function CompliancePage() {
     {
       key: 'userId',
       header: t('admin.lms.studentName'),
-      render: (row) => <span className="font-medium text-slate-900">{row.userId.slice(0, 12)}...</span>,
+      render: (row) => <span className="font-medium text-[var(--k-text-primary)]">{row.userId.slice(0, 12)}...</span>,
     },
     {
       key: 'course',

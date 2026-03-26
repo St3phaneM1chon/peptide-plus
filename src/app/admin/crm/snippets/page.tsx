@@ -259,7 +259,7 @@ export default function SnippetsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
         </div>
       ) : snippets.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-16 bg-[var(--k-glass-thin)] rounded-xl border border-gray-200">
           <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">
             {t('admin.crm.snippets.empty')}
@@ -273,7 +273,7 @@ export default function SnippetsPage() {
           {snippets.map((snippet) => (
             <div
               key={snippet.id}
-              className={`bg-white rounded-xl border p-4 flex flex-col ${
+              className={`bg-[var(--k-glass-thin)] rounded-xl border p-4 flex flex-col ${
                 !snippet.isActive ? 'opacity-60' : ''
               }`}
             >
@@ -346,7 +346,7 @@ export default function SnippetsPage() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="snippet-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="snippet-modal-title">
             {/* Modal header */}
             <div className="flex items-center justify-between">
               <h2 id="snippet-modal-title" className="text-lg font-semibold text-gray-900">

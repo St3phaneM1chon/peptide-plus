@@ -108,7 +108,7 @@ export default function BrandKitPage() {
               <button
                 onClick={saveBrandKit}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-gradient-to-r from-[#6366f1] to-[#818cf8] text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('common.save')}
@@ -190,7 +190,7 @@ export default function BrandKitPage() {
       )}
 
       {/* Colors */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Palette className="w-5 h-5" /> {t('admin.media.brandKit.colorsSection')}
         </h2>
@@ -201,7 +201,7 @@ export default function BrandKitPage() {
               <div key={color.nameKey} className="group">
                 <button
                   onClick={() => copyToClipboard(color.hex, name)}
-                  className="w-full aspect-square rounded-xl shadow-sm border border-slate-200 hover:ring-2 hover:ring-indigo-400 transition-all relative overflow-hidden"
+                  className="w-full aspect-square rounded-xl shadow-sm border border-[var(--k-border-subtle)] hover:ring-2 hover:ring-indigo-400 transition-all relative overflow-hidden"
                   style={{ backgroundColor: color.hex }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 transition-opacity">
@@ -220,13 +220,13 @@ export default function BrandKitPage() {
       </div>
 
       {/* Typography */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Type className="w-5 h-5" /> {t('admin.media.brandKit.typographySection')}
         </h2>
         <div className="space-y-6">
           {fonts.map(font => (
-            <div key={font.nameKey} className="flex items-start gap-6 p-4 bg-slate-50 rounded-lg">
+            <div key={font.nameKey} className="flex items-start gap-6 p-4 bg-white/5 rounded-lg">
               <div className="w-32 flex-shrink-0">
                 <div className="text-sm font-semibold text-slate-700">{t(`admin.media.brandKit.${font.nameKey}`)}</div>
                 <div className="text-xs text-slate-500">{font.family} {font.weight}</div>
@@ -241,12 +241,12 @@ export default function BrandKitPage() {
       </div>
 
       {/* Logo Guidelines */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] p-6">
         <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Image className="w-5 h-5" aria-hidden="true" /> {t('admin.media.brandKit.logoSection')}
         </h2>
         <div className="grid grid-cols-2 gap-6">
-          <div className="p-8 bg-white border border-slate-200 rounded-xl text-center">
+          <div className="p-8 bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl text-center">
             <div className="text-2xl font-bold text-emerald-600 mb-2">BioCycle Peptides</div>
             <div className="text-xs text-slate-400">{t('admin.media.brandKit.logoLight')}</div>
           </div>

@@ -91,7 +91,7 @@ export default function AnalyticsHubClient({ stats }: { stats: SummaryStats }) {
           <Link
             key={card.href}
             href={card.href}
-            className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
+            className="group bg-[var(--k-glass-thin)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
           >
             <div className="flex items-start justify-between">
               <div className={`p-3 rounded-xl ${card.bg}`}>

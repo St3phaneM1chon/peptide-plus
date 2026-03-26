@@ -95,7 +95,7 @@ export default function CategoriesPage() {
     {
       key: 'name',
       header: t('admin.lms.categoryName'),
-      render: (row) => <span className="font-medium text-slate-900">{row.name}</span>,
+      render: (row) => <span className="font-medium text-[var(--k-text-primary)]">{row.name}</span>,
     },
     {
       key: 'slug',

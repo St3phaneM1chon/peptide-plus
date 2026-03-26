@@ -358,7 +358,7 @@ export default function FournisseursPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.suppliers.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.suppliers.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.suppliers.subtitle')}</p>
             <TutorialLink guideSlug="02-commerce/06-fournisseurs" magazineSlug="Section_02_Commerce" compact />
           </div>
@@ -422,13 +422,13 @@ export default function FournisseursPage() {
                   </div>
 
                   {/* General Info */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.suppliers.generalInfo')}</h3>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.suppliers.generalInfo')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       {selectedSupplier.code && (
                         <div>
                           <p className="text-xs text-slate-500 mb-1">{t('admin.suppliers.code')}</p>
-                          <code className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{selectedSupplier.code}</code>
+                          <code className="text-[var(--k-text-primary)] bg-slate-100 px-2 py-0.5 rounded">{selectedSupplier.code}</code>
                         </div>
                       )}
                       {selectedSupplier.email && (
@@ -467,7 +467,7 @@ export default function FournisseursPage() {
                       {(selectedSupplier.address || selectedSupplier.city) && (
                         <div className="md:col-span-2">
                           <p className="text-xs text-slate-500 mb-1">{t('admin.suppliers.address')}</p>
-                          <p className="text-slate-900">
+                          <p className="text-[var(--k-text-primary)]">
                             {[
                               selectedSupplier.address,
                               [selectedSupplier.city, selectedSupplier.province].filter(Boolean).join(', '),
@@ -489,10 +489,10 @@ export default function FournisseursPage() {
                   )}
 
                   {/* Contacts */}
-                  <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="bg-white/5 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Users className="w-4 h-4 text-slate-500" />
-                      <h3 className="font-semibold text-slate-900">
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">
                         {t('admin.suppliers.contacts')} ({selectedSupplier.contacts.length})
                       </h3>
                     </div>
@@ -502,7 +502,7 @@ export default function FournisseursPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="text-start text-xs text-slate-500 border-b border-slate-200">
+                            <tr className="text-start text-xs text-slate-500 border-b border-[var(--k-border-subtle)]">
                               <th className="pb-2 pe-3">{t('admin.suppliers.department')}</th>
                               <th className="pb-2 pe-3">{t('admin.suppliers.contactName')}</th>
                               <th className="pb-2 pe-3">{t('admin.suppliers.email')}</th>
@@ -520,7 +520,7 @@ export default function FournisseursPage() {
                                     {c.isPrimary && <Star className="w-3 h-3 text-amber-500" fill="currentColor" />}
                                   </span>
                                 </td>
-                                <td className="py-2 pe-3 font-medium text-slate-900">{c.name}</td>
+                                <td className="py-2 pe-3 font-medium text-[var(--k-text-primary)]">{c.name}</td>
                                 <td className="py-2 pe-3">
                                   {c.email ? (
                                     <a href={`mailto:${c.email}`} className="text-indigo-600 hover:underline">{c.email}</a>
@@ -538,10 +538,10 @@ export default function FournisseursPage() {
                   </div>
 
                   {/* Links */}
-                  <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="bg-white/5 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Link2 className="w-4 h-4 text-slate-500" />
-                      <h3 className="font-semibold text-slate-900">
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">
                         {t('admin.suppliers.links')} ({selectedSupplier.links.length})
                       </h3>
                     </div>
@@ -550,7 +550,7 @@ export default function FournisseursPage() {
                     ) : (
                       <div className="space-y-2">
                         {selectedSupplier.links.map((link) => (
-                          <div key={link.id} className="flex items-center gap-3 bg-white rounded-lg border border-slate-200 p-3">
+                          <div key={link.id} className="flex items-center gap-3 bg-[var(--k-glass-thin)] rounded-lg border border-[var(--k-border-subtle)] p-3">
                             <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <a

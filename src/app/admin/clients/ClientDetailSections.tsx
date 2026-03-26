@@ -86,8 +86,8 @@ export function PointAdjustmentSection({ item, updateItem, t }: PointAdjustmentP
   };
 
   return (
-    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.clients.adjustPoints')}</h3>
+    <div className="bg-white/5 rounded-lg p-4 border border-[var(--k-border-subtle)]">
+      <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.clients.adjustPoints')}</h3>
       <div className="grid grid-cols-2 gap-4 mb-3">
         <FormField label={t('admin.clients.amount')}>
           <Input

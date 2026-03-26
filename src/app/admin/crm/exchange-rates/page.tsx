@@ -104,7 +104,7 @@ export default function ExchangeRatesPage() {
       </div>
 
       {/* Currency Converter */}
-      <div className="bg-white rounded-xl border p-4 mb-6">
+      <div className="bg-[var(--k-glass-thin)] rounded-xl border p-4 mb-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1">
           <ArrowRightLeft className="h-4 w-4" /> {t('admin.crm.currencyConverter')}
         </h3>
@@ -142,13 +142,13 @@ export default function ExchangeRatesPage() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" /></div>
       ) : rates.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 bg-white rounded-lg border border-dashed">
+        <div className="text-center py-12 text-gray-400 bg-[var(--k-glass-thin)] rounded-lg border border-dashed">
           <Globe className="h-12 w-12 mx-auto mb-3 opacity-40" />
           <p>{t('admin.crm.noRates')}</p>
           <button onClick={syncRates} className="mt-2 text-sm text-amber-600 hover:underline">{t('admin.crm.syncFromApi')}</button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b">
@@ -179,7 +179,7 @@ export default function ExchangeRatesPage() {
       {/* Add Rate Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="add-rate-modal-title">
+          <div className="bg-[var(--k-glass-thin)] rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="add-rate-modal-title">
             <div className="flex items-center justify-between">
               <h2 id="add-rate-modal-title" className="text-lg font-semibold">{t('admin.crm.addRate')}</h2>
               <button onClick={() => setShowAdd(false)} className="p-1 hover:bg-gray-100 rounded" aria-label="Close"><X className="h-5 w-5" /></button>

@@ -273,7 +273,7 @@ export default function EtatsFinanciersPage() {
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="2026-01">{t('admin.financialStatements.january2026')}</option>
               <option value="2025-Q4">{t('admin.financialStatements.q42025')}</option>
@@ -293,7 +293,7 @@ export default function EtatsFinanciersPage() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-[var(--k-border-subtle)]">
         <nav className="flex gap-8">
           <button
             onClick={() => setActiveTab('resultats')}
@@ -339,8 +339,8 @@ export default function EtatsFinanciersPage() {
             <table className="w-full">
               <tbody>
                 {/* Revenus */}
-                <tr className="bg-slate-50">
-                  <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.revenue')}</td>
+                <tr className="bg-white/5">
+                  <td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.revenue')}</td>
                 </tr>
                 {Object.entries(incomeStatement.revenue).map(([name, amount]) => (
                   <tr key={name}>
@@ -348,16 +348,16 @@ export default function EtatsFinanciersPage() {
                     <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                   </tr>
                 ))}
-                <tr className="border-t border-slate-200">
-                  <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalRevenue')}</td>
+                <tr className="border-t border-[var(--k-border-subtle)]">
+                  <td className="px-4 py-3 font-semibold text-[var(--k-text-primary)]">{t('admin.financialStatements.totalRevenue')}</td>
                   <td className="px-4 py-3 text-end font-bold text-emerald-600">{formatCurrency(totalRevenue)}</td>
                 </tr>
 
                 {/* CMV */}
                 {Object.keys(incomeStatement.cogs).length > 0 && (
                   <>
-                    <tr className="bg-slate-50">
-                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.cogs')}</td>
+                    <tr className="bg-white/5">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.cogs')}</td>
                     </tr>
                     {Object.entries(incomeStatement.cogs).map(([name, amount]) => (
                       <tr key={name}>
@@ -365,8 +365,8 @@ export default function EtatsFinanciersPage() {
                         <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                       </tr>
                     ))}
-                    <tr className="border-t border-slate-200">
-                      <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalCogs')}</td>
+                    <tr className="border-t border-[var(--k-border-subtle)]">
+                      <td className="px-4 py-3 font-semibold text-[var(--k-text-primary)]">{t('admin.financialStatements.totalCogs')}</td>
                       <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalCogs)})</td>
                     </tr>
                   </>
@@ -383,8 +383,8 @@ export default function EtatsFinanciersPage() {
                 {/* Dépenses */}
                 {Object.keys(incomeStatement.expenses).length > 0 && (
                   <>
-                    <tr className="bg-slate-50">
-                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingExpenses')}</td>
+                    <tr className="bg-white/5">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.operatingExpenses')}</td>
                     </tr>
                     {Object.entries(incomeStatement.expenses).map(([name, amount]) => (
                       <tr key={name}>
@@ -392,8 +392,8 @@ export default function EtatsFinanciersPage() {
                         <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                       </tr>
                     ))}
-                    <tr className="border-t border-slate-200">
-                      <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalExpenses')}</td>
+                    <tr className="border-t border-[var(--k-border-subtle)]">
+                      <td className="px-4 py-3 font-semibold text-[var(--k-text-primary)]">{t('admin.financialStatements.totalExpenses')}</td>
                       <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalExpenses)})</td>
                     </tr>
                   </>
@@ -408,8 +408,8 @@ export default function EtatsFinanciersPage() {
                 {/* Autres */}
                 {Object.keys(incomeStatement.other).length > 0 && (
                   <>
-                    <tr className="bg-slate-50">
-                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.otherIncomeExpense')}</td>
+                    <tr className="bg-white/5">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.otherIncomeExpense')}</td>
                     </tr>
                     {Object.entries(incomeStatement.other).map(([name, amount]) => (
                       <tr key={name}>
@@ -447,7 +447,7 @@ export default function EtatsFinanciersPage() {
                 <tbody>
                   {Object.keys(balanceSheet.assets.current).length > 0 && (
                     <>
-                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentAssets')}</td></tr>
+                      <tr className="bg-white/5"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentAssets')}</td></tr>
                       {Object.entries(balanceSheet.assets.current).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -462,7 +462,7 @@ export default function EtatsFinanciersPage() {
 
                   {Object.keys(balanceSheet.assets.nonCurrent).length > 0 && (
                     <>
-                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.nonCurrentAssets')}</td></tr>
+                      <tr className="bg-white/5"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.nonCurrentAssets')}</td></tr>
                       {Object.entries(balanceSheet.assets.nonCurrent).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -492,7 +492,7 @@ export default function EtatsFinanciersPage() {
                 <tbody>
                   {Object.keys(balanceSheet.liabilities.current).length > 0 && (
                     <>
-                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentLiabilities')}</td></tr>
+                      <tr className="bg-white/5"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentLiabilities')}</td></tr>
                       {Object.entries(balanceSheet.liabilities.current).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -505,7 +505,7 @@ export default function EtatsFinanciersPage() {
 
                   {Object.keys(balanceSheet.equity).length > 0 && (
                     <>
-                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.equity')}</td></tr>
+                      <tr className="bg-white/5"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.equity')}</td></tr>
                       {Object.entries(balanceSheet.equity).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -536,7 +536,7 @@ export default function EtatsFinanciersPage() {
           <div className="overflow-x-auto">
           <table className="w-full">
             <tbody>
-              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
+              <tr className="bg-white/5"><td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.operatingActivities')}</td></tr>
               <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-end">{formatCurrency(netProfit)}</td></tr>
               {Object.entries(cashFlow.operating).filter(([key]) => key !== 'netIncome').map(([name, amount]) => (
                 <tr key={name}>
@@ -546,12 +546,12 @@ export default function EtatsFinanciersPage() {
                   </td>
                 </tr>
               ))}
-              <tr className="border-t border-slate-200 bg-green-50">
+              <tr className="border-t border-[var(--k-border-subtle)] bg-green-50">
                 <td className="px-4 py-3 font-semibold text-green-900">{t('admin.financialStatements.netOperatingCashFlow')}</td>
                 <td className="px-4 py-3 text-end font-bold text-green-700">{formatCurrency(operatingCashFlow)}</td>
               </tr>
 
-              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.investingActivities')}</td></tr>
+              <tr className="bg-white/5"><td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.investingActivities')}</td></tr>
               {Object.entries(cashFlow.investing).map(([name, amount]) => (
                 <tr key={name}>
                   <td className="px-8 py-2 text-slate-600">{name}</td>
@@ -563,12 +563,12 @@ export default function EtatsFinanciersPage() {
               {Object.keys(cashFlow.investing).length === 0 && (
                 <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noInvestingActivities')}</td></tr>
               )}
-              <tr className="border-t border-slate-200 bg-red-50">
+              <tr className="border-t border-[var(--k-border-subtle)] bg-red-50">
                 <td className="px-4 py-3 font-semibold text-red-900">{t('admin.financialStatements.netInvestingCashFlow')}</td>
                 <td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency(investingCashFlow)}</td>
               </tr>
 
-              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.financingActivities')}</td></tr>
+              <tr className="bg-white/5"><td colSpan={2} className="px-4 py-3 font-bold text-[var(--k-text-primary)]">{t('admin.financialStatements.financingActivities')}</td></tr>
               {Object.entries(cashFlow.financing).map(([name, amount]) => (
                 <tr key={name}>
                   <td className="px-8 py-2 text-slate-600">{name}</td>
@@ -578,7 +578,7 @@ export default function EtatsFinanciersPage() {
               {Object.keys(cashFlow.financing).length === 0 && (
                 <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noFinancingActivities')}</td></tr>
               )}
-              <tr className="border-t border-slate-200 bg-indigo-50">
+              <tr className="border-t border-[var(--k-border-subtle)] bg-indigo-50">
                 <td className="px-4 py-3 font-semibold text-indigo-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
                 <td className="px-4 py-3 text-end font-bold text-indigo-700">{formatCurrency(financingCashFlow)}</td>
               </tr>

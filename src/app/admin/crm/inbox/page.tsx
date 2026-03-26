@@ -139,7 +139,7 @@ export default function InboxPage() {
   return (
     <div className="h-[calc(100vh-64px)] flex">
       {/* Left: Conversation List */}
-      <div className="w-80 border-r bg-white flex flex-col">
+      <div className="w-80 border-r bg-[var(--k-glass-thin)] flex flex-col">
         <div className="p-3 border-b space-y-2">
           <h2 className="text-lg font-semibold">{t('admin.crm.inbox')}</h2>
           <div className="flex gap-2">
@@ -198,7 +198,7 @@ export default function InboxPage() {
         ) : (
           <>
             {/* Header */}
-            <div className="bg-white px-4 py-3 border-b flex items-center justify-between">
+            <div className="bg-[var(--k-glass-thin)] px-4 py-3 border-b flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-gray-900">{selected.contact?.name || selected.lead?.contactName || 'Unknown'}</h3>
                 <p className="text-xs text-gray-500">{selected.subject || selected.channel} - {selected.status}</p>
@@ -233,7 +233,7 @@ export default function InboxPage() {
               {selected.messages?.map(msg => (
                 <div key={msg.id} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[70%] rounded-lg p-3 ${
-                    msg.direction === 'OUTBOUND' ? 'bg-indigo-600 text-white' : 'bg-white border'
+                    msg.direction === 'OUTBOUND' ? 'bg-indigo-600 text-white' : 'bg-[var(--k-glass-thin)] border'
                   }`}>
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     <div className={`text-xs mt-1 ${msg.direction === 'OUTBOUND' ? 'text-blue-200' : 'text-gray-400'}`}>
@@ -246,7 +246,7 @@ export default function InboxPage() {
             </div>
 
             {/* Reply */}
-            <div className="bg-white border-t p-3">
+            <div className="bg-[var(--k-glass-thin)] border-t p-3">
               <div className="flex gap-2">
                 <textarea
                   value={replyText}
@@ -268,7 +268,7 @@ export default function InboxPage() {
 
       {/* Right: Enhanced Contact Panel */}
       {selected && (
-        <div className="w-72 border-l bg-white overflow-y-auto">
+        <div className="w-72 border-l bg-[var(--k-glass-thin)] overflow-y-auto">
           {/* Contact Header */}
           <div className="p-4 border-b bg-indigo-50">
             <div className="flex items-center gap-3 mb-3">

@@ -323,7 +323,7 @@ export default function OCRPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('admin.ocrScan.title')}</h1>
+          <h1 className="text-2xl font-bold text-[var(--k-text-primary)]">{t('admin.ocrScan.title')}</h1>
           <p className="text-slate-500 mt-1">{t('admin.ocrScan.subtitle')}</p>
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function OCRPage() {
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`bg-white rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
+            className={`bg-[var(--k-glass-thin)] rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
               dragActive
                 ? 'border-emerald-500 bg-emerald-50'
                 : 'border-slate-300 hover:border-slate-400'
@@ -367,7 +367,7 @@ export default function OCRPage() {
             {scanning ? (
               <div className="text-center py-8" role="status" aria-label="Loading">
                 <div className="animate-spin h-12 w-12 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-slate-900 font-medium mt-4">{t('admin.ocrScan.analyzing')}</p>
+                <p className="text-[var(--k-text-primary)] font-medium mt-4">{t('admin.ocrScan.analyzing')}</p>
                 <p className="text-sm text-slate-500 mt-1">{t('admin.ocrScan.aiExtraction')}</p>
                 <span className="sr-only">Loading...</span>
               </div>
@@ -386,7 +386,7 @@ export default function OCRPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-5xl mb-4">&#128196;</div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('admin.ocrScan.dropInvoice')}</h3>
+                <h3 className="text-lg font-medium text-[var(--k-text-primary)] mb-2">{t('admin.ocrScan.dropInvoice')}</h3>
                 <p className="text-sm text-slate-500 mb-4">{t('admin.ocrScan.orClickToSelect')}</p>
                 <div className="flex justify-center gap-2">
                   <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">PNG</span>
@@ -435,18 +435,18 @@ export default function OCRPage() {
             >
               <div className="space-y-3">
                 <p className="text-sm text-slate-500">{t('admin.ocrScan.verifyAndCorrect')}</p>
-                <div className="bg-slate-50 rounded-lg p-3 text-sm space-y-1">
+                <div className="bg-white/5 rounded-lg p-3 text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t('admin.ocrScan.supplier')}:</span>
-                    <span className="font-medium text-slate-900">{extractedData.supplierName || '-'}</span>
+                    <span className="font-medium text-[var(--k-text-primary)]">{extractedData.supplierName || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t('admin.ocrScan.total')}:</span>
-                    <span className="font-bold text-slate-900">{fmtCurrency(extractedData.total)}</span>
+                    <span className="font-bold text-[var(--k-text-primary)]">{fmtCurrency(extractedData.total)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t('admin.ocrScan.invoiceDate')}:</span>
-                    <span className="text-slate-900">{extractedData.invoiceDate || '-'}</span>
+                    <span className="text-[var(--k-text-primary)]">{extractedData.invoiceDate || '-'}</span>
                   </div>
                 </div>
                 {extractedData.needsReview && extractedData.needsReview.length > 0 && (
@@ -497,14 +497,14 @@ export default function OCRPage() {
             ) : null}
             <div className="divide-y divide-slate-100">
               {history.slice(0, 5).map(scan => (
-                <div key={scan.id} className="px-4 py-3 hover:bg-slate-50">
+                <div key={scan.id} className="px-4 py-3 hover:bg-white/5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{scan.supplierName}</p>
+                      <p className="text-sm font-medium text-[var(--k-text-primary)]">{scan.supplierName}</p>
                       <p className="text-xs text-slate-400">{scan.fileName}</p>
                     </div>
                     <div className="text-end">
-                      <p className="text-sm font-semibold text-slate-900">{fmtCurrency(scan.total)}</p>
+                      <p className="text-sm font-semibold text-[var(--k-text-primary)]">{fmtCurrency(scan.total)}</p>
                       <span className={`text-xs font-medium ${
                         scan.status === 'SUCCESS' ? 'text-emerald-600' :
                         scan.status === 'NEEDS_REVIEW' ? 'text-amber-500' : 'text-red-500'
@@ -525,11 +525,11 @@ export default function OCRPage() {
       {/* ============================================================= */}
       {showReviewModal && extractedData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setShowReviewModal(false); }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+          <div className="bg-[var(--k-glass-thin)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--k-border-subtle)]">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-[var(--k-text-primary)]">
                   {t('admin.ocrScan.reviewTitle')}
                 </h2>
                 <p className="text-sm text-slate-500 mt-0.5">
@@ -571,7 +571,7 @@ export default function OCRPage() {
                     type="text"
                     value={reviewForm.supplierName}
                     onChange={e => updateReviewField('supplierName', e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder={t('admin.ocrScan.supplierPlaceholder')}
                   />
                 </div>
@@ -581,7 +581,7 @@ export default function OCRPage() {
                     type="text"
                     value={reviewForm.invoiceNumber}
                     onChange={e => updateReviewField('invoiceNumber', e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder="INV-0001"
                   />
                 </div>
@@ -591,7 +591,7 @@ export default function OCRPage() {
                     type="date"
                     value={reviewForm.invoiceDate}
                     onChange={e => updateReviewField('invoiceDate', e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -600,7 +600,7 @@ export default function OCRPage() {
                     type="date"
                     value={reviewForm.dueDate}
                     onChange={e => updateReviewField('dueDate', e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -614,7 +614,7 @@ export default function OCRPage() {
                   type="text"
                   value={reviewForm.description}
                   onChange={e => updateReviewField('description', e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder={t('admin.ocrScan.descriptionPlaceholder')}
                 />
               </div>
@@ -623,7 +623,7 @@ export default function OCRPage() {
               {extractedData.items && extractedData.items.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-2">{t('admin.ocrScan.items')}</label>
-                  <div className="bg-slate-50 rounded-lg overflow-hidden overflow-x-auto border border-slate-200">
+                  <div className="bg-white/5 rounded-lg overflow-hidden overflow-x-auto border border-[var(--k-border-subtle)]">
                     <table className="w-full text-sm">
                       <thead className="bg-slate-100">
                         <tr>
@@ -633,13 +633,13 @@ export default function OCRPage() {
                           <th scope="col" className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.ocrScan.total')}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 bg-white">
+                      <tbody className="divide-y divide-slate-200 bg-[var(--k-glass-thin)]">
                         {extractedData.items.map((item, i) => (
                           <tr key={i}>
-                            <td className="px-3 py-2 text-slate-900">{item.description}</td>
+                            <td className="px-3 py-2 text-[var(--k-text-primary)]">{item.description}</td>
                             <td className="px-3 py-2 text-end text-slate-600">{item.quantity}</td>
                             <td className="px-3 py-2 text-end text-slate-600">{formatCurrency(item.unitPrice)}</td>
-                            <td className="px-3 py-2 text-end font-medium text-slate-900">{formatCurrency(item.total)}</td>
+                            <td className="px-3 py-2 text-end font-medium text-[var(--k-text-primary)]">{formatCurrency(item.total)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -657,7 +657,7 @@ export default function OCRPage() {
                     step="0.01"
                     value={reviewForm.subtotal}
                     onChange={e => updateReviewField('subtotal', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -667,7 +667,7 @@ export default function OCRPage() {
                     step="0.01"
                     value={reviewForm.taxTps}
                     onChange={e => updateReviewField('taxTps', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -677,7 +677,7 @@ export default function OCRPage() {
                     step="0.01"
                     value={reviewForm.taxTvq}
                     onChange={e => updateReviewField('taxTvq', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -687,7 +687,7 @@ export default function OCRPage() {
                     step="0.01"
                     value={reviewForm.total}
                     onChange={e => updateReviewField('total', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -701,7 +701,7 @@ export default function OCRPage() {
                   aria-label="Expense account"
                   value={reviewForm.accountCode}
                   onChange={e => updateReviewField('accountCode', e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   disabled={loadingAccounts}
                 >
                   {loadingAccounts ? (
@@ -718,7 +718,7 @@ export default function OCRPage() {
             </div>
 
             {/* Modal footer */}
-            <div className="px-6 py-4 border-t border-slate-200 flex justify-between items-center bg-slate-50 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-[var(--k-border-subtle)] flex justify-between items-center bg-white/5 rounded-b-2xl">
               <button
                 onClick={handleDiscardReview}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium hover:bg-slate-100 rounded-lg transition-colors"

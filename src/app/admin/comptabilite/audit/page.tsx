@@ -235,7 +235,7 @@ export default function AuditTrailPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.actionsToday')}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{todayCount}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)] mt-1">{todayCount}</p>
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.totalActions')}</p>
@@ -243,11 +243,11 @@ export default function AuditTrailPage() {
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.activeUsers')}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{uniqueUsers}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)] mt-1">{uniqueUsers}</p>
         </SectionCard>
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.afterFilters')}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{filteredEntries.length}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)] mt-1">{filteredEntries.length}</p>
         </SectionCard>
       </div>
 
@@ -259,7 +259,7 @@ export default function AuditTrailPage() {
             <select
               value={filters.action}
               onChange={e => setFilters(prev => ({ ...prev, action: e.target.value }))}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
+              className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm"
             >
               <option value="">{t('admin.audit.allActions')}</option>
               {Object.entries(actionLabels).map(([val, label]) => (
@@ -272,7 +272,7 @@ export default function AuditTrailPage() {
             <select
               value={filters.entityType}
               onChange={e => setFilters(prev => ({ ...prev, entityType: e.target.value }))}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
+              className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm"
             >
               <option value="">{t('admin.audit.allTypes')}</option>
               {Object.entries(entityLabels).map(([val, label]) => (
@@ -287,7 +287,7 @@ export default function AuditTrailPage() {
               value={filters.user}
               onChange={e => setFilters(prev => ({ ...prev, user: e.target.value }))}
               placeholder={t('admin.audit.searchPlaceholder')}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
+              className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm"
             />
           </div>
           <div>
@@ -297,13 +297,13 @@ export default function AuditTrailPage() {
               value={filters.search}
               onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
               placeholder={t('admin.audit.docNumberPlaceholder')}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
+              className="w-full px-3 py-2 bg-[var(--k-glass-thin)] border border-slate-300 rounded-lg text-[var(--k-text-primary)] text-sm"
             />
           </div>
           <div className="flex items-end">
             <button
               onClick={() => setFilters({ action: '', entityType: '', user: '', dateFrom: '', dateTo: '', search: '' })}
-              className="px-4 py-2 text-slate-500 hover:text-slate-900 text-sm"
+              className="px-4 py-2 text-slate-500 hover:text-[var(--k-text-primary)] text-sm"
             >
               {t('admin.audit.reset')}
             </button>
@@ -317,7 +317,7 @@ export default function AuditTrailPage() {
           {filteredEntries.map(entry => (
             <div
               key={entry.id}
-              className="p-4 hover:bg-slate-50 cursor-pointer"
+              className="p-4 hover:bg-white/5 cursor-pointer"
               onClick={() => setSelectedEntry(entry)}
             >
               <div className="flex items-start gap-4">
@@ -335,7 +335,7 @@ export default function AuditTrailPage() {
                 </span>
 
                 <div className="flex-1">
-                  <p className="text-slate-900">
+                  <p className="text-[var(--k-text-primary)]">
                     <span className="text-slate-500">{entityLabels[entry.entityType] || entry.entityType}:</span>{' '}
                     <span className="font-medium">{entry.entityNumber || entry.entityId}</span>
                   </p>
@@ -362,16 +362,16 @@ export default function AuditTrailPage() {
       {/* Detail Modal */}
       {selectedEntry && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEntry(null); }}>
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="audit-detail-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedEntry(null)}>
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h2 id="audit-detail-title" className="text-xl font-bold text-slate-900">{t('admin.audit.auditDetails')}</h2>
+          <div className="bg-[var(--k-glass-thin)] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="audit-detail-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedEntry(null)}>
+            <div className="p-6 border-b border-[var(--k-border-subtle)] flex justify-between items-center">
+              <h2 id="audit-detail-title" className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.audit.auditDetails')}</h2>
               <button onClick={() => setSelectedEntry(null)} className="text-slate-500 hover:text-slate-900" aria-label="Fermer">✕</button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.dateTimeLabel')}</p>
-                  <p className="text-slate-900">{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedEntry.timestamp))}</p>
+                  <p className="text-[var(--k-text-primary)]">{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedEntry.timestamp))}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.actionLabel')}</p>
@@ -381,26 +381,26 @@ export default function AuditTrailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.typeLabel')}</p>
-                  <p className="text-slate-900">{entityLabels[selectedEntry.entityType]}</p>
+                  <p className="text-[var(--k-text-primary)]">{entityLabels[selectedEntry.entityType]}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.documentLabel')}</p>
-                  <p className="text-slate-900 font-mono">{selectedEntry.entityNumber || selectedEntry.entityId}</p>
+                  <p className="text-[var(--k-text-primary)] font-mono">{selectedEntry.entityNumber || selectedEntry.entityId}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.userLabel')}</p>
-                  <p className="text-slate-900">{selectedEntry.userName}</p>
+                  <p className="text-[var(--k-text-primary)]">{selectedEntry.userName}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.ipAddressLabel')}</p>
-                  <p className="text-slate-900 font-mono">{selectedEntry.ipAddress || '-'}</p>
+                  <p className="text-[var(--k-text-primary)] font-mono">{selectedEntry.ipAddress || '-'}</p>
                 </div>
               </div>
 
               {selectedEntry.changes.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-slate-600 mb-2">{t('admin.audit.modificationsLabel')}</p>
-                  <div className="bg-slate-50 rounded-lg overflow-hidden overflow-x-auto">
+                  <div className="bg-white/5 rounded-lg overflow-hidden overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-slate-100">
                         <tr>
@@ -412,7 +412,7 @@ export default function AuditTrailPage() {
                       <tbody className="divide-y divide-slate-200">
                         {selectedEntry.changes.map((change, i) => (
                           <tr key={i}>
-                            <td className="px-3 py-2 text-slate-900">{change.field}</td>
+                            <td className="px-3 py-2 text-[var(--k-text-primary)]">{change.field}</td>
                             <td className="px-3 py-2 text-red-600 font-mono text-xs">
                               {change.oldValue === null ? <span className="text-slate-400 italic">{t('admin.audit.empty')}</span> : String(change.oldValue)}
                             </td>

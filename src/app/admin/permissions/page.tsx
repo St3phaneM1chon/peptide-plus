@@ -400,7 +400,7 @@ export default function PermissionsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
                 ${activeTab === tab.id
-                  ? 'bg-white text-[var(--k-text-primary)] shadow-sm'
+                  ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm'
                   : 'text-[var(--k-text-secondary)] hover:text-slate-700'
                 }`}
             >

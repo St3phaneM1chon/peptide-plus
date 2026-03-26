@@ -372,20 +372,23 @@ export async function middleware(request: NextRequest) {
   }
   let token = null;
   try {
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
     token = await getToken({
       req: request,
       // FAILLE-023 FIX: Use AUTH_SECRET with NEXTAUTH_SECRET fallback (both are valid)
       secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-      secureCookie: true,
-      cookieName: '__Secure-authjs.session-token',
+      secureCookie: isProd,
+      cookieName,
     });
   } catch (err) {
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Secure-authjs.session-token' : 'authjs.session-token';
     console.error(JSON.stringify({
       event: 'middleware_getToken_error',
       pathname,
       error: String(err),
-      hasCookie: !!request.cookies.get('__Secure-authjs.session-token'),
-      cookieLength: request.cookies.get('__Secure-authjs.session-token')?.value?.length || 0,
+      hasCookie: !!request.cookies.get(cookieName),
+      cookieLength: request.cookies.get(cookieName)?.value?.length || 0,
     }));
   }
 

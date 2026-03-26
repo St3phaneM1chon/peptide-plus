@@ -109,7 +109,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
   return (
     <div className="flex flex-col h-full">
       {/* Search bar */}
-      <div className="p-3 border-b border-slate-200">
+      <div className="p-3 border-b border-[var(--k-border-subtle)]">
         <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -117,13 +117,13 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
             placeholder={t('admin.emails.inbox.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full ps-10 pe-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full ps-10 pe-4 py-2 text-sm border border-[var(--k-border-subtle)] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
       </div>
 
       {/* Status filters */}
-      <div className="flex gap-1 p-2 border-b border-slate-200 overflow-x-auto">
+      <div className="flex gap-1 p-2 border-b border-[var(--k-border-subtle)] overflow-x-auto">
         {statuses.map((s) => (
           <button
             key={s.key}
@@ -175,7 +175,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
                 onClick={() => onSelectConversation(conv.id)}
                 className={`w-full text-start p-3 border-b border-slate-100 border-s-4 transition-colors ${
                   priorityColors[conv.priority] || ''
-                } ${isSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                } ${isSelected ? 'bg-indigo-50' : 'hover:bg-white/5'}`}
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
@@ -189,7 +189,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-slate-900 truncate">
+                      <span className="text-sm font-medium text-[var(--k-text-primary)] truncate">
                         {conv.customer?.name || lastEmail?.fromName || lastEmail?.from || t('admin.emails.inbox.unknown')}
                       </span>
                       <span className="text-[10px] text-slate-400 whitespace-nowrap">

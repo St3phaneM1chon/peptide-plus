@@ -445,7 +445,7 @@ export default function ImmobilisationsPage() {
       <SectionCard title={t('admin.accounting.assets.title')} theme={theme} noPadding>
         <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white/5">
             <tr>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.assets.assetNumber')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accounting.assets.colName')}</th>
@@ -467,15 +467,15 @@ export default function ImmobilisationsPage() {
             )}
             {assets.map((asset) => (
               <>
-                <tr key={asset.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedId(expandedId === asset.id ? null : asset.id)}>
+                <tr key={asset.id} className="hover:bg-white/5 cursor-pointer" onClick={() => setExpandedId(expandedId === asset.id ? null : asset.id)}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedId === asset.id ? '' : '-rotate-90'}`} />
-                      <span className="font-mono font-medium text-slate-900">{asset.assetNumber}</span>
+                      <span className="font-mono font-medium text-[var(--k-text-primary)]">{asset.assetNumber}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-slate-900">{asset.name}</span>
+                    <span className="font-medium text-[var(--k-text-primary)]">{asset.name}</span>
                     {asset.location && <span className="block text-xs text-slate-400">{asset.location}</span>}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -483,8 +483,8 @@ export default function ImmobilisationsPage() {
                       {asset.ccaClass} ({asset.ccaRate}%)
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-end font-medium text-slate-900 tabular-nums">{formatCurrency(Number(asset.acquisitionCost))}</td>
-                  <td className="px-4 py-3 text-end font-medium text-slate-900 tabular-nums">{formatCurrency(Number(asset.currentBookValue))}</td>
+                  <td className="px-4 py-3 text-end font-medium text-[var(--k-text-primary)] tabular-nums">{formatCurrency(Number(asset.acquisitionCost))}</td>
+                  <td className="px-4 py-3 text-end font-medium text-[var(--k-text-primary)] tabular-nums">{formatCurrency(Number(asset.currentBookValue))}</td>
                   <td className="px-4 py-3 text-end text-slate-600 tabular-nums">{formatCurrency(Number(asset.accumulatedDepreciation))}</td>
                   <td className="px-4 py-3 text-center">{statusBadge(asset.status)}</td>
                   <td className="px-4 py-3 text-center">
@@ -561,19 +561,19 @@ export default function ImmobilisationsPage() {
                           </h4>
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <span className="text-slate-500">{t('admin.accounting.assets.method')}</span>
-                            <span className="text-slate-900">{asset.depreciationMethod}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.depreciationMethod}</span>
                             <span className="text-slate-500">{t('admin.accounting.assets.halfYearRule')}</span>
-                            <span className="text-slate-900">{asset.halfYearRuleApplied ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.halfYearRuleApplied ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
                             <span className="text-slate-500">AII</span>
-                            <span className="text-slate-900">{asset.aiiApplied ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.aiiApplied ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
                             <span className="text-slate-500">{t('admin.accounting.assets.superDeduction')}</span>
-                            <span className="text-slate-900">{asset.superDeduction ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.superDeduction ? t('admin.accounting.assets.yes') : t('admin.accounting.assets.no')}</span>
                             <span className="text-slate-500">{t('admin.accounting.assets.assetAccount')}</span>
-                            <span className="text-slate-900">{asset.assetAccount.code} - {asset.assetAccount.name}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.assetAccount.code} - {asset.assetAccount.name}</span>
                             <span className="text-slate-500">{t('admin.accounting.assets.deprAccount')}</span>
-                            <span className="text-slate-900">{asset.depreciationAccount.code} - {asset.depreciationAccount.name}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.depreciationAccount.code} - {asset.depreciationAccount.name}</span>
                             <span className="text-slate-500">{t('admin.accounting.assets.expenseAccount')}</span>
-                            <span className="text-slate-900">{asset.expenseAccount.code} - {asset.expenseAccount.name}</span>
+                            <span className="text-[var(--k-text-primary)]">{asset.expenseAccount.code} - {asset.expenseAccount.name}</span>
                           </div>
 
                           {asset.status === 'DISPOSED' && (
@@ -623,7 +623,7 @@ export default function ImmobilisationsPage() {
         }
       >
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 border-b border-slate-200">
+        <div className="flex gap-1 mb-4 border-b border-[var(--k-border-subtle)]">
           {tabs.map((tab, i) => (
             <button
               key={tab}
@@ -678,7 +678,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.ccaClass}
                 onChange={(e) => handleCCAClassChange(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.selectClass')}</option>
                 {CCA_CLASSES.map((c) => (
@@ -696,7 +696,7 @@ export default function ImmobilisationsPage() {
                 <select
                   value={form.depreciationMethod}
                   onChange={(e) => setForm((f) => ({ ...f, depreciationMethod: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                 >
                   <option value="DECLINING_BALANCE">{t('admin.accounting.assets.methodDeclining')}</option>
                   <option value="STRAIGHT_LINE">{t('admin.accounting.assets.methodStraight')}</option>
@@ -710,21 +710,21 @@ export default function ImmobilisationsPage() {
         {/* Tab 2: CCA Options */}
         {activeTab === 2 && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
               <input type="checkbox" id="halfYear" checked={form.halfYearRuleApplied} onChange={(e) => setForm((f) => ({ ...f, halfYearRuleApplied: e.target.checked }))} className="w-4 h-4 rounded border-slate-300 text-indigo-600" />
               <label htmlFor="halfYear" className="text-sm text-slate-700">
                 <span className="font-medium">{t('admin.accounting.assets.halfYearRule')}</span>
                 <span className="block text-xs text-slate-500">{t('admin.accounting.assets.halfYearRuleDesc')}</span>
               </label>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
               <input type="checkbox" id="aii" checked={form.aiiApplied} onChange={(e) => setForm((f) => ({ ...f, aiiApplied: e.target.checked }))} className="w-4 h-4 rounded border-slate-300 text-indigo-600" />
               <label htmlFor="aii" className="text-sm text-slate-700">
                 <span className="font-medium">{t('admin.accounting.assets.aiiLabel')}</span>
                 <span className="block text-xs text-slate-500">{t('admin.accounting.assets.aiiDesc')}</span>
               </label>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
               <input type="checkbox" id="superDeduction" checked={form.superDeduction} onChange={(e) => setForm((f) => ({ ...f, superDeduction: e.target.checked }))} className="w-4 h-4 rounded border-slate-300 text-indigo-600" />
               <label htmlFor="superDeduction" className="text-sm text-slate-700">
                 <span className="font-medium">{t('admin.accounting.assets.superDeductionLabel')}</span>
@@ -744,7 +744,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.assetAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, assetAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -754,7 +754,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.depreciationAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, depreciationAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
@@ -764,7 +764,7 @@ export default function ImmobilisationsPage() {
               <select
                 value={form.expenseAccountId}
                 onChange={(e) => setForm((f) => ({ ...f, expenseAccountId: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               >
                 <option value="">{t('admin.accounting.assets.select')}</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}

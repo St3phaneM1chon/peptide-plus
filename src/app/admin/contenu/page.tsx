@@ -506,7 +506,7 @@ export default function ContenuPage() {
         <button
           onClick={() => setActiveTab('pages')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-            ${activeTab === 'pages' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            ${activeTab === 'pages' ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <FileText className="w-4 h-4" />
           {t('admin.content.tabPages', { count: String(pages.length) })}
@@ -514,7 +514,7 @@ export default function ContenuPage() {
         <button
           onClick={() => setActiveTab('faq')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
-            ${activeTab === 'faq' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            ${activeTab === 'faq' ? 'bg-white/20 text-[var(--k-text-primary)] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <HelpCircle className="w-4 h-4" />
           {t('admin.content.tabFaq', { count: String(faqs.length) })}
@@ -536,14 +536,14 @@ export default function ContenuPage() {
           </h3>
           <div className="space-y-2">
             {scheduledItems.filter(s => s.status === 'scheduled').map(sched => (
-              <div key={sched.id} className="flex items-center gap-3 bg-white rounded-lg p-3 border border-amber-100">
+              <div key={sched.id} className="flex items-center gap-3 bg-[var(--k-glass-thin)] rounded-lg p-3 border border-amber-100">
                 <div className={`px-2 py-0.5 rounded text-[10px] font-medium uppercase ${
                   sched.action === 'publish' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                 }`}>
                   {sched.action === 'publish' ? 'Publication' : 'Dépublication'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{sched.title}</p>
+                  <p className="text-sm font-medium text-[var(--k-text-primary)] truncate">{sched.title}</p>
                   <p className="text-xs text-slate-500 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {new Date(sched.scheduledAt).toLocaleDateString(locale)} à {new Date(sched.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
@@ -579,9 +579,9 @@ export default function ContenuPage() {
             action={<Button variant="primary" icon={Plus} onClick={() => openPageModal()}>{t('admin.content.createPage')}</Button>}
           />
         ) : (
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+          <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
                   <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colPage')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUrl')}</th>
@@ -593,9 +593,9 @@ export default function ContenuPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredPages.map((page) => (
-                  <tr key={page.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={page.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-slate-900">{page.title}</p>
+                      <p className="text-sm font-medium text-[var(--k-text-primary)]">{page.title}</p>
                       {page.translations.length > 0 && (
                         <p className="text-xs text-slate-400 mt-0.5">
                           {page.translations.length > 1
@@ -699,8 +699,8 @@ export default function ContenuPage() {
         ) : (
           <div className="space-y-4">
             {faqCategories.map((category) => (
-              <div key={category} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <div key={category} className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-lg overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 bg-white/5">
                   <h3 className="text-sm font-semibold text-slate-700 capitalize">{category}</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
@@ -708,7 +708,7 @@ export default function ContenuPage() {
                     <div key={faq.id} className={`p-4 ${!faq.isPublished ? 'opacity-60' : ''}`}>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{faq.question}</p>
+                          <p className="text-sm font-medium text-[var(--k-text-primary)]">{faq.question}</p>
                           <p className="text-sm text-slate-500 mt-1 line-clamp-2">{faq.answer}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -800,7 +800,7 @@ export default function ContenuPage() {
               <select
                 value={pageForm.template}
                 onChange={e => setPageForm(f => ({ ...f, template: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="default">{t('admin.content.templateDefault')}</option>
                 <option value="full-width">{t('admin.content.templateFullWidth')}</option>
@@ -846,7 +846,7 @@ export default function ContenuPage() {
               <select
                 value={faqForm.category}
                 onChange={e => setFaqForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {getFaqCategories(t).map(cat => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -895,9 +895,9 @@ export default function ContenuPage() {
         const status = getContentStatus(p);
         const schedule = scheduledItems.find(s => s.contentId === p.id && s.status === 'scheduled');
         return (
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="bg-[var(--k-glass-thin)] border border-[var(--k-border-subtle)] rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <h3 className="font-semibold text-[var(--k-text-primary)] flex items-center gap-2">
                 <FileSearch className="w-4 h-4 text-indigo-500" />
                 Aperçu enrichi: {p.title}
               </h3>
@@ -907,7 +907,7 @@ export default function ContenuPage() {
             </div>
 
             {/* Status timeline horizontal */}
-            <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
+            <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
               {(['draft', 'review', 'scheduled', 'published'] as ContentStatus[]).map((step, idx) => {
                 const labels: Record<ContentStatus, string> = { draft: 'Brouillon', review: 'En revue', scheduled: 'Planifié', published: 'Publié' };
                 const isActive = step === status;
@@ -916,7 +916,7 @@ export default function ContenuPage() {
                   <div key={step} className="flex items-center gap-2">
                     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
                       isActive ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200' :
-                      isPast ? 'bg-emerald-50 text-emerald-600' : 'bg-white text-slate-400'
+                      isPast ? 'bg-emerald-50 text-emerald-600' : 'bg-white/20 text-slate-400'
                     }`}>
                       <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-indigo-500' : isPast ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                       {labels[step]}
@@ -956,7 +956,7 @@ export default function ContenuPage() {
               )}
               <div className="col-span-2">
                 <p className="text-xs font-medium text-slate-500 mb-1">Contenu ({p.content.length} caractères)</p>
-                <div className="bg-slate-50 rounded-lg p-3 max-h-32 overflow-y-auto text-sm text-slate-700 whitespace-pre-wrap">
+                <div className="bg-white/5 rounded-lg p-3 max-h-32 overflow-y-auto text-sm text-slate-700 whitespace-pre-wrap">
                   {p.content.substring(0, 500)}{p.content.length > 500 ? '...' : ''}
                 </div>
               </div>
@@ -983,7 +983,7 @@ export default function ContenuPage() {
             <select
               value={scheduleForm.action}
               onChange={e => setScheduleForm(f => ({ ...f, action: e.target.value as 'publish' | 'unpublish' }))}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="publish">Publier</option>
               <option value="unpublish">Dépublier</option>

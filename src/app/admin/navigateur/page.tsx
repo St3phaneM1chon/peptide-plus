@@ -200,8 +200,8 @@ export default function NavigateurPage() {
       {/* 3-column editor */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ minHeight: '500px' }}>
         {/* Column 1: Sections */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--k-border-subtle)] bg-white/5">
             <h3 className="text-sm font-semibold text-slate-700">{t('admin.webNavigator.sections')}</h3>
             <Button variant="ghost" size="sm" icon={Plus} onClick={() => openCreateModal('section')} />
           </div>
@@ -210,11 +210,11 @@ export default function NavigateurPage() {
               <button
                 key={sec.id}
                 onClick={() => { setSelectedSection(sec); setSelectedSubSection(null); }}
-                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-white/5 transition-colors ${
                   selectedSection?.id === sec.id ? 'bg-indigo-50 border-s-[3px] border-s-indigo-600' : ''
                 }`}
               >
-                <span className="text-sm text-slate-900 truncate">{sec.title}</span>
+                <span className="text-sm text-[var(--k-text-primary)] truncate">{sec.title}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button onClick={(e) => { e.stopPropagation(); openEditModal('section', sec); }} className="p-1 hover:bg-slate-200 rounded">
                     <Pencil className="w-3 h-3 text-slate-400" />
@@ -233,8 +233,8 @@ export default function NavigateurPage() {
         </div>
 
         {/* Column 2: Sub-sections */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--k-border-subtle)] bg-white/5">
             <h3 className="text-sm font-semibold text-slate-700">{t('admin.webNavigator.subSections')}</h3>
             {selectedSection && <Button variant="ghost" size="sm" icon={Plus} onClick={() => openCreateModal('subsection')} />}
           </div>
@@ -243,11 +243,11 @@ export default function NavigateurPage() {
               <button
                 key={sub.id}
                 onClick={() => setSelectedSubSection(sub)}
-                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-slate-50 transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-3 text-start hover:bg-white/5 transition-colors ${
                   selectedSubSection?.id === sub.id ? 'bg-indigo-50 border-s-[3px] border-s-indigo-600' : ''
                 }`}
               >
-                <span className="text-sm text-slate-900 truncate">{sub.title}</span>
+                <span className="text-sm text-[var(--k-text-primary)] truncate">{sub.title}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button onClick={(e) => { e.stopPropagation(); openEditModal('subsection', sub); }} className="p-1 hover:bg-slate-200 rounded">
                     <Pencil className="w-3 h-3 text-slate-400" />
@@ -267,8 +267,8 @@ export default function NavigateurPage() {
         </div>
 
         {/* Column 3: Pages */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl border border-[var(--k-border-subtle)] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--k-border-subtle)] bg-white/5">
             <h3 className="text-sm font-semibold text-slate-700">{t('admin.webNavigator.pages')}</h3>
             {selectedSubSection && <Button variant="ghost" size="sm" icon={Plus} onClick={() => openCreateModal('page')} />}
           </div>
@@ -276,10 +276,10 @@ export default function NavigateurPage() {
             {(selectedSubSection?.pages ?? []).map(page => (
               <div
                 key={page.id}
-                className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                className="flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm text-slate-900 truncate">{page.title}</div>
+                  <div className="text-sm text-[var(--k-text-primary)] truncate">{page.title}</div>
                   <div className="text-xs text-slate-400 truncate">{page.url}</div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">

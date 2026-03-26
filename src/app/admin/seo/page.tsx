@@ -650,7 +650,7 @@ export default function SEOPage() {
                       <p className="text-xs font-semibold text-[var(--k-text-secondary)] uppercase mb-2 flex items-center gap-1">
                         <Eye className="w-3 h-3" /> Aperçu Open Graph (Facebook / LinkedIn)
                       </p>
-                      <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white shadow-sm">
+                      <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white/20 shadow-sm">
                         <div className="h-32 bg-white/10 flex items-center justify-center">
                           {page.ogImage ? (
                             <Image src={page.ogImage} alt="OG" width={200} height={200} className="w-full h-full object-cover" />
@@ -755,7 +755,7 @@ export default function SEOPage() {
                             <p className="text-xs font-semibold text-[var(--k-text-secondary)] uppercase mb-2 flex items-center gap-1">
                               <Eye className="w-3 h-3" /> Aperçu Open Graph - {product.name}
                             </p>
-                            <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white shadow-sm">
+                            <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white/20 shadow-sm">
                               <div className="h-32 bg-white/10 flex items-center justify-center">
                                 {product.imageUrl ? (
                                   <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full h-full object-cover" />
@@ -877,7 +877,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
                 previewSize="md"
               />
             </FormField>
-            <div className="flex gap-3 pt-4 border-t border-slate-200">
+            <div className="flex gap-3 pt-4 border-t border-[var(--k-border-subtle)]">
               <Button variant="secondary" onClick={() => setEditingPage(null)} className="flex-1">
                 {t('admin.seo.cancel')}
               </Button>
@@ -904,7 +904,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
               className="font-mono text-sm"
             />
           </FormField>
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <div className="flex gap-3 pt-4 border-t border-[var(--k-border-subtle)]">
             <Button variant="secondary" onClick={() => setEditingRobots(false)} className="flex-1">
               {t('admin.seo.cancel')}
             </Button>
@@ -958,11 +958,11 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
             </FormField>
 
             {/* Live OG Preview */}
-            <div className="border-t border-slate-200 pt-4">
+            <div className="border-t border-[var(--k-border-subtle)] pt-4">
               <p className="text-xs font-semibold text-[var(--k-text-secondary)] uppercase mb-2 flex items-center gap-1">
                 <Eye className="w-3 h-3" /> Aperçu Open Graph
               </p>
-              <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white shadow-sm max-w-sm">
+              <div className="border border-[var(--k-border-subtle)] rounded-lg overflow-hidden bg-white/20 shadow-sm max-w-sm">
                 <div className="h-24 bg-white/10 flex items-center justify-center">
                   {editingProduct.imageUrl ? (
                     <Image src={editingProduct.imageUrl} alt={editingProduct.name} width={200} height={200} className="w-full h-full object-cover" />
@@ -988,7 +988,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
               </pre>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t border-slate-200">
+            <div className="flex gap-3 pt-4 border-t border-[var(--k-border-subtle)]">
               <Button variant="secondary" onClick={() => setEditingProduct(null)} className="flex-1">
                 Annuler
               </Button>

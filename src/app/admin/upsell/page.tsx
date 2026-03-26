@@ -432,7 +432,7 @@ export default function UpsellAdminPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.upsell.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.upsell.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.upsell.subtitle')}</p>
           </div>
           <Button variant="primary" icon={Plus} size="sm" onClick={() => openForm()}>
@@ -504,9 +504,9 @@ export default function UpsellAdminPage() {
               >
                 <div className="space-y-6">
                   {/* Status */}
-                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between bg-white/5 rounded-lg p-4">
                     <div>
-                      <h3 className="font-semibold text-slate-900">{t('admin.upsell.enabled')}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.upsell.enabled')}</h3>
                       <p className="text-sm text-slate-500 mt-0.5">
                         {configStatusLabel(selectedConfig, t)}
                       </p>
@@ -522,13 +522,13 @@ export default function UpsellAdminPage() {
 
                   {/* Section toggles */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-slate-700 mb-1">{t('admin.upsell.showQuantityDiscount')}</h4>
                       <p className={`text-lg font-bold ${selectedConfig.showQuantityDiscount ? 'text-emerald-600' : 'text-slate-400'}`}>
                         {selectedConfig.showQuantityDiscount ? t('admin.upsell.on') : t('admin.upsell.off')}
                       </p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-white/5 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-slate-700 mb-1">{t('admin.upsell.showSubscription')}</h4>
                       <p className={`text-lg font-bold ${selectedConfig.showSubscription ? 'text-emerald-600' : 'text-slate-400'}`}>
                         {selectedConfig.showSubscription ? t('admin.upsell.on') : t('admin.upsell.off')}
@@ -537,8 +537,8 @@ export default function UpsellAdminPage() {
                   </div>
 
                   {/* Display rule */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.displayRule')}</h3>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.upsell.displayRule')}</h3>
                     <p className="text-sm font-medium text-indigo-700 bg-indigo-50 inline-block px-3 py-1 rounded-full">
                       {selectedConfig.displayRule}
                     </p>
@@ -546,38 +546,38 @@ export default function UpsellAdminPage() {
 
                   {/* Custom titles */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-slate-900">{t('admin.upsell.customTitles')}</h3>
+                    <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.upsell.customTitles')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.quantityTitle')}</p>
-                        <p className="text-sm font-medium text-slate-900">{selectedConfig.quantityTitle || '---'}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)]">{selectedConfig.quantityTitle || '---'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.quantitySubtitle')}</p>
-                        <p className="text-sm font-medium text-slate-900">{selectedConfig.quantitySubtitle || '---'}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)]">{selectedConfig.quantitySubtitle || '---'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.subscriptionTitle')}</p>
-                        <p className="text-sm font-medium text-slate-900">{selectedConfig.subscriptionTitle || '---'}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)]">{selectedConfig.subscriptionTitle || '---'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.subscriptionSubtitle')}</p>
-                        <p className="text-sm font-medium text-slate-900">{selectedConfig.subscriptionSubtitle || '---'}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)]">{selectedConfig.subscriptionSubtitle || '---'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Suggested values */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.suggestedValues')}</h3>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.upsell.suggestedValues')}</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.suggestedQuantity')}</p>
-                        <p className="text-lg font-bold text-slate-900">{selectedConfig.suggestedQuantity || '---'}</p>
+                        <p className="text-lg font-bold text-[var(--k-text-primary)]">{selectedConfig.suggestedQuantity || '---'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">{t('admin.upsell.suggestedFrequency')}</p>
-                        <p className="text-sm font-medium text-slate-900">{selectedConfig.suggestedFrequency || '---'}</p>
+                        <p className="text-sm font-medium text-[var(--k-text-primary)]">{selectedConfig.suggestedFrequency || '---'}</p>
                       </div>
                     </div>
                   </div>
@@ -585,7 +585,7 @@ export default function UpsellAdminPage() {
                   {/* Product image if available */}
                   {selectedConfig.productImage && (
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.productImage')}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.upsell.productImage')}</h3>
                       {/* FIX: FLAW-050 - Use Next.js Image for automatic optimization, WebP, lazy loading */}
                       <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden relative">
                         <Image
@@ -600,7 +600,7 @@ export default function UpsellAdminPage() {
                   )}
 
                   {/* Meta info */}
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                  <div className="text-xs text-slate-400 pt-2 border-t border-[var(--k-border-subtle)]">
                     <p>ID: {selectedConfig.id}</p>
                     {selectedConfig.productId && <p>{t('admin.upsell.productId')}: {selectedConfig.productId}</p>}
                     {selectedConfig.productSlug && <p>Slug: {selectedConfig.productSlug}</p>}
@@ -667,7 +667,7 @@ export default function UpsellAdminPage() {
                 onChange={(e) => setFormEnabled(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[var(--k-glass-thin)] after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
             </label>
             <span className="text-sm font-medium text-slate-700">{t('admin.upsell.enabled')}</span>
           </div>
@@ -682,7 +682,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowQty(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[var(--k-glass-thin)] after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showQuantityDiscount')}</span>
             </div>
@@ -694,7 +694,7 @@ export default function UpsellAdminPage() {
                   onChange={(e) => setFormShowSub(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[var(--k-glass-thin)] after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500" />
               </label>
               <span className="text-sm text-slate-700">{t('admin.upsell.showSubscription')}</span>
             </div>
@@ -779,7 +779,7 @@ export default function UpsellAdminPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-[var(--k-border-subtle)]">
           <Button
             variant="ghost"
             onClick={() => {

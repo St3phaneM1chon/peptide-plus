@@ -596,7 +596,7 @@ export default function NewsletterPage() {
         </div>
 
         {/* Source breakdown */}
-        <div className="bg-white rounded-lg p-4 border border-[var(--k-border-subtle)] mb-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 border border-[var(--k-border-subtle)] mb-4">
           <h3 className="text-sm font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.newsletter.subscriptionsBySource')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <SourceCard
@@ -624,7 +624,7 @@ export default function NewsletterPage() {
         </div>
 
         {/* Segmentation intelligente */}
-        <div className="bg-white rounded-lg p-4 border border-[var(--k-border-subtle)] mb-4">
+        <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 border border-[var(--k-border-subtle)] mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Target className="h-5 w-5 text-violet-600" />
             <h3 className="text-sm font-semibold text-[var(--k-text-primary)]">Segmentation intelligente</h3>
@@ -655,7 +655,7 @@ export default function NewsletterPage() {
         {/* Conformité CASL et résultats A/B Test */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           {/* Badge conformité CASL */}
-          <div className="bg-white rounded-lg p-4 border border-[var(--k-border-subtle)]">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 border border-[var(--k-border-subtle)]">
             <div className="flex items-center gap-2 mb-3">
               <Shield className="h-5 w-5 text-emerald-600" />
               <h3 className="text-sm font-semibold text-[var(--k-text-primary)]">Conformité LCAP (CASL)</h3>
@@ -707,7 +707,7 @@ export default function NewsletterPage() {
           </div>
 
           {/* Résultats A/B Test */}
-          <div className="bg-white rounded-lg p-4 border border-[var(--k-border-subtle)]">
+          <div className="bg-[var(--k-glass-thin)] rounded-lg p-4 border border-[var(--k-border-subtle)]">
             <div className="flex items-center gap-2 mb-3">
               <FlaskConical className="h-5 w-5 text-indigo-600" />
               <h3 className="text-sm font-semibold text-[var(--k-text-primary)]">Résultats des tests A/B</h3>
@@ -743,7 +743,7 @@ export default function NewsletterPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className={`flex-1 text-center p-2 rounded ${winner === 'A' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'A' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white/5'}`}>
                           <div className="flex items-center justify-center gap-1">
                             {winner === 'A' && !isRunning && <Trophy className="h-3 w-3 text-emerald-600" />}
                             <p className="text-xs font-semibold text-slate-700">Variante A</p>
@@ -753,7 +753,7 @@ export default function NewsletterPage() {
                           <p className="text-[10px] text-[var(--k-text-muted)]">{abResult.variantA.sent} envoyés</p>
                         </div>
                         <span className="text-xs text-slate-400 font-medium">vs</span>
-                        <div className={`flex-1 text-center p-2 rounded ${winner === 'B' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white'}`}>
+                        <div className={`flex-1 text-center p-2 rounded ${winner === 'B' && !isRunning ? 'bg-emerald-100 ring-1 ring-emerald-300' : 'bg-white/5'}`}>
                           <div className="flex items-center justify-center gap-1">
                             {winner === 'B' && !isRunning && <Trophy className="h-3 w-3 text-emerald-600" />}
                             <p className="text-xs font-semibold text-slate-700">Variante B</p>
@@ -894,7 +894,7 @@ export default function NewsletterPage() {
                             ? 'bg-emerald-100 text-emerald-700'
                             : selectedSubscriber.status === 'BOUNCED'
                               ? 'bg-red-100 text-red-700'
-                              : 'bg-white/10 text-slate-600'
+                              : 'bg-white/10 text-[var(--k-text-secondary)]'
                         }`}>
                           {selectedSubscriber.status}
                         </span>
@@ -915,7 +915,7 @@ export default function NewsletterPage() {
                         <span className="text-[var(--k-text-secondary)]">{t('admin.newsletter.colSource')}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                           selectedSubscriber.source === 'popup' ? 'bg-indigo-50 text-indigo-700'
-                          : selectedSubscriber.source === 'footer' ? 'bg-white/10 text-slate-600'
+                          : selectedSubscriber.source === 'footer' ? 'bg-white/10 text-[var(--k-text-secondary)]'
                           : 'bg-amber-50 text-amber-700'
                         }`}>
                           {selectedSubscriber.source || 'N/A'}
@@ -934,7 +934,7 @@ export default function NewsletterPage() {
                     </div>
 
                     {/* Meta */}
-                    <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                    <div className="text-xs text-slate-400 pt-2 border-t border-[var(--k-border-subtle)]">
                       <p>ID: {selectedSubscriber.id}</p>
                     </div>
                   </div>
@@ -1096,7 +1096,7 @@ export default function NewsletterPage() {
                             ? 'bg-emerald-100 text-emerald-700'
                             : selectedCampaign.status === 'SCHEDULED'
                               ? 'bg-indigo-100 text-indigo-700'
-                              : 'bg-white/10 text-slate-600'
+                              : 'bg-white/10 text-[var(--k-text-secondary)]'
                         }`}>
                           {selectedCampaign.status}
                         </span>
@@ -1181,7 +1181,7 @@ export default function NewsletterPage() {
                     </div>
 
                     {/* Meta */}
-                    <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                    <div className="text-xs text-slate-400 pt-2 border-t border-[var(--k-border-subtle)]">
                       <p>ID: {selectedCampaign.id}</p>
                     </div>
                   </div>
@@ -1265,7 +1265,7 @@ export default function NewsletterPage() {
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'subject'
                           ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
-                          : 'bg-white border-slate-200 text-[var(--k-text-secondary)] hover:border-[var(--k-border-subtle)]'
+                          : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-[var(--k-text-secondary)] hover:border-[var(--k-border-subtle)]'
                       }`}
                     >
                       {t('admin.newsletter.abTestSubject')}
@@ -1276,7 +1276,7 @@ export default function NewsletterPage() {
                       className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
                         abTestType === 'content'
                           ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
-                          : 'bg-white border-slate-200 text-[var(--k-text-secondary)] hover:border-[var(--k-border-subtle)]'
+                          : 'bg-[var(--k-glass-thin)] border-[var(--k-border-subtle)] text-[var(--k-text-secondary)] hover:border-[var(--k-border-subtle)]'
                       }`}
                     >
                       {t('admin.newsletter.abTestContent')}
@@ -1366,7 +1366,7 @@ export default function NewsletterPage() {
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-slate-200">
+          <div className="flex gap-3 pt-4 border-t border-[var(--k-border-subtle)]">
             <Button variant="secondary" className="flex-1" onClick={() => createCampaign('DRAFT')} disabled={savingCampaign}>
               {t('admin.newsletter.saveDraft')}
             </Button>

@@ -505,7 +505,7 @@ export default function PromotionsPage() {
       <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{t('admin.promotions.title')}</h1>
+            <h1 className="text-xl font-bold text-[var(--k-text-primary)]">{t('admin.promotions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.promotions.subtitle')}</p>
           </div>
           <Button variant="primary" icon={Plus} size="sm" onClick={openCreateForm}>
@@ -579,9 +579,9 @@ export default function PromotionsPage() {
               >
                 <div className="space-y-6">
                   {/* Status toggle */}
-                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between bg-white/5 rounded-lg p-4">
                     <div>
-                      <h3 className="font-semibold text-slate-900">{t('admin.promotions.statActive')}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)]">{t('admin.promotions.statActive')}</h3>
                       <p className="text-sm text-slate-500 mt-0.5">
                         {statusLabel(selectedPromo, t)}
                       </p>
@@ -603,7 +603,7 @@ export default function PromotionsPage() {
                   {/* Discount Info */}
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.discount')}</h3>
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.promotions.discount')}</h3>
                       <p className="text-2xl font-bold text-indigo-600">
                         {selectedPromo.discountType === 'PERCENTAGE'
                           ? `${selectedPromo.discountValue}%`
@@ -617,8 +617,8 @@ export default function PromotionsPage() {
                     </div>
 
                     <div>
-                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.priority')}</h3>
-                      <p className="text-2xl font-bold text-slate-900">{selectedPromo.priority}</p>
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.promotions.priority')}</h3>
+                      <p className="text-2xl font-bold text-[var(--k-text-primary)]">{selectedPromo.priority}</p>
                     </div>
                   </div>
 
@@ -645,19 +645,19 @@ export default function PromotionsPage() {
                   )}
 
                   {selectedPromo.minQuantity && (
-                    <div className="flex justify-between text-sm bg-slate-50 rounded-lg p-4">
+                    <div className="flex justify-between text-sm bg-white/5 rounded-lg p-4">
                       <span className="text-slate-600">{t('admin.promotions.minQuantity')}</span>
-                      <span className="font-medium text-slate-900">{selectedPromo.minQuantity}</span>
+                      <span className="font-medium text-[var(--k-text-primary)]">{selectedPromo.minQuantity}</span>
                     </div>
                   )}
 
                   {/* Validity dates */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promotions.validity')}</h3>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="font-semibold text-[var(--k-text-primary)] mb-3">{t('admin.promotions.validity')}</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-600">{t('admin.promoCodes.fromDate')}</span>
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium text-[var(--k-text-primary)]">
                           {new Date(selectedPromo.startsAt).toLocaleDateString(locale)}
                         </span>
                       </div>
@@ -665,7 +665,7 @@ export default function PromotionsPage() {
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-600">{t('admin.promoCodes.toDate')}</span>
                           <span className={`font-medium ${
-                            new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-slate-900'
+                            new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-[var(--k-text-primary)]'
                           }`}>
                             {new Date(selectedPromo.endsAt).toLocaleDateString(locale)}
                           </span>
@@ -676,20 +676,20 @@ export default function PromotionsPage() {
 
                   {/* Targets */}
                   {selectedPromo.targetProducts && selectedPromo.targetProducts.length > 0 && (
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetProducts')}</h3>
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.promotions.targetProducts')}</h3>
                       <p className="text-sm text-slate-600">{selectedPromo.targetProducts.length} {t('admin.promotions.productsIncluded')}</p>
                     </div>
                   )}
                   {selectedPromo.targetCategories && selectedPromo.targetCategories.length > 0 && (
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-slate-900 mb-2">{t('admin.promotions.targetCategories')}</h3>
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h3 className="font-semibold text-[var(--k-text-primary)] mb-2">{t('admin.promotions.targetCategories')}</h3>
                       <p className="text-sm text-slate-600">{selectedPromo.targetCategories.length} {t('admin.promotions.categoriesIncluded')}</p>
                     </div>
                   )}
 
                   {/* Meta info */}
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                  <div className="text-xs text-slate-400 pt-2 border-t border-[var(--k-border-subtle)]">
                     <p>ID: {selectedPromo.id}</p>
                     <p>
                       {t('admin.promoCodes.fromDate')} {new Date(selectedPromo.createdAt).toLocaleString(locale)}
@@ -766,7 +766,7 @@ export default function PromotionsPage() {
             <select
               value={formPromoKind}
               onChange={(e) => setFormPromoKind(e.target.value as Promotion['type'])}
-              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
             >
               <option value="PRODUCT_DISCOUNT">{typeLabels.PRODUCT_DISCOUNT}</option>
               <option value="CATEGORY_DISCOUNT">{typeLabels.CATEGORY_DISCOUNT}</option>
@@ -781,7 +781,7 @@ export default function PromotionsPage() {
               <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT')}
-                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-[var(--k-text-primary)] bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700"
               >
                 <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
                 <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>

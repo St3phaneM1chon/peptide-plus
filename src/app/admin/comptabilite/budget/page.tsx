@@ -228,7 +228,7 @@ export default function BudgetPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="2026">2026</option>
               <option value="2025">2025</option>
@@ -242,9 +242,9 @@ export default function BudgetPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-5 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.budget.budgetedRevenue')}</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalRevenueBudget)}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)]">{formatCurrency(totalRevenueBudget)}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${totalRevenueBudget > 0 ? (totalRevenueActual/totalRevenueBudget)*100 : 0}%` }} />
@@ -252,9 +252,9 @@ export default function BudgetPage() {
             <span className="text-xs text-slate-500">{totalRevenueBudget > 0 ? ((totalRevenueActual/totalRevenueBudget)*100).toFixed(1) : '0.0'}%</span>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 border border-slate-200">
+        <div className="bg-[var(--k-glass-thin)] rounded-xl p-5 border border-[var(--k-border-subtle)]">
           <p className="text-sm text-slate-500">{t('admin.budget.budgetedExpenses')}</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalExpenseBudgetVal)}</p>
+          <p className="text-2xl font-bold text-[var(--k-text-primary)]">{formatCurrency(totalExpenseBudgetVal)}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 rounded-full" style={{ width: `${totalExpenseBudgetVal > 0 ? (totalExpenseActual/totalExpenseBudgetVal)*100 : 0}%` }} />
@@ -307,7 +307,7 @@ export default function BudgetPage() {
             return (
               <div key={line.id} className="flex items-center gap-4">
                 <div className="w-40 min-w-[10rem]">
-                  <p className="text-sm font-medium text-slate-900 truncate">{line.category}</p>
+                  <p className="text-sm font-medium text-[var(--k-text-primary)] truncate">{line.category}</p>
                   <p className="text-xs text-slate-500">{line.accountCode}</p>
                 </div>
                 <div className="flex-1">
@@ -365,7 +365,7 @@ export default function BudgetPage() {
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-white/5">
               <tr>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
@@ -377,11 +377,11 @@ export default function BudgetPage() {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {revenueBudget.map((line) => (
-                <tr key={line.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
+                <tr key={line.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 font-medium text-[var(--k-text-primary)]">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.budget)}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.actual)}</td>
+                  <td className="px-4 py-3 text-end text-[var(--k-text-primary)]">{formatCurrency(line.budget)}</td>
+                  <td className="px-4 py-3 text-end text-[var(--k-text-primary)]">{formatCurrency(line.actual)}</td>
                   <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
                   </td>
@@ -423,7 +423,7 @@ export default function BudgetPage() {
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-white/5">
               <tr>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
                 <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
@@ -435,11 +435,11 @@ export default function BudgetPage() {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {expenseBudget.map((line) => (
-                <tr key={line.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
+                <tr key={line.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 font-medium text-[var(--k-text-primary)]">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.budget)}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.actual)}</td>
+                  <td className="px-4 py-3 text-end text-[var(--k-text-primary)]">{formatCurrency(line.budget)}</td>
+                  <td className="px-4 py-3 text-end text-[var(--k-text-primary)]">{formatCurrency(line.actual)}</td>
                   <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
                   </td>
