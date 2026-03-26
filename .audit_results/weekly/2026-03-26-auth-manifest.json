@@ -1,0 +1,32 @@
+{
+  "domain": "auth",
+  "domainName": "Authentication & Authorization",
+  "date": "2026-03-26",
+  "patterns": [
+    "src/lib/auth*.ts",
+    "src/lib/brute-force*.ts",
+    "src/lib/mfa*.ts",
+    "src/lib/session-security*.ts",
+    "src/lib/security*.ts",
+    "src/lib/token-encryption*.ts",
+    "src/app/api/auth/**/*.ts",
+    "src/app/auth/**/*.tsx"
+  ],
+  "excludePatterns": [],
+  "emphasizedDimensions": [
+    "security",
+    "compliance"
+  ],
+  "threatModel": "## THREAT MODEL — Authentication & Authorization\n\n**Description:** Gestion des identites, sessions, tokens JWT, OAuth, MFA, permissions RBAC.\n**Attaquant:** Attaquant externe non-authentifie tentant elevation de privileges, et utilisateur authentifie tentant acces cross-tenant.\n**Donnees a risque:** Mots de passe (bcrypt), tokens de session, cles API, tokens OAuth refresh.\n**Conformite:** OWASP A01:2025 Broken Access Control, OWASP A07:2025 Auth Failures, Loi 25 Quebec (PII).\n\n### Focus prioritaire:\n1. Bypass authentication (missing auth checks, weak session validation)\n2. Privilege escalation (user accessing admin routes, cross-tenant data)\n3. Session fixation/hijacking (predictable tokens, missing rotation)\n4. Credential stuffing (missing brute-force protection, timing attacks)\n5. OAuth misconfiguration (state parameter, redirect URI validation)\n\n### NE PAS rapporter (faux positifs connus):\n- NE PAS rapporter: \"missing rate limiting\" si le route utilise withAdminGuard/withUserGuard (rate limit integre)\n- NE PAS rapporter: \"SQL injection\" sur les queries Prisma (parameterisation automatique)\n- NE PAS rapporter: \"missing CSRF\" sur les requetes GET (CSRF ne s'applique qu'aux mutations)",
+  "pipeline": {
+    "pass1": "Deep audit per function (Generator)",
+    "pass2": "Adversarial review (Critic)",
+    "pass3": "Cross-module check (after all domains complete)",
+    "consensus": "Triple-run for Critical/High"
+  },
+  "promptTemplate": {
+    "persona": "Tu es un pentester senior avec 20 ans d'experience specialise en Authentication & Authorization.",
+    "evidenceGate": "Chaque finding DOIT inclure: exploitSteps, testCase, suggestedFix.",
+    "outputFormat": "JSON avec: file, line, code, severity, category, title, exploitSteps[], testCase, suggestedFix, cweId, confidence"
+  }
+}
