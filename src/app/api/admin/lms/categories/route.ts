@@ -42,3 +42,43 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     throw error;
   }
 });
+
+const updateSchema = createCategorySchema.partial();
+
+export const PATCH = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return apiError('Category ID required', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const body = await request.json();
+  const parsed = updateSchema.safeParse(body);
+  if (!parsed.success) return apiError('Invalid input', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const existing = await prisma.courseCategory.findFirst({ where: { id, tenantId }, select: { id: true } });
+  if (!existing) return apiError('Category not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+
+  const updated = await prisma.courseCategory.update({ where: { id }, data: parsed.data });
+  return apiSuccess(updated, { request });
+});
+
+export const PUT = PATCH;
+
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const tenantId = session.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return apiError('Category ID required', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+
+  const category = await prisma.courseCategory.findFirst({
+    where: { id, tenantId },
+    include: { _count: { select: { courses: true } } },
+  });
+  if (!category) return apiError('Category not found', ErrorCode.NOT_FOUND, { request, status: 404 });
+  if (category._count.courses > 0) {
+    return apiError('Cannot delete category with courses. Reassign courses first.', ErrorCode.VALIDATION_ERROR, { request, status: 400 });
+  }
+
+  await prisma.courseCategory.delete({ where: { id } });
+  return apiSuccess({ success: true }, { request });
+});
