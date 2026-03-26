@@ -24,7 +24,10 @@ export const DELETE = withMobileGuard(async (_request, { session }) => {
       },
     });
 
-    logger.info('[Auth] Account deleted', { userId: session.user.id });
+    // AUTH-F10 FIX: Invalidate all sessions after account deletion
+    await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {});
+
+    logger.info('[Auth] Account deleted + sessions invalidated', { userId: session.user.id });
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('[Auth] Account deletion failed', {
