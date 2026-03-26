@@ -61,6 +61,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
+      // ECOM-F2 FIX: Timing normalization — perform dummy query to equalize response time
+      await prisma.order.findFirst({ where: { orderNumber: 'nonexistent' }, select: { id: true } });
       return NextResponse.json({ found: false });
     }
 
