@@ -14,12 +14,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { getClientIpFromRequest } from '@/lib/admin-audit';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // ECOM-F9 FIX: Rate limit invoice generation
+    const ip = getClientIpFromRequest(_request);
+    const rl = await rateLimitMiddleware(ip, '/api/orders/invoice');
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { id: orderId } = await params;
 
     if (!orderId) {
