@@ -1,7 +1,28 @@
 {
   "date": "2026-03-26",
-  "domainScores": {},
-  "globalScore": 0,
+  "domainScores": {
+    "accounting": {
+      "score": 1,
+      "grade": "F"
+    },
+    "auth": {
+      "score": 0,
+      "grade": "F"
+    },
+    "crm": {
+      "score": 12,
+      "grade": "F"
+    },
+    "ecommerce": {
+      "score": 38,
+      "grade": "F"
+    },
+    "payment": {
+      "score": 18,
+      "grade": "F"
+    }
+  },
+  "globalScore": 13,
   "globalGrade": "F",
-  "totalFindings": 0
+  "totalFindings": 57
 }
