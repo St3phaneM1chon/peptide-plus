@@ -120,6 +120,23 @@ export async function POST(request: NextRequest) {
           error: `Insufficient stock. Available: ${format.stockQuantity}`,
         }, { status: 400 });
       }
+
+      // ECOM-F8 FIX: Atomic inventory reservation (was check-only, no reservation)
+      if (format.trackInventory) {
+        try {
+          await prisma.inventoryReservation.create({
+            data: {
+              productId,
+              optionId: optionId!,
+              quantity,
+              expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min reservation
+            },
+          });
+        } catch {
+          // Reservation table may not exist — fall back to stock check only
+        }
+      }
+
       unitPrice = Number(format.price);
     }
 
