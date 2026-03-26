@@ -119,6 +119,12 @@ export const POST = withAdminGuard(async (request: NextRequest, { params, sessio
     }
 
     const respondedBy = session.user?.email || session.user?.id || 'unknown';
+
+    // ACCT-F1 CRITICAL FIX: Segregation of duties — cannot approve own request
+    if (action === 'approve' && approval.requestedBy === respondedBy) {
+      return apiError('Cannot approve your own request (segregation of duties)', 'FORBIDDEN', { status: 403, request });
+    }
+
     const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED';
 
     const updated = await prisma.approvalRequest.update({

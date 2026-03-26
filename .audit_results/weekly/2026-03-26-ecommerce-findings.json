@@ -1,0 +1,19 @@
+{
+  "domain": "ecommerce",
+  "date": "2026-03-26",
+  "score": 79,
+  "grade": "C",
+  "functionsAudited": 35,
+  "findings": [
+    {"id": "ECOM-F1", "severity": "medium", "title": "Cart share JWT stores client-sent prices", "file": "src/app/api/cart/share/route.ts", "line": 55, "cweId": "CWE-20", "confidence": 0.75, "status": "open"},
+    {"id": "ECOM-F2", "severity": "low", "title": "Order tracking timing side-channel", "file": "src/app/api/orders/track/route.ts", "line": 58, "cweId": "CWE-208", "confidence": 0.70, "status": "open"},
+    {"id": "ECOM-F3", "severity": "low", "title": "Gift card balance leaks expiry state", "file": "src/app/api/gift-cards/balance/route.ts", "line": 53, "cweId": "CWE-203", "confidence": 0.85, "status": "open"},
+    {"id": "ECOM-F4", "severity": "medium", "title": "Stock alert accepts arbitrary emails (spam relay)", "file": "src/app/api/stock-alerts/route.ts", "line": 57, "cweId": "CWE-862", "confidence": 0.90, "status": "open"},
+    {"id": "ECOM-F5", "severity": "medium", "title": "PayPal capture trusts client productType for shipping", "file": "src/app/api/payments/paypal/capture/route.ts", "line": 287, "cweId": "CWE-20", "confidence": 0.90, "status": "open"},
+    {"id": "ECOM-F6", "severity": "low", "title": "Promo code state enumeration via HTTP status", "file": "src/app/api/promo/validate/route.ts", "line": 66, "cweId": "CWE-203", "confidence": 0.80, "status": "open"},
+    {"id": "ECOM-F7", "severity": "high", "title": "Fraud detection engine exists but never invoked", "file": "src/lib/fraud-detection.ts", "line": 34, "cweId": "CWE-778", "confidence": 0.95, "status": "open"},
+    {"id": "ECOM-F8", "severity": "high", "title": "Express/saved-card skip inventory reservation (overselling)", "file": "src/app/api/payments/express/route.ts", "line": 106, "cweId": "CWE-362", "confidence": 0.95, "status": "open"},
+    {"id": "ECOM-F9", "severity": "medium", "title": "Invoice endpoint missing rate limiting", "file": "src/app/api/orders/[id]/invoice/route.ts", "line": 18, "cweId": "CWE-770", "confidence": 0.85, "status": "open"}
+  ],
+  "criticals": 0, "highs": 2, "mediums": 4, "lows": 3
+}

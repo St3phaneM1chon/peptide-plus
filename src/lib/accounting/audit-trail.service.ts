@@ -402,7 +402,12 @@ export function exportAuditToCSV(entries: AuditEntry[]): string {
 
   return [
     headers.join(','),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    // ACCT-F10 FIX: Escape formula injection characters (=, +, -, @, tab, CR)
+    ...rows.map(row => row.map(cell => {
+      let s = String(cell).replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // Prefix with apostrophe to prevent formula execution
+      return `"${s}"`;
+    }).join(',')),
   ].join('\n');
 }
 

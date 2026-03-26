@@ -570,10 +570,11 @@ export async function revokePortalAccess(token: string): Promise<boolean> {
     data: { isActive: false },
   });
 
+  // ACCT-F9 FIX: Mask token in logs (was plaintext)
   logger.info('Client portal access revoked', {
     accessId: access.id,
-    email: access.email,
-    token,
+    email: access.email.replace(/^(.{2}).*(@.*)$/, '$1***$2'),
+    token: token.substring(0, 8) + '...',
   });
 
   return true;
