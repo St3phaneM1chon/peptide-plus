@@ -63,7 +63,7 @@
       "line": 27,
       "cweId": "CWE-770",
       "confidence": 0.8,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CRM-F7",
@@ -103,7 +103,7 @@
       "line": 71,
       "cweId": "CWE-770",
       "confidence": 0.7,
-      "status": "open"
+      "status": "fixed"
     },
     {
       "id": "CRM-F11",
